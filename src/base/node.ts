@@ -281,7 +281,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         function cascade(node: T) {
             const current: T[] = [];
             for (const item of node.children) {
-                if (!element || item.baseElement) {
+                if (!element || item.element) {
                     current.push(item);
                 }
                 if (item.length) {
@@ -800,8 +800,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             element = <Element> this._element.previousSibling;
         }
         else if (this._initial.children.length) {
-            const list = this._initial.children.filter(node => node.pageFlow);
-            element = list.length ? <Element> list[0].element.previousSibling : null;
+            const children = this._initial.children.filter(node => node.pageFlow);
+            element = children.length && children[0].element ? <Element> children[0].element.previousSibling : null;
         }
         while (element) {
             const node = $dom.getElementAsNode<T>(element);
@@ -828,20 +828,28 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             element = <Element> this._element.nextSibling;
         }
         else if (this._initial.children.length) {
-            const list = this._initial.children.filter(node => node.pageFlow);
-            element = list.length ? <Element> list[0].element.nextSibling : null;
+            const children = this._initial.children.filter(node => node.pageFlow);
+            if (children.length) {
+                const lastChild = children[children.length - 1];
+                element = lastChild.element ? <Element> lastChild.element.nextSibling : null;
+            }
         }
         while (element) {
             const node = $dom.getElementAsNode<T>(element);
             if (node) {
-                if (lineBreak && node.lineBreak || excluded && node.excluded) {
-                    result.push(node);
-                }
-                else if (!node.excluded && node.pageFlow) {
-                    result.push(node);
-                    if (!visible || node.visible && !node.floating) {
-                        break;
+                if (node.naturalElement) {
+                    if (lineBreak && node.lineBreak || excluded && node.excluded) {
+                        result.push(node);
                     }
+                    else if (!node.excluded && node.pageFlow) {
+                        result.push(node);
+                        if (!visible || node.visible && !node.floating) {
+                            break;
+                        }
+                    }
+                }
+                else {
+                    break;
                 }
             }
             element = <Element> element.nextSibling;
@@ -923,38 +931,29 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
     get tagName() {
         if (this._cached.tagName === undefined) {
-            const element = this._element;
             let value = '';
-            if (element) {
-                if (this.styleElement) {
-                    value = (element.tagName === 'INPUT' ? (<HTMLInputElement> element).type : element.tagName).toUpperCase();
-                }
-                else if (element.nodeName === '#text') {
+            if (this._element) {
+                if (this._element.nodeName === '#text') {
                     value = 'PLAINTEXT';
                 }
+                else if (this._element instanceof HTMLInputElement) {
+                    value = this._element.type;
+                }
+                else {
+                    value = this._element.tagName;
+                }
             }
-            this._cached.tagName = value;
+            this._cached.tagName = value.toUpperCase();
         }
         return this._cached.tagName;
     }
 
     get element() {
-        if (this._element) {
-            return this._element;
-        }
-        else {
-            const element = $dom.createElement(null, this.block);
-            $dom.setElementCache(element, 'node', this);
-            return element;
-        }
-    }
-
-    get baseElement() {
         return this._element;
     }
 
     get htmlElement() {
-        return this._element instanceof HTMLElement && (this.display !== 'none' || this._element.innerHTML !== '');
+        return this._element instanceof HTMLElement;
     }
 
     get svgElement() {
@@ -966,7 +965,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get naturalElement() {
-        return this.styleElement && (this.display !== 'none' || this.element.innerHTML !== '') || this.plainText;
+        return !!this._element && this._element.className !== '__css.placeholder';
     }
 
     get imageElement() {
@@ -1663,16 +1662,16 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get actualParent() {
-        return this.baseElement && this.baseElement.parentElement ? $dom.getElementAsNode(this.baseElement.parentElement) as T : undefined;
+        return this._element && this._element.parentElement ? $dom.getElementAsNode<T>(this._element.parentElement) : undefined;
     }
 
     get actualChildren() {
         if (this._cached.actualChildren === undefined) {
-            if (this.htmlElement) {
-                this._cached.actualChildren = $util.flatMap(Array.from(this.element.childNodes), (element: Element) => $dom.getElementAsNode(element) as T) as T[];
+            if (this._element instanceof HTMLElement) {
+                this._cached.actualChildren = $util.flatMap(Array.from(this._element.childNodes), (element: Element) => $dom.getElementAsNode(element) as T);
             }
             else if (this.groupParent) {
-                this._cached.actualChildren = this._initial.children.slice() as T[];
+                this._cached.actualChildren = this._initial.children.slice();
             }
             else {
                 this._cached.actualChildren = [];
@@ -1686,10 +1685,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get firstChild() {
-        const element = this._element as HTMLElement;
-        if (element) {
-            for (let i = 0; i < element.childNodes.length; i++) {
-                const node = $dom.getElementAsNode<T>(<Element> element.childNodes[i]);
+        if (this._element instanceof HTMLElement) {
+            for (let i = 0; i < this._element.childNodes.length; i++) {
+                const node = $dom.getElementAsNode<T>(<Element> this._element.childNodes[i]);
                 if (node) {
                     return node;
                 }
@@ -1699,11 +1697,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get lastChild() {
-        const element = this._element as HTMLElement;
-        if (element) {
-            for (let i = element.childNodes.length - 1; i >= 0; i--) {
-                const node = $dom.getElementAsNode<T>(<Element> element.childNodes[i]);
-                if (node) {
+        if (this._element instanceof HTMLElement) {
+            for (let i = this._element.childNodes.length - 1; i >= 0; i--) {
+                const node = $dom.getElementAsNode<T>(<Element> this._element.childNodes[i]);
+                if (node && node.naturalElement) {
                     return node;
                 }
             }

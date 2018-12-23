@@ -55,45 +55,46 @@ export default class Toolbar<T extends $View> extends squared.base.Extension<T> 
     public processNode(node: T, parent: T): ExtensionResult<T> {
         const application = this.application;
         const controller = application.controllerHandler;
+        const element = <HTMLElement> node.element;
         const target = $util.hasValue(node.dataset.target);
-        const options: ExternalData = Object.assign({}, this.options[node.element.id]);
+        const options: ExternalData = Object.assign({}, this.options[element.id]);
         const toolbarOptions = $util_android.createAttribute(options.self);
         const appBarOptions = $util_android.createAttribute(options.appBar);
         const collapsingToolbarOptions = $util_android.createAttribute(options.collapsingToolbar);
-        const hasMenu = Toolbar.findNestedByName(node.element, WIDGET_NAME.MENU);
+        const hasMenu = Toolbar.findNestedByName(element, WIDGET_NAME.MENU);
         const backgroundImage = node.has('backgroundImage');
         const appBarChildren: T[] = [];
         const collapsingToolbarChildren: T[] = [];
         let depth = target ? 0 : parent.renderDepth + 1;
         let children = node.filter(item => !item.positioned).length;
-        Array.from(node.element.children).forEach((element: HTMLElement) => {
-            if (element.tagName === 'IMG') {
-                if ($util.hasValue(element.dataset.navigationIcon)) {
-                    const result = $Resource.addImageSrcSet(<HTMLImageElement> element, $const_android.PREFIX_ANDROID.MENU);
+        Array.from(element.children).forEach((item: HTMLElement) => {
+            if (item.tagName === 'IMG') {
+                if ($util.hasValue(item.dataset.navigationIcon)) {
+                    const result = $Resource.addImageSrcSet(<HTMLImageElement> item, $const_android.PREFIX_ANDROID.MENU);
                     if (result !== '') {
                         $util.defaultWhenNull(toolbar, 'app', 'navigationIcon', `@drawable/${result}`);
-                        if ($dom.getStyle(element).display !== 'none') {
+                        if ($dom.getStyle(item).display !== 'none') {
                             children--;
                         }
                     }
                 }
-                if ($util.hasValue(element.dataset.collapseIcon)) {
-                    const result = $Resource.addImageSrcSet(<HTMLImageElement> element, $const_android.PREFIX_ANDROID.MENU);
+                if ($util.hasValue(item.dataset.collapseIcon)) {
+                    const result = $Resource.addImageSrcSet(<HTMLImageElement> item, $const_android.PREFIX_ANDROID.MENU);
                     if (result !== '') {
                         $util.defaultWhenNull(toolbar, 'app', 'collapseIcon', `@drawable/${result}`);
-                        if ($dom.getStyle(element).display !== 'none') {
+                        if ($dom.getStyle(item).display !== 'none') {
                             children--;
                         }
                     }
                 }
             }
-            if ($util.hasValue(element.dataset.target)) {
+            if ($util.hasValue(item.dataset.target)) {
                 children--;
             }
             else {
-                const targetNode = $dom.getElementAsNode<T>(element);
+                const targetNode = $dom.getElementAsNode<T>(item);
                 if (targetNode) {
-                    switch (element.dataset.targetModule) {
+                    switch (item.dataset.targetModule) {
                         case 'appBar':
                             appBarChildren.push(targetNode);
                             children--;
@@ -289,7 +290,7 @@ export default class Toolbar<T extends $View> extends squared.base.Extension<T> 
     public postProcedure(node: T) {
         const menu = $util.optionalAsString(Toolbar.findNestedByName(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
         if (menu !== '') {
-            const options: ExternalData = Object.assign({}, this.options[node.element.id]);
+            const options: ExternalData = node.element && this.options[node.element.id] || {};
             const toolbarOptions = $util_android.createAttribute(options.self);
             $util.defaultWhenNull(toolbarOptions, 'app', 'menu', `@menu/${menu}`);
             node.app('menu', toolbarOptions.app.menu);
@@ -316,7 +317,7 @@ export default class Toolbar<T extends $View> extends squared.base.Extension<T> 
                 }]
             };
             if (themeData.target) {
-                data['1'] = false as any;
+                data['1'] = [];
             }
             else {
                 data['items'] = data['1'][0]['items'];
@@ -330,7 +331,7 @@ export default class Toolbar<T extends $View> extends squared.base.Extension<T> 
     private createPlaceholder(nextId: number, node: T, children: T[]) {
         const placeholder = new $View(
             nextId,
-            $dom.createElement(node.actualParent ? node.actualParent.baseElement : null, node.block),
+            $dom.createElement(node.actualParent ? node.actualParent.element : null, node.block),
             this.application.controllerHandler.afterInsertNode
         );
         placeholder.inherit(node, 'base');

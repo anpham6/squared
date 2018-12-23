@@ -121,7 +121,7 @@ export function isUserAgent(value: string | number) {
     return hasBit(value, client);
 }
 
-export function getDataSet(element: Element, prefix: string) {
+export function getDataSet(element: Element | null, prefix: string) {
     const result: StringMap = {};
     if (hasComputedStyle(element) || element instanceof SVGElement) {
         prefix = convertCamelCase(prefix, '\\.');
@@ -266,36 +266,40 @@ export function cssResolveUrl(value: string) {
     return '';
 }
 
-export function cssInherit(element: Element, attr: string, exclude?: string[], tagNames?: string[]) {
+export function cssInherit(element: Element | null, attr: string, exclude?: string[], tagNames?: string[]) {
     let result = '';
-    let current = element.parentElement;
-    while (current && (tagNames === undefined || !tagNames.includes(current.tagName))) {
-        result = getStyle(current)[attr];
-        if (result === 'inherit' || exclude && exclude.some(value => result.indexOf(value) !== -1)) {
-            result = '';
+    if (element) {
+        let current = element.parentElement;
+        while (current && (tagNames === undefined || !tagNames.includes(current.tagName))) {
+            result = getStyle(current)[attr];
+            if (result === 'inherit' || exclude && exclude.some(value => result.indexOf(value) !== -1)) {
+                result = '';
+            }
+            if (current === document.body || result) {
+                break;
+            }
+            current = current.parentElement;
         }
-        if (current === document.body || result) {
-            break;
-        }
-        current = current.parentElement;
     }
     return result || '';
 }
 
-export function cssParent(element: Element, attr: string, ...styles: string[]) {
-    if (element.nodeName.charAt(0) !== '#') {
-        if (styles.includes(getStyle(element)[attr])) {
-            return true;
+export function cssParent(element: Element | null, attr: string, ...styles: string[]) {
+    if (element) {
+        if (element.nodeName.charAt(0) !== '#') {
+            if (styles.includes(getStyle(element)[attr])) {
+                return true;
+            }
         }
-    }
-    if (element.parentElement) {
-        return styles.includes(getStyle(element.parentElement)[attr]);
+        if (element.parentElement) {
+            return styles.includes(getStyle(element.parentElement)[attr]);
+        }
     }
     return false;
 }
 
-export function cssFromParent(element: Element, attr: string) {
-    if (element.parentElement && hasComputedStyle(element)) {
+export function cssFromParent(element: Element | null, attr: string) {
+    if (hasComputedStyle(element) && element.parentElement) {
         const node = getElementAsNode<T>(element);
         const style = getStyle(element);
         if (node && style) {
@@ -431,7 +435,7 @@ export function getBackgroundPosition(value: string, dimension: RectDimensions, 
     return result;
 }
 
-export function getFirstChildElement(element: Element, lineBreak = false) {
+export function getFirstChildElement(element: Element | null, lineBreak = false) {
     if (element instanceof HTMLElement) {
         for (let i = 0; i < element.childNodes.length; i++) {
             const node = getElementAsNode<T>(<Element> element.childNodes[i]);
@@ -443,11 +447,11 @@ export function getFirstChildElement(element: Element, lineBreak = false) {
     return null;
 }
 
-export function getLastChildElement(element: Element, lineBreak = false) {
+export function getLastChildElement(element: Element | null, lineBreak = false) {
     if (element instanceof HTMLElement) {
         for (let i = element.childNodes.length - 1; i >= 0; i--) {
             const node = getElementAsNode<T>(<Element> element.childNodes[i]);
-            if (node && (!node.excluded || (lineBreak && node.lineBreak))) {
+            if (node && node.naturalElement && (!node.excluded || (lineBreak && node.lineBreak))) {
                 return node.element;
             }
         }
@@ -503,7 +507,7 @@ export function isPlainText(element: Element, whiteSpace = false) {
     return false;
 }
 
-export function hasLineBreak(element: Element, lineBreak = false, trimString = false) {
+export function hasLineBreak(element: Element | null, lineBreak = false, trimString = false) {
     if (element) {
         let value = element.textContent || '';
         if (trimString) {
@@ -559,26 +563,30 @@ export function getElementsBetween(elementStart: Element | null, elementEnd: Ele
     return [];
 }
 
-export function getPreviousElementSibling(element: Element) {
-    element = <Element> element.previousSibling;
-    while (element) {
-        const node = getElementAsNode<T>(element);
-        if (node && (!node.excluded || node.lineBreak)) {
-            return node.element;
-        }
+export function getPreviousElementSibling(element: Element | null) {
+    if (element) {
         element = <Element> element.previousSibling;
+        while (element) {
+            const node = getElementAsNode<T>(element);
+            if (node && (!node.excluded || node.lineBreak)) {
+                return node.element;
+            }
+            element = <Element> element.previousSibling;
+        }
     }
     return null;
 }
 
-export function getNextElementSibling(element: Element) {
-    element = <Element> element.nextSibling;
-    while (element) {
-        const node = getElementAsNode<T>(element);
-        if (node && (!node.excluded || node.lineBreak)) {
-            return node.element;
-        }
+export function getNextElementSibling(element: Element | null) {
+    if (element) {
         element = <Element> element.nextSibling;
+        while (element) {
+            const node = getElementAsNode<T>(element);
+            if (node && (!node.excluded || node.lineBreak)) {
+                return node.element;
+            }
+            element = <Element> element.nextSibling;
+        }
     }
     return null;
 }

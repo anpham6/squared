@@ -7,7 +7,7 @@ import $dom = squared.lib.dom;
 import $util = squared.lib.util;
 
 export default abstract class Extension<T extends Node> implements squared.base.Extension<T> {
-    public static findNestedByName(element: Element, name: string) {
+    public static findNestedByName(element: Element | null, name: string) {
         if ($dom.hasComputedStyle(element)) {
             return Array.from(element.children).find((item: HTMLElement) => $util.includes(item.dataset.use, name)) as HTMLElement || null;
         }
@@ -41,7 +41,7 @@ export default abstract class Extension<T extends Node> implements squared.base.
     }
 
     public is(node: T) {
-        return node.styleElement ? this.tagNames.length === 0 || this.tagNames.includes(node.element.tagName) : false;
+        return node.styleElement ? this.tagNames.length === 0 || this.tagNames.includes((<HTMLElement> node.element).tagName) : false;
     }
 
     public require(name: string, preload = false) {

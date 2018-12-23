@@ -48,7 +48,7 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
         const scrollView = overflow.map((value, index) => {
             const container = new View(
                 this.application.nextId,
-                index === 0 ? node.baseElement : $dom.createElement(node.actualParent ? node.actualParent.baseElement : null, node.block),
+                index === 0 ? node.element : $dom.createElement(node.actualParent ? node.actualParent.element : null, node.block),
                 this.application.controllerHandler.afterInsertNode
             );
             container.setControlType(value, CONTAINER_NODE.BLOCK);

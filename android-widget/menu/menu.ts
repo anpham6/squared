@@ -213,8 +213,9 @@ export default class Menu<T extends $View> extends squared.base.Extension<T> {
     }
 
     public postBaseLayout(node: T) {
-        if (this.included(<HTMLElement> node.element)) {
-            Array.from(node.element.querySelectorAll('NAV')).forEach((item: HTMLElement) => {
+        const element = <HTMLElement> node.element;
+        if (this.included(element)) {
+            Array.from(element.querySelectorAll('NAV')).forEach((item: HTMLElement) => {
                 const display = $dom.getElementCache(item, 'squaredExternalDisplay');
                 if (display) {
                     item.style.display = display;

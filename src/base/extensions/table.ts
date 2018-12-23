@@ -40,7 +40,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
         const thead = node.filter(item => item.tagName === 'THEAD');
         const tbody = node.filter(item => item.tagName === 'TBODY');
         const tfoot = node.filter(item => item.tagName === 'TFOOT');
-        const colgroup = Array.from(node.element.children).find(element => element.tagName === 'COLGROUP');
+        const colgroup = node.element ? Array.from(node.element.children).find(element => element.tagName === 'COLGROUP') : undefined;
         if (thead.length) {
             thead[0].cascade().filter(item => item.tagName === 'TH' || item.tagName === 'TD').forEach(item => item.inherit(thead[0], 'styleMap'));
             table.push(...thead[0].children as T[]);

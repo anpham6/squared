@@ -52,13 +52,15 @@ export default abstract class NodeGroup extends Node {
     }
 
     get firstChild() {
-        const actualParent = NodeList.actualParent(this.nodes);
+        const actualParent = this.actualParent;
         if (actualParent) {
             const element = actualParent.element;
-            for (let i = 0; i < actualParent.element.childNodes.length; i++) {
-                const node = $dom.getElementAsNode<Node>(<Element> element.childNodes[i]);
-                if (node && this.nodes.includes(node)) {
-                    return node;
+            if (element) {
+                for (let i = 0; i < element.childNodes.length; i++) {
+                    const node = $dom.getElementAsNode<Node>(<Element> element.childNodes[i]);
+                    if (node && this.nodes.includes(node)) {
+                        return node;
+                    }
                 }
             }
         }
@@ -69,13 +71,15 @@ export default abstract class NodeGroup extends Node {
     }
 
     get lastChild() {
-        const actualParent = NodeList.actualParent(this.nodes);
-        if (actualParent) {
+        const actualParent = this.actualParent;
+        if (actualParent && actualParent.element) {
             const element = actualParent.element;
-            for (let i = actualParent.element.childNodes.length - 1; i >= 0; i--) {
-                const node = $dom.getElementAsNode<Node>(<Element> element.childNodes[i]);
-                if (node && this.nodes.includes(node)) {
-                    return node;
+            if (element) {
+                for (let i = element.childNodes.length - 1; i >= 0; i--) {
+                    const node = $dom.getElementAsNode<Node>(<Element> element.childNodes[i]);
+                    if (node && this.nodes.includes(node)) {
+                        return node;
+                    }
                 }
             }
         }
@@ -142,11 +146,6 @@ export default abstract class NodeGroup extends Node {
             this.css('display') ||
             this.some(node => node.block) ? 'block' : (this.some(node => node.blockDimension) ? 'inline-block' : 'inline')
         );
-    }
-
-    get element() {
-        const children = this.cascade(true);
-        return children.length ? children[0].element : super.element;
     }
 
     get groupParent() {

@@ -44,14 +44,16 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
         });
         if (node.cssTry('display', 'block')) {
             for (const item of pageFlow) {
-                const bounds = item.element.getBoundingClientRect();
-                const initial: InitialData<T> = item.unsafe('initial');
-                Object.assign(initial.bounds, { width: bounds.width, height: bounds.height });
+                if (item.element) {
+                    const bounds = item.element.getBoundingClientRect();
+                    const initial: InitialData<T> = item.unsafe('initial');
+                    Object.assign(initial.bounds, { width: bounds.width, height: bounds.height });
+                }
             }
             node.cssFinally('display');
         }
         if (mainData.wrap) {
-            function setFlexDirection(align: string, sort: string, size: string) {
+            function setDirection(align: string, sort: string, size: string) {
                 const map = new Map<number, T[]>();
                 pageFlow.sort((a, b) => {
                     if (a.linear[align] < b.linear[align]) {
@@ -91,10 +93,10 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
                 }
             }
             if (mainData.rowDirection) {
-                setFlexDirection(mainData.wrapReverse ? 'bottom' : 'top', 'left', 'right');
+                setDirection(mainData.wrapReverse ? 'bottom' : 'top', 'left', 'right');
             }
             else {
-                setFlexDirection('left', 'top', 'bottom');
+                setDirection('left', 'top', 'bottom');
             }
         }
         else {

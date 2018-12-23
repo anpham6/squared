@@ -270,8 +270,9 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                                 }
                             }
                             const index = Math.min(l + (columnSpan - 1), columnEnd.length - 1);
+                            const documentParent = <HTMLElement> item.documentParent.element;
                             data.siblings.push(
-                                ...$util.flatMap(Array.from(item.documentParent.element.children), element => {
+                                ...$util.flatMap(Array.from(documentParent.children), element => {
                                     const sibling = $dom.getElementAsNode<T>(element);
                                     return (
                                         sibling &&

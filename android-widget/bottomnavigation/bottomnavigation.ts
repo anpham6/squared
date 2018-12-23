@@ -25,7 +25,7 @@ export default class BottomNavigation<T extends $View> extends squared.base.Exte
     }
 
     public processNode(node: T, parent: T): ExtensionResult<T> {
-        const options = $util_android.createAttribute(this.options[node.element.id]);
+        const options = $util_android.createAttribute(node.element ? this.options[node.element.id] : undefined);
         $util.defaultWhenNull(options, 'android', 'background', `?android:attr/windowBackground`);
         for (let i = 5; i < node.length; i++) {
             const item = node.item(i) as T;
@@ -60,7 +60,7 @@ export default class BottomNavigation<T extends $View> extends squared.base.Exte
         }
         const menu = $util.optionalAsString(BottomNavigation.findNestedByName(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
         if (menu !== '') {
-            const options = $util_android.createAttribute(this.options[node.element.id]);
+            const options = $util_android.createAttribute(node.element ? this.options[node.element.id] : undefined);
             $util.defaultWhenNull(options, 'app', 'menu', `@menu/${menu}`);
             node.app('menu', options.app.menu);
         }

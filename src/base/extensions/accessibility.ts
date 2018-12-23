@@ -9,7 +9,7 @@ import $util = squared.lib.util;
 export default abstract class Accessibility<T extends Node> extends Extension<T> {
     public afterInit() {
         for (const node of this.application.processing.cache.elements) {
-            const element = node.baseElement;
+            const element = node.element;
             if (element instanceof HTMLInputElement && !node.hasBit('excludeProcedure', NODE_PROCEDURE.ACCESSIBILITY)) {
                 switch (element.type) {
                     case 'radio':

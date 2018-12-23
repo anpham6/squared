@@ -363,7 +363,7 @@ export default (Base: Constructor<T>) => {
         }
 
         public clone(id?: number, attributes = false, position = false): View {
-            const node = new View(id || this.id, this.baseElement);
+            const node = new View(id || this.id, this.element);
             Object.assign(node.localSettings, this.localSettings);
             node.tagName = this.tagName;
             if (id) {
@@ -439,7 +439,7 @@ export default (Base: Constructor<T>) => {
                 this.controlId = stripId(this.android('id'));
             }
             if (this.controlId === '') {
-                const element = this.baseElement;
+                const element = this.element;
                 let name = '';
                 if (element) {
                     name = validateString(element.id || (<HTMLInputElement> element).name);
@@ -869,7 +869,7 @@ export default (Base: Constructor<T>) => {
                     }
                 }
                 else if (this.is(CONTAINER_NODE.LINE)) {
-                    if (this.element.tagName !== 'HR' && layoutHeight > 0 && this.toInt('height', true) > 0) {
+                    if (this.tagName !== 'HR' && layoutHeight > 0 && this.toInt('height', true) > 0) {
                         this.android('layout_height', $util.formatPX(layoutHeight + this.borderTopWidth + this.borderBottomWidth));
                     }
                 }

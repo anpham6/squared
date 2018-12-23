@@ -16,10 +16,10 @@ export default class <T extends View> extends squared.base.extensions.Sprite<T> 
         let output = '';
         let container: T | undefined;
         const mainData = <ImageAsset> node.data($const.EXT_NAME.SPRITE, 'mainData');
-        if (mainData && mainData.uri && mainData.position && node.baseElement) {
+        if (mainData && mainData.uri && mainData.position) {
             container = new View(
                 this.application.nextId,
-                node.baseElement,
+                <HTMLElement> node.element,
                 this.application.controllerHandler.afterInsertNode
             ) as T;
             container.inherit(node, 'initial', 'base', 'styleMap');

@@ -29,7 +29,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
             list = baseline;
         }
         if (text) {
-            list = list.filter(item => item.baseElement && !item.imageElement);
+            list = list.filter(item => item.element && !item.imageElement);
         }
         const lineHeight = $util.maxArray(list.map(node => node.lineHeight));
         const boundsHeight = $util.maxArray(list.map(node => node.bounds.height));
@@ -93,7 +93,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
         if (parent && list.length > 1) {
             list.slice().sort(this.siblingIndex);
             const actualParent = this.actualParent(list);
-            if (actualParent) {
+            if (actualParent && actualParent.element) {
                 const nodes: T[] = [];
                 const listEnd = list[list.length - 1];
                 let valid = false;

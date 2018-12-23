@@ -185,7 +185,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             if (/(start|end|center|baseline)/.test(alignItems) || /(start|end|center|baseline|left|right)/.test(justifyItems)) {
                 container = new View(
                     this.application.nextId,
-                    $dom.createElement(node.actualParent ? node.actualParent.baseElement : null),
+                    $dom.createElement(node.actualParent ? node.actualParent.element : null),
                     this.application.controllerHandler.afterInsertNode
                 ) as T;
                 container.tagName = node.tagName;

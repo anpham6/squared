@@ -171,7 +171,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     }
                     const companion = new View(
                         this.application.nextId,
-                        $dom.createElement(node.actualParent ? node.actualParent.baseElement : null),
+                        $dom.createElement(node.actualParent ? node.actualParent.element : null),
                         this.application.controllerHandler.afterInsertNode
                     ) as T;
                     companion.tagName = `${node.tagName}_ORDINAL`;

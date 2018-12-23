@@ -338,7 +338,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
         for (const node of this.cache) {
             const backgroundImage = Resource.hasDrawableBackground(node.data(Resource.KEY_NAME, 'boxStyle'));
             if (!(node.renderChildren.length ||
-                node.baseElement === undefined ||
+                !node.element ||
                 node.imageElement ||
                 node.svgElement ||
                 node.tagName === 'HR' ||
@@ -446,7 +446,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                     value = value.replace(/\s+/g, ' ');
                     break;
                 default:
-                    const element = node.baseElement;
+                    const element = node.element;
                     if (element) {
                         if (element.previousSibling && $dom.isLineBreak(<Element> element.previousSibling)) {
                             value = value.replace(/^\s+/, '');
@@ -460,7 +460,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
             return [value, true];
         }
         for (const node of this.cache.visible) {
-            const element = node.baseElement;
+            const element = node.element;
             if (element) {
                 let name = '';
                 let value = '';
@@ -525,8 +525,8 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         if (previousSibling === undefined || previousSibling.multiLine || previousSibling.lineBreak || previousSibling.plainText && /\s+$/.test(previousSibling.textContent)) {
                             value = value.replace(/^\s+/, '');
                         }
-                        else if (previousSibling.baseElement) {
-                            previousSpaceEnd = /\s+$/.test((<HTMLElement> previousSibling.baseElement).innerText || previousSibling.textContent);
+                        else if (previousSibling.element) {
+                            previousSpaceEnd = /\s+$/.test((<HTMLElement> previousSibling.element).innerText || previousSibling.textContent);
                         }
                         if (inlineTrim) {
                             const original = value;

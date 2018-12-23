@@ -164,7 +164,7 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     public reset() {
-        this.session.cache.each(node => node.baseElement && $dom.deleteElementCache(node.baseElement, 'node', 'style', 'styleMap'));
+        this.session.cache.each(node => node.element && $dom.deleteElementCache(node.element, 'node', 'style', 'styleMap'));
         for (const element of this.parseElements) {
             delete element.dataset.iteration;
             delete element.dataset.layoutName;
@@ -540,10 +540,10 @@ export default class Application<T extends Node> implements squared.base.Applica
         }
         if (this.processing.cache.length) {
             for (const node of this.processing.cache) {
-                if (node.element.tagName !== 'SELECT') {
+                if (node.htmlElement && node.tagName !== 'SELECT') {
                     const plainText: Element[] = [];
                     let valid = false;
-                    Array.from(node.element.childNodes).forEach((element: Element) => {
+                    Array.from((<HTMLElement> node.element).childNodes).forEach((element: Element) => {
                         if (element.nodeName === '#text') {
                             plainText.push(element);
                         }
@@ -686,7 +686,7 @@ export default class Application<T extends Node> implements squared.base.Applica
             for (const node of this.processing.cache) {
                 if (node.htmlElement && node.length) {
                     let i = 0;
-                    Array.from(node.element.childNodes).forEach((element: Element) => {
+                    Array.from((<HTMLElement> node.element).childNodes).forEach((element: Element) => {
                         const item = $dom.getElementAsNode<T>(element);
                         if (item && !item.excluded && (item.pageFlow || item.documentParent === node)) {
                             item.siblingIndex = i++;
@@ -798,7 +798,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 let k = -1;
                 while (++k < axisY.length) {
                     let nodeY = axisY[k];
-                    if (nodeY.rendered || !nodeY.visible || this.parseElements.has(<HTMLElement> nodeY.baseElement) && !nodeY.documentRoot && !nodeY.documentBody) {
+                    if (nodeY.rendered || !nodeY.visible || this.parseElements.has(<HTMLElement> nodeY.element) && !nodeY.documentRoot && !nodeY.documentBody) {
                         continue;
                     }
                     let parentY = nodeY.parent as T;

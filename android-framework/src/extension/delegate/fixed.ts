@@ -60,7 +60,7 @@ export default class Fixed<T extends View> extends squared.base.Extension<T> {
     public processNode(node: T, parent: T): ExtensionResult<T> {
         const container = new View(
             this.application.nextId,
-            $dom.createElement(node.baseElement, node.block),
+            $dom.createElement(node.element, node.block),
             this.application.controllerHandler.afterInsertNode
         ) as T;
         container.inherit(node, 'initial', 'base');

@@ -16,8 +16,8 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
     public afterResources() {
         for (const node of this.application.processing.cache) {
             if (!node.hasBit('excludeResource', $enum.NODE_RESOURCE.VALUE_STRING)) {
-                if (node.baseElement instanceof HTMLSelectElement) {
-                    const [stringArray, numberArray] = Resource.getOptionArray(node.baseElement);
+                if (node.element instanceof HTMLSelectElement) {
+                    const [stringArray, numberArray] = Resource.getOptionArray(node.element);
                     const result: string[] = [];
                     if (!this.options.numberResourceValue && numberArray && numberArray.length) {
                         result.push(...numberArray);

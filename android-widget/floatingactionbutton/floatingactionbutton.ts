@@ -14,7 +14,8 @@ import $util_android = android.lib.util;
 
 export default class FloatingActionButton<T extends $View> extends squared.base.Extension<T> {
     public is(node: T) {
-        return super.is(node) && (node.element.tagName !== 'INPUT' || ['button', 'file', 'image', 'reset', 'search', 'submit'].includes((<HTMLInputElement> node.element).type));
+        const element = <HTMLInputElement> node.element;
+        return super.is(node) && (element.tagName !== 'INPUT' || ['button', 'file', 'image', 'reset', 'search', 'submit'].includes(element.type));
     }
 
     public condition(node: T) {
@@ -22,8 +23,8 @@ export default class FloatingActionButton<T extends $View> extends squared.base.
     }
 
     public processNode(node: T, parent: T): ExtensionResult<T> {
+        const element = <HTMLElement> node.element;
         const target = $util.hasValue(node.dataset.target);
-        const element = node.element;
         const options = $util_android.createAttribute(this.options[element.id]);
         const backgroundColor = $color.parseRGBA(node.css('backgroundColor'), node.css('opacity'));
         let colorValue = '';

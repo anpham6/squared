@@ -40,8 +40,7 @@ declare global {
             readonly box: RectDimensions;
             readonly bounds: RectDimensions;
             readonly linear: RectDimensions;
-            readonly element: Element;
-            readonly baseElement: Element | null;
+            readonly element: Element | null;
             readonly htmlElement: boolean;
             readonly styleElement: boolean;
             readonly naturalElement: boolean;
