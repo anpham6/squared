@@ -1,3 +1,5 @@
+import { SvgDefs, SvgLinearGradient, SvgRadialGradient } from './types/svg';
+
 import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 import SvgElement from './svgelement';

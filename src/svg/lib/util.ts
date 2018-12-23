@@ -1,3 +1,5 @@
+import { SvgTransformData } from '../types/svg';
+
 import $dom = squared.lib.dom;
 import $util = squared.lib.util;
 

@@ -1,3 +1,5 @@
+import { SvgTransformData } from '../src/svg/types/svg';
+
 declare global {
     namespace squared.svg.lib {
         namespace util {

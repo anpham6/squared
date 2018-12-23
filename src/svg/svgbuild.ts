@@ -1,3 +1,5 @@
+import { SvgPathCommand } from './types/svg';
+
 import { applyMatrixX, applyMatrixY, getRadiusY } from './lib/util';
 
 import $color = squared.lib.color;

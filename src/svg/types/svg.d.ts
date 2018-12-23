@@ -1,16 +1,16 @@
-interface SvgDefs {
+export interface SvgDefs {
     clipPath: Map<string, squared.svg.SvgGroup>;
     gradient: Map<string, Gradient>;
 }
 
-interface SvgViewBox {
+export interface SvgViewBox {
     x: number;
     y: number;
     width: number;
     height: number;
 }
 
-interface SvgTransformData {
+export interface SvgTransformData {
     operations: number[];
     translateX: number;
     translateY: number;
@@ -27,7 +27,7 @@ interface SvgTransformData {
     origin?: Point;
 }
 
-interface SvgLinearGradient extends Gradient {
+export interface SvgLinearGradient extends Gradient {
     x1: number;
     y1: number;
     x2: number;
@@ -38,7 +38,7 @@ interface SvgLinearGradient extends Gradient {
     y2AsString: string;
 }
 
-interface SvgRadialGradient extends Gradient {
+export interface SvgRadialGradient extends Gradient {
     cx: number;
     cy: number;
     r: number;
@@ -51,7 +51,7 @@ interface SvgRadialGradient extends Gradient {
     fyAsString: string;
 }
 
-interface SvgPathCommand {
+export interface SvgPathCommand {
     command: string;
     relative: boolean;
     coordinates: number[];

@@ -1,3 +1,4 @@
+import { SvgLinearGradient, SvgRadialGradient } from '../../src/svg/types/svg';
 import { UserSettingsAndroid } from './types/application';
 import { BackgroundGradient } from './template/resource/types/data';
 

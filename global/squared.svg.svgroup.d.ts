@@ -1,3 +1,5 @@
+import { SvgViewBox } from '../src/svg/types/svg';
+
 import Container = squared.lib.base.Container;
 
 declare global {

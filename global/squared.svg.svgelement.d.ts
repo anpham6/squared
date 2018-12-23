@@ -1,3 +1,5 @@
+import { SvgViewBox } from '../src/svg/types/svg';
+
 declare global {
     namespace squared.svg {
         export interface SvgElement extends SvgBase, SvgBaseFeature {
