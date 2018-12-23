@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en"> 
+	<head>
+		<title>Inlined</title>
+  		<meta charset="utf-8" />
+  		<link rel="stylesheet" href="site.css"   media="all" />
+  		<link rel="stylesheet" href="page.css"   media="all" />
+          <script src="/node_modules/systemjs/dist/system.js"></script>
+          <script src="../../../squared.js"></script>
+</head>
+
+<body>
+
+ <h1>Inlined</h1>
+ <div>
+   <p>Normal Paragraph</p>
+   <table><tr> <td>Normal Table</td> <td>r1c2</td> <td>r1c3</td> </tr>
+          <tr> <td>row2</td>         <td>r2c2</td> <td>r2c3</td> </tr> </table>
+
+   <ul> <li>Normal List</li> <li>Normal List</li> </ul> </div>
+
+ <div>
+   <p class="inlined">Inlined Paragraph</p>
+
+   <table class="inlined" >
+          <tr> <td>Inlined Table</td> <td>r1c2</td> <td>r1c3</td> </tr>
+          <tr> <td>row2</td>          <td>r2c2</td> <td>r2c3</td> </tr> </table>
+
+   <ul class="inlined" > <li class="inlined">Inlined List</li> 
+                         <li class="inlined">Inlined List</li></ul> </div>
+ 
+</body>
+</html>

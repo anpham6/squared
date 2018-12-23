@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Event Styling (Rollup)</title>
+  		<meta charset="utf-8" />
+  		<link rel="stylesheet" href="site.css"   media="all" />
+  		<link rel="stylesheet" href="page.css"   media="all" />
+          <script src="/node_modules/systemjs/dist/system.js"></script>
+          <script src="../../../squared.js"></script>
+     </head>
+<body>
+
+ <h1>Event Styling (Rollup)</h1>
+
+ <div id="main" class="rollup">
+   <h2 class="rollup-trigger test1">Main</h2>
+
+   <div id="faq"><div class="oi rollup">
+     <h3 class="rollup-trigger">FAQ</h3> Don't roll me up.
+     <dl class="rollup">
+       <dt class="rollup-trigger">QUESTION: How do rollups work?</dt>
+       <dd class="hidden">ANSWER: When the user clicks on a heading or button,
+                          the content rolls up or down. </dd></dl></div></div>
+
+   <div id="info"><div class="oi rollup">
+     <h3 class="rollup-trigger">Info</h3>
+     <div class="rollup">
+       <p><span class="rollup-trigger">&nbsp;</span>List</p>
+       <ul> <li>list item 1</li> <li>list item 2</li></ul></div>
+     <em><span class="rollup-trigger">&nbsp;</span>Roll me up</em></div></div>
+     <div class="float-divider"></div></div>
+
+
+ </body>
+</html>

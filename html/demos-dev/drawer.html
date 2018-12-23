@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Language" content="en">
+    <title>https://github.com/anpham6/squared</title>
+    <link rel="stylesheet" type="text/css" href="common/dev.css">
+    <style>
+        #squared_ui {
+            width: 300px;
+        }
+        #drawer_demo {
+            position: relative;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            overflow: hidden;
+        }
+        #drawer_demo > div {
+            position: relative;
+        }
+        #drawer_demo button, #drawer_demo input[type=button] {
+            position: absolute;
+            width: 56px;
+            height: 56px;
+            background: slateblue center no-repeat;
+            border: none;
+            border-radius: 28px;
+            margin: 8px;
+            padding: 0;
+        }
+        #drawer_aside {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 200px;
+            height: 100%;
+            margin: 0;
+            padding: 4px;
+            background-color: #fff;
+            border-right: solid 1px #aaa;
+        }
+        #drawer_aside div {
+            font-size: 11px;
+            padding: 8px;
+            overflow: hidden;
+        }
+        #drawer_aside div:hover {
+            background-color: azure;
+            cursor: pointer;
+        }
+        #drawer_aside div img {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            float: left;
+        }
+        #drawer_aside label {
+            margin-top: 4px;
+            float: left;
+        }
+        #drawer_demo #fab_menu {
+            position: static;
+            background-image: url(../demos/images/icons8-squared-menu-24.png);
+            float: right;
+        }
+        #drawer_demo #fab_left {
+            bottom: 0;
+            left: 0;
+            background-image: url(../demos/images/icons8-left-24.png);
+        }
+        .content {
+            font-size: 12px;
+            color: #fff;
+            background-color: #aaa;
+            padding: 8px;
+        }
+    </style>
+    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="common/dev.js"></script>
+    <script>
+        System.import('/build/src/main.js').then(result => {
+            squared = result;
+            System.import('/build/src/lib/main.js').then(result => {
+                squared.lib = result;
+                System.import('/build/src/base/main.js').then(result => {
+                    squared.base = result;
+                    System.import('/build/android-framework/src/main.js').then(result => {
+                        android = result.default;
+                        squared.setFramework(android);
+                        Promise.all([
+                            System.import('/build/android-widget/coordinator/main.js'),
+                            System.import('/build/android-widget/floatingactionbutton/main.js'),
+                            System.import('/build/android-widget/menu/main.js'),
+                            System.import('/build/android-widget/drawer/main.js')
+                        ]).then(() => {
+                            squared.parseDocument('squared_ui').then(function() {
+                                squared.close();
+
+                                var views = squared.system.writeLayoutAllXml();
+                                document.getElementById('output').innerHTML = stringify(views).replace(/</g, '&lt;');
+
+                                var resource = squared.system.writeResourceAllXml();
+                                document.getElementById('resource').innerHTML = stringify(resource).replace(/</g, '&lt;');
+                            });
+                        });
+                    });
+                });
+            });
+        });
+        function toggleAside() {
+            var element = document.getElementById('drawer_aside');
+            element.style.display = (element.style.display === 'block' ? 'none' : 'block');
+        }
+    </script>
+</head>
+<body>
+    <!-- START: DEMO -->
+    <div id="squared_ui">
+        <div id="drawer_demo" data-use="android.widget.drawer" onclick="toggleAside();">
+            <div data-use="android.widget.coordinator" data-android-include="drawer_content" data-android-include-end="true">
+                <div style="padding: 0 20px 20px 20px;">
+                    <h3>title</h3>
+                    <div class="content">
+                        content content content content content content content content content content
+                        content content content content content content content content content content
+                        content content content content content content content content content content
+                        content content content content content content content content content content
+                        content content content content content content content content content content
+                        content content content content content content content content content content
+                        content content content content content content content content content content
+                        content content content content content content content content content content
+                    </div>
+                    <input id="fab_menu" type="button" data-use="android.widget.floatingactionbutton" />
+                    <br /><br /><br /><br /><br /><br />
+                </div>
+                <button id="fab_left" data-use="android.widget.floatingactionbutton"></button>
+            </div>
+            <aside id="drawer_aside">
+                <div>
+                    <img src="../demos/images/icons8-chrome.png" />
+                    <label>Chrome</label>
+                </div>
+                <div>
+                    <img src="../demos/images/icons8-google-docs.png" />
+                    <label>Docs</label>
+                </div>
+                <div>
+                    <img src="../demos/images/icons8-google-news.png" />
+                    <label>News</label>
+                </div>
+                <div>
+                    <img src="../demos/images/icons8-google-play.png" />
+                    <label>Play</label>
+                </div>
+                <div>
+                    <img src="../demos/images/icons8-google-plus.png" />
+                    <label>Plus</label>
+                </div>
+            </aside>
+        </div>
+    </div>
+    <!-- END: DEMO -->
+
+    <div>
+        <div class="output">
+            <pre id="output"></pre>
+            <div>
+                <button onclick="copy('output');">Copy</button>
+                <button onclick="squared.system.writeLayoutAllXml(true);">Save</button>
+                <button onclick="squared.saveAllToDisk();">Save All</button>
+            </div>
+        </div>
+        <div class="output">
+            <pre id="resource"></pre>
+            <div>
+                <button onclick="copy('resource');">Copy</button>
+                <button onclick="squared.system.writeResourceAllXml(true);">Save</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

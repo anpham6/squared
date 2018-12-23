@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Language" content="en">
+    <title>https://github.com/anpham6/squared</title>
+    <link rel="stylesheet" type="text/css" href="common/dev.css">
+    <style>
+        .flex-container {
+            list-style: none;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            margin: 0 0 8px 0;
+            padding: 4px;
+            overflow: hidden;
+            display: flex;
+        }
+        .item {
+            width: 50px;
+            font-size: 12px;
+            color: white;
+            margin: 2px;
+            padding: 4px 6px 6px 8px;
+            background-color: darkblue;
+            border: 1px solid yellowgreen;
+        }
+        .flex-item {
+            width: 30px;
+            font-size: 12px;
+            color: white;
+            text-align: center;
+            margin: 2px;
+            padding: 6px 0;
+            background-color: darkblue;
+            border: 1px solid yellowgreen;
+            border-radius: 3px;
+        }
+        .initial {
+            flex: initial;
+        }
+        .auto {
+            flex: auto;
+        }
+        .none {
+            flex: none;
+        }
+        .flex-start {
+            align-self: flex-start;
+        }
+        .flex-end {
+            align-self: flex-end;
+        }
+        .center {
+            align-self: center;
+        }
+        .baseline {
+            align-self: baseline;
+        }
+        .stretch {
+            align-self: stretch;
+        }
+        .flex-start {
+            justify-content: flex-start;
+        }
+        .flex-end {
+            justify-content: flex-end;
+        }
+        .center {
+            justify-content: center;
+        }
+        .space-between {
+            justify-content: space-between;
+        }
+        .space-around {
+            justify-content: space-around;
+        }
+        .space-evenly {
+            justify-content: space-evenly;
+        }
+    </style>
+    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="common/dev.js"></script>
+    <script>
+        System.import('/build/src/main.js').then(result => {
+            squared = result;
+            System.import('/build/src/lib/main.js').then(result => {
+                squared.lib = result;
+                System.import('/build/src/base/main.js').then(result => {
+                    squared.base = result;
+                    System.import('/build/android-framework/src/main.js').then(result => {
+                        android = result.default;
+                        squared.setFramework(android);
+                        squared.parseDocument('squared_ui');
+                        squared.close();
+
+                        var views = squared.system.writeLayoutAllXml();
+                        document.getElementById('output').innerHTML = stringify(views).replace(/</g, '&lt;');
+
+                        var resource = squared.system.writeResourceAllXml();
+                        document.getElementById('resource').innerHTML = stringify(resource).replace(/</g, '&lt;');
+                    });
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <!-- START: DEMO -->
+    <div id="squared_ui" style="width: 400px;">
+        <ul class="flex-container">
+            <li class="item auto" style="flex-grow: 0; width: 75px;">auto</li>
+            <li class="item auto" style="flex: 4; height: 50%;">auto</li>
+            <li class="item auto">auto</li>
+        </ul>
+        <ul class="flex-container">
+            <li class="item auto" style="flex: 4; height: 100px;">auto</li>
+            <li class="item initial" style="flex: 4; height: 50%;">initial</li>
+            <li class="item initial" style="flex: 4;">initial</li>
+        </ul>
+        <ul class="flex-container">
+            <li class="item auto" style="flex: 4; width: 100px;">auto</li>
+            <li class="item auto" style="flex: 2; width: 10%;">auto</li>
+            <li class="item none">none</li>
+        </ul>
+        <ul class="flex-container">
+            <li class="item initial" style="flex: 4; width: 100px;">initial</li>
+            <li class="item none" style="flex: 2; width: 10%;">none</li>
+            <li class="item none">none</li>
+        </ul>
+        <ul class="flex-container">
+            <li class="item" style="flex: 4; width: 100px;">4</li>
+            <li class="item" style="flex: 2; width: 10%;">2</li>
+            <li class="item" style="flex: 1;">1</li>
+        </ul>
+        <ul class="flex-container" style="height: 150px; overflow: hidden;">
+            <li class="flex-item flex-start" style="height: 50%;">1</li>
+            <li class="flex-item flex-end">2</li>
+            <li class="flex-item center">3</li>
+            <li class="flex-item baseline">4</li>
+            <li class="flex-item stretch">5</li>
+        </ul>
+        <ul class="flex-container flex-start">
+            <li class="flex-item">1</li>
+            <li class="flex-item">2</li>
+            <li class="flex-item">3</li>
+            <li class="flex-item">4</li>
+            <li class="flex-item">5</li>
+        </ul>
+        <ul class="flex-container flex-end">
+            <li class="flex-item">1</li>
+            <li class="flex-item">2</li>
+            <li class="flex-item">3</li>
+            <li class="flex-item">4</li>
+            <li class="flex-item">5</li>
+        </ul>
+        <ul class="flex-container center">
+            <li class="flex-item">1</li>
+            <li class="flex-item">2</li>
+            <li class="flex-item">3</li>
+            <li class="flex-item">4</li>
+            <li class="flex-item">5</li>
+        </ul>
+        <ul class="flex-container space-between">
+            <li class="flex-item">1</li>
+            <li class="flex-item">2</li>
+            <li class="flex-item">3</li>
+            <li class="flex-item">4</li>
+            <li class="flex-item">5</li>
+        </ul>
+        <ul class="flex-container space-around">
+            <li class="flex-item">1</li>
+            <li class="flex-item">2</li>
+            <li class="flex-item">3</li>
+            <li class="flex-item">4</li>
+            <li class="flex-item">5</li>
+        </ul>
+        <ul class="flex-container space-evenly">
+            <li class="flex-item">1</li>
+            <li class="flex-item">2</li>
+            <li class="flex-item">3</li>
+            <li class="flex-item">4</li>
+            <li class="flex-item">5</li>
+        </ul>
+    </div>
+    <!-- END: DEMO -->
+
+    <div>
+        <div class="output">
+            <pre id="output"></pre>
+            <div>
+                <button onclick="copy('output');">Copy</button>
+                <button onclick="squared.system.writeLayoutAllXml(true);">Save</button>
+                <button onclick="squared.saveAllToDisk();">Save All</button>
+            </div>
+        </div>
+        <div class="output">
+            <pre id="resource"></pre>
+            <div>
+                <button onclick="copy('resource');">Copy</button>
+                <button onclick="squared.system.writeResourceAllXml(true);">Save</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

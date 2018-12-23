@@ -1,0 +1,17 @@
+.idea/
+.vscode/
+android-framework/
+android-widget/
+build/
+global/
+html/demos/android/
+html/demos-dev/
+node_modules/
+src/
+temp/
+.babelrc
+*.code-workspace
+package-lock.json
+rollup.config.js
+tsconfig.json
+tslint.json

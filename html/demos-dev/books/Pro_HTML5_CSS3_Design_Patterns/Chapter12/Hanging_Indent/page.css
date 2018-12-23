@@ -1,0 +1,6 @@
+p                 { padding:10px 0; padding-right:10px; background-color:gold; 
+                    border-left:6px groove black; border-right:6px groove black; 
+                    border-top:6px ridge black; border-bottom:6px ridge black;  }
+
+.hanging-indent  { text-indent:-50px; padding-left:50px; }
+.hanging-indent2 { text-indent:-50px; padding-left:70px; border-style: double; }

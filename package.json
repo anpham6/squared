@@ -1,0 +1,68 @@
+{
+  "name": "squared",
+  "version": "0.1.0",
+  "description": "Converts and optimizes HTML pages with JavaScript into the various standard Android layouts in XML with potential support for any UI framework. Compatible with Chrome and Safari.",
+  "main": "dist/squared.min.js",
+  "scripts": {
+    "express": "node app.js",
+    "dev": "tsc -w",
+    "prod": "npm run clean && tslint -c tslint.json '**/*.ts' && tsc --inlineSourceMap false && rollup -c rollup.config.js && cd ./android-framework && rollup -c rollup.config.js && cd ../android-widget && rollup -c rollup.config.js",
+    "clean": "rimraf build/* && rimraf dist/* && rimraf temp/*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anpham6/squared.git"
+  },
+  "keywords": [
+    "Android",
+    "Chrome",
+    "HTML",
+    "XML",
+    "CSS",
+    "CSS Grid",
+    "SVG",
+    "Flexbox",
+    "androme",
+    "iOS",
+    "iPhone",
+    "Safari",
+    "Flutter",
+    "Xamarin",
+    "Xamarin Forms",
+    "TypeScript",
+    "Javascript",
+    "Firefox",
+    "Edge"
+  ],
+  "author": {
+    "name": "An Pham",
+    "email": "anpham6@gmail.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/anpham6/squared/issues"
+  },
+  "homepage": "https://github.com/anpham6/squared#readme",
+  "dependencies": {
+    "archiver": "^3.0.0",
+    "body-parser": "^1.18.3",
+    "express": "^4.16.4",
+    "mkdirp": "^0.5.1",
+    "request": "^2.88.0",
+    "uuid": "^3.3.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.2.2",
+    "@babel/plugin-transform-for-of": "^7.2.0",
+    "@babel/preset-env": "^7.2.3",
+    "rimraf": "^2.6.2",
+    "rollup": "^0.68.1",
+    "rollup-plugin-babel": "^4.1.0",
+    "rollup-plugin-terser": "^3.0.0",
+    "systemjs": "^0.21.5",
+    "systemjs-plugin-babel": "0.0.25",
+    "terser": "^3.13.1",
+    "tslint": "^5.12.0",
+    "typescript": "^3.2.2"
+  }
+}

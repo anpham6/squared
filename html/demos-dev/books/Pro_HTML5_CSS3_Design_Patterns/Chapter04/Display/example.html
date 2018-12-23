@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><title>Display</title>
+ <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+ <link rel="stylesheet" href="site.css"   media="all"    type="text/css" />
+ <link rel="stylesheet" href="page.css"   media="all"    type="text/css" />
+ <script src="/node_modules/systemjs/dist/system.js"></script>
+ <script src="../../../squared.js"></script>
+</head>
+
+<body>
+
+ <h1>Display</h1>
+
+ <code>display:inline</code> 
+ <p>p</p> <p>p</p> <p>p</p>
+ <ol> <li>li</li> <li>li</li> <li>li</li> </ol>
+ <table><tr><td>td</td><td>td</td></tr><tr><td>td</td><td>td</td></tr></table> 
+
+ <strong>strong <br /><code>display:inline-block</code></strong>  <br /><br />
+ 
+ <em>em <code>display:block</code></em> <em>em</em> <br />
+ 
+ <div class="ul"><dfn>dfn <code>display:list-item</code></dfn><dfn>dfn</dfn></div> 
+
+ <br /><img src="star.gif" alt="star" /> <code>display:none</code>
+ 
+ 
+ 
+
+ <!-- The following code does not work in Internet Explorer 7 and earlier versions -->
+ <div class="table">div display:table</div>
+ <div class="row"  >div display:table-row</div>
+ <div class="cell" >div display:table-cell</div>
+
+ <span class="inline-table">
+  <span class="row">
+    <span class="cell">span</span>
+    <span class="cell">span <code>display:inline-table</code></span></span>
+  <span class="row">
+    <span class="cell">span</span>
+    <span class="cell">span</span></span></span> 
+
+
+ <div class="table">
+  <div class="row">
+    <div class="cell">div <code>display:table</code></div>
+    <div class="cell">div</div></div>
+  <div class="row">
+    <div class="cell">div</div>
+    <div class="cell">div</div></div></div> 
+
+ 
+</body>
+</html>

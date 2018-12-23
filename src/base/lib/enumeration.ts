@@ -1,0 +1,82 @@
+export const enum APP_FRAMEWORK {
+    UNIVERSAL = 0,
+    ANDROID = 2
+}
+
+export const enum NODE_ALIGNMENT {
+    NONE = 0,
+    UNKNOWN = 2,
+    AUTO_LAYOUT = 4,
+    HORIZONTAL = 8,
+    VERTICAL = 16,
+    ABSOLUTE = 32,
+    FLOAT = 64,
+    SEGMENTED = 128,
+    COLUMN = 256,
+    RIGHT = 512,
+    NOWRAP = 1024,
+    SINGLE = 2048,
+    MULTILINE = 4096,
+    EXTENDABLE = 8192
+}
+
+export const enum CSS_STANDARD {
+    NONE = 0,
+    UNIT = 2,
+    AUTO = 4,
+    LEFT = 8,
+    BASELINE = 16,
+    PERCENT = 32,
+    ZERO = 64
+}
+
+export const enum BOX_STANDARD {
+    MARGIN_TOP = 2,
+    MARGIN_RIGHT = 4,
+    MARGIN_BOTTOM = 8,
+    MARGIN_LEFT = 16,
+    PADDING_TOP = 32,
+    PADDING_RIGHT = 64,
+    PADDING_BOTTOM = 128,
+    PADDING_LEFT = 256,
+    MARGIN = 2 | 4 | 8 | 16,
+    MARGIN_VERTICAL = 2 | 8,
+    MARGIN_HORIZONTAL = 4 | 16,
+    PADDING = 32 | 64 | 128 | 256,
+    PADDING_VERTICAL = 32 | 128,
+    PADDING_HORIZONTAL = 64 | 256
+}
+
+export enum APP_SECTION {
+    NONE = 0,
+    DOM_TRAVERSE = 2,
+    EXTENSION = 4,
+    RENDER = 8,
+    ALL = 14
+}
+
+export enum NODE_RESOURCE {
+    NONE = 0,
+    BOX_STYLE = 2,
+    BOX_SPACING = 4,
+    FONT_STYLE = 8,
+    VALUE_STRING = 16,
+    IMAGE_SOURCE = 32,
+    ASSET = 8 | 16 | 32,
+    ALL = 126
+}
+
+export enum NODE_PROCEDURE {
+    NONE = 0,
+    CONSTRAINT = 2,
+    LAYOUT = 4,
+    ALIGNMENT = 8,
+    AUTOFIT = 16,
+    OPTIMIZATION = 32,
+    CUSTOMIZATION = 64,
+    ACCESSIBILITY = 128,
+    LOCALIZATION = 256,
+    POSITIONAL = CONSTRAINT | LAYOUT | ALIGNMENT | OPTIMIZATION,
+    NONPOSITIONAL = AUTOFIT | CUSTOMIZATION | ACCESSIBILITY | LOCALIZATION,
+    ALL = 510
+}

@@ -1,0 +1,16 @@
+select { width:275px; margin:15px 0; }
+p      { margin-left:0px; margin-top:0; border:1px solid black; padding:10px; 
+         width:200px; height:145px; }
+
+*.nowrap       { white-space:nowrap; }
+*.big          { font-size:50px; }
+
+*.ex1  { overflow:visible; }
+*.ex2  { overflow:hidden;  }
+*.ex3  { overflow:scroll;  }
+*.ex4  { overflow:auto;    }
+
+#ex1  { position:absolute; top:10px;  left:20px; }
+#ex2  { position:absolute; top:10px;  left:420px; }
+#ex3  { position:absolute; top:260px; left:20px; }
+#ex4  { position:absolute; top:260px; left:420px; }

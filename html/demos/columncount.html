@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Language" content="en">
+    <title>https://github.com/anpham6/squared</title>
+    <style type="text/css">
+        body {
+            font-family: Tahoma, Arial, sans-serif;
+            padding: 10px;
+            margin: 0;
+            background-color: #eee;
+        }
+        body > div {
+            vertical-align: top;
+            display: inline-block;
+        }
+        button {
+            font-size: 10px;
+            margin-top: 6px;
+        }
+        .output {
+            width: 400px;
+            overflow: auto;
+            float: left;
+        }
+        .output pre {
+            height: 600px;
+            font-size: 10px;
+            margin: 0 0 0 15px;
+            padding: 10px;
+            background-color: floralwhite;
+            border: 1px solid #ccc;
+            overflow: auto;
+        }
+        .output div {
+            text-align: right;
+        }
+        #squared_ui {
+            column-count: 4;
+            column-gap: 3em;
+        }
+        img {
+            width: 50px;
+            height: 50px; 
+            text-align: center;
+            display: block;
+        }
+        p {
+            font-size: 11px;
+            text-align: center;
+            width: 50px;
+        }
+    </style>
+    <script src="common/prod.js"></script>
+    <script src="../dist/squared.min.js"></script>
+    <script src="../dist/squared.lib.min.js"></script>
+    <script src="../dist/squared.base.min.js"></script>
+    <script src="../dist/android.framework.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            squared.setFramework(android);
+            squared.parseDocument('squared_ui').then(function() {
+                squared.close();
+
+                var views = squared.system.writeLayoutAllXml();
+                document.getElementById('output').innerHTML = stringify(views).replace(/</g, '&lt;');
+
+                var resource = squared.system.writeResourceAllXml();
+                document.getElementById('resource').innerHTML = stringify(resource).replace(/</g, '&lt;');
+            });
+        });
+    </script>
+</head>
+<body>
+    <!-- START: DEMO -->
+    <div id="squared_ui">
+        <img src="images/icons8-google-docs.png" />
+        <p>Nunc a vulputate turpis. Duis ornare lacus magna, vitae tincidunt leo elementum et.</p>
+        <img src="images/icons8-google-news.png" />
+        <p>Nulla vitae magna sed sapien ultricies dapibus a non libero. Fusce lobortis adipiscing purus vel rhoncus.</p>
+        <img src="images/icons8-google-play.png" />
+        <p>Proin blandit, tortor quis tristique porta, nisl est rhoncus turpis, non interdum nibh ligula sit amet dolor.</p>
+        <img src="images/icons8-google-plus.png" />
+        <p>Sed sagittis aliquam nulla vel viverra. Sed at augue eros. Nam tincidunt mi eu malesuada molestie.</p>
+    </div>
+    <!-- END: DEMO -->
+
+    <div>
+        <div class="output">
+            <pre id="output"></pre>
+            <div>
+                <button onclick="copy('output');">Copy</button>
+                <button onclick="squared.system.writeLayoutAllXml(true);">Save</button>
+                <button onclick="squared.saveAllToDisk();">Save All</button>
+            </div>
+        </div>
+        <div class="output">
+            <pre id="resource"></pre>
+            <div>
+                <button onclick="copy('resource');">Copy</button>
+                <button onclick="squared.system.writeResourceAllXml(true);">Save</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

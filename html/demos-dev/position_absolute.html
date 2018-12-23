@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Language" content="en">
+    <title>https://github.com/anpham6/squared</title>
+    <link rel="stylesheet" type="text/css" href="common/dev.css">
+    <style>
+        #squared_ui {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            border: 1px solid #000;
+        }
+        span {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            line-height: 80px;
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            background-color: darkblue;
+            border: 1px solid yellowgreen;
+            border-radius: 8px;
+        }
+    </style>
+    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="common/dev.js"></script>
+    <script>
+        System.import('/build/src/main.js').then(result => {
+            squared = result;
+            System.import('/build/src/lib/main.js').then(result => {
+                squared.lib = result;
+                System.import('/build/src/base/main.js').then(result => {
+                    squared.base = result;
+                    System.import('/build/android-framework/src/main.js').then(result => {
+                        android = result.default;
+                        squared.setFramework(android);
+                        squared.configure('android.constraint.guideline', { circlePosition: true });
+                        addView();
+                        closeDocument();
+                    });
+                });
+            });
+        });
+        function addView() {
+            if (squared.ready()) {
+                var elements = document.getElementsByTagName('span');
+                for (var i = 0; i < elements.length; i++) {
+                    var span = elements[i];
+                    span.style.top = `${320 * Math.random()}px`;
+                    span.style.left = `${320 * Math.random()}px`;
+                }
+                squared.parseDocument('squared_ui');
+            }
+        }
+        function closeDocument() {
+            squared.close();
+
+            var views = squared.system.writeLayoutAllXml();
+            document.getElementById('output').innerHTML = stringify(views).replace(/</g, '&lt;');
+
+            var resource = squared.system.writeResourceAllXml();
+            document.getElementById('resource').innerHTML = stringify(resource).replace(/</g, '&lt;');
+        }
+        function resetDocument() {
+            squared.reset();
+            document.getElementById('output').innerHTML = '';
+            document.getElementById('resource').innerHTML = '';
+        }
+    </script>
+</head>
+<body>
+    <!-- START: DEMO -->
+    <div id="squared_ui" data-use="android.constraint.guideline">
+        <span>1</span>
+        <span>2</span>
+        <span>3</span>
+        <span>4</span>
+        <span>5</span>
+    </div>
+    <!-- END: DEMO -->
+
+    <div>
+        <div class="output">
+            <pre id="output"></pre>
+            <div>
+                <button onclick="addView();">Add View (1)</button>
+                <button onclick="closeDocument();">Close (2)</button>
+                <button onclick="closeDocument(); squared.saveAllToDisk();">Save All (3)</button>
+                <button onclick="resetDocument();">Reset (4)</button>
+                &nbsp;&nbsp;
+                <button onclick="copy('output');">Copy</button>
+            </div>
+        </div>
+        <div class="output">
+            <pre id="resource"></pre>
+            <div>
+                <button onclick="copy('resource');">Copy</button>
+                <button onclick="squared.system.writeResourceAllXml(true);">Save</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
