@@ -19,7 +19,7 @@
     "global/**/*",
     "android-framework/src/**/*",
     "android-widget/**/*",
-    "src/**/*",
+    "src/**/*"
   ],
   "exclude": [
     "node_modules"

@@ -1,4 +1,4 @@
-# Squared
+# squared
 
 This program can convert moderately complex HTML pages into the standard XML layouts for Android. HTML is the most popular and versatile way to design user interfaces and can be used to generate the UI for any platform based on XML.
 
@@ -32,9 +32,8 @@ GitHub
 * Open Browser: http://localhost:3000/demos/index.html
 ```javascript
 <script src="/dist/squared.min.js"></script>
-<script src="/dist/squared.lib.min.js"></script>
-<script src="/dist/squared.svg.min.js"></script> /* optional */
 <script src="/dist/squared.base.min.js"></script>
+<script src="/dist/squared.svg.min.js"></script> /* optional */
 <script src="/dist/android.framework.min.js"></script>
 <script>
     // optional
@@ -58,14 +57,13 @@ GitHub
 </script>
 ```
 
-Library files are in the /dist folder. A minimum of *four* files are required to run Squared.
+Library files are in the /dist folder. A minimum of *three* files are required to run Squared.
 
 1. squared
-2. squared-lib
+2. squared-base
 3. squared-svg - *optional*
-4. squared-base
-5. framework (e.g. android)
-6. extensions (e.g. android.widget) - *optional*
+4. framework (e.g. android)
+5. extensions (e.g. android.widget) - *optional*
 
 There are babel minified versions for production (ES5) and non-babel versions for development (ES6). The primary function "parseDocument" can be called on multiple elements and multiple times per session. The application will continuously and progressively build into a single entity with combined shared resources.
 

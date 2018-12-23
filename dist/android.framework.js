@@ -1579,7 +1579,7 @@ var android = (function () {
                 }
             }
             clone(id, attributes = false, position = false) {
-                const node = new View(id || this.id, this.baseElement);
+                const node = new View(id || this.id, this.element);
                 Object.assign(node.localSettings, this.localSettings);
                 node.tagName = this.tagName;
                 if (id) {
@@ -1654,7 +1654,7 @@ var android = (function () {
                     this.controlId = stripId(this.android('id'));
                 }
                 if (this.controlId === '') {
-                    const element = this.baseElement;
+                    const element = this.element;
                     let name = '';
                     if (element) {
                         name = validateString(element.id || element.name);
@@ -2064,7 +2064,7 @@ var android = (function () {
                         }
                     }
                     else if (this.is(CONTAINER_NODE.LINE)) {
-                        if (this.element.tagName !== 'HR' && layoutHeight > 0 && this.toInt('height', true) > 0) {
+                        if (this.tagName !== 'HR' && layoutHeight > 0 && this.toInt('height', true) > 0) {
                             this.android('layout_height', $util$2.formatPX(layoutHeight + this.borderTopWidth + this.borderBottomWidth));
                         }
                     }
@@ -2306,7 +2306,7 @@ var android = (function () {
                         node.anchor('top', 'true');
                     }
                 }
-                else if (node.baseElement && node.length === 0 || node.layoutHorizontal && node.renderChildren.every(item => item.baseline)) {
+                else if (node.element && node.length === 0 || node.layoutHorizontal && node.renderChildren.every(item => item.baseline)) {
                     node.anchor('baseline', baseline.documentId);
                 }
             }
@@ -2395,9 +2395,9 @@ var android = (function () {
         }
     }
     function isTargeted(node, parent) {
-        if (parent.baseElement && node.dataset.target) {
+        if (parent.element && node.dataset.target) {
             const element = document.getElementById(node.dataset.target);
-            return !!element && element !== parent.baseElement;
+            return element !== null && element !== parent.element;
         }
         return false;
     }
@@ -2532,18 +2532,16 @@ var android = (function () {
                     if (node.dir === 'rtl') {
                         node.android(node.length ? 'layoutDirection' : 'textDirection', 'rtl');
                     }
-                    if (node.baseElement) {
-                        const dataset = $dom$2.getDataSet(node.baseElement, 'android');
-                        for (const name in dataset) {
-                            if (/^attr[A-Z]/.test(name)) {
-                                const obj = $util$3.capitalize(name.substring(4), false);
-                                dataset[name].split(';').forEach(values => {
-                                    const [key, value] = values.split('::');
-                                    if (key && value) {
-                                        node.attr(obj, key, value);
-                                    }
-                                });
-                            }
+                    const dataset = $dom$2.getDataSet(node.element, 'android');
+                    for (const name in dataset) {
+                        if (/^attr[A-Z]/.test(name)) {
+                            const obj = $util$3.capitalize(name.substring(4), false);
+                            dataset[name].split(';').forEach(values => {
+                                const [key, value] = values.split('::');
+                                if (key && value) {
+                                    node.attr(obj, key, value);
+                                }
+                            });
                         }
                     }
                     const indent = $util$3.repeat(node.renderDepth + 1);
@@ -2580,8 +2578,9 @@ var android = (function () {
                         next = true;
                     }
                     else if (this.userSettings.collapseUnattributedElements &&
+                        node.element &&
                         node.positionStatic &&
-                        node.baseElement && !$util$3.hasValue(node.baseElement.id) &&
+                        !$util$3.hasValue(node.element.id) &&
                         !$util$3.hasValue(node.dataset.use) &&
                         !$util$3.hasValue(node.dataset.target) &&
                         !node.hasWidth &&
@@ -2609,7 +2608,7 @@ var android = (function () {
                 }
                 else {
                     layout.init();
-                    if (node.baseElement && $dom$2.hasLineBreak(node.baseElement, true)) {
+                    if ($dom$2.hasLineBreak(node.element, true)) {
                         layout.setType(CONTAINER_NODE.LINEAR, 16 /* VERTICAL */, 2 /* UNKNOWN */);
                     }
                     else if (this.checkConstraintFloat(layout)) {
@@ -2670,6 +2669,7 @@ var android = (function () {
             }
             else if (!node.documentRoot) {
                 if (this.userSettings.collapseUnattributedElements &&
+                    node.element &&
                     node.bounds.height === 0 &&
                     !visible.background &&
                     !$util$3.hasValue(node.element.id) &&
@@ -2959,7 +2959,7 @@ var android = (function () {
             const controlName = View.getControlName(layout.containerType);
             node.setControlType(controlName, layout.containerType);
             const target = $util$3.hasValue(node.dataset.target) && !$util$3.hasValue(node.dataset.use);
-            switch (node.element.tagName) {
+            switch (node.element ? node.element.tagName : '') {
                 case 'IMG': {
                     if (!node.hasBit('excludeResource', $enum$1.NODE_RESOURCE.IMAGE_SOURCE)) {
                         const element = node.element;
@@ -3018,7 +3018,7 @@ var android = (function () {
                         if (!node.pageFlow && node.left < 0 || node.top < 0) {
                             const absoluteParent = node.absoluteParent;
                             if (absoluteParent && absoluteParent.css('overflow') === 'hidden') {
-                                const container = new View(this.cache.nextId, $dom$2.createElement(node.actualParent ? node.actualParent.baseElement : null), this.afterInsertNode);
+                                const container = new View(this.cache.nextId, $dom$2.createElement(node.actualParent ? node.actualParent.element : null), this.afterInsertNode);
                                 container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                                 container.inherit(node, 'base');
                                 container.exclude({
@@ -3415,7 +3415,7 @@ var android = (function () {
             return group;
         }
         createNodeWrapper(node, parent, controlName, containerType) {
-            const container = new View(this.application.nextId, $dom$2.createElement(node.actualParent ? node.actualParent.baseElement : null, node.block), this.application.controllerHandler.afterInsertNode);
+            const container = new View(this.application.nextId, $dom$2.createElement(node.actualParent ? node.actualParent.element : null, node.block), this.application.controllerHandler.afterInsertNode);
             if (node.documentRoot) {
                 container.documentRoot = true;
                 node.documentRoot = false;
@@ -3489,7 +3489,7 @@ var android = (function () {
                     const item = segment[i];
                     const previous = segment[i - 1];
                     let dimension = item.bounds;
-                    if (item.inlineText && !item.hasWidth) {
+                    if (item.element && !item.hasWidth && item.inlineText) {
                         const bounds = $dom$2.getRangeClientRect(item.element);
                         if (bounds.multiLine || bounds.width < item.box.width) {
                             dimension = bounds;
@@ -3516,7 +3516,7 @@ var android = (function () {
                             alignSibling = '';
                         }
                         const viewGroup = item.groupParent && !item.hasAlign(128 /* SEGMENTED */);
-                        siblings = !viewGroup && previous.inlineVertical && item.inlineVertical ? $dom$2.getElementsBetween(previous.element, item.element, true) : [];
+                        siblings = !viewGroup && item.element && item.inlineVertical && previous.inlineVertical ? $dom$2.getElementsBetween(previous.element, item.element, true) : [];
                         const startNewRow = (() => {
                             if (item.textElement) {
                                 let connected = false;
@@ -3935,8 +3935,8 @@ var android = (function () {
                         const nodes = [];
                         if (aboveEnd) {
                             nodes.push(aboveEnd);
-                            if (chain.baseElement) {
-                                nodes.push(...$util$3.flatMap($dom$2.getElementsBetween(aboveEnd.baseElement, chain.baseElement), element => $dom$2.getElementAsNode(element)));
+                            if (chain.element) {
+                                nodes.push(...$util$3.flatMap($dom$2.getElementsBetween(aboveEnd.element, chain.element), element => $dom$2.getElementAsNode(element)));
                             }
                         }
                         else {
@@ -4402,9 +4402,9 @@ var android = (function () {
         afterBaseLayout() {
             for (const node of this.application.processing.cache.elements) {
                 if (!node.hasBit('excludeProcedure', $enum$2.NODE_PROCEDURE.ACCESSIBILITY)) {
-                    const element = node.element;
                     switch (node.controlName) {
                         case CONTAINER_ANDROID.EDIT:
+                            const element = node.element;
                             if (!node.companion) {
                                 [$dom$3.getPreviousElementSibling(element), $dom$3.getNextElementSibling(element)].some((sibling) => {
                                     if (sibling) {
@@ -4428,7 +4428,7 @@ var android = (function () {
                         case CONTAINER_ANDROID.CHECKBOX:
                         case CONTAINER_ANDROID.RADIO:
                         case CONTAINER_ANDROID.BUTTON:
-                            if (element.disabled) {
+                            if (node.element.disabled) {
                                 node.android('focusable', 'false');
                             }
                             break;
@@ -4602,7 +4602,7 @@ var android = (function () {
                 const alignItems = node.has('alignSelf') ? node.css('alignSelf') : mainData.alignItems;
                 const justifyItems = node.has('justifySelf') ? node.css('justifySelf') : mainData.justifyItems;
                 if (/(start|end|center|baseline)/.test(alignItems) || /(start|end|center|baseline|left|right)/.test(justifyItems)) {
-                    container = new View(this.application.nextId, $dom$4.createElement(node.actualParent ? node.actualParent.baseElement : null), this.application.controllerHandler.afterInsertNode);
+                    container = new View(this.application.nextId, $dom$4.createElement(node.actualParent ? node.actualParent.element : null), this.application.controllerHandler.afterInsertNode);
                     container.tagName = node.tagName;
                     container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                     container.inherit(node, 'initial', 'base');
@@ -5333,7 +5333,7 @@ var android = (function () {
                         else {
                             options.android.text = mainData.ordinal;
                         }
-                        const companion = new View(this.application.nextId, $dom$5.createElement(node.actualParent ? node.actualParent.baseElement : null), this.application.controllerHandler.afterInsertNode);
+                        const companion = new View(this.application.nextId, $dom$5.createElement(node.actualParent ? node.actualParent.element : null), this.application.controllerHandler.afterInsertNode);
                         companion.tagName = `${node.tagName}_ORDINAL`;
                         companion.inherit(node, 'textStyle');
                         if (mainData.ordinal !== '' && !/[A-Za-z\d]+\./.test(mainData.ordinal) && companion.toInt('fontSize') > 12) {
@@ -5407,8 +5407,8 @@ var android = (function () {
             let output = '';
             let container;
             const mainData = node.data($const$4.EXT_NAME.SPRITE, 'mainData');
-            if (mainData && mainData.uri && mainData.position && node.baseElement) {
-                container = new View(this.application.nextId, node.baseElement, this.application.controllerHandler.afterInsertNode);
+            if (mainData && mainData.uri && mainData.position) {
+                container = new View(this.application.nextId, node.element, this.application.controllerHandler.afterInsertNode);
                 container.inherit(node, 'initial', 'base', 'styleMap');
                 container.setControlType(CONTAINER_ANDROID.FRAME);
                 container.exclude({
@@ -5464,7 +5464,7 @@ var android = (function () {
             return super.processNode(node, parent);
         }
         postProcedure(node) {
-            const options = Object.assign({}, this.options[node.element.id]);
+            const options = createAttribute(node.element ? this.options[node.element.id] : undefined);
             node.apply(Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')));
         }
     }
@@ -5777,7 +5777,7 @@ var android = (function () {
             return false;
         }
         processNode(node, parent) {
-            const container = new View(this.application.nextId, $dom$6.createElement(node.baseElement, node.block), this.application.controllerHandler.afterInsertNode);
+            const container = new View(this.application.nextId, $dom$6.createElement(node.element, node.block), this.application.controllerHandler.afterInsertNode);
             container.inherit(node, 'initial', 'base');
             container.exclude({
                 procedure: $enum$b.NODE_PROCEDURE.NONPOSITIONAL,
@@ -5978,7 +5978,7 @@ var android = (function () {
                 node.overflow = overflowType;
             }
             const scrollView = overflow.map((value, index) => {
-                const container = new View(this.application.nextId, index === 0 ? node.baseElement : $dom$7.createElement(node.actualParent ? node.actualParent.baseElement : null, node.block), this.application.controllerHandler.afterInsertNode);
+                const container = new View(this.application.nextId, index === 0 ? node.element : $dom$7.createElement(node.actualParent ? node.actualParent.element : null, node.block), this.application.controllerHandler.afterInsertNode);
                 container.setControlType(value, CONTAINER_NODE.BLOCK);
                 if (index === 0) {
                     container.inherit(node, 'initial', 'base', 'styleMap');
@@ -7404,8 +7404,8 @@ var android = (function () {
         afterResources() {
             for (const node of this.application.processing.cache) {
                 if (!node.hasBit('excludeResource', $enum$i.NODE_RESOURCE.VALUE_STRING)) {
-                    if (node.baseElement instanceof HTMLSelectElement) {
-                        const [stringArray, numberArray] = Resource.getOptionArray(node.baseElement);
+                    if (node.element instanceof HTMLSelectElement) {
+                        const [stringArray, numberArray] = Resource.getOptionArray(node.element);
                         const result = [];
                         if (!this.options.numberResourceValue && numberArray && numberArray.length) {
                             result.push(...numberArray);

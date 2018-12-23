@@ -96,29 +96,26 @@
     <script>
         System.import('/build/src/main.js').then(result => {
             squared = result;
-            System.import('/build/src/lib/main.js').then(result => {
-                squared.lib = result;
-                System.import('/build/src/base/main.js').then(result => {
-                    squared.base = result;
-                    System.import('/build/android-framework/src/main.js').then(result => {
-                        android = result.default;
-                        squared.setFramework(android);
-                        squared.system.customize(squared.settings.targetAPI, 'Button', {
-                            android: {
-                                layout_height: 'wrap_content',
-                                minWidth: '35px',
-                                minHeight: '25px'
-                            }
-                        });
-                        squared.parseDocument('squared_ui');
-                        squared.close();
-
-                        var views = squared.system.writeLayoutAllXml();
-                        document.getElementById('output').innerHTML = stringify(views).replace(/</g, '&lt;');
-
-                        var resource = squared.system.writeResourceAllXml();
-                        document.getElementById('resource').innerHTML = stringify(resource).replace(/</g, '&lt;');
+            System.import('/build/src/base/main.js').then(result => {
+                squared.base = result;
+                System.import('/build/android-framework/src/main.js').then(result => {
+                    android = result.default;
+                    squared.setFramework(android);
+                    squared.system.customize(squared.settings.targetAPI, 'Button', {
+                        android: {
+                            layout_height: 'wrap_content',
+                            minWidth: '35px',
+                            minHeight: '25px'
+                        }
                     });
+                    squared.parseDocument('squared_ui');
+                    squared.close();
+
+                    var views = squared.system.writeLayoutAllXml();
+                    document.getElementById('output').innerHTML = stringify(views).replace(/</g, '&lt;');
+
+                    var resource = squared.system.writeResourceAllXml();
+                    document.getElementById('resource').innerHTML = stringify(resource).replace(/</g, '&lt;');
                 });
             });
         });

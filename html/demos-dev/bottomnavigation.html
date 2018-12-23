@@ -48,40 +48,37 @@
     <script>
         System.import('/build/src/main.js').then(result => {
             squared = result;
-            System.import('/build/src/lib/main.js').then(result => {
-                squared.lib = result;
-                System.import('/build/src/base/main.js').then(result => {
-                    squared.base = result;
-                    System.import('/build/android-framework/src/main.js').then(result => {
-                        android = result.default;
-                        squared.setFramework(android);
-                        Promise.all([
-                            System.import('/build/android-widget/menu/main.js'),
-                            System.import('/build/android-widget/bottomnavigation/main.js')
-                        ]).then(() => {
-                            squared.apply('android.widget.bottomnavigation', {
-                            bottomnavigation_demo: {
-                                    android: {
-                                        background: '?android:attr/windowBackground'
-                                    },
-                                    app: {
-                                        itemIconTint: '#000000',
-                                        itemTextColor: '#000000'
-                                    }
+            System.import('/build/src/base/main.js').then(result => {
+                squared.base = result;
+                System.import('/build/android-framework/src/main.js').then(result => {
+                    android = result.default;
+                    squared.setFramework(android);
+                    Promise.all([
+                        System.import('/build/android-widget/menu/main.js'),
+                        System.import('/build/android-widget/bottomnavigation/main.js')
+                    ]).then(() => {
+                        squared.apply('android.widget.bottomnavigation', {
+                        bottomnavigation_demo: {
+                                android: {
+                                    background: '?android:attr/windowBackground'
                                 },
-                                resource: {
-                                    parentTheme: 'Theme.AppCompat.Light.NoActionBar'
+                                app: {
+                                    itemIconTint: '#000000',
+                                    itemTextColor: '#000000'
                                 }
-                            });
-                            squared.parseDocument('squared_ui').then(function() {
-                                squared.close();
+                            },
+                            resource: {
+                                parentTheme: 'Theme.AppCompat.Light.NoActionBar'
+                            }
+                        });
+                        squared.parseDocument('squared_ui').then(function() {
+                            squared.close();
 
-                                var views = squared.system.writeLayoutAllXml();
-                                document.getElementById('output').innerHTML = stringify(views).replace(/</g, '&lt;');
+                            var views = squared.system.writeLayoutAllXml();
+                            document.getElementById('output').innerHTML = stringify(views).replace(/</g, '&lt;');
 
-                                var resource = squared.system.writeResourceAllXml();
-                                document.getElementById('resource').innerHTML = stringify(resource).replace(/</g, '&lt;');
-                            });
+                            var resource = squared.system.writeResourceAllXml();
+                            document.getElementById('resource').innerHTML = stringify(resource).replace(/</g, '&lt;');
                         });
                     });
                 });

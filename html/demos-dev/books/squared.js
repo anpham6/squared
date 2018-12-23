@@ -20,20 +20,14 @@ System.config({
 
 System.import('/build/src/main.js').then(result => {
     squared = result;
-    System.import('/build/src/lib/main.js').then(result => {
-        squared.lib = result;
-        System.import('/build/src/svg/main.js').then(result => {
-            squared.svg = result;
-            System.import('/build/src/base/main.js').then(result => {
-                squared.base = result;
-                System.import('/build/android-framework/src/main.js').then(result => {
-                    android = result.default;
-                    squared.setFramework(android);
-                    squared.parseDocument().then(function() {
-                        squared.close();
-                        squared.saveAllToDisk();
-                    });
-                });
+    System.import('/build/src/base/main.js').then(result => {
+        squared.base = result;
+        System.import('/build/android-framework/src/main.js').then(result => {
+            android = result.default;
+            squared.setFramework(android);
+            squared.parseDocument().then(function() {
+                squared.close();
+                squared.saveAllToDisk();
             });
         });
     });

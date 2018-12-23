@@ -27,9 +27,9 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public repeatDur: number | undefined;
     public repeatCount: number | undefined;
 
-    private _end = 0;
-    private _endMS = 0;
-    private _repeatDurationMS = 0;
+    private readonly _end: number;
+    private readonly _endMS: number;
+    private readonly _repeatDurationMS: number;
 
     constructor(
         public element: SVGAnimateElement,
@@ -75,18 +75,27 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         if (end) {
             if (end.value === 'indefinite') {
                 this._end = -1;
+                this._endMS = 0;
             }
             else {
                 [this._end, this._endMS] = SvgAnimate.convertClockTime(end.value);
             }
         }
+        else {
+            this._end = 0;
+            this._endMS = 0;
+        }
         if (repeatDur) {
             if (repeatDur.value === 'indefinite') {
                 this.repeatDur = -1;
+                this._repeatDurationMS = 0;
             }
             else {
                 [this.repeatDur, this._repeatDurationMS] = SvgAnimate.convertClockTime(repeatDur.value);
             }
+        }
+        else {
+            this._repeatDurationMS = 0;
         }
         if (repeatCount) {
             if (repeatCount.value === 'indefinite') {

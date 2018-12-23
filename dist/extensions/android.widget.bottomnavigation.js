@@ -30,7 +30,7 @@ this.android.widget.bottomnavigation = (function () {
             this.require("android.widget.menu" /* MENU */);
         }
         processNode(node, parent) {
-            const options = $util_android.createAttribute(this.options[node.element.id]);
+            const options = $util_android.createAttribute(node.element ? this.options[node.element.id] : undefined);
             $util.defaultWhenNull(options, 'android', 'background', `?android:attr/windowBackground`);
             for (let i = 5; i < node.length; i++) {
                 const item = node.item(i);
@@ -57,7 +57,7 @@ this.android.widget.bottomnavigation = (function () {
             }
             const menu = $util.optionalAsString(BottomNavigation.findNestedByName(node.element, "android.widget.menu" /* MENU */), 'dataset.layoutName');
             if (menu !== '') {
-                const options = $util_android.createAttribute(this.options[node.element.id]);
+                const options = $util_android.createAttribute(node.element ? this.options[node.element.id] : undefined);
                 $util.defaultWhenNull(options, 'app', 'menu', `@menu/${menu}`);
                 node.app('menu', options.app.menu);
             }

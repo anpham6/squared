@@ -15,7 +15,7 @@ this.android.widget.coordinator = (function () {
     class Coordinator extends squared.base.Extension {
         processNode(node, parent) {
             const controller = this.application.controllerHandler;
-            const options = $util_android.createAttribute(this.options[node.element.id]);
+            const options = $util_android.createAttribute(node.element ? this.options[node.element.id] : undefined);
             node.setControlType($const_android.SUPPORT_ANDROID.COORDINATOR, $enum_android.CONTAINER_NODE.BLOCK);
             node.exclude({ resource: $enum.NODE_RESOURCE.ASSET });
             node.render(parent);
@@ -23,10 +23,10 @@ this.android.widget.coordinator = (function () {
             const element = Coordinator.findNestedByName(node.element, "android.widget.toolbar" /* TOOLBAR */);
             if (element) {
                 const toolbar = $dom.getElementAsNode(element);
-                if (toolbar) {
-                    const ext = this.application.extensionManager.retrieve("android.widget.toolbar" /* TOOLBAR */);
-                    if (ext) {
-                        const toolbarOptions = $util_android.createAttribute(ext.options[toolbar.element.id]);
+                if (toolbar && toolbar.element) {
+                    const extension = this.application.extensionManager.retrieve("android.widget.toolbar" /* TOOLBAR */);
+                    if (extension) {
+                        const toolbarOptions = $util_android.createAttribute(extension.options[toolbar.element.id]);
                         if (toolbarOptions.hasOwnProperty('collapsingToolbar')) {
                             node.android('fitsSystemWindows', 'true');
                         }

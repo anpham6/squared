@@ -15,14 +15,15 @@ this.android.widget.floatingactionbutton = (function () {
     var $util_android = android.lib.util;
     class FloatingActionButton extends squared.base.Extension {
         is(node) {
-            return super.is(node) && (node.element.tagName !== 'INPUT' || ['button', 'file', 'image', 'reset', 'search', 'submit'].includes(node.element.type));
+            const element = node.element;
+            return super.is(node) && (element.tagName !== 'INPUT' || ['button', 'file', 'image', 'reset', 'search', 'submit'].includes(element.type));
         }
         condition(node) {
             return this.included(node.element);
         }
         processNode(node, parent) {
-            const target = $util.hasValue(node.dataset.target);
             const element = node.element;
+            const target = $util.hasValue(node.dataset.target);
             const options = $util_android.createAttribute(this.options[element.id]);
             const backgroundColor = $color.parseRGBA(node.css('backgroundColor'), node.css('opacity'));
             let colorValue = '';

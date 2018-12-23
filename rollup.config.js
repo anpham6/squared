@@ -9,19 +9,9 @@ export default [
         treeshake: false,
         output: {
             file: './dist/squared.js',
-            name: 'squared',
-            format: 'iife',
-            banner: `/* squared ${version}\n   https://github.com/anpham6/squared */\n`
-        }
-    },
-    {
-        input: './build/src/lib/main.js',
-        treeshake: false,
-        output: {
-            file: './dist/squared.lib.js',
-            name: 'squared.lib',
+            name: 'umd',
             format: 'umd',
-            banner: `/* squared.lib ${version}\n   https://github.com/anpham6/squared */\n`
+            banner: `/* squared ${version}\n   https://github.com/anpham6/squared */\n`
         }
     },
     {
@@ -50,24 +40,6 @@ export default [
         output: {
             file: './dist/squared.min.js',
             name: 'squared',
-            format: 'iife'
-        },
-        plugins: [
-            babel(),
-            terser({
-                compress: {
-                    pure_getters: true,
-                    unsafe: true
-                }
-            })
-        ]
-    },
-    {
-        input: './build/src/lib/main.js',
-        treeshake: false,
-        output: {
-            file: './dist/squared.lib.min.js',
-            name: 'squared.lib',
             format: 'umd'
         },
         plugins: [

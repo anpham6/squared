@@ -62,45 +62,46 @@ this.android.widget.toolbar = (function () {
         processNode(node, parent) {
             const application = this.application;
             const controller = application.controllerHandler;
+            const element = node.element;
             const target = $util.hasValue(node.dataset.target);
-            const options = Object.assign({}, this.options[node.element.id]);
+            const options = Object.assign({}, this.options[element.id]);
             const toolbarOptions = $util_android.createAttribute(options.self);
             const appBarOptions = $util_android.createAttribute(options.appBar);
             const collapsingToolbarOptions = $util_android.createAttribute(options.collapsingToolbar);
-            const hasMenu = Toolbar.findNestedByName(node.element, "android.widget.menu" /* MENU */);
+            const hasMenu = Toolbar.findNestedByName(element, "android.widget.menu" /* MENU */);
             const backgroundImage = node.has('backgroundImage');
             const appBarChildren = [];
             const collapsingToolbarChildren = [];
             let depth = target ? 0 : parent.renderDepth + 1;
             let children = node.filter(item => !item.positioned).length;
-            Array.from(node.element.children).forEach((element) => {
-                if (element.tagName === 'IMG') {
-                    if ($util.hasValue(element.dataset.navigationIcon)) {
-                        const result = $Resource.addImageSrcSet(element, $const_android.PREFIX_ANDROID.MENU);
+            Array.from(element.children).forEach((item) => {
+                if (item.tagName === 'IMG') {
+                    if ($util.hasValue(item.dataset.navigationIcon)) {
+                        const result = $Resource.addImageSrcSet(item, $const_android.PREFIX_ANDROID.MENU);
                         if (result !== '') {
                             $util.defaultWhenNull(toolbar, 'app', 'navigationIcon', `@drawable/${result}`);
-                            if ($dom.getStyle(element).display !== 'none') {
+                            if ($dom.getStyle(item).display !== 'none') {
                                 children--;
                             }
                         }
                     }
-                    if ($util.hasValue(element.dataset.collapseIcon)) {
-                        const result = $Resource.addImageSrcSet(element, $const_android.PREFIX_ANDROID.MENU);
+                    if ($util.hasValue(item.dataset.collapseIcon)) {
+                        const result = $Resource.addImageSrcSet(item, $const_android.PREFIX_ANDROID.MENU);
                         if (result !== '') {
                             $util.defaultWhenNull(toolbar, 'app', 'collapseIcon', `@drawable/${result}`);
-                            if ($dom.getStyle(element).display !== 'none') {
+                            if ($dom.getStyle(item).display !== 'none') {
                                 children--;
                             }
                         }
                     }
                 }
-                if ($util.hasValue(element.dataset.target)) {
+                if ($util.hasValue(item.dataset.target)) {
                     children--;
                 }
                 else {
-                    const targetNode = $dom.getElementAsNode(element);
+                    const targetNode = $dom.getElementAsNode(item);
                     if (targetNode) {
-                        switch (element.dataset.targetModule) {
+                        switch (item.dataset.targetModule) {
                             case 'appBar':
                                 appBarChildren.push(targetNode);
                                 children--;
@@ -263,7 +264,7 @@ this.android.widget.toolbar = (function () {
         postProcedure(node) {
             const menu = $util.optionalAsString(Toolbar.findNestedByName(node.element, "android.widget.menu" /* MENU */), 'dataset.layoutName');
             if (menu !== '') {
-                const options = Object.assign({}, this.options[node.element.id]);
+                const options = node.element && this.options[node.element.id] || {};
                 const toolbarOptions = $util_android.createAttribute(options.self);
                 $util.defaultWhenNull(toolbarOptions, 'app', 'menu', `@menu/${menu}`);
                 node.app('menu', toolbarOptions.app.menu);
@@ -289,7 +290,7 @@ this.android.widget.toolbar = (function () {
                         }]
                 };
                 if (themeData.target) {
-                    data['1'] = false;
+                    data['1'] = [];
                 }
                 else {
                     data['items'] = data['1'][0]['items'];
@@ -300,7 +301,7 @@ this.android.widget.toolbar = (function () {
             }
         }
         createPlaceholder(nextId, node, children) {
-            const placeholder = new $View(nextId, $dom.createElement(node.actualParent ? node.actualParent.baseElement : null, node.block), this.application.controllerHandler.afterInsertNode);
+            const placeholder = new $View(nextId, $dom.createElement(node.actualParent ? node.actualParent.element : null, node.block), this.application.controllerHandler.afterInsertNode);
             placeholder.inherit(node, 'base');
             placeholder.exclude({ resource: $enum.NODE_RESOURCE.ALL });
             placeholder.positioned = true;

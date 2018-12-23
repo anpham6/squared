@@ -197,8 +197,9 @@ this.android.widget.menu = (function () {
             return { output, complete: true, next: controlName === VIEW_NAVIGATION.MENU };
         }
         postBaseLayout(node) {
-            if (this.included(node.element)) {
-                Array.from(node.element.querySelectorAll('NAV')).forEach((item) => {
+            const element = node.element;
+            if (this.included(element)) {
+                Array.from(element.querySelectorAll('NAV')).forEach((item) => {
                     const display = $dom.getElementCache(item, 'squaredExternalDisplay');
                     if (display) {
                         item.style.display = display;

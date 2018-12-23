@@ -1,5 +1,12 @@
 import { AppFramework, UserSettings } from './base/types/application';
 
+import Container from './lib/base/container';
+
+import * as color from './lib/color';
+import * as dom from './lib/dom';
+import * as util from './lib/util';
+import * as xml from './lib/xml';
+
 type T = squared.base.Node;
 type Application = squared.base.Application<T>;
 type Extension = squared.base.Extension<T>;
@@ -195,4 +202,14 @@ export function toString() {
     return main ? main.toString() : '';
 }
 
-export { system, settings };
+const lib = {
+    base: {
+        Container
+    },
+    color,
+    dom,
+    util,
+    xml
+};
+
+export { lib, system, settings };
