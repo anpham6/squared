@@ -39,7 +39,7 @@ export interface ControllerSettings {
 
 export interface AppFramework<T extends squared.base.Node> {
     base: {};
-    extension: {};
+    extensions: {};
     lib: {};
     system: FunctionMap<any>;
     create(): AppBase<T>;

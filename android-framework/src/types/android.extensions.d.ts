@@ -1,7 +1,7 @@
 type View = android.base.View;
 
 declare global {
-    namespace android.extension {
+    namespace android.extensions {
         export class Accessibility<T extends View> extends squared.base.extensions.Accessibility<T> {}
         export class CssGrid<T extends View> extends squared.base.extensions.CssGrid<T> {}
         export class External<T extends View> extends squared.base.extensions.External<T> {}

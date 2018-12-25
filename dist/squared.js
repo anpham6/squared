@@ -430,6 +430,15 @@
         }
         return [valid, invalid];
     }
+    function spliceArray(list, item) {
+        for (let i = 0; i < list.length; i++) {
+            if (list[i] === item) {
+                list.splice(i, 1);
+                return true;
+            }
+        }
+        return false;
+    }
     function flatArray(list) {
         let current = list;
         while (current.some(item => Array.isArray(item))) {
@@ -493,6 +502,7 @@
         assignWhenNull: assignWhenNull,
         defaultWhenNull: defaultWhenNull,
         partition: partition,
+        spliceArray: spliceArray,
         flatArray: flatArray,
         flatMap: flatMap,
         sortAsc: sortAsc,
@@ -1237,14 +1247,18 @@
         return false;
     }
     function cssAttribute(element, attr, computed = false) {
-        let value = element.getAttribute(attr) || (!computed && element.parentElement instanceof SVGGElement ? element.parentElement.getAttribute(attr) : '');
-        if (!value) {
+        const attribute = element.attributes.getNamedItem(attr) || (!computed && element.parentElement instanceof SVGGElement ? element.parentElement.attributes.getNamedItem(attr) : '');
+        if (attribute) {
+            return attribute.value.trim();
+        }
+        else {
             const node = getElementAsNode(element);
+            let value = '';
             if (node) {
                 value = node.cssInitial(attr);
             }
+            return value || computed && getStyle(element)[convertCamelCase(attr)] || '';
         }
-        return !value && computed ? getStyle(element)[convertCamelCase(attr)] : value || '';
     }
     function getBackgroundPosition(value, dimension, dpi, fontSize, leftPerspective = false, percent = false) {
         const result = {

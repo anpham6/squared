@@ -5,6 +5,7 @@ declare global {
         export interface SvgElement extends SvgBase, SvgBaseFeature {
             path: SvgPath | undefined;
             readonly drawable: boolean;
+            synchronizePath(): void;
         }
 
         export class SvgElement implements SvgElement {
@@ -14,7 +15,7 @@ declare global {
 
         export interface SvgImage extends SvgViewBox, SvgElement {
             uri: string;
-            setExternal(): void;
+            externalize(): void;
         }
 
         export class SvgImage implements SvgImage {

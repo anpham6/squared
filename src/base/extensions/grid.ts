@@ -11,6 +11,16 @@ import NodeList from '../nodelist';
 import $dom = squared.lib.dom;
 import $util = squared.lib.util;
 
+function getRowIndex<T extends Node>(columns: T[][], target: T) {
+    for (const column of columns) {
+        const index = column.findIndex(item => $util.withinFraction(target.linear.top, item.linear.top) || target.linear.top > item.linear.top && target.linear.top < item.linear.bottom);
+        if (index !== -1) {
+            return index;
+        }
+    }
+    return -1;
+}
+
 export default abstract class Grid<T extends Node> extends Extension<T> {
     public static createDataAttribute(): GridData {
         return {
@@ -132,15 +142,6 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
             }
         }
         else {
-            function getRowIndex(rowItem: T) {
-                for (const column of columns) {
-                    const index = column.findIndex(item => $util.withinFraction(rowItem.linear.top, item.linear.top) || rowItem.linear.top > item.linear.top && rowItem.linear.top < item.linear.bottom);
-                    if (index !== -1) {
-                        return index;
-                    }
-                }
-                return -1;
-            }
             const nextMapX: ObjectIndex<T[]> = {};
             for (const item of node) {
                 for (const subitem of item) {
@@ -171,7 +172,7 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                                 columns[l][m] = nextX;
                             }
                             else {
-                                const index = getRowIndex(nextX);
+                                const index = getRowIndex(columns, nextX);
                                 if (index !== -1) {
                                     columns[l][index] = nextX;
                                 }
@@ -187,7 +188,7 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                                 const maxRight = $util.maxArray(columns[current].map(item => item.linear.right));
                                 if (left > minLeft && right > maxRight) {
                                     const filtered = columns.filter(item => item);
-                                    const index = getRowIndex(nextX);
+                                    const index = getRowIndex(columns, nextX);
                                     if (index !== -1 && filtered[filtered.length - 1][index] === undefined) {
                                         columns[current].length = 0;
                                     }

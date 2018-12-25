@@ -2271,7 +2271,7 @@ var android = (function () {
     var $dom$2 = squared.lib.dom;
     var $util$3 = squared.lib.util;
     var $xml$2 = squared.lib.xml;
-    function sortFloatHorizontal(list) {
+    function sortHorizontalFloat(list) {
         if (list.some(node => node.floating)) {
             const result = list.slice().sort((a, b) => {
                 if (a.floating && !b.floating) {
@@ -2401,6 +2401,34 @@ var android = (function () {
         }
         return false;
     }
+    function getRootNamespace(value) {
+        let output = '';
+        for (const namespace in XMLNS_ANDROID) {
+            if (new RegExp(`\\s+${namespace}:`).test(value)) {
+                output += `\n\t${getXmlNs(namespace)}`;
+            }
+        }
+        return output;
+    }
+    function parseAttributes(node) {
+        if (node.dir === 'rtl') {
+            node.android(node.length ? 'layoutDirection' : 'textDirection', 'rtl');
+        }
+        const dataset = $dom$2.getDataSet(node.element, 'android');
+        for (const name in dataset) {
+            if (/^attr[A-Z]/.test(name)) {
+                const obj = $util$3.capitalize(name.substring(4), false);
+                dataset[name].split(';').forEach(values => {
+                    const [key, value] = values.split('::');
+                    if (key && value) {
+                        node.attr(obj, key, value);
+                    }
+                });
+            }
+        }
+        const indent = $util$3.repeat(node.renderDepth + 1);
+        return node.combine().map(value => `\n${indent + value}`).join('');
+    }
     class Controller extends squared.base.Controller {
         constructor() {
             super(...arguments);
@@ -2519,34 +2547,6 @@ var android = (function () {
         finalize(data) {
             const settings = this.userSettings;
             if (settings.showAttributes) {
-                function getRootNamespace(content) {
-                    let output = '';
-                    for (const namespace in XMLNS_ANDROID) {
-                        if (new RegExp(`\\s+${namespace}:`).test(content)) {
-                            output += `\n\t${getXmlNs(namespace)}`;
-                        }
-                    }
-                    return output;
-                }
-                function parseAttributes(node) {
-                    if (node.dir === 'rtl') {
-                        node.android(node.length ? 'layoutDirection' : 'textDirection', 'rtl');
-                    }
-                    const dataset = $dom$2.getDataSet(node.element, 'android');
-                    for (const name in dataset) {
-                        if (/^attr[A-Z]/.test(name)) {
-                            const obj = $util$3.capitalize(name.substring(4), false);
-                            dataset[name].split(';').forEach(values => {
-                                const [key, value] = values.split('::');
-                                if (key && value) {
-                                    node.attr(obj, key, value);
-                                }
-                            });
-                        }
-                    }
-                    const indent = $util$3.repeat(node.renderDepth + 1);
-                    return node.combine().map(value => `\n${indent + value}`).join('');
-                }
                 const cache = data.cache.visible.map(node => ({ pattern: $xml$2.formatPlaceholder(node.id, '@'), attributes: parseAttributes(node) }));
                 for (const value of [...data.views, ...data.includes]) {
                     cache.forEach(item => value.content = value.content.replace(item.pattern, item.attributes));
@@ -2627,7 +2627,7 @@ var android = (function () {
                         else {
                             layout.setType(CONTAINER_NODE.LINEAR);
                             if (layout.floated.size) {
-                                layout.renderPosition = sortFloatHorizontal(layout.children);
+                                layout.renderPosition = sortHorizontalFloat(layout.children);
                             }
                         }
                         layout.add(8 /* HORIZONTAL */);
@@ -2729,7 +2729,7 @@ var android = (function () {
             else if (!strictMode || layout.linearX && !layout.floated.has('right')) {
                 containerType = CONTAINER_NODE.LINEAR;
                 if (layout.floated.size) {
-                    layout.renderPosition = sortFloatHorizontal(layout.children);
+                    layout.renderPosition = sortHorizontalFloat(layout.children);
                 }
             }
             if (containerType !== 0) {
@@ -3482,7 +3482,7 @@ var android = (function () {
             let rowPreviousLeft;
             let rowPreviousBottom;
             const [right, left] = $util$3.partition(children, item => item.float === 'right');
-            sortFloatHorizontal(left);
+            sortHorizontalFloat(left);
             [left, right].forEach((segment, index) => {
                 const alignParent = index === 0 ? 'left' : 'right';
                 for (let i = 0; i < segment.length; i++) {
@@ -3508,8 +3508,8 @@ var android = (function () {
                         rows.push([item]);
                     }
                     else {
-                        const baseWidth = (rowPreviousLeft && rows.length > 1 ? rowPreviousLeft.linear.width : 0) + rowWidth + item.marginLeft + (previous.float === 'left' && !cleared.has(item) ? 0 : dimension.width) - (firefoxEdge ? item.borderRightWidth : 0);
                         function checkWidthWrap() {
+                            const baseWidth = (rowPreviousLeft && rows.length > 1 ? rowPreviousLeft.linear.width : 0) + rowWidth + item.marginLeft + (previous.float === 'left' && !cleared.has(item) ? 0 : dimension.width) - (firefoxEdge ? item.borderRightWidth : 0);
                             return !item.rightAligned && (Math.floor(baseWidth) - (item.styleElement && item.inlineStatic ? item.paddingLeft + item.paddingRight : 0) > boxWidth);
                         }
                         if (adjustFloatingNegativeMargin(item, previous)) {
@@ -4476,6 +4476,96 @@ var android = (function () {
         result = node[dimension] - result;
         return result;
     }
+    function setContentSpacing(mainData, node, alignment, direction) {
+        const MARGIN_START = direction === 'column' ? 16 /* MARGIN_LEFT */ : 2 /* MARGIN_TOP */;
+        const MARGIN_END = direction === 'column' ? 4 /* MARGIN_RIGHT */ : 8 /* MARGIN_BOTTOM */;
+        const PADDING_START = direction === 'column' ? 256 /* PADDING_LEFT */ : 32 /* PADDING_TOP */;
+        const data = mainData[direction];
+        const rowData = alignment.startsWith('space') ? getRowData(mainData, direction) : [];
+        const sizeTotal = getGridSize(mainData, direction, node);
+        if (sizeTotal > 0) {
+            const dimension = direction === 'column' ? 'width' : 'height';
+            const itemCount = mainData[direction].count;
+            const adjusted = new Set();
+            switch (alignment) {
+                case 'center':
+                    node.modifyBox(PADDING_START, Math.floor(sizeTotal / 2));
+                    data.normal = false;
+                    break;
+                case 'right':
+                    if (direction === 'row') {
+                        break;
+                    }
+                case 'end':
+                case 'flex-end':
+                    node.modifyBox(PADDING_START, sizeTotal);
+                    data.normal = false;
+                    break;
+                case 'space-around': {
+                    const marginSize = Math.floor(sizeTotal / (itemCount * 2));
+                    for (let i = 0; i < itemCount; i++) {
+                        new Set($util$6.flatArray(rowData[i])).forEach(item => {
+                            if (!adjusted.has(item)) {
+                                item.modifyBox(MARGIN_START, marginSize);
+                                if (i < itemCount - 1) {
+                                    item.modifyBox(MARGIN_END, marginSize);
+                                }
+                                adjusted.add(item);
+                            }
+                            else {
+                                item.cssPX(dimension, marginSize * 2);
+                            }
+                        });
+                    }
+                    data.normal = false;
+                    break;
+                }
+                case 'space-between': {
+                    const marginSize = Math.floor(sizeTotal / ((itemCount - 1) * 2));
+                    const rowLast = $util$6.flatArray(rowData[itemCount - 1]);
+                    for (let i = 0; i < itemCount; i++) {
+                        new Set($util$6.flatArray(rowData[i])).forEach(item => {
+                            if (!adjusted.has(item)) {
+                                if (i > 0) {
+                                    item.modifyBox(MARGIN_START, marginSize);
+                                }
+                                if (i < itemCount - 1 && !rowLast.some(cell => cell === item)) {
+                                    item.modifyBox(MARGIN_END, marginSize);
+                                }
+                                adjusted.add(item);
+                            }
+                            else {
+                                item.cssPX(dimension, marginSize * 2);
+                            }
+                        });
+                    }
+                    data.normal = false;
+                    break;
+                }
+                case 'space-evenly': {
+                    const marginSize = Math.floor(sizeTotal / (itemCount + 1));
+                    const rowLast = $util$6.flatArray(rowData[itemCount - 1]);
+                    for (let i = 0; i < itemCount; i++) {
+                        const marginMiddle = Math.floor(marginSize / 2);
+                        new Set($util$6.flatArray(rowData[i])).forEach(item => {
+                            if (!adjusted.has(item)) {
+                                item.modifyBox(MARGIN_START, i === 0 ? marginSize : marginMiddle);
+                                if (i < itemCount - 1 && !rowLast.some(cell => cell === item)) {
+                                    item.modifyBox(MARGIN_END, marginMiddle);
+                                }
+                                adjusted.add(item);
+                            }
+                            else {
+                                item.cssPX(dimension, marginSize);
+                            }
+                        });
+                    }
+                    data.normal = false;
+                    break;
+                }
+            }
+        }
+    }
     class CssGrid extends squared.base.extensions.CssGrid {
         processNode(node, parent) {
             super.processNode(node, parent);
@@ -4668,101 +4758,11 @@ var android = (function () {
         postBaseLayout(node) {
             const mainData = node.data($const.EXT_NAME.CSS_GRID, 'mainData');
             if (mainData) {
-                function setContentSpacing(alignment, direction) {
-                    const MARGIN_START = direction === 'column' ? 16 /* MARGIN_LEFT */ : 2 /* MARGIN_TOP */;
-                    const MARGIN_END = direction === 'column' ? 4 /* MARGIN_RIGHT */ : 8 /* MARGIN_BOTTOM */;
-                    const PADDING_START = direction === 'column' ? 256 /* PADDING_LEFT */ : 32 /* PADDING_TOP */;
-                    const data = mainData[direction];
-                    const rowData = alignment.startsWith('space') ? getRowData(mainData, direction) : [];
-                    const sizeTotal = getGridSize(mainData, direction, node);
-                    if (sizeTotal > 0) {
-                        const dimension = direction === 'column' ? 'width' : 'height';
-                        const itemCount = mainData[direction].count;
-                        const adjusted = new Set();
-                        switch (alignment) {
-                            case 'center':
-                                node.modifyBox(PADDING_START, Math.floor(sizeTotal / 2));
-                                data.normal = false;
-                                break;
-                            case 'right':
-                                if (direction === 'row') {
-                                    break;
-                                }
-                            case 'end':
-                            case 'flex-end':
-                                node.modifyBox(PADDING_START, sizeTotal);
-                                data.normal = false;
-                                break;
-                            case 'space-around': {
-                                const marginSize = Math.floor(sizeTotal / (itemCount * 2));
-                                for (let i = 0; i < itemCount; i++) {
-                                    new Set($util$6.flatArray(rowData[i])).forEach(item => {
-                                        if (!adjusted.has(item)) {
-                                            item.modifyBox(MARGIN_START, marginSize);
-                                            if (i < itemCount - 1) {
-                                                item.modifyBox(MARGIN_END, marginSize);
-                                            }
-                                            adjusted.add(item);
-                                        }
-                                        else {
-                                            item.cssPX(dimension, marginSize * 2);
-                                        }
-                                    });
-                                }
-                                data.normal = false;
-                                break;
-                            }
-                            case 'space-between': {
-                                const marginSize = Math.floor(sizeTotal / ((itemCount - 1) * 2));
-                                const rowLast = $util$6.flatArray(rowData[itemCount - 1]);
-                                for (let i = 0; i < itemCount; i++) {
-                                    new Set($util$6.flatArray(rowData[i])).forEach(item => {
-                                        if (!adjusted.has(item)) {
-                                            if (i > 0) {
-                                                item.modifyBox(MARGIN_START, marginSize);
-                                            }
-                                            if (i < itemCount - 1 && !rowLast.some(cell => cell === item)) {
-                                                item.modifyBox(MARGIN_END, marginSize);
-                                            }
-                                            adjusted.add(item);
-                                        }
-                                        else {
-                                            item.cssPX(dimension, marginSize * 2);
-                                        }
-                                    });
-                                }
-                                data.normal = false;
-                                break;
-                            }
-                            case 'space-evenly': {
-                                const marginSize = Math.floor(sizeTotal / (itemCount + 1));
-                                const rowLast = $util$6.flatArray(rowData[itemCount - 1]);
-                                for (let i = 0; i < itemCount; i++) {
-                                    const marginMiddle = Math.floor(marginSize / 2);
-                                    new Set($util$6.flatArray(rowData[i])).forEach(item => {
-                                        if (!adjusted.has(item)) {
-                                            item.modifyBox(MARGIN_START, i === 0 ? marginSize : marginMiddle);
-                                            if (i < itemCount - 1 && !rowLast.some(cell => cell === item)) {
-                                                item.modifyBox(MARGIN_END, marginMiddle);
-                                            }
-                                            adjusted.add(item);
-                                        }
-                                        else {
-                                            item.cssPX(dimension, marginSize);
-                                        }
-                                    });
-                                }
-                                data.normal = false;
-                                break;
-                            }
-                        }
-                    }
-                }
                 if (node.hasWidth && mainData.justifyContent !== 'normal') {
-                    setContentSpacing(mainData.justifyContent, 'column');
+                    setContentSpacing(mainData, node, mainData.justifyContent, 'column');
                 }
                 if (node.hasHeight && mainData.alignContent !== 'normal') {
-                    setContentSpacing(mainData.alignContent, 'row');
+                    setContentSpacing(mainData, node, mainData.alignContent, 'row');
                 }
                 if (mainData.column.normal && !mainData.column.unit.includes('auto')) {
                     const columnGap = mainData.column.gap * (mainData.column.count - 1);
@@ -6299,6 +6299,17 @@ var android = (function () {
             'corners': borderRadius
         });
     }
+    function checkBackgroundPosition(current, adjacent, defaultPosition) {
+        if (current.indexOf(' ') === -1 && adjacent.indexOf(' ') !== -1) {
+            if (/^[a-z]+$/.test(current)) {
+                return `${current === 'initial' ? defaultPosition : current} 0px`;
+            }
+            else {
+                return `${defaultPosition} ${current}`;
+            }
+        }
+        return current;
+    }
     class ResourceBackground extends squared.base.Extension {
         constructor() {
             super(...arguments);
@@ -6311,17 +6322,6 @@ var android = (function () {
             this.application.processing.cache.duplicate().sort(a => !a.visible ? -1 : 0).forEach(node => {
                 const stored = node.data(Resource.KEY_NAME, 'boxStyle');
                 if (stored && !node.hasBit('excludeResource', $enum$g.NODE_RESOURCE.BOX_STYLE)) {
-                    function checkPartialBackgroundPosition(current, adjacent, defaultPosition) {
-                        if (current.indexOf(' ') === -1 && adjacent.indexOf(' ') !== -1) {
-                            if (/^[a-z]+$/.test(current)) {
-                                return `${current === 'initial' ? defaultPosition : current} 0px`;
-                            }
-                            else {
-                                return `${defaultPosition} ${current}`;
-                            }
-                        }
-                        return current;
-                    }
                     stored.backgroundColor = Resource.addColor(stored.backgroundColor);
                     const backgroundImage = [];
                     const backgroundVector = [];
@@ -6340,8 +6340,8 @@ var android = (function () {
                                 backgroundImage[i] = Resource.addImageUrl(backgroundImage[i]);
                                 const postionX = backgroundPositionX[i] || backgroundPositionX[i - 1];
                                 const postionY = backgroundPositionY[i] || backgroundPositionY[i - 1];
-                                const x = checkPartialBackgroundPosition(postionX, postionY, 'left');
-                                const y = checkPartialBackgroundPosition(postionY, postionX, 'top');
+                                const x = checkBackgroundPosition(postionX, postionY, 'left');
+                                const y = checkBackgroundPosition(postionY, postionX, 'top');
                                 backgroundPosition[i] = `${x === 'initial' ? '0px' : x} ${y === 'initial' ? '0px' : y}`;
                             }
                             else {
@@ -7645,6 +7645,61 @@ var android = (function () {
         'stroke-width': 'strokeWidth',
         'd': 'pathData'
     };
+    function queueAnimations(animateMap, name, svg, predicate, pathData = '') {
+        const animate = svg.animate.filter(predicate);
+        if (animate.length) {
+            animateMap.set(name, {
+                element: svg.element,
+                animate,
+                pathData
+            });
+        }
+    }
+    function createGroup(animateMap, group, inclusions = []) {
+        const name = `group_${group.name}`;
+        const data = {
+            name,
+            '2': []
+        };
+        let x = group instanceof $SvgGroupViewBox ? group.x : 0;
+        let y = group instanceof $SvgGroupViewBox ? group.y : 0;
+        if (group.transformable) {
+            const transform = $util_svg.createTransformData(group.element);
+            if (transform.operations.length) {
+                x += transform.translateX;
+                y += transform.translateY;
+                if (transform.scaleX !== 1) {
+                    data.scaleX = transform.scaleX.toString();
+                }
+                if (transform.scaleY !== 1) {
+                    data.scaleY = transform.scaleY.toString();
+                }
+                if (transform.rotateAngle !== 0) {
+                    data.rotation = transform.rotateAngle.toString();
+                }
+                let pivotX = transform.rotateOriginX || 0;
+                let pivotY = transform.rotateOriginY || 0;
+                if (transform.origin) {
+                    pivotX += transform.origin.x;
+                    pivotY += transform.origin.y;
+                }
+                if (pivotX !== 0) {
+                    data.pivotX = pivotX.toString();
+                }
+                if (pivotY !== 0) {
+                    data.pivotY = pivotY.toString();
+                }
+            }
+        }
+        if (x !== 0) {
+            data.translateX = x.toString();
+        }
+        if (y !== 0) {
+            data.translateY = y.toString();
+        }
+        queueAnimations(animateMap, name, group, item => item instanceof $SvgAnimateTransform || inclusions.includes(item.attributeName), group instanceof $SvgUse && group.path ? group.path.d : '');
+        return data;
+    }
     function getSvgOffset(element, outerParent) {
         let parent = element.parentElement;
         let x = 0;
@@ -7675,133 +7730,78 @@ var android = (function () {
                 if (node.svgElement) {
                     const svg = new squared.svg.Svg(node.element);
                     const namespace = new Set();
-                    const animateGroup = new Map();
+                    const animateMap = new Map();
                     const templateName = `${node.tagName.toLowerCase()}_${node.controlId}`;
                     const images = [];
                     let drawable = '';
                     let vectorName = '';
-                    function queueAnimations(name, target, predicate, pathData = '') {
-                        const animate = target.animate.filter(predicate);
-                        if (animate.length) {
-                            animateGroup.set(name, {
-                                element: target.element,
-                                animate,
-                                pathData
-                            });
-                        }
-                    }
-                    function createGroup(group, inclusions = []) {
-                        const name = `group_${group.name}`;
-                        const data = {
-                            name,
-                            '2': []
-                        };
-                        let x = group instanceof $SvgGroupViewBox ? group.x : 0;
-                        let y = group instanceof $SvgGroupViewBox ? group.y : 0;
-                        if (group.transformable) {
-                            const transform = $util_svg.createTransformData(group.element);
-                            if (transform.operations.length) {
-                                x += transform.translateX;
-                                y += transform.translateY;
-                                if (transform.scaleX !== 1) {
-                                    data.scaleX = transform.scaleX.toString();
-                                }
-                                if (transform.scaleY !== 1) {
-                                    data.scaleY = transform.scaleY.toString();
-                                }
-                                if (transform.rotateAngle !== 0) {
-                                    data.rotation = transform.rotateAngle.toString();
-                                }
-                                let pivotX = transform.rotateOriginX || 0;
-                                let pivotY = transform.rotateOriginY || 0;
-                                if (transform.origin) {
-                                    pivotX += transform.origin.x;
-                                    pivotY += transform.origin.y;
-                                }
-                                if (pivotX !== 0) {
-                                    data.pivotX = pivotX.toString();
-                                }
-                                if (pivotY !== 0) {
-                                    data.pivotY = pivotY.toString();
+                    if (svg.length) {
+                        function createPath(target, path, exclusions = []) {
+                            const name = target.name;
+                            const clipPaths = [];
+                            if (path.clipPath !== '') {
+                                const clipPath = svg.defs.clipPath.get(path.clipPath);
+                                if (clipPath) {
+                                    clipPath.each(child => {
+                                        if (child.path) {
+                                            clipPaths.push({ name: child.name, d: child.path.d });
+                                            queueAnimations(animateMap, child.name, child, item => !(item instanceof $SvgAnimateTransform || item instanceof $SvgAnimateMotion), child.path.d);
+                                        }
+                                    });
                                 }
                             }
-                        }
-                        if (x !== 0) {
-                            data.translateX = x.toString();
-                        }
-                        if (y !== 0) {
-                            data.translateY = y.toString();
-                        }
-                        queueAnimations(name, group, item => item instanceof $SvgAnimateTransform || inclusions.includes(item.attributeName), group instanceof $SvgUse && group.path ? group.path.d : '');
-                        return data;
-                    }
-                    function createPath(target, path, exclusions = []) {
-                        const name = target.name;
-                        const clipPaths = [];
-                        if (path.clipPath !== '') {
-                            const clipPath = svg.defs.clipPath.get(path.clipPath);
-                            if (clipPath) {
-                                clipPath.each(child => {
-                                    if (child.path) {
-                                        clipPaths.push({ name: child.name, d: child.path.d });
-                                        queueAnimations(child.name, child, item => !(item instanceof $SvgAnimateTransform || item instanceof $SvgAnimateMotion), child.path.d);
-                                    }
-                                });
-                            }
-                        }
-                        const result = Object.assign({}, path, { name, clipPaths });
-                        ['fill', 'stroke'].forEach(attr => {
-                            if ($util$n.isString(result[attr])) {
-                                if (result[attr].charAt(0) === '@') {
-                                    const gradient = svg.defs.gradient.get(result[attr]);
-                                    if (gradient) {
-                                        switch (target.element.tagName) {
-                                            case 'path':
-                                                if (!/[zZ]\s*$/.test(result.d)) {
-                                                    break;
-                                                }
-                                            case 'rect':
-                                            case 'polygon':
-                                            case 'polyline':
-                                            case 'circle':
-                                            case 'ellipse':
-                                                const gradients = Resource.createBackgroundGradient(node, [gradient], result);
-                                                result[attr] = [{ gradients }];
-                                                namespace.add('aapt');
-                                                return;
+                            const result = Object.assign({}, path, { name, clipPaths });
+                            ['fill', 'stroke'].forEach(attr => {
+                                if ($util$n.isString(result[attr])) {
+                                    if (result[attr].charAt(0) === '@') {
+                                        const gradient = svg.defs.gradient.get(result[attr]);
+                                        if (gradient) {
+                                            switch (target.element.tagName) {
+                                                case 'path':
+                                                    if (!/[zZ]\s*$/.test(result.d)) {
+                                                        break;
+                                                    }
+                                                case 'rect':
+                                                case 'polygon':
+                                                case 'polyline':
+                                                case 'circle':
+                                                case 'ellipse':
+                                                    const gradients = Resource.createBackgroundGradient(node, [gradient], result);
+                                                    result[attr] = [{ gradients }];
+                                                    namespace.add('aapt');
+                                                    return;
+                                            }
+                                        }
+                                        else {
+                                            result[attr] = result.color;
                                         }
                                     }
-                                    else {
-                                        result[attr] = result.color;
+                                    const colorName = Resource.addColor(result[attr]);
+                                    if (colorName !== '') {
+                                        result[attr] = `@color/${colorName}`;
                                     }
                                 }
-                                const colorName = Resource.addColor(result[attr]);
-                                if (colorName !== '') {
-                                    result[attr] = `@color/${colorName}`;
+                            });
+                            if (result.fillRule) {
+                                switch (result.fillRule) {
+                                    case 'evenodd':
+                                        result.fillRule = 'evenOdd';
+                                        break;
+                                    default:
+                                        result.fillRule = 'nonZero';
+                                        break;
                                 }
                             }
-                        });
-                        if (result.fillRule) {
-                            switch (result.fillRule) {
-                                case 'evenodd':
-                                    result.fillRule = 'evenOdd';
-                                    break;
-                                default:
-                                    result.fillRule = 'nonZero';
-                                    break;
-                            }
+                            queueAnimations(animateMap, name, target, item => !(item instanceof $SvgAnimateTransform || item instanceof $SvgAnimateMotion) && !exclusions.includes(item.attributeName), result.d);
+                            return result;
                         }
-                        queueAnimations(name, target, item => !(item instanceof $SvgAnimateTransform || item instanceof $SvgAnimateMotion) && !exclusions.includes(item.attributeName), result.d);
-                        return result;
-                    }
-                    if (svg.length) {
-                        queueAnimations(svg.name, svg, item => item.attributeName === 'opacity');
+                        queueAnimations(animateMap, svg.name, svg, item => item.attributeName === 'opacity');
                         let groups = [];
                         let groupData;
                         for (let i = 0; i < svg.children.length; i++) {
                             const group = svg.children[i];
                             if (i > 0) {
-                                groupData = createGroup(group, group instanceof $SvgGroupViewBox ? ['x', 'y'] : []);
+                                groupData = createGroup(animateMap, group, group instanceof $SvgGroupViewBox ? ['x', 'y'] : []);
                             }
                             if (group instanceof $SvgUse) {
                                 if (groupData && group.path) {
@@ -7811,19 +7811,20 @@ var android = (function () {
                             else {
                                 for (const item of group.children) {
                                     if (item instanceof $SvgImage) {
-                                        item.setExternal();
+                                        item.externalize();
                                         images.push(item);
                                     }
                                     else if (item.visible && item.path) {
                                         let newGroup = false;
+                                        item.synchronizePath();
                                         if (i === 0) {
                                             if (item.transformable && !item.path.transformed || item.animate.some(animate => animate instanceof $SvgAnimateTransform)) {
-                                                groupData = createGroup(item);
+                                                groupData = createGroup(animateMap, item);
                                                 groups.push(groupData);
                                                 newGroup = true;
                                             }
                                             if (groupData === undefined) {
-                                                groupData = createGroup(group);
+                                                groupData = createGroup(animateMap, group);
                                                 groups.push(groupData);
                                             }
                                         }
@@ -7857,12 +7858,12 @@ var android = (function () {
                                 vectorName = templateName + (images.length ? '_vector' : '');
                                 Resource.STORED.drawables.set(vectorName, xml);
                             }
-                            if (animateGroup.size) {
+                            if (animateMap.size) {
                                 const animateData = {
                                     vectorName,
                                     '1': []
                                 };
-                                for (const [name, group] of animateGroup.entries()) {
+                                for (const [name, group] of animateMap.entries()) {
                                     const animate = {
                                         name,
                                         ordering: $dom$b.getDataSet(group.element, 'android').ordering || this.options.vectorAnimateOrdering,
@@ -7872,48 +7873,10 @@ var android = (function () {
                                     for (const item of group.animate) {
                                         let propertyName;
                                         let values;
-                                        let duration;
-                                        let repeatCount = 0;
-                                        if (item instanceof $SvgAnimate) {
-                                            if (item.duration !== -1) {
-                                                duration = item.duration;
-                                                if (item.repeatCount !== undefined && item.repeatDur !== undefined) {
-                                                    if (item.repeatCount === -1 && item.repeatDur === -1) {
-                                                        repeatCount = -1;
-                                                    }
-                                                    else if (item.repeatCount !== -1 && item.repeatDur !== -1) {
-                                                        if ((item.repeatCount + 1) * duration <= item.repeatDuration) {
-                                                            repeatCount = item.repeatCount;
-                                                        }
-                                                        else {
-                                                            repeatCount = Math.round(item.repeatDuration / duration);
-                                                        }
-                                                    }
-                                                    else if (item.repeatDur !== -1) {
-                                                        repeatCount = Math.round(item.repeatDuration / duration);
-                                                    }
-                                                    else {
-                                                        repeatCount = item.repeatCount;
-                                                    }
-                                                }
-                                                else if (item.repeatDur !== undefined) {
-                                                    repeatCount = Math.round(item.repeatDuration / duration);
-                                                }
-                                                else if (item.repeatCount !== undefined) {
-                                                    repeatCount = item.repeatCount;
-                                                }
-                                            }
-                                            else if (item.repeatDur !== undefined) {
-                                                duration = item.repeatDuration;
-                                            }
-                                        }
-                                        else {
-                                            duration = item.duration;
-                                        }
                                         const options = {
                                             startOffset: item.begin !== -1 ? item.begin.toString() : '',
-                                            duration: duration !== undefined ? duration.toString() : '',
-                                            repeatCount: repeatCount.toString()
+                                            duration: item.duration !== -1 ? item.duration.toString() : '',
+                                            repeatCount: item instanceof $SvgAnimate ? Math.round(item.repeatCount).toString() : '0'
                                         };
                                         const dataset = $dom$b.getDataSet(item.element, 'android');
                                         if (item instanceof $SvgAnimateTransform) {
@@ -8396,7 +8359,7 @@ var android = (function () {
             Resource,
             View
         },
-        extension: {
+        extensions: {
             Accessibility,
             CssGrid,
             External,

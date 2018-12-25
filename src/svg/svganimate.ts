@@ -21,123 +21,122 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public values: string[] = [];
     public keyTimes: number[] = [];
     public calcMode = '';
-    public additive = false;
-    public accumulate = false;
-    public freeze = false;
-    public repeatDur: number | undefined;
-    public repeatCount: number | undefined;
+    public additiveSum = false;
+    public accumulateSum = false;
+    public fillFreeze = false;
 
-    private readonly _end: number;
-    private readonly _endMS: number;
-    private readonly _repeatDurationMS: number;
+    private _end: number;
+    private _endMS: number | undefined;
+    private _repeatCount: number;
+    private _repeatDuration: number;
+    private _repeatDurationMS: number | undefined;
 
     constructor(
         public element: SVGAnimateElement,
         public parentElement: SVGGraphicsElement)
     {
         super(element, parentElement);
-        const attributeName = element.attributes.getNamedItem('attributeName');
-        if (attributeName) {
-            this.attributeName = attributeName.value.trim();
-        }
-        const attributeType = element.attributes.getNamedItem('attributeType');
-        if (attributeType) {
-            this.attributeType = attributeType.value.trim();
-        }
-        const values = element.attributes.getNamedItem('values');
+        const values = this.getAttribute('values');
         if (values) {
-            this.values.push(...$util.flatMap(values.value.split(';'), value => value.trim()));
+            this.values.push(...$util.flatMap(values.split(';'), value => value.trim()));
             if (this.values.length > 1) {
                 this.from = this.values[0];
                 this.to = this.values[this.values.length - 1];
-                const keyTimes = element.attributes.getNamedItem('keyTimes');
+                const keyTimes = this.getAttribute('keyTimes');
                 if (keyTimes) {
-                    const times = SvgAnimate.toFractionList(keyTimes.value);
+                    const times = SvgAnimate.toFractionList(keyTimes);
                     if (times.length === this.values.length) {
                         this.keyTimes.push(...times);
                     }
                 }
             }
+            else {
+                this.values.length = 0;
+            }
         }
-        else {
-            if (this.to) {
-                this.values.push(this.from, this.to);
-                this.keyTimes.push(0, 1);
-                const by = element.attributes.getNamedItem('by');
-                if (by) {
-                    this.by = by.value.trim();
+        if (this.values.length === 0 && this.to !== '') {
+            this.setAttribute('from');
+            if (this.from === '') {
+                const xml: string = $util.optional(parentElement, `${this.attributeName}.baseVal.value`);
+                if (xml) {
+                    this.from = xml;
+                }
+                else {
+                    const current = parentElement.attributes.getNamedItem(this.attributeName);
+                    if (current) {
+                        this.from = current.value.trim();
+                    }
                 }
             }
+            this.values.push(this.from, this.to);
+            this.keyTimes.push(0, 1);
+            this.setAttribute('by');
         }
-        const end = element.attributes.getNamedItem('end');
-        const repeatDur = element.attributes.getNamedItem('repeatDur');
-        const repeatCount = element.attributes.getNamedItem('repeatCount');
-        if (end) {
-            if (end.value === 'indefinite') {
-                this._end = -1;
-                this._endMS = 0;
-            }
-            else {
-                [this._end, this._endMS] = SvgAnimate.convertClockTime(end.value);
-            }
+        const end = this.getAttribute('end');
+        const repeatDur = this.getAttribute('repeatDur');
+        const repeatCount = this.getAttribute('repeatCount');
+        if (end === '' || end === 'indefinite') {
+            this._end = -1;
         }
         else {
-            this._end = 0;
-            this._endMS = 0;
+            [this._end, this._endMS] = SvgAnimate.convertClockTime(end);
         }
-        if (repeatDur) {
-            if (repeatDur.value === 'indefinite') {
-                this.repeatDur = -1;
-                this._repeatDurationMS = 0;
-            }
-            else {
-                [this.repeatDur, this._repeatDurationMS] = SvgAnimate.convertClockTime(repeatDur.value);
-            }
+        if (repeatDur === '' || repeatDur === 'indefinite') {
+            this._repeatDuration = -1;
         }
         else {
-            this._repeatDurationMS = 0;
+            [this._repeatDuration, this._repeatDurationMS] = SvgAnimate.convertClockTime(repeatDur);
         }
-        if (repeatCount) {
-            if (repeatCount.value === 'indefinite') {
-                this.repeatCount = -1;
-            }
-            else {
-                const value = parseInt(repeatCount.value);
-                if (!isNaN(value)) {
-                    this.repeatCount = value;
-                }
-            }
+        if (repeatCount === 'indefinite') {
+            this._repeatCount = -1;
         }
-        const calcMode = element.attributes.getNamedItem('calcMode');
-        if (calcMode) {
-            switch (calcMode.value) {
-                case 'discrete':
-                case 'linear':
-                case 'paced':
-                case 'spline':
-                    this.calcMode = calcMode.value;
-                    break;
-            }
+        else {
+            this._repeatCount = Math.max(0, $util.convertInt(repeatCount));
         }
-        const additive = element.attributes.getNamedItem('additive');
-        if (additive) {
-            this.additive = additive.value === 'sum';
-        }
-        const accumulate = element.attributes.getNamedItem('accumulate');
-        if (accumulate) {
-            this.accumulate = accumulate.value === 'sum';
-        }
-        const fill = element.attributes.getNamedItem('fill');
-        if (fill) {
-            this.freeze = fill.value === 'freeze';
-        }
+        this.setAttribute('calcMode');
+        this.setAttribute('additive', 'sum');
+        this.setAttribute('accumulate', 'sum');
+        this.setAttribute('fill', 'freeze');
     }
 
+    set end(value) {
+        this._end = Math.floor(value / 1000);
+        this._endMS = value % 1000;
+    }
     get end() {
-        return this._end !== -1 ? this._end * 1000 + this._endMS : this._end;
+        return this._endMS !== undefined ? this._end * 1000 + this._endMS : this._end;
+    }
+
+    set repeatCount(value) {
+        this._repeatCount = value;
+        this._repeatDuration = -1;
+        this._repeatDurationMS = undefined;
+    }
+    get repeatCount() {
+        const duration = this.duration;
+        if (duration !== -1) {
+            if (this._repeatCount !== -1 && this._repeatDuration !== -1) {
+                if ((this._repeatCount + 1) * duration <= this.repeatDuration) {
+                    return this._repeatCount;
+                }
+                else {
+                    return this.repeatDuration / duration;
+                }
+            }
+            else if (this._repeatCount === -1 && this._repeatDuration === -1) {
+                return -1;
+            }
+            else if (this._repeatDuration !== -1) {
+                return this.repeatDuration / duration;
+            }
+            else {
+                return this._repeatCount;
+            }
+        }
+        return 0;
     }
 
     get repeatDuration() {
-        return this.repeatDur !== undefined && this.repeatDur !== -1 ? this.repeatDur * 1000 + this._repeatDurationMS : 0;
+        return this._repeatDurationMS !== undefined ? this._repeatDuration * 1000 + this._repeatDurationMS : this._repeatDuration;
     }
 }

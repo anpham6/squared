@@ -1,3 +1,5 @@
+import { SvgPathBaseVal } from './types/svg';
+
 import SvgBuild from './svgbuild';
 
 import { getTransformOrigin } from './lib/util';
@@ -7,17 +9,17 @@ import $dom = squared.lib.dom;
 import $util = squared.lib.util;
 
 export default class SvgPath implements squared.svg.SvgPath {
-    public static getLine(x1: number, y1: number, x2 = 0, y2 = 0) {
-        return x1 !== 0 || y1 !== 0 || x2 !== 0 || y2 !== 0 ? `M${x1},${y1} L${x2},${y2}` : '';
+    public static getLine(x1: number, y1: number, x2 = 0, y2 = 0, checkValid = false) {
+        return x1 !== 0 || y1 !== 0 || x2 !== 0 || y2 !== 0 || !checkValid ? `M${x1},${y1} L${x2},${y2}` : '';
     }
 
-    public static getRect(width: number, height: number, x = 0, y = 0) {
-        return width > 0 && height > 0 ? `M${x},${y} h${width} v${height} h${-width} Z` : '';
+    public static getRect(width: number, height: number, x = 0, y = 0, checkValid = false) {
+        return width > 0 && height > 0 || !checkValid ? `M${x},${y} h${width} v${height} h${-width} Z` : '';
     }
 
-    public static getPolyline(points: Point[] | DOMPoint[] | SVGPointList) {
+    public static getPolyline(points: Point[] | DOMPoint[] | SVGPointList, checkValid = false) {
         points = points instanceof SVGPointList ? SvgBuild.toPointList(points) : points;
-        return points.length ? `M${points.map(item => `${item.x},${item.y}`).join(' ')}` : '';
+        return points.length || !checkValid ? `M${points.map(item => `${item.x},${item.y}`).join(' ')}` : '';
     }
 
     public static getPolygon(points: Point[] | DOMPoint[] | SVGPointList) {
@@ -25,12 +27,12 @@ export default class SvgPath implements squared.svg.SvgPath {
         return value !== '' ? value + ' Z' : '';
     }
 
-    public static getCircle(cx: number, cy: number, r: number) {
-        return r > 0 ? this.getEllipse(cx, cy, r, r) : '';
+    public static getCircle(cx: number, cy: number, r: number, checkValid = false) {
+        return r > 0 || !checkValid ? this.getEllipse(cx, cy, r, r) : '';
     }
 
-    public static getEllipse(cx: number, cy: number, rx: number, ry: number) {
-        return rx > 0 && ry > 0 ? `M${cx - rx},${cy} a${rx},${ry},0,1,0,${rx * 2},0 a${rx},${ry},0,1,0,-${rx * 2},0` : '';
+    public static getEllipse(cx: number, cy: number, rx: number, ry: number, checkValid = false) {
+        return rx > 0 && ry > 0 || !checkValid ? `M${cx - rx},${cy} a${rx},${ry},0,1,0,${rx * 2},0 a${rx},${ry},0,1,0,-${rx * 2},0` : '';
     }
 
     public transformed = false;
@@ -47,6 +49,22 @@ export default class SvgPath implements squared.svg.SvgPath {
     public strokeMiterlimit = '';
     public clipPath = '';
     public clipRule = '';
+    public baseVal: SvgPathBaseVal = {
+        cx: null,
+        cy: null,
+        r: null,
+        rx: null,
+        ry: null,
+        x1: null,
+        x2: null,
+        y1: null,
+        y2: null,
+        x: null,
+        y: null,
+        width: null,
+        height: null,
+        points: null
+    };
 
     constructor(
         public readonly element: SVGGraphicsElement,
@@ -106,63 +124,70 @@ export default class SvgPath implements squared.svg.SvgPath {
                 }
                 case 'circle': {
                     const item = <SVGCircleElement> element;
-                    this.d = SvgPath.getCircle(item.cx.baseVal.value, item.cy.baseVal.value, item.r.baseVal.value);
+                    this.baseVal.cx = item.cx.baseVal.value;
+                    this.baseVal.cy = item.cy.baseVal.value;
+                    this.baseVal.r = item.r.baseVal.value;
+                    this.d = SvgPath.getCircle(this.baseVal.cx, this.baseVal.cy, this.baseVal.r, true);
                     break;
                 }
                 case 'ellipse': {
                     const item = <SVGEllipseElement> element;
-                    this.d = SvgPath.getEllipse(item.cx.baseVal.value, item.cy.baseVal.value, item.rx.baseVal.value, item.ry.baseVal.value);
+                    this.baseVal.cx = item.cx.baseVal.value;
+                    this.baseVal.cy = item.cy.baseVal.value;
+                    this.baseVal.rx = item.rx.baseVal.value;
+                    this.baseVal.ry = item.ry.baseVal.value;
+                    this.d = SvgPath.getEllipse(this.baseVal.cx, this.baseVal.cy, this.baseVal.rx, this.baseVal.ry, true);
                     break;
                 }
                 case 'line': {
                     const item = <SVGLineElement> element;
-                    const x1 = item.x1.baseVal.value;
-                    const y1 = item.y1.baseVal.value;
-                    const x2 = item.x2.baseVal.value;
-                    const y2 = item.y2.baseVal.value;
+                    this.baseVal.x1 = item.x1.baseVal.value;
+                    this.baseVal.y1 = item.y1.baseVal.value;
+                    this.baseVal.x2 = item.x2.baseVal.value;
+                    this.baseVal.y2 = item.y2.baseVal.value;
                     if (transform.numberOfItems) {
                         const points: Point[] = [
-                            { x: x1, y: y1 },
-                            { x: x2, y: y2 }
+                            { x: this.baseVal.x1, y: this.baseVal.y1 },
+                            { x: this.baseVal.x2, y: this.baseVal.y2 }
                         ];
                         this.d = SvgPath.getPolyline(SvgBuild.applyTransforms(transform, points, getTransformOrigin(element)));
                         this.transformed = true;
                     }
                     else {
-                        this.d = SvgPath.getLine(x1, y1, x2, y2);
+                        this.d = SvgPath.getLine(this.baseVal.x1, this.baseVal.y1, this.baseVal.x2, this.baseVal.y2, true);
                     }
                     break;
                 }
                 case 'rect': {
                     const item = <SVGRectElement> element;
-                    const x = item.x.baseVal.value;
-                    const y = item.y.baseVal.value;
-                    const width = item.width.baseVal.value;
-                    const height = item.height.baseVal.value;
+                    this.baseVal.x = item.x.baseVal.value;
+                    this.baseVal.y = item.y.baseVal.value;
+                    this.baseVal.width = item.width.baseVal.value;
+                    this.baseVal.height = item.height.baseVal.value;
                     if (transform.numberOfItems) {
                         const points: Point[] = [
-                            { x, y },
-                            { x: x + width, y },
-                            { x: x + width, y: y + height },
-                            { x, y: y + height }
+                            { x: this.baseVal.x, y: this.baseVal.y },
+                            { x: this.baseVal.x + this.baseVal.width, y: this.baseVal.y },
+                            { x: this.baseVal.x + this.baseVal.width, y: this.baseVal.y + this.baseVal.height },
+                            { x: this.baseVal.x, y: this.baseVal.y + this.baseVal.height }
                         ];
                         this.d = SvgPath.getPolygon(SvgBuild.applyTransforms(transform, points, getTransformOrigin(element)));
                         this.transformed = true;
                     }
                     else {
-                        this.d = SvgPath.getRect(width, height, x, y);
+                        this.d = SvgPath.getRect(this.baseVal.width, this.baseVal.height, this.baseVal.x, this.baseVal.y, true);
                     }
                     break;
                 }
                 case 'polyline':
                 case 'polygon': {
                     const item = <SVGPolygonElement> element;
-                    let points = SvgBuild.toPointList(item.points);
+                    this.baseVal.points = SvgBuild.toPointList(item.points);
                     if (transform.numberOfItems) {
-                        points = SvgBuild.applyTransforms(transform, points, getTransformOrigin(element));
+                        this.baseVal.points = SvgBuild.applyTransforms(transform, this.baseVal.points, getTransformOrigin(element));
                         this.transformed = true;
                     }
-                    this.d = element.tagName === 'polygon' ? SvgPath.getPolygon(points) : SvgPath.getPolyline(points);
+                    this.d = element.tagName === 'polygon' ? SvgPath.getPolygon(this.baseVal.points) : SvgPath.getPolyline(this.baseVal.points);
                     break;
                 }
             }
@@ -177,12 +202,12 @@ export default class SvgPath implements squared.svg.SvgPath {
             this.opacity = Math.min(parseFloat(opacity), 1);
         }
         this.setColor('fill');
-        if (this.fill) {
+        if (this.fill !== '') {
             this.setOpacity('fill');
             this.fillRule = $dom.cssAttribute(element, 'fill-rule', true);
         }
         this.setColor('stroke');
-        if (this.stroke) {
+        if (this.stroke !== '') {
             this.setOpacity('stroke');
             this.strokeWidth = $dom.cssAttribute(element, 'stroke-width') || '1';
             this.strokeLinecap = $dom.cssAttribute(element, 'stroke-linecap', true);

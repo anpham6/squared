@@ -5,9 +5,10 @@ import SvgElement from './svgelement';
 import { isVisible } from './lib/util';
 
 export default class SvgGroup extends squared.lib.base.Container<SvgElement> implements squared.svg.SvgGroup {
-    public readonly name: string;
-    public readonly animate: SvgAnimation[];
+    public animate: SvgAnimation[];
     public visible = true;
+
+    public readonly name: string;
 
     constructor(public readonly element: SVGGraphicsElement) {
         super();

@@ -15,10 +15,6 @@ type ExpressResult = {
 export default abstract class File<T extends Node> implements squared.base.File<T> {
     public static downloadToDisk(data: Blob, filename: string, mime = '') {
         const blob = new Blob([data], { type: mime || 'application/octet-stream' });
-        if (typeof window.navigator.msSaveBlob !== 'undefined') {
-            window.navigator.msSaveBlob(blob, filename);
-            return;
-        }
         const url = window.URL.createObjectURL(blob);
         const element = document.createElement('a');
         element.style.display = 'none';
@@ -90,8 +86,8 @@ export default abstract class File<T extends Node> implements squared.base.File<
                 if (result) {
                     if (result.zipname) {
                         fetch(`/api/downloadtobrowser?filename=${encodeURIComponent(result.zipname)}`)
-                            .then((response2: Response) => response2.blob())
-                            .then((result2: Blob) => File.downloadToDisk(result2, $util.lastIndexOf(result.zipname)));
+                            .then((responseBlob: Response) => responseBlob.blob())
+                            .then((blob: Blob) => File.downloadToDisk(blob, $util.lastIndexOf(result.zipname)));
                     }
                     else if (result.system) {
                         alert(`${result.application}\n\n${result.system}`);

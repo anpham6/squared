@@ -5,10 +5,10 @@ import Container = squared.lib.base.Container;
 declare global {
     namespace squared.svg {
         export interface SvgBase {
+            animate: SvgAnimation[];
             readonly element: SVGGraphicsElement;
             readonly name: string;
             readonly visible: boolean;
-            readonly animate: SvgAnimation[];
             readonly transform: SVGTransformList;
         }
 

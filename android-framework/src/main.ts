@@ -11,34 +11,34 @@ import File from './file';
 import Resource from './resource';
 import View from './view';
 
-import Accessibility from './extension/accessibility';
-import CssGrid from './extension/cssgrid';
-import External from './extension/external';
-import Flexbox from './extension/flexbox';
-import Grid from './extension/grid';
-import List from './extension/list';
-import Relative from './extension/relative';
-import Sprite from './extension/sprite';
-import Substitute from './extension/substitute';
-import Table from './extension/table';
-import VerticalAlign from './extension/verticalalign';
-import WhiteSpace from './extension/whitespace';
+import Accessibility from './extensions/accessibility';
+import CssGrid from './extensions/cssgrid';
+import External from './extensions/external';
+import Flexbox from './extensions/flexbox';
+import Grid from './extensions/grid';
+import List from './extensions/list';
+import Relative from './extensions/relative';
+import Sprite from './extensions/sprite';
+import Substitute from './extensions/substitute';
+import Table from './extensions/table';
+import VerticalAlign from './extensions/verticalalign';
+import WhiteSpace from './extensions/whitespace';
 
-import ConstraintGuideline from './extension/constraint/guideline';
+import ConstraintGuideline from './extensions/constraint/guideline';
 
-import DelegateFixed from './extension/delegate/fixed';
-import DelegateMaxWidthHeight from './extension/delegate/max-width-height';
-import DelegatePercent from './extension/delegate/percent';
-import DelegateRadioGroup from './extension/delegate/radiogroup';
-import DelegateScrollBar from './extension/delegate/scrollbar';
+import DelegateFixed from './extensions/delegate/fixed';
+import DelegateMaxWidthHeight from './extensions/delegate/max-width-height';
+import DelegatePercent from './extensions/delegate/percent';
+import DelegateRadioGroup from './extensions/delegate/radiogroup';
+import DelegateScrollBar from './extensions/delegate/scrollbar';
 
-import ResourceBackground from './extension/resource/background';
-import ResourceDimens from './extension/resource/dimens';
-import ResourceFonts from './extension/resource/fonts';
-import ResourceIncludes from './extension/resource/includes';
-import ResourceStrings from './extension/resource/strings';
-import ResourceStyles from './extension/resource/styles';
-import ResourceSvg from './extension/resource/svg';
+import ResourceBackground from './extensions/resource/background';
+import ResourceDimens from './extensions/resource/dimens';
+import ResourceFonts from './extensions/resource/fonts';
+import ResourceIncludes from './extensions/resource/includes';
+import ResourceStrings from './extensions/resource/strings';
+import ResourceStyles from './extensions/resource/styles';
+import ResourceSvg from './extensions/resource/svg';
 
 import * as constant from './lib/constant';
 import * as enumeration from './lib/enumeration';
@@ -80,7 +80,7 @@ const appBase: AppFramework<T> = {
         Resource,
         View
     },
-    extension: {
+    extensions: {
         Accessibility,
         CssGrid,
         External,

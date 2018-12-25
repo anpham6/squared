@@ -62,3 +62,20 @@ export interface SvgPathCommand {
     largeArcFlag?: number;
     sweepFlag?: number;
 }
+
+export interface SvgPathBaseVal {
+    cx: number | null;
+    cy: number | null;
+    r: number | null;
+    rx: number | null;
+    ry: number | null;
+    x1: number | null;
+    x2: number | null;
+    y1: number | null;
+    y2: number | null;
+    x: number | null;
+    y: number | null;
+    width: number | null;
+    height: number | null;
+    points: Point[] | null;
+}

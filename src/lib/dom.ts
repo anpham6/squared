@@ -309,15 +309,19 @@ export function cssFromParent(element: Element | null, attr: string) {
     return false;
 }
 
-export function cssAttribute(element: Element, attr: string, computed = false): string {
-    let value = element.getAttribute(attr) || (!computed && element.parentElement instanceof SVGGElement ? element.parentElement.getAttribute(attr) : '');
-    if (!value) {
-        const node = getElementAsNode<T>(element);
-        if (node) {
-           value = node.cssInitial(attr);
-        }
+export function cssAttribute(element: Element, attr: string, computed = false) {
+    const attribute = element.attributes.getNamedItem(attr) || (!computed && element.parentElement instanceof SVGGElement ? element.parentElement.attributes.getNamedItem(attr) : '');
+    if (attribute) {
+        return attribute.value.trim();
     }
-    return !value && computed ? getStyle(element)[convertCamelCase(attr)] : value || '';
+    else {
+        const node = getElementAsNode<T>(element);
+        let value = '';
+        if (node) {
+            value = node.cssInitial(attr);
+        }
+        return value || computed && getStyle(element)[convertCamelCase(attr)] as string || '';
+    }
 }
 
 export function getBackgroundPosition(value: string, dimension: RectDimensions, dpi: number, fontSize: number, leftPerspective = false, percent = false) {

@@ -1,3 +1,5 @@
+import $util = squared.lib.util;
+
 export default class SvgAnimation implements squared.svg.SvgAnimation {
     public static convertClockTime(value: string): [number, number] {
         let s = 0;
@@ -35,60 +37,69 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     public attributeName = '';
-    public attributeType = '';
     public to = '';
 
-    private _begin = 0;
-    private _beginMS = 0;
-    private _duration = 0;
-    private _durationMS = 0;
+    private _begin: number;
+    private _beginMS: number | undefined;
+    private _duration: number;
+    private _durationMS: number | undefined;
 
     constructor(
         public element: SVGAnimationElement,
         public parentElement: SVGGraphicsElement)
     {
-        this.init();
+        this.setAttribute('attributeName');
+        this.setAttribute('to');
+        const begin = this.getAttribute('begin');
+        const dur = this.getAttribute('dur');
+        if (begin === '') {
+            this._begin = 0;
+            this._beginMS = 0;
+        }
+        else if (begin === 'indefinite') {
+            this._begin = -1;
+        }
+        else {
+            [this._begin, this._beginMS] = SvgAnimation.convertClockTime(begin);
+        }
+        if (dur === ''  || dur === 'indefinite') {
+            this._duration = -1;
+        }
+        else {
+            [this._duration, this._durationMS] = SvgAnimation.convertClockTime(dur);
+        }
     }
 
-    private init() {
-        const element = this.element;
-        const attributeName = element.attributes.getNamedItem('attributeName');
-        if (attributeName) {
-            this.attributeName = attributeName.value.trim();
-        }
-        const attributeType = element.attributes.getNamedItem('attributeType');
-        if (attributeType) {
-            this.attributeType = attributeType.value.trim();
-        }
-        const to = element.attributes.getNamedItem('to');
-        if (to) {
-            this.to = to.value.trim();
-        }
-        const begin = element.attributes.getNamedItem('begin');
-        const dur = element.attributes.getNamedItem('dur');
-        if (begin) {
-            if (begin.value === 'indefinite') {
-                this._begin = -1;
+    public setAttribute(attr: string, equality?: string) {
+        const value = this.getAttribute(attr);
+        if (value) {
+            if (equality !== undefined) {
+                this[attr + $util.capitalize(equality)] = value === equality;
             }
             else {
-                [this._begin, this._beginMS] = SvgAnimation.convertClockTime(begin.value);
-            }
-        }
-        if (dur) {
-            if (dur.value === 'indefinite') {
-                this._duration = -1;
-            }
-            else {
-                [this._duration, this._durationMS] = SvgAnimation.convertClockTime(dur.value);
+                this[attr] = value;
             }
         }
     }
 
+    public getAttribute(attr: string) {
+        const item = this.element.attributes.getNamedItem(attr);
+        return item ? item.value.trim() : '';
+    }
+
+    set duration(value) {
+        this._duration = Math.floor(value / 1000);
+        this._durationMS = value % 1000;
+    }
     get duration() {
-        return this._duration !== -1 ? this._duration * 1000 + this._durationMS : this._duration;
+        return this._durationMS !== undefined ? this._duration * 1000 + this._durationMS : this._duration;
     }
 
+    set begin(value) {
+        this._begin = Math.floor(value / 1000);
+        this._beginMS = value % 1000;
+    }
     get begin() {
-        return this._begin !== -1 ? this._begin * 1000 + this._beginMS : this._begin;
+        return this._beginMS !== undefined ? this._begin * 1000 + this._beginMS : this._begin;
     }
 }

@@ -12,6 +12,10 @@ import $dom = squared.lib.dom;
 import $util = squared.lib.util;
 import $xml = squared.lib.xml;
 
+function colorStop(parse: boolean) {
+    return `${parse ? '' : '(?:'},?\\s*(${parse ? '' : '?:'}rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|[a-z]+)\\s*(${parse ? '' : '?:'}\\d+%)?${parse ? '' : ')'}`;
+}
+
 export default abstract class Resource<T extends Node> implements squared.base.Resource<T> {
     public static KEY_NAME = 'squared.resource';
 
@@ -210,9 +214,6 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                     case 'background':
                     case 'backgroundImage': {
                         if (value !== 'none' && !node.hasBit('excludeResource', NODE_RESOURCE.IMAGE_SOURCE)) {
-                            function colorStop(parse: boolean) {
-                                return `${parse ? '' : '(?:'},?\\s*(${parse ? '' : '?:'}rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|[a-z]+)\\s*(${parse ? '' : '?:'}\\d+%)?${parse ? '' : ')'}`;
-                            }
                             const gradients: Gradient[] = [];
                             let pattern = new RegExp(`([a-z\-]+)-gradient\\(([\\w\\s%]+)?(${colorStop(false)}+)\\)`, 'g');
                             let match: RegExpExecArray | null;

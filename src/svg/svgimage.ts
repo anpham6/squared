@@ -20,7 +20,7 @@ export default class SvgImage extends SvgElement implements squared.svg.SvgImage
         this.uri =  $util.resolvePath(element.href.baseVal);
     }
 
-    public setExternal() {
+    public externalize() {
         const transform = this.element.transform.baseVal;
         if (transform.numberOfItems) {
             let x = this.x;

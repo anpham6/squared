@@ -1,13 +1,14 @@
 declare global {
     namespace squared.svg {
         interface SvgAnimation {
+            attributeName: string;
+            to: string;
             readonly element: SVGAnimationElement;
             readonly parentElement: SVGGraphicsElement;
-            attributeName: string;
-            attributeType: string;
-            to: string;
-            readonly duration: number;
-            readonly begin: number;
+            duration: number;
+            begin: number;
+            setAttribute(attr: string, equality?: string): void;
+            getAttribute(attr: string): string;
         }
 
         export class SvgAnimation implements SvgAnimation {
@@ -16,17 +17,16 @@ declare global {
         }
 
         interface SvgAnimate extends SvgAnimation {
-            readonly element: SVGAnimateElement;
             from: string;
             by: string;
             values: string[];
             keyTimes: number[];
+            repeatCount: number;
             calcMode: string;
-            additive: boolean;
-            accumulate: boolean;
-            freeze: boolean;
-            repeatDur: number | undefined;
-            repeatCount: number | undefined;
+            additiveSum: boolean;
+            accumulateSum: boolean;
+            fillFreeze: boolean;
+            readonly element: SVGAnimateElement;
             readonly end: number;
             readonly repeatDuration: number;
         }

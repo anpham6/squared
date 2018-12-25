@@ -21,7 +21,7 @@ import $dom = squared.lib.dom;
 import $util = squared.lib.util;
 import $xml = squared.lib.xml;
 
-function sortFloatHorizontal<T extends View>(list: T[]) {
+function sortHorizontalFloat<T extends View>(list: T[]) {
     if (list.some(node => node.floating)) {
         const result = list.slice().sort((a, b) => {
             if (a.floating && !b.floating) {
@@ -162,6 +162,36 @@ function isTargeted<T extends View>(node: T, parent: T) {
     return false;
 }
 
+function getRootNamespace(value: string) {
+    let output = '';
+    for (const namespace in XMLNS_ANDROID) {
+        if (new RegExp(`\\s+${namespace}:`).test(value)) {
+            output += `\n\t${getXmlNs(namespace)}`;
+        }
+    }
+    return output;
+}
+
+function parseAttributes<T extends View>(node: T) {
+    if (node.dir === 'rtl') {
+        node.android(node.length ? 'layoutDirection' : 'textDirection', 'rtl');
+    }
+    const dataset = $dom.getDataSet(node.element, 'android');
+    for (const name in dataset) {
+        if (/^attr[A-Z]/.test(name)) {
+            const obj = $util.capitalize(name.substring(4), false);
+            dataset[name].split(';').forEach(values => {
+                const [key, value] = values.split('::');
+                if (key && value) {
+                    node.attr(obj, key, value);
+                }
+            });
+        }
+    }
+    const indent = $util.repeat(node.renderDepth + 1);
+    return node.combine().map(value => `\n${indent + value}`).join('');
+}
+
 export default class Controller<T extends View> extends squared.base.Controller<T> implements android.base.Controller<T> {
     public static evaluateAnchors<T extends View>(nodes: T[]) {
         const horizontal = nodes.filter(item => item.constraint.horizontal);
@@ -281,34 +311,6 @@ export default class Controller<T extends View> extends squared.base.Controller<
     public finalize(data: SessionData<$NodeList<T>>) {
         const settings = this.userSettings;
         if (settings.showAttributes) {
-            function getRootNamespace(content: string) {
-                let output = '';
-                for (const namespace in XMLNS_ANDROID) {
-                    if (new RegExp(`\\s+${namespace}:`).test(content)) {
-                        output += `\n\t${getXmlNs(namespace)}`;
-                    }
-                }
-                return output;
-            }
-            function parseAttributes(node: T) {
-                if (node.dir === 'rtl') {
-                    node.android(node.length ? 'layoutDirection' : 'textDirection', 'rtl');
-                }
-                const dataset = $dom.getDataSet(node.element, 'android');
-                for (const name in dataset) {
-                    if (/^attr[A-Z]/.test(name)) {
-                        const obj = $util.capitalize(name.substring(4), false);
-                        dataset[name].split(';').forEach(values => {
-                            const [key, value] = values.split('::');
-                            if (key && value) {
-                                node.attr(obj, key, value);
-                            }
-                        });
-                    }
-                }
-                const indent = $util.repeat(node.renderDepth + 1);
-                return node.combine().map(value => `\n${indent + value}`).join('');
-            }
             const cache = data.cache.visible.map(node => ({ pattern: $xml.formatPlaceholder(node.id, '@'), attributes: parseAttributes(node) }));
             for (const value of [...data.views, ...data.includes]) {
                 cache.forEach(item => value.content = value.content.replace(item.pattern, item.attributes));
@@ -392,7 +394,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     else {
                         layout.setType(CONTAINER_NODE.LINEAR);
                         if (layout.floated.size) {
-                            layout.renderPosition = sortFloatHorizontal(layout.children);
+                            layout.renderPosition = sortHorizontalFloat(layout.children);
                         }
                     }
                     layout.add($enum.NODE_ALIGNMENT.HORIZONTAL);
@@ -499,7 +501,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         else if (!strictMode || layout.linearX && !layout.floated.has('right')) {
             containerType = CONTAINER_NODE.LINEAR;
             if (layout.floated.size) {
-                layout.renderPosition = sortFloatHorizontal(layout.children);
+                layout.renderPosition = sortHorizontalFloat(layout.children);
             }
         }
         if (containerType !== 0) {
@@ -1294,7 +1296,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         let rowPreviousLeft: T | undefined;
         let rowPreviousBottom: T | undefined;
         const [right, left] = $util.partition(children, item => item.float === 'right');
-        sortFloatHorizontal(left);
+        sortHorizontalFloat(left);
         [left, right].forEach((segment, index) => {
             const alignParent = index === 0 ? 'left' : 'right';
             for (let i = 0; i < segment.length; i++) {
@@ -1320,8 +1322,8 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     rows.push([item]);
                 }
                 else {
-                    const baseWidth = (rowPreviousLeft && rows.length > 1 ? rowPreviousLeft.linear.width : 0) + rowWidth + item.marginLeft + (previous.float === 'left' && !cleared.has(item) ? 0 : dimension.width) - (firefoxEdge ? item.borderRightWidth : 0);
                     function checkWidthWrap() {
+                        const baseWidth = (rowPreviousLeft && rows.length > 1 ? rowPreviousLeft.linear.width : 0) + rowWidth + item.marginLeft + (previous.float === 'left' && !cleared.has(item) ? 0 : dimension.width) - (firefoxEdge ? item.borderRightWidth : 0);
                         return !item.rightAligned && (Math.floor(baseWidth) - (item.styleElement && item.inlineStatic ? item.paddingLeft + item.paddingRight : 0) > boxWidth);
                     }
                     if (adjustFloatingNegativeMargin(item, previous)) {

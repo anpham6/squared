@@ -161,6 +161,18 @@ function insertDoubleBorder(border: BorderAttribute, top: boolean, right: boolea
     });
 }
 
+function checkBackgroundPosition(current: string, adjacent: string, defaultPosition: string) {
+    if (current.indexOf(' ') === -1 && adjacent.indexOf(' ') !== -1) {
+        if (/^[a-z]+$/.test(current)) {
+            return `${current === 'initial' ? defaultPosition : current} 0px`;
+        }
+        else {
+            return `${defaultPosition} ${current}`;
+        }
+    }
+    return current;
+}
+
 export default class ResourceBackground<T extends View> extends squared.base.Extension<T> {
     public readonly options = {
         autoSizeBackgroundImage: true
@@ -172,17 +184,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         this.application.processing.cache.duplicate().sort(a => !a.visible ? -1 : 0).forEach(node => {
             const stored: BoxStyle = node.data(Resource.KEY_NAME, 'boxStyle');
             if (stored && !node.hasBit('excludeResource', $enum.NODE_RESOURCE.BOX_STYLE)) {
-                function checkPartialBackgroundPosition(current: string, adjacent: string, defaultPosition: string) {
-                    if (current.indexOf(' ') === -1 && adjacent.indexOf(' ') !== -1) {
-                        if (/^[a-z]+$/.test(current)) {
-                            return `${current === 'initial' ? defaultPosition : current} 0px`;
-                        }
-                        else {
-                            return `${defaultPosition} ${current}`;
-                        }
-                    }
-                    return current;
-                }
                 stored.backgroundColor = Resource.addColor(stored.backgroundColor);
                 const backgroundImage: string[] = [];
                 const backgroundVector: StringMap[] = [];
@@ -201,8 +202,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             backgroundImage[i] = Resource.addImageUrl(backgroundImage[i]);
                             const postionX = backgroundPositionX[i] || backgroundPositionX[i - 1];
                             const postionY = backgroundPositionY[i] || backgroundPositionY[i - 1];
-                            const x = checkPartialBackgroundPosition(postionX, postionY, 'left');
-                            const y = checkPartialBackgroundPosition(postionY, postionX, 'top');
+                            const x = checkBackgroundPosition(postionX, postionY, 'left');
+                            const y = checkBackgroundPosition(postionY, postionX, 'top');
                             backgroundPosition[i] = `${x === 'initial' ? '0px' : x} ${y === 'initial' ? '0px' : y}`;
                         }
                         else {

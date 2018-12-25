@@ -454,6 +454,9 @@
     var $dom$1 = squared.lib.dom;
     var $util$2 = squared.lib.util;
     var $xml = squared.lib.xml;
+    function colorStop(parse) {
+        return `${parse ? '' : '(?:'},?\\s*(${parse ? '' : '?:'}rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|[a-z]+)\\s*(${parse ? '' : '?:'}\\d+%)?${parse ? '' : ')'}`;
+    }
     class Resource {
         constructor(application, cache) {
             this.application = application;
@@ -613,9 +616,6 @@
                         case 'background':
                         case 'backgroundImage': {
                             if (value !== 'none' && !node.hasBit('excludeResource', NODE_RESOURCE.IMAGE_SOURCE)) {
-                                function colorStop(parse) {
-                                    return `${parse ? '' : '(?:'},?\\s*(${parse ? '' : '?:'}rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|[a-z]+)\\s*(${parse ? '' : '?:'}\\d+%)?${parse ? '' : ')'}`;
-                                }
                                 const gradients = [];
                                 let pattern = new RegExp(`([a-z\-]+)-gradient\\(([\\w\\s%]+)?(${colorStop(false)}+)\\)`, 'g');
                                 let match;
@@ -3054,10 +3054,6 @@
         }
         static downloadToDisk(data, filename, mime = '') {
             const blob = new Blob([data], { type: mime || 'application/octet-stream' });
-            if (typeof window.navigator.msSaveBlob !== 'undefined') {
-                window.navigator.msSaveBlob(blob, filename);
-                return;
-            }
             const url = window.URL.createObjectURL(blob);
             const element = document.createElement('a');
             element.style.display = 'none';
@@ -3113,8 +3109,8 @@
                     if (result) {
                         if (result.zipname) {
                             fetch(`/api/downloadtobrowser?filename=${encodeURIComponent(result.zipname)}`)
-                                .then((response2) => response2.blob())
-                                .then((result2) => File.downloadToDisk(result2, $util$7.lastIndexOf(result.zipname)));
+                                .then((responseBlob) => responseBlob.blob())
+                                .then((blob) => File.downloadToDisk(blob, $util$7.lastIndexOf(result.zipname)));
                         }
                         else if (result.system) {
                             alert(`${result.application}\n\n${result.system}`);
@@ -4897,6 +4893,38 @@
         UNIT: new RegExp(`^(${REGEX_PARTIAL.UNIT})$`),
         NAMED: new RegExp(`\\s*(${REGEX_PARTIAL.NAMED}|${REGEX_PARTIAL.REPEAT}|${REGEX_PARTIAL.MINMAX}|${REGEX_PARTIAL.FIT_CONTENT}|${REGEX_PARTIAL.UNIT})\\s*`, 'g')
     };
+    function repeatUnit(data, dimension) {
+        const unitPX = [];
+        const unitRepeat = [];
+        for (let i = 0; i < dimension.length; i++) {
+            if (data.repeat[i]) {
+                unitRepeat.push(dimension[i]);
+            }
+            else {
+                unitPX.push(dimension[i]);
+            }
+        }
+        const repeatTotal = data.count - unitPX.length;
+        const result = [];
+        for (let i = 0; i < data.count; i++) {
+            if (data.repeat[i]) {
+                for (let j = 0, k = 0; j < repeatTotal; i++, j++, k++) {
+                    if (k === unitRepeat.length) {
+                        k = 0;
+                    }
+                    result[i] = unitRepeat[k];
+                }
+                break;
+            }
+            else if (unitPX.length) {
+                result[i] = unitPX.shift();
+            }
+        }
+        return result;
+    }
+    function convertUnit(node, value) {
+        return $util$a.isUnit(value) ? node.convertPX(value) : value;
+    }
     class CssGrid extends Extension {
         static createDataAttribute() {
             return {
@@ -4966,9 +4994,6 @@
                 }
                 return false;
             }
-            function convertUnit(value) {
-                return $util$a.isUnit(value) ? node.convertPX(value) : value;
-            }
             [node.cssInitial('gridTemplateRows', true), node.cssInitial('gridTemplateColumns', true), node.css('gridAutoRows'), node.css('gridAutoColumns')].forEach((value, index) => {
                 if (value && value !== 'none' && value !== 'auto') {
                     let i = 1;
@@ -4983,8 +5008,8 @@
                                 data.name[match[2]].push(i);
                             }
                             else if (match[1].startsWith('minmax')) {
-                                data.unit.push(convertUnit(match[6]));
-                                data.unitMin.push(convertUnit(match[5]));
+                                data.unit.push(convertUnit(node, match[6]));
+                                data.unitMin.push(convertUnit(node, match[5]));
                                 data.repeat.push(false);
                                 i++;
                             }
@@ -5005,8 +5030,8 @@
                                     const minmax = new RegExp(REGEX_PARTIAL.MINMAX, 'g');
                                     let matchMM;
                                     while ((matchMM = minmax.exec(match[4])) !== null) {
-                                        data.unit.push(convertUnit(matchMM[2]));
-                                        data.unitMin.push(convertUnit(matchMM[1]));
+                                        data.unit.push(convertUnit(node, matchMM[2]));
+                                        data.unitMin.push(convertUnit(node, matchMM[1]));
                                         data.repeat.push(true);
                                         i++;
                                     }
@@ -5041,7 +5066,7 @@
                                 }
                             }
                             else if (PATTERN_GRID.UNIT.test(match[1])) {
-                                data.unit.push(convertUnit(match[1]));
+                                data.unit.push(convertUnit(node, match[1]));
                                 data.unitMin.push('');
                                 data.repeat.push(false);
                                 i++;
@@ -5157,7 +5182,23 @@
                     for (let i = 0; i < positions.length; i++) {
                         const value = positions[i];
                         let template = mainData.templateAreas[value];
-                        if (template === undefined) {
+                        if (template) {
+                            switch (i) {
+                                case 0:
+                                    placement[i] = template.rowStart + 1;
+                                    break;
+                                case 1:
+                                    placement[i] = template.columnStart + 1;
+                                    break;
+                                case 2:
+                                    placement[i] = template.rowStart + template.rowSpan + 1;
+                                    break;
+                                case 3:
+                                    placement[i] = template.columnStart + template.columnSpan + 1;
+                                    break;
+                            }
+                        }
+                        else {
                             const match = /^([\w\-]+)-(start|end)$/.exec(value);
                             if (match) {
                                 template = mainData.templateAreas[match[1]];
@@ -5187,22 +5228,6 @@
                                         }
                                     }
                                 }
-                            }
-                        }
-                        else {
-                            switch (i) {
-                                case 0:
-                                    placement[i] = template.rowStart + 1;
-                                    break;
-                                case 1:
-                                    placement[i] = template.columnStart + 1;
-                                    break;
-                                case 2:
-                                    placement[i] = template.rowStart + template.rowSpan + 1;
-                                    break;
-                                case 3:
-                                    placement[i] = template.columnStart + template.columnSpan + 1;
-                                    break;
                             }
                         }
                     }
@@ -5281,37 +5306,8 @@
                         data.unitMin.push('');
                         data.repeat.push(true);
                     }
-                    function repeatUnit(dimension) {
-                        const unitPX = [];
-                        const unitRepeat = [];
-                        for (let i = 0; i < dimension.length; i++) {
-                            if (data.repeat[i]) {
-                                unitRepeat.push(dimension[i]);
-                            }
-                            else {
-                                unitPX.push(dimension[i]);
-                            }
-                        }
-                        const repeatTotal = data.count - unitPX.length;
-                        const result = [];
-                        for (let i = 0; i < data.count; i++) {
-                            if (data.repeat[i]) {
-                                for (let j = 0, k = 0; j < repeatTotal; i++, j++, k++) {
-                                    if (k === unitRepeat.length) {
-                                        k = 0;
-                                    }
-                                    result[i] = unitRepeat[k];
-                                }
-                                break;
-                            }
-                            else if (unitPX.length) {
-                                result[i] = unitPX.shift();
-                            }
-                        }
-                        return result;
-                    }
-                    data.unit = repeatUnit(data.unit);
-                    data.unitMin = repeatUnit(data.unitMin);
+                    data.unit = repeatUnit(data, data.unit);
+                    data.unitMin = repeatUnit(data, data.unitMin);
                 }
             }
             node.each((item, index) => {
@@ -5648,6 +5644,15 @@
 
     var $dom$8 = squared.lib.dom;
     var $util$c = squared.lib.util;
+    function getRowIndex(columns, target) {
+        for (const column of columns) {
+            const index = column.findIndex(item => $util$c.withinFraction(target.linear.top, item.linear.top) || target.linear.top > item.linear.top && target.linear.top < item.linear.bottom);
+            if (index !== -1) {
+                return index;
+            }
+        }
+        return -1;
+    }
     class Grid extends Extension {
         constructor() {
             super(...arguments);
@@ -5762,15 +5767,6 @@
                 }
             }
             else {
-                function getRowIndex(rowItem) {
-                    for (const column of columns) {
-                        const index = column.findIndex(item => $util$c.withinFraction(rowItem.linear.top, item.linear.top) || rowItem.linear.top > item.linear.top && rowItem.linear.top < item.linear.bottom);
-                        if (index !== -1) {
-                            return index;
-                        }
-                    }
-                    return -1;
-                }
                 const nextMapX = {};
                 for (const item of node) {
                     for (const subitem of item) {
@@ -5801,7 +5797,7 @@
                                     columns[l][m] = nextX;
                                 }
                                 else {
-                                    const index = getRowIndex(nextX);
+                                    const index = getRowIndex(columns, nextX);
                                     if (index !== -1) {
                                         columns[l][index] = nextX;
                                     }
@@ -5817,7 +5813,7 @@
                                     const maxRight = $util$c.maxArray(columns[current].map(item => item.linear.right));
                                     if (left > minLeft && right > maxRight) {
                                         const filtered = columns.filter(item => item);
-                                        const index = getRowIndex(nextX);
+                                        const index = getRowIndex(columns, nextX);
                                         if (index !== -1 && filtered[filtered.length - 1][index] === undefined) {
                                             columns[current].length = 0;
                                         }

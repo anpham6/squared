@@ -152,6 +152,29 @@ export function getTransformOrigin(element: SVGGraphicsElement, dpi = 0) {
     return undefined;
 }
 
+export function getLeastCommonMultiple(values: number[]) {
+    const sorted = values.slice().sort((a, b) => a < b ? -1 : 1);
+    if (sorted.length > 1) {
+        const smallest = sorted.splice(0, 1)[0];
+        let result = smallest;
+        let valid = false;
+        while (!valid) {
+            for (const value of sorted) {
+                if (result >= value && result % value === 0) {
+                    valid = true;
+                }
+                else {
+                    valid = false;
+                    result += smallest;
+                    break;
+                }
+            }
+        }
+        return result;
+    }
+    return sorted[0];
+}
+
 export function applyMatrixX(matrix: DOMMatrix, x: number, y: number) {
     return matrix.a * x + matrix.c * y + matrix.e;
 }

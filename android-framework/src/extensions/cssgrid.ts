@@ -49,6 +49,97 @@ function getGridSize<T extends View>(mainData: CssGridData<T>, direction: string
     return result;
 }
 
+function setContentSpacing<T extends View>(mainData: CssGridData<T>, node: T, alignment: string, direction: string) {
+    const MARGIN_START = direction === 'column' ? $enum.BOX_STANDARD.MARGIN_LEFT : $enum.BOX_STANDARD.MARGIN_TOP;
+    const MARGIN_END = direction === 'column' ? $enum.BOX_STANDARD.MARGIN_RIGHT : $enum.BOX_STANDARD.MARGIN_BOTTOM;
+    const PADDING_START = direction === 'column' ? $enum.BOX_STANDARD.PADDING_LEFT : $enum.BOX_STANDARD.PADDING_TOP;
+    const data = <CssGridDirectionData> mainData[direction];
+    const rowData = alignment.startsWith('space') ? getRowData(mainData, direction) : [];
+    const sizeTotal = getGridSize(mainData, direction, node);
+    if (sizeTotal > 0) {
+        const dimension = direction === 'column' ? 'width' : 'height';
+        const itemCount = mainData[direction].count;
+        const adjusted = new Set<T>();
+        switch (alignment) {
+            case 'center':
+                node.modifyBox(PADDING_START, Math.floor(sizeTotal / 2));
+                data.normal = false;
+                break;
+            case 'right':
+                if (direction === 'row') {
+                    break;
+                }
+            case 'end':
+            case 'flex-end':
+                node.modifyBox(PADDING_START, sizeTotal);
+                data.normal = false;
+                break;
+            case 'space-around': {
+                const marginSize = Math.floor(sizeTotal / (itemCount * 2));
+                for (let i = 0; i < itemCount; i++) {
+                    new Set<T>($util.flatArray(rowData[i])).forEach(item => {
+                        if (!adjusted.has(item)) {
+                            item.modifyBox(MARGIN_START, marginSize);
+                            if (i < itemCount - 1) {
+                                item.modifyBox(MARGIN_END, marginSize);
+                            }
+                            adjusted.add(item);
+                        }
+                        else {
+                            item.cssPX(dimension, marginSize * 2);
+                        }
+                    });
+                }
+                data.normal = false;
+                break;
+            }
+            case 'space-between': {
+                const marginSize = Math.floor(sizeTotal / ((itemCount - 1) * 2));
+                const rowLast = $util.flatArray(rowData[itemCount - 1]);
+                for (let i = 0; i < itemCount; i++) {
+                    new Set<T>($util.flatArray(rowData[i])).forEach(item => {
+                        if (!adjusted.has(item)) {
+                            if (i > 0) {
+                                item.modifyBox(MARGIN_START, marginSize);
+                            }
+                            if (i < itemCount - 1 && !rowLast.some(cell => cell === item)) {
+                                item.modifyBox(MARGIN_END, marginSize);
+                            }
+                            adjusted.add(item);
+                        }
+                        else {
+                            item.cssPX(dimension, marginSize * 2);
+                        }
+                    });
+                }
+                data.normal = false;
+                break;
+            }
+            case 'space-evenly': {
+                const marginSize = Math.floor(sizeTotal / (itemCount + 1));
+                const rowLast = $util.flatArray(rowData[itemCount - 1]);
+                for (let i = 0; i < itemCount; i++) {
+                    const marginMiddle = Math.floor(marginSize / 2);
+                    new Set<T>($util.flatArray(rowData[i])).forEach(item => {
+                        if (!adjusted.has(item)) {
+                            item.modifyBox(MARGIN_START, i === 0 ? marginSize : marginMiddle);
+                            if (i < itemCount - 1 && !rowLast.some(cell => cell === item)) {
+                                item.modifyBox(MARGIN_END, marginMiddle);
+                            }
+                            adjusted.add(item);
+                        }
+                        else {
+                            item.cssPX(dimension, marginSize);
+                        }
+                    });
+                }
+                data.normal = false;
+                break;
+            }
+        }
+    }
+}
+
 export default class <T extends View> extends squared.base.extensions.CssGrid<T> {
     public processNode(node: T, parent: T): ExtensionResult<T> {
         super.processNode(node, parent);
@@ -261,101 +352,11 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
     public postBaseLayout(node: T) {
         const mainData: CssGridData<T> = node.data($const.EXT_NAME.CSS_GRID, 'mainData');
         if (mainData) {
-            function setContentSpacing(alignment: string, direction: string) {
-                const MARGIN_START = direction === 'column' ? $enum.BOX_STANDARD.MARGIN_LEFT : $enum.BOX_STANDARD.MARGIN_TOP;
-                const MARGIN_END = direction === 'column' ? $enum.BOX_STANDARD.MARGIN_RIGHT : $enum.BOX_STANDARD.MARGIN_BOTTOM;
-                const PADDING_START = direction === 'column' ? $enum.BOX_STANDARD.PADDING_LEFT : $enum.BOX_STANDARD.PADDING_TOP;
-                const data = <CssGridDirectionData> mainData[direction];
-                const rowData = alignment.startsWith('space') ? getRowData(mainData, direction) : [];
-                const sizeTotal = getGridSize(mainData, direction, node);
-                if (sizeTotal > 0) {
-                    const dimension = direction === 'column' ? 'width' : 'height';
-                    const itemCount = mainData[direction].count;
-                    const adjusted = new Set<T>();
-                    switch (alignment) {
-                        case 'center':
-                            node.modifyBox(PADDING_START, Math.floor(sizeTotal / 2));
-                            data.normal = false;
-                            break;
-                        case 'right':
-                            if (direction === 'row') {
-                                break;
-                            }
-                        case 'end':
-                        case 'flex-end':
-                            node.modifyBox(PADDING_START, sizeTotal);
-                            data.normal = false;
-                            break;
-                        case 'space-around': {
-                            const marginSize = Math.floor(sizeTotal / (itemCount * 2));
-                            for (let i = 0; i < itemCount; i++) {
-                                new Set<T>($util.flatArray(rowData[i])).forEach(item => {
-                                    if (!adjusted.has(item)) {
-                                        item.modifyBox(MARGIN_START, marginSize);
-                                        if (i < itemCount - 1) {
-                                            item.modifyBox(MARGIN_END, marginSize);
-                                        }
-                                        adjusted.add(item);
-                                    }
-                                    else {
-                                        item.cssPX(dimension, marginSize * 2);
-                                    }
-                                });
-                            }
-                            data.normal = false;
-                            break;
-                        }
-                        case 'space-between': {
-                            const marginSize = Math.floor(sizeTotal / ((itemCount - 1) * 2));
-                            const rowLast = $util.flatArray(rowData[itemCount - 1]);
-                            for (let i = 0; i < itemCount; i++) {
-                                new Set<T>($util.flatArray(rowData[i])).forEach(item => {
-                                    if (!adjusted.has(item)) {
-                                        if (i > 0) {
-                                            item.modifyBox(MARGIN_START, marginSize);
-                                        }
-                                        if (i < itemCount - 1 && !rowLast.some(cell => cell === item)) {
-                                            item.modifyBox(MARGIN_END, marginSize);
-                                        }
-                                        adjusted.add(item);
-                                    }
-                                    else {
-                                        item.cssPX(dimension, marginSize * 2);
-                                    }
-                                });
-                            }
-                            data.normal = false;
-                            break;
-                        }
-                        case 'space-evenly': {
-                            const marginSize = Math.floor(sizeTotal / (itemCount + 1));
-                            const rowLast = $util.flatArray(rowData[itemCount - 1]);
-                            for (let i = 0; i < itemCount; i++) {
-                                const marginMiddle = Math.floor(marginSize / 2);
-                                new Set<T>($util.flatArray(rowData[i])).forEach(item => {
-                                    if (!adjusted.has(item)) {
-                                        item.modifyBox(MARGIN_START, i === 0 ? marginSize : marginMiddle);
-                                        if (i < itemCount - 1 && !rowLast.some(cell => cell === item)) {
-                                            item.modifyBox(MARGIN_END, marginMiddle);
-                                        }
-                                        adjusted.add(item);
-                                    }
-                                    else {
-                                        item.cssPX(dimension, marginSize);
-                                    }
-                                });
-                            }
-                            data.normal = false;
-                            break;
-                        }
-                    }
-                }
-            }
             if (node.hasWidth && mainData.justifyContent !== 'normal') {
-                setContentSpacing(mainData.justifyContent, 'column');
+                setContentSpacing(mainData, node, mainData.justifyContent, 'column');
             }
             if (node.hasHeight && mainData.alignContent !== 'normal') {
-                setContentSpacing(mainData.alignContent, 'row');
+                setContentSpacing(mainData, node, mainData.alignContent, 'row');
             }
             if (mainData.column.normal && !mainData.column.unit.includes('auto')) {
                 const columnGap =  mainData.column.gap * (mainData.column.count - 1);

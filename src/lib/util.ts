@@ -474,6 +474,16 @@ export function partition<T>(list: T[], predicate: IteratorPredicate<T, boolean>
     return [valid, invalid];
 }
 
+export function spliceArray<T>(list: T[], item: T) {
+    for (let i = 0; i < list.length; i++) {
+        if (list[i] === item) {
+            list.splice(i, 1);
+            return true;
+        }
+    }
+    return false;
+}
+
 export function flatArray<T>(list: any[]): T[] {
     let current = list;
     while (current.some(item => Array.isArray(item))) {
