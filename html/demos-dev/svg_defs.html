@@ -42,7 +42,7 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 240 240">
             <rect x="0" y="0" width="100" height="50" stroke="black" stroke-width="2" fill="purple">
                 <set attributeType="CSS" attributeName="fill-opacity" begin="5s" dur="10s" to="1" />
-                <animate attributeName="x" values="0; 100; 200" keyTimes="0; 0.5; 1" dur="3s" repeatCount="1" data-android-interpolator="ACCELERATE_DECELERATE" />
+                <animate attributeName="x" values="0; 100; 200" keyTimes="0; 0.5; 1" begin="1s; 2s" fill="freeze" dur="5s" repeatCount="2" />
                 <animate attributeName="y" values="75; 50; 25" keyTimes="0; 0.5; 1" dur="5s" begin="1s" repeatCount="1" />
                 <animate attributeName="y" to="100" dur="10s" begin="0s" repeatCount="indefinite" />
                 <animate attributeName="stroke-opacity" values="0; 1" keyTimes="0; 1" dur="10s" repeatCount="1" data-android-interpolator="ACCELERATE" />

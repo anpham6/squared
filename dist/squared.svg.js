@@ -474,25 +474,22 @@
             this.parentElement = parentElement;
             this.attributeName = '';
             this.to = '';
+            this.begin = [0];
             this.setAttribute('attributeName');
             this.setAttribute('to');
             const begin = this.getAttribute('begin');
             const dur = this.getAttribute('dur');
-            if (begin === '') {
-                this._begin = 0;
-                this._beginMS = 0;
+            if (begin === 'indefinite') {
+                this.begin.length = 0;
             }
-            else if (begin === 'indefinite') {
-                this._begin = -1;
-            }
-            else {
-                [this._begin, this._beginMS] = SvgAnimation.convertClockTime(begin);
+            else if (begin !== '') {
+                this.begin = begin.split(';').map(value => SvgAnimation.convertClockTime(value)).sort((a, b) => a < b ? -1 : 1);
             }
             if (dur === '' || dur === 'indefinite') {
-                this._duration = -1;
+                this.duration = -1;
             }
             else {
-                [this._duration, this._durationMS] = SvgAnimation.convertClockTime(dur);
+                this.duration = SvgAnimation.convertClockTime(dur);
             }
         }
         static convertClockTime(value) {
@@ -527,7 +524,7 @@
                     }
                 }
             }
-            return [s, ms];
+            return s * 1000 + ms;
         }
         setAttribute(attr, equality) {
             const value = this.getAttribute(attr);
@@ -544,20 +541,6 @@
             const item = this.element.attributes.getNamedItem(attr);
             return item ? item.value.trim() : '';
         }
-        set duration(value) {
-            this._duration = Math.floor(value / 1000);
-            this._durationMS = value % 1000;
-        }
-        get duration() {
-            return this._durationMS !== undefined ? this._duration * 1000 + this._durationMS : this._duration;
-        }
-        set begin(value) {
-            this._begin = Math.floor(value / 1000);
-            this._beginMS = value % 1000;
-        }
-        get begin() {
-            return this._beginMS !== undefined ? this._begin * 1000 + this._beginMS : this._begin;
-        }
     }
 
     var $util$2 = squared.lib.util;
@@ -570,12 +553,13 @@
             this.by = '';
             this.values = [];
             this.keyTimes = [];
+            this.end = [];
             this.calcMode = '';
             this.additiveSum = false;
             this.accumulateSum = false;
             this.fillFreeze = false;
             const values = this.getAttribute('values');
-            if (values) {
+            if (values !== '') {
                 this.values.push(...$util$2.flatMap(values.split(';'), value => value.trim()));
                 if (this.values.length > 1) {
                     this.from = this.values[0];
@@ -613,23 +597,20 @@
             const end = this.getAttribute('end');
             const repeatDur = this.getAttribute('repeatDur');
             const repeatCount = this.getAttribute('repeatCount');
-            if (end === '' || end === 'indefinite') {
-                this._end = -1;
-            }
-            else {
-                [this._end, this._endMS] = SvgAnimate.convertClockTime(end);
+            if (end !== '') {
+                this.end = end.split(';').map(value => SvgAnimation.convertClockTime(value)).sort((a, b) => a < b ? -1 : 1);
             }
             if (repeatDur === '' || repeatDur === 'indefinite') {
-                this._repeatDuration = -1;
+                this.repeatDuration = -1;
             }
             else {
-                [this._repeatDuration, this._repeatDurationMS] = SvgAnimate.convertClockTime(repeatDur);
+                this.repeatDuration = SvgAnimate.convertClockTime(repeatDur);
             }
             if (repeatCount === 'indefinite') {
                 this._repeatCount = -1;
             }
             else {
-                this._repeatCount = Math.max(0, $util$2.convertInt(repeatCount));
+                this._repeatCount = Math.max(1, $util$2.convertInt(repeatCount));
             }
             this.setAttribute('calcMode');
             this.setAttribute('additive', 'sum');
@@ -648,43 +629,32 @@
             });
             return result.length > 1 && result.some(percent => percent !== -1) && result[0] === 0 ? result : [];
         }
-        set end(value) {
-            this._end = Math.floor(value / 1000);
-            this._endMS = value % 1000;
-        }
-        get end() {
-            return this._endMS !== undefined ? this._end * 1000 + this._endMS : this._end;
-        }
         set repeatCount(value) {
-            this._repeatCount = value;
-            this._repeatDuration = -1;
-            this._repeatDurationMS = undefined;
+            this._repeatCount = value !== -1 ? Math.max(1, value) : -1;
+            this.repeatDuration = -1;
         }
         get repeatCount() {
             const duration = this.duration;
             if (duration !== -1) {
-                if (this._repeatCount !== -1 && this._repeatDuration !== -1) {
-                    if ((this._repeatCount + 1) * duration <= this.repeatDuration) {
+                if (this._repeatCount === -1 && this.repeatDuration === -1) {
+                    return -1;
+                }
+                else if (this._repeatCount !== -1 && this.repeatDuration !== -1) {
+                    if (this._repeatCount * duration <= this.repeatDuration) {
                         return this._repeatCount;
                     }
                     else {
                         return this.repeatDuration / duration;
                     }
                 }
-                else if (this._repeatCount === -1 && this._repeatDuration === -1) {
-                    return -1;
-                }
-                else if (this._repeatDuration !== -1) {
+                else if (this.repeatDuration !== -1) {
                     return this.repeatDuration / duration;
                 }
                 else {
                     return this._repeatCount;
                 }
             }
-            return 0;
-        }
-        get repeatDuration() {
-            return this._repeatDurationMS !== undefined ? this._repeatDuration * 1000 + this._repeatDurationMS : this._repeatDuration;
+            return 1;
         }
     }
 
@@ -998,27 +968,54 @@
     }
 
     var $util$5 = squared.lib.util;
-    function getSplitValue(time, previousTime, nextTime, previousValue, nextValue) {
-        return previousValue + ((time - previousTime) / (nextTime - previousTime)) * (nextValue - previousValue);
-    }
-    function getAdjacentTimeValue(timeline, keyTime) {
-        let previous;
-        let next;
-        for (const [timeMS, data] of timeline.entries()) {
-            if (previous && keyTime < timeMS) {
-                next = { timeMS, value: data.value };
+    function insertSplitKeyTimeValue(insertMap, iteration, begin, duration, keyTimes, values, maxTime, finalTimeValue) {
+        maxTime += finalTimeValue ? -1 : 1;
+        const fraction = (maxTime - (begin + duration * iteration)) / duration;
+        let previousIndex = -1;
+        let nextIndex = -1;
+        for (let l = 0; l < keyTimes.length; l++) {
+            if (previousIndex !== -1 && fraction < keyTimes[l]) {
+                nextIndex = l;
                 break;
             }
-            if (keyTime > timeMS) {
-                previous = { timeMS, value: data.value };
+            if (fraction > keyTimes[l]) {
+                previousIndex = l;
             }
         }
-        return [previous, next];
+        if (previousIndex !== -1 && nextIndex !== -1) {
+            const value = getSplitValue(fraction, keyTimes[previousIndex], keyTimes[nextIndex], parseFloat(values[previousIndex]), parseFloat(values[nextIndex]));
+            insertMap.set(maxTime, { begin, duration, value });
+            return maxTime;
+        }
+        else {
+            return -1;
+        }
     }
-    function convertKeyTimeFraction(map, totalMS) {
+    function getSplitValue(fraction, previousFraction, nextFraction, previousValue, nextValue) {
+        return previousValue + ((fraction - previousFraction) / (nextFraction - previousFraction)) * (nextValue - previousValue);
+    }
+    function insertSplitTimeValue(baseMap, insertMap, keyTime) {
+        let previous;
+        let next;
+        for (const [time, data] of baseMap.entries()) {
+            if (previous && keyTime < time) {
+                next = { time, value: data.value };
+                break;
+            }
+            if (keyTime > time) {
+                previous = { time, value: data.value };
+            }
+        }
+        if (previous && next) {
+            insertMap.set(keyTime, { value: getSplitValue(keyTime, previous.time, next.time, previous.value, next.value) });
+            return true;
+        }
+        return false;
+    }
+    function convertKeyTimeFraction(map, total) {
         const result = new Map();
-        for (const [timeMS, data] of map.entries()) {
-            let fraction = timeMS / totalMS;
+        for (const [time, data] of map.entries()) {
+            let fraction = time / total;
             if (fraction > 0) {
                 for (let i = 5;; i++) {
                     const value = parseFloat(fraction.toString().substring(0, i));
@@ -1034,14 +1031,14 @@
     }
     function getPathData(path, map, methodName, attrs, freezeMap, transform) {
         const result = [];
-        for (const [timeMS, data] of map.entries()) {
+        for (const [time, data] of map.entries()) {
             const values = [];
             attrs.forEach(attr => {
                 if (data.has(attr)) {
                     values.push(data.get(attr));
                 }
-                else if (freezeMap && freezeMap[attr] !== undefined) {
-                    values.push(freezeMap[attr]);
+                else if (freezeMap && freezeMap[attr]) {
+                    values.push(freezeMap[attr].value);
                 }
                 else if (path.baseVal[attr] !== null) {
                     values.push(path.baseVal[attr]);
@@ -1062,7 +1059,7 @@
                 if (value === undefined) {
                     value = SvgPath[methodName].apply(null, values);
                 }
-                result.push({ timeMS, value });
+                result.push({ time, value });
             }
             else {
                 return undefined;
@@ -1087,6 +1084,27 @@
             { x: x + width, y: y + height },
             { x, y: y + height }
         ];
+    }
+    function getKeyTimeMap(keyTimes, timelineMap, freezeMap) {
+        const result = new Map();
+        for (const keyTime of keyTimes) {
+            const values = new Map();
+            for (const attr in timelineMap) {
+                const item = timelineMap[attr].get(keyTime);
+                if (item) {
+                    values.set(attr, item.value);
+                }
+            }
+            if (freezeMap) {
+                for (const attr in freezeMap) {
+                    if (!values.has(attr) && keyTime >= freezeMap[attr].time) {
+                        values.set(attr, freezeMap[attr].value);
+                    }
+                }
+            }
+            result.set(keyTime, values);
+        }
+        return result;
     }
     class SvgElement {
         constructor(element) {
@@ -1160,286 +1178,266 @@
                         }
                     }
                 }
-                if (animations.length > 1) {
+                if (animations.length > 1 || animations.some(item => item.begin.length > 1)) {
                     const indefiniteMap = {};
                     const repeatingMap = {};
+                    const indefiniteStaticMap = {};
+                    const indefiniteAnimations = [];
+                    const repeatingAnimations = [];
                     const freezeMap = {};
-                    const indefiniteDuration = [];
                     const keyTimeMapList = [];
                     let repeatingDurationTotal = 0;
                     let indefiniteDurationTotal = 0;
                     animations.forEach(item => {
                         const attr = item.attributeName;
-                        if (indefiniteMap[attr] === undefined && freezeMap[attr] === undefined) {
+                        if (indefiniteMap[attr] === undefined && freezeMap[attr] === undefined && item.begin.length) {
+                            let maxTime = -1;
                             if (item.repeatCount === -1) {
-                                indefiniteMap[attr] = new Map();
-                                const begin = item.begin !== -1 ? item.begin : 0;
-                                indefiniteDuration.push(begin + item.duration);
+                                indefiniteStaticMap[attr] = new Map();
                                 for (let i = 0; i < item.keyTimes.length; i++) {
-                                    indefiniteMap[attr].set(begin + item.keyTimes[i] * item.duration, { value: parseFloat(item.values[i]), begin, duration: item.duration });
+                                    indefiniteStaticMap[attr].set(item.keyTimes[i] * item.duration, { begin: 0, duration: item.duration, value: parseFloat(item.values[i]) });
                                 }
+                                if (item.begin.some(value => value > 0)) {
+                                    indefiniteMap[attr] = new Map();
+                                    for (let i = 0; i < item.begin.length; i++) {
+                                        const begin = item.begin[i];
+                                        const maxThreadTime = item.begin[i + 1] !== undefined ? item.begin[i + 1] : Number.MAX_VALUE;
+                                        for (let j = 0; j < item.keyTimes.length; j++) {
+                                            const time = begin + item.keyTimes[j] * item.duration;
+                                            if (time >= maxThreadTime) {
+                                                const insertTime = insertSplitKeyTimeValue(indefiniteMap[attr], i, begin, item.duration, item.keyTimes, item.values, maxThreadTime, true);
+                                                if (insertTime !== -1) {
+                                                    maxTime = insertTime;
+                                                }
+                                                break;
+                                            }
+                                            else if (time > maxTime) {
+                                                indefiniteMap[attr].set(time, { begin, duration: item.duration, value: parseFloat(item.values[j]) });
+                                                maxTime = time;
+                                            }
+                                        }
+                                    }
+                                }
+                                indefiniteAnimations.push(item);
                             }
                             else {
-                                let maxTimeMS = -1;
-                                let fillFreeze = false;
                                 let parallel = false;
+                                let included = false;
                                 if (repeatingMap[attr] === undefined) {
                                     repeatingMap[attr] = new Map();
                                 }
                                 else {
-                                    maxTimeMS = $util$5.maxArray(Array.from(repeatingMap[attr].keys()));
-                                    fillFreeze = !!Array.from(repeatingMap[attr].values()).pop().freeze;
+                                    maxTime = $util$5.maxArray(Array.from(repeatingMap[attr].keys()));
                                     parallel = true;
                                 }
-                                const durationMS = item.duration;
-                                const repeatCount = item.repeatCount;
-                                if (maxTimeMS >= (repeatCount + 1) * durationMS) {
-                                    return;
-                                }
-                                const repeatTotal = Math.ceil(repeatCount);
-                                const repeatExcessTime = repeatCount - Math.floor(repeatCount);
-                                const begin = item.begin !== -1 ? item.begin : 0;
-                                let itemValue;
-                                for (let i = maxTimeMS >= durationMS ? Math.floor(maxTimeMS / durationMS) : 0; i <= repeatTotal; i++) {
-                                    const beginMS = begin * (i + 1);
-                                    for (let j = 0; j < item.keyTimes.length; j++) {
-                                        const keyTime = item.keyTimes[j];
-                                        let nextKeyTime;
-                                        let timeMS;
-                                        let value = parseFloat(item.values[j]);
-                                        if (j === 0) {
-                                            const from = item.element.attributes.getNamedItem('values') || item.element.attributes.getNamedItem('from');
-                                            if (from === null) {
-                                                const previous = Array.from(repeatingMap[attr].values()).reverse().find(subitem => !!subitem.freeze);
-                                                if (previous) {
-                                                    value = previous.value;
+                                for (let i = 0; i < item.begin.length; i++) {
+                                    const begin = item.begin[i];
+                                    const maxThreadTime = item.begin[i + 1] !== undefined ? item.begin[i + 1] : Number.MAX_VALUE;
+                                    const duration = item.duration;
+                                    const repeatCount = item.repeatCount;
+                                    const durationTotal = duration * repeatCount;
+                                    if (begin + durationTotal <= maxTime) {
+                                        return;
+                                    }
+                                    const repeatTotal = Math.ceil(repeatCount);
+                                    const repeatFraction = repeatCount - Math.floor(repeatCount);
+                                    for (let j = Math.floor(Math.max(0, maxTime - begin) / duration); j < repeatTotal; j++) {
+                                        for (let k = 0; k < item.keyTimes.length; k++) {
+                                            const fraction = item.keyTimes[k];
+                                            let time;
+                                            let value = parseFloat(item.values[k]);
+                                            let finalTimeValue = false;
+                                            if (j === repeatTotal - 1 && repeatFraction > 0 && repeatFraction >= fraction) {
+                                                for (let l = k + 1; l < item.keyTimes.length; l++) {
+                                                    if (repeatFraction < item.keyTimes[l]) {
+                                                        time = begin + durationTotal;
+                                                        value = getSplitValue(repeatFraction, fraction, item.keyTimes[l], value, parseFloat(item.values[l]));
+                                                        finalTimeValue = true;
+                                                        break;
+                                                    }
                                                 }
                                             }
-                                        }
-                                        if (i === repeatTotal && repeatExcessTime > keyTime) {
-                                            nextKeyTime = item.keyTimes[j + 1];
-                                            if (nextKeyTime !== undefined && repeatExcessTime < nextKeyTime) {
-                                                timeMS = repeatCount * durationMS;
-                                                value = getSplitValue(repeatExcessTime, keyTime, nextKeyTime, value, parseFloat(item.values[j + 1]));
-                                            }
-                                            else {
-                                                nextKeyTime = undefined;
-                                            }
-                                        }
-                                        if (timeMS === undefined) {
-                                            timeMS = (keyTime + i) * durationMS;
-                                            if (j === 0 && (i > 0 || parallel)) {
-                                                if (parallel) {
-                                                    const maxTimeAdjustedMS = maxTimeMS + (fillFreeze ? 0 : -1);
-                                                    if (beginMS >= maxTimeAdjustedMS) {
-                                                        timeMS = Math.max(beginMS, maxTimeMS + 1);
+                                            if (time === undefined) {
+                                                time = begin + (fraction + j) * duration;
+                                                if (time >= maxThreadTime) {
+                                                    maxTime = maxThreadTime;
+                                                    finalTimeValue = true;
+                                                }
+                                                if (parallel || finalTimeValue) {
+                                                    if (!finalTimeValue && begin >= maxTime) {
+                                                        time = Math.max(begin, maxTime + 1);
                                                     }
                                                     else {
-                                                        const excessTimeMS = maxTimeAdjustedMS % (begin + durationMS);
-                                                        if (excessTimeMS !== 0) {
-                                                            const currentTime = (excessTimeMS - begin) / durationMS;
-                                                            let previous = -1;
-                                                            let next = -1;
-                                                            for (let k = 0; k < item.keyTimes.length; k++) {
-                                                                if (previous !== -1 && currentTime < item.keyTimes[k]) {
-                                                                    next = k;
-                                                                    break;
-                                                                }
-                                                                if (currentTime > item.keyTimes[k]) {
-                                                                    previous = k;
-                                                                }
-                                                            }
-                                                            if (previous !== -1 && next !== -1) {
-                                                                value = getSplitValue(currentTime, item.keyTimes[previous], item.keyTimes[next], parseFloat(item.values[previous]), parseFloat(item.values[next]));
-                                                            }
-                                                            timeMS = maxTimeMS + 1;
+                                                        if (!finalTimeValue && time < maxTime) {
+                                                            continue;
+                                                        }
+                                                        else if (!finalTimeValue && time === maxTime) {
+                                                            time = maxTime + 1;
                                                         }
                                                         else {
-                                                            value = parseFloat(item.values[0]);
-                                                            timeMS = Math.max(beginMS + timeMS, maxTimeMS + 1);
+                                                            const insertTime = insertSplitKeyTimeValue(repeatingMap[attr], j, begin, duration, item.keyTimes, item.values, maxTime, finalTimeValue);
+                                                            if (insertTime !== -1) {
+                                                                maxTime = insertTime;
+                                                                included = true;
+                                                            }
+                                                            if (finalTimeValue) {
+                                                                break;
+                                                            }
                                                         }
                                                     }
                                                     parallel = false;
                                                 }
-                                                else {
-                                                    timeMS = maxTimeMS + 1;
+                                                else if (j > 0 && k === 0) {
+                                                    time = Math.max(time, maxTime + 1);
                                                 }
                                             }
-                                        }
-                                        else {
-                                            timeMS += beginMS;
-                                        }
-                                        if (timeMS > maxTimeMS) {
-                                            itemValue = { value };
-                                            repeatingMap[attr].set(timeMS, itemValue);
-                                            maxTimeMS = timeMS;
-                                        }
-                                        if (nextKeyTime) {
-                                            break;
+                                            if (time > maxTime) {
+                                                repeatingMap[attr].set(time, { begin, duration, value });
+                                                maxTime = time;
+                                                included = true;
+                                            }
+                                            if (finalTimeValue) {
+                                                break;
+                                            }
                                         }
                                     }
                                 }
-                                if (itemValue) {
+                                if (included) {
                                     if (item.fillFreeze) {
-                                        itemValue.freeze = item.fillFreeze;
-                                        freezeMap[attr] = { timeMS: maxTimeMS, value: itemValue.value };
+                                        const data = repeatingMap[attr].get(maxTime);
+                                        if (data) {
+                                            freezeMap[attr] = { time: maxTime, value: data.value };
+                                        }
                                     }
-                                    else {
-                                        repeatingMap[attr].set(maxTimeMS + 1, { value: parseFloat(item.values[0]) });
-                                    }
+                                    repeatingAnimations.push(item);
                                 }
                             }
                         }
                     });
-                    const hasRepeating = Object.keys(repeatingMap).length > 0;
-                    if (hasRepeating) {
-                        let keyTimes = [];
-                        for (const attr in repeatingMap) {
-                            keyTimes.push(...repeatingMap[attr].keys());
-                        }
-                        keyTimes = Array.from(new Set(keyTimes)).sort((a, b) => a < b ? -1 : 1);
+                    if (repeatingAnimations.length) {
                         for (const attr in indefiniteMap) {
-                            const duration = indefiniteMap[attr].values().next().value.duration;
-                            const maxTime = keyTimes[keyTimes.length - 1];
-                            for (let i = 1;; i++) {
-                                const time = duration * i;
-                                if (time === maxTime) {
-                                    break;
-                                }
-                                if (time > maxTime) {
-                                    keyTimes.push(time);
-                                    break;
-                                }
+                            if (repeatingMap[attr] === undefined) {
+                                repeatingMap[attr] = indefiniteMap[attr];
+                                indefiniteMap[attr] = undefined;
                             }
                         }
-                        const indefiniteResult = {};
-                        const repeatingResult = {};
-                        [[indefiniteMap, indefiniteResult], [repeatingMap, repeatingResult]].forEach(item => {
-                            const repeatMap = item[0];
-                            const resultMap = item[1];
-                            for (const attr in repeatMap) {
-                                const map = repeatMap[attr];
-                                const maxTime = Array.from(map.keys()).pop();
-                                const keyTimeCount = keyTimes.length + (repeatMap === repeatingMap ? -1 : 0);
-                                resultMap[attr] = new Map();
-                                for (let i = 1; i < keyTimeCount; i++) {
-                                    const keyTime = keyTimes[i];
-                                    if (repeatMap === repeatingMap && keyTime >= maxTime) {
-                                        break;
+                        const keyTimesRepeating = [];
+                        for (const attr in repeatingMap) {
+                            keyTimesRepeating.push(...repeatingMap[attr].keys());
+                        }
+                        const repeatingEndTime = $util$5.maxArray(keyTimesRepeating);
+                        for (const attr in repeatingMap) {
+                            const insertMap = repeatingMap[attr];
+                            let endTime = $util$5.maxArray(Array.from(insertMap.keys()));
+                            let modified = false;
+                            if (indefiniteMap[attr]) {
+                                const baseMap = indefiniteMap[attr];
+                                const baseKeyTimes = Array.from(baseMap.keys());
+                                if (endTime >= baseKeyTimes[0]) {
+                                    for (let [time, data] of baseMap.entries()) {
+                                        time += insertMap.has(time) ? 1 : 0;
+                                        insertMap.set(time, { value: data.value });
                                     }
-                                    const value = map.get(keyTime);
+                                    modified = true;
+                                }
+                                else {
+                                    let joined = false;
+                                    for (let [time, data] of baseMap.entries()) {
+                                        if (time >= endTime) {
+                                            if (!joined) {
+                                                const joinTime = endTime + 1;
+                                                if (time === endTime) {
+                                                    time = joinTime;
+                                                }
+                                                else if (insertSplitTimeValue(baseMap, insertMap, joinTime)) {
+                                                    keyTimesRepeating.push(joinTime);
+                                                }
+                                                joined = true;
+                                            }
+                                            insertMap.set(time, { value: data.value });
+                                            keyTimesRepeating.push(time);
+                                            endTime = time;
+                                            modified = true;
+                                        }
+                                    }
+                                }
+                            }
+                            if (indefiniteStaticMap[attr] && endTime < repeatingEndTime) {
+                                let maxTime = endTime;
+                                do {
+                                    let insertTime = -1;
+                                    for (const [time, data] of indefiniteStaticMap[attr].entries()) {
+                                        insertTime = maxTime + time;
+                                        insertTime += insertMap.has(insertTime) ? 1 : 0;
+                                        insertMap.set(insertTime, data);
+                                        keyTimesRepeating.push(insertTime);
+                                    }
+                                    maxTime = insertTime;
+                                } while (maxTime < repeatingEndTime);
+                                modified = true;
+                            }
+                            if (!modified && indefiniteMap[attr] === undefined && freezeMap[attr] === undefined && path.baseVal[attr] !== null) {
+                                insertMap.set(endTime + 1, { value: path.baseVal[attr] });
+                            }
+                        }
+                        const keyTimes = Array.from(new Set(keyTimesRepeating)).sort((a, b) => a < b ? -1 : 1);
+                        const repeatingResult = {};
+                        for (const attr in repeatingMap) {
+                            const baseMap = repeatingMap[attr];
+                            const insertMap = new Map();
+                            const maxTime = Array.from(baseMap.keys()).pop();
+                            for (let i = 1; i < keyTimes.length; i++) {
+                                const keyTime = keyTimes[i];
+                                if (keyTime <= maxTime) {
+                                    const value = baseMap.get(keyTime);
                                     if (value === undefined) {
-                                        let previous;
-                                        let next;
-                                        let time;
-                                        if (repeatMap === repeatingMap) {
-                                            [previous, next] = getAdjacentTimeValue(map, keyTime);
-                                            time = keyTime;
-                                        }
-                                        else {
-                                            const data = Array.from(map.values());
-                                            const duration = data[1].duration;
-                                            previous = { timeMS: 0, value: data[0].value };
-                                            next = { timeMS: duration, value: data[1].value };
-                                            time = keyTime % duration !== 0 ? (keyTime > duration ? keyTime % duration : keyTime) : duration;
-                                        }
-                                        if (previous && next) {
-                                            resultMap[attr].set(keyTime, { value: getSplitValue(time, previous.timeMS, next.timeMS, previous.value, next.value) });
-                                        }
+                                        insertSplitTimeValue(baseMap, insertMap, keyTime);
                                     }
                                     else {
-                                        resultMap[attr].set(keyTime, value);
+                                        insertMap.set(keyTime, value);
                                     }
                                 }
                             }
-                        });
-                        const keyTimeMap = new Map();
-                        for (const keyTime of keyTimes) {
-                            const values = new Map();
-                            [indefiniteResult, repeatingResult].forEach(map => {
-                                for (const attr in map) {
-                                    const item = map[attr].get(keyTime);
-                                    if (item) {
-                                        values.set(attr, item.value);
-                                    }
-                                }
-                            });
-                            keyTimeMap.set(keyTime, values);
-                        }
-                        for (const attr in freezeMap) {
-                            const item = freezeMap[attr];
-                            for (const [time, data] of keyTimeMap.entries()) {
-                                if (time > item.timeMS && !data.has(attr)) {
-                                    data.set(attr, item.value);
-                                }
-                            }
+                            repeatingResult[attr] = insertMap;
                         }
                         repeatingDurationTotal = keyTimes[keyTimes.length - 1];
-                        keyTimeMapList.push(convertKeyTimeFraction(keyTimeMap, repeatingDurationTotal));
+                        keyTimeMapList.push(convertKeyTimeFraction(getKeyTimeMap(keyTimes, repeatingResult, freezeMap), repeatingDurationTotal));
                     }
-                    if (indefiniteDuration.length > 1) {
-                        indefiniteDurationTotal = getLeastCommonMultiple(indefiniteDuration);
-                        const indefiniteOffsetMap = {};
-                        const keyTimeSet = new Set();
-                        for (const attr in indefiniteMap) {
-                            indefiniteOffsetMap[attr] = new Map();
-                            let i = 0;
+                    if (indefiniteAnimations.length) {
+                        indefiniteDurationTotal = getLeastCommonMultiple(indefiniteAnimations.map(item => item.duration));
+                        const indefiniteResult = {};
+                        let keyTimes = [];
+                        for (const attr in indefiniteStaticMap) {
+                            indefiniteResult[attr] = new Map();
                             let maxTime = 0;
+                            let i = 0;
                             do {
-                                let j = 0;
-                                for (let [time, data] of indefiniteMap[attr].entries()) {
-                                    if (i > 0 && j++ === 0) {
-                                        time++;
-                                    }
-                                    time += (data.begin + data.duration) * i;
-                                    indefiniteOffsetMap[attr].set(time, { value: data.value });
-                                    keyTimeSet.add(time);
+                                for (let [time, data] of indefiniteStaticMap[attr].entries()) {
+                                    time += data.duration * i;
+                                    indefiniteResult[attr].set(time, { value: data.value });
+                                    keyTimes.push(time);
                                     maxTime = time;
                                 }
                                 i++;
                             } while (maxTime < indefiniteDurationTotal);
                         }
-                        const keyTimes = Array.from(keyTimeSet).sort((a, b) => a < b ? -1 : 1);
-                        for (const attr in indefiniteOffsetMap) {
-                            const map = indefiniteOffsetMap[attr];
+                        keyTimes = Array.from(new Set(keyTimes)).sort((a, b) => a < b ? -1 : 1);
+                        for (const attr in indefiniteResult) {
+                            const baseMap = indefiniteResult[attr];
                             for (let i = 1; i < keyTimes.length; i++) {
                                 const keyTime = keyTimes[i];
-                                if (!map.has(keyTime)) {
-                                    const [previous, next] = getAdjacentTimeValue(map, keyTime);
-                                    if (previous && next) {
-                                        map.set(keyTime, { value: getSplitValue(keyTime, previous.timeMS, next.timeMS, previous.value, next.value) });
-                                    }
+                                if (!baseMap.has(keyTime)) {
+                                    insertSplitTimeValue(baseMap, baseMap, keyTime);
                                 }
                             }
                         }
-                        const keyTimeMap = new Map();
-                        for (const keyTime of keyTimes) {
-                            const values = new Map();
-                            for (const attr in indefiniteOffsetMap) {
-                                const item = indefiniteOffsetMap[attr].get(keyTime);
-                                if (item) {
-                                    values.set(attr, item.value);
-                                }
-                            }
-                            keyTimeMap.set(keyTime, values);
-                        }
-                        keyTimeMapList.push(convertKeyTimeFraction(keyTimeMap, keyTimes[keyTimes.length - 1]));
-                    }
-                    else {
-                        for (const attr in indefiniteMap) {
-                            const animate = animations.find(item => item.attributeName === attr && item.repeatCount === -1);
-                            if (animate) {
-                                if ($util$5.spliceArray(animations, animate)) {
-                                    animate.begin = repeatingDurationTotal;
-                                }
-                            }
-                        }
+                        keyTimeMapList.push(convertKeyTimeFraction(getKeyTimeMap(keyTimes, indefiniteResult), keyTimes[keyTimes.length - 1]));
                     }
                     if (keyTimeMapList.length) {
                         this.animate = this.animate.filter(item => !animations.includes(item));
                         for (let i = 0; i < keyTimeMapList.length; i++) {
                             const keyMap = keyTimeMapList[i];
-                            const freezeIndefinite = !hasRepeating || i > 0 ? freezeMap : undefined;
+                            const freezeIndefinite = repeatingDurationTotal === 0 || i > 0 ? freezeMap : undefined;
                             let pathData;
                             switch (tagName) {
                                 case 'circle':
@@ -1456,19 +1454,21 @@
                                     break;
                             }
                             if (pathData) {
-                                const animate = new SvgAnimate(animations[0].element, this.element);
+                                const repeating = i === 0 && repeatingDurationTotal > 0;
+                                const animate = new SvgAnimate(repeating ? repeatingAnimations[0].element : indefiniteAnimations[0].element, this.element);
                                 animate.attributeName = 'd';
-                                if (hasRepeating && i === 0) {
+                                if (repeating) {
+                                    animate.begin = [0];
                                     animate.duration = repeatingDurationTotal;
                                     animate.repeatCount = 0;
                                 }
                                 else {
-                                    animate.begin = repeatingDurationTotal;
+                                    animate.begin = [repeatingDurationTotal];
                                     animate.duration = indefiniteDurationTotal;
                                     animate.repeatCount = -1;
                                 }
-                                animate.end = 0;
-                                animate.keyTimes = pathData.map(item => item.timeMS);
+                                animate.end.length = 0;
+                                animate.keyTimes = pathData.map(item => item.time);
                                 animate.values = pathData.map(item => item.value.toString());
                                 animate.from = animate.values[0];
                                 animate.to = animate.values[animate.values.length - 1];

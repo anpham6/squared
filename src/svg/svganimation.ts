@@ -1,7 +1,7 @@
 import $util = squared.lib.util;
 
 export default class SvgAnimation implements squared.svg.SvgAnimation {
-    public static convertClockTime(value: string): [number, number] {
+    public static convertClockTime(value: string) {
         let s = 0;
         let ms = 0;
         if (/\d+ms$/.test(value)) {
@@ -33,16 +33,13 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
                 }
             }
         }
-        return [s, ms];
+        return s * 1000 + ms;
     }
 
     public attributeName = '';
     public to = '';
-
-    private _begin: number;
-    private _beginMS: number | undefined;
-    private _duration: number;
-    private _durationMS: number | undefined;
+    public begin: number[] = [0];
+    public duration: number;
 
     constructor(
         public element: SVGAnimationElement,
@@ -52,21 +49,17 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
         this.setAttribute('to');
         const begin = this.getAttribute('begin');
         const dur = this.getAttribute('dur');
-        if (begin === '') {
-            this._begin = 0;
-            this._beginMS = 0;
+        if (begin === 'indefinite') {
+            this.begin.length = 0;
         }
-        else if (begin === 'indefinite') {
-            this._begin = -1;
-        }
-        else {
-            [this._begin, this._beginMS] = SvgAnimation.convertClockTime(begin);
+        else if (begin !== '') {
+            this.begin = begin.split(';').map(value => SvgAnimation.convertClockTime(value)).sort((a, b) => a < b ? -1 : 1);
         }
         if (dur === ''  || dur === 'indefinite') {
-            this._duration = -1;
+            this.duration = -1;
         }
         else {
-            [this._duration, this._durationMS] = SvgAnimation.convertClockTime(dur);
+            this.duration = SvgAnimation.convertClockTime(dur);
         }
     }
 
@@ -85,21 +78,5 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     public getAttribute(attr: string) {
         const item = this.element.attributes.getNamedItem(attr);
         return item ? item.value.trim() : '';
-    }
-
-    set duration(value) {
-        this._duration = Math.floor(value / 1000);
-        this._durationMS = value % 1000;
-    }
-    get duration() {
-        return this._durationMS !== undefined ? this._duration * 1000 + this._durationMS : this._duration;
-    }
-
-    set begin(value) {
-        this._begin = Math.floor(value / 1000);
-        this._beginMS = value % 1000;
-    }
-    get begin() {
-        return this._beginMS !== undefined ? this._begin * 1000 + this._beginMS : this._begin;
     }
 }

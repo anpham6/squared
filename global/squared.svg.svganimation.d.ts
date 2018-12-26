@@ -2,33 +2,33 @@ declare global {
     namespace squared.svg {
         interface SvgAnimation {
             attributeName: string;
+            begin: number[];
             to: string;
+            duration: number;
             readonly element: SVGAnimationElement;
             readonly parentElement: SVGGraphicsElement;
-            duration: number;
-            begin: number;
             setAttribute(attr: string, equality?: string): void;
             getAttribute(attr: string): string;
         }
 
         export class SvgAnimation implements SvgAnimation {
-            public static convertClockTime(value: string): [number, number];
+            public static convertClockTime(value: string): number;
             constructor(element: SVGAnimationElement, parentElement: SVGGraphicsElement);
         }
 
         interface SvgAnimate extends SvgAnimation {
             from: string;
             by: string;
+            end: number[];
             values: string[];
             keyTimes: number[];
             repeatCount: number;
+            repeatDuration: number;
             calcMode: string;
             additiveSum: boolean;
             accumulateSum: boolean;
             fillFreeze: boolean;
             readonly element: SVGAnimateElement;
-            readonly end: number;
-            readonly repeatDuration: number;
         }
 
         export class SvgAnimate implements SvgAnimate {

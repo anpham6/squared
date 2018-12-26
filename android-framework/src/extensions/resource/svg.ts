@@ -331,7 +331,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                     let propertyName: string[] | undefined;
                                     let values: string[] | (null[] | number[])[] | undefined;
                                     const options: ExternalData = {
-                                        startOffset: item.begin !== -1 ? item.begin.toString() : '',
+                                        startOffset: item.begin.length ? item.begin[0].toString() : '',
                                         duration: item.duration !== -1 ? item.duration.toString() : '',
                                         repeatCount: item instanceof $SvgAnimate ? Math.round(item.repeatCount).toString() : '0'
                                     };

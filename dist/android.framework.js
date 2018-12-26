@@ -7874,7 +7874,7 @@ var android = (function () {
                                         let propertyName;
                                         let values;
                                         const options = {
-                                            startOffset: item.begin !== -1 ? item.begin.toString() : '',
+                                            startOffset: item.begin.length ? item.begin[0].toString() : '',
                                             duration: item.duration !== -1 ? item.duration.toString() : '',
                                             repeatCount: item instanceof $SvgAnimate ? Math.round(item.repeatCount).toString() : '0'
                                         };

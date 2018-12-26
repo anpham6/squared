@@ -20,16 +20,14 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public by = '';
     public values: string[] = [];
     public keyTimes: number[] = [];
+    public end: number[] = [];
+    public repeatDuration: number;
     public calcMode = '';
     public additiveSum = false;
     public accumulateSum = false;
     public fillFreeze = false;
 
-    private _end: number;
-    private _endMS: number | undefined;
     private _repeatCount: number;
-    private _repeatDuration: number;
-    private _repeatDurationMS: number | undefined;
 
     constructor(
         public element: SVGAnimateElement,
@@ -37,7 +35,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     {
         super(element, parentElement);
         const values = this.getAttribute('values');
-        if (values) {
+        if (values !== '') {
             this.values.push(...$util.flatMap(values.split(';'), value => value.trim()));
             if (this.values.length > 1) {
                 this.from = this.values[0];
@@ -75,23 +73,20 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         const end = this.getAttribute('end');
         const repeatDur = this.getAttribute('repeatDur');
         const repeatCount = this.getAttribute('repeatCount');
-        if (end === '' || end === 'indefinite') {
-            this._end = -1;
-        }
-        else {
-            [this._end, this._endMS] = SvgAnimate.convertClockTime(end);
+        if (end !== '') {
+            this.end = end.split(';').map(value => SvgAnimation.convertClockTime(value)).sort((a, b) => a < b ? -1 : 1);
         }
         if (repeatDur === '' || repeatDur === 'indefinite') {
-            this._repeatDuration = -1;
+            this.repeatDuration = -1;
         }
         else {
-            [this._repeatDuration, this._repeatDurationMS] = SvgAnimate.convertClockTime(repeatDur);
+            this.repeatDuration = SvgAnimate.convertClockTime(repeatDur);
         }
         if (repeatCount === 'indefinite') {
             this._repeatCount = -1;
         }
         else {
-            this._repeatCount = Math.max(0, $util.convertInt(repeatCount));
+            this._repeatCount = Math.max(1, $util.convertInt(repeatCount));
         }
         this.setAttribute('calcMode');
         this.setAttribute('additive', 'sum');
@@ -99,44 +94,31 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         this.setAttribute('fill', 'freeze');
     }
 
-    set end(value) {
-        this._end = Math.floor(value / 1000);
-        this._endMS = value % 1000;
-    }
-    get end() {
-        return this._endMS !== undefined ? this._end * 1000 + this._endMS : this._end;
-    }
-
     set repeatCount(value) {
-        this._repeatCount = value;
-        this._repeatDuration = -1;
-        this._repeatDurationMS = undefined;
+        this._repeatCount = value !== -1 ? Math.max(1, value) : -1;
+        this.repeatDuration = -1;
     }
     get repeatCount() {
         const duration = this.duration;
         if (duration !== -1) {
-            if (this._repeatCount !== -1 && this._repeatDuration !== -1) {
-                if ((this._repeatCount + 1) * duration <= this.repeatDuration) {
+            if (this._repeatCount === -1 && this.repeatDuration === -1) {
+                return -1;
+            }
+            else if (this._repeatCount !== -1 && this.repeatDuration !== -1) {
+                if (this._repeatCount * duration <= this.repeatDuration) {
                     return this._repeatCount;
                 }
                 else {
                     return this.repeatDuration / duration;
                 }
             }
-            else if (this._repeatCount === -1 && this._repeatDuration === -1) {
-                return -1;
-            }
-            else if (this._repeatDuration !== -1) {
+            else if (this.repeatDuration !== -1) {
                 return this.repeatDuration / duration;
             }
             else {
                 return this._repeatCount;
             }
         }
-        return 0;
-    }
-
-    get repeatDuration() {
-        return this._repeatDurationMS !== undefined ? this._repeatDuration * 1000 + this._repeatDurationMS : this._repeatDuration;
+        return 1;
     }
 }
