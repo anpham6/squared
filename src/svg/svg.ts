@@ -65,6 +65,18 @@ export default class Svg extends squared.lib.base.Container<SvgGroup> implements
                 this.setDimensions(bounds.width, bounds.height);
             }
         }
+        element.querySelectorAll('set, animate, animateTransform, animateMotion').forEach((svg: SVGAnimationElement) => {
+            const href = svg.attributes.getNamedItem('href');
+            if (href && href.value !== '') {
+                const target = href.value.charAt(0) === '#' ? <SVGGraphicsElement> (document.getElementById(href.value.replace('#', '')) as unknown) : null;
+                if (svg.parentElement) {
+                    svg.parentElement.removeChild(svg);
+                }
+                if (target) {
+                    target.appendChild(svg);
+                }
+            }
+        });
         element.querySelectorAll('clipPath, linearGradient, radialGradient').forEach((svg: SVGElement) => {
             if (svg.id) {
                 if (svg instanceof SVGClipPathElement) {

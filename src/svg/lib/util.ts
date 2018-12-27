@@ -152,8 +152,12 @@ export function getTransformOrigin(element: SVGGraphicsElement, dpi = 0) {
     return undefined;
 }
 
+export function sortNumberAsc(values: number[]) {
+    return values.sort((a, b) => a < b ? -1 : 1);
+}
+
 export function getLeastCommonMultiple(values: number[]) {
-    const sorted = values.slice().sort((a, b) => a < b ? -1 : 1);
+    const sorted = sortNumberAsc(values.slice());
     if (sorted.length > 1) {
         const smallest = sorted.splice(0, 1)[0];
         let result = smallest;

@@ -1,14 +1,16 @@
 import SvgAnimation from './svganimation';
 
+import { sortNumberAsc } from './lib/util';
+
 import $util = squared.lib.util;
 
 export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgAnimate {
     public static toFractionList(value: string, delimiter = ';') {
-        let previousFraction = -1;
+        let previous = -1;
         const result = $util.flatMap(value.split(delimiter), segment => {
             const fraction = parseFloat(segment);
-            if (!isNaN(fraction) && fraction <= 1 && (previousFraction === -1 || fraction > previousFraction)) {
-                previousFraction = fraction;
+            if (!isNaN(fraction) && fraction <= 1 && (previous === -1 || fraction > previous)) {
+                previous = fraction;
                 return fraction;
             }
             return -1;
@@ -55,9 +57,9 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         if (this.values.length === 0 && this.to !== '') {
             this.setAttribute('from');
             if (this.from === '') {
-                const xml: string = $util.optional(parentElement, `${this.attributeName}.baseVal.value`);
-                if (xml) {
-                    this.from = xml;
+                const value = $util.optionalAsString(parentElement, `${this.attributeName}.baseVal.value`);
+                if (value !== '') {
+                    this.from = value;
                 }
                 else {
                     const current = parentElement.attributes.getNamedItem(this.attributeName);
@@ -72,7 +74,6 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         }
         const repeatDur = this.getAttribute('repeatDur');
         const repeatCount = this.getAttribute('repeatCount');
-        const end = this.getAttribute('end');
         if (repeatDur === '' || repeatDur === 'indefinite') {
             this.repeatDuration = -1;
         }
@@ -85,13 +86,16 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         else {
             this._repeatCount = Math.max(1, $util.convertInt(repeatCount));
         }
-        if (end !== '') {
-            const clockTimes = end.split(';').map(value => SvgAnimation.convertClockTime(value)).sort((a, b) => a < b ? -1 : 1);
-            if (clockTimes.length && (this.begin.length === 1 || this.begin[this.begin.length - 1] !== this.end || clockTimes[0] === 0)) {
-                this.end = clockTimes[0];
-                this.begin = this.begin.filter(value => value < clockTimes[0]);
-                if (this.begin.length && this._repeatCount === -1) {
-                    this._repeatCount = Math.max(1, this.end / this.duration);
+        if (this.begin.length) {
+            const end = this.getAttribute('end');
+            if (end !== '') {
+                const times = sortNumberAsc(end.split(';').map(value => SvgAnimation.convertClockTime(value)));
+                if (times.length && (this.begin.length === 1 || this.begin[this.begin.length - 1] !== this.end || times[0] === 0)) {
+                    this.end = times[0];
+                    this.begin = this.begin.filter(value => value < times[0]);
+                    if (this.begin.length && this._repeatCount === -1) {
+                        this._repeatCount = Math.max(1, this.end / this.duration);
+                    }
                 }
             }
         }

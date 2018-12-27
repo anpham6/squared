@@ -1,3 +1,5 @@
+import { sortNumberAsc } from './lib/util';
+
 import $util = squared.lib.util;
 
 export default class SvgAnimation implements squared.svg.SvgAnimation {
@@ -62,7 +64,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
             this.begin.length = 0;
         }
         else if (begin !== '') {
-            this.begin = begin.split(';').map(value => SvgAnimation.convertClockTime(value)).sort((a, b) => a < b ? -1 : 1);
+            this.begin = sortNumberAsc(begin.split(';').map(value => SvgAnimation.convertClockTime(value)));
         }
         if (dur === ''  || dur === 'indefinite') {
             this.duration = -1;

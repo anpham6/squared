@@ -23,12 +23,12 @@ export default class SvgPath implements squared.svg.SvgPath {
     }
 
     public static getPolygon(points: Point[] | DOMPoint[] | SVGPointList) {
-        const value = this.getPolyline(points);
+        const value = SvgPath.getPolyline(points);
         return value !== '' ? value + ' Z' : '';
     }
 
     public static getCircle(cx: number, cy: number, r: number, checkValid = false) {
-        return r > 0 || !checkValid ? this.getEllipse(cx, cy, r, r) : '';
+        return r > 0 || !checkValid ? SvgPath.getEllipse(cx, cy, r, r) : '';
     }
 
     public static getEllipse(cx: number, cy: number, rx: number, ry: number, checkValid = false) {

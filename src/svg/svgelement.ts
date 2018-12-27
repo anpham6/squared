@@ -5,7 +5,7 @@ import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 import SvgPath from './svgpath';
 
-import { getLeastCommonMultiple, getTransformOrigin, isVisible } from './lib/util';
+import { getLeastCommonMultiple, getTransformOrigin, isVisible, sortNumberAsc } from './lib/util';
 
 import $util = squared.lib.util;
 
@@ -24,11 +24,8 @@ type KeyTimeMap = Map<number, Map<string, number>>;
 
 type FreezeMap = ObjectMap<KeyTimeValue<number>>;
 
-function insertSplitKeyTimeValue(insertMap: TimelineIndex, iteration: number, begin: number, item: SvgAnimate , maxTime: number, finalTimeValue?: boolean) {
-    if (finalTimeValue !== undefined) {
-        maxTime += finalTimeValue ? -1 : 1;
-    }
-    const fraction = (maxTime - (begin + item.duration * iteration)) / item.duration;
+function insertSplitKeyTimeValue(insertMap: TimelineIndex, iteration: number, begin: number, item: SvgAnimate , splitTime: number) {
+    const fraction = (splitTime - (begin + item.duration * iteration)) / item.duration;
     const keyTimes = item.keyTimes;
     let previousIndex = -1;
     let nextIndex = -1;
@@ -43,8 +40,8 @@ function insertSplitKeyTimeValue(insertMap: TimelineIndex, iteration: number, be
     }
     if (previousIndex !== -1 && nextIndex !== -1) {
         const value = getSplitValue(fraction, keyTimes[previousIndex], keyTimes[nextIndex], parseFloat(item.values[previousIndex]), parseFloat(item.values[nextIndex]));
-        insertMap.set(maxTime, value);
-        return maxTime;
+        insertMap.set(splitTime, value);
+        return splitTime;
     }
     else {
         return -1;
@@ -179,17 +176,19 @@ export default class SvgElement implements squared.svg.SvgElement {
         const result: SvgAnimation[] = [];
         for (let i = 0; i < element.children.length; i++) {
             const item = element.children[i];
-            if (item instanceof SVGAnimateTransformElement) {
-                result.push(new SvgAnimateTransform(item, element));
-            }
-            else if (item instanceof SVGAnimateMotionElement) {
-                result.push(new SvgAnimateMotion(item, element));
-            }
-            else if (item instanceof SVGAnimateElement) {
-                result.push(new SvgAnimate(item, element));
-            }
-            else if (item instanceof SVGAnimationElement) {
-                result.push(new SvgAnimation(item, element));
+            if (item instanceof SVGAnimationElement) {
+                if (item instanceof SVGAnimateTransformElement) {
+                    result.push(new SvgAnimateTransform(item, element));
+                }
+                else if (item instanceof SVGAnimateMotionElement) {
+                    result.push(new SvgAnimateMotion(item, element));
+                }
+                else if (item instanceof SVGAnimateElement) {
+                    result.push(new SvgAnimate(item, element));
+                }
+                else {
+                    result.push(new SvgAnimation(item, element));
+                }
             }
         }
         return result;
@@ -254,11 +253,11 @@ export default class SvgElement implements squared.svg.SvgElement {
                 }
             }
             if (animations.length > 1 || animations.some(item => item.begin.length > 1 || item.end !== undefined)) {
-                const indefiniteMap: TimelineMap = {};
                 const repeatingMap: TimelineMap = {};
+                const indefiniteMap: TimelineMap = {};
                 const indefiniteStaticMap: TimelineMap = {};
-                const indefiniteAnimations: SvgAnimate[] = [];
                 const repeatingAnimations: SvgAnimate[] = [];
+                const indefiniteAnimations: SvgAnimate[] = [];
                 const freezeMap: FreezeMap = {};
                 const keyTimeMapList: KeyTimeMap[] = [];
                 let repeatingDurationTotal = 0;
@@ -280,7 +279,7 @@ export default class SvgElement implements squared.svg.SvgElement {
                                     for (let j = 0; j < item.keyTimes.length; j++) {
                                         const time = begin + item.keyTimes[j] * item.duration;
                                         if (time >= maxThreadTime) {
-                                            const insertTime = insertSplitKeyTimeValue(indefiniteMap[attr], i, begin, item, maxThreadTime, true);
+                                            const insertTime = insertSplitKeyTimeValue(indefiniteMap[attr], i, begin, item, maxThreadTime - 1);
                                             if (insertTime !== -1) {
                                                 maxTime = insertTime;
                                             }
@@ -302,7 +301,10 @@ export default class SvgElement implements squared.svg.SvgElement {
                                 repeatingMap[attr] = new Map<number, number>();
                             }
                             else {
-                                maxTime = $util.maxArray(Array.from(repeatingMap[attr].keys()));
+                                maxTime = Array.from(repeatingMap[attr].keys()).pop() as number;
+                                if (item.end !== undefined && item.end <= maxTime) {
+                                    return;
+                                }
                                 parallel = true;
                             }
                             for (let i = 0; i < item.begin.length; i++) {
@@ -310,7 +312,7 @@ export default class SvgElement implements squared.svg.SvgElement {
                                 const duration = item.duration;
                                 const repeatCount = item.repeatCount;
                                 const durationTotal = duration * repeatCount;
-                                if (item.end === undefined && begin + durationTotal <= maxTime || item.end !== undefined && item.end <= maxTime) {
+                                if (item.end === undefined && begin + durationTotal <= maxTime) {
                                     return;
                                 }
                                 const repeatTotal = Math.ceil(repeatCount);
@@ -338,36 +340,44 @@ export default class SvgElement implements squared.svg.SvgElement {
                                                 finalTimeValue = true;
                                             }
                                             else {
-                                                if (time > maxThreadTime) {
-                                                    maxTime = maxThreadTime;
-                                                    finalTimeValue = true;
+                                                function adjustKeyTimeValue(fromMaxThread: boolean, splitTime: number) {
+                                                    const insertTime = insertSplitKeyTimeValue(repeatingMap[attr], j, begin, item, splitTime + (fromMaxThread && !repeatingMap[attr].has(splitTime) ? 0 : 1));
+                                                    if (insertTime !== -1) {
+                                                        maxTime = insertTime;
+                                                        included = true;
+                                                        return true;
+                                                    }
+                                                    return false;
                                                 }
-                                                if (parallel || finalTimeValue) {
-                                                    if (!finalTimeValue && begin >= maxTime) {
-                                                        time = Math.max(begin, maxTime + 1);
+                                                if (time > maxThreadTime) {
+                                                    if (adjustKeyTimeValue(false, maxThreadTime)) {
+                                                        break;
                                                     }
                                                     else {
-                                                        if (!finalTimeValue && time < maxTime) {
-                                                            continue;
-                                                        }
-                                                        else if (!finalTimeValue && time === maxTime) {
-                                                            time = maxTime + 1;
+                                                        finalTimeValue = true;
+                                                    }
+                                                }
+                                                else {
+                                                    if (parallel) {
+                                                        if (begin >= maxTime) {
+                                                            time = Math.max(begin, maxTime + 1);
                                                         }
                                                         else {
-                                                            const insertTime = insertSplitKeyTimeValue(repeatingMap[attr], j, begin, item, maxTime, finalTimeValue && !repeatingMap[attr].has(maxTime) ? undefined : finalTimeValue);
-                                                            if (insertTime !== -1) {
-                                                                maxTime = insertTime;
-                                                                included = true;
+                                                            if (time < maxTime) {
+                                                                continue;
                                                             }
-                                                            if (finalTimeValue) {
-                                                                break;
+                                                            else if (time === maxTime) {
+                                                                time = maxTime + 1;
+                                                            }
+                                                            else {
+                                                                adjustKeyTimeValue(true, maxTime);
                                                             }
                                                         }
+                                                        parallel = false;
                                                     }
-                                                    parallel = false;
-                                                }
-                                                else if (j > 0 && k === 0) {
-                                                    time = Math.max(time, maxTime + 1);
+                                                    else if (j > 0 && k === 0) {
+                                                        time = Math.max(time, maxTime + 1);
+                                                    }
                                                 }
                                             }
                                         }
@@ -395,10 +405,15 @@ export default class SvgElement implements squared.svg.SvgElement {
                     }
                 });
                 if (repeatingAnimations.length) {
-                    for (const attr in indefiniteMap) {
+                    for (const attr in indefiniteStaticMap) {
                         if (repeatingMap[attr] === undefined) {
-                            repeatingMap[attr] = indefiniteMap[attr];
-                            indefiniteMap[attr] = undefined as any;
+                            if (indefiniteMap[attr]) {
+                                repeatingMap[attr] = indefiniteMap[attr];
+                                indefiniteMap[attr] = undefined as any;
+                            }
+                            else {
+                                repeatingMap[attr] = indefiniteStaticMap[attr];
+                            }
                         }
                     }
                     const keyTimesRepeating: number[] = [];
@@ -412,8 +427,7 @@ export default class SvgElement implements squared.svg.SvgElement {
                         let modified = false;
                         if (indefiniteMap[attr]) {
                             const baseMap = indefiniteMap[attr];
-                            const baseKeyTimes = Array.from(baseMap.keys());
-                            if (endTime >= baseKeyTimes[0]) {
+                            if (endTime >= baseMap.keys().next().value) {
                                 for (let [time, value] of baseMap.entries()) {
                                     time += insertMap.has(time) ? 1 : 0;
                                     insertMap.set(time, value);
@@ -457,11 +471,11 @@ export default class SvgElement implements squared.svg.SvgElement {
                             while (maxTime < repeatingEndTime);
                             modified = true;
                         }
-                        if (!modified && indefiniteMap[attr] === undefined && freezeMap[attr] === undefined && path.baseVal[attr] !== null && insertMap.get(endTime) !== path.baseVal[attr]) {
+                        if (!modified && indefiniteStaticMap[attr] === undefined && freezeMap[attr] === undefined && path.baseVal[attr] !== null && insertMap.get(endTime) !== path.baseVal[attr]) {
                             insertMap.set(endTime + 1, path.baseVal[attr]);
                         }
                     }
-                    const keyTimes = Array.from(new Set(keyTimesRepeating)).sort((a, b) => a < b ? -1 : 1);
+                    const keyTimes = sortNumberAsc(Array.from(new Set(keyTimesRepeating)));
                     const repeatingResult: TimelineMap = {};
                     for (const attr in repeatingMap) {
                         const baseMap = repeatingMap[attr];
@@ -509,7 +523,7 @@ export default class SvgElement implements squared.svg.SvgElement {
                             while (maxTime < indefiniteDurationTotal);
                         }
                     }
-                    keyTimes = Array.from(new Set(keyTimes)).sort((a, b) => a < b ? -1 : 1);
+                    keyTimes = sortNumberAsc(Array.from(new Set(keyTimes)));
                     for (const attr in indefiniteResult) {
                         const baseMap = indefiniteResult[attr];
                         for (let i = 1; i < keyTimes.length; i++) {
