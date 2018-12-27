@@ -77,7 +77,7 @@ const ATTRIBUTE_ANDROID = {
 };
 
 function queueAnimations(animateMap: Map<string, AnimateGroup>, name: string, svg: $Svg | $SvgGroup | $SvgElement, predicate: IteratorPredicate<$SvgAnimation, void>, pathData = '') {
-    const animate = svg.animate.filter(predicate);
+    const animate = svg.animate.filter(predicate).filter(item => item.begin.length > 0);
     if (animate.length) {
         animateMap.set(name, {
             element: svg.element,
@@ -331,7 +331,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                     let propertyName: string[] | undefined;
                                     let values: string[] | (null[] | number[])[] | undefined;
                                     const options: ExternalData = {
-                                        startOffset: item.begin.length ? item.begin[0].toString() : '',
+                                        startOffset: item.begin.length && item.begin[0] > 0 ? item.begin[0].toString() : '',
                                         duration: item.duration !== -1 ? item.duration.toString() : '',
                                         repeatCount: item instanceof $SvgAnimate ? Math.round(item.repeatCount).toString() : '0'
                                     };
@@ -643,7 +643,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                 options.interpolator = dataset.interpolator ? INTERPOLATOR_ANDROID[dataset.interpolator] || dataset.interpolator : this.options.vectorAnimateInterpolator;
                                                 const keyName = JSON.stringify(options);
                                                 for (let i = 0; i < propertyName.length; i++) {
-                                                    if (node.localSettings.targetAPI >= BUILD_ANDROID.MARSHMALLOW && item.keyTimes.length > 1 && (this.options.vectorAnimateAlwaysUseKeyframes || item.keyTimes.join('-') !== '0-1')) {
+                                                    if (node.localSettings.targetAPI >= BUILD_ANDROID.MARSHMALLOW && item.keyTimes.length > 1 && item.duration > 0 && (this.options.vectorAnimateAlwaysUseKeyframes || item.keyTimes.join('-') !== '0-1')) {
                                                         const propertyValues: PropertyValue[] = animatorMap.get(keyName) || [];
                                                         const keyframes: KeyFrame[] = [];
                                                         for (let j = 0; j < item.keyTimes.length; j++) {
@@ -677,22 +677,41 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                     else {
                                                         options.propertyName = propertyName[i];
                                                         if (Array.isArray(values[0])) {
-                                                            if (values.length > 1) {
-                                                                const from = values[0][i];
-                                                                if (from !== null) {
-                                                                    options.valueFrom = from.toString();
+                                                            let to: string | number | null = null;
+                                                            if (item.duration > 0) {
+                                                                if (values.length > 1) {
+                                                                    const from = values[0][i];
+                                                                    if (from !== null) {
+                                                                        options.valueFrom = from.toString();
+                                                                    }
                                                                 }
+                                                                to = values[values.length - 1][i];
                                                             }
-                                                            const to = values[values.length - 1][i];
+                                                            else if (item.duration === 0 && item.keyTimes[0] === 0) {
+                                                                to = values[0][i];
+                                                                options.repeatCount = '0';
+                                                            }
                                                             if (to !== null) {
                                                                 options.valueTo = to.toString();
                                                             }
+                                                            else {
+                                                                continue;
+                                                            }
                                                         }
                                                         else {
-                                                            if (values.length > 1) {
-                                                                options.valueFrom = values[0].toString();
+                                                            if (item.duration > 0) {
+                                                                if (values.length > 1) {
+                                                                    options.valueFrom = values[0].toString();
+                                                                }
+                                                                options.valueTo = values[values.length - 1].toString();
                                                             }
-                                                            options.valueTo = values[values.length - 1].toString();
+                                                            else if (item.duration === 0 && item.keyTimes[0] === 0) {
+                                                                options.valueTo = values[0].toString();
+                                                                options.repeatCount = '0';
+                                                            }
+                                                            else {
+                                                                continue;
+                                                            }
                                                         }
                                                         options.propertyValues = false;
                                                         animate.objectAnimators.push(options);

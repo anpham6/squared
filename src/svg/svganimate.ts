@@ -20,7 +20,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public by = '';
     public values: string[] = [];
     public keyTimes: number[] = [];
-    public end: number[] = [];
+    public end: number | undefined;
     public repeatDuration: number;
     public calcMode = '';
     public additiveSum = false;
@@ -70,12 +70,9 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             this.keyTimes.push(0, 1);
             this.setAttribute('by');
         }
-        const end = this.getAttribute('end');
         const repeatDur = this.getAttribute('repeatDur');
         const repeatCount = this.getAttribute('repeatCount');
-        if (end !== '') {
-            this.end = end.split(';').map(value => SvgAnimation.convertClockTime(value)).sort((a, b) => a < b ? -1 : 1);
-        }
+        const end = this.getAttribute('end');
         if (repeatDur === '' || repeatDur === 'indefinite') {
             this.repeatDuration = -1;
         }
@@ -87,6 +84,16 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         }
         else {
             this._repeatCount = Math.max(1, $util.convertInt(repeatCount));
+        }
+        if (end !== '') {
+            const clockTimes = end.split(';').map(value => SvgAnimation.convertClockTime(value)).sort((a, b) => a < b ? -1 : 1);
+            if (clockTimes.length && (this.begin.length === 1 || this.begin[this.begin.length - 1] !== this.end || clockTimes[0] === 0)) {
+                this.end = clockTimes[0];
+                this.begin = this.begin.filter(value => value < clockTimes[0]);
+                if (this.begin.length && this._repeatCount === -1) {
+                    this._repeatCount = Math.max(1, this.end / this.duration);
+                }
+            }
         }
         this.setAttribute('calcMode');
         this.setAttribute('additive', 'sum');

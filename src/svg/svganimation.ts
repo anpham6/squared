@@ -4,41 +4,50 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     public static convertClockTime(value: string) {
         let s = 0;
         let ms = 0;
-        if (/\d+ms$/.test(value)) {
-            ms = parseInt(value);
-        }
-        else if (/\d+s$/.test(value)) {
+        if ($util.isNumber(value)) {
             s = parseInt(value);
         }
-        else if (/\d+min$/.test(value)) {
-            s = parseInt(value) * 60;
-        }
-        else if (/\d+(.\d+)?h$/.test(value)) {
-            s = parseFloat(value) * 60 * 60;
-        }
         else {
-            const match = /^(?:(\d?\d):)?(?:(\d?\d):)?(\d?\d)\.?(\d?\d?\d)?$/.exec(value);
-            if (match) {
-                if (match[1]) {
-                    s += parseInt(match[1]) * 60 * 60;
-                }
-                if (match[2]) {
-                    s += parseInt(match[2]) * 60;
-                }
-                if (match[3]) {
-                    s += parseInt(match[3]);
-                }
-                if (match[4]) {
-                    ms = parseInt(match[4]) * (match[4].length < 3 ? Math.pow(10, 3 - match[4].length) : 1);
+            if (/-?\d+ms$/.test(value)) {
+                ms = parseInt(value);
+            }
+            else if (/-?\d+s$/.test(value)) {
+                s = parseInt(value);
+            }
+            else if (/-?\d+min$/.test(value)) {
+                s = parseInt(value) * 60;
+            }
+            else if (/-?\d+(.\d+)?h$/.test(value)) {
+                s = parseFloat(value) * 60 * 60;
+            }
+            else {
+                const match = /^(?:(-?)(\d?\d):)?(?:(\d?\d):)?(\d?\d)\.?(\d?\d?\d)?$/.exec(value);
+                if (match) {
+                    if (match[2]) {
+                        s += parseInt(match[2]) * 60 * 60;
+                    }
+                    if (match[3]) {
+                        s += parseInt(match[3]) * 60;
+                    }
+                    if (match[4]) {
+                        s += parseInt(match[4]);
+                    }
+                    if (match[5]) {
+                        ms = parseInt(match[5]) * (match[5].length < 3 ? Math.pow(10, 3 - match[5].length) : 1);
+                    }
+                    if (match[1]) {
+                        s *= -1;
+                        ms *= -1;
+                    }
                 }
             }
         }
-        return s * 1000 + ms;
+        return s < 0 || ms < 0 ? 0 : s * 1000 + ms;
     }
 
     public attributeName = '';
     public to = '';
-    public begin: number[] = [0];
+    public begin = [0];
     public duration: number;
 
     constructor(

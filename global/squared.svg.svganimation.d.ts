@@ -19,7 +19,7 @@ declare global {
         interface SvgAnimate extends SvgAnimation {
             from: string;
             by: string;
-            end: number[];
+            end: number | undefined;
             values: string[];
             keyTimes: number[];
             repeatCount: number;
