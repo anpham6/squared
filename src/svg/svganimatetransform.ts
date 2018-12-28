@@ -38,13 +38,18 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
     }
 
     public static toTranslateList(values: string[]) {
+        let y: number | null = null;
         const result = values.map(value => {
             if (value === '') {
                 return [null, null];
             }
             else {
                 const segment = SvgBuild.toCoordinateList(value);
-                if (segment.length === 1 || segment.length === 2) {
+                if (segment.length === 1) {
+                    return [segment[0], y];
+                }
+                else if (segment.length === 2) {
+                    y = segment[1];
                     return segment;
                 }
                 return [];

@@ -188,6 +188,20 @@ function getItemValue(path: SvgPath, animate: SvgAnimate, index: number, iterati
     return result;
 }
 
+function getKeyTimePath(path: SvgPath, keyTimeMap: KeyTimeMap, freezeMap?: FreezeMap) {
+    switch (path.element.tagName) {
+        case 'circle':
+            return getPathData(path, keyTimeMap, 'getCircle', ['cx', 'cy', 'r'], freezeMap);
+        case 'ellipse':
+            return getPathData(path, keyTimeMap, 'getEllipse', ['cx', 'cy', 'rx', 'ry'], freezeMap);
+        case 'line':
+            return getPathData(path, keyTimeMap, 'getLine', ['x1', 'y1', 'x2', 'y2'], freezeMap, path.element.transform.baseVal);
+        case 'rect':
+            return getPathData(path, keyTimeMap, 'getRect', ['width', 'height', 'x', 'y'], freezeMap, path.element.transform.baseVal);
+    }
+    return undefined;
+}
+
 export default class SvgElement implements squared.svg.SvgElement {
     public static toAnimateList(element: SVGGraphicsElement) {
         const result: SvgAnimation[] = [];
@@ -219,17 +233,22 @@ export default class SvgElement implements squared.svg.SvgElement {
 
     constructor(public readonly element: SVGGraphicsElement) {
         this.name = SvgBuild.setName(element);
-        this.animate = this.animatable ? SvgElement.toAnimateList(element) : [];
         this.visible = isVisible(element);
+        this.animate = this.animatable ? SvgElement.toAnimateList(element) : [];
         if (this.drawable) {
             const path = new SvgPath(element);
             if (path.d && path.d !== 'none') {
                 this.path = path;
+                for (const item of this.animate) {
+                    if (item instanceof SvgAnimate) {
+                        item.parentPath = path;
+                    }
+                }
             }
         }
     }
 
-    public synchronizePath() {
+    public synchronizePath(useKeyTime = true) {
         const path = this.path;
         if (path && this.animate.length)  {
             const tagName = this.element.tagName;
@@ -269,7 +288,7 @@ export default class SvgElement implements squared.svg.SvgElement {
                     }
                 }
             }
-            if (animations.length > 1 || animations.some(item => item.begin.length > 1 || item.end !== undefined || item.additiveSum)) {
+            if (animations.length > 1 || animations.some(item => item.begin.length > 1 || item.end !== undefined || item.additiveSum || !item.fillFreeze)) {
                 const repeatingMap: TimelineMap = {};
                 const indefiniteMap: TimelineMap = {};
                 const indefiniteStaticMap: TimelineMap = {};
@@ -494,6 +513,7 @@ export default class SvgElement implements squared.svg.SvgElement {
                         }
                         if (!modified && indefiniteStaticMap[attr] === undefined && freezeMap[attr] === undefined && path.baseVal[attr] !== null && insertMap.get(endTime) !== path.baseVal[attr]) {
                             insertMap.set(endTime + 1, path.baseVal[attr]);
+                            keyTimesRepeating.push(endTime + 1);
                         }
                     }
                     const keyTimes = sortNumberAsc(Array.from(new Set(keyTimesRepeating)));
@@ -517,10 +537,15 @@ export default class SvgElement implements squared.svg.SvgElement {
                         repeatingResult[attr] = insertMap;
                     }
                     repeatingDurationTotal = keyTimes[keyTimes.length - 1];
-                    keyTimeMapList.push(convertKeyTimeFraction(
-                        getKeyTimeMap(keyTimes, repeatingResult, freezeMap),
-                        repeatingDurationTotal
-                    ));
+                    if (useKeyTime) {
+                        keyTimeMapList.push(convertKeyTimeFraction(
+                            getKeyTimeMap(keyTimes, repeatingResult, freezeMap),
+                            repeatingDurationTotal
+                        ));
+                    }
+                    else {
+                        keyTimeMapList.push(getKeyTimeMap(keyTimes, repeatingResult, freezeMap));
+                    }
                 }
                 if (indefiniteAnimations.length) {
                     indefiniteDurationTotal = getLeastCommonMultiple(indefiniteAnimations.map(item => item.duration));
@@ -554,52 +579,82 @@ export default class SvgElement implements squared.svg.SvgElement {
                             }
                         }
                     }
-                    keyTimeMapList.push(convertKeyTimeFraction(
-                        getKeyTimeMap(keyTimes, indefiniteResult),
-                        keyTimes[keyTimes.length - 1]
-                    ));
+                    if (useKeyTime) {
+                        keyTimeMapList.push(convertKeyTimeFraction(
+                            getKeyTimeMap(keyTimes, indefiniteResult),
+                            keyTimes[keyTimes.length - 1]
+                        ));
+                    }
+                    else {
+                        keyTimeMapList.push(getKeyTimeMap(keyTimes, indefiniteResult));
+                    }
                 }
                 if (keyTimeMapList.length) {
                     this.animate = this.animate.filter(item => !animations.includes(<SvgAnimate> item));
+                    const sequentialName = animations.map(item => item.attributeName).join('-');
                     for (let i = 0; i < keyTimeMapList.length; i++) {
-                        const keyMap = keyTimeMapList[i];
+                        const keyTimeMap = keyTimeMapList[i];
                         const freezeIndefinite = repeatingDurationTotal === 0 || i > 0 ? freezeMap : undefined;
-                        let pathData: KeyTimeValue<string>[] | undefined;
-                        switch (tagName) {
-                            case 'circle':
-                                pathData = getPathData(path, keyMap, 'getCircle', ['cx', 'cy', 'r'], freezeIndefinite);
-                                break;
-                            case 'ellipse':
-                                pathData = getPathData(path, keyMap, 'getEllipse', ['cx', 'cy', 'rx', 'ry'], freezeIndefinite);
-                                break;
-                            case 'line':
-                                pathData = getPathData(path, keyMap, 'getLine', ['x1', 'y1', 'x2', 'y2'], freezeIndefinite, this.transform);
-                                break;
-                            case 'rect':
-                                pathData = getPathData(path, keyMap, 'getRect', ['width', 'height', 'x', 'y'], freezeIndefinite, this.transform);
-                                break;
+                        const repeating = i === 0 && repeatingDurationTotal > 0;
+                        if (useKeyTime) {
+                            const pathData = getKeyTimePath(path, keyTimeMap, freezeIndefinite);
+                            if (pathData) {
+                                const animate = new SvgAnimate(repeating ? repeatingAnimations[0].element : indefiniteAnimations[0].element, this.element);
+                                animate.attributeName = 'd';
+                                if (repeating) {
+                                    animate.begin = [0];
+                                    animate.duration = repeatingDurationTotal;
+                                    animate.repeatCount = 0;
+                                }
+                                else {
+                                    animate.begin = [repeatingDurationTotal];
+                                    animate.duration = indefiniteDurationTotal;
+                                    animate.repeatCount = -1;
+                                }
+                                animate.end = undefined;
+                                animate.keyTimes = pathData.map(item => item.time);
+                                animate.values = pathData.map(item => item.value.toString());
+                                animate.from = animate.values[0];
+                                animate.to = animate.values[animate.values.length - 1];
+                                animate.by = '';
+                                this.animate.push(animate);
+                            }
                         }
-                        if (pathData) {
-                            const repeating = i === 0 && repeatingDurationTotal > 0;
-                            const animate = new SvgAnimate(repeating ? repeatingAnimations[0].element : indefiniteAnimations[0].element, this.element);
-                            animate.attributeName = 'd';
-                            if (repeating) {
-                                animate.begin = [0];
-                                animate.duration = repeatingDurationTotal;
-                                animate.repeatCount = 0;
+                        else {
+                            const entries = Array.from(keyTimeMap.entries());
+                            for (let j = 0, k = 0; j < entries.length - 1; j++) {
+                                const [keyTimeFrom, dataFrom] = entries[j];
+                                const [keyTimeTo, dataTo] = entries[j + 1];
+                                const map = new Map<number, Map<string, number>>();
+                                map.set(keyTimeFrom, dataFrom);
+                                map.set(keyTimeTo, dataTo);
+                                const pathData = getKeyTimePath(path, map, freezeIndefinite);
+                                if (pathData) {
+                                    const animate = new SvgAnimate(repeating ? repeatingAnimations[0].element : indefiniteAnimations[0].element, this.element);
+                                    animate.attributeName = 'd';
+                                    if (repeating) {
+                                        animate.begin = [j === 0 ? keyTimeFrom : 0];
+                                        animate.duration = keyTimeTo - keyTimeFrom;
+                                        animate.repeatCount = 0;
+                                    }
+                                    else {
+                                        animate.begin = [0];
+                                        animate.duration = indefiniteDurationTotal;
+                                        animate.repeatCount = -1;
+                                    }
+                                    animate.end = undefined;
+                                    animate.keyTimes = [0, 1];
+                                    animate.values = pathData.map(item => item.value.toString());
+                                    animate.from = animate.values[0];
+                                    animate.to = animate.values[animate.values.length - 1];
+                                    animate.by = '';
+                                    animate.sequential = {
+                                        name: sequentialName,
+                                        index: k++
+                                    };
+                                    this.animate.push(animate);
+                                }
                             }
-                            else {
-                                animate.begin = [repeatingDurationTotal];
-                                animate.duration = indefiniteDurationTotal;
-                                animate.repeatCount = -1;
-                            }
-                            animate.end = undefined;
-                            animate.keyTimes = pathData.map(item => item.time);
-                            animate.values = pathData.map(item => item.value.toString());
-                            animate.from = animate.values[0];
-                            animate.to = animate.values[animate.values.length - 1];
-                            animate.by = '';
-                            this.animate.push(animate);
                         }
                     }
                 }

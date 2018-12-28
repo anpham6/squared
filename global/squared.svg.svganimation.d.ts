@@ -28,6 +28,8 @@ declare global {
             additiveSum: boolean;
             accumulateSum: boolean;
             fillFreeze: boolean;
+            parentPath: SvgPath | undefined;
+            sequential: { name: string; index: number; } | undefined;
             readonly element: SVGAnimateElement;
         }
 

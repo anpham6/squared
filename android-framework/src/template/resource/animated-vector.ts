@@ -2,6 +2,7 @@ const template = [
 '<?xml version="1.0" encoding="utf-8"?>',
 '<animated-vector xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt" android:drawable="@drawable/{&vectorName}">',
 '!1',
+    '!targetSet',
 '	<target android:name="{&name}">',
 '		<aapt:attr name="android:animation">',
 '			<set android:ordering="{~ordering}">',
@@ -31,6 +32,7 @@ const template = [
 '			</set>',
 '		</aapt:attr>',
 '	</target>',
+    '!targetSet',
 '!1',
 '</animated-vector>'
 ];

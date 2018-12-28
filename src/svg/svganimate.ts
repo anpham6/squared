@@ -1,4 +1,5 @@
 import SvgAnimation from './svganimation';
+import SvgPath from './svgpath';
 
 import { sortNumberAsc } from './lib/util';
 
@@ -28,6 +29,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public additiveSum = false;
     public accumulateSum = false;
     public fillFreeze = false;
+    public parentPath: SvgPath | undefined;
+    public sequential: { name: string; index: number; } | undefined;
 
     private _repeatCount: number;
 
