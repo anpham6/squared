@@ -37,6 +37,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     {
         super(element, parentElement);
         const values = this.getAttribute('values');
+        const from = this.getAttribute('from');
         if (values !== '') {
             this.values.push(...$util.flatMap(values.split(';'), value => value.trim()));
             if (this.values.length > 1) {
@@ -55,8 +56,10 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             }
         }
         if (this.values.length === 0 && this.to !== '') {
-            this.setAttribute('from');
-            if (this.from === '') {
+            if (from !== '') {
+                this.from = from;
+            }
+            else {
                 const value = $util.optionalAsString(parentElement, `${this.attributeName}.baseVal.value`);
                 if (value !== '') {
                     this.from = value;
@@ -100,8 +103,12 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             }
         }
         this.setAttribute('calcMode');
-        this.setAttribute('additive', 'sum');
-        this.setAttribute('accumulate', 'sum');
+        if (values === '' && from !== '' && this.to !== '') {
+            this.setAttribute('additive', 'sum');
+            if (this.additiveSum) {
+                this.setAttribute('accumulate', 'sum');
+            }
+        }
         this.setAttribute('fill', 'freeze');
     }
 

@@ -16,12 +16,15 @@ let system = {} as FunctionMap<any>;
 const extensionsAsync = new Set<Extension>();
 const optionsAsync = new Map<string, ExternalData>();
 
-let main: Application;
-let framework: AppFramework<T>;
+let main: Application | undefined;
+let framework: AppFramework<T> | undefined;
 
 export function setFramework(value: AppFramework<T>, cached = false) {
     if (framework !== value) {
         const appBase = cached ? value.cached() : value.create();
+        if (framework === undefined) {
+            Object.assign(appBase.userSettings, settings);
+        }
         settings = appBase.userSettings;
         main = appBase.application;
         main.userSettings = appBase.userSettings;
@@ -40,7 +43,9 @@ export function setFramework(value: AppFramework<T>, cached = false) {
                     }
                 }
             }
-            register.forEach(item => main.extensionManager.include(item));
+            for (const item of register) {
+                main.extensionManager.include(item);
+            }
         }
         framework = value;
         system = value.system;
@@ -51,7 +56,9 @@ export function setFramework(value: AppFramework<T>, cached = false) {
 export function parseDocument(...elements: Undefined<string | HTMLElement>[]): FunctionMap<void> {
     if (main && !main.closed) {
         if (settings.handleExtensionsAsync) {
-            extensionsAsync.forEach(item => main.extensionManager.include(item));
+            for (const item of extensionsAsync) {
+                main.extensionManager.include(item);
+            }
             for (const [name, options] of optionsAsync.entries()) {
                 configure(name, options);
             }
