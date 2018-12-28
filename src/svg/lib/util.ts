@@ -3,6 +3,14 @@ import { SvgTransformData } from '../types/svg';
 import $dom = squared.lib.dom;
 import $util = squared.lib.util;
 
+export function getHrefTarget(element: Element) {
+    const href = element.attributes.getNamedItem('href');
+    if (href && href.value !== '') {
+        return href.value.charAt(0) === '#' ? <SVGGraphicsElement> (document.getElementById(href.value.replace('#', '')) as unknown) : null;
+    }
+    return null;
+}
+
 export function isSvgShape(element: Element): element is SVGGraphicsElement {
     switch (element.tagName) {
         case 'path':

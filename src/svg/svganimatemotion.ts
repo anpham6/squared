@@ -1,9 +1,13 @@
 import SvgAnimate from './svganimate';
+import SvgPath from './svgpath';
+
+import { getHrefTarget } from './lib/util';
 
 import $util = squared.lib.util;
 
 export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.SvgAnimateMotion {
     public path = '';
+    public mpath: SvgPath | undefined;
     public keyPoints: number[] = [];
     public rotate = 0;
     public rotateAuto = false;
@@ -30,6 +34,19 @@ export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.
                 const points = SvgAnimate.toFractionList(keyPoints);
                 if (points.length === this.keyTimes.length) {
                     this.keyPoints = points;
+                }
+            }
+        }
+        for (let i = 0; i < element.children.length; i++) {
+            const item = element.children[i];
+            if (item.tagName === 'mpath') {
+                const target = getHrefTarget(item);
+                if (target) {
+                    this.mpath = new SvgPath(target);
+                    if (this.path === '') {
+                        this.path = this.mpath.d;
+                    }
+                    break;
                 }
             }
         }

@@ -3,6 +3,7 @@ import { SvgTransformData } from '../src/svg/types/svg';
 declare global {
     namespace squared.svg.lib {
         namespace util {
+            export function getHrefTarget(element: Element): SVGGraphicsElement | null;
             export function isSvgShape(element: Element): element is SVGGraphicsElement;
             export function isSvgImage(element: Element): element is SVGImageElement;
             export function createTransformData(element: SVGGraphicsElement): SvgTransformData;

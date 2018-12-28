@@ -18,7 +18,7 @@ declare global {
 
         export interface SvgUse extends SvgGroupViewBox {
             path: SvgPath | undefined;
-            setPath(value: string): void;
+            setPath(value: SvgPath): void;
         }
 
         export class SvgUse implements SvgUse {

@@ -49,6 +49,7 @@ declare global {
 
         interface SvgAnimateMotion extends SvgAnimate {
             path: string;
+            mpath: SvgPath | undefined;
             keyPoints: number[];
             rotate: number;
             rotateAuto: boolean;

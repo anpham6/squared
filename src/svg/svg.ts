@@ -6,9 +6,10 @@ import SvgElement from './svgelement';
 import SvgGroup from './svggroup';
 import SvgGroupViewBox from './svggroupviewbox';
 import SvgImage from './svgimage';
+import SvgPath from './svgpath';
 import SvgUse from './svguse';
 
-import { isSvgImage, isSvgShape, isVisible } from './lib/util';
+import { getHrefTarget, isSvgImage, isSvgShape, isVisible } from './lib/util';
 
 import $dom = squared.lib.dom;
 
@@ -68,7 +69,7 @@ export default class Svg extends squared.lib.base.Container<SvgGroup> implements
         element.querySelectorAll('set, animate, animateTransform, animateMotion').forEach((svg: SVGAnimationElement) => {
             const href = svg.attributes.getNamedItem('href');
             if (href && href.value !== '') {
-                const target = href.value.charAt(0) === '#' ? <SVGGraphicsElement> (document.getElementById(href.value.replace('#', '')) as unknown) : null;
+                const target = getHrefTarget(svg);
                 if (svg.parentElement) {
                     svg.parentElement.removeChild(svg);
                 }
@@ -125,14 +126,14 @@ export default class Svg extends squared.lib.base.Container<SvgGroup> implements
                 }
             }
         });
-        const useMap = new Map<string, string>();
+        const useMap = new Map<string, SvgPath>();
         let currentGroup: SvgGroup | undefined;
         function appendShape(item: Element) {
             let shape: SvgElement | undefined;
             if (isSvgShape(item)) {
                 shape = new SvgElement(item);
                 if (item.id && shape.path) {
-                    useMap.set(`#${item.id}`, shape.path.d);
+                    useMap.set(`#${item.id}`, shape.path);
                 }
             }
             else if (isSvgImage(item)) {
