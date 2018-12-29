@@ -2,16 +2,16 @@ import Container = squared.lib.base.Container;
 
 declare global {
     namespace squared.base {
-        export interface NodeList<T extends Node> extends Container<T> {
-            afterAppend?: (node: T) => void;
+        interface NodeList<T extends Node> extends Container<T> {
             readonly visible: T[];
             readonly elements: T[];
             readonly nextId: number;
+            afterAppend?: (node: T) => void;
             append(node: T, delegate?: boolean): this;
             reset(): void;
         }
 
-        export class NodeList<T extends Node> implements NodeList<T> {
+        class NodeList<T extends Node> implements NodeList<T> {
             public static actualParent<T>(list: T[]): T | undefined;
             public static baseline<T>(list: T[], text?: boolean): T[];
             public static floated<T>(list: T[]): Set<string>;

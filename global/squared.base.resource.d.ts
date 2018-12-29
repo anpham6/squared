@@ -2,7 +2,7 @@ import { AppHandler, ResourceAssetMap, ResourceStoredMap, SessionData, UserSetti
 
 declare global {
     namespace squared.base {
-        export interface Resource<T extends Node> extends AppHandler<T> {
+        interface Resource<T extends Node> extends AppHandler<T> {
             application: Application<T>;
             cache: NodeList<T>;
             fileHandler: File<T> | undefined;
@@ -15,7 +15,7 @@ declare global {
             setValueString(): void;
         }
 
-        export class Resource<T extends Node> implements Resource<T> {
+        class Resource<T extends Node> implements Resource<T> {
             public static KEY_NAME: string;
             public static ASSETS: ResourceAssetMap;
             public static STORED: ResourceStoredMap;

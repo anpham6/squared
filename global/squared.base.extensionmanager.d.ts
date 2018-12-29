@@ -1,6 +1,6 @@
 declare global {
     namespace squared.base {
-        export interface ExtensionManager<T extends Node> {
+        interface ExtensionManager<T extends Node> {
             readonly application: Application<T>;
             include(ext: Extension<T>): boolean;
             exclude(ext: Extension<T>): boolean;
@@ -12,7 +12,7 @@ declare global {
             optionValueAsBoolean(name: string, attr: string): boolean;
         }
 
-        export class ExtensionManager<T extends Node> implements ExtensionManager<T> {}
+        class ExtensionManager<T extends Node> implements ExtensionManager<T> {}
     }
 }
 

@@ -2,7 +2,7 @@ import { ResourceStoredMap, SessionData, UserSettings } from '../src/base/types/
 
 declare global {
     namespace squared.base {
-        export interface File<T extends Node> {
+        interface File<T extends Node> {
             resource: Resource<T>;
             userSettings: UserSettings;
             appName: string;
@@ -14,7 +14,7 @@ declare global {
             saveToDisk(files: FileAsset[]): void;
         }
 
-        export class File<T extends Node> implements File<T> {
+        class File<T extends Node> implements File<T> {
             public static downloadToDisk(data: Blob, filename: string, mime?: string): void;
             constructor(resource: Resource<T>);
         }

@@ -2,7 +2,7 @@ import { AppSession, AppProcessing, SessionData, UserSettings } from '../src/bas
 
 declare global {
     namespace squared.base {
-        export interface Application<T extends Node> {
+        interface Application<T extends Node> {
             framework: number;
             controllerHandler: Controller<T>;
             resourceHandler: Resource<T>;
@@ -39,7 +39,7 @@ declare global {
             toString(): string;
         }
 
-        export class Application<T extends Node> implements Application<T> {
+        class Application<T extends Node> implements Application<T> {
             constructor(
                 framework: number,
                 controllerConstructor: Constructor<Controller<T>>,

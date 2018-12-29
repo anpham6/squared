@@ -707,7 +707,7 @@ export default class SvgElement implements squared.svg.SvgElement {
                                 object.duration = keyTimeTo - keyTimeFrom;
                             }
                             object.keyTimes = [0, 1];
-                            object.sequential = { name, index: k++ };
+                            object.sequential = { name, value: k++ };
                             insertAnimate(object);
                         }
                     }

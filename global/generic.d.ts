@@ -25,7 +25,7 @@ type ObjectMapNested<T> = ObjectMap<ObjectMap<T>>;
 
 interface NameValue {
     name: string;
-    value: string;
+    value: any;
 }
 
 interface Point {

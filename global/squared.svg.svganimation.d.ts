@@ -11,7 +11,7 @@ declare global {
             getAttribute(attr: string): string;
         }
 
-        export class SvgAnimation implements SvgAnimation {
+        class SvgAnimation implements SvgAnimation {
             public static convertClockTime(value: string): number;
             constructor(element: SVGAnimationElement, parentElement: SVGGraphicsElement);
         }
@@ -29,11 +29,11 @@ declare global {
             accumulateSum: boolean;
             fillFreeze: boolean;
             parentPath: SvgPath | undefined;
-            sequential: { name: string; index: number; } | undefined;
+            sequential: NameValue | undefined;
             readonly element: SVGAnimateElement;
         }
 
-        export class SvgAnimate implements SvgAnimate {
+        class SvgAnimate implements SvgAnimate {
             public static toFractionList(value: string, delimiter?: string): number[];
             constructor(element: SVGAnimateElement, parentElement: SVGGraphicsElement);
         }
@@ -42,7 +42,7 @@ declare global {
             type: number;
         }
 
-        export class SvgAnimateTransform implements SvgAnimateTransform {
+        class SvgAnimateTransform implements SvgAnimateTransform {
             public static toRotateList(values: string[]): (null[] | number[])[] | undefined;
             public static toScaleList(values: string[]): (null[] | number[])[] | undefined;
             public static toTranslateList(values: string[]): (null[] | number[])[] | undefined;
@@ -58,7 +58,7 @@ declare global {
             rotateAutoReverse: boolean;
         }
 
-        export class SvgAnimateMotion implements SvgAnimateMotion {
+        class SvgAnimateMotion implements SvgAnimateMotion {
             constructor(element: SVGAnimateMotionElement, parentElement: SVGGraphicsElement);
         }
     }

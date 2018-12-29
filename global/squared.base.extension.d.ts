@@ -2,7 +2,7 @@ import { ExtensionDependency, ExtensionResult } from '../src/base/types/applicat
 
 declare global {
     namespace squared.base {
-        export interface Extension<T extends Node> {
+        interface Extension<T extends Node> {
             tagNames: string[];
             documentRoot: boolean;
             eventOnly: boolean;
@@ -38,7 +38,7 @@ declare global {
             afterFinalize(): void;
         }
 
-        export class Extension<T extends Node> implements Extension<T> {
+        class Extension<T extends Node> implements Extension<T> {
             public static findNestedByName(element: Element | null, name: string): HTMLElement | null;
             constructor(name: string, framework: number, tagNames?: string[], options?: ExternalData);
         }

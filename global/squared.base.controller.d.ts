@@ -2,7 +2,7 @@ import { AppHandler, ControllerSettings, LayoutType, LayoutResult, SessionData, 
 
 declare global {
     namespace squared.base {
-        export interface Controller<T extends Node> extends AppHandler<T> {
+        interface Controller<T extends Node> extends AppHandler<T> {
             application: Application<T>;
             cache: NodeList<T>;
             readonly userSettings: UserSettings;
@@ -32,7 +32,7 @@ declare global {
             replaceIndent(value: string, depth: number, cache: T[]): string;
         }
 
-        export class Controller<T extends Node> implements Controller<T> {
+        class Controller<T extends Node> implements Controller<T> {
             constructor(application: Application<T>);
         }
     }

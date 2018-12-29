@@ -1,6 +1,6 @@
 declare global {
     namespace squared.lib.base {
-        export interface Container<T> extends Iterable<T> {
+        interface Container<T> extends Iterable<T> {
             readonly children: T[];
             readonly length: number;
             [Symbol.iterator](): Iterator<T>;
@@ -22,7 +22,7 @@ declare global {
             sort(predicate: (a: T, b: T) => number): this;
         }
 
-        export class Container<T> implements Container<T> {
+        class Container<T> implements Container<T> {
             constructor(children?: T[]);
         }
     }

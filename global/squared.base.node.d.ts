@@ -5,7 +5,7 @@ import Container = squared.lib.base.Container;
 
 declare global {
     namespace squared.base {
-        export interface Node extends Container<Node>, BoxModel {
+        interface Node extends Container<Node>, BoxModel {
             id: number;
             style: CSSStyleDeclaration;
             containerType: number;
@@ -181,9 +181,9 @@ declare global {
             nextSiblings(lineBreak?: boolean, excluded?: boolean, height?: boolean): Node[];
         }
 
-        export class Node implements Node {}
+        class Node implements Node {}
 
-        export class NodeGroup extends Node {}
+        class NodeGroup extends Node {}
     }
 }
 

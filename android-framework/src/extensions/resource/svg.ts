@@ -365,7 +365,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                     targets.push([item]);
                                 }
                                 for (const item of sequentialMap.values()) {
-                                    targets.push(item.sort((a, b) => a.sequential && b.sequential && a.sequential.index >= b.sequential.index ? 1 : -1));
+                                    targets.push(item.sort((a, b) => a.sequential && b.sequential && a.sequential.value >= b.sequential.value ? 1 : -1));
                                 }
                                 for (const set of targets) {
                                     let ordering: string;
@@ -794,10 +794,14 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                             valueTo = transform.rotateAngle.toString();
                                                                             break;
                                                                         case 'pivotX':
-                                                                            valueTo = (transform.rotateOriginX || 0).toString();
+                                                                            if (transform.rotateOriginX !== undefined) {
+                                                                                valueTo = transform.rotateOriginX.toString();
+                                                                            }
                                                                             break;
                                                                         case 'pivotY':
-                                                                            valueTo = (transform.rotateOriginX || 0).toString();
+                                                                            if (transform.rotateOriginY !== undefined) {
+                                                                                valueTo = transform.rotateOriginY.toString();
+                                                                            }
                                                                             break;
                                                                     }
                                                                     break;

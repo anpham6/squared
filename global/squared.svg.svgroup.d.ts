@@ -4,26 +4,26 @@ import Container = squared.lib.base.Container;
 
 declare global {
     namespace squared.svg {
-        export interface SvgGroup extends SvgBase, Container<SvgElement> {
+        interface SvgGroup extends SvgBase, Container<SvgElement> {
             synchronize(useKeyTime?: boolean): void;
         }
 
-        export class SvgGroup implements SvgGroup {
+        class SvgGroup implements SvgGroup {
             constructor(element: SVGGraphicsElement);
         }
 
-        export interface SvgGroupViewBox extends SvgViewBox, SvgGroup {}
+        interface SvgGroupViewBox extends SvgViewBox, SvgGroup {}
 
-        export class SvgGroupViewBox implements SvgGroupViewBox {
+        class SvgGroupViewBox implements SvgGroupViewBox {
             constructor(element: SVGSVGElement | SVGUseElement);
         }
 
-        export interface SvgUse extends SvgGroupViewBox {
+        interface SvgUse extends SvgGroupViewBox {
             path: SvgPath | undefined;
             setPath(value: SvgPath): void;
         }
 
-        export class SvgUse implements SvgUse {
+        class SvgUse implements SvgUse {
             constructor(element: SVGUseElement, d: string);
         }
     }

@@ -4,7 +4,7 @@ import Container = squared.lib.base.Container;
 
 declare global {
     namespace squared.svg {
-        export interface SvgBase {
+        interface SvgBase {
             animate: SvgAnimation[];
             readonly element: SVGGraphicsElement;
             readonly name: string;
@@ -12,7 +12,7 @@ declare global {
             readonly transform: SVGTransformList;
         }
 
-        export interface Svg extends Container<SvgGroup>, SvgBase {
+        interface Svg extends Container<SvgGroup>, SvgBase {
             readonly defs: SvgDefs;
             readonly width: number;
             readonly height: number;
@@ -24,11 +24,11 @@ declare global {
             setDimensions(width: number, height: number): void;
         }
 
-        export class Svg implements Svg {
+        class Svg implements Svg {
             constructor(element: SVGSVGElement);
         }
 
-        export class SvgBuild {
+        class SvgBuild {
             public static setName(element: SVGGraphicsElement): string;
             public static applyTransforms(transform: SVGTransformList, points: Point[], origin?: Point): Point[];
             public static toPointList(points: SVGPointList): Point[];

@@ -27,7 +27,7 @@ declare global {
             delete(value: number): number;
         }
 
-        export class Layout<T extends Node> implements Layout<T> {
+        class Layout<T extends Node> implements Layout<T> {
             constructor(parent: T, node: T, containerType?: number, alignmentType?: number, itemCount?: number, children?: T[]);
         }
     }
