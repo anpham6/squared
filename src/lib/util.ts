@@ -474,6 +474,12 @@ export function partition<T>(list: T[], predicate: IteratorPredicate<T, boolean>
     return [valid, invalid];
 }
 
+export function retainArray<T>(list: T[], predicate: IteratorPredicate<T, any>) {
+    const retain = list.filter(predicate);
+    list.length = 0;
+    list.push(...retain);
+}
+
 export function spliceArray<T>(list: T[], item: T) {
     for (let i = 0; i < list.length; i++) {
         if (list[i] === item) {

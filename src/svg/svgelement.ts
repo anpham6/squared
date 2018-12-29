@@ -24,7 +24,7 @@ type KeyTimeMap = Map<number, Map<string, number>>;
 
 type FreezeMap = ObjectMap<KeyTimeValue<number>>;
 
-function insertSplitKeyTimeValue(insertMap: TimelineIndex, path: SvgPath, item: SvgAnimate, iteration: number, begin: number, splitTime: number) {
+function insertSplitKeyTimeValue(map: TimelineIndex, element: SVGGraphicsElement, path: SvgPath | undefined, item: SvgAnimate, iteration: number, begin: number, splitTime: number) {
     const fraction = (splitTime - (begin + item.duration * iteration)) / item.duration;
     const keyTimes = item.keyTimes;
     let previousIndex = -1;
@@ -39,9 +39,9 @@ function insertSplitKeyTimeValue(insertMap: TimelineIndex, path: SvgPath, item: 
         }
     }
     if (previousIndex !== -1 && nextIndex !== -1) {
-        const previousValue = getItemValue(path, item, previousIndex, iteration);
-        const nextValue = getItemValue(path, item, nextIndex, iteration);
-        insertMap.set(splitTime, getSplitValue(fraction, keyTimes[previousIndex], keyTimes[nextIndex], previousValue, nextValue));
+        const previousValue = getItemValue(element, path, item, previousIndex, iteration);
+        const nextValue = getItemValue(element, path, item, nextIndex, iteration);
+        map.set(splitTime, getSplitValue(fraction, keyTimes[previousIndex], keyTimes[nextIndex], previousValue, nextValue));
         return splitTime;
     }
     else {
@@ -53,10 +53,10 @@ function getSplitValue(fraction: number, previousFraction: number, nextFraction:
     return previousValue + ((fraction - previousFraction) / (nextFraction - previousFraction)) * (nextValue - previousValue);
 }
 
-function insertSplitTimeValue(baseMap: TimelineIndex, insertMap: TimelineIndex, splitTime: number) {
+function insertSplitTimeValue(map: TimelineIndex, insertMap: TimelineIndex, splitTime: number) {
     let previous: KeyTimeValue<number> | undefined;
     let next: KeyTimeValue<number> | undefined;
-    for (const [time, value] of baseMap.entries()) {
+    for (const [time, value] of map.entries()) {
         if (previous && splitTime < time) {
             next = { time, value };
             break;
@@ -91,7 +91,7 @@ function convertKeyTimeFraction(map: KeyTimeMap, total: number) {
     return result;
 }
 
-function getPathData(path: SvgPath, map: KeyTimeMap, methodName: string, attrs: string[], freezeMap?: FreezeMap, transform?: SVGTransformList) {
+function getPathData(map: KeyTimeMap, path: SvgPath, methodName: string, attrs: string[], freezeMap?: FreezeMap, transform?: SVGTransformList) {
     const result: KeyTimeValue<string>[] = [];
     for (const [time, data] of map.entries()) {
         const values: number[] = [];
@@ -150,12 +150,12 @@ function getRectPoints(values: number[]): Point[] {
     ];
 }
 
-function getKeyTimeMap(keyTimes: number[], timelineMap: TimelineMap, freezeMap?: FreezeMap) {
+function getKeyTimeMap(map: TimelineMap, keyTimes: number[], freezeMap?: FreezeMap) {
     const result = new Map<number, Map<string, number>>();
     for (const keyTime of keyTimes) {
         const values = new Map<string, number>();
-        for (const attr in timelineMap) {
-            const value = timelineMap[attr].get(keyTime);
+        for (const attr in map) {
+            const value = map[attr].get(keyTime);
             if (value !== undefined) {
                 values.set(attr, value);
             }
@@ -172,10 +172,15 @@ function getKeyTimeMap(keyTimes: number[], timelineMap: TimelineMap, freezeMap?:
     return result;
 }
 
-function getItemValue(path: SvgPath, animate: SvgAnimate, index: number, iteration = 0) {
+function getItemValue(element: SVGGraphicsElement, path: SvgPath | undefined, animate: SvgAnimate, index: number, iteration = 0) {
     let result = parseFloat(animate.values[index]);
-    if (animate.additiveSum && typeof path.baseVal[animate.attributeName] === 'number') {
-        result += path.baseVal[animate.attributeName];
+    if (animate.additiveSum) {
+        if (path && typeof path.baseVal[animate.attributeName] === 'number') {
+            result += path.baseVal[animate.attributeName];
+        }
+        else {
+            result += $util.optionalAsNumber(element, `${animate.attributeName}.baseVal.value`);
+        }
         if (!animate.accumulateSum) {
             iteration = 0;
         }
@@ -188,16 +193,16 @@ function getItemValue(path: SvgPath, animate: SvgAnimate, index: number, iterati
     return result;
 }
 
-function getKeyTimePath(path: SvgPath, keyTimeMap: KeyTimeMap, freezeMap?: FreezeMap) {
+function getKeyTimePath(map: KeyTimeMap, path: SvgPath, freezeMap?: FreezeMap) {
     switch (path.element.tagName) {
         case 'circle':
-            return getPathData(path, keyTimeMap, 'getCircle', ['cx', 'cy', 'r'], freezeMap);
+            return getPathData(map, path, 'getCircle', ['cx', 'cy', 'r'], freezeMap);
         case 'ellipse':
-            return getPathData(path, keyTimeMap, 'getEllipse', ['cx', 'cy', 'rx', 'ry'], freezeMap);
+            return getPathData(map, path, 'getEllipse', ['cx', 'cy', 'rx', 'ry'], freezeMap);
         case 'line':
-            return getPathData(path, keyTimeMap, 'getLine', ['x1', 'y1', 'x2', 'y2'], freezeMap, path.element.transform.baseVal);
+            return getPathData(map, path, 'getLine', ['x1', 'y1', 'x2', 'y2'], freezeMap, path.element.transform.baseVal);
         case 'rect':
-            return getPathData(path, keyTimeMap, 'getRect', ['width', 'height', 'x', 'y'], freezeMap, path.element.transform.baseVal);
+            return getPathData(map, path, 'getRect', ['width', 'height', 'x', 'y'], freezeMap, path.element.transform.baseVal);
     }
     return undefined;
 }
@@ -225,66 +230,54 @@ export default class SvgElement implements squared.svg.SvgElement {
         return result;
     }
 
-    public path: SvgPath | undefined;
-    public animate: SvgAnimation[];
-
-    public readonly name: string;
-    public readonly visible: boolean;
-
-    constructor(public readonly element: SVGGraphicsElement) {
-        this.name = SvgBuild.setName(element);
-        this.visible = isVisible(element);
-        this.animate = this.animatable ? SvgElement.toAnimateList(element) : [];
-        if (this.drawable) {
-            const path = new SvgPath(element);
-            if (path.d && path.d !== 'none') {
-                this.path = path;
-                for (const item of this.animate) {
-                    if (item instanceof SvgAnimate) {
-                        item.parentPath = path;
-                    }
-                }
-            }
-        }
-    }
-
-    public synchronizePath(useKeyTime = true) {
-        const path = this.path;
-        if (path && this.animate.length)  {
-            const tagName = this.element.tagName;
+    public static synchronizeAnimations(element: SVGGraphicsElement, animate: SvgAnimation[], useKeyTime = true, path?: SvgPath) {
+        if (animate.length)  {
+            const tagName = element.tagName;
             const animations: SvgAnimate[] = [];
-            for (const item of this.animate) {
+            for (const item of animate) {
                 if (item instanceof SvgAnimate && item.keyTimes.length > 1 && item.duration > 0 && item.begin.length) {
-                    switch (item.attributeName) {
-                        case 'r':
-                        case 'cx':
-                        case 'cy':
-                            if (tagName === 'circle') {
-                                animations.push(item);
+                    if (path) {
+                        switch (item.attributeName) {
+                            case 'r':
+                            case 'cx':
+                            case 'cy':
+                                if (tagName === 'circle') {
+                                    animations.push(item);
+                                    break;
+                                }
+                            case 'rx':
+                            case 'ry':
+                                if (tagName === 'ellipse') {
+                                    animations.push(item);
+                                }
                                 break;
+                            case 'x1':
+                            case 'x2':
+                            case 'y1':
+                            case 'y2':
+                                if (tagName === 'line') {
+                                    animations.push(item);
+                                }
+                                break;
+                            case 'x':
+                            case 'y':
+                            case 'width':
+                            case 'height':
+                                if (tagName === 'rect') {
+                                    animations.push(item);
+                                }
+                                break;
+                        }
+                    }
+                    else {
+                        if (element instanceof SVGSVGElement || element instanceof SVGUseElement) {
+                            switch (item.attributeName) {
+                                case 'x':
+                                case 'y':
+                                    animations.push(item);
+                                    break;
                             }
-                        case 'rx':
-                        case 'ry':
-                            if (tagName === 'ellipse') {
-                                animations.push(item);
-                            }
-                            break;
-                        case 'x1':
-                        case 'x2':
-                        case 'y1':
-                        case 'y2':
-                            if (tagName === 'line') {
-                                animations.push(item);
-                            }
-                            break;
-                        case 'x':
-                        case 'y':
-                        case 'width':
-                        case 'height':
-                            if (tagName === 'rect') {
-                                animations.push(item);
-                            }
-                            break;
+                        }
                     }
                 }
             }
@@ -305,7 +298,7 @@ export default class SvgElement implements squared.svg.SvgElement {
                         if (item.repeatCount === -1) {
                             indefiniteStaticMap[attr] = new Map<number, number>();
                             for (let i = 0; i < item.keyTimes.length; i++) {
-                                indefiniteStaticMap[attr].set(item.keyTimes[i] * item.duration, getItemValue(path, item, i));
+                                indefiniteStaticMap[attr].set(item.keyTimes[i] * item.duration, getItemValue(element, path, item, i));
                             }
                             if (item.begin.some(value => value > 0)) {
                                 indefiniteMap[attr] = new Map<number, number>();
@@ -315,14 +308,14 @@ export default class SvgElement implements squared.svg.SvgElement {
                                     for (let j = 0; j < item.keyTimes.length; j++) {
                                         const time = begin + item.keyTimes[j] * item.duration;
                                         if (time >= maxThreadTime) {
-                                            const insertTime = insertSplitKeyTimeValue(indefiniteMap[attr], path, item, 0, begin, maxThreadTime - 1);
+                                            const insertTime = insertSplitKeyTimeValue(indefiniteMap[attr], element, path, item, 0, begin, maxThreadTime - 1);
                                             if (insertTime !== -1) {
                                                 maxTime = insertTime;
                                             }
                                             break;
                                         }
                                         else if (time > maxTime) {
-                                            indefiniteMap[attr].set(time, getItemValue(path, item, j));
+                                            indefiniteMap[attr].set(time, getItemValue(element, path, item, j));
                                             maxTime = time;
                                         }
                                     }
@@ -358,13 +351,13 @@ export default class SvgElement implements squared.svg.SvgElement {
                                     for (let k = 0; k < item.keyTimes.length; k++) {
                                         const fraction = item.keyTimes[k];
                                         let time: number | undefined;
-                                        let value = getItemValue(path, item, k, j);
+                                        let value = getItemValue(element, path, item, k, j);
                                         let finalTimeValue = false;
                                         if (j === repeatTotal - 1 && repeatFraction > 0 && repeatFraction >= fraction) {
                                             for (let l = k + 1; l < item.keyTimes.length; l++) {
                                                 if (repeatFraction < item.keyTimes[l]) {
                                                     time = begin + durationTotal;
-                                                    value = getSplitValue(repeatFraction, fraction, item.keyTimes[l], value, getItemValue(path, item, l, j));
+                                                    value = getSplitValue(repeatFraction, fraction, item.keyTimes[l], value, getItemValue(element, path, item, l, j));
                                                     finalTimeValue = true;
                                                     break;
                                                 }
@@ -377,7 +370,7 @@ export default class SvgElement implements squared.svg.SvgElement {
                                             }
                                             else {
                                                 const adjustKeyTimeValue = (fromMaxThread: boolean, splitTime: number) => {
-                                                    const insertTime = insertSplitKeyTimeValue(repeatingMap[attr], path, item, j, begin, splitTime + (fromMaxThread && !repeatingMap[attr].has(splitTime) ? 0 : 1));
+                                                    const insertTime = insertSplitKeyTimeValue(repeatingMap[attr], element, path, item, j, begin, splitTime + (fromMaxThread && !repeatingMap[attr].has(splitTime) ? 0 : 1));
                                                     if (insertTime !== -1) {
                                                         maxTime = insertTime;
                                                         included = true;
@@ -511,9 +504,22 @@ export default class SvgElement implements squared.svg.SvgElement {
                             while (maxTime < repeatingEndTime);
                             modified = true;
                         }
-                        if (!modified && indefiniteStaticMap[attr] === undefined && freezeMap[attr] === undefined && path.baseVal[attr] !== null && insertMap.get(endTime) !== path.baseVal[attr]) {
-                            insertMap.set(endTime + 1, path.baseVal[attr]);
-                            keyTimesRepeating.push(endTime + 1);
+                        if (!modified && indefiniteStaticMap[attr] === undefined && freezeMap[attr] === undefined) {
+                            const replaceTime = endTime + 1;
+                            let value: number | undefined;
+                            if (path && path.baseVal[attr] !== null) {
+                                value = path.baseVal[attr];
+                            }
+                            else {
+                                const optional = $util.optionalAsObject(element, `${attr}.baseVal.value`);
+                                if (typeof optional === 'number') {
+                                    value = optional;
+                                }
+                            }
+                            if (value !== undefined && insertMap.get(endTime) !== value) {
+                                insertMap.set(replaceTime, value);
+                                keyTimesRepeating.push(replaceTime);
+                            }
                         }
                     }
                     const keyTimes = sortNumberAsc(Array.from(new Set(keyTimesRepeating)));
@@ -539,12 +545,12 @@ export default class SvgElement implements squared.svg.SvgElement {
                     repeatingDurationTotal = keyTimes[keyTimes.length - 1];
                     if (useKeyTime) {
                         keyTimeMapList.push(convertKeyTimeFraction(
-                            getKeyTimeMap(keyTimes, repeatingResult, freezeMap),
+                            getKeyTimeMap(repeatingResult, keyTimes, freezeMap),
                             repeatingDurationTotal
                         ));
                     }
                     else {
-                        keyTimeMapList.push(getKeyTimeMap(keyTimes, repeatingResult, freezeMap));
+                        keyTimeMapList.push(getKeyTimeMap(repeatingResult, keyTimes, freezeMap));
                     }
                 }
                 if (indefiniteAnimations.length) {
@@ -553,13 +559,13 @@ export default class SvgElement implements squared.svg.SvgElement {
                     let keyTimes: number[] = [];
                     for (const attr in indefiniteStaticMap) {
                         indefiniteResult[attr] = new Map<number, number>();
-                        const animate = indefiniteAnimations.find(item => item.attributeName === attr);
-                        if (animate) {
+                        const object = indefiniteAnimations.find(item => item.attributeName === attr);
+                        if (object) {
                             let maxTime = 0;
                             let i = 0;
                             do {
                                 for (let [time, value] of indefiniteStaticMap[attr].entries()) {
-                                    time += animate.duration * i;
+                                    time += object.duration * i;
                                     indefiniteResult[attr].set(time, value);
                                     keyTimes.push(time);
                                     maxTime = time;
@@ -581,84 +587,170 @@ export default class SvgElement implements squared.svg.SvgElement {
                     }
                     if (useKeyTime) {
                         keyTimeMapList.push(convertKeyTimeFraction(
-                            getKeyTimeMap(keyTimes, indefiniteResult),
+                            getKeyTimeMap(indefiniteResult, keyTimes),
                             keyTimes[keyTimes.length - 1]
                         ));
                     }
                     else {
-                        keyTimeMapList.push(getKeyTimeMap(keyTimes, indefiniteResult));
+                        keyTimeMapList.push(getKeyTimeMap(indefiniteResult, keyTimes));
                     }
                 }
                 if (keyTimeMapList.length) {
-                    this.animate = this.animate.filter(item => !animations.includes(<SvgAnimate> item));
+                    $util.retainArray(animate, item => !animations.includes(<SvgAnimate> item));
                     const sequentialName = animations.map(item => item.attributeName).join('-');
                     for (let i = 0; i < keyTimeMapList.length; i++) {
                         const keyTimeMap = keyTimeMapList[i];
                         const freezeIndefinite = repeatingDurationTotal === 0 || i > 0 ? freezeMap : undefined;
                         const repeating = i === 0 && repeatingDurationTotal > 0;
+                        let x = 0;
+                        let y = 0;
+                        if (path === undefined) {
+                            x = $util.optionalAsNumber(element, `x.baseVal.value`);
+                            y = $util.optionalAsNumber(element, `y.baseVal.value`);
+                        }
+                        function setXY(item: Map<string, number>) {
+                            if (!item.has('x')) {
+                                item.set('x', x);
+                            }
+                            else {
+                                x = item.get('x') as number;
+                            }
+                            if (!item.has('y')) {
+                                item.set('y', y);
+                            }
+                            else {
+                                y = item.get('y') as number;
+                            }
+                        }
+                        function insertAnimate(item: SvgAnimate) {
+                            if (repeating) {
+                                item.repeatCount = 0;
+                            }
+                            else {
+                                item.begin = [0];
+                                item.duration = indefiniteDurationTotal;
+                                item.repeatCount = -1;
+                            }
+                            item.end = undefined;
+                            item.from = item.values[0];
+                            item.to = item.values[item.values.length - 1];
+                            item.by = '';
+                            animate.push(item);
+                        }
                         if (useKeyTime) {
-                            const pathData = getKeyTimePath(path, keyTimeMap, freezeIndefinite);
-                            if (pathData) {
-                                const animate = new SvgAnimate(repeating ? repeatingAnimations[0].element : indefiniteAnimations[0].element, this.element);
-                                animate.attributeName = 'd';
-                                if (repeating) {
-                                    animate.begin = [0];
-                                    animate.duration = repeatingDurationTotal;
-                                    animate.repeatCount = 0;
+                            let object: SvgAnimate | undefined;
+                            if (path) {
+                                const pathData = getKeyTimePath(keyTimeMap, path, freezeIndefinite);
+                                if (pathData) {
+                                    object = new SvgAnimate(repeating ? repeatingAnimations[0].element : indefiniteAnimations[0].element, element);
+                                    object.attributeName = 'd';
+                                    object.keyTimes = pathData.map(item => item.time);
+                                    object.values = pathData.map(item => item.value.toString());
                                 }
                                 else {
-                                    animate.begin = [repeatingDurationTotal];
-                                    animate.duration = indefiniteDurationTotal;
-                                    animate.repeatCount = -1;
+                                    continue;
                                 }
-                                animate.end = undefined;
-                                animate.keyTimes = pathData.map(item => item.time);
-                                animate.values = pathData.map(item => item.value.toString());
-                                animate.from = animate.values[0];
-                                animate.to = animate.values[animate.values.length - 1];
-                                animate.by = '';
-                                this.animate.push(animate);
                             }
+                            else {
+                                object = new SvgAnimateTransform(repeating ? repeatingAnimations[0].element : indefiniteAnimations[0].element, element);
+                                object.attributeName = 'transform';
+                                (object as SvgAnimateTransform).type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
+                                object.keyTimes.length = 0;
+                                object.values.length = 0;
+                                for (const [keyTime, data] of keyTimeMap.entries()) {
+                                    setXY(data);
+                                    object.keyTimes.push(keyTime);
+                                    object.values.push(`${x} ${y}`);
+                                }
+                            }
+                            if (repeating) {
+                                object.begin = [0];
+                                object.duration = repeatingDurationTotal;
+                            }
+                            insertAnimate(object);
                         }
                         else {
                             const entries = Array.from(keyTimeMap.entries());
                             for (let j = 0, k = 0; j < entries.length - 1; j++) {
                                 const [keyTimeFrom, dataFrom] = entries[j];
                                 const [keyTimeTo, dataTo] = entries[j + 1];
-                                const map = new Map<number, Map<string, number>>();
-                                map.set(keyTimeFrom, dataFrom);
-                                map.set(keyTimeTo, dataTo);
-                                const pathData = getKeyTimePath(path, map, freezeIndefinite);
-                                if (pathData) {
-                                    const animate = new SvgAnimate(repeating ? repeatingAnimations[0].element : indefiniteAnimations[0].element, this.element);
-                                    animate.attributeName = 'd';
-                                    if (repeating) {
-                                        animate.begin = [j === 0 ? keyTimeFrom : 0];
-                                        animate.duration = keyTimeTo - keyTimeFrom;
-                                        animate.repeatCount = 0;
+                                let name: string;
+                                let object: SvgAnimate | undefined;
+                                if (path) {
+                                    const map = new Map<number, Map<string, number>>();
+                                    map.set(keyTimeFrom, dataFrom);
+                                    map.set(keyTimeTo, dataTo);
+                                    const pathData = getKeyTimePath(map, path, freezeIndefinite);
+                                    if (pathData) {
+                                        object = new SvgAnimate(repeating ? repeatingAnimations[0].element : indefiniteAnimations[0].element, element);
+                                        object.attributeName = 'd';
+                                        if (repeating) {
+                                            object.begin = [j === 0 ? keyTimeFrom : 0];
+                                        }
+                                        object.values = pathData.map(item => item.value.toString());
                                     }
                                     else {
-                                        animate.begin = [0];
-                                        animate.duration = indefiniteDurationTotal;
-                                        animate.repeatCount = -1;
+                                        continue;
                                     }
-                                    animate.end = undefined;
-                                    animate.keyTimes = [0, 1];
-                                    animate.values = pathData.map(item => item.value.toString());
-                                    animate.from = animate.values[0];
-                                    animate.to = animate.values[animate.values.length - 1];
-                                    animate.by = '';
-                                    animate.sequential = {
-                                        name: sequentialName,
-                                        index: k++
-                                    };
-                                    this.animate.push(animate);
+                                    name = sequentialName;
                                 }
+                                else {
+                                    object = new SvgAnimateTransform(repeating ? repeatingAnimations[0].element : indefiniteAnimations[0].element, element);
+                                    object.attributeName = 'transform';
+                                    (object as SvgAnimateTransform).type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
+                                    if (repeating) {
+                                        object.begin = [keyTimeFrom];
+                                    }
+                                    object.values = [dataFrom, dataTo].map(item => {
+                                        setXY(item);
+                                        return `${x} ${y}`;
+                                    });
+                                    name = sequentialName + j;
+                                }
+                                if (repeating) {
+                                    object.duration = keyTimeTo - keyTimeFrom;
+                                }
+                                object.keyTimes = [0, 1];
+                                object.sequential = {
+                                    name,
+                                    index: k++
+                                };
+                                insertAnimate(object);
                             }
                         }
                     }
                 }
             }
+        }
+        return animate;
+    }
+
+    public path: SvgPath | undefined;
+    public animate: SvgAnimation[];
+
+    public readonly name: string;
+    public readonly visible: boolean;
+
+    constructor(public readonly element: SVGGraphicsElement) {
+        this.name = SvgBuild.setName(element);
+        this.visible = isVisible(element);
+        this.animate = SvgElement.toAnimateList(element);
+        if (this.drawable) {
+            const path = new SvgPath(element);
+            if (path.d && path.d !== 'none') {
+                this.path = path;
+                for (const item of this.animate) {
+                    if (item instanceof SvgAnimate) {
+                        item.parentPath = path;
+                    }
+                }
+            }
+        }
+    }
+
+    public synchronize(useKeyTime = true) {
+        if (this.path) {
+            SvgElement.synchronizeAnimations(this.element, this.animate, useKeyTime, this.path);
         }
     }
 
@@ -668,13 +760,5 @@ export default class SvgElement implements squared.svg.SvgElement {
 
     get drawable() {
         return true;
-    }
-
-    get animatable() {
-        return true;
-    }
-
-    get transformable() {
-        return this.transform.numberOfItems > 0;
     }
 }

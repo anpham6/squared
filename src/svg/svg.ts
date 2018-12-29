@@ -18,9 +18,6 @@ export default class Svg extends squared.lib.base.Container<SvgGroup> implements
     public animate: SvgAnimation[];
     public visible: boolean;
 
-    public readonly animatable = true;
-    public readonly transformable = false;
-
     public readonly defs: SvgDefs = {
         clipPath: new Map<string, SvgGroup>(),
         gradient: new Map<string, Gradient>()

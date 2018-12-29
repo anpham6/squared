@@ -430,6 +430,11 @@
         }
         return [valid, invalid];
     }
+    function retainArray(list, predicate) {
+        const retain = list.filter(predicate);
+        list.length = 0;
+        list.push(...retain);
+    }
     function spliceArray(list, item) {
         for (let i = 0; i < list.length; i++) {
             if (list[i] === item) {
@@ -502,6 +507,7 @@
         assignWhenNull: assignWhenNull,
         defaultWhenNull: defaultWhenNull,
         partition: partition,
+        retainArray: retainArray,
         spliceArray: spliceArray,
         flatArray: flatArray,
         flatMap: flatMap,
@@ -1758,6 +1764,9 @@
     function setFramework(value, cached = false) {
         if (framework !== value) {
             const appBase = cached ? value.cached() : value.create();
+            if (framework === undefined) {
+                Object.assign(appBase.userSettings, exports.settings);
+            }
             exports.settings = appBase.userSettings;
             main = appBase.application;
             main.userSettings = appBase.userSettings;
@@ -1776,7 +1785,9 @@
                         }
                     }
                 }
-                register.forEach(item => main.extensionManager.include(item));
+                for (const item of register) {
+                    main.extensionManager.include(item);
+                }
             }
             framework = value;
             exports.system = value.system;
@@ -1786,7 +1797,9 @@
     function parseDocument(...elements) {
         if (main && !main.closed) {
             if (exports.settings.handleExtensionsAsync) {
-                extensionsAsync.forEach(item => main.extensionManager.include(item));
+                for (const item of extensionsAsync) {
+                    main.extensionManager.include(item);
+                }
                 for (const [name, options] of optionsAsync.entries()) {
                     configure(name, options);
                 }

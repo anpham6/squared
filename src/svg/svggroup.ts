@@ -13,19 +13,15 @@ export default class SvgGroup extends squared.lib.base.Container<SvgElement> imp
     constructor(public readonly element: SVGGraphicsElement) {
         super();
         this.name = SvgBuild.setName(element);
-        this.animate = this.animatable ? SvgElement.toAnimateList(element) : [];
+        this.animate = SvgElement.toAnimateList(element);
         this.visible = isVisible(element);
+    }
+
+    public synchronize(useKeyTime = true) {
+        SvgElement.synchronizeAnimations(this.element, this.animate, useKeyTime);
     }
 
     get transform() {
         return this.element.transform.baseVal;
-    }
-
-    get animatable() {
-        return this.element instanceof SVGGElement;
-    }
-
-    get transformable() {
-        return this.element instanceof SVGGElement && this.element.transform.baseVal.numberOfItems > 0;
     }
 }

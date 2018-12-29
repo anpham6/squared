@@ -97,6 +97,7 @@ declare global {
             export function assignWhenNull(destination: {}, source: {}): void;
             export function defaultWhenNull(options: {}, ...attrs: string[]): void;
             export function partition<T>(list: T[], predicate: IteratorPredicate<T, boolean>): [T[], T[]];
+            export function retainArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): void;
             export function spliceArray<T>(list: T[], item: T): boolean;
             export function flatArray<T>(list: any[]): T[];
             export function flatMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[];

@@ -12,12 +12,7 @@ declare global {
             readonly transform: SVGTransformList;
         }
 
-        export interface SvgBaseFeature {
-            readonly animatable: boolean;
-            readonly transformable: boolean;
-        }
-
-        export interface Svg extends Container<SvgGroup>, SvgBase, SvgBaseFeature {
+        export interface Svg extends Container<SvgGroup>, SvgBase {
             readonly defs: SvgDefs;
             readonly width: number;
             readonly height: number;

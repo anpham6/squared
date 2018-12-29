@@ -13,12 +13,4 @@ export default class SvgGroupViewBox extends SvgGroup implements squared.svg.Svg
         this.width = element.width.baseVal.value;
         this.height = element.height.baseVal.value;
     }
-
-    get animatable() {
-        return true;
-    }
-
-    get transformable() {
-        return this.transform.numberOfItems > 0;
-    }
 }

@@ -2,14 +2,15 @@ import { SvgViewBox } from '../src/svg/types/svg';
 
 declare global {
     namespace squared.svg {
-        export interface SvgElement extends SvgBase, SvgBaseFeature {
+        export interface SvgElement extends SvgBase {
             path: SvgPath | undefined;
             readonly drawable: boolean;
-            synchronizePath(useKeyTime?: boolean): void;
+            synchronize(useKeyTime?: boolean): void;
         }
 
         export class SvgElement implements SvgElement {
             public static toAnimateList(element: SVGGraphicsElement): SvgAnimation[];
+            public static synchronizeAnimations(element: SVGGraphicsElement, animate: SvgAnimation[], useKeyTime?: boolean, path?: SvgPath): SvgAnimation[];
             constructor(element: SVGGraphicsElement);
         }
 
