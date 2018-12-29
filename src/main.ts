@@ -36,9 +36,9 @@ export function setFramework(value: AppFramework<T>, cached = false) {
                     register.add(main.builtInExtensions[namespace]);
                 }
                 else {
-                    for (const ext in main.builtInExtensions) {
-                        if (ext.startsWith(`${namespace}.`)) {
-                            register.add(main.builtInExtensions[ext]);
+                    for (const extension in main.builtInExtensions) {
+                        if (extension.startsWith(`${namespace}.`)) {
+                            register.add(main.builtInExtensions[extension]);
                         }
                     }
                 }
@@ -89,9 +89,9 @@ export function include(value: Extension | string) {
         }
         else if (typeof value === 'string') {
             value = value.trim();
-            const ext = main.builtInExtensions[value] || retrieve(value);
-            if (ext) {
-                return main.extensionManager.include(ext);
+            const extension = main.builtInExtensions[value] || retrieve(value);
+            if (extension) {
+                return main.extensionManager.include(extension);
             }
         }
     }
@@ -125,9 +125,9 @@ export function exclude(value: Extension | string) {
         }
         else if (typeof value === 'string') {
             value = value.trim();
-            const ext = main.extensionManager.retrieve(value);
-            if (ext) {
-                return main.extensionManager.exclude(ext);
+            const extension = main.extensionManager.retrieve(value);
+            if (extension) {
+                return main.extensionManager.exclude(extension);
             }
         }
     }
@@ -143,9 +143,9 @@ export function configure(value: Extension | string, options: {}) {
         else if (typeof value === 'string') {
             if (main) {
                 value = value.trim();
-                const ext = main.extensionManager.retrieve(value) || Array.from(extensionsAsync).find(item => item.name === value);
-                if (ext) {
-                    Object.assign(ext.options, options);
+                const extension = main.extensionManager.retrieve(value) || Array.from(extensionsAsync).find(item => item.name === value);
+                if (extension) {
+                    Object.assign(extension.options, options);
                     return true;
                 }
                 else {

@@ -12,6 +12,7 @@ declare global {
             resourceStyleToXml(saveToDisk?: boolean): string;
             resourceDimenToXml(saveToDisk?: boolean): string;
             resourceDrawableToXml(saveToDisk?: boolean): string;
+            resourceAnimatorToXml(saveToDisk?: boolean): string;
         }
 
         export class File<T extends View> implements File<T> {}

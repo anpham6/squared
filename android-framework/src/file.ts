@@ -68,14 +68,15 @@ export default class File<T extends View> extends squared.base.File<T> implement
             const view = views[i];
             files.push(createFileAsset(view.pathname, i === 0 ? this.userSettings.outputMainFileName : `${view.filename}.xml`, view.content));
         }
-        const xml = this.resourceDrawableToXml();
         files.push(...parseFileDetails(this.resourceStringToXml()));
         files.push(...parseFileDetails(this.resourceStringArrayToXml()));
         files.push(...parseFileDetails(this.resourceFontToXml()));
         files.push(...parseFileDetails(this.resourceColorToXml()));
         files.push(...parseFileDetails(this.resourceStyleToXml()));
         files.push(...parseFileDetails(this.resourceDimenToXml()));
+        const xml = this.resourceDrawableToXml();
         files.push(...parseImageDetails(xml), ...parseFileDetails(xml));
+        files.push(...parseFileDetails(this.resourceAnimatorToXml()));
         this.saveToDisk(files);
     }
 
@@ -104,7 +105,8 @@ export default class File<T extends View> extends squared.base.File<T> implement
             color: this.resourceColorToXml(),
             style: this.resourceStyleToXml(),
             dimen: this.resourceDimenToXml(),
-            drawable: this.resourceDrawableToXml()
+            drawable: this.resourceDrawableToXml(),
+            animator: this.resourceAnimatorToXml()
         };
         for (const resource in result) {
             if (result[resource] === '') {
@@ -304,6 +306,24 @@ export default class File<T extends View> extends squared.base.File<T> implement
             xml = replaceTab(xml, settings.insertSpaces);
             if (saveToDisk) {
                 this.saveToDisk([...parseImageDetails(xml), ...parseFileDetails(xml)]);
+            }
+        }
+        return xml;
+    }
+
+    public resourceAnimatorToXml(saveToDisk = false) {
+        let xml = '';
+        if (this.stored.animators.size) {
+            const template = $xml.parseTemplate(DRAWABLE_TMPL);
+            for (const [name, value] of this.stored.animators.entries()) {
+                xml += '\n\n' + $xml.createTemplate(template, {
+                    name: `res/animator/${name}.xml`,
+                    value
+                });
+            }
+            xml = replaceTab(xml, this.userSettings.insertSpaces);
+            if (saveToDisk) {
+                this.saveToDisk(parseFileDetails(xml));
             }
         }
         return xml;

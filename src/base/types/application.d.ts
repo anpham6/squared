@@ -119,5 +119,6 @@ export interface ResourceStoredMap {
     styles: Map<string, {}>;
     dimens: Map<string, string>;
     drawables: Map<string, string>;
+    animators: Map<string, string>;
     images: Map<string, StringMap>;
 }

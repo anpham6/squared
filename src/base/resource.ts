@@ -32,6 +32,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
         styles: new Map(),
         dimens: new Map(),
         drawables: new Map(),
+        animators: new Map(),
         images: new Map()
     };
 

@@ -2,6 +2,7 @@ import { BUILD_ANDROID } from '../../lib/enumeration';
 
 import ANIMATEDVECTOR_TMPL from '../../template/resource/animated-vector';
 import LAYERLIST_TMPL from '../../template/resource/layer-list';
+import SETSEQUENTIALLY_TMPL from '../../template/resource/set-sequentially';
 import VECTOR_TMPL from '../../template/resource/vector';
 
 import Resource from '../../resource';
@@ -38,12 +39,12 @@ type AnimateGroup = {
     pathData?: string;
 };
 
-type AnimateData = {
-    targetSet: AnimateSetData[]
+type AnimatedTargetData = {
+    name: string;
+    animationName: string;
 };
 
 type AnimateSetData = {
-    name: string;
     ordering: string;
     objectAnimators: ExternalData[];
 };
@@ -321,13 +322,20 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                             Resource.STORED.drawables.set(vectorName, xml);
                         }
                         if (animateMap.size) {
+                            function getAnimatedFilenamePrefix(suffix = '') {
+                                return `${templateName}_animated${images.length ? '_vector' : ''}${suffix !== '' ? `_${suffix}` : ''}`;
+                            }
                             const data: ExternalData = {
                                 vectorName,
                                 '1': []
                             };
                             for (const [name, group] of animateMap.entries()) {
-                                const animateData: AnimateData = {
-                                    targetSet: []
+                                const targetData: AnimatedTargetData = {
+                                    name,
+                                    animationName: getAnimatedFilenamePrefix(name)
+                                };
+                                const targetSetData: ExternalData = {
+                                    '1': []
                                 };
                                 const animatorMap = new Map<string, PropertyValue[]>();
                                 const together: $SvgAnimation[] = [];
@@ -361,21 +369,20 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                 }
                                 for (const set of targets) {
                                     let ordering: string;
-                                    if (set.some(animate => animate instanceof $SvgAnimateTransform && animate.sequential !== undefined)) {
+                                    if (set.some(animate => animate instanceof $SvgAnimateTransform && animate.sequential !== undefined) ||
+                                        set.some(animate => animate instanceof $SvgAnimate && (animate.sequential !== undefined || !animate.fillFreeze)))
+                                    {
                                         ordering = 'together';
-                                    }
-                                    else if (set.some(animate => animate instanceof $SvgAnimate && animate.sequential !== undefined)) {
-                                        ordering = 'sequentially';
-                                    }
-                                    else if (set.some(animate => animate instanceof $SvgAnimate && !animate.fillFreeze)) {
-                                        ordering = 'sequentially';
                                     }
                                     else {
                                         ordering = $dom.getDataSet(group.element, 'android').ordering || this.options.vectorAnimateOrdering;
                                     }
                                     const setData: AnimateSetData = {
-                                        name,
                                         ordering,
+                                        objectAnimators: []
+                                    };
+                                    const replaceData: AnimateSetData = {
+                                        ordering: 'together',
                                         objectAnimators: []
                                     };
                                     for (const item of set) {
@@ -820,7 +827,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                             }
                                                         }
                                                         if (valueTo !== undefined) {
-                                                            setData.objectAnimators.push({
+                                                            replaceData.objectAnimators.push({
                                                                 propertyName: propertyName[i],
                                                                 valueType: options.valueType,
                                                                 duration: '1',
@@ -843,18 +850,22 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                         }
                                     }
                                     if (setData.objectAnimators.length) {
-                                        animateData.targetSet.push(setData);
+                                        targetSetData['1'].push(setData);
+                                    }
+                                    if (replaceData.objectAnimators.length) {
+                                        targetSetData['1'].push(replaceData);
                                     }
                                 }
-                                if (animateData.targetSet.length) {
-                                    data['1'].push(animateData);
+                                if (targetSetData['1'].length) {
+                                    Resource.STORED.animators.set(targetData.animationName, $xml.createTemplate($xml.parseTemplate(SETSEQUENTIALLY_TMPL), targetSetData));
+                                    data['1'].push(targetData);
                                 }
                             }
                             if (data['1'].length) {
                                 xml = $xml.createTemplate($xml.parseTemplate(ANIMATEDVECTOR_TMPL), data);
                                 vectorName = Resource.getStoredName('drawables', xml);
                                 if (vectorName === '') {
-                                    vectorName = `${templateName}_animated${images.length ? '_vector' : ''}`;
+                                    vectorName = getAnimatedFilenamePrefix();
                                     Resource.STORED.drawables.set(vectorName, xml);
                                 }
                             }

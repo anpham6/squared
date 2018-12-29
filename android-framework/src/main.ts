@@ -179,6 +179,12 @@ const appBase: AppFramework<T> = {
                 return fileHandler.resourceDrawableToXml(saveToDisk);
             }
             return '';
+        },
+        writeResourceAnimatorXml(saveToDisk = false) {
+            if (fileHandler && checkApplication(application)) {
+                return fileHandler.resourceAnimatorToXml(saveToDisk);
+            }
+            return '';
         }
     },
     create() {

@@ -62,9 +62,9 @@ export function createTransformData(element: SVGGraphicsElement) {
                 case SVGTransform.SVG_TRANSFORM_ROTATE:
                     if (item.angle !== 0) {
                         data.rotateAngle = item.angle;
-                        const namedItem = element.attributes.getNamedItem('transform');
-                        if (namedItem && namedItem.nodeValue) {
-                            const match = /rotate\((\d+), (\d+), (\d+)\)/.exec(namedItem.nodeValue);
+                        const transform = element.attributes.getNamedItem('transform');
+                        if (transform && transform.value) {
+                            const match = /rotate\((\d+), (\d+), (\d+)\)/.exec(transform.value);
                             if (match) {
                                 data.rotateOriginX = parseInt(match[2]);
                                 data.rotateOriginY = parseInt(match[3]);

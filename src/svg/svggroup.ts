@@ -18,7 +18,9 @@ export default class SvgGroup extends squared.lib.base.Container<SvgElement> imp
     }
 
     public synchronize(useKeyTime = true) {
-        SvgElement.synchronizeAnimations(this.element, this.animate, useKeyTime);
+        if (this.animate.length) {
+            SvgElement.synchronizeAnimations(this.element, this.animate, useKeyTime);
+        }
     }
 
     get transform() {
