@@ -21,8 +21,10 @@ System.config({
 
 function stringify(template) {
     var output = '';
-    for (var i in template) {
-        output += template[i] + '\n\n';
+    for (var name in template) {
+        for (var xml of template[name]) {
+            output += xml + '\n\n';
+        }
     }
     return output;
 }

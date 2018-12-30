@@ -1,6 +1,6 @@
 import { SvgLinearGradient, SvgRadialGradient } from '../../src/svg/types/svg';
 import { UserSettingsAndroid } from './types/application';
-import { BackgroundGradient } from './template/resource/types/data';
+import { BackgroundGradient } from './types/resource';
 
 import { EXT_ANDROID, RESERVED_JAVA } from './lib/constant';
 

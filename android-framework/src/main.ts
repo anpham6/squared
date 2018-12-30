@@ -130,61 +130,67 @@ const appBase: AppFramework<T> = {
             if (fileHandler && checkApplication(application)) {
                 return fileHandler.layoutAllToXml(application.sessionData, saveToDisk);
             }
-            return '';
+            return {};
         },
         writeResourceAllXml(saveToDisk = false) {
             if (fileHandler && checkApplication(application)) {
                 return fileHandler.resourceAllToXml(saveToDisk);
             }
-            return '';
+            return {};
         },
         writeResourceStringXml(saveToDisk = false) {
             if (fileHandler && checkApplication(application)) {
                 return fileHandler.resourceStringToXml(saveToDisk);
             }
-            return '';
+            return [];
         },
         writeResourceArrayXml(saveToDisk = false) {
             if (fileHandler && checkApplication(application)) {
                 return fileHandler.resourceStringArrayToXml(saveToDisk);
             }
-            return '';
+            return [];
         },
         writeResourceFontXml(saveToDisk = false) {
             if (fileHandler && checkApplication(application)) {
                 return fileHandler.resourceFontToXml(saveToDisk);
             }
-            return '';
+            return [];
         },
         writeResourceColorXml(saveToDisk = false) {
             if (fileHandler && checkApplication(application)) {
                 return fileHandler.resourceColorToXml(saveToDisk);
             }
-            return '';
+            return [];
         },
         writeResourceStyleXml(saveToDisk = false) {
             if (fileHandler && checkApplication(application)) {
                 return fileHandler.resourceStyleToXml(saveToDisk);
             }
-            return '';
+            return [];
         },
         writeResourceDimenXml(saveToDisk = false) {
             if (fileHandler && checkApplication(application)) {
                 return fileHandler.resourceDimenToXml(saveToDisk);
             }
-            return '';
+            return [];
         },
         writeResourceDrawableXml(saveToDisk = false) {
             if (fileHandler && checkApplication(application)) {
                 return fileHandler.resourceDrawableToXml(saveToDisk);
             }
-            return '';
+            return [];
+        },
+        writeResourceDrawableImageXml(saveToDisk = false) {
+            if (fileHandler && checkApplication(application)) {
+                return fileHandler.resourceDrawableImageToXml(saveToDisk);
+            }
+            return [];
         },
         writeResourceAnimatorXml(saveToDisk = false) {
             if (fileHandler && checkApplication(application)) {
                 return fileHandler.resourceAnimatorToXml(saveToDisk);
             }
-            return '';
+            return [];
         }
     },
     create() {

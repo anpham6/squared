@@ -1,10 +1,10 @@
-import { BackgroundImage, BackgroundGradient } from '../../template/resource/types/data';
+import { BackgroundGradient } from '../../types/resource';
 
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
-import LAYERLIST_TMPL from '../../template/resource/layer-list';
-import SHAPE_TMPL from '../../template/resource/shape';
-import VECTOR_TMPL from '../../template/resource/vector';
+import LAYERLIST_TMPL from '../../template/resource/embedded/layer-list';
+import SHAPE_TMPL from '../../template/resource/embedded/shape';
+import VECTOR_TMPL from '../../template/resource/embedded/vector';
 
 import Resource from '../../resource';
 import View from '../../view';
@@ -16,6 +16,20 @@ import $dom = squared.lib.dom;
 import $enum = squared.base.lib.enumeration;
 import $util = squared.lib.util;
 import $xml = squared.lib.xml;
+
+type BackgroundImage = {
+    src: string;
+    top: string;
+    right: string;
+    bottom: string;
+    left: string;
+    gravity: string;
+    tileMode: string;
+    tileModeX: string;
+    tileModeY: string;
+    width: string;
+    height: string;
+};
 
 function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = false): StringMap {
     const result = {

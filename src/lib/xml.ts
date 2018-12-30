@@ -73,45 +73,23 @@ export function replaceCharacter(value: string) {
 
 export function parseTemplate(value: string) {
     const result: StringMap = { '__root': value };
-    let pattern: RegExp | undefined;
-    let match: RegExpExecArray | null | boolean = false;
-    let characters = value.length;
-    let section = '';
-    do {
-        if (match) {
-            const segment = match[0].replace(new RegExp(`^${match[1]}\\n`), '').replace(new RegExp(`${match[1]}$`), '');
-            for (const index in result) {
-                result[index] = result[index].replace(new RegExp(match[0], 'g'), `{%${match[2]}}`);
-            }
-            result[match[2]] = segment;
-            characters -= match[0].length;
-            section = match[2];
-        }
-        if (match === null || characters === 0) {
-            if (section) {
-                value = result[section];
-                if (!value) {
-                    break;
+    function parseSection(section: string) {
+        const pattern = /(!(\w+))\n[\w\W]*\n*\1/g;
+        let match: RegExpExecArray | null = null;
+        do {
+            match = pattern.exec(section);
+            if (match) {
+                const segment = match[0].replace(new RegExp(`^${match[1]}\\n`), '').replace(new RegExp(`${match[1]}$`), '');
+                for (const index in result) {
+                    result[index] = result[index].replace(new RegExp(match[0], 'g'), `{%${match[2]}}`);
                 }
-                characters = value.length;
-                section = '';
-                match = null;
-            }
-            else {
-                break;
+                result[match[2]] = segment;
+                parseSection(segment);
             }
         }
-        if (!match) {
-            pattern = /(!(\w+))\n[\w\W]*\n*\1/g;
-        }
-        if (pattern) {
-            match = pattern.exec(value);
-        }
-        else {
-            break;
-        }
+        while (match);
     }
-    while (true);
+    parseSection(value);
     return result;
 }
 
@@ -138,10 +116,7 @@ export function createTemplate(value: StringMap, data: ExternalData, index?: str
             }
             output = output.replace(new RegExp(`{${hash + attr}}`, 'g'), result);
         }
-        if (result === false ||
-            Array.isArray(result) && result.length === 0 ||
-            hash && hash !== '%')
-        {
+        if (result === false || Array.isArray(result) && result.length === 0 || hash && hash !== '%') {
             output = output.replace(new RegExp(`{%${attr}}\\n*`, 'g'), '');
         }
         if (hash === '' && new RegExp(`{&${attr}}`).test(output)) {

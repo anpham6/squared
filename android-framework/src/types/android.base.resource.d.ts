@@ -1,5 +1,5 @@
 import { UserSettingsAndroid } from './application';
-import { BackgroundGradient } from '../template/resource/types/data';
+import { BackgroundGradient } from './resource';
 
 declare global {
     namespace android.base {
