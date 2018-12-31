@@ -1,29 +1,40 @@
-import { SvgPathCommand, SvgTransform } from './types/svg';
+import { SvgPathCommand, SvgTransform } from './types/object';
 
 import { applyMatrixX, applyMatrixY, createTransform, getRadiusY } from './lib/util';
 
-import $color = squared.lib.color;
-import $dom = squared.lib.dom;
+const $color = squared.lib.color;
+const $dom = squared.lib.dom;
 
-const NAME_GRAPHICS: ObjectMap<number> = {};
+const NAME_GRAPHICS = new Map<string, number>();
 
 export default class SvgBuild implements squared.svg.SvgBuild {
-    public static setName(element: SVGGraphicsElement) {
-        let result = '';
-        let tagName: string | undefined;
-        if (element.id) {
-            if (NAME_GRAPHICS[element.id] === undefined) {
-                result = element.id;
+    public static setName(element?: SVGGraphicsElement) {
+        if (element) {
+            let result = '';
+            let tagName: string | undefined;
+            if (element.id) {
+                if (!NAME_GRAPHICS.has(element.id)) {
+                    result = element.id;
+                }
+                tagName = element.id;
             }
-            tagName = element.id;
+            else {
+                tagName = element.tagName;
+            }
+            let index = NAME_GRAPHICS.get(tagName) || 0;
+            if (result !== '') {
+                NAME_GRAPHICS.set(tagName, index);
+                return result;
+            }
+            else {
+                NAME_GRAPHICS.set(tagName, ++index);
+                return `${tagName}_${index}`;
+            }
         }
         else {
-            tagName = element.tagName;
+            NAME_GRAPHICS.clear();
+            return '';
         }
-        if (NAME_GRAPHICS[tagName] === undefined) {
-            NAME_GRAPHICS[tagName] = 0;
-        }
-        return result !== '' ? result : `${tagName}_${++NAME_GRAPHICS[tagName]}`;
     }
 
     public static toTransformList(transform: SVGTransformList) {
@@ -56,29 +67,29 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             if (origin) {
                 switch (item.type) {
                     case SVGTransform.SVG_TRANSFORM_SCALE:
-                        if (item.origin.x) {
+                        if (item.method.x) {
                             x1 += origin.x;
                         }
-                        if (item.origin.y) {
+                        if (item.method.y) {
                             y2 += origin.y;
                         }
                         break;
                     case SVGTransform.SVG_TRANSFORM_SKEWX:
-                        if (item.origin.y) {
+                        if (item.method.y) {
                             y1 -= origin.y;
                         }
                         break;
                     case SVGTransform.SVG_TRANSFORM_SKEWY:
-                        if (item.origin.x) {
+                        if (item.method.x) {
                             x2 -= origin.x;
                         }
                         break;
                     case SVGTransform.SVG_TRANSFORM_ROTATE:
-                        if (item.origin.x) {
+                        if (item.method.x) {
                             x2 -= origin.x;
                             x3 = origin.x + getRadiusY(item.angle, origin.x);
                         }
-                        if (item.origin.y) {
+                        if (item.method.y) {
                             y1 -= origin.y;
                             y3 = origin.y + getRadiusY(item.angle, origin.y);
                         }

@@ -3,7 +3,7 @@ import { NODE_ALIGNMENT } from './lib/enumeration';
 import Node from './node';
 import NodeList from './nodelist';
 
-import $dom = squared.lib.dom;
+const $dom = squared.lib.dom;
 
 export default abstract class NodeGroup extends Node {
     public init() {

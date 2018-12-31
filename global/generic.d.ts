@@ -6,7 +6,7 @@ type Constructor<T> = new(...args: any[]) => T;
 
 type IteratorPredicate<T, U> = (value: T, index: number) => U;
 
-type SelfWrapped<T, U> = (self: T, ...args: any[]) => U;
+type BindGeneric<T, U> = (target: T, ...args: any[]) => U;
 
 type FunctionType<T> = (...args: any[]) => T;
 type FunctionVoid = FunctionType<void>;
@@ -26,16 +26,6 @@ type ObjectMapNested<T> = ObjectMap<ObjectMap<T>>;
 interface NameValue {
     name: string;
     value: any;
-}
-
-interface Point {
-    x: number;
-    y: number;
-}
-
-interface PointR extends Point {
-    rx?: number;
-    ry?: number;
 }
 
 type ExternalData = ObjectMap<any>;

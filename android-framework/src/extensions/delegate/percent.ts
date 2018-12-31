@@ -5,8 +5,9 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 import View from '../../view';
 
 import $Layout = squared.base.Layout;
-import $enum = squared.base.lib.enumeration;
-import $util = squared.lib.util;
+
+const $enum = squared.base.lib.enumeration;
+const $util = squared.lib.util;
 
 export default class Percent<T extends View> extends squared.base.Extension<T> {
     public condition(node: T, parent: T) {

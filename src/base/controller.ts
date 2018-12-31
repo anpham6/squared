@@ -5,8 +5,8 @@ import Layout from './layout';
 import Node from './node';
 import NodeList from './nodelist';
 
-import $util = squared.lib.util;
-import $xml = squared.lib.xml;
+const $util = squared.lib.util;
+const $xml = squared.lib.xml;
 
 export default abstract class Controller<T extends Node> implements squared.base.Controller<T> {
     public abstract readonly localSettings: ControllerSettings;
@@ -36,7 +36,7 @@ export default abstract class Controller<T extends Node> implements squared.base
     public abstract get containerTypeHorizontal(): LayoutType;
     public abstract get containerTypeVertical(): LayoutType;
     public abstract get containerTypeVerticalMargin(): LayoutType;
-    public abstract get afterInsertNode(): SelfWrapped<T, void>;
+    public abstract get afterInsertNode(): BindGeneric<T, void>;
 
     public reset() {
         this._before = {};

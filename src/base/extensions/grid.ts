@@ -8,8 +8,8 @@ import Extension from '../extension';
 import Node from '../node';
 import NodeList from '../nodelist';
 
-import $dom = squared.lib.dom;
-import $util = squared.lib.util;
+const $dom = squared.lib.dom;
+const $util = squared.lib.util;
 
 function getRowIndex<T extends Node>(columns: T[][], target: T) {
     for (const column of columns) {

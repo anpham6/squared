@@ -2,7 +2,7 @@ import Application from './application';
 import Extension from './extension';
 import Node from './node';
 
-import $util = squared.lib.util;
+const $util = squared.lib.util;
 
 export default abstract class ExtensionManager<T extends Node> implements squared.base.ExtensionManager<T> {
     protected constructor(public readonly application: Application<T>) {

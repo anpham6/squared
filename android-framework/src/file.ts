@@ -1,4 +1,4 @@
-import { SessionData } from '../../src/base/types/application';
+import { FileAsset, SessionData } from '../../src/base/types/application';
 import { UserSettingsAndroid } from './types/application';
 
 import { BUILD_ANDROID } from './lib/enumeration';
@@ -16,8 +16,9 @@ import View from './view';
 import { getXmlNs, replaceTab, replaceUnit } from './lib/util';
 
 import $NodeList = squared.base.NodeList;
-import $util = squared.lib.util;
-import $xml = squared.lib.xml;
+
+const $util = squared.lib.util;
+const $xml = squared.lib.xml;
 
 function parseImageDetails(files: string[]) {
     const result: FileAsset[] = [];

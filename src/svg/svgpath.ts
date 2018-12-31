@@ -1,12 +1,12 @@
-import { SvgPathBaseVal, SvgTransform } from './types/svg';
+import { SvgPathBaseVal, SvgTransform } from './types/object';
 
 import SvgBuild from './svgbuild';
 
 import { getTransform, getTransformOrigin } from './lib/util';
 
-import $color = squared.lib.color;
-import $dom = squared.lib.dom;
-import $util = squared.lib.util;
+const $color = squared.lib.color;
+const $dom = squared.lib.dom;
+const $util = squared.lib.util;
 
 export default class SvgPath implements squared.svg.SvgPath {
     public static getLine(x1: number, y1: number, x2 = 0, y2 = 0, checkValid = false) {

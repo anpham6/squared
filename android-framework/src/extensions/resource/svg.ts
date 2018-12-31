@@ -10,16 +10,10 @@ import View from '../../view';
 
 import { getXmlNs } from '../../lib/util';
 
-import $color = squared.lib.color;
-import $dom = squared.lib.dom;
-import $util = squared.lib.util;
-import $xml = squared.lib.xml;
-
-if (squared.svg === undefined) {
+if (!squared.svg) {
     squared.svg = {} as any;
 }
 
-import $SvgBase = squared.svg.SvgBase;
 import $SvgAnimate = squared.svg.SvgAnimate;
 import $SvgAnimateMotion = squared.svg.SvgAnimateMotion;
 import $SvgAnimateTransform = squared.svg.SvgAnimateTransform;
@@ -64,6 +58,11 @@ type KeyFrame = {
     value: string;
 };
 
+const $color = squared.lib.color;
+const $dom = squared.lib.dom;
+const $util = squared.lib.util;
+const $xml = squared.lib.xml;
+
 const INTERPOLATOR_ANDROID = {
     ACCELERATE_DECELERATE: '@android:anim/accelerate_decelerate_interpolator',
     ACCELERATE:	'@android:anim/accelerate_interpolator',
@@ -93,7 +92,7 @@ const TEMPLATES = {
     VECTOR: $xml.parseTemplate(VECTOR_TMPL)
 };
 
-function queueAnimations(map: Map<string, AnimateGroup>, name: string, svg: $SvgBase, predicate: IteratorPredicate<$SvgAnimation, void>, pathData = '') {
+function queueAnimations(map: Map<string, AnimateGroup>, name: string, svg: squared.svg.SvgBase, predicate: IteratorPredicate<$SvgAnimation, void>, pathData = '') {
     const animate = svg.animate.filter(predicate).filter(item => item.begin.length > 0);
     if (animate.length) {
         map.set(name, {
@@ -227,6 +226,9 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
 
     public beforeInit() {
         this.application.controllerHandler.localSettings.unsupported.tagName.delete('svg');
+        if ($SvgBuild) {
+            $SvgBuild.setName();
+        }
     }
 
     public afterResources() {

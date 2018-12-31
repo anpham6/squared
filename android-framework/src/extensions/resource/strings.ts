@@ -1,10 +1,10 @@
 import Resource from '../../resource';
 import View from '../../view';
 
-import $dom = squared.lib.dom;
-import $enum = squared.base.lib.enumeration;
-import $util = squared.lib.util;
-import $xml = squared.lib.xml;
+const $enum = squared.base.lib.enumeration;
+const $dom = squared.lib.dom;
+const $util = squared.lib.util;
+const $xml = squared.lib.xml;
 
 export default class ResourceStrings<T extends View> extends squared.base.Extension<T> {
     public readonly options = {

@@ -1,11 +1,11 @@
-import { SvgTransform } from './types/svg';
+import { SvgTransform } from './types/object';
 
 import SvgBuild from './svgbuild';
 import SvgElement from './svgelement';
 
 import { applyMatrixX, applyMatrixY, getTransform } from './lib/util';
 
-import $util = squared.lib.util;
+const $util = squared.lib.util;
 
 export default class SvgImage extends SvgElement implements squared.svg.SvgImage {
     public x: number;

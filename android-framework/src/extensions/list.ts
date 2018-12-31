@@ -11,10 +11,11 @@ import { createAttribute } from '../lib/util';
 
 import $Layout = squared.base.Layout;
 import $NodeList = squared.base.NodeList;
-import $const = squared.base.lib.constant;
-import $dom = squared.lib.dom;
-import $enum = squared.base.lib.enumeration;
-import $util = squared.lib.util;
+
+const $const = squared.base.lib.constant;
+const $enum = squared.base.lib.enumeration;
+const $dom = squared.lib.dom;
+const $util = squared.lib.util;
 
 export default class <T extends View> extends squared.base.extensions.List<T> {
     public processNode(node: T, parent: T): ExtensionResult<T> {

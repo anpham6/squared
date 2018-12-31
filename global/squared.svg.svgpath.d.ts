@@ -1,4 +1,4 @@
-import { SvgPathBaseVal, SvgTransform } from '../src/svg/types/svg';
+import { SvgPathBaseVal, SvgTransform } from '../src/svg/types/object';
 
 declare global {
     namespace squared.svg {

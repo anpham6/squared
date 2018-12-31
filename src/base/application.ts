@@ -1,4 +1,4 @@
-import { AppSession, AppProcessing, LayoutResult, LayoutType, SessionData, UserSettings } from './types/application';
+import { AppSession, AppProcessing, FileAsset, ImageAsset, LayoutResult, LayoutType, SessionData, UserSettings } from './types/application';
 
 import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } from './lib/enumeration';
 
@@ -10,9 +10,9 @@ import Node from './node';
 import NodeList from './nodelist';
 import Resource from './resource';
 
-import $dom = squared.lib.dom;
-import $util = squared.lib.util;
-import $xml = squared.lib.xml;
+const $dom = squared.lib.dom;
+const $util = squared.lib.util;
+const $xml = squared.lib.xml;
 
 function prioritizeExtensions<T extends Node>(documentRoot: HTMLElement, element: HTMLElement, extensions: Extension<T>[]) {
     const tagged: string[] = [];

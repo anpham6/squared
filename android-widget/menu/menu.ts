@@ -1,16 +1,16 @@
 import { ExtensionResult } from '../../src/base/types/application';
 import { ViewAttribute } from '../../android-framework/src/types/node';
 
-import $const = squared.base.lib.constant;
-import $enum = squared.base.lib.enumeration;
-import $dom = squared.lib.dom;
-import $util = squared.lib.util;
-
 import $Resource = android.base.Resource;
 import $View = android.base.View;
-import $const_android = android.lib.constant;
-import $enum_android = android.lib.enumeration;
-import $util_android = android.lib.util;
+
+const $const = squared.base.lib.constant;
+const $enum = squared.base.lib.enumeration;
+const $dom = squared.lib.dom;
+const $util = squared.lib.util;
+const $constA = android.lib.constant;
+const $enumA = android.lib.enumeration;
+const $utilA = android.lib.util;
 
 const VIEW_NAVIGATION = {
     MENU: 'menu',
@@ -126,7 +126,7 @@ export default class Menu<T extends $View> extends squared.base.Extension<T> {
     public processNode(node: T): ExtensionResult<T> {
         node.documentRoot = true;
         node.alignmentType |= $enum.NODE_ALIGNMENT.AUTO_LAYOUT;
-        node.setControlType(VIEW_NAVIGATION.MENU, $enum_android.CONTAINER_NODE.INLINE);
+        node.setControlType(VIEW_NAVIGATION.MENU, $enumA.CONTAINER_NODE.INLINE);
         node.exclude({ procedure: $enum.NODE_PROCEDURE.ALL, resource: $enum.NODE_RESOURCE.ALL });
         const output = this.application.controllerHandler.renderNodeStatic(VIEW_NAVIGATION.MENU, 0, {}, '', '', node, true);
         node.cascade().forEach(item => this.subscribersChild.add(item as T));
@@ -138,7 +138,7 @@ export default class Menu<T extends $View> extends squared.base.Extension<T> {
             node.hide();
             return { output: '', next: true };
         }
-        const options = $util_android.createAttribute();
+        const options = $utilA.createAttribute();
         const element = <HTMLElement> node.element;
         let controlName: string;
         let title = '';
@@ -184,14 +184,14 @@ export default class Menu<T extends $View> extends squared.base.Extension<T> {
                 parseDataSet(VALIDATE_ITEM, element, options);
                 if (!$util.hasValue(options.android.icon)) {
                     const style = $dom.getStyle(element);
-                    let src = $Resource.addImageUrl((style.backgroundImage !== 'none' ? style.backgroundImage : style.background) as string, $const_android.PREFIX_ANDROID.MENU);
+                    let src = $Resource.addImageUrl((style.backgroundImage !== 'none' ? style.backgroundImage : style.background) as string, $constA.PREFIX_ANDROID.MENU);
                     if (src !== '') {
                         options.android.icon = `@drawable/${src}`;
                     }
                     else {
                         const image = node.find(item => item.imageElement);
                         if (image) {
-                            src = $Resource.addImageSrcSet(<HTMLImageElement> image.element, $const_android.PREFIX_ANDROID.MENU);
+                            src = $Resource.addImageSrcSet(<HTMLImageElement> image.element, $constA.PREFIX_ANDROID.MENU);
                             if (src !== '') {
                                 options.android.icon = `@drawable/${src}`;
                             }
@@ -201,10 +201,10 @@ export default class Menu<T extends $View> extends squared.base.Extension<T> {
                 break;
         }
         if (title !== '') {
-            const name = $Resource.addString(title, '', this.application.extensionManager.optionValueAsBoolean($const_android.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
+            const name = $Resource.addString(title, '', this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
             options.android.title = name !== '' ? `@string/${name}` : title;
         }
-        node.setControlType(controlName, $enum_android.CONTAINER_NODE.INLINE);
+        node.setControlType(controlName, $enumA.CONTAINER_NODE.INLINE);
         node.exclude({ procedure: $enum.NODE_PROCEDURE.ALL, resource: $enum.NODE_RESOURCE.ALL });
         node.render(parent);
         const output = this.application.controllerHandler.renderNodeStatic(controlName, node.renderDepth, options, '', '', node, layout);

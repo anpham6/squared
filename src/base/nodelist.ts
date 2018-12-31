@@ -1,7 +1,7 @@
 import Node from './node';
 
-import $dom = squared.lib.dom;
-import $util = squared.lib.util;
+const $dom = squared.lib.dom;
+const $util = squared.lib.util;
 
 export default class NodeList<T extends Node> extends squared.lib.base.Container<T> implements squared.base.NodeList<T> {
     public static actualParent<T extends Node>(list: T[]) {

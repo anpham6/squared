@@ -1,5 +1,3 @@
-type Node = squared.base.Node;
-
 declare global {
     namespace squared.base.extensions {
         class Accessibility<T extends Node> extends squared.base.Extension<T> {}

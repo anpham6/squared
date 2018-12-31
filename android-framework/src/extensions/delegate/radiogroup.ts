@@ -6,9 +6,10 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 import View from '../../view';
 
 import $NodeList = squared.base.NodeList;
-import $enum = squared.base.lib.enumeration;
-import $util = squared.lib.util;
-import $xml = squared.lib.xml;
+
+const $enum = squared.base.lib.enumeration;
+const $util = squared.lib.util;
+const $xml = squared.lib.xml;
 
 const RADIO_GROUP = 'RadioGroup';
 

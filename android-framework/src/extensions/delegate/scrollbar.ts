@@ -4,10 +4,10 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import View from '../../view';
 
-import $dom = squared.lib.dom;
-import $enum = squared.base.lib.enumeration;
-import $util = squared.lib.util;
-import $xml = squared.lib.xml;
+const $enum = squared.base.lib.enumeration;
+const $dom = squared.lib.dom;
+const $util = squared.lib.util;
+const $xml = squared.lib.xml;
 
 const SCROLL_HORIZONTAL = 'HorizontalScrollView';
 const SCROLL_VERTICAL = 'android.support.v4.widget.NestedScrollView';

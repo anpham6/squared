@@ -6,8 +6,9 @@ import { CONTAINER_NODE } from '../lib/enumeration';
 import View from '../view';
 
 import $Layout = squared.base.Layout;
-import $const = squared.base.lib.constant;
-import $enum = squared.base.lib.enumeration;
+
+const $const = squared.base.lib.constant;
+const $enum = squared.base.lib.enumeration;
 
 export default class <T extends View> extends squared.base.extensions.VerticalAlign<T> {
     public processNode(node: T, parent: T): ExtensionResult<T> {

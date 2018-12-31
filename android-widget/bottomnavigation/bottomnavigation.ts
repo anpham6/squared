@@ -4,14 +4,14 @@ import { WIDGET_NAME } from '../lib/constant';
 
 import EXTENSION_GENERIC_TMPL from '../lib/templates/generic';
 
-import $enum = squared.base.lib.enumeration;
-import $util = squared.lib.util;
-
 import $Resource = android.base.Resource;
 import $View = android.base.View;
-import $const_android = android.lib.constant;
-import $enum_android = android.lib.enumeration;
-import $util_android = android.lib.util;
+
+const $enum = squared.base.lib.enumeration;
+const $util = squared.lib.util;
+const $constA = android.lib.constant;
+const $enumA = android.lib.enumeration;
+const $utilA = android.lib.util;
 
 export default class BottomNavigation<T extends $View> extends squared.base.Extension<T> {
     constructor(
@@ -25,20 +25,20 @@ export default class BottomNavigation<T extends $View> extends squared.base.Exte
     }
 
     public processNode(node: T, parent: T): ExtensionResult<T> {
-        const options = $util_android.createAttribute(node.element ? this.options[node.element.id] : undefined);
+        const options = $utilA.createAttribute(node.element ? this.options[node.element.id] : undefined);
         $util.defaultWhenNull(options, 'android', 'background', `?android:attr/windowBackground`);
         for (let i = 5; i < node.length; i++) {
             const item = node.item(i) as T;
             item.hide();
             item.cascade().forEach(child => child.hide());
         }
-        node.setControlType($const_android.SUPPORT_ANDROID.BOTTOM_NAVIGATION, $enum_android.CONTAINER_NODE.BLOCK);
+        node.setControlType($constA.SUPPORT_ANDROID.BOTTOM_NAVIGATION, $enumA.CONTAINER_NODE.BLOCK);
         node.exclude({ resource: $enum.NODE_RESOURCE.ASSET });
         node.render(parent);
         const output = this.application.controllerHandler.renderNodeStatic(
-            $const_android.SUPPORT_ANDROID.BOTTOM_NAVIGATION,
+            $constA.SUPPORT_ANDROID.BOTTOM_NAVIGATION,
             node.renderDepth,
-            $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($const_android.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')),
+            $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')),
             'match_parent',
             'wrap_content',
             node
@@ -60,7 +60,7 @@ export default class BottomNavigation<T extends $View> extends squared.base.Exte
         }
         const menu = $util.optionalAsString(BottomNavigation.findNestedByName(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
         if (menu !== '') {
-            const options = $util_android.createAttribute(node.element ? this.options[node.element.id] : undefined);
+            const options = $utilA.createAttribute(node.element ? this.options[node.element.id] : undefined);
             $util.defaultWhenNull(options, 'app', 'menu', `@menu/${menu}`);
             node.app('menu', options.app.menu);
         }
@@ -69,7 +69,7 @@ export default class BottomNavigation<T extends $View> extends squared.base.Exte
     private setStyleTheme() {
         if (this.application.resourceHandler.fileHandler) {
             const options: ExternalData = Object.assign({}, this.options.resource);
-            $util.defaultWhenNull(options, 'appTheme', $util_android.getAppTheme(this.application.resourceHandler.fileHandler.assets) || 'AppTheme');
+            $util.defaultWhenNull(options, 'appTheme', $utilA.getAppTheme(this.application.resourceHandler.fileHandler.assets) || 'AppTheme');
             $util.defaultWhenNull(options, 'parentTheme', 'Theme.AppCompat.Light.DarkActionBar');
             const data = {
                 'appTheme': options.appTheme,

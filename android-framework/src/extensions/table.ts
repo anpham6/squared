@@ -6,9 +6,10 @@ import { CONTAINER_NODE } from '../lib/enumeration';
 import View from '../view';
 
 import $Layout = squared.base.Layout;
-import $const = squared.base.lib.constant;
-import $enum = squared.base.lib.enumeration;
-import $util = squared.lib.util;
+
+const $const = squared.base.lib.constant;
+const $enum = squared.base.lib.enumeration;
+const $util = squared.lib.util;
 
 export default class <T extends View> extends squared.base.extensions.Table<T> {
     public processNode(node: T, parent: T): ExtensionResult<T> {

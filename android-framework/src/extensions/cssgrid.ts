@@ -9,10 +9,11 @@ import View from '../view';
 import { createAttribute } from '../lib/util';
 
 import $Layout = squared.base.Layout;
-import $const = squared.base.lib.constant;
-import $dom = squared.lib.dom;
-import $enum = squared.base.lib.enumeration;
-import $util = squared.lib.util;
+
+const $const = squared.base.lib.constant;
+const $enum = squared.base.lib.enumeration;
+const $dom = squared.lib.dom;
+const $util = squared.lib.util;
 
 function getRowData<T extends View>(mainData: CssGridData<T>, direction: string) {
     const result: Undefined<T[]>[][] = [];

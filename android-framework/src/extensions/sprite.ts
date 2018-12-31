@@ -1,4 +1,4 @@
-import { ExtensionResult } from '../../../src/base/types/application';
+import { ImageAsset, ExtensionResult } from '../../../src/base/types/application';
 
 import { CONTAINER_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
@@ -7,9 +7,10 @@ import Resource from '../resource';
 import View from '../view';
 
 import $Layout = squared.base.Layout;
-import $enum = squared.base.lib.enumeration;
-import $const = squared.base.lib.constant;
-import $util = squared.lib.util;
+
+const $const = squared.base.lib.constant;
+const $enum = squared.base.lib.enumeration;
+const $util = squared.lib.util;
 
 export default class <T extends View> extends squared.base.extensions.Sprite<T> {
     public processNode(node: T, parent: T): ExtensionResult<T> {

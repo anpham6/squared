@@ -1,3 +1,4 @@
+import { FileAsset } from '../../../src/base/types/application';
 import { ViewAttribute } from './node';
 
 import * as $const from '../lib/constant';

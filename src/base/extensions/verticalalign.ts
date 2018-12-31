@@ -8,7 +8,7 @@ import Extension from '../extension';
 import Node from '../node';
 import NodeList from '../nodelist';
 
-import $util = squared.lib.util;
+const $util = squared.lib.util;
 
 export default class VerticalAlign<T extends Node> extends Extension<T> {
     public condition(node: T) {

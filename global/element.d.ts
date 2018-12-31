@@ -134,3 +134,13 @@ interface ColorStop {
     offset: string;
     opacity: number;
 }
+
+interface Point {
+    x: number;
+    y: number;
+}
+
+interface PointR extends Point {
+    rx?: number;
+    ry?: number;
+}

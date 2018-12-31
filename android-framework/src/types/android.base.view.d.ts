@@ -34,7 +34,7 @@ declare global {
             public static documentBody(): View;
             public static getCustomizationValue(api: number, tagName: string, obj: string, attr: string): string;
             public static getControlName(containerType: number): string;
-            constructor(id: number, element?: Element | null, afterInit?: SelfWrapped<View, void>);
+            constructor(id: number, element?: Element | null, afterInit?: BindGeneric<View, void>);
         }
 
         class ViewGroup<T extends View> extends View {}

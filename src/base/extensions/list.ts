@@ -8,7 +8,7 @@ import Extension from '../extension';
 import Node from '../node';
 import NodeList from '../nodelist';
 
-import $util = squared.lib.util;
+const $util = squared.lib.util;
 
 function hasSingleImage<T extends Node>(node: T) {
     return node.visibleStyle.backgroundImage && !node.visibleStyle.backgroundRepeat;

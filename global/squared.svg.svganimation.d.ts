@@ -11,11 +11,6 @@ declare global {
             getAttribute(attr: string): string;
         }
 
-        class SvgAnimation implements SvgAnimation {
-            public static convertClockTime(value: string): number;
-            constructor(element: SVGAnimationElement, parentElement: SVGGraphicsElement);
-        }
-
         interface SvgAnimate extends SvgAnimation {
             from: string;
             by: string;
@@ -33,20 +28,8 @@ declare global {
             readonly element: SVGAnimateElement;
         }
 
-        class SvgAnimate implements SvgAnimate {
-            public static toFractionList(value: string, delimiter?: string): number[];
-            constructor(element: SVGAnimateElement, parentElement: SVGGraphicsElement);
-        }
-
         interface SvgAnimateTransform extends SvgAnimate {
             type: number;
-        }
-
-        class SvgAnimateTransform implements SvgAnimateTransform {
-            public static toRotateList(values: string[]): (null[] | number[])[] | undefined;
-            public static toScaleList(values: string[]): (null[] | number[])[] | undefined;
-            public static toTranslateList(values: string[]): (null[] | number[])[] | undefined;
-            constructor(element: SVGAnimateTransformElement, parentElement: SVGGraphicsElement);
         }
 
         interface SvgAnimateMotion extends SvgAnimate {
@@ -56,6 +39,23 @@ declare global {
             rotate: number;
             rotateAuto: boolean;
             rotateAutoReverse: boolean;
+        }
+
+        class SvgAnimation implements SvgAnimation {
+            public static convertClockTime(value: string): number;
+            constructor(element: SVGAnimationElement, parentElement: SVGGraphicsElement);
+        }
+
+        class SvgAnimate implements SvgAnimate {
+            public static toFractionList(value: string, delimiter?: string): number[];
+            constructor(element: SVGAnimateElement, parentElement: SVGGraphicsElement);
+        }
+
+        class SvgAnimateTransform implements SvgAnimateTransform {
+            public static toRotateList(values: string[]): (null[] | number[])[] | undefined;
+            public static toScaleList(values: string[]): (null[] | number[])[] | undefined;
+            public static toTranslateList(values: string[]): (null[] | number[])[] | undefined;
+            constructor(element: SVGAnimateTransformElement, parentElement: SVGGraphicsElement);
         }
 
         class SvgAnimateMotion implements SvgAnimateMotion {

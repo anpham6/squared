@@ -3,8 +3,8 @@ import { ExtensionDependency, ExtensionResult } from './types/application';
 import Application from './application';
 import Node from './node';
 
-import $dom = squared.lib.dom;
-import $util = squared.lib.util;
+const $dom = squared.lib.dom;
+const $util = squared.lib.util;
 
 export default abstract class Extension<T extends Node> implements squared.base.Extension<T> {
     public static findNestedByName(element: Element | null, name: string) {

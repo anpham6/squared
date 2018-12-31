@@ -1,10 +1,12 @@
+import { ImageAsset } from '../types/application';
+
 import { EXT_NAME } from '../lib/constant';
 
 import Extension from '../extension';
 import Node from '../node';
 
-import $dom = squared.lib.dom;
-import $util = squared.lib.util;
+const $dom = squared.lib.dom;
+const $util = squared.lib.util;
 
 export default abstract class Sprite<T extends Node> extends Extension<T> {
     public condition(node: T) {

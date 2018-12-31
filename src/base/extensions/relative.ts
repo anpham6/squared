@@ -4,7 +4,7 @@ import Extension from '../extension';
 import Layout from '../layout';
 import Node from '../node';
 
-import $util = squared.lib.util;
+const $util = squared.lib.util;
 
 export default abstract class Relative<T extends Node> extends Extension<T> {
     public condition(node: T) {

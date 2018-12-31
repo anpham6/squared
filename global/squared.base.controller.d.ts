@@ -1,4 +1,4 @@
-import { AppHandler, ControllerSettings, LayoutType, LayoutResult, SessionData, UserSettings } from '../src/base/types/application';
+import { AppHandler, ControllerSettings, LayoutResult, LayoutType, SessionData, UserSettings } from '../src/base/types/application';
 
 declare global {
     namespace squared.base {
@@ -10,7 +10,7 @@ declare global {
             readonly containerTypeHorizontal: LayoutType;
             readonly containerTypeVertical: LayoutType;
             readonly containerTypeVerticalMargin: LayoutType;
-            readonly afterInsertNode: SelfWrapped<T, void>;
+            readonly afterInsertNode: BindGeneric<T, void>;
             finalize(data: SessionData<NodeList<T>>): void;
             reset(): void;
             processUnknownParent(layout: Layout<T>): LayoutResult<T>;

@@ -1,5 +1,5 @@
 import { ControllerSettings, LayoutType, SessionData } from '../../src/base/types/application';
-import { UserSettingsAndroid,  } from './types/application';
+import { UserSettingsAndroid } from './types/application';
 import { ViewAttribute } from './types/node';
 
 import { AXIS_ANDROID, BOX_ANDROID, CONTAINER_ANDROID, XMLNS_ANDROID } from './lib/constant';
@@ -15,12 +15,12 @@ import { createAttribute, getXmlNs, replaceTab, replaceUnit } from './lib/util';
 
 import $Layout = squared.base.Layout;
 import $NodeList = squared.base.NodeList;
-import $enum = squared.base.lib.enumeration;
 
-import $color = squared.lib.color;
-import $dom = squared.lib.dom;
-import $util = squared.lib.util;
-import $xml = squared.lib.xml;
+const $enum = squared.base.lib.enumeration;
+const $color = squared.lib.color;
+const $dom = squared.lib.dom;
+const $util = squared.lib.util;
+const $xml = squared.lib.xml;
 
 function sortHorizontalFloat<T extends View>(list: T[]) {
     if (list.some(node => node.floating)) {
@@ -1845,10 +1845,10 @@ export default class Controller<T extends View> extends squared.base.Controller<
         };
     }
 
-    get afterInsertNode(): SelfWrapped<T, void> {
+    get afterInsertNode(): BindGeneric<T, void> {
         const settings = this.userSettings;
-        return (self: T) => {
-            self.localSettings = {
+        return (target: T) => {
+            target.localSettings = {
                 targetAPI: settings.targetAPI !== undefined ? settings.targetAPI : BUILD_ANDROID.LATEST,
                 resolutionDPI: settings.resolutionDPI !== undefined ? settings.resolutionDPI : DENSITY_ANDROID.MDPI,
                 supportRTL: settings.supportRTL !== undefined ? settings.supportRTL : true,

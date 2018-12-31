@@ -1,16 +1,16 @@
-import { SessionData, UserSettings } from './types/application';
+import { FileAsset, SessionData, UserSettings } from './types/application';
 
 import Node from './node';
 import NodeList from './nodelist';
 import Resource from './resource';
-
-import $util = squared.lib.util;
 
 type ExpressResult = {
     zipname: string;
     application: string;
     system: string;
 };
+
+const $util = squared.lib.util;
 
 export default abstract class File<T extends Node> implements squared.base.File<T> {
     public static downloadToDisk(data: Blob, filename: string, mime = '') {

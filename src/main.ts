@@ -11,13 +11,13 @@ type T = squared.base.Node;
 type Application = squared.base.Application<T>;
 type Extension = squared.base.Extension<T>;
 
-let settings = {} as UserSettings;
-let system = {} as FunctionMap<any>;
-const extensionsAsync = new Set<Extension>();
-const optionsAsync = new Map<string, ExternalData>();
-
 let main: Application | undefined;
 let framework: AppFramework<T> | undefined;
+let settings = {} as UserSettings;
+let system = {} as FunctionMap<any>;
+
+const extensionsAsync = new Set<Extension>();
+const optionsAsync = new Map<string, ExternalData>();
 
 export function setFramework(value: AppFramework<T>, cached = false) {
     if (framework !== value) {

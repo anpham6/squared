@@ -3,8 +3,8 @@ import { BOX_STANDARD, CSS_STANDARD, NODE_ALIGNMENT } from '../lib/enumeration';
 import Extension from '../extension';
 import Node from '../node';
 
-import $dom = squared.lib.dom;
-import $util = squared.lib.util;
+const $dom = squared.lib.dom;
+const $util = squared.lib.util;
 
 function setMinHeight<T extends Node>(node: T, offset: number) {
     const minHeight = node.has('minHeight', CSS_STANDARD.UNIT) ? node.toInt('minHeight') : 0;

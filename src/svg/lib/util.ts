@@ -1,7 +1,7 @@
-import { SvgMatrix, SvgTransform } from '../types/svg';
+import { SvgMatrix, SvgTransform } from '../types/object';
 
-import $dom = squared.lib.dom;
-import $util = squared.lib.util;
+const $dom = squared.lib.dom;
+const $util = squared.lib.util;
 
 const REGEX_UNIT = {
     DECIMAL: '(-?[\\d.]+)',
@@ -147,7 +147,7 @@ export function createTransform(type: number, matrix: SvgMatrix | DOMMatrix, ang
         type,
         matrix,
         angle,
-        origin: { x, y }
+        method: { x, y }
     };
 }
 

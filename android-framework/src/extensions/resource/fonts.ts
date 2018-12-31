@@ -7,21 +7,22 @@ import View from '../../view';
 
 import { replaceUnit } from '../../lib/util';
 
-import $dom = squared.lib.dom;
-import $enum = squared.base.lib.enumeration;
-import $util = squared.lib.util;
-
 type StyleData = {
     name: string;
     parent?: string;
     attrs: string;
     ids: number[];
 };
+
 type StyleList = ObjectMap<number[]>;
 type SharedAttributes = ObjectMapNested<number[]>;
 type AttributeMap = ObjectMap<number[]>;
 type TagNameMap = ObjectMap<StyleData[]>;
 type NodeStyleMap = ObjectMapNested<string[]>;
+
+const $enum = squared.base.lib.enumeration;
+const $dom = squared.lib.dom;
+const $util = squared.lib.util;
 
 const FONT_ANDROID = {
     'sans-serif': BUILD_ANDROID.ICE_CREAM_SANDWICH,
@@ -65,10 +66,6 @@ const FONTREPLACE_ANDROID = {
     '-apple-system': 'sans-serif'
 };
 
-if ($dom.isUserAgent($dom.USER_AGENT.EDGE)) {
-    FONTREPLACE_ANDROID['consolas'] = 'monospace';
-}
-
 const FONTWEIGHT_ANDROID = {
     '100': 'thin',
     '200': 'extra_light',
@@ -89,6 +86,10 @@ const FONT_STYLE = {
     'color': 'android:textColor="@color/{0}"',
     'backgroundColor': 'android:background="@color/{0}"'
 };
+
+if ($dom.isUserAgent($dom.USER_AGENT.EDGE)) {
+    FONTREPLACE_ANDROID['consolas'] = 'monospace';
+}
 
 function deleteStyleAttribute(sorted: AttributeMap[], attrs: string, ids: number[]) {
     attrs.split(';').forEach(value => {

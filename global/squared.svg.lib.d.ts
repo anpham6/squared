@@ -1,4 +1,4 @@
-import { SvgMatrix, SvgTransform } from '../src/svg/types/svg';
+import { SvgMatrix, SvgTransform } from '../src/svg/types/object';
 
 import * as $util from '../src/svg/lib/util';
 

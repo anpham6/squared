@@ -47,6 +47,14 @@ import * as util from './lib/util';
 type T = View;
 type Application = squared.base.Application<T>;
 
+let initialized = false;
+
+let application: Application;
+let fileHandler: File<T>;
+let userSettings: UserSettingsAndroid;
+
+const framework = squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID;
+
 function autoClose() {
     if (application && application.userSettings.autoCloseOnWrite && !application.initialized && !application.closed) {
         application.finalize();
@@ -58,14 +66,6 @@ function autoClose() {
 function checkApplication(main?: Application): main is Application {
     return initialized && !!main && (main.closed || autoClose());
 }
-
-let initialized = false;
-
-let application: Application;
-let fileHandler: File<T>;
-let userSettings: UserSettingsAndroid;
-
-const framework = squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID;
 
 const lib = {
     constant,

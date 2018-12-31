@@ -1,6 +1,6 @@
 import { sortNumberAsc } from './lib/util';
 
-import $util = squared.lib.util;
+const $util = squared.lib.util;
 
 export default class SvgAnimation implements squared.svg.SvgAnimation {
     public static convertClockTime(value: string) {

@@ -1,7 +1,7 @@
 import Resource from '../../resource';
 import View from '../../view';
 
-import $util = squared.lib.util;
+const $util = squared.lib.util;
 
 function getResourceKey(dimens: Map<string, string>, key: string, value: string) {
     for (const [storedKey, storedvalue] of dimens.entries()) {

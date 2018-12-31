@@ -7,9 +7,9 @@ import View from '../../view';
 import $Layout = squared.base.Layout;
 import $NodeList = squared.base.NodeList;
 
-import $dom = squared.lib.dom;
-import $enum = squared.base.lib.enumeration;
-import $util = squared.lib.util;
+const $enum = squared.base.lib.enumeration;
+const $dom = squared.lib.dom;
+const $util = squared.lib.util;
 
 function getFixedNodes<T extends View>(node: T) {
     return node.filter(item => !item.pageFlow && (item.position === 'fixed' || item.absoluteParent === node));

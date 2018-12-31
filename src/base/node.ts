@@ -6,10 +6,10 @@ import { APP_SECTION, BOX_STANDARD, CSS_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE
 
 import Extension from './extension';
 
-import $dom = squared.lib.dom;
-import $util = squared.lib.util;
-
 type T = Node;
+
+const $dom = squared.lib.dom;
+const $util = squared.lib.util;
 
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
     public style: CSSStyleDeclaration;

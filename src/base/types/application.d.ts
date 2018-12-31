@@ -122,3 +122,19 @@ export interface ResourceStoredMap {
     animators: Map<string, string>;
     images: Map<string, StringMap>;
 }
+
+export interface Asset {
+    uri?: string;
+}
+
+export interface FileAsset extends Asset {
+    pathname: string;
+    filename: string;
+    content: string;
+}
+
+export interface ImageAsset extends Asset {
+    width: number;
+    height: number;
+    position?: Point;
+}

@@ -65,9 +65,9 @@ export interface SvgPathBaseVal {
 
 export interface SvgTransform {
     type: number;
-    matrix: SvgMatrix | DOMMatrix;
     angle: number;
-    origin: {
+    matrix: SvgMatrix | DOMMatrix;
+    method: {
         x: boolean;
         y: boolean;
     };

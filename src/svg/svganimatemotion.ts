@@ -3,7 +3,7 @@ import SvgPath from './svgpath';
 
 import { getHrefTarget } from './lib/util';
 
-import $util = squared.lib.util;
+const $util = squared.lib.util;
 
 export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.SvgAnimateMotion {
     public path = '';

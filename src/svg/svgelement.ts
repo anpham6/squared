@@ -1,4 +1,4 @@
-import { SvgTransform } from './types/svg';
+import { SvgTransform } from './types/object';
 
 import SvgAnimate from './svganimate';
 import SvgAnimateMotion from './svganimatemotion';
@@ -9,22 +9,17 @@ import SvgPath from './svgpath';
 
 import { getLeastCommonMultiple, getTransformOrigin, isSvgVisible, sortNumberAsc } from './lib/util';
 
-import $util = squared.lib.util;
-
 type TimelineIndex = Map<number, number>;
-
-type TimelineMap = {
-    [key: string]: TimelineIndex;
-};
+type TimelineMap = ObjectMap<TimelineIndex>;
+type KeyTimeMap = Map<number, Map<string, number>>;
+type FreezeMap = ObjectMap<KeyTimeValue<number>>;
 
 type KeyTimeValue<T> = {
     time: number;
     value: T;
 };
 
-type KeyTimeMap = Map<number, Map<string, number>>;
-
-type FreezeMap = ObjectMap<KeyTimeValue<number>>;
+const $util = squared.lib.util;
 
 function insertSplitKeyTimeValue(map: TimelineIndex, element: SVGGraphicsElement, path: SvgPath | undefined, item: SvgAnimate, iteration: number, begin: number, splitTime: number) {
     const fraction = (splitTime - (begin + item.duration * iteration)) / item.duration;

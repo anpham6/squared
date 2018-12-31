@@ -1,7 +1,7 @@
 import Resource from '../../resource';
 import View from '../../view';
 
-import $util = squared.lib.util;
+const $util = squared.lib.util;
 
 export default class ResourceStyles<T extends View> extends squared.base.Extension<T> {
     public readonly eventOnly = true;

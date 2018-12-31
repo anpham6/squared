@@ -1,15 +1,10 @@
-import { SvgLinearGradient, SvgRadialGradient } from '../../src/svg/types/svg';
+import { SvgLinearGradient, SvgRadialGradient } from '../../src/svg/types/object';
 import { UserSettingsAndroid } from './types/application';
 import { BackgroundGradient } from './types/node';
 
 import { EXT_ANDROID, RESERVED_JAVA } from './lib/constant';
 
 import View from './view';
-
-import $color = squared.lib.color;
-import $dom = squared.lib.dom;
-import $util = squared.lib.util;
-import $xml = squared.lib.xml;
 
 type ThemeTemplate = {
     output: {
@@ -18,6 +13,11 @@ type ThemeTemplate = {
     }
     items?: StringMap
 };
+
+const $color = squared.lib.color;
+const $dom = squared.lib.dom;
+const $util = squared.lib.util;
+const $xml = squared.lib.xml;
 
 function getHexARGB(value: ColorData | null) {
     return value ? (value.opaque ? value.valueARGB : value.valueRGB) : '';

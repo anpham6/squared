@@ -1,3 +1,4 @@
+import { ImageAsset } from '../../../../src/base/types/application';
 import { BackgroundGradient } from '../../types/node';
 
 import { CONTAINER_NODE } from '../../lib/enumeration';
@@ -10,12 +11,6 @@ import Resource from '../../resource';
 import View from '../../view';
 
 import { getXmlNs } from '../../lib/util';
-
-import $color = squared.lib.color;
-import $dom = squared.lib.dom;
-import $enum = squared.base.lib.enumeration;
-import $util = squared.lib.util;
-import $xml = squared.lib.xml;
 
 type BackgroundImage = {
     src: string;
@@ -30,6 +25,12 @@ type BackgroundImage = {
     width: string;
     height: string;
 };
+
+const $enum = squared.base.lib.enumeration;
+const $color = squared.lib.color;
+const $dom = squared.lib.dom;
+const $util = squared.lib.util;
+const $xml = squared.lib.xml;
 
 const TEMPLATES = {
     LAYER_LIST: $xml.parseTemplate(LAYERLIST_TMPL),
@@ -111,7 +112,7 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
     return result[style] || result.solid;
 }
 
-function getShapeAttribute(boxStyle: BoxStyle, name: string, direction = -1, hasInset = false, isInset = false): any[] | boolean {
+function getShapeAttribute(boxStyle: BoxStyle, name: string, direction = -1, hasInset = false, isInset = false): {}[] | false {
     switch (name) {
         case 'stroke':
             if (boxStyle.border && Resource.isBorderVisible(boxStyle.border)) {

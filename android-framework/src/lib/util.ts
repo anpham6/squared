@@ -1,3 +1,4 @@
+import { FileAsset } from '../../../src/base/types/application';
 import { ViewAttribute } from '../types/node';
 
 import { XMLNS_ANDROID } from './constant';

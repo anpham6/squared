@@ -10,9 +10,10 @@ import View from '../view';
 
 import $Layout = squared.base.Layout;
 import $NodeList = squared.base.NodeList;
-import $const = squared.base.lib.constant;
-import $enum = squared.base.lib.enumeration;
-import $util = squared.lib.util;
+
+const $const = squared.base.lib.constant;
+const $enum = squared.base.lib.enumeration;
+const $util = squared.lib.util;
 
 const CHAIN_MAP = {
     leftTop: ['left', 'top'],

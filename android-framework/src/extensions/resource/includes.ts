@@ -1,14 +1,14 @@
 import View from '../../view';
 
-import $util = squared.lib.util;
-import $xml = squared.lib.xml;
-
 type NodeRenderIndex = {
     item: View;
     name: string;
     index: number;
     merge: boolean;
 };
+
+const $util = squared.lib.util;
+const $xml = squared.lib.xml;
 
 export default class ResourceIncludes<T extends View> extends squared.base.Extension<T> {
     public readonly eventOnly = true;

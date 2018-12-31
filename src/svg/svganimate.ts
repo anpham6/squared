@@ -3,7 +3,7 @@ import SvgPath from './svgpath';
 
 import { sortNumberAsc } from './lib/util';
 
-import $util = squared.lib.util;
+const $util = squared.lib.util;
 
 export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgAnimate {
     public static toFractionList(value: string, delimiter = ';') {

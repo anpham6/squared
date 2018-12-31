@@ -7,13 +7,13 @@ import { BOX_STANDARD } from '../lib/enumeration';
 import Extension from '../extension';
 import Node from '../node';
 
-import $util = squared.lib.util;
-
 type GridPosition = {
     placement: number[],
     rowSpan: number,
     columnSpan: number
 };
+
+const $util = squared.lib.util;
 
 const REGEX_PARTIAL = {
     UNIT: '[\\d.]+[a-z%]+|auto|max-content|min-content',

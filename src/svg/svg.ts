@@ -1,4 +1,4 @@
-import { SvgDefs, SvgLinearGradient, SvgRadialGradient } from './types/svg';
+import { SvgDefs, SvgLinearGradient, SvgRadialGradient } from './types/object';
 
 import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
@@ -11,7 +11,7 @@ import SvgUse from './svguse';
 
 import { getHrefTarget, isSvgImage, isSvgShape, isSvgVisible } from './lib/util';
 
-import $dom = squared.lib.dom;
+const $dom = squared.lib.dom;
 
 export default class Svg extends squared.lib.base.Container<SvgGroup> implements squared.svg.Svg {
     public name: string;

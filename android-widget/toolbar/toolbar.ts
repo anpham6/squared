@@ -4,23 +4,23 @@ import { WIDGET_NAME } from '../lib/constant';
 
 import EXTENSION_TOOLBAR_TMPL from '../lib/templates/toolbar';
 
-import $const = squared.base.lib.constant;
-import $enum = squared.base.lib.enumeration;
-import $dom = squared.lib.dom;
-import $util = squared.lib.util;
-import $xml = squared.lib.xml;
-
 import $Resource = android.base.Resource;
 import $View = android.base.View;
-import $const_android = android.lib.constant;
-import $enum_android = android.lib.enumeration;
-import $util_android = android.lib.util;
 
 type ToolbarThemeData = {
     target: boolean;
     appBarOverlay: string;
     popupOverlay: string;
 };
+
+const $const = squared.base.lib.constant;
+const $enum = squared.base.lib.enumeration;
+const $dom = squared.lib.dom;
+const $util = squared.lib.util;
+const $xml = squared.lib.xml;
+const $constA = android.lib.constant;
+const $enumA = android.lib.enumeration;
+const $utilA = android.lib.util;
 
 export default class Toolbar<T extends $View> extends squared.base.Extension<T> {
     constructor(
@@ -58,9 +58,9 @@ export default class Toolbar<T extends $View> extends squared.base.Extension<T> 
         const element = <HTMLElement> node.element;
         const target = $util.hasValue(node.dataset.target);
         const options: ExternalData = Object.assign({}, this.options[element.id]);
-        const toolbarOptions = $util_android.createAttribute(options.self);
-        const appBarOptions = $util_android.createAttribute(options.appBar);
-        const collapsingToolbarOptions = $util_android.createAttribute(options.collapsingToolbar);
+        const toolbarOptions = $utilA.createAttribute(options.self);
+        const appBarOptions = $utilA.createAttribute(options.appBar);
+        const collapsingToolbarOptions = $utilA.createAttribute(options.collapsingToolbar);
         const hasMenu = Toolbar.findNestedByName(element, WIDGET_NAME.MENU);
         const backgroundImage = node.has('backgroundImage');
         const appBarChildren: T[] = [];
@@ -70,7 +70,7 @@ export default class Toolbar<T extends $View> extends squared.base.Extension<T> 
         Array.from(element.children).forEach((item: HTMLElement) => {
             if (item.tagName === 'IMG') {
                 if ($util.hasValue(item.dataset.navigationIcon)) {
-                    const result = $Resource.addImageSrcSet(<HTMLImageElement> item, $const_android.PREFIX_ANDROID.MENU);
+                    const result = $Resource.addImageSrcSet(<HTMLImageElement> item, $constA.PREFIX_ANDROID.MENU);
                     if (result !== '') {
                         $util.defaultWhenNull(toolbar, 'app', 'navigationIcon', `@drawable/${result}`);
                         if ($dom.getStyle(item).display !== 'none') {
@@ -79,7 +79,7 @@ export default class Toolbar<T extends $View> extends squared.base.Extension<T> 
                     }
                 }
                 if ($util.hasValue(item.dataset.collapseIcon)) {
-                    const result = $Resource.addImageSrcSet(<HTMLImageElement> item, $const_android.PREFIX_ANDROID.MENU);
+                    const result = $Resource.addImageSrcSet(<HTMLImageElement> item, $constA.PREFIX_ANDROID.MENU);
                     if (result !== '') {
                         $util.defaultWhenNull(toolbar, 'app', 'collapseIcon', `@drawable/${result}`);
                         if ($dom.getStyle(item).display !== 'none') {
@@ -144,10 +144,10 @@ export default class Toolbar<T extends $View> extends squared.base.Extension<T> 
             }
         }
         const innerDepth = depth + (hasAppBar ? 1 : 0) + (hasCollapsingToolbar ? 1 : 0);
-        const numberResourceValue = application.extensionManager.optionValueAsBoolean($const_android.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue');
-        node.setControlType($const_android.SUPPORT_ANDROID.TOOLBAR, $enum_android.CONTAINER_NODE.BLOCK);
+        const numberResourceValue = application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue');
+        node.setControlType($constA.SUPPORT_ANDROID.TOOLBAR, $enumA.CONTAINER_NODE.BLOCK);
         let output = controller.renderNodeStatic(
-            $const_android.SUPPORT_ANDROID.TOOLBAR,
+            $constA.SUPPORT_ANDROID.TOOLBAR,
             innerDepth,
             $Resource.formatOptions(toolbarOptions, numberResourceValue),
             'match_parent',
@@ -157,7 +157,7 @@ export default class Toolbar<T extends $View> extends squared.base.Extension<T> 
         );
         if (hasCollapsingToolbar) {
             if (backgroundImage) {
-                const backgroundImageOptions = $util_android.createAttribute(options.backgroundImage);
+                const backgroundImageOptions = $utilA.createAttribute(options.backgroundImage);
                 let scaleType = 'center';
                 switch (node.css('backgroundSize')) {
                     case 'cover':
@@ -179,7 +179,7 @@ export default class Toolbar<T extends $View> extends squared.base.Extension<T> 
                 $util.defaultWhenNull(backgroundImageOptions, 'android', 'fitsSystemWindows', 'true');
                 $util.defaultWhenNull(backgroundImageOptions, 'app', 'layout_collapseMode', 'parallax');
                 output = controller.renderNodeStatic(
-                    $const_android.CONTAINER_ANDROID.IMAGE,
+                    $constA.CONTAINER_ANDROID.IMAGE,
                     innerDepth,
                     $Resource.formatOptions(backgroundImageOptions, numberResourceValue),
                     'match_parent',
@@ -211,11 +211,11 @@ export default class Toolbar<T extends $View> extends squared.base.Extension<T> 
             }
             appBarNode = this.createPlaceholder(application.nextId, node, appBarChildren) as T;
             appBarNode.parent = node.parent;
-            appBarNode.controlId = $util_android.stripId(appBarOptions.android.id);
-            appBarNode.setControlType($const_android.SUPPORT_ANDROID.APPBAR, $enum_android.CONTAINER_NODE.BLOCK);
+            appBarNode.controlId = $utilA.stripId(appBarOptions.android.id);
+            appBarNode.setControlType($constA.SUPPORT_ANDROID.APPBAR, $enumA.CONTAINER_NODE.BLOCK);
             application.processing.cache.append(appBarNode, appBarChildren.length > 0);
             outer = controller.renderNodeStatic(
-                $const_android.SUPPORT_ANDROID.APPBAR,
+                $constA.SUPPORT_ANDROID.APPBAR,
                 target ? -1 : depth,
                 $Resource.formatOptions(appBarOptions, numberResourceValue),
                 'match_parent',
@@ -236,10 +236,10 @@ export default class Toolbar<T extends $View> extends squared.base.Extension<T> 
                 collapsingToolbarNode.parent = appBarNode;
                 if (collapsingToolbarNode) {
                     collapsingToolbarNode.each(item => item.dataset.target = (collapsingToolbarNode as T).controlId);
-                    collapsingToolbarNode.setControlType($const_android.SUPPORT_ANDROID.COLLAPSING_TOOLBAR, $enum_android.CONTAINER_NODE.BLOCK);
+                    collapsingToolbarNode.setControlType($constA.SUPPORT_ANDROID.COLLAPSING_TOOLBAR, $enumA.CONTAINER_NODE.BLOCK);
                     application.processing.cache.append(collapsingToolbarNode, collapsingToolbarChildren.length > 0);
                     const content = controller.renderNodeStatic(
-                        $const_android.SUPPORT_ANDROID.COLLAPSING_TOOLBAR,
+                        $constA.SUPPORT_ANDROID.COLLAPSING_TOOLBAR,
                         target && !hasAppBar ? -1 : depth,
                         $Resource.formatOptions(collapsingToolbarOptions, numberResourceValue),
                         'match_parent',
@@ -273,7 +273,7 @@ export default class Toolbar<T extends $View> extends squared.base.Extension<T> 
         else {
             node.render(target ? node : parent);
         }
-        node.containerType = $enum_android.CONTAINER_NODE.BLOCK;
+        node.containerType = $enumA.CONTAINER_NODE.BLOCK;
         node.exclude({ resource: $enum.NODE_RESOURCE.FONT_STYLE });
         return { output };
     }
@@ -291,7 +291,7 @@ export default class Toolbar<T extends $View> extends squared.base.Extension<T> 
         const menu = $util.optionalAsString(Toolbar.findNestedByName(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
         if (menu !== '') {
             const options: ExternalData = node.element && this.options[node.element.id] || {};
-            const toolbarOptions = $util_android.createAttribute(options.self);
+            const toolbarOptions = $utilA.createAttribute(options.self);
             $util.defaultWhenNull(toolbarOptions, 'app', 'menu', `@menu/${menu}`);
             node.app('menu', toolbarOptions.app.menu);
         }
@@ -304,7 +304,7 @@ export default class Toolbar<T extends $View> extends squared.base.Extension<T> 
     private setStyleTheme(themeData: ToolbarThemeData) {
         if (this.application.resourceHandler.fileHandler) {
             const options: ExternalData = Object.assign({}, this.options.resource);
-            $util.defaultWhenNull(options, 'appTheme', $util_android.getAppTheme(this.application.resourceHandler.fileHandler.assets) || 'AppTheme');
+            $util.defaultWhenNull(options, 'appTheme', $utilA.getAppTheme(this.application.resourceHandler.fileHandler.assets) || 'AppTheme');
             $util.defaultWhenNull(options, 'parentTheme', 'Theme.AppCompat.Light.DarkActionBar');
             const data = {
                 'appTheme': options.appTheme,

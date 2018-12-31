@@ -61,7 +61,7 @@
     "rollup-plugin-terser": "^3.0.0",
     "systemjs": "^0.21.5",
     "systemjs-plugin-babel": "0.0.25",
-    "terser": "^3.13.1",
+    "terser": "^3.14.0",
     "tslint": "^5.12.0",
     "typescript": "^3.2.2"
   }

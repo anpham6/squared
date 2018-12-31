@@ -8,11 +8,12 @@ import { calculateBias, replaceRTL, stripId, validateString } from './lib/util';
 
 import $NodeList = squared.base.NodeList;
 import $Resource = squared.base.Resource;
-import $enum = squared.base.lib.enumeration;
-import $dom = squared.lib.dom;
-import $util = squared.lib.util;
 
 type T = squared.base.Node;
+
+const $enum = squared.base.lib.enumeration;
+const $dom = squared.lib.dom;
+const $util = squared.lib.util;
 
 function setLineHeight(node: T, lineHeight: number) {
     const offset = lineHeight - (node.hasHeight ? node.height : node.bounds.height);
@@ -80,7 +81,7 @@ export default (Base: Constructor<T>) => {
         constructor(
             id = 0,
             element?: Element | null,
-            afterInit?: SelfWrapped<View, void>)
+            afterInit?: BindGeneric<View, void>)
         {
             super(id, element);
             if (afterInit) {
@@ -324,26 +325,11 @@ export default (Base: Constructor<T>) => {
                 const obj: StringMap = this[`__${name}`];
                 if (objs.length === 0 || objs.includes(name)) {
                     for (const attr in obj) {
-                        if (name !== '_') {
-                            result.push(`${name}:${attr}="${obj[attr]}"`);
-                        }
-                        else {
-                            result.push(`${attr}="${obj[attr]}"`);
-                        }
+                        result.push(name !== '_' ? `${name}:${attr}="${obj[attr]}"` : `${attr}="${obj[attr]}"`);
                     }
                 }
             }
-            return result.sort((a, b) => {
-                if (a.startsWith('android:id=')) {
-                    return -1;
-                }
-                else if (b.startsWith('android:id=')) {
-                    return 1;
-                }
-                else {
-                    return a > b ? 1 : -1;
-                }
-            });
+            return result.sort((a, b) => a > b || b.startsWith('android:id=') ? 1 : -1);
         }
 
         public localizeString(value: string) {

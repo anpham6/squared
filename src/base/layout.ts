@@ -3,7 +3,7 @@ import { NODE_ALIGNMENT } from './lib/enumeration';
 import Node from './node';
 import NodeList from './nodelist';
 
-import $util = squared.lib.util;
+const $util = squared.lib.util;
 
 export default class Layout<T extends Node> extends squared.lib.base.Container<T> implements squared.base.Layout<T> {
     public rowCount = 0;

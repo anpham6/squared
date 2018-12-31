@@ -1,7 +1,7 @@
 import Extension from '../extension';
 import Node from '../node';
 
-import $dom = squared.lib.dom;
+const $dom = squared.lib.dom;
 
 export default abstract class External<T extends Node> extends Extension<T> {
     public beforeInit(element: HTMLElement, internal = false) {

@@ -1,4 +1,4 @@
-import { AppSession, AppProcessing, SessionData, UserSettings } from '../src/base/types/application';
+import { AppProcessing, AppSession, FileAsset, SessionData, UserSettings } from '../src/base/types/application';
 
 declare global {
     namespace squared.base {

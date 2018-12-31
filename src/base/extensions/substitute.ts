@@ -5,7 +5,7 @@ import { EXT_NAME } from '../lib/constant';
 import Extension from '../extension';
 import Node from '../node';
 
-import $dom = squared.lib.dom;
+const $dom = squared.lib.dom;
 
 export default class Substitute<T extends Node> extends Extension<T> {
     constructor(
