@@ -1,6 +1,9 @@
+import { SvgTransform } from './types/svg';
+
+import SvgBuild from './svgbuild';
 import SvgElement from './svgelement';
 
-import { applyMatrixX, applyMatrixY } from './lib/util';
+import { applyMatrixX, applyMatrixY, getTransform } from './lib/util';
 
 import $util = squared.lib.util;
 
@@ -9,7 +12,10 @@ export default class SvgImage extends SvgElement implements squared.svg.SvgImage
     public y: number;
     public width: number;
     public height: number;
-    public uri = '';
+    public href = '';
+
+    private _transform: SvgTransform[] | undefined;
+    private _transformed = false;
 
     constructor(public readonly element: SVGImageElement) {
         super(element);
@@ -17,22 +23,20 @@ export default class SvgImage extends SvgElement implements squared.svg.SvgImage
         this.y = element.y.baseVal.value;
         this.width = element.width.baseVal.value;
         this.height = element.height.baseVal.value;
-        this.uri =  $util.resolvePath(element.href.baseVal);
+        this.href =  $util.resolvePath(element.href.baseVal);
     }
 
-    public externalize() {
-        const transform = this.element.transform.baseVal;
-        if (transform.numberOfItems) {
+    public transformRect() {
+        const transform = this.transform;
+        if (transform.length) {
             let x = this.x;
             let y = this.y;
-            for (let i = transform.numberOfItems - 1; i >= 0; i--) {
-                const item = transform.getItem(i);
+            const [skewXY, transformable] = $util.partitionArray(transform, item => item.type === SVGTransform.SVG_TRANSFORM_SKEWX || item.type === SVGTransform.SVG_TRANSFORM_SKEWY);
+            transformable.reverse();
+            for (let i = 0; i < transformable.length; i++) {
+                const item = transformable[i];
                 const matrix = item.matrix;
                 switch (item.type) {
-                    case SVGTransform.SVG_TRANSFORM_TRANSLATE:
-                        x += matrix.e;
-                        y += matrix.f;
-                        break;
                     case SVGTransform.SVG_TRANSFORM_SCALE:
                         x *= matrix.a;
                         y *= matrix.d;
@@ -55,14 +59,45 @@ export default class SvgImage extends SvgElement implements squared.svg.SvgImage
                             y += matrix.d * this.height;
                         }
                         break;
+                    case SVGTransform.SVG_TRANSFORM_TRANSLATE:
+                        x += matrix.e;
+                        y += matrix.f;
+                        break;
                 }
             }
             this.x = x;
             this.y = y;
+            this.transform = skewXY;
+            this.transformed = skewXY.length === 0;
         }
     }
 
     get drawable() {
         return false;
+    }
+
+    set transform(value) {
+        this._transform = value;
+    }
+    get transform() {
+        if (this._transform === undefined) {
+            this._transform = getTransform(this.element) || SvgBuild.toTransformList(this.element.transform.baseVal);
+        }
+        return this._transform;
+    }
+
+    set transformed(value) {
+        this._transformed = value;
+        if (!value) {
+            this._transform = undefined;
+        }
+        else {
+            if (this._transform !== undefined) {
+                this._transform.length = 0;
+            }
+        }
+    }
+    get transformed() {
+        return this._transformed;
     }
 }

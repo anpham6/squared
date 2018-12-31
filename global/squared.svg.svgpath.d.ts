@@ -2,8 +2,7 @@ import { SvgPathBaseVal, SvgTransform } from '../src/svg/types/svg';
 
 declare global {
     namespace squared.svg {
-        interface SvgPath {
-            transformed: boolean;
+        interface SvgPath extends SvgTransformable {
             opacity: number;
             d: string;
             color: string;
@@ -20,7 +19,6 @@ declare global {
             clipRule: string;
             baseVal: SvgPathBaseVal;
             readonly element: SVGGraphicsElement;
-            readonly transform: SvgTransform[] | null;
             setColor(attr: string): void;
             setOpacity(attr: string): void;
         }

@@ -98,12 +98,12 @@ export default class CssGrid<T extends Node> extends Extension<T> {
     }
 
     public processNode(node: T): ExtensionResult<T> {
-        const mainData = Object.assign(CssGrid.createDataAttribute(), {
+        const mainData = { ...CssGrid.createDataAttribute(),
             alignItems: node.css('alignItems'),
             alignContent: node.css('alignContent'),
             justifyItems: node.css('justifyItems'),
             justifyContent: node.css('justifyContent')
-        });
+        };
         const gridAutoFlow = node.css('gridAutoFlow');
         const horizontal = gridAutoFlow.indexOf('row') !== -1;
         const dense = gridAutoFlow.indexOf('dense') !== -1;

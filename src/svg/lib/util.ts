@@ -102,7 +102,7 @@ export function isSvgVisible(element: SVGGraphicsElement) {
     return value !== 'hidden' && value !== 'collapse' && $dom.cssAttribute(element, 'display', true) !== 'none';
 }
 
-export function getTransformMatrix(element: SVGGraphicsElement): SvgMatrix | null {
+export function getTransformMatrix(element: SVGGraphicsElement): SvgMatrix | undefined {
     const match = new RegExp(REGEX_TRANSFORM.MATRIX).exec($dom.getStyle(element, true).transform || '');
     if (match) {
         switch (match[1]) {
@@ -126,7 +126,7 @@ export function getTransformMatrix(element: SVGGraphicsElement): SvgMatrix | nul
                 };
         }
     }
-    return null;
+    return undefined;
 }
 
 export function convertAngle(value: string, unit = 'deg') {
@@ -151,7 +151,7 @@ export function createTransform(type: number, matrix: SvgMatrix | DOMMatrix, ang
     };
 }
 
-export function getTransform(element: SVGGraphicsElement): SvgTransform[] | null {
+export function getTransform(element: SVGGraphicsElement): SvgTransform[] | undefined {
     const value = $dom.cssInline(element, 'transform');
     if (value !== '') {
         const result: SvgTransform[] = [];
@@ -187,9 +187,9 @@ export function getTransform(element: SVGGraphicsElement): SvgTransform[] | null
                         result[match.index] = createTransform(SVGTransform.SVG_TRANSFORM_SKEWY, matrix, y, false, true);
                     }
                     else {
-                        result[match.index] = createTransform(SVGTransform.SVG_TRANSFORM_SKEWX, Object.assign({}, matrix, { b: 0 }), x, true, false);
+                        result[match.index] = createTransform(SVGTransform.SVG_TRANSFORM_SKEWX, { ...matrix, b: 0 }, x, true, false);
                         if (y !== 0) {
-                            result[match.index + 1] = createTransform(SVGTransform.SVG_TRANSFORM_SKEWY, Object.assign({}, matrix, { c: 0 }), y, false, true);
+                            result[match.index + 1] = createTransform(SVGTransform.SVG_TRANSFORM_SKEWY, { ...matrix, c: 0 }, y, false, true);
                         }
                     }
                 }
@@ -219,7 +219,7 @@ export function getTransform(element: SVGGraphicsElement): SvgTransform[] | null
         }
         return result.filter(item => item);
     }
-    return null;
+    return undefined;
 }
 
 export function getTransformOrigin(element: SVGGraphicsElement) {
@@ -237,7 +237,7 @@ export function getTransformOrigin(element: SVGGraphicsElement) {
             height = parent.viewportElement.viewBox.baseVal.height;
         }
         else {
-            return null;
+            return undefined;
         }
         let positions = value.split(' ');
         if (positions.length === 1) {
@@ -285,7 +285,7 @@ export function getTransformOrigin(element: SVGGraphicsElement) {
             return origin;
         }
     }
-    return null;
+    return undefined;
 }
 
 export function sortNumberAsc(values: number[]) {

@@ -11,9 +11,9 @@ declare global {
             function isSvgImage(element: Element): element is SVGImageElement;
             function isSvgVisible(element: SVGGraphicsElement): boolean;
             function createTransform(type: number, matrix: SvgMatrix | DOMMatrix, angle?: number, x?: boolean, y?: boolean): SvgTransform;
-            function getTransform(element: SVGGraphicsElement): SvgTransform[] | null;
-            function getTransformOrigin(element: SVGGraphicsElement): Point | null;
-            function getTransformMatrix(element: SVGGraphicsElement): SvgMatrix | null;
+            function getTransform(element: SVGGraphicsElement): SvgTransform[] | undefined;
+            function getTransformOrigin(element: SVGGraphicsElement): Point | undefined;
+            function getTransformMatrix(element: SVGGraphicsElement): SvgMatrix | undefined;
             function getLeastCommonMultiple(values: number[]): number;
             function applyMatrixX(matrix: SvgMatrix | DOMMatrix, x: number, y: number): number;
             function applyMatrixY(matrix: SvgMatrix | DOMMatrix, x: number, y: number): number;

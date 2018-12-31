@@ -11,6 +11,11 @@ declare global {
             readonly visible: boolean;
         }
 
+        interface SvgTransformable {
+            transform: SvgTransform[];
+            transformed: boolean;
+        }
+
         interface Svg extends Container<SvgGroup>, SvgBase {
             readonly defs: SvgDefs;
             readonly width: number;
@@ -29,7 +34,7 @@ declare global {
 
         class SvgBuild {
             public static setName(element: SVGGraphicsElement): string;
-            public static applyTransforms(transform: SvgTransform[] | SVGTransformList, points: Point[], origin?: Point | null): Point[];
+            public static applyTransforms(transform: SvgTransform[], points: Point[] | PointR[], origin?: Point): Point[];
             public static toPointList(points: SVGPointList): Point[];
             public static toCoordinateList(value: string): number[];
             public static toPathCommandList(value: string): SvgPathCommand[];

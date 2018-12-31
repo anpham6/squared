@@ -32,14 +32,14 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
         const controller = this.application.controllerHandler;
         const pageFlow = node.children.filter(item => item.pageFlow) as T[];
         const flex = node.flexbox;
-        const mainData = Object.assign(Flexbox.createDataAttribute(pageFlow), {
+        const mainData = { ...Flexbox.createDataAttribute(pageFlow),
             wrap: flex.wrap.startsWith('wrap'),
             wrapReverse: flex.wrap === 'wrap-reverse',
             directionReverse: flex.direction.endsWith('reverse'),
             justifyContent: flex.justifyContent,
             rowDirection: flex.direction.startsWith('row'),
             columnDirection: flex.direction.startsWith('column')
-        });
+        };
         if (node.cssTry('display', 'block')) {
             for (const item of pageFlow) {
                 if (item.element) {

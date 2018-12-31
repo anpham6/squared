@@ -144,7 +144,7 @@ export function newBoxRect(): BoxRect {
 }
 
 export function newRectDimensions(): RectDimensions {
-    return Object.assign({ width: 0, height: 0 }, newBoxRect());
+    return { width: 0, height: 0, ...newBoxRect() };
 }
 
 export function newBoxModel(): BoxModel {
@@ -216,7 +216,7 @@ export function getRangeClientRect(element: Element): TextDimensions {
             }
         }
     }
-    return Object.assign(bounds, { multiLine });
+    return { ...bounds, multiLine };
 }
 
 export function assignBounds(bounds: RectDimensions | DOMRect): RectDimensions {

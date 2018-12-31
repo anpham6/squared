@@ -102,7 +102,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 const element = <HTMLElement> this._element;
                 const styleMap = $dom.getElementCache(element, 'styleMap') || {};
                 Array.from(element.style).forEach(attr => styleMap[$util.convertCamelCase(attr)] = element.style[attr]);
-                this._styleMap = Object.assign({}, styleMap);
+                this._styleMap = { ...styleMap };
             }
             if (this._element) {
                 $dom.setElementCache(this._element, 'node', this);
@@ -114,7 +114,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public saveAsInitial() {
         if (this._initial.iteration === -1) {
             this._initial.children = this.duplicate();
-            this._initial.styleMap = Object.assign({}, this._styleMap);
+            this._initial.styleMap = { ...this._styleMap };
             this._initial.documentParent = this._documentParent;
         }
         if (this._bounds) {
@@ -175,15 +175,13 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public apply(options: {}) {
-        if (typeof options === 'object') {
-            for (const obj in options) {
-                const attrs = options[obj];
-                if (typeof attrs === 'object') {
-                    for (const attr in attrs) {
-                        this.attr(obj, attr, attrs[attr]);
-                    }
-                    delete options[obj];
+        for (const obj in options) {
+            const namespace = options[obj];
+            if (typeof namespace === 'object') {
+                for (const attr in namespace) {
+                    this.attr(obj, attr, namespace[attr]);
                 }
+                delete options[obj];
             }
         }
     }

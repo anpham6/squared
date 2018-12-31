@@ -33,4 +33,9 @@ interface Point {
     y: number;
 }
 
+interface PointR extends Point {
+    rx?: number;
+    ry?: number;
+}
+
 type ExternalData = ObjectMap<any>;

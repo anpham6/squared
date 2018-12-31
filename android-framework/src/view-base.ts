@@ -121,8 +121,8 @@ export default (Base: Constructor<T>) => {
         }
 
         public apply(options: {}) {
-            if (typeof options === 'object') {
-                const local = Object.assign({}, options);
+            if (options && typeof options === 'object') {
+                const local = { ...options };
                 super.apply(local);
                 for (const obj in local) {
                     this.formatted(`${obj}="${local[obj]}"`);

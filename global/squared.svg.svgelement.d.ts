@@ -1,4 +1,4 @@
-import { SvgViewBox } from '../src/svg/types/svg';
+import { SvgTransform, SvgViewBox } from '../src/svg/types/svg';
 
 declare global {
     namespace squared.svg {
@@ -14,9 +14,9 @@ declare global {
             constructor(element: SVGGraphicsElement);
         }
 
-        interface SvgImage extends SvgViewBox, SvgElement {
-            uri: string;
-            externalize(): void;
+        interface SvgImage extends SvgViewBox, SvgElement, SvgTransformable {
+            href: string;
+            transformRect(): void;
         }
 
         class SvgImage implements SvgImage {

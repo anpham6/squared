@@ -26,22 +26,26 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result !== '' ? result : `${tagName}_${++NAME_GRAPHICS[tagName]}`;
     }
 
-    public static applyTransforms(transform: SvgTransform[] | SVGTransformList, points: Point[], origin?: Point | null) {
-        const result: Point[] = [];
-        for (const pt of points) {
-            result.push({ x: pt.x, y: pt.y });
+    public static toTransformList(transform: SVGTransformList) {
+        const result: SvgTransform[] = [];
+        for (let i = 0; i < transform.numberOfItems; i++) {
+            const item = transform.getItem(i);
+            result.push(createTransform(item.type, item.matrix, item.angle));
         }
-        let items: SvgTransform[];
-        if (transform instanceof SVGTransformList) {
-            items = [];
-            for (let i = transform.numberOfItems - 1; i >= 0; i--) {
-                const item = transform.getItem(i);
-                items.push(createTransform(item.type, item.matrix, item.angle));
+        return result;
+    }
+
+    public static applyTransforms(transform: SvgTransform[], points: Point[] | PointR[], origin?: Point) {
+        const result: PointR[] = [];
+        for (const pt of points as PointR[]) {
+            const item: PointR = { x: pt.x, y: pt.y };
+            if (pt.rx !== undefined && pt.ry !== undefined) {
+                item.rx = pt.rx;
+                item.ry = pt.ry;
             }
+            result.push(item);
         }
-        else {
-            items = transform.slice().reverse();
-        }
+        const items = transform.slice().reverse();
         for (const item of items) {
             let x1 = 0;
             let y1 = 0;
@@ -83,9 +87,13 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             }
             for (const pt of result) {
                 const x = pt.x;
-                const y = pt.y;
-                pt.x = applyMatrixX(item.matrix, x + x1, y + y1) + x3;
-                pt.y = applyMatrixY(item.matrix, x + x2, y + y2) + y3;
+                pt.x = applyMatrixX(item.matrix, x + x1, pt.y + y1) + x3;
+                pt.y = applyMatrixY(item.matrix, x + x2, pt.y + y2) + y3;
+                if (pt.rx !== undefined && pt.ry !== undefined && item.type === SVGTransform.SVG_TRANSFORM_SCALE) {
+                    const rx = pt.rx;
+                    pt.rx = applyMatrixX(item.matrix, rx + x1, pt.ry + y1);
+                    pt.ry = applyMatrixY(item.matrix, rx + x2, pt.ry + y2);
+                }
             }
         }
         return result;

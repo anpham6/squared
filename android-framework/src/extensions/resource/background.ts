@@ -31,6 +31,12 @@ type BackgroundImage = {
     height: string;
 };
 
+const TEMPLATES = {
+    LAYER_LIST: $xml.parseTemplate(LAYERLIST_TMPL),
+    SHAPE: $xml.parseTemplate(SHAPE_TMPL),
+    VECTOR: $xml.parseTemplate(VECTOR_TMPL)
+};
+
 function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = false): StringMap {
     const result = {
         solid: `android:color="@color/${border.color}"`,
@@ -479,7 +485,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     if (vectorGradient) {
                         const width = node.bounds.width;
                         const height = node.bounds.height;
-                        const xml = $xml.createTemplate($xml.parseTemplate(VECTOR_TMPL), {
+                        const xml = $xml.createTemplate(TEMPLATES.VECTOR, {
                             namespace: getXmlNs('aapt'),
                             width: $util.formatPX(width),
                             height: $util.formatPX(height),
@@ -511,7 +517,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             if (borderRadius && borderRadius[0]['radius'] === undefined) {
                                 borderRadius[0]['radius'] = '1px';
                             }
-                            template = $xml.parseTemplate(SHAPE_TMPL);
+                            template = TEMPLATES.SHAPE;
                             data = {
                                 '1': getShapeAttribute(stored, 'stroke'),
                                 '2': backgroundColor,
@@ -520,7 +526,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             };
                         }
                         else {
-                            template = $xml.parseTemplate(LAYERLIST_TMPL);
+                            template = TEMPLATES.LAYER_LIST;
                             data = {
                                 '1': backgroundColor,
                                 '2': !vectorGradient && backgroundGradient.length ? backgroundGradient : false,
@@ -533,7 +539,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                     }
                     else {
-                        template = $xml.parseTemplate(LAYERLIST_TMPL);
+                        template = TEMPLATES.LAYER_LIST;
                         data = {
                             '1': backgroundColor,
                             '2': !vectorGradient && backgroundGradient.length ? backgroundGradient : false,

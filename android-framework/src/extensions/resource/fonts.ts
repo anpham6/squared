@@ -143,7 +143,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 if (companion && !companion.visible && companion.tagName === 'LABEL') {
                     node = companion as T;
                 }
-                const stored = Object.assign({}, <FontAttribute> node.data(Resource.KEY_NAME, 'fontStyle'));
+                const stored: FontAttribute = Object.assign({}, node.data(Resource.KEY_NAME, 'fontStyle'));
                 let system = false;
                 stored.backgroundColor = Resource.addColor(stored.backgroundColor);
                 if (stored.fontFamily) {
@@ -413,8 +413,9 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             value.split('.').forEach(name => {
                 const match = name.match(/^(\w*?)(?:_(\d+))?$/);
                 if (match) {
-                    const tagData = Object.assign({ name, parent }, resource[match[1].toUpperCase()][match[2] === undefined ? 0 : parseInt(match[2])]);
-                    Resource.STORED.styles.set(name, tagData);
+                    const data = resource[match[1].toUpperCase()];
+                    const index = match[2] ? parseInt(match[2]) : 0;
+                    Resource.STORED.styles.set(name, { name, parent, ...(data && data[index] ? data[index] : {}) });
                     parent = name;
                 }
             });

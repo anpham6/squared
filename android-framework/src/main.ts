@@ -198,7 +198,7 @@ const appBase: AppFramework<T> = {
         const EA = EXT_ANDROID;
         application = new squared.base.Application(framework, Controller, Resource, ExtensionManager, View);
         fileHandler = new File(application.resourceHandler);
-        userSettings = Object.assign({}, SETTINGS);
+        userSettings = { ...SETTINGS };
         Object.assign(application.builtInExtensions, {
             [EN.EXTERNAL]: new External(EN.EXTERNAL, framework),
             [EN.SUBSTITUTE]: new Substitute(EN.SUBSTITUTE, framework),

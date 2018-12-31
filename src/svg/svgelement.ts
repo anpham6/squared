@@ -1,3 +1,5 @@
+import { SvgTransform } from './types/svg';
+
 import SvgAnimate from './svganimate';
 import SvgAnimateMotion from './svganimatemotion';
 import SvgAnimateTransform from './svganimatetransform';
@@ -91,7 +93,7 @@ function convertKeyTimeFraction(map: KeyTimeMap, total: number) {
     return result;
 }
 
-function getPathData(map: KeyTimeMap, path: SvgPath, methodName: string, attrs: string[], freezeMap?: FreezeMap, transform?: SVGTransformList) {
+function getPathData(map: KeyTimeMap, path: SvgPath, methodName: string, attrs: string[], freezeMap?: FreezeMap, transform?: SvgTransform[]) {
     const result: KeyTimeValue<string>[] = [];
     for (const [time, data] of map.entries()) {
         const values: number[] = [];
@@ -108,7 +110,7 @@ function getPathData(map: KeyTimeMap, path: SvgPath, methodName: string, attrs: 
         });
         if (values.length === attrs.length) {
             let value: string | undefined;
-            if (transform && transform.numberOfItems) {
+            if (transform && transform.length) {
                 switch (methodName) {
                     case 'getLine':
                         value = SvgPath.getPolyline(SvgBuild.applyTransforms(transform, getLinePoints(values), getTransformOrigin(path.element)));
@@ -201,9 +203,9 @@ function getKeyTimePath(map: KeyTimeMap, path: SvgPath, freezeMap?: FreezeMap) {
         case 'ellipse':
             return getPathData(map, path, 'getEllipse', ['cx', 'cy', 'rx', 'ry'], freezeMap);
         case 'line':
-            return getPathData(map, path, 'getLine', ['x1', 'y1', 'x2', 'y2'], freezeMap, path.element.transform.baseVal);
+            return getPathData(map, path, 'getLine', ['x1', 'y1', 'x2', 'y2'], freezeMap, path.transform);
         case 'rect':
-            return getPathData(map, path, 'getRect', ['width', 'height', 'x', 'y'], freezeMap, path.element.transform.baseVal);
+            return getPathData(map, path, 'getRect', ['width', 'height', 'x', 'y'], freezeMap, path.transform);
     }
     return undefined;
 }

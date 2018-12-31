@@ -231,7 +231,7 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
             columnEnd.push(node.box.right);
         }
         if (columns.length > 1 && columns[0].length === node.length) {
-            const mainData = Object.assign(Grid.createDataAttribute(), { columnCount: columnBalance ? columns[0].length : columns.length });
+            const mainData = { ...Grid.createDataAttribute(), columnCount: columnBalance ? columns[0].length : columns.length };
             node.duplicate().forEach(item => node.remove(item) && item.hide());
             for (let l = 0, count = 0; l < columns.length; l++) {
                 let spacer = 0;
@@ -239,7 +239,7 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                     const item = columns[l][m];
                     if (!(<any> item).spacer) {
                         item.parent = node;
-                        const data: GridCellData<T> = Object.assign(Grid.createDataCellAttribute(), item.data(EXT_NAME.GRID, 'cellData') || {});
+                        const data: GridCellData<T> = Object.assign(Grid.createDataCellAttribute(), item.data(EXT_NAME.GRID, 'cellData'));
                         if (columnBalance) {
                             data.rowStart = m === 0;
                             data.rowEnd = m === columns[l].length - 1;
