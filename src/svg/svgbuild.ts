@@ -1,6 +1,6 @@
-import { SvgPathCommand } from './types/svg';
+import { SvgPathCommand, SvgTransform } from './types/svg';
 
-import { applyMatrixX, applyMatrixY, getRadiusY } from './lib/util';
+import { applyMatrixX, applyMatrixY, createTransform, getRadiusY } from './lib/util';
 
 import $color = squared.lib.color;
 import $dom = squared.lib.dom;
@@ -26,13 +26,23 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result !== '' ? result : `${tagName}_${++NAME_GRAPHICS[tagName]}`;
     }
 
-    public static applyTransforms(transform: SVGTransformList, points: Point[], origin?: Point) {
+    public static applyTransforms(transform: SvgTransform[] | SVGTransformList, points: Point[], origin?: Point | null) {
         const result: Point[] = [];
         for (const pt of points) {
             result.push({ x: pt.x, y: pt.y });
         }
-        for (let i = transform.numberOfItems - 1; i >= 0; i--) {
-            const item = transform.getItem(i);
+        let items: SvgTransform[];
+        if (transform instanceof SVGTransformList) {
+            items = [];
+            for (let i = transform.numberOfItems - 1; i >= 0; i--) {
+                const item = transform.getItem(i);
+                items.push(createTransform(item.type, item.matrix, item.angle));
+            }
+        }
+        else {
+            items = transform.slice().reverse();
+        }
+        for (const item of items) {
             let x1 = 0;
             let y1 = 0;
             let x2 = 0;
@@ -42,20 +52,32 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             if (origin) {
                 switch (item.type) {
                     case SVGTransform.SVG_TRANSFORM_SCALE:
-                        x1 += origin.x;
-                        y2 += origin.y;
+                        if (item.origin.x) {
+                            x1 += origin.x;
+                        }
+                        if (item.origin.y) {
+                            y2 += origin.y;
+                        }
                         break;
                     case SVGTransform.SVG_TRANSFORM_SKEWX:
-                        y1 -= origin.y;
+                        if (item.origin.y) {
+                            y1 -= origin.y;
+                        }
                         break;
                     case SVGTransform.SVG_TRANSFORM_SKEWY:
-                        x2 -= origin.x;
+                        if (item.origin.x) {
+                            x2 -= origin.x;
+                        }
                         break;
                     case SVGTransform.SVG_TRANSFORM_ROTATE:
-                        x2 -= origin.x;
-                        y1 -= origin.y;
-                        x3 = origin.x + getRadiusY(item.angle, origin.x);
-                        y3 = origin.y + getRadiusY(item.angle, origin.y);
+                        if (item.origin.x) {
+                            x2 -= origin.x;
+                            x3 = origin.x + getRadiusY(item.angle, origin.x);
+                        }
+                        if (item.origin.y) {
+                            y1 -= origin.y;
+                            y3 = origin.y + getRadiusY(item.angle, origin.y);
+                        }
                         break;
                 }
             }

@@ -10,23 +10,6 @@ export interface SvgViewBox {
     height: number;
 }
 
-export interface SvgTransformData {
-    operations: number[];
-    translateX: number;
-    translateY: number;
-    scaleX: number;
-    scaleY: number;
-    skewX: number;
-    skewY: number;
-    rotateAngle: number;
-    rotateOriginX?: number;
-    rotateOriginY?: number;
-    matrixSkewX?: DOMMatrix;
-    matrixSkewY?: DOMMatrix;
-    matrixRotate?: DOMMatrix;
-    origin?: Point;
-}
-
 export interface SvgLinearGradient extends Gradient {
     x1: number;
     y1: number;
@@ -77,5 +60,24 @@ export interface SvgPathBaseVal {
     y: number | null;
     width: number | null;
     height: number | null;
-    points: Point[] | null;
+    points: SVGPointList | Point[] | null;
+}
+
+export interface SvgTransform {
+    type: number;
+    matrix: SvgMatrix | DOMMatrix;
+    angle: number;
+    origin: {
+        x: boolean;
+        y: boolean;
+    };
+}
+
+export interface SvgMatrix {
+    a: number;
+    b: number;
+    c: number;
+    d: number;
+    e: number;
+    f: number;
 }

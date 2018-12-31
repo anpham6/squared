@@ -33,6 +33,7 @@ declare global {
             function cssParent(element: Element | null, attr: string, ...styles: string[]): boolean;
             function cssFromParent(element: Element | null, attr: string): boolean;
             function cssAttribute(element: Element, attr: string, computed?: boolean): string;
+            function cssInline(element: Element, attr: string): string;
             function getBackgroundPosition(value: string, dimension: RectDimensions, dpi: number, fontSize: number, leftPerspective?: boolean, percent?: boolean): RectPosition;
             function getFirstChildElement(elements: Element | null, lineBreak?: boolean): Element | null;
             function getLastChildElement(elements: Element | null, lineBreak?: boolean): Element | null;
@@ -87,8 +88,6 @@ declare global {
             function repeat(many: number, value?: string): string;
             function indexOf(value: string, ...terms: string[]): number;
             function lastIndexOf(value: string, char?: string): string;
-            function minArray(list: number[]): number;
-            function maxArray(list: number[]): number;
             function hasSameValue(obj1: {}, obj2: {}, ...attrs: string[]): boolean;
             function searchObject(obj: StringMap, value: string | StringMap): any[][];
             function hasValue(value: any): boolean;
@@ -96,13 +95,14 @@ declare global {
             function withinFraction(lower: number, upper: number): boolean;
             function assignWhenNull(destination: {}, source: {}): void;
             function defaultWhenNull(options: {}, ...attrs: string[]): void;
-            function partition<T>(list: T[], predicate: IteratorPredicate<T, boolean>): [T[], T[]];
+            function minArray(list: number[]): number;
+            function maxArray(list: number[]): number;
+            function partitionArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): [T[], T[]];
             function retainArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): void;
             function spliceArray<T>(list: T[], item: T): boolean;
             function flatArray<T>(list: any[]): T[];
             function flatMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[];
-            function sortAsc<T>(list: T[], ...attrs: string[]): T[];
-            function sortDesc<T>(list: T[], ...attrs: string[]): T[];
+            function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]): T[];
         }
 
         namespace xml {

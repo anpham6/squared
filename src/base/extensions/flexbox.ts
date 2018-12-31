@@ -9,8 +9,6 @@ import Extension from '../extension';
 import Node from '../node';
 import NodeList from '../nodelist';
 
-import $util = squared.lib.util;
-
 export default abstract class Flexbox<T extends Node> extends Extension<T> {
     public static createDataAttribute<T extends Node>(children: T[]): FlexboxData<T> {
         return {
@@ -102,10 +100,10 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
         else {
             if (pageFlow.some(item => item.flexbox.order !== 0)) {
                 if (mainData.directionReverse) {
-                    $util.sortDesc(node.children, 'flexbox.order');
+                    node.sort((a, b) => a.flexbox.order <= b.flexbox.order ? 1 : -1);
                 }
                 else {
-                    $util.sortAsc(node.children, 'flexbox.order');
+                    node.sort((a, b) => a.flexbox.order >= b.flexbox.order ? 1 : -1);
                 }
             }
             if (mainData.rowDirection) {

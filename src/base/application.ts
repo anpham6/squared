@@ -736,7 +736,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 }
                 node.saveAsInitial();
             }
-            $util.sortAsc(this.processing.cache.children, 'depth', 'id');
+            $util.sortArray(this.processing.cache.children, true, 'depth', 'id');
             for (const ext of this.extensions) {
                 ext.afterInit(documentRoot);
             }

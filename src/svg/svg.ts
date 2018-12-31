@@ -9,7 +9,7 @@ import SvgImage from './svgimage';
 import SvgPath from './svgpath';
 import SvgUse from './svguse';
 
-import { getHrefTarget, isSvgImage, isSvgShape, isVisible } from './lib/util';
+import { getHrefTarget, isSvgImage, isSvgShape, isSvgVisible } from './lib/util';
 
 import $dom = squared.lib.dom;
 
@@ -33,7 +33,7 @@ export default class Svg extends squared.lib.base.Container<SvgGroup> implements
         super();
         this.name = SvgBuild.setName(element);
         this.animate = SvgElement.toAnimateList(element);
-        this.visible = isVisible(element);
+        this.visible = isSvgVisible(element);
         this.init();
     }
 

@@ -5,23 +5,6 @@ const NUMERALS = [
     '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'
 ];
 
-function sort<T>(list: T[], asc: 1 | 2, ...attrs: string[]) {
-    return list.sort((a, b) => {
-        for (const attr of attrs) {
-            const result = compareObject(a, b, attr, true);
-            if (result && result[0] !== result[1]) {
-                if (asc === 1) {
-                    return result[0] > result[1] ? 1 : -1;
-                }
-                else {
-                    return result[0] < result[1] ? 1 : -1;
-                }
-            }
-        }
-        return 0;
-    });
-}
-
 function compareObject(obj1: {}, obj2: {}, attr: string, numeric: boolean) {
     const namespaces = attr.split('.');
     let current1: any = obj1;
@@ -107,7 +90,7 @@ export function convertFloat(value: string) {
 export function convertPX(value: string, dpi: number, fontSize: number): string {
     if (value) {
         if (isNumber(value)) {
-            return `${Math.round(value)}px`;
+            return `${value}px`;
         }
         else {
             value = value.trim();
@@ -352,20 +335,6 @@ export function lastIndexOf(value: string, char = '/') {
     return value.substring(value.lastIndexOf(char) + 1);
 }
 
-export function minArray(list: number[]) {
-    if (list.length) {
-        return Math.min.apply(null, list) as number;
-    }
-    return Number.MAX_VALUE;
-}
-
-export function maxArray(list: number[]) {
-    if (list.length) {
-        return Math.max.apply(null, list) as number;
-    }
-    return Number.MAX_VALUE * -1;
-}
-
 export function hasSameValue(obj1: {}, obj2: {}, ...attrs: string[]) {
     for (const attr of attrs) {
         const value = compareObject(obj1, obj2, attr, false);
@@ -459,7 +428,21 @@ export function defaultWhenNull(options: {}, ...attrs: string[]) {
     }
 }
 
-export function partition<T>(list: T[], predicate: IteratorPredicate<T, boolean>): [T[], T[]] {
+export function minArray(list: number[]) {
+    if (list.length) {
+        return Math.min.apply(null, list) as number;
+    }
+    return Number.MAX_VALUE;
+}
+
+export function maxArray(list: number[]) {
+    if (list.length) {
+        return Math.max.apply(null, list) as number;
+    }
+    return Number.MAX_VALUE * -1;
+}
+
+export function partitionArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): [T[], T[]] {
     const valid: T[] = [];
     const invalid: T[] = [];
     for (let i = 0; i < list.length; i++) {
@@ -502,10 +485,19 @@ export function flatMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[
     return list.map((item: T, index) => predicate(item, index)).filter((item: U) => hasValue(item));
 }
 
-export function sortAsc<T>(list: T[], ...attrs: string[]) {
-    return sort<T>(list, 1, ...attrs);
-}
-
-export function sortDesc<T>(list: T[], ...attrs: string[]) {
-    return sort<T>(list, 2, ...attrs);
+export function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]) {
+    return list.sort((a, b) => {
+        for (const attr of attrs) {
+            const result = compareObject(a, b, attr, true);
+            if (result && result[0] !== result[1]) {
+                if (ascending) {
+                    return result[0] > result[1] ? 1 : -1;
+                }
+                else {
+                    return result[0] < result[1] ? 1 : -1;
+                }
+            }
+        }
+        return 0;
+    });
 }

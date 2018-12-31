@@ -315,13 +315,31 @@ export function cssAttribute(element: Element, attr: string, computed = false) {
         return attribute.value.trim();
     }
     else {
+        attr = convertCamelCase(attr);
         const node = getElementAsNode<T>(element);
         let value = '';
         if (node) {
             value = node.cssInitial(attr);
         }
-        return value || computed && getStyle(element)[convertCamelCase(attr)] as string || '';
+        else {
+            value = cssInline(element, attr);
+        }
+        return value || computed && getStyle(element)[attr] as string || '';
     }
+}
+
+export function cssInline(element: Element, attr: string) {
+    let value = '';
+    if (typeof element['style'] === 'object') {
+        value = element['style'][attr];
+    }
+    if (!value) {
+        const styleMap = getElementCache(element, 'styleMap');
+        if (styleMap) {
+            value = styleMap[attr];
+        }
+    }
+    return value;
 }
 
 export function getBackgroundPosition(value: string, dimension: RectDimensions, dpi: number, fontSize: number, leftPerspective = false, percent = false) {

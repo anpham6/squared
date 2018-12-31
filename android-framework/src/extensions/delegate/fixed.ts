@@ -68,11 +68,11 @@ export default class Fixed<T extends View> extends squared.base.Extension<T> {
             procedure: $enum.NODE_PROCEDURE.NONPOSITIONAL,
             resource: $enum.NODE_RESOURCE.BOX_STYLE | $enum.NODE_RESOURCE.ASSET
         });
-        const [normal, nested] = $util.partition(getFixedNodes(node), item => item.absoluteParent === node);
+        const [normal, nested] = $util.partitionArray(getFixedNodes(node), item => item.absoluteParent === node);
         normal.push(container);
         const children = [
-            ...$util.sortAsc(normal, 'zIndex', 'id'),
-            ...$util.sortAsc(nested, 'zIndex', 'id')
+            ...$util.sortArray(normal, true, 'zIndex', 'id'),
+            ...$util.sortArray(nested, true, 'zIndex', 'id')
         ] as T[];
         node.duplicate().forEach((item: T) => {
             if (!children.includes(item)) {

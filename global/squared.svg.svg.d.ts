@@ -1,4 +1,4 @@
-import { SvgDefs, SvgPathCommand } from '../src/svg/types/svg';
+import { SvgDefs, SvgMatrix, SvgPathCommand, SvgTransform } from '../src/svg/types/svg';
 
 import Container = squared.lib.base.Container;
 
@@ -9,7 +9,6 @@ declare global {
             readonly element: SVGGraphicsElement;
             readonly name: string;
             readonly visible: boolean;
-            readonly transform: SVGTransformList;
         }
 
         interface Svg extends Container<SvgGroup>, SvgBase {
@@ -30,7 +29,7 @@ declare global {
 
         class SvgBuild {
             public static setName(element: SVGGraphicsElement): string;
-            public static applyTransforms(transform: SVGTransformList, points: Point[], origin?: Point): Point[];
+            public static applyTransforms(transform: SvgTransform[] | SVGTransformList, points: Point[], origin?: Point | null): Point[];
             public static toPointList(points: SVGPointList): Point[];
             public static toCoordinateList(value: string): number[];
             public static toPathCommandList(value: string): SvgPathCommand[];

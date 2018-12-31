@@ -5,7 +5,7 @@ import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 import SvgPath from './svgpath';
 
-import { getLeastCommonMultiple, getTransformOrigin, isVisible, sortNumberAsc } from './lib/util';
+import { getLeastCommonMultiple, getTransformOrigin, isSvgVisible, sortNumberAsc } from './lib/util';
 
 import $util = squared.lib.util;
 
@@ -725,7 +725,7 @@ export default class SvgElement implements squared.svg.SvgElement {
 
     constructor(public readonly element: SVGGraphicsElement) {
         this.name = SvgBuild.setName(element);
-        this.visible = isVisible(element);
+        this.visible = isSvgVisible(element);
         this.animate = SvgElement.toAnimateList(element);
         if (this.drawable) {
             const path = new SvgPath(element);
@@ -744,10 +744,6 @@ export default class SvgElement implements squared.svg.SvgElement {
         if (this.path && this.animate.length) {
             SvgElement.synchronizeAnimations(this.element, this.animate, useKeyTime, this.path);
         }
-    }
-
-    get transform() {
-        return this.element.transform.baseVal;
     }
 
     get drawable() {

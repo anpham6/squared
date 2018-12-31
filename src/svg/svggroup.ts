@@ -2,7 +2,7 @@ import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 import SvgElement from './svgelement';
 
-import { isVisible } from './lib/util';
+import { isSvgVisible } from './lib/util';
 
 export default class SvgGroup extends squared.lib.base.Container<SvgElement> implements squared.svg.SvgGroup {
     public animate: SvgAnimation[];
@@ -14,16 +14,12 @@ export default class SvgGroup extends squared.lib.base.Container<SvgElement> imp
         super();
         this.name = SvgBuild.setName(element);
         this.animate = SvgElement.toAnimateList(element);
-        this.visible = isVisible(element);
+        this.visible = isSvgVisible(element);
     }
 
     public synchronize(useKeyTime = true) {
         if (this.animate.length) {
             SvgElement.synchronizeAnimations(this.element, this.animate, useKeyTime);
         }
-    }
-
-    get transform() {
-        return this.element.transform.baseVal;
     }
 }

@@ -30,6 +30,7 @@ GitHub
 &nbsp;&nbsp;&nbsp;&gt; node app.js  
   
 * Open Browser: http://localhost:3000/demos/index.html
+
 ```javascript
 <script src="/dist/squared.min.js"></script>
 <script src="/dist/squared.base.min.js"></script>

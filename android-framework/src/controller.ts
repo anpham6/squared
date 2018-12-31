@@ -529,9 +529,9 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     }
                 }
             }
-            ordered.push(...$util.sortAsc(below, 'zIndex', 'id'));
+            ordered.push(...$util.sortArray(below, true, 'zIndex', 'id'));
             ordered.push(...middle);
-            ordered.push(...$util.sortAsc(above, 'zIndex', 'id'));
+            ordered.push(...$util.sortArray(above, true, 'zIndex', 'id'));
             return ordered;
         }
         return [];
@@ -584,7 +584,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 const children = node.renderChildren.filter(item => !item.positioned) as T[];
                 if (children.length) {
                     if (node.layoutConstraint) {
-                        const [pageFlow, absolute] = $util.partition(children, item => item.pageFlow);
+                        const [pageFlow, absolute] = $util.partitionArray(children, item => item.pageFlow);
                         const bottomParent = Math.max(absolute.length ? $util.maxArray(node.renderChildren.map(item => item.linear.bottom)) : 0, node.box.bottom);
                         for (const item of absolute) {
                             if (!item.positionAuto && (item.documentParent === item.absoluteParent || item.position === 'fixed')) {
@@ -1295,7 +1295,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         let rowWidth = 0;
         let rowPreviousLeft: T | undefined;
         let rowPreviousBottom: T | undefined;
-        const [right, left] = $util.partition(children, item => item.float === 'right');
+        const [right, left] = $util.partitionArray(children, item => item.float === 'right');
         sortHorizontalFloat(left);
         [left, right].forEach((segment, index) => {
             const alignParent = index === 0 ? 'left' : 'right';

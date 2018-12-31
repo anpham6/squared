@@ -1,4 +1,4 @@
-import { partition } from '../util';
+import { partitionArray } from '../util';
 
 export default class Container<T> implements squared.lib.base.Container<T>, Iterable<T> {
     private _children: T[] = [];
@@ -99,7 +99,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     }
 
     public partition(predicate: IteratorPredicate<T, boolean>): [T[], T[]] {
-        return partition(this._children, predicate);
+        return partitionArray(this._children, predicate);
     }
 
     public sort(predicate: (a: T, b: T) => number) {
