@@ -1,8 +1,8 @@
-import { Constraint, LocalSettings } from './application';
+import { Constraint, LocalSettings } from './node';
 
 declare global {
     namespace android.base {
-        export interface View extends squared.base.Node {
+        interface View extends squared.base.Node {
             anchored: boolean;
             readonly constraint: Constraint;
             readonly localSettings: LocalSettings;
@@ -30,15 +30,15 @@ declare global {
             combine(...objs: string[]): string[];
         }
 
-        export class View implements View {
+        class View implements View {
             public static documentBody(): View;
             public static getCustomizationValue(api: number, tagName: string, obj: string, attr: string): string;
             public static getControlName(containerType: number): string;
             constructor(id: number, element?: Element | null, afterInit?: SelfWrapped<View, void>);
         }
 
-        export class ViewGroup<T extends View> extends View {}
+        class ViewGroup<T extends View> extends View {}
     }
 }
 
-export {};
+export = android.base.View;

@@ -1,6 +1,5 @@
 import { ExtensionResult } from '../../src/base/types/application';
-
-import { ViewAttribute } from '../../android-framework/src/types/application';
+import { ViewAttribute } from '../../android-framework/src/types/node';
 
 import $const = squared.base.lib.constant;
 import $enum = squared.base.lib.enumeration;

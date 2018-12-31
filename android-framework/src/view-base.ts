@@ -1,4 +1,4 @@
-import { Constraint, LocalSettings } from './types/application';
+import { Constraint, LocalSettings } from './types/node';
 
 import { AXIS_ANDROID, CONTAINER_ANDROID, ELEMENT_ANDROID, LAYOUT_ANDROID, RESERVED_JAVA } from './lib/constant';
 import { API_ANDROID, DEPRECATED_ANDROID, FunctionResult } from './customizations';

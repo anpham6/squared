@@ -2,7 +2,7 @@ import { SessionData } from '../../../src/base/types/application';
 
 declare global {
     namespace android.base {
-        export interface File<T extends View> extends squared.base.File<T> {
+        interface File<T extends View> extends squared.base.File<T> {
             layoutAllToXml(data: SessionData<squared.base.NodeList<T>>, saveToDisk?: boolean): {};
             resourceAllToXml(saveToDisk?: boolean): {};
             resourceStringToXml(saveToDisk?: boolean): string[];
@@ -16,8 +16,8 @@ declare global {
             resourceAnimatorToXml(saveToDisk?: boolean): string[];
         }
 
-        export class File<T extends View> implements File<T> {}
+        class File<T extends View> implements File<T> {}
     }
 }
 
-export {};
+export = android.base.File;

@@ -30,4 +30,4 @@ declare global {
     }
 }
 
-export {};
+export = squared.base.Resource;

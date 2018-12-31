@@ -51,4 +51,4 @@ declare global {
     }
 }
 
-export {};
+export = squared.base.Application;

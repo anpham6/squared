@@ -1,4 +1,4 @@
-import { BackgroundGradient } from '../../types/resource';
+import { BackgroundGradient } from '../../types/node';
 
 import { CONTAINER_NODE } from '../../lib/enumeration';
 

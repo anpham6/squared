@@ -45,4 +45,4 @@ declare global {
     }
 }
 
-export {};
+export = squared.base.Extension;

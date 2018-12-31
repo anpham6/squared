@@ -1,14 +1,14 @@
 import { UserSettingsAndroid } from './application';
-import { BackgroundGradient } from './resource';
+import { BackgroundGradient } from './node';
 
 declare global {
     namespace android.base {
-        export interface Resource<T extends View> extends squared.base.Resource<T> {
+        interface Resource<T extends View> extends squared.base.Resource<T> {
             readonly userSettings: UserSettingsAndroid;
             addStyleTheme(template: string, data: ExternalData, options: ExternalData): void;
         }
 
-        export class Resource<T extends View> implements Resource<T> {
+        class Resource<T extends View> implements Resource<T> {
             public static createBackgroundGradient<T extends View>(node: T, gradients: Gradient[], path?: squared.svg.SvgPath): BackgroundGradient[];
             public static formatOptions(options: ExternalData, numberAlias?: boolean): ExternalData;
             public static getOptionArray(element: HTMLSelectElement): (string[] | null)[];
@@ -21,4 +21,4 @@ declare global {
     }
 }
 
-export {};
+export = android.base.Resource;

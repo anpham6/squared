@@ -38,4 +38,4 @@ declare global {
     }
 }
 
-export {};
+export = squared.base.Controller;
