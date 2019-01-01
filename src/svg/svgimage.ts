@@ -1,9 +1,6 @@
-import { SvgTransform } from './types/object';
-
-import SvgBuild from './svgbuild';
 import SvgElement from './svgelement';
 
-import { applyMatrixX, applyMatrixY, getTransform } from './lib/util';
+import { applyMatrixX, applyMatrixY } from './lib/util';
 
 const $util = squared.lib.util;
 
@@ -12,18 +9,18 @@ export default class SvgImage extends SvgElement implements squared.svg.SvgImage
     public y: number;
     public width: number;
     public height: number;
-    public href = '';
+    public href: string;
 
-    private _transform: SvgTransform[] | undefined;
-    private _transformed = false;
-
-    constructor(public readonly element: SVGImageElement) {
+    constructor(
+        public readonly element: SVGImageElement | SVGUseElement,
+        href = '')
+    {
         super(element);
         this.x = element.x.baseVal.value;
         this.y = element.y.baseVal.value;
         this.width = element.width.baseVal.value;
         this.height = element.height.baseVal.value;
-        this.href =  $util.resolvePath(element.href.baseVal);
+        this.href = element instanceof SVGUseElement ? href : $util.resolvePath(element.href.baseVal);
     }
 
     public transformRect() {
@@ -70,34 +67,5 @@ export default class SvgImage extends SvgElement implements squared.svg.SvgImage
             this.transform = skewXY;
             this.transformed = skewXY.length === 0;
         }
-    }
-
-    get drawable() {
-        return false;
-    }
-
-    set transform(value) {
-        this._transform = value;
-    }
-    get transform() {
-        if (this._transform === undefined) {
-            this._transform = getTransform(this.element) || SvgBuild.toTransformList(this.element.transform.baseVal);
-        }
-        return this._transform;
-    }
-
-    set transformed(value) {
-        this._transformed = value;
-        if (!value) {
-            this._transform = undefined;
-        }
-        else {
-            if (this._transform !== undefined) {
-                this._transform.length = 0;
-            }
-        }
-    }
-    get transformed() {
-        return this._transformed;
     }
 }

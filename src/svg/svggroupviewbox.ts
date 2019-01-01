@@ -6,7 +6,7 @@ export default class SvgGroupViewBox extends SvgGroup implements squared.svg.Svg
     public width: number;
     public height: number;
 
-    constructor(public readonly element: SVGSVGElement | SVGUseElement) {
+    constructor(public readonly element: SVGSVGElement) {
         super(element);
         this.x = element.x.baseVal.value;
         this.y = element.y.baseVal.value;

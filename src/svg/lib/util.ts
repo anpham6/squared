@@ -102,6 +102,19 @@ export function isSvgVisible(element: SVGGraphicsElement) {
     return value !== 'hidden' && value !== 'collapse' && $dom.cssAttribute(element, 'display', true) !== 'none';
 }
 
+export function parseNumberList(value: string) {
+    const result: number[] = [];
+    const pattern = /-?[\d.]+/g;
+    let digit: RegExpExecArray | null;
+    while ((digit = pattern.exec(value)) !== null) {
+        const digitValue = parseFloat(digit[0]);
+        if (!isNaN(digitValue)) {
+            result.push(digitValue);
+        }
+    }
+    return result;
+}
+
 export function getTransformMatrix(element: SVGGraphicsElement): SvgMatrix | undefined {
     const match = new RegExp(REGEX_TRANSFORM.MATRIX).exec($dom.getStyle(element, true).transform || '');
     if (match) {

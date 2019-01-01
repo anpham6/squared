@@ -6,14 +6,9 @@ declare global {
     namespace squared.svg {
         interface SvgBase {
             animate: SvgAnimation[];
+            visible: boolean;
             readonly element: SVGGraphicsElement;
             readonly name: string;
-            readonly visible: boolean;
-        }
-
-        interface SvgTransformable {
-            transform: SvgTransform[];
-            transformed: boolean;
         }
 
         interface Svg extends Container<SvgGroup>, SvgBase {
@@ -33,15 +28,21 @@ declare global {
         }
 
         class SvgBuild {
-            public static setName(element?: SVGGraphicsElement): string;
             public static applyTransforms(transform: SvgTransform[], points: Point[] | PointR[], origin?: Point): Point[];
             public static toPointList(points: SVGPointList): Point[];
-            public static toCoordinateList(value: string): number[];
+            public static canTransformSkew(values: SvgPathCommand[]): boolean;
+            public static toAbsolutePointList(values: SvgPathCommand[]): PointR[];
             public static toPathCommandList(value: string): SvgPathCommand[];
-            public static createColorStops(element: SVGGradientElement): ColorStop[];
-            public static createAnimations(element: SVGGraphicsElement): SvgAnimation[];
-            public static fromCoordinateList(values: number[]): Point[];
+            public static fromNumberList(values: number[]): Point[];
+            public static fromAbsolutePointList(values: SvgPathCommand[], points: Point[] | PointR[]): SvgPathCommand[];
             public static fromPathCommandList(commands: SvgPathCommand[]): string;
+        }
+
+        class SvgCreate {
+            public static setName(element?: SVGGraphicsElement): string;
+            public static toColorStopList(element: SVGGradientElement): ColorStop[];
+            public static toAnimateList(element: SVGGraphicsElement): SvgAnimation[];
+            public static toTransformList(transform: SVGTransformList): SvgTransform[];
         }
     }
 }

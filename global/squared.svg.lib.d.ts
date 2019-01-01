@@ -10,6 +10,7 @@ declare global {
             function isSvgShape(element: Element): element is SVGGraphicsElement;
             function isSvgImage(element: Element): element is SVGImageElement;
             function isSvgVisible(element: SVGGraphicsElement): boolean;
+            function parseNumberList(value: string): number[];
             function createTransform(type: number, matrix: SvgMatrix | DOMMatrix, angle?: number, x?: boolean, y?: boolean): SvgTransform;
             function getTransform(element: SVGGraphicsElement): SvgTransform[] | undefined;
             function getTransformOrigin(element: SVGGraphicsElement): Point | undefined;

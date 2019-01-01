@@ -1,16 +1,12 @@
-import { SvgViewBox } from '../src/svg/types/object';
+import { SvgTransform, SvgViewBox } from '../src/svg/types/object';
 
 import Container = squared.lib.base.Container;
 
 declare global {
     namespace squared.svg {
         interface SvgGroup extends SvgBase, Container<SvgElement> {
+            transform: SvgTransform[] | undefined;
             synchronize(useKeyTime?: boolean): void;
-        }
-
-        interface SvgUse extends SvgGroupViewBox {
-            path: SvgPath | undefined;
-            setPath(value: SvgPath): void;
         }
 
         interface SvgGroupViewBox extends SvgViewBox, SvgGroup {}
@@ -20,11 +16,7 @@ declare global {
         }
 
         class SvgGroupViewBox implements SvgGroupViewBox {
-            constructor(element: SVGSVGElement | SVGUseElement);
-        }
-
-        class SvgUse implements SvgUse {
-            constructor(element: SVGUseElement, d: string);
+            constructor(element: SVGSVGElement);
         }
     }
 }

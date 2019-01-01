@@ -1,14 +1,15 @@
-import { SvgPathBaseVal, SvgTransform } from './types/object';
+import { SvgPathBaseVal } from './types/object';
 
 import SvgBuild from './svgbuild';
+import SvgElement from './svgelement';
 
-import { getTransform, getTransformOrigin } from './lib/util';
+import { getTransformOrigin } from './lib/util';
 
 const $color = squared.lib.color;
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
-export default class SvgPath implements squared.svg.SvgPath {
+export default class SvgPath extends SvgElement implements squared.svg.SvgPath {
     public static getLine(x1: number, y1: number, x2 = 0, y2 = 0, checkValid = false) {
         return x1 !== 0 || y1 !== 0 || x2 !== 0 || y2 !== 0 || !checkValid ? `M${x1},${y1} L${x2},${y2}` : '';
     }
@@ -37,9 +38,9 @@ export default class SvgPath implements squared.svg.SvgPath {
     public opacity = 1;
     public color = '';
     public fillRule = '';
-    public fill = '';
+    public fill!: string;
     public fillOpacity = '';
-    public stroke = '';
+    public stroke!: string;
     public strokeWidth = '';
     public strokeOpacity = '';
     public strokeLinecap = '';
@@ -48,6 +49,7 @@ export default class SvgPath implements squared.svg.SvgPath {
     public clipPath = '';
     public clipRule = '';
     public baseVal: SvgPathBaseVal = {
+        d: null,
         cx: null,
         cy: null,
         r: null,
@@ -64,13 +66,11 @@ export default class SvgPath implements squared.svg.SvgPath {
         points: null
     };
 
-    private _transform: SvgTransform[] | undefined;
-    private _transformed = false;
-
     constructor(
         public readonly element: SVGGraphicsElement,
         public d = '')
     {
+        super(element);
         this.init();
     }
 
@@ -119,7 +119,31 @@ export default class SvgPath implements squared.svg.SvgPath {
         if (this.d === '') {
             switch (element.tagName) {
                 case 'path': {
-                    this.d = $dom.cssAttribute(element, 'd');
+                    this.baseVal.d = $dom.cssAttribute(element, 'd');
+                    const transform = this.transform;
+                    if (transform.length) {
+                        let commands = SvgBuild.toPathCommandList(this.baseVal.d);
+                        if (commands.length) {
+                            const points = SvgBuild.toAbsolutePointList(commands);
+                            const [skewXY, transformable] = SvgBuild.canTransformSkew(commands) ? [[], transform] : $util.partitionArray(transform, item => item.type === SVGTransform.SVG_TRANSFORM_SKEWX || item.type === SVGTransform.SVG_TRANSFORM_SKEWY);
+                            const result = SvgBuild.applyTransforms(transformable, points, getTransformOrigin(element));
+                            if (result.length) {
+                                commands = SvgBuild.fromAbsolutePointList(commands, result);
+                                if (commands.length) {
+                                    this.d = SvgBuild.fromPathCommandList(commands);
+                                    if (skewXY.length === 0) {
+                                        this.transformed = true;
+                                    }
+                                    else {
+                                        this.transform = skewXY;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (this.d === '') {
+                        this.d = this.baseVal.d;
+                    }
                     break;
                 }
                 case 'circle':
@@ -246,30 +270,5 @@ export default class SvgPath implements squared.svg.SvgPath {
             this.strokeLinejoin = $dom.cssAttribute(element, 'stroke-linejoin', true);
             this.strokeMiterlimit = $dom.cssAttribute(element, 'stroke-miterlimit', true);
         }
-    }
-
-    set transform(value) {
-        this._transform = value;
-    }
-    get transform() {
-        if (this._transform === undefined) {
-            this._transform = getTransform(this.element) || SvgBuild.toTransformList(this.element.transform.baseVal);
-        }
-        return this._transform;
-    }
-
-    set transformed(value) {
-        this._transformed = value;
-        if (!value) {
-            this._transform = undefined;
-        }
-        else {
-            if (this._transform !== undefined) {
-                this._transform.length = 0;
-            }
-        }
-    }
-    get transformed() {
-        return this._transformed;
     }
 }

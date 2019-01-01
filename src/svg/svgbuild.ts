@@ -1,51 +1,8 @@
 import { SvgPathCommand, SvgTransform } from './types/object';
 
-import { applyMatrixX, applyMatrixY, createTransform, getRadiusY } from './lib/util';
-
-const $color = squared.lib.color;
-const $dom = squared.lib.dom;
-
-const NAME_GRAPHICS = new Map<string, number>();
+import { applyMatrixX, applyMatrixY, getRadiusY, parseNumberList } from './lib/util';
 
 export default class SvgBuild implements squared.svg.SvgBuild {
-    public static setName(element?: SVGGraphicsElement) {
-        if (element) {
-            let result = '';
-            let tagName: string | undefined;
-            if (element.id) {
-                if (!NAME_GRAPHICS.has(element.id)) {
-                    result = element.id;
-                }
-                tagName = element.id;
-            }
-            else {
-                tagName = element.tagName;
-            }
-            let index = NAME_GRAPHICS.get(tagName) || 0;
-            if (result !== '') {
-                NAME_GRAPHICS.set(tagName, index);
-                return result;
-            }
-            else {
-                NAME_GRAPHICS.set(tagName, ++index);
-                return `${tagName}_${index}`;
-            }
-        }
-        else {
-            NAME_GRAPHICS.clear();
-            return '';
-        }
-    }
-
-    public static toTransformList(transform: SVGTransformList) {
-        const result: SvgTransform[] = [];
-        for (let i = 0; i < transform.numberOfItems; i++) {
-            const item = transform.getItem(i);
-            result.push(createTransform(item.type, item.matrix, item.angle));
-        }
-        return result;
-    }
-
     public static applyTransforms(transform: SvgTransform[], points: Point[] | PointR[], origin?: Point) {
         const result: PointR[] = [];
         for (const pt of points as PointR[]) {
@@ -110,6 +67,20 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
+    public static canTransformSkew(values: SvgPathCommand[]) {
+        return !values.some(item => {
+            switch (item.command.toUpperCase()) {
+                case 'A':
+                case 'C':
+                case 'S':
+                case 'Q':
+                case 'T':
+                    return true;
+            }
+            return false;
+        });
+    }
+
     public static toPointList(points: SVGPointList) {
         const result: Point[] = [];
         for (let j = 0; j < points.numberOfItems; j++) {
@@ -119,14 +90,45 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
-    public static toCoordinateList(value: string) {
-        const result: number[] = [];
-        const pattern = /-?[\d.]+/g;
-        let digit: RegExpExecArray | null;
-        while ((digit = pattern.exec(value)) !== null) {
-            const digitValue = parseFloat(digit[0]);
-            if (!isNaN(digitValue)) {
-                result.push(digitValue);
+    public static toAbsolutePointList(values: SvgPathCommand[]) {
+        const result: PointR[] = [];
+        let x = 0;
+        let y = 0;
+        for (let i = 0; i < values.length; i++) {
+            const item = values[i];
+            for (let j = 0; j < item.coordinates.length; j += 2) {
+                if (item.relative) {
+                    x += item.coordinates[j];
+                    y += item.coordinates[j + 1];
+                }
+                else {
+                    x = item.coordinates[j];
+                    y = item.coordinates[j + 1];
+                }
+                const pt: PointR = { x, y };
+                if (item.command.toUpperCase() === 'A') {
+                    pt.rx = item.radiusX;
+                    pt.ry = item.radiusY;
+                }
+                result.push(pt);
+            }
+            if (item.relative) {
+                switch (item.command) {
+                    case 'h':
+                    case 'v':
+                        const previous = values[i - 1];
+                        if (previous && previous.command === 'M') {
+                            previous.coordinates.push(...item.coordinates);
+                            values.splice(i, 1);
+                            i--;
+                        }
+                        item.command = 'M';
+                        break;
+                    default:
+                        item.command = item.command.toUpperCase();
+                        break;
+                }
+                item.relative = false;
             }
         }
         return result;
@@ -142,10 +144,10 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 break;
             }
             command[2] = (command[2] || '').trim();
-            const coordinates = this.toCoordinateList(command[2]);
+            const coordinates = parseNumberList(command[2]);
             const previous = result[result.length - 1] as SvgPathCommand | undefined;
             const previousCommand = previous ? previous.command.toUpperCase() : '';
-            const previousPoint = previous ? previous.points[previous.points.length - 1] : undefined;
+            let previousPoint = previous ? previous.points[previous.points.length - 1] : undefined;
             let radiusX: number | undefined;
             let radiusY: number | undefined;
             let xAxisRotation: number | undefined;
@@ -153,9 +155,14 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             let sweepFlag: number | undefined;
             switch (command[1].toUpperCase()) {
                 case 'M':
+                    if (result.length === 0) {
+                        command[1] = 'M';
+                    }
                 case 'L':
                     if (coordinates.length >= 2) {
-                        coordinates.length = 2;
+                        if (coordinates.length % 2 !== 0) {
+                            coordinates.length--;
+                        }
                         break;
                     }
                     else {
@@ -183,7 +190,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     }
                 case 'Z':
                     if (result.length) {
-                        coordinates.push(...result[0].coordinates);
+                        coordinates.push(...result[0].coordinates.slice(0, 2));
                         command[1] = 'Z';
                         break;
                     }
@@ -243,6 +250,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     if (relative && previousPoint) {
                         x += previousPoint.x;
                         y += previousPoint.y;
+                        previousPoint = { x, y };
                     }
                     points.push({ x, y });
                 }
@@ -262,27 +270,58 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
-    public static createColorStops(element: SVGGradientElement) {
-        const result: ColorStop[] = [];
-        for (const stop of Array.from(element.getElementsByTagName('stop'))) {
-            const color = $color.parseRGBA($dom.cssAttribute(stop, 'stop-color'), $dom.cssAttribute(stop, 'stop-opacity'));
-            if (color && color.visible) {
-                result.push({
-                    color: color.valueRGBA,
-                    offset: $dom.cssAttribute(stop, 'offset'),
-                    opacity: color.alpha
-                });
-            }
-        }
-        return result;
-    }
-
-    public static fromCoordinateList(values: number[]) {
+    public static fromNumberList(values: number[]) {
         const result: Point[] = [];
         for (let i = 0; i < values.length; i += 2) {
             result.push({ x: values[i], y: values[i + 1] });
         }
         return result.length % 2 === 0 ? result : [];
+    }
+
+    public static fromAbsolutePointList(values: SvgPathCommand[], points: Point[] | PointR[]) {
+        const absolute = points.slice();
+        invalidPoint: {
+            for (const item of values) {
+                switch (item.command.toUpperCase()) {
+                    case 'M':
+                    case 'L':
+                    case 'H':
+                    case 'V':
+                    case 'C':
+                    case 'S':
+                    case 'Q':
+                    case 'T': {
+                        for (let i = 0; i < item.coordinates.length; i += 2) {
+                            const pt = absolute.shift();
+                            if (pt) {
+                                item.coordinates[i] = pt.x;
+                                item.coordinates[i + 1] = pt.y;
+                            }
+                            else {
+                                values = [];
+                                break invalidPoint;
+                            }
+                        }
+                        break;
+                    }
+                    case 'A': {
+                        const pt = <PointR> absolute.shift();
+                        if (pt && pt.rx !== undefined && pt.ry !== undefined) {
+                            item.coordinates[0] = pt.x;
+                            item.coordinates[1] = pt.y;
+                            item.radiusX = pt.rx;
+                            item.radiusY = pt.ry;
+                        }
+                        else {
+                            values = [];
+                            break invalidPoint;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        return values;
     }
 
     public static fromPathCommandList(commands: SvgPathCommand[]) {

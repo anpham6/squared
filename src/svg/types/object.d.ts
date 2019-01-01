@@ -47,6 +47,7 @@ export interface SvgPathCommand {
 }
 
 export interface SvgPathBaseVal {
+    d: string | null;
     cx: number | null;
     cy: number | null;
     r: number | null;
