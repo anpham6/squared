@@ -5,7 +5,7 @@ import Container = squared.lib.base.Container;
 declare global {
     namespace squared.svg {
         interface SvgGroup extends SvgBase, Container<SvgElement> {
-            transform: SvgTransform[] | undefined;
+            transform?: SvgTransform[];
             synchronize(useKeyTime?: boolean): void;
         }
 

@@ -1,6 +1,5 @@
 import SvgAnimate from './svganimate';
-
-import { parseNumberList } from './lib/util';
+import SvgBuild from './svgbuild';
 
 export default class SvgAnimateTransform extends SvgAnimate implements squared.svg.SvgAnimateTransform {
     public static toRotateList(values: string[]) {
@@ -9,7 +8,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                 return [null, null, null];
             }
             else {
-                const segment = parseNumberList(value);
+                const segment = SvgBuild.toCoordinateList(value);
                 if (segment.length === 1 || segment.length === 3) {
                     return segment;
                 }
@@ -25,7 +24,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                 return [null, null];
             }
             else {
-                const segment = parseNumberList(value);
+                const segment = SvgBuild.toCoordinateList(value);
                 if (segment.length === 1) {
                     return [segment[0], segment[0]];
                 }
@@ -45,7 +44,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                 return [null, null];
             }
             else {
-                const segment = parseNumberList(value);
+                const segment = SvgBuild.toCoordinateList(value);
                 if (segment.length === 1) {
                     return [segment[0], y];
                 }

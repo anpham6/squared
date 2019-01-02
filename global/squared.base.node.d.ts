@@ -28,10 +28,10 @@ declare global {
             multiLine: number;
             overflow: number;
             documentParent: Node;
-            parent: Node | undefined;
-            renderParent: Node | undefined;
-            companion: Node | undefined;
-            renderAs: Node | undefined;
+            parent?: Node;
+            renderParent?: Node;
+            companion?: Node;
+            renderAs?: Node;
             readonly localSettings: EnvironmentSettings;
             readonly excludeSection: number;
             readonly excludeProcedure: number;

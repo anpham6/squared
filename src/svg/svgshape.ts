@@ -1,4 +1,4 @@
-import { SvgTransform } from './types/object';
+import { KeyTimeValue, SvgTransform } from './types/object';
 
 import SvgAnimate from './svganimate';
 import SvgAnimateTransform from './svganimatetransform';
@@ -7,17 +7,12 @@ import SvgBuild from './svgbuild';
 import SvgPath from './svgpath';
 import SvgElement from './svgelement';
 
-import { getLeastCommonMultiple, getTransformOrigin, sortNumberAsc } from './lib/util';
+import { getLeastCommonMultiple, getTransformOrigin, sortNumber } from './lib/util';
 
 type TimelineIndex = Map<number, number>;
 type TimelineMap = ObjectMap<TimelineIndex>;
 type KeyTimeMap = Map<number, Map<string, number>>;
 type FreezeMap = ObjectMap<KeyTimeValue<number>>;
-
-type KeyTimeValue<T> = {
-    time: number;
-    value: T;
-};
 
 const $util = squared.lib.util;
 
@@ -88,7 +83,7 @@ function convertKeyTimeFraction(map: KeyTimeMap, total: number) {
     return result;
 }
 
-function getPathData(map: KeyTimeMap, path: SvgPath, methodName: string, attrs: string[], freezeMap?: FreezeMap, transform?: SvgTransform[]) {
+function getPathData(map: KeyTimeMap, path: SvgPath, methodName: string, attrs: string[], transform: SvgTransform[], freezeMap?: FreezeMap) {
     const result: KeyTimeValue<string>[] = [];
     for (const [time, data] of map.entries()) {
         const values: number[] = [];
@@ -107,6 +102,17 @@ function getPathData(map: KeyTimeMap, path: SvgPath, methodName: string, attrs: 
             let value: string | undefined;
             if (transform && transform.length) {
                 switch (methodName) {
+                    case 'getCircle':
+                    case 'getEllipse':
+                        const transformable = SvgBuild.filterTransformSkew(transform)[0];
+                        if (transformable.length) {
+                            const transformed = SvgBuild.applyTransforms(transformable, getEllipsePoints(values, methodName === 'getCircle'), getTransformOrigin(path.element));
+                            if (transformed.length) {
+                                const pt = <Required<PointR>> transformed[0];
+                                value = SvgPath.getEllipse(pt.x, pt.y, pt.rx, pt.ry);
+                            }
+                        }
+                        break;
                     case 'getLine':
                         value = SvgPath.getPolyline(SvgBuild.applyTransforms(transform, getLinePoints(values), getTransformOrigin(path.element)));
                         break;
@@ -125,6 +131,10 @@ function getPathData(map: KeyTimeMap, path: SvgPath, methodName: string, attrs: 
         }
     }
     return result;
+}
+
+function getEllipsePoints(values: number[], circle: boolean): Required<PointR>[] {
+    return [{ x: values[0], y: values[1], rx: values[2], ry: values[circle ? 2 : 3] }];
 }
 
 function getLinePoints(values: number[]): Point[] {
@@ -194,13 +204,13 @@ function getItemValue(element: SVGGraphicsElement, path: SvgPath | undefined, an
 function getKeyTimePath(map: KeyTimeMap, path: SvgPath, freezeMap?: FreezeMap) {
     switch (path.element.tagName) {
         case 'circle':
-            return getPathData(map, path, 'getCircle', ['cx', 'cy', 'r'], freezeMap);
+            return getPathData(map, path, 'getCircle', ['cx', 'cy', 'r'], path.transform, freezeMap);
         case 'ellipse':
-            return getPathData(map, path, 'getEllipse', ['cx', 'cy', 'rx', 'ry'], freezeMap);
+            return getPathData(map, path, 'getEllipse', ['cx', 'cy', 'rx', 'ry'], path.transform, freezeMap);
         case 'line':
-            return getPathData(map, path, 'getLine', ['x1', 'y1', 'x2', 'y2'], freezeMap, path.transform);
+            return getPathData(map, path, 'getLine', ['x1', 'y1', 'x2', 'y2'], path.transform, freezeMap);
         case 'rect':
-            return getPathData(map, path, 'getRect', ['width', 'height', 'x', 'y'], freezeMap, path.transform);
+            return getPathData(map, path, 'getRect', ['width', 'height', 'x', 'y'], path.transform, freezeMap);
     }
     return undefined;
 }
@@ -490,7 +500,7 @@ export default class SvgShape extends SvgElement implements squared.svg.SvgShape
                         }
                     }
                 }
-                const keyTimes = sortNumberAsc(Array.from(new Set(keyTimesRepeating)));
+                const keyTimes = sortNumber(Array.from(new Set(keyTimesRepeating)));
                 const repeatingResult: TimelineMap = {};
                 for (const attr in repeatingMap) {
                     const baseMap = repeatingMap[attr];
@@ -543,7 +553,7 @@ export default class SvgShape extends SvgElement implements squared.svg.SvgShape
                         while (maxTime < indefiniteDurationTotal);
                     }
                 }
-                keyTimes = sortNumberAsc(Array.from(new Set(keyTimes)));
+                keyTimes = sortNumber(Array.from(new Set(keyTimes)));
                 for (const attr in indefiniteResult) {
                     const baseMap = indefiniteResult[attr];
                     for (let i = 1; i < keyTimes.length; i++) {
@@ -685,7 +695,7 @@ export default class SvgShape extends SvgElement implements squared.svg.SvgShape
         return animate;
     }
 
-    public path: SvgPath | undefined;
+    public path?: SvgPath;
 
     constructor(public readonly element: SVGGraphicsElement) {
         super(element);

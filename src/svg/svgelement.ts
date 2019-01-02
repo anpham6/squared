@@ -11,7 +11,7 @@ export default abstract class SvgElement implements squared.svg.SvgElement {
 
     public readonly name: string;
 
-    private _transform: SvgTransform[] | undefined;
+    private _transform?: SvgTransform[];
     private _transformed = false;
 
     constructor(public readonly element: SVGGraphicsElement) {

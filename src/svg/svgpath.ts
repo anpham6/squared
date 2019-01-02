@@ -125,7 +125,7 @@ export default class SvgPath extends SvgElement implements squared.svg.SvgPath {
                         let commands = SvgBuild.toPathCommandList(this.baseVal.d);
                         if (commands.length) {
                             const points = SvgBuild.toAbsolutePointList(commands);
-                            const [skewXY, transformable] = SvgBuild.canTransformSkew(commands) ? [[], transform] : $util.partitionArray(transform, item => item.type === SVGTransform.SVG_TRANSFORM_SKEWX || item.type === SVGTransform.SVG_TRANSFORM_SKEWY);
+                            const [transformable, skewXY] = SvgBuild.canTransformSkew(commands) ? [transform, []] : SvgBuild.filterTransformSkew(transform);
                             const result = SvgBuild.applyTransforms(transformable, points, getTransformOrigin(element));
                             if (result.length) {
                                 commands = SvgBuild.fromAbsolutePointList(commands, result);
@@ -173,7 +173,7 @@ export default class SvgPath extends SvgElement implements squared.svg.SvgPath {
                         const points: Required<PointR>[] = [
                             { x: this.baseVal.cx, y: this.baseVal.cy, rx, ry }
                         ];
-                        const [skewXY, transformable] = $util.partitionArray(transform, item => item.type === SVGTransform.SVG_TRANSFORM_SKEWX || item.type === SVGTransform.SVG_TRANSFORM_SKEWY);
+                        const [transformable, skewXY] = SvgBuild.filterTransformSkew(transform);
                         const result = SvgBuild.applyTransforms(transformable, points, getTransformOrigin(element));
                         if (result.length) {
                             const pt = <Required<PointR>> result[0];

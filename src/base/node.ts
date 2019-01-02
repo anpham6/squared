@@ -25,24 +25,24 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public positioned = false;
     public renderExtension = new Set<Extension<T>>();
     public controlId = '';
-    public companion: T | undefined;
+    public companion?: T;
 
     public abstract readonly localSettings: EnvironmentSettings;
     public abstract readonly renderChildren: T[];
 
     protected abstract _namespaces: Set<string>;
 
-    protected abstract readonly _boxAdjustment: BoxModel;
-    protected abstract readonly _boxReset: BoxModel;
-
     protected _cached: CachedValue<T> = {};
     protected _styleMap: StringMap = {};
-    protected _box: RectDimensions | undefined;
-    protected _bounds: RectDimensions | undefined;
-    protected _linear: RectDimensions | undefined;
-    protected _controlName: string | undefined;
-    protected _renderParent: T | undefined;
-    protected _documentParent: T | undefined;
+    protected _box?: RectDimensions;
+    protected _bounds?: RectDimensions;
+    protected _linear?: RectDimensions;
+    protected _controlName?: string;
+    protected _renderParent?: T;
+    protected _documentParent?: T;
+
+    protected abstract readonly _boxAdjustment: BoxModel;
+    protected abstract readonly _boxReset: BoxModel;
 
     protected readonly _initial: InitialData<T> = {
         iteration: -1,
@@ -51,10 +51,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     };
 
     private _initialized = false;
-    private _parent: T | undefined;
-    private _renderAs: T | undefined;
+    private _parent?: T;
+    private _renderAs?: T;
     private _renderDepth = -1;
-    private _renderPositionId: string | undefined;
+    private _renderPositionId?: string;
     private _data = {};
     private _excludeSection = 0;
     private _excludeProcedure = 0;

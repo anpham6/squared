@@ -8,13 +8,14 @@ declare global {
         }
 
         interface SvgShape extends SvgElement {
-            path: SvgPath | undefined;
+            path?: SvgPath;
             setPath(value: SvgPath | string): void;
             synchronize(useKeyTime?: boolean): void;
         }
 
         interface SvgImage extends SvgElement, SvgViewBox {
             href: string;
+            residualAngle?: number;
             transformRect(): void;
         }
 

@@ -82,3 +82,8 @@ export interface SvgMatrix {
     e: number;
     f: number;
 }
+
+export type KeyTimeValue<T> = {
+    time: number;
+    value: T;
+};

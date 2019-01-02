@@ -1,4 +1,4 @@
-import { sortNumberAsc } from './lib/util';
+import { sortNumber } from './lib/util';
 
 const $util = squared.lib.util;
 
@@ -64,7 +64,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
             this.begin.length = 0;
         }
         else if (begin !== '') {
-            this.begin = sortNumberAsc(begin.split(';').map(value => SvgAnimation.convertClockTime(value)));
+            this.begin = sortNumber(begin.split(';').map(value => SvgAnimation.convertClockTime(value)));
         }
         if (dur === ''  || dur === 'indefinite') {
             this.duration = -1;

@@ -1,6 +1,8 @@
 import { SvgPathCommand, SvgTransform } from './types/object';
 
-import { applyMatrixX, applyMatrixY, getRadiusY, parseNumberList } from './lib/util';
+import { applyMatrixX, applyMatrixY, getRadiusY } from './lib/util';
+
+const $util = squared.lib.util;
 
 export default class SvgBuild implements squared.svg.SvgBuild {
     public static applyTransforms(transform: SvgTransform[], points: Point[] | PointR[], origin?: Point) {
@@ -81,6 +83,23 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         });
     }
 
+    public static filterTransformSkew(transform: SvgTransform[]) {
+        return $util.partitionArray(transform, item => item.type !== SVGTransform.SVG_TRANSFORM_SKEWX && item.type !== SVGTransform.SVG_TRANSFORM_SKEWY);
+    }
+
+    public static toCoordinateList(value: string) {
+        const result: number[] = [];
+        const pattern = /-?[\d.]+/g;
+        let digit: RegExpExecArray | null;
+        while ((digit = pattern.exec(value)) !== null) {
+            const digitValue = parseFloat(digit[0]);
+            if (!isNaN(digitValue)) {
+                result.push(digitValue);
+            }
+        }
+        return result;
+    }
+
     public static toPointList(points: SVGPointList) {
         const result: Point[] = [];
         for (let j = 0; j < points.numberOfItems; j++) {
@@ -144,7 +163,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 break;
             }
             command[2] = (command[2] || '').trim();
-            const coordinates = parseNumberList(command[2]);
+            const coordinates = SvgBuild.toCoordinateList(command[2]);
             const previous = result[result.length - 1] as SvgPathCommand | undefined;
             const previousCommand = previous ? previous.command.toUpperCase() : '';
             let previousPoint = previous ? previous.points[previous.points.length - 1] : undefined;

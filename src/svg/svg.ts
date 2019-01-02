@@ -28,7 +28,7 @@ export default class Svg extends squared.lib.base.Container<SvgGroup> implements
     private _viewBoxWidth = 0;
     private _viewBoxHeight = 0;
     private _opacity = 1;
-    private _transform: SvgTransform[] | undefined;
+    private _transform?: SvgTransform[];
 
     constructor(public readonly element: SVGSVGElement) {
         super();

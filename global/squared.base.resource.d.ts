@@ -5,7 +5,7 @@ declare global {
         interface Resource<T extends Node> extends AppHandler<T> {
             application: Application<T>;
             cache: NodeList<T>;
-            fileHandler: File<T> | undefined;
+            fileHandler?: File<T>;
             readonly userSettings: UserSettings;
             readonly stored: ResourceStoredMap;
             finalize(data: SessionData<NodeList<T>>): void;

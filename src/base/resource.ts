@@ -117,7 +117,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
         );
     }
 
-    public fileHandler: File<T> | undefined;
+    public fileHandler?: File<T>;
 
     protected constructor(
         public application: Application<T>,

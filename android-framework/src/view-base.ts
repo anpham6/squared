@@ -9,13 +9,11 @@ import { calculateBias, replaceRTL, stripId, validateString } from './lib/util';
 import $NodeList = squared.base.NodeList;
 import $Resource = squared.base.Resource;
 
-type T = squared.base.Node;
-
 const $enum = squared.base.lib.enumeration;
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
-function setLineHeight(node: T, lineHeight: number) {
+function setLineHeight<T extends squared.base.Node>(node: T, lineHeight: number) {
     const offset = lineHeight - (node.hasHeight ? node.height : node.bounds.height);
     if (offset > 0) {
         node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.floor(offset / 2) - (node.inlineVertical ? $util.convertInt(node.verticalAlign) : 0));
@@ -23,7 +21,7 @@ function setLineHeight(node: T, lineHeight: number) {
     }
 }
 
-export default (Base: Constructor<T>) => {
+export default (Base: Constructor<squared.base.Node>) => {
     return class View extends Base implements squared.base.Node {
         public static documentBody() {
             if (View._documentBody === undefined) {
@@ -52,7 +50,6 @@ export default (Base: Constructor<T>) => {
         private static _documentBody: View;
 
         public readonly renderChildren: View[] = [];
-
         public readonly constraint: Constraint = {
             horizontal: false,
             vertical: false,
@@ -61,9 +58,10 @@ export default (Base: Constructor<T>) => {
 
         protected _namespaces = new Set(['android', 'app']);
         protected _controlName = '';
-        protected _renderParent: View | undefined;
-        protected _documentParent: View | undefined;
         protected _fontSize = 0;
+        protected _renderParent?: View;
+        protected _documentParent?: View;
+
         protected readonly _boxAdjustment: BoxModel = $dom.newBoxModel();
         protected readonly _boxReset: BoxModel = $dom.newBoxModel();
 

@@ -70,14 +70,12 @@ export default class Application<T extends Node> implements squared.base.Applica
     public readonly builtInExtensions: ObjectMap<Extension<T>> = {};
     public readonly extensions = new Set<Extension<T>>();
     public readonly parseElements = new Set<HTMLElement>();
-
     public readonly session: AppSession<T, NodeList<T>> = {
         cache: new NodeList<T>(),
         image: new Map<string, ImageAsset>(),
         renderQueue: new Map<string, string[]>(),
         excluded: new NodeList<T>(),
     };
-
     public readonly processing: AppProcessing<T, NodeList<T>> = {
         cache: new NodeList<T>(),
         depthMap: new Map<number, Map<string, string>>(),
@@ -86,8 +84,8 @@ export default class Application<T extends Node> implements squared.base.Applica
         excluded: new NodeList<T>()
     };
 
-    private _userSettings: UserSettings | undefined;
     private _renderPosition = new Map<number, { parent: T; children: T[] }>();
+    private _userSettings?: UserSettings;
 
     private readonly _views: FileAsset[] = [];
     private readonly _includes: FileAsset[] = [];

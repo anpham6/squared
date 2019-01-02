@@ -29,8 +29,10 @@ declare global {
 
         class SvgBuild {
             public static applyTransforms(transform: SvgTransform[], points: Point[] | PointR[], origin?: Point): Point[];
-            public static toPointList(points: SVGPointList): Point[];
             public static canTransformSkew(values: SvgPathCommand[]): boolean;
+            public static filterTransformSkew(transform: SvgTransform[]): [SvgTransform[], SvgTransform[]];
+            public static toPointList(points: SVGPointList): Point[];
+            public static toCoordinateList(value: string): number[];
             public static toAbsolutePointList(values: SvgPathCommand[]): PointR[];
             public static toPathCommandList(value: string): SvgPathCommand[];
             public static fromNumberList(values: number[]): Point[];

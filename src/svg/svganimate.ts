@@ -1,7 +1,7 @@
 import SvgAnimation from './svganimation';
 import SvgPath from './svgpath';
 
-import { sortNumberAsc } from './lib/util';
+import { sortNumber } from './lib/util';
 
 const $util = squared.lib.util;
 
@@ -23,14 +23,14 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public by = '';
     public values: string[] = [];
     public keyTimes: number[] = [];
-    public end: number | undefined;
     public repeatDuration: number;
     public calcMode = '';
     public additiveSum = false;
     public accumulateSum = false;
     public fillFreeze = false;
-    public parentPath: SvgPath | undefined;
-    public sequential: NameValue | undefined;
+    public end?: number;
+    public parentPath?: SvgPath;
+    public sequential?: NameValue;
 
     private _repeatCount: number;
 
@@ -95,7 +95,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         if (this.begin.length) {
             const end = this.getAttribute('end');
             if (end !== '') {
-                const times = sortNumberAsc(end.split(';').map(value => SvgAnimation.convertClockTime(value)));
+                const times = sortNumber(end.split(';').map(value => SvgAnimation.convertClockTime(value)));
                 if (times.length && (this.begin.length === 1 || this.begin[this.begin.length - 1] !== this.end || times[0] === 0)) {
                     this.end = times[0];
                     this.begin = this.begin.filter(value => value < times[0]);

@@ -11,7 +11,7 @@ import View from '../../view';
 import { getXmlNs } from '../../lib/util';
 
 if (!squared.svg) {
-    squared.svg = { lib: {} } as any;
+    squared.svg = {} as any;
 }
 
 import $SvgAnimate = squared.svg.SvgAnimate;
@@ -26,7 +26,6 @@ import $SvgImage = squared.svg.SvgImage;
 import $SvgPath = squared.svg.SvgPath;
 import $SvgShape = squared.svg.SvgShape;
 import $SvgUse = squared.svg.SvgUse;
-import $utilS = squared.svg.lib.util;
 
 interface SvgTransformData {
     operations: number[];
@@ -570,7 +569,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                         for (let i = 0; i < values.length; i++) {
                                                                             const value = values[i];
                                                                             if (value !== '') {
-                                                                                const points = $SvgBuild.fromNumberList($utilS.parseNumberList(value));
+                                                                                const points = $SvgBuild.fromNumberList($SvgBuild.toCoordinateList(value));
                                                                                 if (points.length) {
                                                                                     values[i] = item.parentElement.tagName === 'polygon' ? $SvgPath.getPolygon(points) : $SvgPath.getPolyline(points);
                                                                                 }
@@ -989,9 +988,8 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                             top: y !== 0 ? $util.formatPX(y) : '',
                             src: Resource.addImage({ mdpi: item.href })
                         };
-                        const transform = createTransformData(item.element);
-                        if (transform.rotation !== 0) {
-                            data.fromDegrees = transform.rotation.toString();
+                        if (item.residualAngle !== undefined) {
+                            data.fromDegrees = item.residualAngle.toString();
                             data.visible = item.visible ? 'true' : 'false';
                             rotate.push(data);
                         }

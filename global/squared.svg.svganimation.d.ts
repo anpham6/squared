@@ -14,7 +14,6 @@ declare global {
         interface SvgAnimate extends SvgAnimation {
             from: string;
             by: string;
-            end: number | undefined;
             values: string[];
             keyTimes: number[];
             repeatCount: number;
@@ -23,8 +22,9 @@ declare global {
             additiveSum: boolean;
             accumulateSum: boolean;
             fillFreeze: boolean;
-            parentPath: SvgPath | undefined;
-            sequential: NameValue | undefined;
+            end?: number;
+            parentPath?: SvgPath;
+            sequential?: NameValue;
             readonly element: SVGAnimateElement;
         }
 
@@ -34,7 +34,7 @@ declare global {
 
         interface SvgAnimateMotion extends SvgAnimate {
             path: string;
-            mpath: SVGGraphicsElement | undefined;
+            mpath?: SVGGraphicsElement;
             keyPoints: number[];
             rotate: number;
             rotateAuto: boolean;

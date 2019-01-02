@@ -1,3 +1,4 @@
+import SvgBuild from './svgbuild';
 import SvgElement from './svgelement';
 
 import { applyMatrixX, applyMatrixY } from './lib/util';
@@ -10,6 +11,7 @@ export default class SvgImage extends SvgElement implements squared.svg.SvgImage
     public width: number;
     public height: number;
     public href: string;
+    public residualAngle?: number;
 
     constructor(
         public readonly element: SVGImageElement | SVGUseElement,
@@ -28,7 +30,7 @@ export default class SvgImage extends SvgElement implements squared.svg.SvgImage
         if (transform.length) {
             let x = this.x;
             let y = this.y;
-            const [skewXY, transformable] = $util.partitionArray(transform, item => item.type === SVGTransform.SVG_TRANSFORM_SKEWX || item.type === SVGTransform.SVG_TRANSFORM_SKEWY);
+            const [transformable, skewXY] = SvgBuild.filterTransformSkew(transform);
             transformable.reverse();
             for (let i = 0; i < transformable.length; i++) {
                 const item = transformable[i];
@@ -54,6 +56,12 @@ export default class SvgImage extends SvgElement implements squared.svg.SvgImage
                         }
                         if (matrix.d < 0) {
                             y += matrix.d * this.height;
+                        }
+                        if (this.residualAngle === undefined) {
+                            this.residualAngle = item.angle;
+                        }
+                        else {
+                            this.residualAngle += item.angle;
                         }
                         break;
                     case SVGTransform.SVG_TRANSFORM_TRANSLATE:

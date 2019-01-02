@@ -24,7 +24,7 @@ export default abstract class Extension<T extends Node> implements squared.base.
     public readonly subscribers = new Set<T>();
     public readonly subscribersChild = new Set<T>();
 
-    private _application: Application<T> | undefined;
+    private _application?: Application<T>;
 
     protected constructor(
         public readonly name: string,

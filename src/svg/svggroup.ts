@@ -13,7 +13,7 @@ export default class SvgGroup extends squared.lib.base.Container<SvgElement> imp
     public readonly visible: boolean;
     public readonly name: string;
 
-    private _transform: SvgTransform[] | undefined;
+    private _transform?: SvgTransform[];
 
     constructor(public readonly element: SVGGraphicsElement) {
         super();

@@ -6,7 +6,7 @@ const $util = squared.lib.util;
 
 export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.SvgAnimateMotion {
     public path = '';
-    public mpath: SVGGraphicsElement | undefined;
+    public mpath?: SVGGraphicsElement;
     public keyPoints: number[] = [];
     public rotate = 0;
     public rotateAuto = false;

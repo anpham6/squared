@@ -11,10 +11,10 @@ export default class Layout<T extends Node> extends squared.lib.base.Container<T
     public renderType = 0;
     public renderPosition = false;
 
-    private _floated: Set<string> | undefined;
-    private _cleared: Map<T, string> | undefined;
-    private _linearX: boolean | undefined;
-    private _linearY: boolean | undefined;
+    private _floated?: Set<string>;
+    private _cleared?: Map<T, string>;
+    private _linearX?: boolean;
+    private _linearY?: boolean;
 
     constructor(
         public parent: T,
