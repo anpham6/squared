@@ -1,4 +1,4 @@
-import { ExtensionResult } from '../types/application';
+import { ExtensionResult } from '../@types/application';
 
 import { EXT_NAME } from '../lib/constant';
 

@@ -1,4 +1,4 @@
-import { AppFramework, UserSettings } from './base/types/application';
+import { AppFramework, UserSettings } from './base/@types/application';
 
 import Container from './lib/base/container';
 

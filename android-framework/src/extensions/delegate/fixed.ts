@@ -1,4 +1,4 @@
-import { ExtensionResult } from '../../../../src/base/types/application';
+import { ExtensionResult } from '../../../../src/base/@types/application';
 
 import { CONTAINER_NODE } from '../../lib/enumeration';
 

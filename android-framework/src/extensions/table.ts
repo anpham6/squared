@@ -1,5 +1,5 @@
-import { ExtensionResult } from '../../../src/base/types/application';
-import { TableData } from '../../../src/base/types/extension';
+import { ExtensionResult } from '../../../src/base/@types/application';
+import { TableData } from '../../../src/base/@types/extension';
 
 import { CONTAINER_NODE } from '../lib/enumeration';
 

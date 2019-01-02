@@ -1,5 +1,5 @@
-import { ExtensionResult } from '../types/application';
-import { GridCellData, GridData } from '../types/extension';
+import { ExtensionResult } from '../@types/application';
+import { GridCellData, GridData } from '../@types/extension';
 
 import { EXT_NAME } from '../lib/constant';
 import { BOX_STANDARD } from '../lib/enumeration';

@@ -1,8 +1,8 @@
-import { FileAsset } from '../../../src/base/types/application';
-import { ViewAttribute } from './node';
+import { FileAsset } from '../../src/base/@types/application';
+import { ViewAttribute } from '../src/@types/node';
 
-import * as $const from '../lib/constant';
-import * as $enum from '../lib/enumeration';
+import * as $const from '../src/lib/constant';
+import * as $enum from '../src/lib/enumeration';
 
 declare global {
     namespace android.lib {

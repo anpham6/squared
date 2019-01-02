@@ -1,4 +1,4 @@
-import { AppHandler, ControllerSettings, LayoutResult, LayoutType, SessionData, UserSettings } from '../src/base/types/application';
+import { AppHandler, ControllerSettings, LayoutResult, LayoutType, SessionData, UserSettings } from '../base/@types/application';
 
 declare global {
     namespace squared.base {

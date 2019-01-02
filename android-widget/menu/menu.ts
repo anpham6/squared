@@ -1,5 +1,5 @@
-import { ExtensionResult } from '../../src/base/types/application';
-import { ViewAttribute } from '../../android-framework/src/types/node';
+import { ExtensionResult } from '../../src/base/@types/application';
+import { ViewAttribute } from '../../android-framework/src/@types/node';
 
 import $Resource = android.base.Resource;
 import $View = android.base.View;

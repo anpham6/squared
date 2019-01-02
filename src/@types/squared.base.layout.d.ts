@@ -1,4 +1,4 @@
-import { LayoutType } from '../src/base/types/application';
+import { LayoutType } from '../base/@types/application';
 
 import Container = squared.lib.base.Container;
 

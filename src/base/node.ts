@@ -1,5 +1,5 @@
-import { EnvironmentSettings } from './types/application';
-import { CachedValue, InitialData, Support } from './types/node';
+import { EnvironmentSettings } from './@types/application';
+import { CachedValue, InitialData, Support } from './@types/node';
 
 import { CSS_SPACING } from './lib/constant';
 import { APP_SECTION, BOX_STANDARD, CSS_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } from './lib/enumeration';

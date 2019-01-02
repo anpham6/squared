@@ -1,4 +1,4 @@
-import { ExtensionDependency, ExtensionResult } from '../src/base/types/application';
+import { ExtensionDependency, ExtensionResult } from '../base/@types/application';
 
 declare global {
     namespace squared.base {

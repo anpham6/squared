@@ -1,6 +1,6 @@
-import { ControllerSettings, LayoutType, SessionData } from '../../src/base/types/application';
-import { UserSettingsAndroid } from './types/application';
-import { ViewAttribute } from './types/node';
+import { ControllerSettings, LayoutType, SessionData } from '../../src/base/@types/application';
+import { UserSettingsAndroid } from './@types/application';
+import { ViewAttribute } from './@types/node';
 
 import { AXIS_ANDROID, BOX_ANDROID, CONTAINER_ANDROID, XMLNS_ANDROID } from './lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE, DENSITY_ANDROID } from './lib/enumeration';

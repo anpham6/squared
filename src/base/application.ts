@@ -1,4 +1,4 @@
-import { AppSession, AppProcessing, FileAsset, ImageAsset, LayoutResult, LayoutType, SessionData, UserSettings } from './types/application';
+import { AppSession, AppProcessing, FileAsset, ImageAsset, LayoutResult, LayoutType, SessionData, UserSettings } from './@types/application';
 
 import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } from './lib/enumeration';
 

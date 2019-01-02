@@ -1,4 +1,4 @@
-import { UserSettingsAndroid } from './types/application';
+import { UserSettingsAndroid } from './@types/application';
 
 const settings: UserSettingsAndroid = {
     builtInExtensions: [

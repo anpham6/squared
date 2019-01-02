@@ -1,4 +1,4 @@
-import { SvgPathBaseVal } from './types/object';
+import { SvgPathBaseVal } from './@types/object';
 
 import SvgBuild from './svgbuild';
 import SvgElement from './svgelement';

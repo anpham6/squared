@@ -1,4 +1,4 @@
-import { FileAsset, SessionData, UserSettings } from './types/application';
+import { FileAsset, SessionData, UserSettings } from './@types/application';
 
 import Node from './node';
 import NodeList from './nodelist';

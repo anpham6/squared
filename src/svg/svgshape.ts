@@ -1,4 +1,4 @@
-import { KeyTimeValue, SvgTransform } from './types/object';
+import { KeyTimeValue, SvgTransform } from './@types/object';
 
 import SvgAnimate from './svganimate';
 import SvgAnimateTransform from './svganimatetransform';

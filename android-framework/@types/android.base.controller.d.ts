@@ -1,5 +1,5 @@
-import { UserSettingsAndroid } from './application';
-import { ViewAttribute } from './node';
+import { UserSettingsAndroid } from '../src/@types/application';
+import { ViewAttribute } from '../src/@types/node';
 
 declare global {
     namespace android.base {

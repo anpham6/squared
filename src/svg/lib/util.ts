@@ -1,4 +1,4 @@
-import { SvgMatrix, SvgTransform } from '../types/object';
+import { SvgMatrix, SvgTransform } from '../@types/object';
 
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;

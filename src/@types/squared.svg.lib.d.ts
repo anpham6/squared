@@ -1,6 +1,6 @@
-import { SvgMatrix, SvgTransform } from '../src/svg/types/object';
+import { SvgMatrix, SvgTransform } from '../svg/@types/object';
 
-import * as $util from '../src/svg/lib/util';
+import * as $util from '../svg/lib/util';
 
 declare global {
     namespace squared.svg.lib {

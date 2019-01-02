@@ -1,4 +1,4 @@
-import { SvgPathCommand, SvgTransform } from './types/object';
+import { SvgPathCommand, SvgTransform } from './@types/object';
 
 import { applyMatrixX, applyMatrixY, getRadiusY } from './lib/util';
 

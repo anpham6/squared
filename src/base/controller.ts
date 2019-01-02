@@ -1,4 +1,4 @@
-import { ControllerSettings, LayoutResult, LayoutType, SessionData, UserSettings } from './types/application';
+import { ControllerSettings, LayoutResult, LayoutType, SessionData, UserSettings } from './@types/application';
 
 import Application from './application';
 import Layout from './layout';

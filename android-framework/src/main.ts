@@ -1,5 +1,5 @@
-import { AppFramework } from '../../src/base/types/application';
-import { UserSettingsAndroid } from './types/application';
+import { AppFramework } from '../../src/base/@types/application';
+import { UserSettingsAndroid } from './@types/application';
 
 import { EXT_ANDROID, XMLNS_ANDROID } from './lib/constant';
 import { API_ANDROID } from './customizations';

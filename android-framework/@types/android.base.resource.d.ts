@@ -1,5 +1,5 @@
-import { UserSettingsAndroid } from './application';
-import { BackgroundGradient } from './node';
+import { UserSettingsAndroid } from '../src/@types/application';
+import { BackgroundGradient } from '../src/@types/node';
 
 declare global {
     namespace android.base {

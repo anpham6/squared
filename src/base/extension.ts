@@ -1,4 +1,4 @@
-import { ExtensionDependency, ExtensionResult } from './types/application';
+import { ExtensionDependency, ExtensionResult } from './@types/application';
 
 import Application from './application';
 import Node from './node';

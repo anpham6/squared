@@ -1,5 +1,5 @@
-import { EnvironmentSettings } from '../src/base/types/application';
-import { AutoMargin, Support, VisibleStyle } from '../src/base/types/node';
+import { EnvironmentSettings } from '../base/@types/application';
+import { AutoMargin, Support, VisibleStyle } from '../base/@types/node';
 
 import Container = squared.lib.base.Container;
 

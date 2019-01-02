@@ -1,4 +1,4 @@
-import { SvgDefs, SvgLinearGradient, SvgRadialGradient, SvgTransform } from './types/object';
+import { SvgDefs, SvgLinearGradient, SvgRadialGradient, SvgTransform } from './@types/object';
 
 import SvgAnimation from './svganimation';
 import SvgCreate from './svgcreate';

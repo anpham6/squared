@@ -1,4 +1,4 @@
-import { SessionData } from '../../../src/base/types/application';
+import { SessionData } from '../../src/base/@types/application';
 
 declare global {
     namespace android.base {

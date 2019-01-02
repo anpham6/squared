@@ -16,8 +16,7 @@
     "downlevelIteration": true
   },
   "include": [
-    "global/**/*",
-    "android-framework/src/**/*",
+    "android-framework/**/*",
     "android-widget/**/*",
     "src/**/*"
   ],

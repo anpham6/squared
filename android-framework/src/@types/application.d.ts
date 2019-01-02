@@ -1,4 +1,4 @@
-import { UserSettings } from '../../../src/base/types/application';
+import { UserSettings } from '../../../src/base/@types/application';
 
 export interface UserSettingsAndroid extends UserSettings {
     targetAPI: number;

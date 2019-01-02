@@ -1,5 +1,5 @@
-import { FileAsset, SessionData } from '../../src/base/types/application';
-import { UserSettingsAndroid } from './types/application';
+import { FileAsset, SessionData } from '../../src/base/@types/application';
+import { UserSettingsAndroid } from './@types/application';
 
 import { BUILD_ANDROID } from './lib/enumeration';
 

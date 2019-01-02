@@ -1,4 +1,4 @@
-import { SvgTransform, SvgViewBox } from '../src/svg/types/object';
+import { SvgTransform, SvgViewBox } from '../svg/@types/object';
 
 import Container = squared.lib.base.Container;
 

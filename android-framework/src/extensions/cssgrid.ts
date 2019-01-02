@@ -1,5 +1,5 @@
-import { ExtensionResult } from '../../../src/base/types/application';
-import { CssGridCellData, CssGridData, CssGridDirectionData } from '../../../src/base/types/extension';
+import { ExtensionResult } from '../../../src/base/@types/application';
+import { CssGridCellData, CssGridData, CssGridDirectionData } from '../../../src/base/@types/extension';
 
 import { BOX_ANDROID, CONTAINER_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';

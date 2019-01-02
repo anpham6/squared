@@ -122,11 +122,11 @@ interface Gradient {
 }
 
 interface LinearGradient extends Gradient {
-    angle?: number;
+    angle: number;
 }
 
 interface RadialGradient extends Gradient {
-    shapePosition?: string[];
+    position: string[];
 }
 
 interface ColorStop {

@@ -1,6 +1,6 @@
-import { SvgLinearGradient, SvgRadialGradient } from '../../src/svg/types/object';
-import { UserSettingsAndroid } from './types/application';
-import { BackgroundGradient } from './types/node';
+import { SvgLinearGradient, SvgRadialGradient } from '../../src/svg/@types/object';
+import { UserSettingsAndroid } from './@types/application';
+import { BackgroundGradient } from './@types/node';
 
 import { EXT_ANDROID, RESERVED_JAVA } from './lib/constant';
 
@@ -103,8 +103,8 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                     else {
                         const radial = <RadialGradient> item;
                         let boxPosition: RectPosition | undefined;
-                        if (radial.shapePosition && radial.shapePosition.length > 1) {
-                            boxPosition = $dom.getBackgroundPosition(radial.shapePosition[1], node.bounds, node.dpi, node.fontSize, true, !hasStop);
+                        if (radial.position && radial.position.length > 1) {
+                            boxPosition = $dom.getBackgroundPosition(radial.position[1], node.bounds, node.dpi, node.fontSize, true, !hasStop);
                         }
                         if (hasStop) {
                             gradient.gradientRadius = node.bounds.width.toString();
@@ -132,21 +132,19 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                     }
                     else {
                         const linear = <LinearGradient> item;
-                        if (linear.angle !== undefined) {
-                            if (hasStop) {
-                                const x = Math.round(node.bounds.width / 2);
-                                const y = Math.round(node.bounds.height / 2);
-                                const util = squared.svg.lib.util;
-                                if (util) {
-                                    gradient.startX = Math.round(util.getRadiusX(linear.angle + 180, x) + x).toString();
-                                    gradient.startY = Math.round(util.getRadiusY(linear.angle + 180, y) + y).toString();
-                                    gradient.endX = Math.round(util.getRadiusX(linear.angle, x) + x).toString();
-                                    gradient.endY = Math.round(util.getRadiusY(linear.angle, y) + y).toString();
-                                }
+                        if (hasStop) {
+                            const x = Math.round(node.bounds.width / 2);
+                            const y = Math.round(node.bounds.height / 2);
+                            const util = squared.svg.lib.util;
+                            if (util) {
+                                gradient.startX = Math.round(util.getRadiusX(linear.angle + 180, x) + x).toString();
+                                gradient.startY = Math.round(util.getRadiusY(linear.angle + 180, y) + y).toString();
+                                gradient.endX = Math.round(util.getRadiusX(linear.angle, x) + x).toString();
+                                gradient.endY = Math.round(util.getRadiusY(linear.angle, y) + y).toString();
                             }
-                            else {
-                                gradient.angle = (Math.floor(linear.angle / 45) * 45).toString();
-                            }
+                        }
+                        else {
+                            gradient.angle = (Math.floor(linear.angle / 45) * 45).toString();
                         }
                     }
                     break;

@@ -1,4 +1,4 @@
-import { FileAsset, ResourceStoredMap, SessionData, UserSettings } from '../src/base/types/application';
+import { FileAsset, ResourceStoredMap, SessionData, UserSettings } from '../base/@types/application';
 
 declare global {
     namespace squared.base {

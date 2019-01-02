@@ -1,5 +1,5 @@
-import { ExtensionResult } from '../types/application';
-import { ListData } from '../types/extension';
+import { ExtensionResult } from '../@types/application';
+import { ListData } from '../@types/extension';
 
 import { EXT_NAME } from '../lib/constant';
 import { BOX_STANDARD, NODE_RESOURCE } from '../lib/enumeration';

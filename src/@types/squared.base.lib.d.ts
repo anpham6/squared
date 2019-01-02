@@ -1,5 +1,5 @@
-import * as $const from '../src/base/lib/constant';
-import * as $enum from '../src/base/lib/enumeration';
+import * as $const from '../base/lib/constant';
+import * as $enum from '../base/lib/enumeration';
 
 declare global {
     namespace squared.base.lib {

@@ -1,6 +1,6 @@
-import { ExtensionResult } from '../types/application';
-import { FlexboxData } from '../types/extension';
-import { InitialData } from '../types/node';
+import { ExtensionResult } from '../@types/application';
+import { FlexboxData } from '../@types/extension';
+import { InitialData } from '../@types/node';
 
 import { EXT_NAME } from '../lib/constant';
 import { NODE_ALIGNMENT } from '../lib/enumeration';

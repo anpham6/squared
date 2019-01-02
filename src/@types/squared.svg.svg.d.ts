@@ -1,4 +1,4 @@
-import { SvgDefs, SvgMatrix, SvgPathCommand, SvgTransform } from '../src/svg/types/object';
+import { SvgDefs, SvgMatrix, SvgPathCommand, SvgTransform } from '../svg/@types/object';
 
 import Container = squared.lib.base.Container;
 

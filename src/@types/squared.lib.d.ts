@@ -1,5 +1,5 @@
-import * as $dom from '../src/lib/dom';
-import * as $util from '../src/lib/util';
+import * as $dom from '../lib/dom';
+import * as $util from '../lib/util';
 
 declare global {
     namespace squared.lib {

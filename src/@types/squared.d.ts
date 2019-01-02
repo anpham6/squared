@@ -1,4 +1,4 @@
-import { UserSettings } from '../src/base/types/application';
+import { UserSettings } from '../base/@types/application';
 
 declare global {
     namespace squared {

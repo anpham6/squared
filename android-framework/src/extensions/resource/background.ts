@@ -1,5 +1,5 @@
-import { ImageAsset } from '../../../../src/base/types/application';
-import { BackgroundGradient } from '../../types/node';
+import { ImageAsset } from '../../../../src/base/@types/application';
+import { BackgroundGradient } from '../../@types/node';
 
 import { CONTAINER_NODE } from '../../lib/enumeration';
 

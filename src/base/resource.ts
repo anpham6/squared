@@ -1,4 +1,4 @@
-import { ResourceAssetMap, ResourceStoredMap, SessionData, UserSettings } from './types/application';
+import { ResourceAssetMap, ResourceStoredMap, SessionData, UserSettings } from './@types/application';
 
 import { NODE_RESOURCE } from './lib/enumeration';
 
@@ -255,7 +255,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                 else {
                                     gradient = <RadialGradient> {
                                         type: 'radial',
-                                        shapePosition: (() => {
+                                        position: (() => {
                                             const result = ['ellipse', 'center'];
                                             if (match[2]) {
                                                 const shape = match[2].split('at').map(item => item.trim());

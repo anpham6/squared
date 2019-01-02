@@ -1,4 +1,4 @@
-import { ExtensionResult } from '../../src/base/types/application';
+import { ExtensionResult } from '../../src/base/@types/application';
 
 import { WIDGET_NAME } from '../lib/constant';
 

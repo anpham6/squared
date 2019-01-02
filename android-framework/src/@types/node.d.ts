@@ -1,4 +1,4 @@
-import { EnvironmentSettings } from '../../../src/base/types/application';
+import { EnvironmentSettings } from '../../../src/base/@types/application';
 
 export interface LocalSettings extends EnvironmentSettings {
     targetAPI: number;

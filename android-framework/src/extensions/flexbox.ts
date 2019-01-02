@@ -1,6 +1,6 @@
-import { ExtensionResult } from '../../../src/base/types/application';
-import { FlexboxData } from '../../../src/base/types/extension';
-import { InitialData } from '../../../src/base/types/node';
+import { ExtensionResult } from '../../../src/base/@types/application';
+import { FlexboxData } from '../../../src/base/@types/extension';
+import { InitialData } from '../../../src/base/@types/node';
 
 import { AXIS_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';

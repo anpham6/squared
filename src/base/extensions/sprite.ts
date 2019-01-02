@@ -1,4 +1,4 @@
-import { ImageAsset } from '../types/application';
+import { ImageAsset } from '../@types/application';
 
 import { EXT_NAME } from '../lib/constant';
 

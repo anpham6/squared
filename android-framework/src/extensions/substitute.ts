@@ -1,4 +1,4 @@
-import { ExtensionResult } from '../../../src/base/types/application';
+import { ExtensionResult } from '../../../src/base/@types/application';
 
 import { EXT_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';

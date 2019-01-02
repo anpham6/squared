@@ -1,4 +1,4 @@
-import { SvgTransform } from './types/object';
+import { SvgTransform } from './@types/object';
 
 import SvgAnimation from './svganimation';
 import SvgCreate from './svgcreate';

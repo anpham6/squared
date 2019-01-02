@@ -1,4 +1,4 @@
-import { UserSettingsAndroid } from '../../types/application';
+import { UserSettingsAndroid } from '../../@types/application';
 
 import { BUILD_ANDROID } from '../../lib/enumeration';
 
