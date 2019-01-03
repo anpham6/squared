@@ -1,4 +1,5 @@
 import { ResourceAssetMap, ResourceStoredMap, SessionData, UserSettings } from './@types/application';
+import { LinearGradient, RadialGradient } from './@types/node';
 
 import { NODE_RESOURCE } from './lib/enumeration';
 
@@ -29,10 +30,6 @@ export default abstract class Resource<T extends Node> implements squared.base.R
         arrays: new Map(),
         fonts: new Map(),
         colors: new Map(),
-        styles: new Map(),
-        dimens: new Map(),
-        drawables: new Map(),
-        animators: new Map(),
         images: new Map()
     };
 
@@ -58,9 +55,12 @@ export default abstract class Resource<T extends Node> implements squared.base.R
     }
 
     public static getStoredName(asset: string, value: any) {
-        for (const [name, stored] of Resource.STORED[asset].entries()) {
-            if (JSON.stringify(value) === JSON.stringify(stored)) {
-                return name as string;
+        const stored: Map<string, any> = Resource.STORED[asset];
+        if (stored) {
+            for (const [name, data] of Resource.STORED[asset].entries()) {
+                if (JSON.stringify(value) === JSON.stringify(data)) {
+                    return name as string;
+                }
             }
         }
         return '';

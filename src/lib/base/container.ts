@@ -18,7 +18,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
                     return { done: false, value: list[i++] };
                 }
                 else {
-                    return { done: true, value: undefined } as any;
+                    return { done: true, value: undefined as any };
                 }
             }
         };

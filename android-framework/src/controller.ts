@@ -11,7 +11,7 @@ import Resource from './resource';
 import View from './view';
 import ViewGroup from './viewgroup';
 
-import { createAttribute, getXmlNs, replaceTab, replaceUnit } from './lib/util';
+import { createViewAttribute, getXmlNs, replaceTab, replaceUnit } from './lib/util';
 
 import $Layout = squared.base.Layout;
 import $NodeList = squared.base.NodeList;
@@ -699,7 +699,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
 
     public renderNodeGroup(layout: $Layout<T>) {
         const [node, parent, containerType, alignmentType] = [layout.node, layout.parent, layout.containerType, layout.alignmentType];
-        const options = createAttribute();
+        const options = createViewAttribute();
         let valid = false;
         switch (containerType) {
             case CONTAINER_NODE.LINEAR: {
@@ -1018,7 +1018,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     public renderSpace(depth: number, width: string, height = '', columnSpan = 0, rowSpan = 0, options?: ViewAttribute) {
-        options = createAttribute(options);
+        options = createViewAttribute(options);
         let percentWidth = '';
         let percentHeight = '';
         if ($util.isPercent(width)) {
@@ -1182,7 +1182,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         }
                     }
                     if (!found) {
-                        const options = createAttribute({
+                        const options = createViewAttribute({
                             android: {
                                 orientation: index === 0 ? AXIS_ANDROID.VERTICAL : AXIS_ANDROID.HORIZONTAL
                             },

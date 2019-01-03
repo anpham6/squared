@@ -88,60 +88,13 @@ interface BoxStyle extends BoxBorder {
     backgroundPositionY: string;
 }
 
-interface RGBA {
-    r: number;
-    g: number;
-    b: number;
-    a: number;
-}
-
-interface Color {
-    name: string;
-    hex: string;
-    rgba?: RGBA;
-    hsl?: {
-        h: number;
-        s: number;
-        l: number;
-    };
-}
-
-interface ColorData {
-    valueRGB: string;
-    valueRGBA: string;
-    valueARGB: string;
-    rgba: RGBA;
-    alpha: number;
-    opaque: boolean;
-    visible: boolean;
-}
-
 interface Gradient {
     type: string;
     colorStop: ColorStop[];
-}
-
-interface LinearGradient extends Gradient {
-    angle: number;
-}
-
-interface RadialGradient extends Gradient {
-    position: string[];
 }
 
 interface ColorStop {
     color: string;
     offset: string;
     opacity: number;
-}
-
-interface Point {
-    x: number;
-    y: number;
-}
-
-interface PointR extends Point {
-    rx?: number;
-    ry?: number;
-    angle?: number;
 }

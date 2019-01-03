@@ -1,20 +1,13 @@
-import { TemplateAAData } from '../../src/base/@types/application';
-import { UserSettingsAndroid } from './@types/application';
+import { LinearGradient, RadialGradient } from '../../src/base/@types/node';
+import { ResourceStoredMapAndroid, ThemeAttribute, UserSettingsAndroid } from './@types/application';
 import { BackgroundGradient } from './@types/node';
 import { SvgLinearGradient, SvgRadialGradient } from '../../src/svg/@types/object';
 
-import { EXT_ANDROID, RESERVED_JAVA } from './lib/constant';
+import { RESERVED_JAVA } from './lib/constant';
 
 import View from './view';
 
-type ThemeTemplate = {
-    output: {
-        path: string;
-        file: string;
-    }
-    items?: StringMap
-};
-
+const $Resource = squared.base.Resource;
 const $color = squared.lib.color;
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
@@ -27,6 +20,8 @@ function getHexARGB(value: ColorData | null) {
 function getRadiusPercent(value: string) {
     return $util.isPercent(value) ? parseInt(value) / 100 : 0.5;
 }
+
+const STORED = $Resource.STORED as ResourceStoredMapAndroid;
 
 export default class Resource<T extends View> extends squared.base.Resource<T> implements android.base.Resource<T> {
     public static createBackgroundGradient<T extends View>(node: T, gradients: Gradient[], svgPath?: squared.svg.SvgPath) {
@@ -254,6 +249,49 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
         return [stringArray.length ? stringArray : null, numberArray && numberArray.length ? numberArray : null];
     }
 
+    public static addTheme(...values: ThemeAttribute[]) {
+        const themes = STORED.themes;
+        for (const theme of values) {
+            const path = $util.isString(theme.output.path) ? theme.output.path : 'res/values';
+            const file = $util.isString(theme.output.file) ? theme.output.file : 'themes.xml';
+            const filename = `${$util.trimString(path.trim(), '/')}/${$util.trimString(file.trim(), '/')}`;
+            const stored = themes.get(filename) || new Map<string, ThemeAttribute>();
+            let appTheme = '';
+            if (theme.appTheme === '' || theme.appTheme.charAt(0) === '.') {
+                if (themes.size) {
+                    foundTheme: {
+                        for (const themeData of themes.values()) {
+                            for (const name in themeData) {
+                                for (const parentName in themeData[name]) {
+                                    appTheme = themeData[name][parentName].appTheme;
+                                    break foundTheme;
+                                }
+                            }
+                        }
+                    }
+                }
+                if (appTheme === '') {
+                    appTheme = 'AppTheme';
+                }
+            }
+            else {
+                appTheme = theme.appTheme;
+            }
+            theme.appTheme = appTheme + (theme.appTheme.charAt(0) === '.' ? theme.appTheme : '');
+            Resource.formatOptions(theme.items);
+            if (!stored.has(theme.appTheme)) {
+                stored.set(theme.appTheme, theme);
+            }
+            else {
+                const data = <ThemeAttribute> stored.get(theme.appTheme);
+                for (const attr in theme.items) {
+                    data.items[attr] = theme.items[attr];
+                }
+            }
+            themes.set(filename, stored);
+        }
+    }
+
     public static addString(value: string, name = '', numberAlias = false) {
         if (value !== '') {
             if (name === '') {
@@ -261,7 +299,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
             }
             const numeric = $util.isNumber(value);
             if (!numeric || numberAlias) {
-                for (const [resourceName, resourceValue] of Resource.STORED.strings.entries()) {
+                for (const [resourceName, resourceValue] of STORED.strings.entries()) {
                     if (resourceValue === value) {
                         return resourceName;
                     }
@@ -279,10 +317,10 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                 else if (name === '') {
                     name = `__symbol${Math.ceil(Math.random() * 100000)}`;
                 }
-                if (Resource.STORED.strings.has(name)) {
+                if (STORED.strings.has(name)) {
                     name = Resource.generateId('string', name, 1);
                 }
-                Resource.STORED.strings.set(name, value);
+                STORED.strings.set(name, value);
             }
             return name;
         }
@@ -367,18 +405,18 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
         }
         if (value && value.valueRGBA !== '#00000000') {
             const valueARGB = getHexARGB(value);
-            let name = Resource.STORED.colors.get(valueARGB) || '';
+            let name = STORED.colors.get(valueARGB) || '';
             if (name === '') {
                 const shade = $color.getColorByShade(value.valueRGB);
                 if (shade) {
                     shade.name = $util.convertUnderscore(shade.name);
-                    if (!value.opaque && shade.hex === value.valueRGB) {
+                    if (!value.opaque && shade.value === value.valueRGB) {
                         name = shade.name;
                     }
                     else {
                         name = Resource.generateId('color', shade.name, 1);
                     }
-                    Resource.STORED.colors.set(valueARGB, name);
+                    STORED.colors.set(valueARGB, name);
                 }
             }
             return name;
@@ -386,20 +424,13 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
         return '';
     }
 
-    public addStyleTheme(template: string, data: TemplateAAData, options: ThemeTemplate) {
-        if (options.items && Array.isArray(data.AA)) {
-            const items = Resource.formatOptions(options.items, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
-            for (const name in items) {
-                data.AA.push({
-                    name,
-                    value: items[name]
-                });
-            }
-        }
-        const xml = $xml.createTemplate($xml.parseTemplate(template), data);
-        if (this.fileHandler) {
-            this.fileHandler.addAsset(options.output.path, options.output.file, xml);
-        }
+    constructor(application: squared.base.Application<T>, cache: squared.base.NodeList<T>) {
+        super(application, cache);
+        STORED.styles = new Map();
+        STORED.themes = new Map();
+        STORED.dimens = new Map();
+        STORED.drawables = new Map();
+        STORED.animators = new Map();
     }
 
     get userSettings() {

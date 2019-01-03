@@ -1,4 +1,4 @@
-import { UserSettingsAndroid } from '../../@types/application';
+import { ResourceStoredMapAndroid, ResourceStyleData, UserSettingsAndroid } from '../../@types/application';
 
 import { BUILD_ANDROID } from '../../lib/enumeration';
 
@@ -7,17 +7,10 @@ import View from '../../view';
 
 import { replaceUnit } from '../../lib/util';
 
-type StyleData = {
-    name: string;
-    parent?: string;
-    attrs: string;
-    ids: number[];
-};
-
 type StyleList = ObjectMap<number[]>;
 type SharedAttributes = ObjectMapNested<number[]>;
 type AttributeMap = ObjectMap<number[]>;
-type TagNameMap = ObjectMap<StyleData[]>;
+type TagNameMap = ObjectMap<ResourceStyleData[]>;
 type NodeStyleMap = ObjectMapNested<string[]>;
 
 const $enum = squared.base.lib.enumeration;
@@ -90,6 +83,8 @@ const FONT_STYLE = {
 if ($dom.isUserAgent($dom.USER_AGENT.EDGE)) {
     FONTREPLACE_ANDROID['consolas'] = 'monospace';
 }
+
+const STORED = (<ResourceStoredMapAndroid> Resource.STORED);
 
 function deleteStyleAttribute(sorted: AttributeMap[], attrs: string, ids: number[]) {
     attrs.split(';').forEach(value => {
@@ -359,7 +354,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         const parentStyle = new Set<string>();
         for (const tag in style) {
             const tagData = style[tag];
-            const styleData: StyleData[] = [];
+            const styleData: ResourceStyleData[] = [];
             for (const attrs in tagData) {
                 styleData.push({
                     name: '',
@@ -416,8 +411,10 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 if (match) {
                     const data = resource[match[1].toUpperCase()];
                     const index = match[2] ? parseInt(match[2]) : 0;
-                    Resource.STORED.styles.set(name, { name, parent, ...(data && data[index] ? data[index] : {}) });
-                    parent = name;
+                    if (data[index]) {
+                        STORED.styles.set(name, { ...data[index], name, parent });
+                        parent = name;
+                    }
                 }
             });
         }

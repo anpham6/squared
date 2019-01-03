@@ -1,4 +1,5 @@
 import { ImageAsset, TemplateData, TemplateAAData } from '../../../../src/base/@types/application';
+import { ResourceStoredMapAndroid } from '../../@types/application';
 import { BackgroundGradient } from '../../@types/node';
 
 import { CONTAINER_NODE } from '../../lib/enumeration';
@@ -37,6 +38,7 @@ const TEMPLATES = {
     SHAPE: $xml.parseTemplate(SHAPE_TMPL),
     VECTOR: $xml.parseTemplate(VECTOR_TMPL)
 };
+const STORED = (<ResourceStoredMapAndroid> Resource.STORED);
 
 function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = false): StringMap {
     const result = {
@@ -501,7 +503,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         let vectorName = Resource.getStoredName('drawables', xml);
                         if (vectorName === '') {
                             vectorName = `${node.tagName.toLowerCase()}_${node.controlId}_gradient`;
-                            Resource.STORED.drawables.set(vectorName, xml);
+                            STORED.drawables.set(vectorName, xml);
                         }
                         backgroundVector.push({ vectorName });
                     }
@@ -632,7 +634,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         resourceName = Resource.getStoredName('drawables', xml);
                         if (resourceName === '') {
                             resourceName = `${node.tagName.toLowerCase()}_${node.controlId}`;
-                            Resource.STORED.drawables.set(resourceName, xml);
+                            STORED.drawables.set(resourceName, xml);
                         }
                     }
                     node.android('background', `@drawable/${resourceName}`, false);

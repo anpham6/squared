@@ -1,4 +1,5 @@
 import { FileAsset } from '../../../src/base/@types/application';
+import { ThemeAttribute } from '../@types/application';
 import { ViewAttribute } from '../@types/node';
 
 import { XMLNS_ANDROID } from './constant';
@@ -11,12 +12,32 @@ export function stripId(value: string) {
     return value ? value.replace(/@\+?id\//, '') : '';
 }
 
-export function createAttribute(options: ExternalData = {}): ViewAttribute {
+export function createViewAttribute(options?: ExternalData): ViewAttribute {
     return {
         android: {},
         app: {},
         ...(options && typeof options === 'object' ? options : {})
     };
+}
+
+export function createThemeAttribute(options?: ExternalData) {
+    const result: ThemeAttribute = {
+        output: {
+            path: '',
+            file: ''
+        },
+        appTheme: '',
+        parentTheme: '',
+        items: {}
+    };
+    if (options && typeof options === 'object') {
+        for (const attr in result) {
+            if (typeof options[attr] === typeof result[attr]) {
+                result[attr] = options[attr];
+            }
+        }
+    }
+    return result;
 }
 
 export function validateString(value: string) {

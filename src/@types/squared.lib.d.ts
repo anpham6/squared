@@ -75,6 +75,7 @@ declare global {
             function isUnit(value: string): boolean;
             function isPercent(value: string): boolean;
             function includes(source: string | undefined, value: string, delimiter?: string): boolean;
+            function cloneObject(data: {}): {};
             function optional(obj: UndefNull<object>, value: string, type?: string): any;
             function optionalAsObject(obj: UndefNull<object>, value: string): object;
             function optionalAsString(obj: UndefNull<object>, value: string): string;

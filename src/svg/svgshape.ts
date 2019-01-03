@@ -83,7 +83,7 @@ function convertKeyTimeFraction(map: KeyTimeMap, total: number) {
     return result;
 }
 
-function getPathData(map: KeyTimeMap, path: SvgPath, methodName: string, attrs: string[], transform: SvgTransform[], freezeMap?: FreezeMap) {
+function getPathData(map: KeyTimeMap, path: SvgPath, methodName: string, attrs: string[], transform: SvgTransform[] | null, freezeMap?: FreezeMap) {
     const result: KeyTimeValue<string>[] = [];
     for (const [time, data] of map.entries()) {
         const values: number[] = [];
@@ -104,13 +104,10 @@ function getPathData(map: KeyTimeMap, path: SvgPath, methodName: string, attrs: 
                 switch (methodName) {
                     case 'getCircle':
                     case 'getEllipse':
-                        const transformable = SvgBuild.filterTransformSkew(transform)[0];
-                        if (transformable.length) {
-                            const transformed = SvgBuild.applyTransforms(transformable, getEllipsePoints(values, methodName === 'getCircle'), getTransformOrigin(path.element));
-                            if (transformed.length) {
-                                const pt = <Required<PointR>> transformed[0];
-                                value = SvgPath.getEllipse(pt.x, pt.y, pt.rx, pt.ry);
-                            }
+                        const points = SvgBuild.applyTransforms(transform, getEllipsePoints(values, methodName === 'getCircle'), getTransformOrigin(path.element));
+                        if (points.length) {
+                            const pt = <Required<PointR>> points[0];
+                            value = SvgPath.getEllipse(pt.x, pt.y, pt.rx, pt.ry);
                         }
                         break;
                     case 'getLine':
@@ -204,13 +201,13 @@ function getItemValue(element: SVGGraphicsElement, path: SvgPath | undefined, an
 function getKeyTimePath(map: KeyTimeMap, path: SvgPath, freezeMap?: FreezeMap) {
     switch (path.element.tagName) {
         case 'circle':
-            return getPathData(map, path, 'getCircle', ['cx', 'cy', 'r'], path.transform, freezeMap);
+            return getPathData(map, path, 'getCircle', ['cx', 'cy', 'r'], path.baseVal.transformed, freezeMap);
         case 'ellipse':
-            return getPathData(map, path, 'getEllipse', ['cx', 'cy', 'rx', 'ry'], path.transform, freezeMap);
+            return getPathData(map, path, 'getEllipse', ['cx', 'cy', 'rx', 'ry'], path.baseVal.transformed, freezeMap);
         case 'line':
-            return getPathData(map, path, 'getLine', ['x1', 'y1', 'x2', 'y2'], path.transform, freezeMap);
+            return getPathData(map, path, 'getLine', ['x1', 'y1', 'x2', 'y2'], path.baseVal.transformed, freezeMap);
         case 'rect':
-            return getPathData(map, path, 'getRect', ['width', 'height', 'x', 'y'], path.transform, freezeMap);
+            return getPathData(map, path, 'getRect', ['width', 'height', 'x', 'y'], path.baseVal.transformed, freezeMap);
     }
     return undefined;
 }

@@ -28,16 +28,15 @@ declare global {
         }
 
         class SvgBuild {
-            public static applyTransforms(transform: SvgTransform[], points: Point[] | PointR[], origin?: Point, center?: PointR): Point[];
-            public static filterTransformSkew(transform: SvgTransform[]): [SvgTransform[], SvgTransform[]];
+            public static applyTransforms(transform: SvgTransform[], values: Point[] | PointR[], origin?: Point, center?: PointR): Point[];
             public static getPathCenter(values: Point[]): Point[];
-            public static toPointList(points: SVGPointList | Point[] | PointR[]): PointR[];
+            public static toPointList(values: SVGPointList | Point[] | PointR[]): PointR[];
             public static toCoordinateList(value: string): number[];
             public static toAbsolutePointList(values: SvgPathCommand[]): PointR[];
             public static toPathCommandList(value: string): SvgPathCommand[];
             public static fromNumberList(values: number[]): Point[];
             public static fromAbsolutePointList(values: SvgPathCommand[], points: Point[] | PointR[]): SvgPathCommand[];
-            public static fromPathCommandList(commands: SvgPathCommand[]): string;
+            public static fromPathCommandList(values: SvgPathCommand[]): string;
         }
 
         class SvgCreate {

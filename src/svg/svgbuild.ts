@@ -5,8 +5,8 @@ import { applyMatrixX, applyMatrixY, getRadiusY } from './lib/util';
 const $util = squared.lib.util;
 
 export default class SvgBuild implements squared.svg.SvgBuild {
-    public static applyTransforms(transform: SvgTransform[], points: Point[] | PointR[], origin?: Point, center?: PointR) {
-        const result = SvgBuild.toPointList(points);
+    public static applyTransforms(transform: SvgTransform[], values: Point[] | PointR[], origin?: Point, center?: PointR) {
+        const result = SvgBuild.toPointList(values);
         const items = transform.slice().reverse();
         for (const item of items) {
             let x1 = 0;
@@ -85,10 +85,6 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
-    public static filterTransformSkew(transform: SvgTransform[]) {
-        return $util.partitionArray(transform, item => item.type !== SVGTransform.SVG_TRANSFORM_SKEWX && item.type !== SVGTransform.SVG_TRANSFORM_SKEWY);
-    }
-
     public static getPathCenter(values: Point[]): Point {
         const pointsX = values.map(pt => pt.x);
         const pointsY = values.map(pt => pt.y);
@@ -111,16 +107,16 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
-    public static toPointList(points: SVGPointList | Point[] | PointR[]) {
+    public static toPointList(values: SVGPointList | Point[] | PointR[]) {
         const result: PointR[] = [];
-        if (points instanceof SVGPointList) {
-            for (let j = 0; j < points.numberOfItems; j++) {
-                const pt = points.getItem(j);
+        if (values instanceof SVGPointList) {
+            for (let j = 0; j < values.numberOfItems; j++) {
+                const pt = values.getItem(j);
                 result.push({ x: pt.x, y: pt.y });
             }
         }
         else {
-            for (const pt of points as PointR[]) {
+            for (const pt of values as PointR[]) {
                 const item: PointR = { x: pt.x, y: pt.y };
                 if (pt.rx !== undefined && pt.ry !== undefined) {
                     item.rx = pt.rx;
@@ -366,9 +362,9 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return values;
     }
 
-    public static fromPathCommandList(commands: SvgPathCommand[]) {
+    public static fromPathCommandList(values: SvgPathCommand[]) {
         let result = '';
-        for (const item of commands) {
+        for (const item of values) {
             result += (result !== '' ? ' ' : '') + item.command;
             switch (item.command.toUpperCase()) {
                 case 'M':

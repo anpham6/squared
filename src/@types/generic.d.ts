@@ -22,10 +22,3 @@ interface ObjectIndex<T> {
 
 type StringMap = ObjectMap<string>;
 type ObjectMapNested<T> = ObjectMap<ObjectMap<T>>;
-
-interface NameValue {
-    name: string;
-    value: any;
-}
-
-type ExternalData = ObjectMap<any>;

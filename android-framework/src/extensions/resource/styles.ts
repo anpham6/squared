@@ -1,7 +1,11 @@
+import { ResourceStoredMapAndroid } from '../../@types/application';
+
 import Resource from '../../resource';
 import View from '../../view';
 
 const $util = squared.lib.util;
+
+const STORED = (<ResourceStoredMapAndroid> Resource.STORED);
 
 export default class ResourceStyles<T extends View> extends squared.base.Extension<T> {
     public readonly eventOnly = true;
@@ -75,7 +79,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
             }
         }
         for (const name in styles) {
-            Resource.STORED.styles.set(name, {
+            STORED.styles.set(name, {
                 name,
                 attrs: styles[name].join(';'),
                 ids: []

@@ -1,8 +1,6 @@
-import { ExtensionResult, TemplateData } from '../../src/base/@types/application';
+import { ExtensionResult } from '../../src/base/@types/application';
 
 import { WIDGET_NAME } from '../lib/constant';
-
-import EXTENSION_TOOLBAR_TMPL from '../lib/templates/toolbar';
 
 import $Resource = android.base.Resource;
 import $View = android.base.View;
@@ -58,9 +56,9 @@ export default class Toolbar<T extends $View> extends squared.base.Extension<T> 
         const element = <HTMLElement> node.element;
         const target = $util.hasValue(node.dataset.target);
         const options: ExternalData = Object.assign({}, this.options[element.id]);
-        const toolbarOptions = $utilA.createAttribute(options.self);
-        const appBarOptions = $utilA.createAttribute(options.appBar);
-        const collapsingToolbarOptions = $utilA.createAttribute(options.collapsingToolbar);
+        const toolbarOptions = $utilA.createViewAttribute(options.self);
+        const appBarOptions = $utilA.createViewAttribute(options.appBar);
+        const collapsingToolbarOptions = $utilA.createViewAttribute(options.collapsingToolbar);
         const hasMenu = Toolbar.findNestedByName(element, WIDGET_NAME.MENU);
         const backgroundImage = node.has('backgroundImage');
         const appBarChildren: T[] = [];
@@ -157,7 +155,7 @@ export default class Toolbar<T extends $View> extends squared.base.Extension<T> 
         );
         if (hasCollapsingToolbar) {
             if (backgroundImage) {
-                const backgroundImageOptions = $utilA.createAttribute(options.backgroundImage);
+                const backgroundImageOptions = $utilA.createViewAttribute(options.backgroundImage);
                 let scaleType = 'center';
                 switch (node.css('backgroundSize')) {
                     case 'cover':
@@ -291,7 +289,7 @@ export default class Toolbar<T extends $View> extends squared.base.Extension<T> 
         const menu = $util.optionalAsString(Toolbar.findNestedByName(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
         if (menu !== '') {
             const options: ExternalData = node.element && this.options[node.element.id] || {};
-            const toolbarOptions = $utilA.createAttribute(options.self);
+            const toolbarOptions = $utilA.createViewAttribute(options.self);
             $util.defaultWhenNull(toolbarOptions, 'app', 'menu', `@menu/${menu}`);
             node.app('menu', toolbarOptions.app.menu);
         }
@@ -302,30 +300,16 @@ export default class Toolbar<T extends $View> extends squared.base.Extension<T> 
     }
 
     private setStyleTheme(themeData: ToolbarThemeData) {
-        if (this.application.resourceHandler.fileHandler) {
-            const options: ExternalData = Object.assign({}, this.options.resource);
-            $util.defaultWhenNull(options, 'appTheme', $utilA.getAppTheme(this.application.resourceHandler.fileHandler.assets) || 'AppTheme');
-            $util.defaultWhenNull(options, 'parentTheme', 'Theme.AppCompat.Light.DarkActionBar');
-            const data: TemplateData = {
-                appTheme: options.appTheme,
-                appBarOverlay: themeData.appBarOverlay || 'ThemeOverlay.AppCompat.Dark.ActionBar',
-                popupOverlay: themeData.popupOverlay || 'ThemeOverlay.AppCompat.Light',
-                A: [{
-                    appTheme: options.appTheme,
-                    parentTheme: options.parentTheme,
-                    AA: []
-                }]
-            };
-            if (themeData.target) {
-                data.A = [];
-            }
-            else if (data.A[0].AA) {
-                data.AA = data.A[0].AA;
-            }
-            $util.defaultWhenNull(options, 'output', 'path', 'res/values');
-            $util.defaultWhenNull(options, 'output', 'file', `${WIDGET_NAME.TOOLBAR}.xml`);
-            (<android.base.Resource<T>> this.application.resourceHandler).addStyleTheme(EXTENSION_TOOLBAR_TMPL, data, options);
-        }
+        const options = $utilA.createThemeAttribute(Object.assign({}, this.options.resource));
+        const optionsActionBar = $utilA.createThemeAttribute({ appTheme: '.NoActionBar', output: options.output });
+        const optionsAppBar = $utilA.createThemeAttribute({ appTheme: '.AppBarOverlay', output: options.output });
+        const optionsPopup = $utilA.createThemeAttribute({ appTheme: '.PopupOverlay', output: options.output });
+        $util.defaultWhenNull(options, 'parentTheme', 'Theme.AppCompat.Light.DarkActionBar');
+        $util.defaultWhenNull(optionsActionBar.items, 'windowActionBar', 'false');
+        $util.defaultWhenNull(optionsActionBar.items, 'windowNoTitle', 'true');
+        $util.defaultWhenNull(optionsAppBar, 'parentTheme', themeData.appBarOverlay || 'ThemeOverlay.AppCompat.Dark.ActionBar');
+        $util.defaultWhenNull(optionsPopup, 'parentTheme', themeData.popupOverlay || 'ThemeOverlay.AppCompat.Light');
+        $Resource.addTheme(options, optionsActionBar, optionsAppBar, optionsPopup);
     }
 
     private createPlaceholder(nextId: number, node: T, children: T[]) {

@@ -1,7 +1,11 @@
+import { ResourceStoredMapAndroid } from '../../@types/application';
+
 import Resource from '../../resource';
 import View from '../../view';
 
 const $util = squared.lib.util;
+
+const STORED = (<ResourceStoredMapAndroid> Resource.STORED);
 
 function getResourceKey(dimens: Map<string, string>, key: string, value: string) {
     for (const [storedKey, storedvalue] of dimens.entries()) {
@@ -44,20 +48,18 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
                 }
             });
         }
-        const dimens = Resource.STORED.dimens;
         for (const tagName in groups) {
             const group = groups[tagName];
             for (const name in group) {
                 const [namespace, attr, value] = name.split(',');
-                const key = getResourceKey(dimens, `${getDisplayName(tagName)}_${getAttributeName(attr)}`, value);
+                const key = getResourceKey(STORED.dimens, `${getDisplayName(tagName)}_${getAttributeName(attr)}`, value);
                 group[name].forEach(node => node[namespace](attr, `@dimen/${key}`));
-                dimens.set(key, value);
+                STORED.dimens.set(key, value);
             }
         }
     }
 
     public afterFinalize() {
-        const dimens = Resource.STORED.dimens;
         for (const view of this.application.viewData) {
             const pattern = /[\s\n]+<[^<]*?(\w+):(\w+)="(-?[\d.]+(?:px|dp|sp))"/;
             let match: RegExpExecArray | null;
@@ -65,8 +67,8 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
             while ((match = pattern.exec(content)) !== null) {
                 const controlName = /^[\s\n]+<([\w\-.]+)[\s\n]/.exec(match[0]);
                 if (controlName) {
-                    const key = getResourceKey(dimens, `${getDisplayName(controlName[1]).toLowerCase()}_${getAttributeName(match[2])}`, match[3]);
-                    dimens.set(key, match[3]);
+                    const key = getResourceKey(STORED.dimens, `${getDisplayName(controlName[1]).toLowerCase()}_${getAttributeName(match[2])}`, match[3]);
+                    STORED.dimens.set(key, match[3]);
                     content = content.replace(match[0], match[0].replace(match[3], `@dimen/${key}`));
                 }
             }

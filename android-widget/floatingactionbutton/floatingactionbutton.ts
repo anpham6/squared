@@ -25,7 +25,7 @@ export default class FloatingActionButton<T extends $View> extends squared.base.
     public processNode(node: T, parent: T): ExtensionResult<T> {
         const element = <HTMLElement> node.element;
         const target = $util.hasValue(node.dataset.target);
-        const options = $utilA.createAttribute(this.options[element.id]);
+        const options = $utilA.createViewAttribute(this.options[element.id]);
         const backgroundColor = $color.parseRGBA(node.css('backgroundColor'), node.css('opacity'));
         let colorValue = '';
         if (backgroundColor) {

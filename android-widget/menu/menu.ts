@@ -138,7 +138,7 @@ export default class Menu<T extends $View> extends squared.base.Extension<T> {
             node.hide();
             return { output: '', next: true };
         }
-        const options = $utilA.createAttribute();
+        const options = $utilA.createViewAttribute();
         const element = <HTMLElement> node.element;
         let controlName: string;
         let title = '';

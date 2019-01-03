@@ -6,7 +6,7 @@ declare global {
             resource: Resource<T>;
             userSettings: UserSettings;
             appName: string;
-            stored: ResourceStoredMap;
+            readonly stored: ResourceStoredMap;
             readonly assets: FileAsset[];
             saveAllToDisk(data: SessionData<NodeList<T>>): void;
             addAsset(pathname: string, filename: string, content?: string, uri?: string): void;

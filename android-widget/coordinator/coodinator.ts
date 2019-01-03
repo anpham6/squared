@@ -14,7 +14,7 @@ const $utilA = android.lib.util;
 export default class Coordinator<T extends $View> extends squared.base.Extension<T> {
     public processNode(node: T, parent: T): ExtensionResult<T> {
         const controller = this.application.controllerHandler;
-        const options = $utilA.createAttribute(node.element ? this.options[node.element.id] : undefined);
+        const options = $utilA.createViewAttribute(node.element ? this.options[node.element.id] : undefined);
         node.setControlType($constA.SUPPORT_ANDROID.COORDINATOR, $enumA.CONTAINER_NODE.BLOCK);
         node.exclude({ resource: $enum.NODE_RESOURCE.ASSET });
         node.render(parent);
@@ -33,7 +33,7 @@ export default class Coordinator<T extends $View> extends squared.base.Extension
             if (toolbar && toolbar.element) {
                 const extension = this.application.extensionManager.retrieve(WIDGET_NAME.TOOLBAR);
                 if (extension) {
-                    const toolbarOptions = $utilA.createAttribute(extension.options[toolbar.element.id]);
+                    const toolbarOptions = $utilA.createViewAttribute(extension.options[toolbar.element.id]);
                     if (toolbarOptions.hasOwnProperty('collapsingToolbar')) {
                         node.android('fitsSystemWindows', 'true');
                     }

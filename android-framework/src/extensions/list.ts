@@ -7,7 +7,7 @@ import { CONTAINER_NODE } from '../lib/enumeration';
 import Resource from '../resource';
 import View from '../view';
 
-import { createAttribute } from '../lib/util';
+import { createViewAttribute } from '../lib/util';
 
 import $Layout = squared.base.Layout;
 import $NodeList = squared.base.NodeList;
@@ -120,7 +120,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 })();
                 const marginLeft = left > 0 ? $util.formatPX(left) : '';
                 const minWidth = paddingLeft > 0 ? $util.formatPX(paddingLeft) : '';
-                const options = createAttribute({
+                const options = createViewAttribute({
                     android: {
                         layout_columnWeight: columnWeight
                     }
@@ -234,7 +234,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 current.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, null);
             }
             if (spaceHeight > 0) {
-                const options = createAttribute({
+                const options = createViewAttribute({
                     android: {
                         layout_columnSpan: columnCount.toString()
                     }

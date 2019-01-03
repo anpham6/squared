@@ -222,6 +222,21 @@ export function includes(source: string | undefined, value: string, delimiter = 
     return source ? source.split(delimiter).map(segment => segment.trim()).includes(value) : false;
 }
 
+export function cloneObject(data: {}) {
+    const result = {};
+    for (const attr in data) {
+        if (data.hasOwnProperty(attr)) {
+            if (data && typeof data[attr] === 'object') {
+                result[attr] = cloneObject(data[attr]);
+            }
+            else {
+                result[attr] = data[attr];
+            }
+        }
+    }
+    return result;
+}
+
 export function optional(obj: UndefNull<object>, value: string, type?: string) {
     let valid = false;
     let result;

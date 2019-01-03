@@ -1,8 +1,6 @@
-import { ExtensionResult, TemplateAAData } from '../../src/base/@types/application';
+import { ExtensionResult } from '../../src/base/@types/application';
 
 import { WIDGET_NAME } from '../lib/constant';
-
-import EXTENSION_GENERIC_TMPL from '../lib/templates/generic';
 
 import $Resource = android.base.Resource;
 import $View = android.base.View;
@@ -25,7 +23,7 @@ export default class BottomNavigation<T extends $View> extends squared.base.Exte
     }
 
     public processNode(node: T, parent: T): ExtensionResult<T> {
-        const options = $utilA.createAttribute(node.element ? this.options[node.element.id] : undefined);
+        const options = $utilA.createViewAttribute(node.element ? this.options[node.element.id] : undefined);
         $util.defaultWhenNull(options, 'android', 'background', `?android:attr/windowBackground`);
         for (let i = 5; i < node.length; i++) {
             const item = node.item(i) as T;
@@ -60,25 +58,15 @@ export default class BottomNavigation<T extends $View> extends squared.base.Exte
         }
         const menu = $util.optionalAsString(BottomNavigation.findNestedByName(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
         if (menu !== '') {
-            const options = $utilA.createAttribute(node.element ? this.options[node.element.id] : undefined);
+            const options = $utilA.createViewAttribute(node.element ? this.options[node.element.id] : undefined);
             $util.defaultWhenNull(options, 'app', 'menu', `@menu/${menu}`);
             node.app('menu', options.app.menu);
         }
     }
 
     private setStyleTheme() {
-        if (this.application.resourceHandler.fileHandler) {
-            const options: ExternalData = Object.assign({}, this.options.resource);
-            $util.defaultWhenNull(options, 'appTheme', $utilA.getAppTheme(this.application.resourceHandler.fileHandler.assets) || 'AppTheme');
-            $util.defaultWhenNull(options, 'parentTheme', 'Theme.AppCompat.Light.DarkActionBar');
-            const data: TemplateAAData = {
-                appTheme: options.appTheme,
-                parentTheme: options.parentTheme,
-                AA: []
-            };
-            $util.defaultWhenNull(options, 'output', 'path', 'res/values');
-            $util.defaultWhenNull(options, 'output', 'file', `${WIDGET_NAME.BOTTOM_NAVIGATION}.xml`);
-            (<android.base.Resource<T>> this.application.resourceHandler).addStyleTheme(EXTENSION_GENERIC_TMPL, data, options);
-        }
+        const options = $utilA.createThemeAttribute(Object.assign({}, this.options.resource));
+        $util.defaultWhenNull(options, 'parentTheme', 'Theme.AppCompat.Light.DarkActionBar');
+        $Resource.addTheme(options);
     }
 }

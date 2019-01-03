@@ -9,4 +9,4 @@ export default `
 	</style>
 <<A>>
 </resources>
-<!-- filename: res/values/styles.xml -->`;
+<!-- filename: {0} -->`;

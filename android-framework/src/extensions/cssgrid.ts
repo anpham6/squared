@@ -6,7 +6,7 @@ import { CONTAINER_NODE } from '../lib/enumeration';
 
 import View from '../view';
 
-import { createAttribute } from '../lib/util';
+import { createViewAttribute } from '../lib/util';
 
 import $Layout = squared.base.Layout;
 
@@ -392,7 +392,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                 'wrap_content',
                                 0,
                                 0,
-                                createAttribute({
+                                createViewAttribute({
                                     android: {
                                         [node.localizeString(BOX_ANDROID.MARGIN_LEFT)]: $util.formatPX(mainData.column.gap),
                                         layout_row: i.toString(),
@@ -417,7 +417,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                     $util.formatPX(mainData.row.gap),
                                     0,
                                     0,
-                                    createAttribute({
+                                    createViewAttribute({
                                         android: {
                                             layout_row: i.toString(),
                                             layout_column: j.toString()

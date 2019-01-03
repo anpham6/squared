@@ -1,4 +1,5 @@
 import { FileAsset } from '../../src/base/@types/application';
+import { ThemeAttribute } from '../src/@types/application';
 import { ViewAttribute } from '../src/@types/node';
 
 import * as $const from '../src/lib/constant';
@@ -27,7 +28,8 @@ declare global {
 
         namespace util {
             function stripId(value: string): string;
-            function createAttribute(options?: ExternalData): ViewAttribute;
+            function createViewAttribute(options?: ExternalData): ViewAttribute;
+            function createThemeAttribute(options?: ExternalData): ThemeAttribute;
             function validateString(value: string): string;
             function convertUnit(value: string, dpi?: number, font?: boolean): string;
             function replaceUnit(value: string, dpi?: number, format?: string, font?: boolean): string;

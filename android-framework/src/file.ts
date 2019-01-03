@@ -1,5 +1,5 @@
 import { FileAsset, SessionData, TemplateData } from '../../src/base/@types/application';
-import { UserSettingsAndroid } from './@types/application';
+import { ResourceStoredMapAndroid, UserSettingsAndroid } from './@types/application';
 
 import { BUILD_ANDROID } from './lib/enumeration';
 
@@ -240,27 +240,60 @@ export default class File<T extends View> extends squared.base.File<T> implement
         const result: string[] = [];
         if (this.stored.styles.size) {
             const settings = this.userSettings;
-            const data: TemplateData = { A: [] };
-            const styles = (Array.from(this.stored.styles.values()) as Array<StringMap>).sort((a, b) => a.name.toString().toLowerCase() >= b.name.toString().toLowerCase() ? 1 : -1);
-            for (const style of styles) {
-                const AA: StringMap[] = [];
-                style.attrs.split(';').sort().forEach((attr: string) => {
-                    const [name, value] = attr.split('=');
-                    AA.push({
-                        name,
-                        value: value.replace(/"/g, '')
+            const template = $xml.parseTemplate(STYLE_TMPL);
+            const files: { filename: string, data: TemplateData}[] = [];
+            {
+                const styles = Array.from(this.stored.styles.values()).sort((a, b) => a.name.toString().toLowerCase() >= b.name.toString().toLowerCase() ? 1 : -1);
+                const data: TemplateData = { A: [] };
+                for (const style of styles) {
+                    const AA: StringMap[] = [];
+                    style.attrs.split(';').sort().forEach(attr => {
+                        const [name, value] = attr.split('=');
+                        AA.push({
+                            name,
+                            value: value.replace(/"/g, '')
+                        });
                     });
-                });
-                data.A.push({
-                    name: style.name,
-                    parent: style.parent || '',
-                    AA
-                });
+                    data.A.push({
+                        name: style.name,
+                        parent: style.parent || '',
+                        AA
+                    });
+                }
+                files.push({ filename: 'res/values/styles.xml', data });
             }
-            let xml = $xml.createTemplate($xml.parseTemplate(STYLE_TMPL), data);
-            xml = replaceUnit(xml.trim(), settings.resolutionDPI, settings.convertPixels, true);
-            xml = replaceTab(xml, settings.insertSpaces);
-            result.push(xml);
+            const appTheme: ObjectMap<boolean> = {};
+            for (const [filename, theme] of this.stored.themes.entries()) {
+                const data: TemplateData = { A: [] };
+                const filepath = filename.substring(0, filename.lastIndexOf('/'));
+                for (const [themeName, themeData] of theme.entries()) {
+                    const AA: StringMap[] = [];
+                    for (const name in themeData.items) {
+                        AA.push({
+                            name,
+                            value: themeData.items[name]
+                        });
+                    }
+                    if (!appTheme[filepath] || themeName !== 'AppTheme' || AA.length > 0) {
+                        data.A.push({
+                            name: themeName,
+                            parent: themeData.parentTheme,
+                            AA
+                        });
+                    }
+                    if (themeName === 'AppTheme') {
+                        appTheme[filepath] = true;
+                    }
+                }
+                files.push({ filename, data });
+            }
+            for (const style of files) {
+                let xml = $xml.createTemplate(template, style.data);
+                xml = replaceUnit(xml.trim(), settings.resolutionDPI, settings.convertPixels, true);
+                xml = replaceTab(xml, settings.insertSpaces);
+                xml = xml.replace('filename: {0}', `filename: ${style.filename}`);
+                result.push(xml);
+            }
             if (saveToDisk) {
                 this.saveToDisk(parseFileDetails(result));
             }
@@ -366,5 +399,9 @@ export default class File<T extends View> extends squared.base.File<T> implement
 
     get userSettings() {
         return this.resource.userSettings as UserSettingsAndroid;
+    }
+
+    get stored() {
+        return this.resource.stored as ResourceStoredMapAndroid;
     }
 }

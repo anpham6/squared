@@ -25,7 +25,7 @@ declare global {
             public static isBorderVisible(border: BorderAttribute | undefined): boolean;
             public static isBackgroundVisible<T extends Node>(node: T): boolean;
             public static hasDrawableBackground(object: BoxStyle | undefined): boolean;
-            constructor(application: Application<T>);
+            constructor(application: Application<T>, cache: NodeList<T>);
         }
     }
 }

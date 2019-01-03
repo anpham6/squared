@@ -1,6 +1,5 @@
 import { SvgImageBaseVal } from './@types/object';
 
-import SvgBuild from './svgbuild';
 import SvgElement from './svgelement';
 
 import { applyMatrixX, applyMatrixY } from './lib/util';
@@ -40,10 +39,9 @@ export default class SvgImage extends SvgElement implements squared.svg.SvgImage
         if (transform.length) {
             let x = this.x;
             let y = this.y;
-            const [transformable, skewXY] = SvgBuild.filterTransformSkew(transform);
-            transformable.reverse();
-            for (let i = 0; i < transformable.length; i++) {
-                const item = transformable[i];
+            transform.reverse();
+            for (let i = 0; i < transform.length; i++) {
+                const item = transform[i];
                 const m = item.matrix;
                 const localX = x;
                 x = applyMatrixX(m, localX, y);
@@ -83,8 +81,8 @@ export default class SvgImage extends SvgElement implements squared.svg.SvgImage
             }
             this.x = x;
             this.y = y;
-            this.transform = skewXY;
-            this.transformed = skewXY.length === 0;
+            this.baseVal.transformed = transform;
+            this.transformed = true;
         }
         return '';
     }
