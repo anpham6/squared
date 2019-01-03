@@ -114,7 +114,6 @@ declare global {
             function replaceCharacter(value: string): string;
             function parseTemplate(value: string): StringMap;
             function createTemplate(value: StringMap, data: ExternalData, index?: string): string;
-            function getTemplateSection(data: ExternalData, ...levels: string[]): object;
         }
     }
 }

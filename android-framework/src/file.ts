@@ -1,4 +1,4 @@
-import { FileAsset, SessionData } from '../../src/base/@types/application';
+import { FileAsset, SessionData, TemplateData } from '../../src/base/@types/application';
 import { UserSettingsAndroid } from './@types/application';
 
 import { BUILD_ANDROID } from './lib/enumeration';
@@ -136,16 +136,16 @@ export default class File<T extends View> extends squared.base.File<T> implement
 
     public resourceStringToXml(saveToDisk = false) {
         const result: string[] = [];
-        const data: ExternalData = { '1': [] };
+        const data: TemplateData = { A: [] };
         this.stored.strings = new Map([...this.stored.strings.entries()].sort(caseInsensitive));
         if (this.appName !== '' && !this.stored.strings.has('app_name')) {
-            data['1'].push({
+            data.A.push({
                 name: 'app_name',
                 value: this.appName
             });
         }
         for (const [name, value] of this.stored.strings.entries()) {
-            data['1'].push({
+            data.A.push({
                 name,
                 value
             });
@@ -162,12 +162,12 @@ export default class File<T extends View> extends squared.base.File<T> implement
     public resourceStringArrayToXml(saveToDisk = false) {
         const result: string[] = [];
         if (this.stored.arrays.size) {
-            const data: ExternalData = { '1': [] };
+            const data: TemplateData = { A: [] };
             this.stored.arrays = new Map([...this.stored.arrays.entries()].sort());
             for (const [name, values] of this.stored.arrays.entries()) {
-                data['1'].push({
+                data.A.push({
                     name,
-                    items: values.map(value => ({ value }))
+                    AA: values.map(value => ({ value }))
                 });
             }
             let xml = $xml.createTemplate($xml.parseTemplate(STRINGARRAY_TMPL), data);
@@ -187,15 +187,15 @@ export default class File<T extends View> extends squared.base.File<T> implement
             this.stored.fonts = new Map([...this.stored.fonts.entries()].sort());
             const namespace = settings.targetAPI < BUILD_ANDROID.OREO ? 'app' : 'android';
             for (const [name, font] of this.stored.fonts.entries()) {
-                const data: ExternalData = {
+                const data: TemplateData = {
                     name,
                     namespace: getXmlNs(namespace),
-                    '1': []
+                    A: []
                 };
                 let xml = '';
                 for (const attr in font) {
                     const [style, weight] = attr.split('-');
-                    data['1'].push({
+                    data.A.push({
                         style,
                         weight,
                         font: `@font/${name + (style === 'normal' && weight === 'normal' ? `_${style}` : (style !== 'normal' ? `_${style}` : '') + (weight !== 'normal' ? `_${weight}` : ''))}`
@@ -218,10 +218,10 @@ export default class File<T extends View> extends squared.base.File<T> implement
     public resourceColorToXml(saveToDisk = false) {
         const result: string[] = [];
         if (this.stored.colors.size) {
-            const data: ExternalData = { '1': [] };
+            const data: TemplateData = { A: [] };
             this.stored.colors = new Map([...this.stored.colors.entries()].sort());
             for (const [name, value] of this.stored.colors.entries()) {
-                data['1'].push({
+                data.A.push({
                     name,
                     value
                 });
@@ -240,21 +240,21 @@ export default class File<T extends View> extends squared.base.File<T> implement
         const result: string[] = [];
         if (this.stored.styles.size) {
             const settings = this.userSettings;
-            const data: ExternalData = { '1': [] };
+            const data: TemplateData = { A: [] };
             const styles = (Array.from(this.stored.styles.values()) as Array<StringMap>).sort((a, b) => a.name.toString().toLowerCase() >= b.name.toString().toLowerCase() ? 1 : -1);
             for (const style of styles) {
-                const items: StringMap[] = [];
+                const AA: StringMap[] = [];
                 style.attrs.split(';').sort().forEach((attr: string) => {
                     const [name, value] = attr.split('=');
-                    items.push({
+                    AA.push({
                         name,
                         value: value.replace(/"/g, '')
                     });
                 });
-                data['1'].push({
+                data.A.push({
                     name: style.name,
                     parent: style.parent || '',
-                    items
+                    AA
                 });
             }
             let xml = $xml.createTemplate($xml.parseTemplate(STYLE_TMPL), data);
@@ -272,10 +272,10 @@ export default class File<T extends View> extends squared.base.File<T> implement
         const result: string[] = [];
         if (this.stored.dimens.size) {
             const settings = this.userSettings;
-            const data: ExternalData = { '1': [] };
+            const data: TemplateData = { A: [] };
             this.stored.dimens = new Map([...this.stored.dimens.entries()].sort());
             for (const [name, value] of this.stored.dimens.entries()) {
-                data['1'].push({
+                data.A.push({
                     name,
                     value
                 });

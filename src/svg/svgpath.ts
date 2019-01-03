@@ -35,6 +35,7 @@ export default class SvgPath extends SvgElement implements squared.svg.SvgPath {
         return rx > 0 && ry > 0 || !checkValid ? `M${cx - rx},${cy} a${rx},${ry},0,1,0,${rx * 2},0 a${rx},${ry},0,1,0,-${rx * 2},0` : '';
     }
 
+    public animatable = false;
     public opacity = 1;
     public color = '';
     public fillRule = '';
@@ -63,8 +64,10 @@ export default class SvgPath extends SvgElement implements squared.svg.SvgPath {
         y: null,
         width: null,
         height: null,
-        points: null
+        points: null,
+        transformed: null
     };
+    public rotateOrigin?: PointR;
 
     constructor(
         public readonly element: SVGGraphicsElement,
@@ -114,139 +117,189 @@ export default class SvgPath extends SvgElement implements squared.svg.SvgPath {
         this[`${attr}Opacity`] = opacity ? (parseFloat(opacity) * this.opacity).toString() : this.opacity.toString();
     }
 
-    private init() {
+    public build(exclusions?: number[], savePath = true) {
         const element = this.element;
-        if (this.d === '') {
-            switch (element.tagName) {
-                case 'path': {
-                    this.baseVal.d = $dom.cssAttribute(element, 'd');
-                    const transform = this.transform;
-                    if (transform.length) {
-                        let commands = SvgBuild.toPathCommandList(this.baseVal.d);
+        let d = '';
+        if (element instanceof SVGPathElement) {
+            d = this.baseVal.d || $dom.cssAttribute(element, 'd');
+            const transform = this.filterTransform(exclusions);
+            if (transform.length) {
+                let commands = SvgBuild.toPathCommandList(d);
+                if (commands.length) {
+                    const points = SvgBuild.toAbsolutePointList(commands);
+                    const center: PointR = SvgBuild.getPathCenter(points);
+                    const result = SvgBuild.applyTransforms(transform, points, getTransformOrigin(element), center);
+                    if (result.length) {
+                        commands = SvgBuild.fromAbsolutePointList(commands, result);
                         if (commands.length) {
-                            const points = SvgBuild.toAbsolutePointList(commands);
-                            const [transformable, skewXY] = SvgBuild.canTransformSkew(commands) ? [transform, []] : SvgBuild.filterTransformSkew(transform);
-                            const result = SvgBuild.applyTransforms(transformable, points, getTransformOrigin(element));
-                            if (result.length) {
-                                commands = SvgBuild.fromAbsolutePointList(commands, result);
-                                if (commands.length) {
-                                    this.d = SvgBuild.fromPathCommandList(commands);
-                                    if (skewXY.length === 0) {
-                                        this.transformed = true;
-                                    }
-                                    else {
-                                        this.transform = skewXY;
-                                    }
-                                }
+                            d = SvgBuild.fromPathCommandList(commands);
+                            if (center.angle !== undefined) {
+                                center.angle = 0;
+                                this.rotateOrigin = center;
                             }
+                            this.transformed = true;
+                            this.baseVal.transformed = transform;
                         }
                     }
-                    if (this.d === '') {
-                        this.d = this.baseVal.d;
-                    }
-                    break;
-                }
-                case 'circle':
-                case 'ellipse': {
-                    let rx = 0;
-                    let ry = 0;
-                    if (element instanceof SVGCircleElement) {
-                        this.baseVal.cx = element.cx.baseVal.value;
-                        this.baseVal.cy = element.cy.baseVal.value;
-                        this.baseVal.r = element.r.baseVal.value;
-                        rx = this.baseVal.r;
-                        ry = rx;
-                    }
-                    else if (element instanceof SVGEllipseElement) {
-                        this.baseVal.cx = element.cx.baseVal.value;
-                        this.baseVal.cy = element.cy.baseVal.value;
-                        this.baseVal.rx = element.rx.baseVal.value;
-                        this.baseVal.ry = element.ry.baseVal.value;
-                        rx = this.baseVal.rx;
-                        ry = this.baseVal.ry;
-                    }
-                    else {
-                        return;
-                    }
-                    const transform = this.transform;
-                    if (transform.length) {
-                        const points: Required<PointR>[] = [
-                            { x: this.baseVal.cx, y: this.baseVal.cy, rx, ry }
-                        ];
-                        const [transformable, skewXY] = SvgBuild.filterTransformSkew(transform);
-                        const result = SvgBuild.applyTransforms(transformable, points, getTransformOrigin(element));
-                        if (result.length) {
-                            const pt = <Required<PointR>> result[0];
-                            this.d = SvgPath.getEllipse(pt.x, pt.y, pt.rx, pt.ry, true);
-                            if (skewXY.length === 0) {
-                                this.transformed = true;
-                            }
-                            else {
-                                this.transform = skewXY;
-                            }
-                        }
-                    }
-                    if (this.d === '') {
-                        this.d = SvgPath.getEllipse(this.baseVal.cx, this.baseVal.cy, rx, ry, true);
-                    }
-                    break;
-                }
-                case 'line': {
-                    const line = <SVGLineElement> element;
-                    this.baseVal.x1 = line.x1.baseVal.value;
-                    this.baseVal.y1 = line.y1.baseVal.value;
-                    this.baseVal.x2 = line.x2.baseVal.value;
-                    this.baseVal.y2 = line.y2.baseVal.value;
-                    const transform = this.transform;
-                    if (transform.length) {
-                        const points: Point[] = [
-                            { x: this.baseVal.x1, y: this.baseVal.y1 },
-                            { x: this.baseVal.x2, y: this.baseVal.y2 }
-                        ];
-                        this.d = SvgPath.getPolyline(SvgBuild.applyTransforms(transform, points, getTransformOrigin(element)));
-                        this.transformed = true;
-                    }
-                    else {
-                        this.d = SvgPath.getLine(this.baseVal.x1, this.baseVal.y1, this.baseVal.x2, this.baseVal.y2, true);
-                    }
-                    break;
-                }
-                case 'rect': {
-                    const rect = <SVGRectElement> element;
-                    this.baseVal.x = rect.x.baseVal.value;
-                    this.baseVal.y = rect.y.baseVal.value;
-                    this.baseVal.width = rect.width.baseVal.value;
-                    this.baseVal.height = rect.height.baseVal.value;
-                    const transform = this.transform;
-                    if (transform.length) {
-                        const points: Point[] = [
-                            { x: this.baseVal.x, y: this.baseVal.y },
-                            { x: this.baseVal.x + this.baseVal.width, y: this.baseVal.y },
-                            { x: this.baseVal.x + this.baseVal.width, y: this.baseVal.y + this.baseVal.height },
-                            { x: this.baseVal.x, y: this.baseVal.y + this.baseVal.height }
-                        ];
-                        this.d = SvgPath.getPolygon(SvgBuild.applyTransforms(transform, points, getTransformOrigin(element)));
-                        this.transformed = true;
-                    }
-                    else {
-                        this.d = SvgPath.getRect(this.baseVal.width, this.baseVal.height, this.baseVal.x, this.baseVal.y, true);
-                    }
-                    break;
-                }
-                case 'polyline':
-                case 'polygon': {
-                    const polygon = <SVGPolygonElement> element;
-                    this.baseVal.points = polygon.points;
-                    let points: Point[] = SvgBuild.toPointList(polygon.points);
-                    const transform = this.transform;
-                    if (transform.length) {
-                        points = SvgBuild.applyTransforms(transform, points, getTransformOrigin(element));
-                        this.transformed = true;
-                    }
-                    this.d = element.tagName === 'polygon' ? SvgPath.getPolygon(points) : SvgPath.getPolyline(points);
-                    break;
                 }
             }
+        }
+        else if (element instanceof SVGLineElement) {
+            const x1 = this.baseVal.x1 !== null ? this.baseVal.x1 : element.x1.baseVal.value;
+            const y1 = this.baseVal.y1 !== null ? this.baseVal.y1 : element.y1.baseVal.value;
+            const x2 = this.baseVal.x2 !== null ? this.baseVal.x2 : element.x2.baseVal.value;
+            const y2 = this.baseVal.y2 !== null ? this.baseVal.y2 : element.y2.baseVal.value;
+            const transform = this.filterTransform(exclusions);
+            if (transform.length) {
+                const points: Point[] = [
+                    { x: x1, y: y1 },
+                    { x: x2, y: y2 }
+                ];
+                const center: PointR = {
+                    x: (x1 + x2) / 2,
+                    y: (y1 + y2) / 2
+                };
+                const result = SvgBuild.applyTransforms(transform, points, getTransformOrigin(element), center);
+                if (result.length) {
+                    d = SvgPath.getPolyline(result);
+                    if (center.angle !== undefined) {
+                        center.angle = 0;
+                        this.rotateOrigin = center;
+                    }
+                    this.transformed = true;
+                    this.baseVal.transformed = transform;
+                }
+            }
+            if (d === '') {
+                d = SvgPath.getLine(x1, y1, x2, y2, true);
+            }
+        }
+        else if (element instanceof SVGEllipseElement || element instanceof SVGCircleElement) {
+            const cx = this.baseVal.cx !== null ? this.baseVal.cx : element.cx.baseVal.value;
+            const cy = this.baseVal.cy !== null ? this.baseVal.cy : element.cy.baseVal.value;
+            let rx = 0;
+            let ry = 0;
+            if (element instanceof SVGCircleElement) {
+                rx = this.baseVal.r !== null ? this.baseVal.r : element.r.baseVal.value;
+                ry = rx;
+            }
+            else if (element instanceof SVGEllipseElement) {
+                rx = this.baseVal.rx !== null ? this.baseVal.rx : element.rx.baseVal.value;
+                ry = this.baseVal.ry !== null ? this.baseVal.ry : element.ry.baseVal.value;
+            }
+            const transform = this.filterTransform(exclusions);
+            if (transform.length) {
+                const points: PointR[] = [
+                    { x: cx, y: cy, rx, ry }
+                ];
+                const center: PointR = {
+                    x: cx,
+                    y: cy
+                };
+                const result = SvgBuild.applyTransforms(transform, points, getTransformOrigin(element), center);
+                if (result.length) {
+                    const pt = <Required<PointR>> result[0];
+                    d = SvgPath.getEllipse(pt.x, pt.y, pt.rx, pt.ry, true);
+                    if (center.angle !== undefined) {
+                        if (rx === ry) {
+                            center.angle = 0;
+                        }
+                        this.rotateOrigin = center;
+                    }
+                    this.transformed = true;
+                    this.baseVal.transformed = transform;
+                }
+            }
+            if (d === '') {
+                d = SvgPath.getEllipse(cx, cy, rx, ry, true);
+            }
+        }
+        else if (element instanceof SVGRectElement) {
+            const x = this.baseVal.x !== null ? this.baseVal.x : element.x.baseVal.value;
+            const y = this.baseVal.y !== null ? this.baseVal.y : element.y.baseVal.value;
+            const width = this.baseVal.width !== null ? this.baseVal.width : element.width.baseVal.value;
+            const height = this.baseVal.height !== null ? this.baseVal.height : element.height.baseVal.value;
+            const transform = this.filterTransform(exclusions);
+            if (transform.length) {
+                const points: Point[] = [
+                    { x, y },
+                    { x: x + width, y },
+                    { x: x + width, y: y + height },
+                    { x, y: y + height }
+                ];
+                const center: PointR = {
+                    x: x + (width / 2),
+                    y: y + (height / 2)
+                };
+                const result = SvgBuild.applyTransforms(transform, points, getTransformOrigin(element), center);
+                if (result.length) {
+                    d = SvgPath.getPolygon(result);
+                    if (center.angle !== undefined) {
+                        center.angle = 0;
+                        this.rotateOrigin = center;
+                    }
+                    this.transformed = true;
+                    this.baseVal.transformed = transform;
+                }
+            }
+            if (d === '') {
+                d = SvgPath.getRect(width, height, x, y, true);
+            }
+        }
+        else if (element instanceof SVGPolygonElement || element instanceof SVGPolylineElement) {
+            let points = SvgBuild.toPointList(this.baseVal.points !== null ? this.baseVal.points : element.points);
+            const transform = this.filterTransform(exclusions);
+            if (transform.length) {
+                const center: PointR = SvgBuild.getPathCenter(points);
+                const result = SvgBuild.applyTransforms(transform, points, getTransformOrigin(element), center);
+                if (result.length) {
+                    points = result;
+                    if (center.angle !== undefined) {
+                        center.angle = 0;
+                        this.rotateOrigin = center;
+                    }
+                    this.transformed = true;
+                    this.baseVal.transformed = transform;
+                }
+            }
+            d = element.tagName === 'polygon' ? SvgPath.getPolygon(points) : SvgPath.getPolyline(points);
+        }
+        if (savePath) {
+            this.d = d;
+        }
+        return d;
+    }
+
+    private init() {
+        const element = this.element;
+        if (element instanceof SVGPathElement) {
+            this.baseVal.d = $dom.cssAttribute(element, 'd');
+        }
+        else if (element instanceof SVGLineElement) {
+            this.baseVal.x1 = element.x1.baseVal.value;
+            this.baseVal.y1 = element.y1.baseVal.value;
+            this.baseVal.x2 = element.x2.baseVal.value;
+            this.baseVal.y2 = element.y2.baseVal.value;
+        }
+        else if (element instanceof SVGRectElement) {
+            this.baseVal.x = element.x.baseVal.value;
+            this.baseVal.y = element.y.baseVal.value;
+            this.baseVal.width = element.width.baseVal.value;
+            this.baseVal.height = element.height.baseVal.value;
+        }
+        else if (element instanceof SVGCircleElement) {
+            this.baseVal.cx = element.cx.baseVal.value;
+            this.baseVal.cy = element.cy.baseVal.value;
+            this.baseVal.r = element.r.baseVal.value;
+        }
+        else if (element instanceof SVGEllipseElement) {
+            this.baseVal.cx = element.cx.baseVal.value;
+            this.baseVal.cy = element.cy.baseVal.value;
+            this.baseVal.rx = element.rx.baseVal.value;
+            this.baseVal.ry = element.ry.baseVal.value;
+        }
+        else if (element instanceof SVGPolygonElement || element instanceof SVGPolylineElement) {
+            this.baseVal.points = element.points;
         }
         const clipPath = $util.REGEX_PATTERN.CSS_URL.exec($dom.cssAttribute(element, 'clip-path'));
         if (clipPath) {

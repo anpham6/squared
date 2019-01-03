@@ -5,8 +5,8 @@ export default `
 		<item name="android:windowDrawsSystemBarBackgrounds">true</item>
 		<item name="android:statusBarColor">@android:color/transparent</item>
 		<item name="android:windowTranslucentStatus">true</item>
-!items
+    <<AA>>
 		<item name="{&name}">{&value}</item>
-!items
+    <<AA>>
 	</style>
 </resources>`;

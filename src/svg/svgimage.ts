@@ -1,3 +1,5 @@
+import { SvgImageBaseVal } from './@types/object';
+
 import SvgBuild from './svgbuild';
 import SvgElement from './svgelement';
 
@@ -11,7 +13,14 @@ export default class SvgImage extends SvgElement implements squared.svg.SvgImage
     public width: number;
     public height: number;
     public href: string;
-    public residualAngle?: number;
+    public rotateOrigin?: PointR;
+    public baseVal: SvgImageBaseVal = {
+        x: null,
+        y: null,
+        width: null,
+        height: null,
+        transformed: null
+    };
 
     constructor(
         public readonly element: SVGImageElement | SVGUseElement,
@@ -23,10 +32,11 @@ export default class SvgImage extends SvgElement implements squared.svg.SvgImage
         this.width = element.width.baseVal.value;
         this.height = element.height.baseVal.value;
         this.href = element instanceof SVGUseElement ? href : $util.resolvePath(element.href.baseVal);
+        this.init();
     }
 
-    public transformRect() {
-        const transform = this.transform;
+    public build(exclusions?: number[]) {
+        const transform = this.filterTransform(exclusions);
         if (transform.length) {
             let x = this.x;
             let y = this.y;
@@ -34,39 +44,40 @@ export default class SvgImage extends SvgElement implements squared.svg.SvgImage
             transformable.reverse();
             for (let i = 0; i < transformable.length; i++) {
                 const item = transformable[i];
-                const matrix = item.matrix;
+                const m = item.matrix;
+                const localX = x;
+                x = applyMatrixX(m, localX, y);
+                y = applyMatrixY(m, localX, y);
                 switch (item.type) {
                     case SVGTransform.SVG_TRANSFORM_SCALE:
-                        x *= matrix.a;
-                        y *= matrix.d;
-                        this.width *= matrix.a;
-                        this.height *= matrix.d;
+                        this.width *= m.a;
+                        this.height *= m.d;
                         break;
                     case SVGTransform.SVG_TRANSFORM_ROTATE:
-                        x = applyMatrixX(matrix, x, x);
-                        y = applyMatrixY(matrix, y, y);
-                        if (matrix.a < 0) {
-                            x += matrix.a * this.width;
+                        if (item.angle !== 0) {
+                            if (m.a < 0) {
+                                x += m.a * this.width;
+                            }
+                            if (m.c < 0) {
+                                x += m.c * this.width;
+                            }
+                            if (m.b < 0) {
+                                y += m.b * this.height;
+                            }
+                            if (m.d < 0) {
+                                y += m.d * this.height;
+                            }
+                            if (this.rotateOrigin === undefined) {
+                                this.rotateOrigin = {
+                                    angle: item.angle,
+                                    x: 0,
+                                    y: 0
+                                };
+                            }
+                            else {
+                                this.rotateOrigin.angle = (this.rotateOrigin.angle || 0) + item.angle;
+                            }
                         }
-                        if (matrix.c < 0) {
-                            x += matrix.c * this.width;
-                        }
-                        if (matrix.b < 0) {
-                            y += matrix.b * this.height;
-                        }
-                        if (matrix.d < 0) {
-                            y += matrix.d * this.height;
-                        }
-                        if (this.residualAngle === undefined) {
-                            this.residualAngle = item.angle;
-                        }
-                        else {
-                            this.residualAngle += item.angle;
-                        }
-                        break;
-                    case SVGTransform.SVG_TRANSFORM_TRANSLATE:
-                        x += matrix.e;
-                        y += matrix.f;
                         break;
                 }
             }
@@ -75,5 +86,13 @@ export default class SvgImage extends SvgElement implements squared.svg.SvgImage
             this.transform = skewXY;
             this.transformed = skewXY.length === 0;
         }
+        return '';
+    }
+
+    private init() {
+        this.baseVal.x = this.x;
+        this.baseVal.y = this.y;
+        this.baseVal.width = this.width;
+        this.baseVal.height = this.height;
     }
 }

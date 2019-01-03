@@ -123,6 +123,39 @@ export interface ResourceStoredMap {
     images: Map<string, StringMap>;
 }
 
+export interface TemplateData {
+    A: TemplateAAData[];
+    B?: TemplateAAData[] | false;
+    C?: TemplateAAData[] | false;
+    D?: TemplateAAData[] | false;
+    E?: TemplateAAData[] | false;
+    F?: TemplateAAData[] | false;
+    G?: TemplateAAData[] | false;
+    [name: string]: Undefined<string | TemplateAAData[] | false>;
+}
+
+export interface TemplateAAData {
+    AA?: TemplateAAAData[] | false;
+    BB?: TemplateAAAData[] | false;
+    CC?: TemplateAAAData[] | false;
+    DD?: TemplateAAAData[] | false;
+    EE?: TemplateAAAData[] | false;
+    FF?: TemplateAAAData[] | false;
+    GG?: TemplateAAAData[] | false;
+    [name: string]: Undefined<string | TemplateAAAData[] | false>;
+}
+
+export interface TemplateAAAData {
+    AAA?: any[] | false;
+    BBB?: any[] | false;
+    CCC?: any[] | false;
+    DDD?: any[] | false;
+    EEE?: any[] | false;
+    FFF?: any[] | false;
+    GGG?: any[] | false;
+    [name: string]: Undefined<string | any[] | false>;
+}
+
 export interface Asset {
     uri?: string;
 }

@@ -1,11 +1,11 @@
 export default `
 <?xml version="1.0" encoding="utf-8"?>
 <set xmlns:android="http://schemas.android.com/apk/res/android">
-!1
+<<A>>
 	<set android:ordering="{~ordering}">
-!2
+	<<AA>>
 		<set android:ordering="{~ordering}">
-!objectAnimators
+		<<BBB>>
 			<objectAnimator
 				android:propertyName="{~propertyName}"
 				android:valueType="{~valueType}"
@@ -19,19 +19,19 @@ export default `
 				android:fillAfter="{~fillAfter}"
 				android:fillBefore="{~fillBefore}"
 				android:fillEnabled="{~fillEnabled}">
-!propertyValues
+			<<propertyValues>>
 				<propertyValuesHolder android:propertyName="{&propertyName}">
-!keyframes
+				<<keyframes>>
 					<keyframe android:fraction="{~fraction}" android:value="{~value}" />
-!keyframes
+				<<keyframes>>
 				</propertyValuesHolder>
-!propertyValues
+			<<propertyValues>>
 			</objectAnimator>
-!objectAnimators
+		<<BBB>>
 		</set>
-!fill
+		<<CCC>>
 		<set>
-!replace
+		<<replace>>
 			<objectAnimator
 				android:propertyName="{&propertyName}"
 				android:valueType="{~valueType}"
@@ -39,10 +39,10 @@ export default `
 				android:valueTo="{&valueTo}"
 				android:duration="{~duration}"
 				android:repeatCount="{~repeatCount}" />
-!replace
+		<<replace>>
 		</set>
-!fill
-!2
+		<<CCC>>
+	<<AA>>
 	</set>
-!1
+<<A>>
 </set>`;

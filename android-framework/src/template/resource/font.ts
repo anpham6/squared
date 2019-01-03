@@ -1,8 +1,8 @@
 export default `
 <?xml version="1.0" encoding="utf-8"?>
 <font-family {&namespace}>
-!1
+<<A>>
 	<font android:fontStyle="{&style}" android:fontWeight="{&weight}" android:font="{&font}" />
-!1
+<<A>>
 </font-family>
 <!-- filename: res/font/{&name}.xml -->`;

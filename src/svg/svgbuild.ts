@@ -5,16 +5,8 @@ import { applyMatrixX, applyMatrixY, getRadiusY } from './lib/util';
 const $util = squared.lib.util;
 
 export default class SvgBuild implements squared.svg.SvgBuild {
-    public static applyTransforms(transform: SvgTransform[], points: Point[] | PointR[], origin?: Point) {
-        const result: PointR[] = [];
-        for (const pt of points as PointR[]) {
-            const item: PointR = { x: pt.x, y: pt.y };
-            if (pt.rx !== undefined && pt.ry !== undefined) {
-                item.rx = pt.rx;
-                item.ry = pt.ry;
-            }
-            result.push(item);
-        }
+    public static applyTransforms(transform: SvgTransform[], points: Point[] | PointR[], origin?: Point, center?: PointR) {
+        const result = SvgBuild.toPointList(points);
         const items = transform.slice().reverse();
         for (const item of items) {
             let x1 = 0;
@@ -55,36 +47,55 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                         break;
                 }
             }
+            const m = item.matrix;
+            if (center) {
+                switch (item.type) {
+                    case SVGTransform.SVG_TRANSFORM_SCALE:
+                        center.x *= m.a;
+                        center.y *= m.d;
+                        break;
+                    case SVGTransform.SVG_TRANSFORM_ROTATE:
+                        if (item.angle !== 0) {
+                            center.x -= item.angle;
+                            center.y += item.angle;
+                            center.angle = (center.angle || 0) + item.angle;
+                        }
+                        break;
+                    case SVGTransform.SVG_TRANSFORM_TRANSLATE:
+                        center.x += m.e;
+                        center.y += m.f;
+                        break;
+                }
+            }
             for (const pt of result) {
                 const x = pt.x;
-                pt.x = applyMatrixX(item.matrix, x + x1, pt.y + y1) + x3;
-                pt.y = applyMatrixY(item.matrix, x + x2, pt.y + y2) + y3;
-                if (pt.rx !== undefined && pt.ry !== undefined && item.type === SVGTransform.SVG_TRANSFORM_SCALE) {
+                pt.x = applyMatrixX(m, x + x1, pt.y + y1) + x3;
+                pt.y = applyMatrixY(m, x + x2, pt.y + y2) + y3;
+                if (pt.rx !== undefined && pt.ry !== undefined) {
                     const rx = pt.rx;
-                    pt.rx = applyMatrixX(item.matrix, rx + x1, pt.ry + y1);
-                    pt.ry = applyMatrixY(item.matrix, rx + x2, pt.ry + y2);
+                    switch (item.type) {
+                        case SVGTransform.SVG_TRANSFORM_SCALE:
+                            pt.rx = applyMatrixX(m, rx + x1, pt.ry + y1);
+                            pt.ry = applyMatrixY(m, rx + x2, pt.ry + y2);
+                            break;
+                    }
                 }
             }
         }
         return result;
     }
 
-    public static canTransformSkew(values: SvgPathCommand[]) {
-        return !values.some(item => {
-            switch (item.command.toUpperCase()) {
-                case 'A':
-                case 'C':
-                case 'S':
-                case 'Q':
-                case 'T':
-                    return true;
-            }
-            return false;
-        });
-    }
-
     public static filterTransformSkew(transform: SvgTransform[]) {
         return $util.partitionArray(transform, item => item.type !== SVGTransform.SVG_TRANSFORM_SKEWX && item.type !== SVGTransform.SVG_TRANSFORM_SKEWY);
+    }
+
+    public static getPathCenter(values: Point[]): Point {
+        const pointsX = values.map(pt => pt.x);
+        const pointsY = values.map(pt => pt.y);
+        return {
+            x: ($util.minArray(pointsX) + $util.maxArray(pointsX)) / 2,
+            y: ($util.minArray(pointsY) + $util.maxArray(pointsY)) / 2
+        };
     }
 
     public static toCoordinateList(value: string) {
@@ -100,11 +111,23 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
-    public static toPointList(points: SVGPointList) {
-        const result: Point[] = [];
-        for (let j = 0; j < points.numberOfItems; j++) {
-            const pt = points.getItem(j);
-            result.push({ x: pt.x, y: pt.y });
+    public static toPointList(points: SVGPointList | Point[] | PointR[]) {
+        const result: PointR[] = [];
+        if (points instanceof SVGPointList) {
+            for (let j = 0; j < points.numberOfItems; j++) {
+                const pt = points.getItem(j);
+                result.push({ x: pt.x, y: pt.y });
+            }
+        }
+        else {
+            for (const pt of points as PointR[]) {
+                const item: PointR = { x: pt.x, y: pt.y };
+                if (pt.rx !== undefined && pt.ry !== undefined) {
+                    item.rx = pt.rx;
+                    item.ry = pt.ry;
+                }
+                result.push(item);
+            }
         }
         return result;
     }

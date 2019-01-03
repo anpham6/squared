@@ -46,7 +46,15 @@ export interface SvgPathCommand {
     sweepFlag?: number;
 }
 
-export interface SvgPathBaseVal {
+export interface SvgImageBaseVal {
+    x: number | null;
+    y: number | null;
+    width: number | null;
+    height: number | null;
+    transformed: SvgTransform[] | null;
+}
+
+export interface SvgPathBaseVal extends SvgImageBaseVal {
     d: string | null;
     cx: number | null;
     cy: number | null;
@@ -57,10 +65,6 @@ export interface SvgPathBaseVal {
     x2: number | null;
     y1: number | null;
     y2: number | null;
-    x: number | null;
-    y: number | null;
-    width: number | null;
-    height: number | null;
     points: SVGPointList | Point[] | null;
 }
 

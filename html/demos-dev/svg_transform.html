@@ -39,35 +39,34 @@
 <body>
     <!-- START: DEMO -->
     <div id="squared_ui" style="width: 300px;">
-        <svg width="120" height="120" viewBox="0 0 240 240">
-            <g fill="grey">
-                <path d="M 50,30 A 20,20 0,0,1 90,30 A 20,20 0,0,1 130,30 Q 130,60 90,90 Q 50,60 50,30 z" />
-                <animateTransform attributeName="transform" type="scale" dur="5s" keyTimes="0;0.75;1" repeatCount="1" values="1;2 2.1;3" />
-            </g>
+        <svg viewBox="0 0 200 200">
+            <line x1="0" y1="80" x2="100" y2="20" stroke="green" />
+            <line x1="0" y1="80" x2="100" y2="20" stroke="red" transform="rotate(20) scale(2, 1.5) skewX(20) translate(10, 20)" />
+            <line x1="0" y1="80" x2="100" y2="20" stroke="blue" transform="scale(2, 1.5) rotate(10) skewY(20) translate(10, 20)" />
+            <rect x="10" y="10" width="30" height="20" fill="green" />
+            <rect x="10" y="10" width="30" height="20" fill="red" transform="rotate(20) scale(2, 1.5) skewX(20) translate(10, 20)" />
+            <rect x="10" y="10" width="30" height="20" fill="blue" transform="scale(2, 1.5) rotate(10) skewY(20) translate(10, 20)" />
         </svg>
-        <svg width="120" height="120" viewBox="0 0 240 240">
-            <g fill="grey">
-                <path d="M 50,30 A 20,20 0,0,1 90,30 A 20,20 0,0,1 130,30 Q 130,60 90,90 Q 50,60 50,30 z" />
-                <animateTransform attributeName="transform" type="translate" dur="20s" keyTimes="0;0.75;1" repeatCount="1" values="10;50;80 80" data-android-fillBefore="true" />
-            </g>
+        <svg viewBox="0 0 200 200">
+            <circle cx="60" cy="60" r="20" fill="green" />
+            <circle cx="60" cy="60" r="20" fill="green" transform="skewX(20)" />
+            <circle cx="60" cy="60" r="20" fill="red" transform="scale(2, 1.5) rotate(20) translate(10, 20)" />
+            <circle cx="0" cy="60" r="30" fill="green" />
+            <circle cx="0" cy="60" r="30" fill="red" transform="rotate(10) scale(2, 1.5) translate(10, 20)" />
+            <ellipse cx="30" cy="50" rx="10" ry="20" fill="green" />
+            <ellipse cx="30" cy="50" rx="10" ry="20" fill="red" transform="scale(2, 1.5) rotate(20) translate(10, 20)" />
+            <ellipse cx="10" cy="40" rx="35" ry="5" fill="green" />
+            <ellipse cx="10" cy="40" rx="35" ry="5" fill="red" transform="rotate(10) scale(2, 1.5) translate(10, 20)" />
         </svg>
-        <svg width="120" height="120" viewBox="0 0 240 240">
-            <g fill="grey">
-                <path d="M 50,30 A 20,20 0,0,1 90,30 A 20,20 0,0,1 130,30 Q 130,60 90,90 Q 50,60 50,30 z" />
-                <animateTransform attributeName="transform" type="rotate" dur="10s" keyTimes="0;0.75;1" repeatCount="1" values="-10 50 100;-90 60 120;-180 70 140" data-android-fill-after="true" />
-            </g>
+        <svg viewBox="0 0 200 200">
+            <path d="M 50,30 A 20,20 0,0,1 90,30 A 20,20 0,0,1 130,30 Q 130,60 90,90 Q 50,60 50,30 z" fill="green" />
+            <path d="M 50,30 A 20,20 0,0,1 90,30 A 20,20 0,0,1 130,30 Q 130,60 90,90 Q 50,60 50,30 z" transform="rotate(-20) scale(2, 1.5) translate(10, 20)" fill="red" />
+            <path d="M 50,30 A 20,20 0,0,1 90,30 A 20,20 0,0,1 130,30 Q 130,60 90,90 Q 50,60 50,30 z" transform="scale(2, 1.5) rotate(10) translate(10, 20)" fill="blue" />
         </svg>
-        <svg viewBox="0 0 100 100">
-            <clipPath id="myClip">
-                <circle cx="40" cy="35" r="35">
-                    <animate attributeName="r" values="10; 100" keyTimes="0; 1" dur="10s" repeatCount="1" />
-                </circle>
-            </clipPath>
-            <path id="heart" d="M10,30 A20,20,0,0,1,50,30 A20,20,0,0,1,90,30 Q90,60,50,90 Q10,60,10,30 Z" />
-            <use clip-path="url(#myClip)" href="#heart" fill="red">
-                <animate attributeName="x" values="0; 50" keyTimes="0; 1" begin="5s" dur="10s" repeatCount="1" />
-                <animate attributeName="y" values="0; 30; 50" keyTimes="0; 0.5; 1" begin="5s" dur="10s" repeatCount="1" />
-            </use>
+        <svg viewBox="0 0 200 200">
+            <polygon points="0,0 75,13 75,35 100,0" stroke="purple" fill="green" />
+            <polygon points="0,0 75,13 75,35 100,0" transform="rotate(-20) scale(1.1, 1.2) translate(10, 20)" stroke="purple" fill="red" />
+            <polygon points="0,0 75,13 75,35 100,0" transform="scale(1.1, 1.2) rotate(10) translate(10, 20)" stroke="purple" fill="blue" />
         </svg>
     </div>
     <!-- END: DEMO -->

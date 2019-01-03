@@ -1,27 +1,33 @@
-import { SvgPathBaseVal, SvgTransform, SvgViewBox } from '../svg/@types/object';
+import { SvgImageBaseVal, SvgPathBaseVal, SvgTransform, SvgViewBox } from '../svg/@types/object';
 
 declare global {
     namespace squared.svg {
         interface SvgElement extends SvgBase {
             transform: SvgTransform[];
             transformed: boolean;
+            readonly animatable: boolean;
+            build(exclusions?: number[]): string;
+            filterTransform(exclusions?: number[]): SvgTransform[];
         }
 
         interface SvgShape extends SvgElement {
             path?: SvgPath;
-            setPath(value: SvgPath | string): void;
+            setPath(value: SvgPath): void;
             synchronize(useKeyTime?: boolean): void;
         }
 
-        interface SvgImage extends SvgElement, SvgViewBox {
-            href: string;
-            residualAngle?: number;
-            transformRect(): void;
+        interface SvgTransformable {
+            baseVal: SvgImageBaseVal;
+            rotateOrigin?: PointR;
         }
 
-        interface SvgUse extends SvgShape, SvgViewBox {}
+        interface SvgImage extends SvgElement, SvgViewBox, SvgTransformable {
+            href: string;
+        }
 
-        interface SvgPath extends SvgElement {
+        interface SvgUse extends SvgShape, Point {}
+
+        interface SvgPath extends SvgElement, SvgTransformable {
             opacity: number;
             d: string;
             color: string;

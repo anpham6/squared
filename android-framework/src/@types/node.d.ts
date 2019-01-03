@@ -28,7 +28,7 @@ export interface BackgroundGradient {
     startColor: string;
     endColor: string;
     centerColor: string;
-    colorStop: ColorStop[];
+    colorStops: ColorStop[];
     angle?: string;
     startX?: string;
     startY?: string;

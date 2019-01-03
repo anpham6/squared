@@ -1,12 +1,12 @@
 export default `
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-!1
+<<A>>
 	<string-array name="{&name}">
-!items
+	<<AA>>
 		<item>{&value}</item>
-!items
+	<<AA>>
 	</string-array>
-!1
+<<A>>
 </resources>
 <!-- filename: res/values/string_arrays.xml -->`;

@@ -1,12 +1,12 @@
 export default `
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-!1
+<<A>>
 	<style name="{&name}" parent="{~parent}">
-!items
+	<<AA>>
 		<item name="{&name}">{&value}</item>
-!items
+	<<AA>>
 	</style>
-!1
+<<A>>
 </resources>
 <!-- filename: res/values/styles.xml -->`;

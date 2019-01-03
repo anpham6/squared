@@ -74,14 +74,14 @@ export function replaceCharacter(value: string) {
 export function parseTemplate(value: string) {
     const result: StringMap = { '__root': value };
     function parseSection(section: string) {
-        const pattern = /(!(\w+))\n[\w\W]*\n*\1/g;
+        const pattern = /(\t*<<(\w+)>>)\n[\w\W]*\n*\1/g;
         let match: RegExpExecArray | null = null;
         do {
             match = pattern.exec(section);
             if (match) {
                 const segment = match[0].replace(new RegExp(`^${match[1]}\\n`), '').replace(new RegExp(`${match[1]}$`), '');
                 for (const index in result) {
-                    result[index] = result[index].replace(new RegExp(match[0], 'g'), `{%${match[2]}}`);
+                    result[index] = result[index].replace(match[0], `{%${match[2]}}`);
                 }
                 result[match[2]] = segment;
                 parseSection(segment);
@@ -101,7 +101,12 @@ export function createTemplate(value: StringMap, data: ExternalData, index?: str
             for (let i = 0; i < data[attr].length; i++) {
                 result += createTemplate(value, data[attr][i], attr.toString());
             }
-            result = trimEnd(result, '\\n');
+            if (result === '') {
+                result = false;
+            }
+            else {
+                result = trimEnd(result, '\\n');
+            }
         }
         else {
             result = data[attr];
@@ -116,29 +121,25 @@ export function createTemplate(value: StringMap, data: ExternalData, index?: str
             }
             output = output.replace(new RegExp(`{${hash + attr}}`, 'g'), result);
         }
-        if (result === false || Array.isArray(result) && result.length === 0 || hash && hash !== '%') {
-            output = output.replace(new RegExp(`{%${attr}}\\n*`, 'g'), '');
+        if (result === false || Array.isArray(result) && result.length === 0) {
+            output = output.replace(new RegExp(`\\t*{%${attr}}\\n*`, 'g'), '');
         }
         if (hash === '' && new RegExp(`{&${attr}}`).test(output)) {
-            output = '';
+            return '';
         }
     }
     if (index === undefined) {
         output = output.replace(/\n{%\w+}\n/g, '\n');
     }
-    return output.replace(/\s+([\w:]+="[^"]*)?{~\w+}"?/g, '');
-}
-
-export function getTemplateSection(data: ExternalData, ...levels: string[]) {
-    let current = data;
-    for (const level of levels) {
-        const [index, array = '0'] = level.split('-');
-        if (current[index] && current[index][parseInt(array)]) {
-            current = current[index][parseInt(array)];
-        }
-        else {
-            return {};
+    if (output.indexOf('<!--') !== -1) {
+        const match = /^\t*(<!--(\w+))\s.*?-->\s*\n([\w\W]*)\n\t*(<!--\/\2)-->\n$/.exec(output);
+        if (match) {
+            output = output
+                .replace(match[3], match[3].split('\n').map(line => `\t${line}`).join('\n'))
+                .replace(match[1], `<${match[2]}`)
+                .replace(match[4], `</${match[2]}`)
+                .replace(/-->\n/g, '>\n');
         }
     }
-    return current;
+    return output.replace(/\s+([\w:]+="[^"]*)?{~\w+}"?/g, '');
 }

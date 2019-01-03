@@ -1,4 +1,4 @@
-import { ExtensionResult } from '../../src/base/@types/application';
+import { ExtensionResult, TemplateData } from '../../src/base/@types/application';
 
 import { WIDGET_NAME } from '../lib/constant';
 
@@ -306,21 +306,21 @@ export default class Toolbar<T extends $View> extends squared.base.Extension<T> 
             const options: ExternalData = Object.assign({}, this.options.resource);
             $util.defaultWhenNull(options, 'appTheme', $utilA.getAppTheme(this.application.resourceHandler.fileHandler.assets) || 'AppTheme');
             $util.defaultWhenNull(options, 'parentTheme', 'Theme.AppCompat.Light.DarkActionBar');
-            const data = {
-                'appTheme': options.appTheme,
-                'appBarOverlay': themeData.appBarOverlay || 'ThemeOverlay.AppCompat.Dark.ActionBar',
-                'popupOverlay': themeData.popupOverlay || 'ThemeOverlay.AppCompat.Light',
-                '1': [{
-                    'appTheme': options.appTheme,
-                    'parentTheme': options.parentTheme,
-                    'items': []
+            const data: TemplateData = {
+                appTheme: options.appTheme,
+                appBarOverlay: themeData.appBarOverlay || 'ThemeOverlay.AppCompat.Dark.ActionBar',
+                popupOverlay: themeData.popupOverlay || 'ThemeOverlay.AppCompat.Light',
+                A: [{
+                    appTheme: options.appTheme,
+                    parentTheme: options.parentTheme,
+                    AA: []
                 }]
             };
             if (themeData.target) {
-                data['1'] = [];
+                data.A = [];
             }
-            else {
-                data['items'] = data['1'][0]['items'];
+            else if (data.A[0].AA) {
+                data.AA = data.A[0].AA;
             }
             $util.defaultWhenNull(options, 'output', 'path', 'res/values');
             $util.defaultWhenNull(options, 'output', 'file', `${WIDGET_NAME.TOOLBAR}.xml`);

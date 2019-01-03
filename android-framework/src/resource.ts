@@ -1,6 +1,7 @@
-import { SvgLinearGradient, SvgRadialGradient } from '../../src/svg/@types/object';
+import { TemplateAAData } from '../../src/base/@types/application';
 import { UserSettingsAndroid } from './@types/application';
 import { BackgroundGradient } from './@types/node';
+import { SvgLinearGradient, SvgRadialGradient } from '../../src/svg/@types/object';
 
 import { EXT_ANDROID, RESERVED_JAVA } from './lib/constant';
 
@@ -37,7 +38,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                 startColor: !hasStop ? Resource.addColor(item.colorStop[0].color) : '',
                 centerColor: !hasStop && item.colorStop.length > 2 ? Resource.addColor(item.colorStop[1].color) : '',
                 endColor: !hasStop ? Resource.addColor(item.colorStop[item.colorStop.length - 1].color) : '',
-                colorStop: []
+                colorStops: []
             };
             switch (item.type) {
                 case 'radial':
@@ -156,7 +157,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                     let offset = parseInt(stop.offset);
                     if (i === 0) {
                         if (!node.svgElement && offset !== 0) {
-                            gradient.colorStop.push({
+                            gradient.colorStops.push({
                                 color,
                                 offset: '0',
                                 opacity: stop.opacity
@@ -171,7 +172,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                             offset = 100;
                         }
                     }
-                    gradient.colorStop.push({
+                    gradient.colorStops.push({
                         color,
                         offset: (offset / 100).toFixed(2),
                         opacity: stop.opacity
@@ -385,11 +386,11 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
         return '';
     }
 
-    public addStyleTheme(template: string, data: ExternalData, options: ThemeTemplate) {
-        if (options.items && $util.isArray(data.items)) {
+    public addStyleTheme(template: string, data: TemplateAAData, options: ThemeTemplate) {
+        if (options.items && Array.isArray(data.AA)) {
             const items = Resource.formatOptions(options.items, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
             for (const name in items) {
-                data.items.push({
+                data.AA.push({
                     name,
                     value: items[name]
                 });

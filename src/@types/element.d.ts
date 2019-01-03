@@ -143,4 +143,5 @@ interface Point {
 interface PointR extends Point {
     rx?: number;
     ry?: number;
+    angle?: number;
 }

@@ -1,4 +1,4 @@
-import { ExtensionResult } from '../../src/base/@types/application';
+import { ExtensionResult, TemplateAAData } from '../../src/base/@types/application';
 
 import { WIDGET_NAME } from '../lib/constant';
 
@@ -71,10 +71,10 @@ export default class BottomNavigation<T extends $View> extends squared.base.Exte
             const options: ExternalData = Object.assign({}, this.options.resource);
             $util.defaultWhenNull(options, 'appTheme', $utilA.getAppTheme(this.application.resourceHandler.fileHandler.assets) || 'AppTheme');
             $util.defaultWhenNull(options, 'parentTheme', 'Theme.AppCompat.Light.DarkActionBar');
-            const data = {
-                'appTheme': options.appTheme,
-                'parentTheme': options.parentTheme,
-                'items': []
+            const data: TemplateAAData = {
+                appTheme: options.appTheme,
+                parentTheme: options.parentTheme,
+                AA: []
             };
             $util.defaultWhenNull(options, 'output', 'path', 'res/values');
             $util.defaultWhenNull(options, 'output', 'file', `${WIDGET_NAME.BOTTOM_NAVIGATION}.xml`);

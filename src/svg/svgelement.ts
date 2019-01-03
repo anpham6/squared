@@ -6,18 +6,25 @@ import SvgCreate from './svgcreate';
 import { getTransform, isSvgVisible } from './lib/util';
 
 export default abstract class SvgElement implements squared.svg.SvgElement {
+    public animatable = true;
     public animate: SvgAnimation[];
     public visible: boolean;
 
     public readonly name: string;
 
-    private _transform?: SvgTransform[];
     private _transformed = false;
+    private _transform?: SvgTransform[];
 
     constructor(public readonly element: SVGGraphicsElement) {
         this.name = SvgCreate.setName(element);
-        this.animate = SvgCreate.toAnimateList(element);
+        this.animate = this.animatable ? SvgCreate.toAnimateList(element) : [];
         this.visible = isSvgVisible(element);
+    }
+
+    public abstract build(): string;
+
+    public filterTransform(exclusions?: number[]) {
+        return exclusions ? this.transform.filter(item => !exclusions.includes(item.type)) : this.transform;
     }
 
     set transform(value) {
@@ -32,14 +39,6 @@ export default abstract class SvgElement implements squared.svg.SvgElement {
 
     set transformed(value) {
         this._transformed = value;
-        if (!value) {
-            this._transform = undefined;
-        }
-        else {
-            if (this._transform !== undefined) {
-                this._transform.length = 0;
-            }
-        }
     }
     get transformed() {
         return this._transformed;

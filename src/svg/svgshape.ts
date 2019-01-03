@@ -7,7 +7,7 @@ import SvgBuild from './svgbuild';
 import SvgPath from './svgpath';
 import SvgElement from './svgelement';
 
-import { getLeastCommonMultiple, getTransformOrigin, sortNumber } from './lib/util';
+import { getLeastCommonMultiple, getTransformOrigin, isSvgShape, sortNumber } from './lib/util';
 
 type TimelineIndex = Map<number, number>;
 type TimelineMap = ObjectMap<TimelineIndex>;
@@ -133,7 +133,7 @@ function getPathData(map: KeyTimeMap, path: SvgPath, methodName: string, attrs: 
     return result;
 }
 
-function getEllipsePoints(values: number[], circle: boolean): Required<PointR>[] {
+function getEllipsePoints(values: number[], circle: boolean): PointR[] {
     return [{ x: values[0], y: values[1], rx: values[2], ry: values[circle ? 2 : 3] }];
 }
 
@@ -699,22 +699,26 @@ export default class SvgShape extends SvgElement implements squared.svg.SvgShape
 
     constructor(public readonly element: SVGGraphicsElement) {
         super(element);
-        const path = new SvgPath(element);
-        if (path.d && path.d !== 'none') {
-            this.setPath(path);
+        if (isSvgShape(element)) {
+            this.setPath(new SvgPath(element));
         }
     }
 
-    public setPath(value: SvgPath | string) {
-        if (typeof value === 'string') {
-            value = new SvgPath(this.element, value);
-        }
+    public setPath(value: SvgPath) {
         this.path = value;
         for (const item of this.animate) {
             if (item instanceof SvgAnimate) {
                 item.parentPath = value;
             }
         }
+    }
+
+    public build(exclusions?: number[]) {
+        let d = '';
+        if (this.path) {
+            d = this.path.build(exclusions);
+        }
+        return d;
     }
 
     public synchronize(useKeyTime = true) {

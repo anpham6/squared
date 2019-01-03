@@ -1,4 +1,4 @@
-import { ImageAsset } from '../../../../src/base/@types/application';
+import { ImageAsset, TemplateData, TemplateAAData } from '../../../../src/base/@types/application';
 import { BackgroundGradient } from '../../@types/node';
 
 import { CONTAINER_NODE } from '../../lib/enumeration';
@@ -66,11 +66,7 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
                     if (direction === 0 || direction === 2) {
                         halfSize = !halfSize;
                     }
-                    if (color.valueRGB === '#000000' && (
-                            groove && (direction === 1 || direction === 3) ||
-                            !groove && (direction === 0 || direction === 2)
-                       ))
-                    {
+                    if (color.valueRGB === '#000000' && (groove && (direction === 1 || direction === 3) || !groove && (direction === 0 || direction === 2))) {
                         halfSize = !halfSize;
                     }
                     if (halfSize) {
@@ -210,7 +206,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 const backgroundVector: StringMap[] = [];
                 const backgroundRepeat = stored.backgroundRepeat.split(',').map(value => value.trim());
                 const backgroundDimensions: Undefined<ImageAsset>[] = [];
-                const backgroundGradient: BackgroundGradient[] = [];
+                const backgroundGradient: (BackgroundGradient & TemplateAAData)[] = [];
                 const backgroundSize = stored.backgroundSize.split(',').map(value => value.trim());
                 const backgroundPositionX = stored.backgroundPositionX.split(',').map(value => value.trim());
                 const backgroundPositionY = stored.backgroundPositionY.split(',').map(value => value.trim());
@@ -237,7 +233,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 else if (stored.backgroundGradient) {
                     const gradients = Resource.createBackgroundGradient(node, stored.backgroundGradient);
                     if (gradients.length) {
-                        backgroundGradient.push(gradients[0]);
+                        backgroundGradient.push(gradients[0] as BackgroundGradient & TemplateAAData);
                     }
                 }
                 const companion = node.companion;
@@ -274,7 +270,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     });
                     const images5: BackgroundImage[] = [];
                     const images6: BackgroundImage[] = [];
-                    let data: ExternalData;
+                    let data: TemplateData;
                     let resourceName = '';
                     for (let i = 0; i < backgroundImage.length; i++) {
                         if (backgroundImage[i] !== '') {
@@ -480,27 +476,28 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             }
                         }
                     });
-                    const backgroundColor = getShapeAttribute(stored, 'backgroundColor');
+                    const backgroundColor = getShapeAttribute(stored, 'backgroundColor') || [];
                     const borderRadius = getShapeAttribute(stored, 'radius');
-                    const vectorGradient = !!squared.svg.SvgPath && backgroundGradient.length > 0 && backgroundGradient.some(gradient => gradient.colorStop.length > 0);
+                    const vectorGradient = !!squared.svg.SvgPath && backgroundGradient.length > 0 && backgroundGradient.some(gradient => gradient.colorStops.length > 0);
                     if (vectorGradient) {
                         const width = node.bounds.width;
                         const height = node.bounds.height;
-                        const xml = $xml.createTemplate(TEMPLATES.VECTOR, {
+                        const vectorData: TemplateData = {
                             namespace: getXmlNs('aapt'),
                             width: $util.formatPX(width),
                             height: $util.formatPX(height),
                             viewportWidth: width.toString(),
                             viewportHeight: height.toString(),
                             alpha: '',
-                            '1': [{
-                                '2': [{
-                                    clipPaths: false,
+                            A: [{
+                                AA: [{
                                     d: squared.svg.SvgPath.getRect(width, height),
-                                    fill: [{ 'gradients': backgroundGradient }]
+                                    BBB: false,
+                                    fillGradient: [{ 'gradients': backgroundGradient }]
                                 }]
                             }]
-                        });
+                        };
+                        const xml = $xml.createTemplate(TEMPLATES.VECTOR, vectorData);
                         let vectorName = Resource.getStoredName('drawables', xml);
                         if (vectorName === '') {
                             vectorName = `${node.tagName.toLowerCase()}_${node.controlId}_gradient`;
@@ -514,41 +511,42 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             (stored.border.style === 'groove' || stored.border.style === 'ridge') && parseInt(stored.border.width) > 1
                        ))
                     {
+                        const stroke = getShapeAttribute(stored, 'stroke') || [];
                         if (!hasBackgroundImage && backgroundGradient.length <= 1 && !vectorGradient) {
                             if (borderRadius && borderRadius[0]['radius'] === undefined) {
                                 borderRadius[0]['radius'] = '1px';
                             }
                             template = TEMPLATES.SHAPE;
                             data = {
-                                '1': getShapeAttribute(stored, 'stroke'),
-                                '2': backgroundColor,
-                                '3': borderRadius,
-                                '4': backgroundGradient.length ? backgroundGradient : false
+                                A: stroke,
+                                B: backgroundColor,
+                                C: borderRadius,
+                                D: backgroundGradient.length ? backgroundGradient : false
                             };
                         }
                         else {
                             template = TEMPLATES.LAYER_LIST;
                             data = {
-                                '1': backgroundColor,
-                                '2': !vectorGradient && backgroundGradient.length ? backgroundGradient : false,
-                                '3': backgroundVector,
-                                '4': false,
-                                '5': images5.length ? images5 : false,
-                                '6': images6.length ? images6 : false,
-                                '7': Resource.isBorderVisible(stored.border) || borderRadius ? [{ 'stroke': getShapeAttribute(stored, 'stroke'), 'corners': borderRadius }] : false
+                                A: backgroundColor,
+                                B: !vectorGradient && backgroundGradient.length ? backgroundGradient : false,
+                                C: backgroundVector,
+                                D: false,
+                                E: images5.length ? images5 : false,
+                                F: images6.length ? images6 : false,
+                                G: Resource.isBorderVisible(stored.border) || borderRadius ? [{ stroke, corners: borderRadius }] : false
                             };
                         }
                     }
                     else {
                         template = TEMPLATES.LAYER_LIST;
                         data = {
-                            '1': backgroundColor,
-                            '2': !vectorGradient && backgroundGradient.length ? backgroundGradient : false,
-                            '3': backgroundVector,
-                            '4': false,
-                            '5': images5.length ? images5 : false,
-                            '6': images6.length ? images6 : false,
-                            '7': []
+                            A: backgroundColor,
+                            B: !vectorGradient && backgroundGradient.length ? backgroundGradient : false,
+                            C: backgroundVector,
+                            D: false,
+                            E: images5.length ? images5 : false,
+                            F: images6.length ? images6 : false,
+                            G: []
                         };
                         const borderWidth = new Set(borderFiltered.map(item => item.width));
                         const borderStyle = new Set(borderFiltered.map(item => getBorderStyle(item)));
@@ -567,18 +565,18 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     borderRadius
                                 ]);
                             }
-                            else {
+                            else if (data.G) {
                                 const hideWidth = `-${$util.formatPX(getHideWidth(width))}`;
                                 const leftTop = !borderVisible[0] && !borderVisible[3];
                                 const topOnly = !borderVisible[0] && borderVisible[1] && borderVisible[2] && borderVisible[3];
                                 const leftOnly = borderVisible[0] && borderVisible[1] && borderVisible[2] && !borderVisible[3];
-                                data['7'].push({
+                                data.G.push({
                                     top: borderVisible[0] ? '' : hideWidth,
                                     right: borderVisible[1] ? (borderVisible[3] || leftTop || leftOnly ? '' : borderData.width) : hideWidth,
                                     bottom: borderVisible[2] ? (borderVisible[0] || leftTop || topOnly ? '' : borderData.width) : hideWidth,
                                     left: borderVisible[3] ? '' : hideWidth,
-                                    'stroke': getShapeAttribute(<BoxStyle> { border: borderData }, 'stroke'),
-                                    'corners': borderRadius
+                                    stroke: getShapeAttribute(<BoxStyle> { border: borderData }, 'stroke'),
+                                    corners: borderRadius
                                 });
                             }
                         }
@@ -598,30 +596,30 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                             borderRadius
                                         ]);
                                     }
-                                    else {
+                                    else if (data.G) {
                                         const hasInset = width > 1 && (border.style === 'groove' || border.style === 'ridge');
                                         const outsetWidth = hasInset ? Math.ceil(width / 2) : width;
                                         const baseWidth = getHideWidth(outsetWidth);
                                         let hideWidth = `-${$util.formatPX(baseWidth)}`;
                                         let hideTopWidth = `-${$util.formatPX(baseWidth + (visibleAll ? 1 : 0))}`;
-                                        data['7'].push({
+                                        data.G.push({
                                             top:  i === 0 ? '' : hideTopWidth,
                                             right: i === 1 ? (!visibleAll && border.width === '1px' ? border.width : '') : hideWidth,
                                             bottom: i === 2 ? (!visibleAll && border.width === '1px' ? border.width : '') : hideWidth,
                                             left: i === 3 ? '' : hideWidth,
-                                            'stroke': getShapeAttribute(<BoxStyle> { border }, 'stroke', i, hasInset),
-                                            'corners': borderRadius
+                                            stroke: getShapeAttribute(<BoxStyle> { border }, 'stroke', i, hasInset),
+                                            corners: borderRadius
                                         });
                                         if (hasInset) {
                                             hideWidth = `-${$util.formatPX(getHideWidth(width))}`;
                                             hideTopWidth = `-${$util.formatPX(width + (visibleAll ? 1 : 0))}`;
-                                            data['7'].unshift({
+                                            data.G.unshift({
                                                 top:  i === 0 ? '' : hideTopWidth,
                                                 right: i === 1 ? (!visibleAll && border.width === '1px' ? border.width : '') : hideWidth,
                                                 bottom: i === 2 ? (!visibleAll && border.width === '1px' ? border.width : '') : hideWidth,
                                                 left: i === 3 ? '' : hideWidth,
-                                                'stroke': getShapeAttribute(<BoxStyle> { border }, 'stroke', i, true, true),
-                                                'corners': false
+                                                stroke: getShapeAttribute(<BoxStyle> { border }, 'stroke', i, true, true),
+                                                corners: false
                                             });
                                         }
                                     }
