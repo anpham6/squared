@@ -3,7 +3,6 @@ import { SvgTransform } from './@types/object';
 import SvgAnimation from './svganimation';
 import SvgCreate from './svgcreate';
 import SvgElement from './svgelement';
-import SvgShape from './svgshape';
 
 import { getTransform, isSvgVisible } from './lib/util';
 
@@ -22,11 +21,7 @@ export default class SvgGroup extends squared.lib.base.Container<SvgElement> imp
         this.visible = isSvgVisible(element);
     }
 
-    public synchronize(useKeyTime = true) {
-        if (this.animate.length) {
-            SvgShape.synchronizeAnimations(this.element, this.animate, useKeyTime);
-        }
-    }
+    public synchronize(useKeyTime = true) {}
 
     get transform() {
         if (this._transform === undefined) {

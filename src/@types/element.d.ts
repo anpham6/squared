@@ -12,9 +12,7 @@ interface RectPosition extends BoxRect {
     originalY: string;
 }
 
-interface RectDimensions extends BoxRect {
-    width: number;
-    height: number;
+interface RectDimensions extends Dimension, BoxRect {
 }
 
 interface TextDimensions extends RectDimensions {

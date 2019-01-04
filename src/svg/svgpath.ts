@@ -10,29 +10,29 @@ const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 export default class SvgPath extends SvgElement implements squared.svg.SvgPath {
-    public static getLine(x1: number, y1: number, x2 = 0, y2 = 0, checkValid = false) {
-        return x1 !== 0 || y1 !== 0 || x2 !== 0 || y2 !== 0 || !checkValid ? `M${x1},${y1} L${x2},${y2}` : '';
+    public static getLine(x1: number, y1: number, x2 = 0, y2 = 0) {
+        return `M${x1},${y1} L${x2},${y2}`;
     }
 
-    public static getRect(width: number, height: number, x = 0, y = 0, checkValid = false) {
-        return width > 0 && height > 0 || !checkValid ? `M${x},${y} h${width} v${height} h${-width} Z` : '';
+    public static getCircle(cx: number, cy: number, r: number) {
+        return SvgPath.getEllipse(cx, cy, r, r);
     }
 
-    public static getPolyline(points: Point[], checkValid = false) {
-        return points.length || !checkValid ? `M${points.map(item => `${item.x},${item.y}`).join(' ')}` : '';
+    public static getEllipse(cx: number, cy: number, rx: number, ry: number) {
+        return `M${cx - rx},${cy} a${rx},${ry},0,1,0,${rx * 2},0 a${rx},${ry},0,1,0,-${rx * 2},0`;
     }
 
-    public static getPolygon(points: Point[]) {
+    public static getRect(width: number, height: number, x = 0, y = 0) {
+        return `M${x},${y} h${width} v${height} h${-width} Z`;
+    }
+
+    public static getPolygon(points: Point[] | DOMPoint[]) {
         const value = SvgPath.getPolyline(points);
         return value !== '' ? value + ' Z' : '';
     }
 
-    public static getCircle(cx: number, cy: number, r: number, checkValid = false) {
-        return r > 0 || !checkValid ? SvgPath.getEllipse(cx, cy, r, r) : '';
-    }
-
-    public static getEllipse(cx: number, cy: number, rx: number, ry: number, checkValid = false) {
-        return rx > 0 && ry > 0 || !checkValid ? `M${cx - rx},${cy} a${rx},${ry},0,1,0,${rx * 2},0 a${rx},${ry},0,1,0,-${rx * 2},0` : '';
+    public static getPolyline(points: Point[] | DOMPoint[]) {
+        return points.length ? `M${(points as Point[]).map(item => `${item.x},${item.y}`).join(' ')}` : '';
     }
 
     public animatable = false;
@@ -171,10 +171,10 @@ export default class SvgPath extends SvgElement implements squared.svg.SvgPath {
                 }
             }
             if (d === '') {
-                d = SvgPath.getLine(x1, y1, x2, y2, true);
+                d = SvgPath.getLine(x1, y1, x2, y2);
             }
         }
-        else if (element instanceof SVGEllipseElement || element instanceof SVGCircleElement) {
+        else if (element instanceof SVGCircleElement || element instanceof SVGEllipseElement) {
             const cx = this.baseVal.cx !== null ? this.baseVal.cx : element.cx.baseVal.value;
             const cy = this.baseVal.cy !== null ? this.baseVal.cy : element.cy.baseVal.value;
             let rx = 0;
@@ -199,7 +199,7 @@ export default class SvgPath extends SvgElement implements squared.svg.SvgPath {
                 const result = SvgBuild.applyTransforms(transform, points, getTransformOrigin(element), center);
                 if (result.length) {
                     const pt = <Required<PointR>> result[0];
-                    d = SvgPath.getEllipse(pt.x, pt.y, pt.rx, pt.ry, true);
+                    d = SvgPath.getEllipse(pt.x, pt.y, pt.rx, pt.ry);
                     if (center.angle !== undefined) {
                         if (rx === ry) {
                             center.angle = 0;
@@ -211,7 +211,7 @@ export default class SvgPath extends SvgElement implements squared.svg.SvgPath {
                 }
             }
             if (d === '') {
-                d = SvgPath.getEllipse(cx, cy, rx, ry, true);
+                d = SvgPath.getEllipse(cx, cy, rx, ry);
             }
         }
         else if (element instanceof SVGRectElement) {
@@ -243,7 +243,7 @@ export default class SvgPath extends SvgElement implements squared.svg.SvgPath {
                 }
             }
             if (d === '') {
-                d = SvgPath.getRect(width, height, x, y, true);
+                d = SvgPath.getRect(width, height, x, y);
             }
         }
         else if (element instanceof SVGPolygonElement || element instanceof SVGPolylineElement) {

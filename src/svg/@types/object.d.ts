@@ -3,11 +3,7 @@ export interface SvgDefs {
     gradient: Map<string, Gradient>;
 }
 
-export interface SvgViewBox {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
+export interface SvgViewBox extends Point, Dimension {
 }
 
 export interface SvgLinearGradient extends Gradient {

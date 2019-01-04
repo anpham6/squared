@@ -5,16 +5,16 @@ export default `
 	<set android:ordering="{~ordering}">
 	<<AA>>
 		<set android:ordering="{~ordering}">
-		<<BBB>>
+		<<repeating>>
 			<objectAnimator
 				android:propertyName="{~propertyName}"
 				android:valueType="{~valueType}"
 				android:valueFrom="{~valueFrom}"
 				android:valueTo="{~valueTo}"
+				android:startOffset="{~startOffset}"
 				android:duration="{~duration}"
 				android:repeatCount="{&repeatCount}"
 				android:repeatMode="{~repeatMode}"
-				android:startOffset="{~startOffset}"
 				android:interpolator="{~interpolator}"
 				android:fillAfter="{~fillAfter}"
 				android:fillBefore="{~fillBefore}"
@@ -27,21 +27,36 @@ export default `
 				</propertyValuesHolder>
 			<<propertyValues>>
 			</objectAnimator>
-		<<BBB>>
+		<<repeating>>
+		<<indefinite>>
+			<set android:ordering="{~ordering}">
+			<<repeat>>
+				<objectAnimator
+					android:propertyName="{&propertyName}"
+					android:valueType="{~valueType}"
+					android:valueFrom="{~valueFrom}"
+					android:valueTo="{&valueTo}"
+					android:startOffset="{~startOffset}"
+					android:duration="{~duration}"
+					android:repeatCount="{~repeatCount}" />
+			<<repeat>>
+			</set>
+		<<indefinite>>
 		</set>
-		<<CCC>>
-		<set>
+		<<fill>>
+		<set android:ordering="{~ordering}">
 		<<replace>>
 			<objectAnimator
 				android:propertyName="{&propertyName}"
 				android:valueType="{~valueType}"
 				android:valueFrom="{~valueFrom}"
 				android:valueTo="{&valueTo}"
+				android:startOffset="{~startOffset}"
 				android:duration="{~duration}"
 				android:repeatCount="{~repeatCount}" />
 		<<replace>>
 		</set>
-		<<CCC>>
+		<<fill>>
 	<<AA>>
 	</set>
 <<A>>

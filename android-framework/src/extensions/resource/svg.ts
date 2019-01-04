@@ -1,4 +1,4 @@
-import { TemplateData, TemplateAAData, TemplateAAAData } from '../../../../src/base/@types/application';
+import { TemplateData, TemplateDataA, TemplateDataAA, TemplateDataAAA } from '../../../../src/base/@types/application';
 import { ResourceStoredMapAndroid } from '../../@types/application';
 
 import { BUILD_ANDROID } from '../../lib/enumeration';
@@ -48,6 +48,13 @@ type AnimatedTargetData = {
     animationName: string;
 };
 
+type AnimatedSetData = {
+    ordering: string;
+    repeating: TemplateData[],
+    indefinite: TemplateData[],
+    fill: TemplateData[] | boolean
+};
+
 interface TransformBase<T> {
     translateX?: T;
     translateY?: T;
@@ -62,7 +69,7 @@ interface TransformData extends Required<TransformBase<number>> {
     operations: number[];
 }
 
-interface GroupData extends TemplateAAData, TransformBase<string> {
+interface GroupData extends TemplateDataAA, TransformBase<string> {
     name: string;
     AA: any[];
 }
@@ -229,7 +236,6 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                         if (group instanceof $SvgGroupViewBox) {
                             x = group.x;
                             y = group.y;
-                            group.synchronize(false);
                             viewBox = true;
                         }
                         if (transformable) {
@@ -387,6 +393,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                     for (let i = 0; i < svg.children.length; i++) {
                         const group = svg.children[i];
                         if (group.element !== svg.element) {
+                            group.synchronize(false);
                             groupData = createGroup(group, true);
                         }
                         else {
@@ -411,7 +418,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                     }
                     groups = groups.filter(item => item.AA.length > 0);
                     if (groups.length) {
-                        const xml = $xml.createTemplate(TEMPLATES.VECTOR, <TemplateData> {
+                        const xml = $xml.createTemplate(TEMPLATES.VECTOR, <TemplateDataA> {
                             namespace: namespace.size ? getXmlNs(...Array.from(namespace)) : '',
                             name: svg.name,
                             width: $util.formatPX(svg.width),
@@ -430,7 +437,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                             function getAnimatedFilenamePrefix(suffix = '') {
                                 return `${templateName}_animation${(images.length ? '_vector' : '') + (suffix !== '' ? `_${suffix}` : '')}`;
                             }
-                            const data: TemplateData = {
+                            const data: TemplateDataA = {
                                 vectorName,
                                 A: []
                             };
@@ -439,12 +446,12 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                     name,
                                     animationName: getAnimatedFilenamePrefix(name)
                                 };
-                                const targetSetData: TemplateData = { A: [] };
+                                const targetSetData: TemplateDataA = { A: [] };
                                 const animatorMap = new Map<string, PropertyValue[]>();
+                                const sequentialMap = new Map<string, $SvgAnimate[]>();
                                 const together: $SvgAnimation[] = [];
                                 const fillReplace: $SvgAnimation[] = [];
                                 const transformMap = new Map<string, $SvgAnimateTransform[]>();
-                                const sequentialMap = new Map<string, $SvgAnimate[]>();
                                 const togetherTargets: $SvgAnimation[][] = [];
                                 const fillReplaceTargets: $SvgAnimation[][] = [];
                                 const transformTargets: $SvgAnimation[][] = [];
@@ -487,35 +494,51 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                     fillReplaceTargets.push([item]);
                                 }
                                 [togetherTargets, fillReplaceTargets, transformTargets].forEach((targets, index) => {
-                                    const subData: TemplateAAData = {
+                                    const subData: TemplateDataAA = {
                                         ordering: index === 2 ? 'sequentially' : 'together',
                                         AA: []
                                     };
-                                    for (const set of targets) {
+                                    for (const items of targets) {
                                         let ordering: string;
-                                        if (targets === fillReplaceTargets) {
-                                            if (set.some(animate => animate instanceof $SvgAnimateTransform)) {
+                                        let sequential = false;
+                                        if (index === 1) {
+                                            if (items.some(item => item instanceof $SvgAnimateTransform)) {
                                                 subData.ordering = 'sequentially';
                                                 ordering = 'together';
+                                                sequential = true;
                                             }
                                             else {
                                                 ordering = 'sequentially';
                                             }
                                         }
-                                        else if (set.some(animate => animate instanceof $SvgAnimate && animate.sequential !== undefined)) {
+                                        else if (items.some((item: $SvgAnimate) => item.sequential !== undefined)) {
                                             ordering = index === 2 ? 'together' : 'sequentially';
+                                            sequential = true;
                                         }
                                         else {
                                             ordering = $dom.getDataSet(group.element, 'android').ordering || this.options.vectorAnimateOrdering;
                                         }
-                                        const setData: TemplateAAAData = {
+                                        const setData: AnimatedSetData & TemplateDataAAA = {
                                             ordering,
-                                            BBB: [],
-                                            CCC: false
+                                            repeating: [],
+                                            indefinite: [],
+                                            fill: false
                                         };
-                                        const fillData: ExternalData = { replace: [] };
-                                        for (const item of set) {
-                                            const options: ExternalData = {
+                                        const indefiniteData: TemplateData = {
+                                            ordering: 'sequentially',
+                                            repeat: []
+                                        };
+                                        const fillData: TemplateData = {
+                                            ordering: 'together',
+                                            replace: []
+                                        };
+                                        const [indefinite, repeating] = sequential ? $util.partitionArray(items, (animate: $SvgAnimate) => animate.repeatCount === -1) : [[], items];
+                                        if (indefinite.length === 1) {
+                                            repeating.push(indefinite[0]);
+                                            indefinite.length = 0;
+                                        }
+                                        for (const item of repeating) {
+                                            const options: TemplateData = {
                                                 startOffset: item.begin.length && item.begin[0] > 0 ? item.begin[0].toString() : '',
                                                 duration: item.duration !== -1 ? item.duration.toString() : ''
                                             };
@@ -855,9 +878,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                         animatorMap.set(keyName, propertyValues);
                                                                     }
                                                                     propertyOptions.propertyValues = propertyValues;
-                                                                    if (setData.BBB) {
-                                                                        setData.BBB.push(propertyOptions);
-                                                                    }
+                                                                    setData.repeating.push(propertyOptions);
                                                                 }
                                                                 valueEnd = keyframes[keyframes.length - 1].value;
                                                             }
@@ -904,9 +925,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                 valueEnd = propertyOptions.valueTo;
                                                             }
                                                             propertyOptions.propertyValues = false;
-                                                            if (setData.BBB) {
-                                                                setData.BBB.push(propertyOptions);
-                                                            }
+                                                            setData.repeating.push(propertyOptions);
                                                         }
                                                         if (!item.fillFreeze && item.sequential === undefined) {
                                                             let valueTo: string | undefined;
@@ -963,7 +982,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                     }
                                                                 }
                                                             }
-                                                            if (valueTo !== undefined) {
+                                                            if (valueTo !== undefined && Array.isArray(fillData.replace)) {
                                                                 fillData.replace.push({
                                                                     propertyName: propertyName[i],
                                                                     repeatCount: '0',
@@ -986,27 +1005,41 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                     }
                                                     options.repeatCount = '0';
                                                     options.valueTo = item.to.toString();
-                                                    if (setData.BBB) {
-                                                        setData.BBB.push(options);
-                                                    }
+                                                    setData.repeating.push(options);
                                                 }
                                             }
                                         }
-                                        if (setData.BBB && setData.BBB.length) {
-                                            if (fillData.replace.length) {
+                                        if (indefinite.length) {
+                                            const pathArray = setData.repeating.length ? indefiniteData.repeat as ExternalData[] : setData.repeating;
+                                            for (const item of indefinite as $SvgAnimate[]) {
+                                                pathArray.push({
+                                                    propertyName: 'pathData',
+                                                    repeatCount: '0',
+                                                    duration: item.duration.toString(),
+                                                    valueType: 'pathType',
+                                                    valueFrom: item.from,
+                                                    valueTo: item.to
+                                                });
+                                            }
+                                        }
+                                        if (setData.repeating.length) {
+                                            if ($util.isArray(fillData.replace)) {
                                                 if (subData.ordering === 'sequentially') {
-                                                    setData.CCC = [fillData];
+                                                    setData.fill = [fillData];
                                                 }
                                                 else {
-                                                    setData.BBB.push(...fillData.replace);
+                                                    setData.repeating.push(...fillData.replace);
                                                 }
+                                            }
+                                            if ($util.isArray(indefiniteData.repeat)) {
+                                                setData.indefinite.push(indefiniteData);
                                             }
                                             if (subData.AA) {
                                                 subData.AA.push(setData);
                                             }
                                         }
                                     }
-                                    if (subData.AA && subData.AA.length) {
+                                    if ($util.isArray(subData.AA)) {
                                         targetSetData.A.push(subData);
                                     }
                                 });
@@ -1055,7 +1088,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                             normal.push(data);
                         }
                     }
-                    const xml = $xml.createTemplate(TEMPLATES.LAYER_LIST, <TemplateData> {
+                    const xml = $xml.createTemplate(TEMPLATES.LAYER_LIST, <TemplateDataA> {
                         A: [],
                         B: false,
                         C: [{ vectorName }],

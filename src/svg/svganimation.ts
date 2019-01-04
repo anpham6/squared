@@ -60,7 +60,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
         this.setAttribute('to');
         const begin = this.getAttribute('begin');
         const dur = this.getAttribute('dur');
-        if (begin === 'indefinite') {
+        if (begin === 'indefinite' || begin === 'click') {
             this.begin.length = 0;
         }
         else if (begin !== '') {

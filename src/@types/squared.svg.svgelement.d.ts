@@ -52,7 +52,7 @@ declare global {
         }
 
         class SvgShape implements SvgShape {
-            public static synchronizeAnimations(element: SVGGraphicsElement, animate: SvgAnimation[], useKeyTime?: boolean, path?: SvgPath): SvgAnimation[];
+            public static synchronizeAnimate(element: SVGGraphicsElement, animate: SvgAnimation[], useKeyTime?: boolean, path?: SvgPath): SvgAnimation[];
             constructor(element: SVGGraphicsElement);
         }
 
@@ -65,12 +65,12 @@ declare global {
         }
 
         class SvgPath implements SvgPath {
-            public static getLine(x1: number, y1: number, x2?: number, y2?: number, checkValid?: boolean): string;
-            public static getRect(width: number, height: number, x?: number, y?: number, checkValid?: boolean): string;
-            public static getPolyline(points: Point[] | DOMPoint[] | SVGPointList): string;
-            public static getPolygon(points: Point[] | DOMPoint[] | SVGPointList): string;
-            public static getCircle(cx: number, cy: number, r: number, checkValid?: boolean): string;
-            public static getEllipse(cx: number, cy: number, rx: number, ry: number, checkValid?: boolean): string;
+            public static getLine(x1: number, y1: number, x2?: number, y2?: number): string;
+            public static getCircle(cx: number, cy: number, r: number): string;
+            public static getEllipse(cx: number, cy: number, rx: number, ry: number): string;
+            public static getRect(width: number, height: number, x?: number, y?: number): string;
+            public static getPolygon(points: Point[] | DOMPoint[]): string;
+            public static getPolyline(points: Point[] | DOMPoint[]): string;
             constructor(element: SVGGraphicsElement, d?: string);
         }
     }

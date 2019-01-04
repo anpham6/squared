@@ -36,6 +36,11 @@ interface Point {
     y: number;
 }
 
+interface Dimension {
+    width: number;
+    height: number;
+}
+
 interface PointR extends Point {
     rx?: number;
     ry?: number;
