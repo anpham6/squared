@@ -106,12 +106,12 @@ export default class Drawer<T extends $View> extends squared.base.Extension<T> {
     }
 
     private setStyleTheme(api: number) {
-        const options = $utilA.createThemeAttribute(Object.assign({}, this.options.resource));
+        const options = $utilA.createStyleAttribute(Object.assign({}, this.options.resource));
         $util.defaultWhenNull(options, 'parentTheme', 'Theme.AppCompat.Light.NoActionBar');
         $util.defaultWhenNull(options.items, 'android:windowTranslucentStatus', 'true');
         $Resource.addTheme(options);
         if (api >= 21) {
-            const lollipop = $utilA.createThemeAttribute($util.cloneObject(options));
+            const lollipop = $utilA.createStyleAttribute($util.cloneObject(options));
             lollipop.items = {};
             $util.defaultWhenNull(lollipop.output, 'path', 'res/values-v21');
             $util.defaultWhenNull(lollipop.items, 'android:windowDrawsSystemBarBackgrounds', 'true');

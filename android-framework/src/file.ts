@@ -1,4 +1,4 @@
-import { FileAsset, SessionData, TemplateData } from '../../src/base/@types/application';
+import { FileAsset, SessionData, TemplateDataA } from '../../src/base/@types/application';
 import { ResourceStoredMapAndroid, UserSettingsAndroid } from './@types/application';
 
 import { BUILD_ANDROID } from './lib/enumeration';
@@ -136,7 +136,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
 
     public resourceStringToXml(saveToDisk = false) {
         const result: string[] = [];
-        const data: TemplateData = { A: [] };
+        const data: TemplateDataA = { A: [] };
         this.stored.strings = new Map([...this.stored.strings.entries()].sort(caseInsensitive));
         if (this.appName !== '' && !this.stored.strings.has('app_name')) {
             data.A.push({
@@ -162,7 +162,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
     public resourceStringArrayToXml(saveToDisk = false) {
         const result: string[] = [];
         if (this.stored.arrays.size) {
-            const data: TemplateData = { A: [] };
+            const data: TemplateDataA = { A: [] };
             this.stored.arrays = new Map([...this.stored.arrays.entries()].sort());
             for (const [name, values] of this.stored.arrays.entries()) {
                 data.A.push({
@@ -187,7 +187,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             this.stored.fonts = new Map([...this.stored.fonts.entries()].sort());
             const namespace = settings.targetAPI < BUILD_ANDROID.OREO ? 'app' : 'android';
             for (const [name, font] of this.stored.fonts.entries()) {
-                const data: TemplateData = {
+                const data: TemplateDataA = {
                     name,
                     namespace: getXmlNs(namespace),
                     A: []
@@ -218,7 +218,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
     public resourceColorToXml(saveToDisk = false) {
         const result: string[] = [];
         if (this.stored.colors.size) {
-            const data: TemplateData = { A: [] };
+            const data: TemplateDataA = { A: [] };
             this.stored.colors = new Map([...this.stored.colors.entries()].sort());
             for (const [name, value] of this.stored.colors.entries()) {
                 data.A.push({
@@ -241,44 +241,35 @@ export default class File<T extends View> extends squared.base.File<T> implement
         if (this.stored.styles.size) {
             const settings = this.userSettings;
             const template = $xml.parseTemplate(STYLE_TMPL);
-            const files: { filename: string, data: TemplateData}[] = [];
+            const files: { filename: string, data: TemplateDataA}[] = [];
             {
                 const styles = Array.from(this.stored.styles.values()).sort((a, b) => a.name.toString().toLowerCase() >= b.name.toString().toLowerCase() ? 1 : -1);
-                const data: TemplateData = { A: [] };
+                const data: TemplateDataA = { A: [] };
                 for (const style of styles) {
-                    const AA: StringMap[] = [];
-                    style.attrs.split(';').sort().forEach(attr => {
-                        const [name, value] = attr.split('=');
-                        AA.push({
-                            name,
-                            value: value.replace(/"/g, '')
-                        });
-                    });
-                    data.A.push({
-                        name: style.name,
-                        parent: style.parent || '',
-                        AA
-                    });
+                    if (Array.isArray(style.items)) {
+                        style.items.sort((a, b) => a.name >= b.name ? 1 : -1);
+                        data.A.push(style.items as ExternalData);
+                    }
                 }
                 files.push({ filename: 'res/values/styles.xml', data });
             }
             const appTheme: ObjectMap<boolean> = {};
             for (const [filename, theme] of this.stored.themes.entries()) {
-                const data: TemplateData = { A: [] };
+                const data: TemplateDataA = { A: [] };
                 const filepath = filename.substring(0, filename.lastIndexOf('/'));
                 for (const [themeName, themeData] of theme.entries()) {
-                    const AA: StringMap[] = [];
+                    const items: StringMap[] = [];
                     for (const name in themeData.items) {
-                        AA.push({
+                        items.push({
                             name,
                             value: themeData.items[name]
                         });
                     }
-                    if (!appTheme[filepath] || themeName !== 'AppTheme' || AA.length > 0) {
+                    if (!appTheme[filepath] || themeName !== 'AppTheme' || items.length > 0) {
                         data.A.push({
                             name: themeName,
-                            parent: themeData.parentTheme,
-                            AA
+                            parent: themeData.parent,
+                            items
                         });
                     }
                     if (themeName === 'AppTheme') {
@@ -305,7 +296,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         const result: string[] = [];
         if (this.stored.dimens.size) {
             const settings = this.userSettings;
-            const data: TemplateData = { A: [] };
+            const data: TemplateDataA = { A: [] };
             this.stored.dimens = new Map([...this.stored.dimens.entries()].sort());
             for (const [name, value] of this.stored.dimens.entries()) {
                 data.A.push({

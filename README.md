@@ -795,7 +795,7 @@ The attributes "android-include" and "android-include-end" can only be applied t
                     android:paddingVertical="@dimen/button_padding_vertical"
                     android:text="@string/open"
                     android:textAllCaps="false"
-                    style="@style/Button_2" />
+                    style="@style/Button_1" />
                 <Button
                     android:id="@+id/button_2"
                     android:background="@drawable/button_button_1"
@@ -809,7 +809,7 @@ The attributes "android-include" and "android-include-end" can only be applied t
                     android:paddingVertical="@dimen/button_padding_vertical"
                     android:text="@string/all"
                     android:textAllCaps="false"
-                    style="@style/Button_2" />
+                    style="@style/Button_1" />
             </LinearLayout>
             <Space
                 android:id="@+id/space_10"
@@ -932,7 +932,7 @@ The attributes "android-include" and "android-include-end" can only be applied t
                     android:paddingVertical="@dimen/button_padding_vertical"
                     android:text="@string/update"
                     android:textAllCaps="false"
-                    style="@style/Button_1" />
+                    style="@style/Button_2" />
             </LinearLayout>
             <Space
                 android:id="@+id/space_14"
@@ -986,7 +986,7 @@ The attributes "android-include" and "android-include-end" can only be applied t
                     android:paddingVertical="@dimen/button_padding_vertical"
                     android:text="@string/update"
                     android:textAllCaps="false"
-                    style="@style/Button_1" />
+                    style="@style/Button_2" />
                 <Button
                     android:id="@+id/button_5"
                     android:background="@drawable/button_button_1"
@@ -999,7 +999,7 @@ The attributes "android-include" and "android-include-end" can only be applied t
                     android:paddingVertical="@dimen/button_padding_vertical"
                     android:text="@string/clone"
                     android:textAllCaps="false"
-                    style="@style/Button_1" />
+                    style="@style/Button_2" />
             </LinearLayout>
             <Space
                 android:id="@+id/space_15"
@@ -1151,7 +1151,7 @@ The attributes "android-include" and "android-include-end" can only be applied t
                     android:paddingVertical="@dimen/button_padding_vertical"
                     android:text="@string/update"
                     android:textAllCaps="false"
-                    style="@style/Button_1" />
+                    style="@style/Button_2" />
             </LinearLayout>
         </GridLayout>
     </LinearLayout>
@@ -1377,10 +1377,10 @@ The attributes "android-include" and "android-include-end" can only be applied t
         <item name="android:textSize">10sp</item>
     </style>
     <style name="Button_1" parent="Button">
-        <item name="android:textColor">@color/black</item>
+        <item name="android:textColor">@color/gray</item>
     </style>
     <style name="Button_2" parent="Button">
-        <item name="android:textColor">@color/gray</item>
+        <item name="android:textColor">@color/black</item>
     </style>
     <style name="Checkbox">
         <item name="android:fontFamily">sans-serif</item>

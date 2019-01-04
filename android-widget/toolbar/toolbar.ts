@@ -300,10 +300,10 @@ export default class Toolbar<T extends $View> extends squared.base.Extension<T> 
     }
 
     private setStyleTheme(themeData: ToolbarThemeData) {
-        const options = $utilA.createThemeAttribute(Object.assign({}, this.options.resource));
-        const optionsActionBar = $utilA.createThemeAttribute({ appTheme: '.NoActionBar', output: options.output });
-        const optionsAppBar = $utilA.createThemeAttribute({ appTheme: '.AppBarOverlay', output: options.output });
-        const optionsPopup = $utilA.createThemeAttribute({ appTheme: '.PopupOverlay', output: options.output });
+        const options = $utilA.createStyleAttribute(Object.assign({}, this.options.resource));
+        const optionsActionBar = $utilA.createStyleAttribute({ appTheme: '.NoActionBar', output: options.output });
+        const optionsAppBar = $utilA.createStyleAttribute({ appTheme: '.AppBarOverlay', output: options.output });
+        const optionsPopup = $utilA.createStyleAttribute({ appTheme: '.PopupOverlay', output: options.output });
         $util.defaultWhenNull(options, 'parentTheme', 'Theme.AppCompat.Light.DarkActionBar');
         $util.defaultWhenNull(optionsActionBar.items, 'windowActionBar', 'false');
         $util.defaultWhenNull(optionsActionBar.items, 'windowNoTitle', 'true');

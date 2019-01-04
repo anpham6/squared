@@ -1,4 +1,4 @@
-import { ResourceStoredMapAndroid, ThemeAttribute, UserSettingsAndroid } from '../src/@types/application';
+import { ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from '../src/@types/application';
 import { BackgroundGradient } from '../src/@types/node';
 
 declare global {
@@ -12,7 +12,7 @@ declare global {
             public static createBackgroundGradient<T extends View>(node: T, gradients: Gradient[], path?: squared.svg.SvgPath): BackgroundGradient[];
             public static formatOptions(options: ExternalData, numberAlias?: boolean): ExternalData;
             public static getOptionArray(element: HTMLSelectElement): (string[] | null)[];
-            public static addTheme(...options: ThemeAttribute[]): void;
+            public static addTheme(...options: Required<StyleAttribute>[]): void;
             public static addString(value: string, name?: string, numberAlias?: boolean): string;
             public static addImageSrcSet(element: HTMLImageElement, prefix?: string): string;
             public static addImage(images: StringMap, prefix?: string): string;

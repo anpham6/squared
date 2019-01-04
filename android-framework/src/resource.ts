@@ -1,5 +1,5 @@
 import { LinearGradient, RadialGradient } from '../../src/base/@types/node';
-import { ResourceStoredMapAndroid, ThemeAttribute, UserSettingsAndroid } from './@types/application';
+import { ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from './@types/application';
 import { BackgroundGradient } from './@types/node';
 import { SvgLinearGradient, SvgRadialGradient } from '../../src/svg/@types/object';
 
@@ -249,15 +249,15 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
         return [stringArray.length ? stringArray : null, numberArray && numberArray.length ? numberArray : null];
     }
 
-    public static addTheme(...values: ThemeAttribute[]) {
+    public static addTheme(...values: Required<StyleAttribute>[]) {
         const themes = STORED.themes;
         for (const theme of values) {
-            const path = $util.isString(theme.output.path) ? theme.output.path : 'res/values';
+            const path = $util.isString(theme.output.path) ? theme.output.path : '';
             const file = $util.isString(theme.output.file) ? theme.output.file : 'themes.xml';
             const filename = `${$util.trimString(path.trim(), '/')}/${$util.trimString(file.trim(), '/')}`;
-            const stored = themes.get(filename) || new Map<string, ThemeAttribute>();
+            const stored = themes.get(filename) || new Map<string, StyleAttribute>();
             let appTheme = '';
-            if (theme.appTheme === '' || theme.appTheme.charAt(0) === '.') {
+            if (theme.name === '' || theme.name.charAt(0) === '.') {
                 if (themes.size) {
                     foundTheme: {
                         for (const themeData of themes.values()) {
@@ -275,15 +275,15 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                 }
             }
             else {
-                appTheme = theme.appTheme;
+                appTheme = theme.name;
             }
-            theme.appTheme = appTheme + (theme.appTheme.charAt(0) === '.' ? theme.appTheme : '');
+            theme.name = appTheme + (theme.name.charAt(0) === '.' ? theme.name : '');
             Resource.formatOptions(theme.items);
-            if (!stored.has(theme.appTheme)) {
-                stored.set(theme.appTheme, theme);
+            if (!stored.has(theme.name)) {
+                stored.set(theme.name, theme);
             }
             else {
-                const data = <ThemeAttribute> stored.get(theme.appTheme);
+                const data = <StyleAttribute> stored.get(theme.name);
                 for (const attr in theme.items) {
                     data.items[attr] = theme.items[attr];
                 }

@@ -191,3 +191,7 @@ export const RESERVED_JAVA = [
     'volatile',
     'while'
 ];
+
+export const REGEX_ANDROID = {
+    ATTRIBUTE: /(.*?)="(.*?)"/
+};

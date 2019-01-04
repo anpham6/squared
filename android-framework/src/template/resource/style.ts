@@ -3,9 +3,9 @@ export default `
 <resources>
 <<A>>
 	<style name="{&name}" parent="{~parent}">
-	<<AA>>
+	<<items>>
 		<item name="{&name}">{&value}</item>
-	<<AA>>
+	<<items>>
 	</style>
 <<A>>
 </resources>

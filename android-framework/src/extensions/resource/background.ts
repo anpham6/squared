@@ -1,4 +1,4 @@
-import { ImageAsset, TemplateData, TemplateAAData } from '../../../../src/base/@types/application';
+import { ImageAsset, TemplateDataA, TemplateDataAA } from '../../../../src/base/@types/application';
 import { ResourceStoredMapAndroid } from '../../@types/application';
 import { BackgroundGradient } from '../../@types/node';
 
@@ -149,7 +149,7 @@ function getShapeAttribute(boxStyle: BoxStyle, name: string, direction = -1, has
     return false;
 }
 
-function insertDoubleBorder(border: BorderAttribute, top: boolean, right: boolean, bottom: boolean, left: boolean, data: {}, borderRadius: boolean | any[]) {
+function insertDoubleBorder(data: ExternalData, border: BorderAttribute, top: boolean, right: boolean, bottom: boolean, left: boolean, borderRadius: boolean | any[]) {
     const width = parseInt(border.width);
     const baseWidth = Math.floor(width / 3);
     const remainder = width % 3;
@@ -158,36 +158,40 @@ function insertDoubleBorder(border: BorderAttribute, top: boolean, right: boolea
     const rightWidth = baseWidth + offset;
     let indentWidth = `${$util.formatPX(width - baseWidth)}`;
     let hideWidth = `-${indentWidth}`;
-    data['7'].push({
+    data.G.push({
         top: top ? '' : hideWidth,
         right: right ? '' : hideWidth,
         bottom: bottom ? '' : hideWidth,
         left: left ? '' :  hideWidth,
-        'stroke': [{ width: $util.formatPX(leftWidth), borderStyle: getBorderStyle(border) }],
-        'corners': borderRadius
+        stroke: [{ width: $util.formatPX(leftWidth), borderStyle: getBorderStyle(border) }],
+        corners: borderRadius
     });
     if (width === 3) {
         indentWidth = `${$util.formatPX(width)}`;
         hideWidth = `-${indentWidth}`;
     }
-    data['7'].push({
+    data.G.push({
         top: top ? indentWidth : hideWidth,
         right: right ? indentWidth : hideWidth,
         bottom: bottom ? indentWidth : hideWidth,
         left: left ? indentWidth : hideWidth,
-        'stroke': [{ width: $util.formatPX(rightWidth), borderStyle: getBorderStyle(border) }],
-        'corners': borderRadius
+        stroke: [{ width: $util.formatPX(rightWidth), borderStyle: getBorderStyle(border) }],
+        corners: borderRadius
     });
 }
 
 function checkBackgroundPosition(current: string, adjacent: string, defaultPosition: string) {
+    const initial = current === 'initial' || current === 'unset';
     if (current.indexOf(' ') === -1 && adjacent.indexOf(' ') !== -1) {
         if (/^[a-z]+$/.test(current)) {
-            return `${current === 'initial' ? defaultPosition : current} 0px`;
+            return `${initial ? defaultPosition : current} 0px`;
         }
         else {
             return `${defaultPosition} ${current}`;
         }
+    }
+    else if (initial) {
+        return '0px';
     }
     return current;
 }
@@ -208,7 +212,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 const backgroundVector: StringMap[] = [];
                 const backgroundRepeat = stored.backgroundRepeat.split(',').map(value => value.trim());
                 const backgroundDimensions: Undefined<ImageAsset>[] = [];
-                const backgroundGradient: (BackgroundGradient & TemplateAAData)[] = [];
+                const backgroundGradient: (BackgroundGradient & TemplateDataAA)[] = [];
                 const backgroundSize = stored.backgroundSize.split(',').map(value => value.trim());
                 const backgroundPositionX = stored.backgroundPositionX.split(',').map(value => value.trim());
                 const backgroundPositionY = stored.backgroundPositionY.split(',').map(value => value.trim());
@@ -221,9 +225,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             backgroundImage[i] = Resource.addImageUrl(backgroundImage[i]);
                             const postionX = backgroundPositionX[i] || backgroundPositionX[i - 1];
                             const postionY = backgroundPositionY[i] || backgroundPositionY[i - 1];
-                            const x = checkBackgroundPosition(postionX, postionY, 'left');
-                            const y = checkBackgroundPosition(postionY, postionX, 'top');
-                            backgroundPosition[i] = `${x === 'initial' ? '0px' : x} ${y === 'initial' ? '0px' : y}`;
+                            backgroundPosition[i] = `${checkBackgroundPosition(postionX, postionY, 'left')} ${checkBackgroundPosition(postionY, postionX, 'top')}`;
                         }
                         else {
                             backgroundImage[i] = '';
@@ -235,7 +237,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 else if (stored.backgroundGradient) {
                     const gradients = Resource.createBackgroundGradient(node, stored.backgroundGradient);
                     if (gradients.length) {
-                        backgroundGradient.push(gradients[0] as BackgroundGradient & TemplateAAData);
+                        backgroundGradient.push(gradients[0] as BackgroundGradient & TemplateDataAA);
                     }
                 }
                 const companion = node.companion;
@@ -272,7 +274,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     });
                     const images5: BackgroundImage[] = [];
                     const images6: BackgroundImage[] = [];
-                    let data: TemplateData;
+                    let data: TemplateDataA;
                     let resourceName = '';
                     for (let i = 0; i < backgroundImage.length; i++) {
                         if (backgroundImage[i] !== '') {
@@ -484,7 +486,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     if (vectorGradient) {
                         const width = node.bounds.width;
                         const height = node.bounds.height;
-                        const vectorData: TemplateData = {
+                        const vectorData: TemplateDataA = {
                             namespace: getXmlNs('aapt'),
                             width: $util.formatPX(width),
                             height: $util.formatPX(height),
@@ -561,9 +563,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             const width = parseInt(borderData.width);
                             if (width > 2 && borderData.style === 'double') {
                                 insertDoubleBorder.apply(null, [
+                                    data,
                                     borderData,
                                     ...borderVisible,
-                                    data,
                                     borderRadius
                                 ]);
                             }
@@ -589,12 +591,12 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     const width = parseInt(border.width);
                                     if (width > 2 && border.style === 'double') {
                                         insertDoubleBorder.apply(null, [
+                                            data,
                                             border,
                                             i === 0,
                                             i === 1,
                                             i === 2,
                                             i === 3,
-                                            data,
                                             borderRadius
                                         ]);
                                     }

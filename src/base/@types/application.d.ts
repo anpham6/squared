@@ -120,28 +120,32 @@ export interface ResourceStoredMap {
 }
 
 export interface TemplateData {
-    A: TemplateAAData[];
-    B?: TemplateAAData[] | false;
-    C?: TemplateAAData[] | false;
-    D?: TemplateAAData[] | false;
-    E?: TemplateAAData[] | false;
-    F?: TemplateAAData[] | false;
-    G?: TemplateAAData[] | false;
-    [name: string]: Undefined<string | TemplateAAData[] | false>;
+    [name: string]: string | ExternalData[] | false;
 }
 
-export interface TemplateAAData {
-    AA?: TemplateAAAData[] | false;
-    BB?: TemplateAAAData[] | false;
-    CC?: TemplateAAAData[] | false;
-    DD?: TemplateAAAData[] | false;
-    EE?: TemplateAAAData[] | false;
-    FF?: TemplateAAAData[] | false;
-    GG?: TemplateAAAData[] | false;
-    [name: string]: Undefined<string | TemplateAAAData[] | false>;
+export interface TemplateDataA {
+    A: TemplateDataAA[];
+    B?: TemplateDataAA[] | false;
+    C?: TemplateDataAA[] | false;
+    D?: TemplateDataAA[] | false;
+    E?: TemplateDataAA[] | false;
+    F?: TemplateDataAA[] | false;
+    G?: TemplateDataAA[] | false;
+    [name: string]: Undefined<string | TemplateDataAA[] | false>;
 }
 
-export interface TemplateAAAData {
+export interface TemplateDataAA {
+    AA?: TemplateDataAAA[] | false;
+    BB?: TemplateDataAAA[] | false;
+    CC?: TemplateDataAAA[] | false;
+    DD?: TemplateDataAAA[] | false;
+    EE?: TemplateDataAAA[] | false;
+    FF?: TemplateDataAAA[] | false;
+    GG?: TemplateDataAAA[] | false;
+    [name: string]: Undefined<string | TemplateDataAAA[] | false>;
+}
+
+export interface TemplateDataAAA {
     AAA?: any[] | false;
     BBB?: any[] | false;
     CCC?: any[] | false;
@@ -149,7 +153,7 @@ export interface TemplateAAAData {
     EEE?: any[] | false;
     FFF?: any[] | false;
     GGG?: any[] | false;
-    [name: string]: Undefined<string | any[] | false>;
+    [name: string]: Undefined<string | ExternalData[] | false>;
 }
 
 export interface Asset {

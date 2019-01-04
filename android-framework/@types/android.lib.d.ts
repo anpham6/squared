@@ -1,5 +1,5 @@
 import { FileAsset } from '../../src/base/@types/application';
-import { ThemeAttribute } from '../src/@types/application';
+import { StyleAttribute } from '../src/@types/application';
 import { ViewAttribute } from '../src/@types/node';
 
 import * as $const from '../src/lib/constant';
@@ -24,12 +24,13 @@ declare global {
             export import XMLNS_ANDROID = $const.XMLNS_ANDROID;
             export import RESERVED_JAVA = $const.RESERVED_JAVA;
             export import PREFIX_ANDROID = $const.PREFIX_ANDROID;
+            export import REGEX_ANDROID = $const.REGEX_ANDROID;
         }
 
         namespace util {
             function stripId(value: string): string;
             function createViewAttribute(options?: ExternalData): ViewAttribute;
-            function createThemeAttribute(options?: ExternalData): ThemeAttribute;
+            function createStyleAttribute(options?: ExternalData): Required<StyleAttribute>;
             function validateString(value: string): string;
             function convertUnit(value: string, dpi?: number, font?: boolean): string;
             function replaceUnit(value: string, dpi?: number, format?: string, font?: boolean): string;

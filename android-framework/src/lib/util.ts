@@ -1,5 +1,5 @@
 import { FileAsset } from '../../../src/base/@types/application';
-import { ThemeAttribute } from '../@types/application';
+import { StyleAttribute } from '../@types/application';
 import { ViewAttribute } from '../@types/node';
 
 import { XMLNS_ANDROID } from './constant';
@@ -20,14 +20,14 @@ export function createViewAttribute(options?: ExternalData): ViewAttribute {
     };
 }
 
-export function createThemeAttribute(options?: ExternalData) {
-    const result: ThemeAttribute = {
+export function createStyleAttribute(options?: ExternalData) {
+    const result: StyleAttribute = {
         output: {
             path: '',
             file: ''
         },
-        appTheme: '',
-        parentTheme: '',
+        name: '',
+        parent: '',
         items: {}
     };
     if (options && typeof options === 'object') {

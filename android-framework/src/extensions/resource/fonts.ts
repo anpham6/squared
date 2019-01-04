@@ -1,16 +1,17 @@
-import { ResourceStoredMapAndroid, ResourceStyleData, UserSettingsAndroid } from '../../@types/application';
+import { ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from '../../@types/application';
 
 import { BUILD_ANDROID } from '../../lib/enumeration';
 
 import Resource from '../../resource';
 import View from '../../view';
 
+import { REGEX_ANDROID } from '../../lib/constant';
 import { replaceUnit } from '../../lib/util';
 
 type StyleList = ObjectMap<number[]>;
 type SharedAttributes = ObjectMapNested<number[]>;
 type AttributeMap = ObjectMap<number[]>;
-type TagNameMap = ObjectMap<ResourceStyleData[]>;
+type TagNameMap = ObjectMap<StyleAttribute[]>;
 type NodeStyleMap = ObjectMapNested<string[]>;
 
 const $enum = squared.base.lib.enumeration;
@@ -354,18 +355,29 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         const parentStyle = new Set<string>();
         for (const tag in style) {
             const tagData = style[tag];
-            const styleData: ResourceStyleData[] = [];
+            const styleData: StyleAttribute[] = [];
             for (const attrs in tagData) {
+                const items: NameValue[] = [];
+                attrs.split(';').forEach(value => {
+                    const match = REGEX_ANDROID.ATTRIBUTE.exec(value);
+                    if (match) {
+                        items.push({ name: match[1], value: match[2] });
+                    }
+                });
                 styleData.push({
                     name: '',
-                    attrs,
+                    parent: '',
+                    items,
                     ids: tagData[attrs]
                 });
             }
             styleData.sort((a, b) => {
-                let [c, d] = [a.ids.length, b.ids.length];
+                let [c, d] = [a.items.length, b.items.length];
                 if (c === d) {
-                    [c, d] = [a.attrs.split(';').length, b.attrs.split(';').length];
+                    [c, d] = [a.items[0].name, b.items[0].name];
+                }
+                if (c === d) {
+                    [c, d] = [a.items[0].value, b.items[0].value];
                 }
                 return c <= d ? 1 : -1;
             });
@@ -374,11 +386,13 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         }
         for (const tag in resource) {
             for (const group of resource[tag]) {
-                for (const id of group.ids) {
-                    if (nodeMap[id] === undefined) {
-                        nodeMap[id] = { styles: [], attrs: [] };
+                if (group.ids) {
+                    for (const id of group.ids) {
+                        if (nodeMap[id] === undefined) {
+                            nodeMap[id] = { styles: [], attrs: [] };
+                        }
+                        nodeMap[id].styles.push(group.name);
                     }
-                    nodeMap[id].styles.push(group.name);
                 }
             }
             const tagData = <AttributeMap> layout[tag];

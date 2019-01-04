@@ -11,26 +11,20 @@ export interface UserSettingsAndroid extends UserSettings {
 }
 
 export interface ResourceStoredMapAndroid extends ResourceStoredMap {
-    styles: Map<string, ResourceStyleData>;
-    themes: Map<string, Map<string, ThemeAttribute>>;
+    styles: Map<string, StyleAttribute>;
+    themes: Map<string, Map<string, StyleAttribute>>;
     dimens: Map<string, string>;
     drawables: Map<string, string>;
     animators: Map<string, string>;
 }
 
-export interface ResourceStyleData {
-    name: string;
-    attrs: string;
-    ids: number[];
-    parent?: string;
-}
-
-export interface ThemeAttribute {
-    output: {
+export interface StyleAttribute {
+    output?: {
         path: string;
         file: string;
     };
-    appTheme: string;
-    parentTheme: string;
-    items: StringMap;
+    name: string;
+    parent: string;
+    items: StringMap | NameValue[];
+    ids?: number[];
 }
