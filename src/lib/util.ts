@@ -76,15 +76,15 @@ export function convertCamelCase(value: string, char = '-') {
 }
 
 export function convertWord(value: string) {
-    return value ? value.replace(/[^\w]/g, '_').trim() : '';
+    return value && value.replace(/[^\w]/g, '_').trim() || '';
 }
 
 export function convertInt(value: string) {
-    return (value && parseInt(value)) || 0;
+    return value && parseInt(value) || 0;
 }
 
 export function convertFloat(value: string) {
-    return (value && parseFloat(value)) || 0;
+    return value && parseFloat(value) || 0;
 }
 
 export function convertPX(value: string, dpi: number, fontSize: number): string {

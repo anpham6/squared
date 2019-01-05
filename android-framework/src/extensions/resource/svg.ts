@@ -1,4 +1,5 @@
 import { TemplateData, TemplateDataA, TemplateDataAA, TemplateDataAAA } from '../../../../src/base/@types/application';
+import { SvgTransform } from '../../../../src/svg/@types/object';
 import { ResourceStoredMapAndroid } from '../../@types/application';
 
 import { BUILD_ANDROID } from '../../lib/enumeration';
@@ -128,8 +129,8 @@ function queueAnimations(map: Map<string, AnimateGroup>, name: string, svg: squa
     return false;
 }
 
-function createTransformData(element: SVGGraphicsElement) {
-    const data: TransformData = {
+function createTransformData(element: SVGGraphicsElement, transform?: SvgTransform[]) {
+    const result: TransformData = {
         operations: [],
         scaleX: 1,
         scaleY: 1,
@@ -139,38 +140,40 @@ function createTransformData(element: SVGGraphicsElement) {
         translateX: 0,
         translateY: 0
     };
-    for (let i = 0; i < element.transform.baseVal.numberOfItems; i++) {
-        const item = element.transform.baseVal.getItem(i);
-        if (!data.operations.includes(item.type)) {
+    if (transform === undefined) {
+        transform = $utilS.getTransform(element) || [];
+    }
+    for (const item of transform) {
+        if (!result.operations.includes(item.type)) {
             const m = item.matrix;
             switch (item.type) {
                 case SVGTransform.SVG_TRANSFORM_SCALE:
                     if (m.a !== 1 || m.d !== 1) {
-                        data.scaleX = m.a;
-                        data.scaleY = m.d;
-                        data.operations.push(item.type);
+                        result.scaleX = m.a;
+                        result.scaleY = m.d;
+                        result.operations.push(item.type);
                     }
                     break;
                 case SVGTransform.SVG_TRANSFORM_ROTATE:
                     if (item.angle !== 0) {
-                        data.rotation = item.angle;
+                        result.rotation = item.angle;
                         const origin = $utilS.getRotateOrigin(element);
-                        data.pivotX = origin.x;
-                        data.pivotY = origin.y;
-                        data.operations.push(item.type);
+                        result.pivotX = origin.x;
+                        result.pivotY = origin.y;
+                        result.operations.push(item.type);
                     }
                     break;
                 case SVGTransform.SVG_TRANSFORM_TRANSLATE:
                     if (m.e !== 0 || m.f !== 0) {
-                        data.translateX = m.e;
-                        data.translateY = m.f;
-                        data.operations.push(item.type);
+                        result.translateX = m.e;
+                        result.translateY = m.f;
+                        result.operations.push(item.type);
                     }
                     break;
             }
         }
     }
-    return data;
+    return result;
 }
 
 function getSvgOffset(element: SVGGraphicsElement, outerParent: SVGSVGElement) {
@@ -297,6 +300,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                         }
                         const groupName = `group_${target.name}`;
                         const data: TransformBase<string> & StringMap = { name: groupName };
+                        const dataResidual: TransformBase<string> & StringMap = { name: `residual_${target.name}` };
                         const exclusions = useTarget ? ['x', 'y'] : [];
                         let groupGuard = queueAnimations(
                             animateMap,
@@ -304,6 +308,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                             target,
                             item => item instanceof $SvgAnimateTransform || useTarget && (item.attributeName === 'x' || item.attributeName === 'y')
                         );
+                        let residualGuard = false;
                         if (target instanceof $SvgUse && (target.x !== 0 || target.y !== 0)) {
                             data.translateX = target.x.toString();
                             data.translateY = target.y.toString();
@@ -315,12 +320,23 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                             data.pivotY = path.rotateOrigin.y.toString();
                             groupGuard = true;
                         }
+                        if (path.transformResidual) {
+                            const transform = createTransformData(path.element, path.transformResidual);
+                            for (const attr in transform) {
+                                if (typeof transform[attr] === 'number' && transform[attr] !== 0) {
+                                    dataResidual[attr] = transform[attr].toString();
+                                }
+                            }
+                            residualGuard = true;
+                        }
                         const result: $SvgPath = {
                             name,
                             fillGradient: false,
                             BBB: clipPaths,
                             CCC: groupGuard ? [data] : false,
-                            DDD: groupGuard ? [{}] : false
+                            DDD: groupGuard ? [{ name: data.name }] : false,
+                            EEE: residualGuard ? [dataResidual] : false,
+                            FFF: residualGuard ? [{ name: dataResidual.name }] : false
                         } as any;
                         for (const attr in path) {
                             if ($util.isString(path[attr])) {

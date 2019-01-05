@@ -4,8 +4,13 @@ export default `
 <<A>>
 	<group android:name="{&name}" android:rotation="{~rotation}" android:pivotX="{~pivotX}" android:pivotY="{~pivotY}" android:scaleX="{~scaleX}" android:scaleY="{~scaleY}" android:translateX="{~translateX}" android:translateY="{~translateY}">
 	<<AA>>
+		<<EEE>>
+		<group android:name="{&name}" android:rotation="{~rotation}" android:pivotX="{~pivotX}" android:pivotY="{~pivotY}" android:scaleX="{~scaleX}" android:scaleY="{~scaleY}" android:translateX="{~translateX}" android:translateY="{~translateY}">
+		!!{&name}:1!!
+		<<EEE>>
 		<<CCC>>
-		<!--group android:name="{&name}" android:rotation="{~rotation}" android:pivotX="{~pivotX}" android:pivotY="{~pivotY}" android:scaleX="{~scaleX}" android:scaleY="{~scaleY}" android:translateX="{~translateX}" android:translateY="{~translateY}"-->
+		<group android:name="{&name}" android:rotation="{~rotation}" android:pivotX="{~pivotX}" android:pivotY="{~pivotY}" android:scaleX="{~scaleX}" android:scaleY="{~scaleY}" android:translateX="{~translateX}" android:translateY="{~translateY}">
+		!!{&name}:1!!
 		<<CCC>>
 		<<BBB>>
 		<clip-path android:name="{&name}" android:pathData="{&d}" />
@@ -27,8 +32,13 @@ export default `
 		<<fillGradient>>
 		</path>
 		<<DDD>>
-		<!--/group-->
+		!!{&name}:1!!
+		</group>
 		<<DDD>>
+		<<FFF>>
+		!!{&name}:1!!
+		</group>
+		<<FFF>>
 	<<AA>>
 	</group>
 <<A>>

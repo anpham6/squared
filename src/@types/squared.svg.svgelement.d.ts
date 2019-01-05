@@ -6,8 +6,9 @@ declare global {
             transform: SvgTransform[];
             transformed: boolean;
             readonly animatable: boolean;
-            build(exclusions?: number[], savePath?: boolean): string;
+            build(exclusions?: number[]): string;
             filterTransform(exclusions?: number[]): SvgTransform[];
+            transformPoints(transform: SvgTransform[], points: Point[], center?: PointR): PointR[];
         }
 
         interface SvgShape extends SvgElement {
@@ -19,6 +20,7 @@ declare global {
         interface SvgTransformable {
             baseVal: SvgImageBaseVal;
             rotateOrigin?: PointR;
+            transformResidual?: SvgTransform[];
         }
 
         interface SvgImage extends SvgElement, SvgViewBox, SvgTransformable {
@@ -45,6 +47,7 @@ declare global {
             baseVal: SvgPathBaseVal;
             setColor(attr: string): void;
             setOpacity(attr: string): void;
+            build(exclusions?: number[], savePath?: boolean): string;
         }
 
         class SvgElement implements SvgElement {

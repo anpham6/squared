@@ -249,7 +249,6 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     if (Array.isArray(style.items)) {
                         style.items.sort((a, b) => a.name >= b.name ? 1 : -1);
                         const itemA = Object.assign({}, style);
-                        delete itemA.ids;
                         data.A.push(itemA as ExternalData);
                     }
                 }

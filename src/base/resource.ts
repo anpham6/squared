@@ -104,16 +104,14 @@ export default abstract class Resource<T extends Node> implements squared.base.R
     }
 
     public static hasDrawableBackground(object: BoxStyle | undefined) {
-        return (
-            !!object && (
-                this.isBorderVisible(object.borderTop) ||
-                this.isBorderVisible(object.borderRight) ||
-                this.isBorderVisible(object.borderBottom) ||
-                this.isBorderVisible(object.borderLeft) ||
-                !!object.backgroundImage ||
-                !!object.borderRadius ||
-                !!object.backgroundGradient
-            )
+        return !!object && (
+            this.isBorderVisible(object.borderTop) ||
+            this.isBorderVisible(object.borderRight) ||
+            this.isBorderVisible(object.borderBottom) ||
+            this.isBorderVisible(object.borderLeft) ||
+            !!object.backgroundImage ||
+            !!object.borderRadius ||
+            !!object.backgroundGradient
         );
     }
 
