@@ -87,20 +87,21 @@ function insertSplitTimeValue(map: TimelineIndex, insertMap: TimelineIndex, spli
     let previous: KeyTimeValue<AnimateValue> | undefined;
     let next: KeyTimeValue<AnimateValue> | undefined;
     for (const [time, value] of map.entries()) {
-        if (previous && splitTime < time) {
+        if (previous && splitTime <= time) {
             next = { time, value };
             break;
         }
-        if (splitTime > time) {
+        if (splitTime >= time) {
             previous = { time, value };
         }
     }
     if (previous && next) {
         const value = getSplitValue(splitTime, previous.time, next.time, previous.value, next.value);
         insertMap.set(splitTime, value);
-        return true;
     }
-    return false;
+    else if (previous) {
+        insertMap.set(splitTime, previous.value);
+    }
 }
 
 function convertKeyTimeFraction(map: KeyTimeMap, total: number) {
@@ -389,11 +390,13 @@ export default class SvgShape extends SvgElement implements squared.svg.SvgShape
             }
             const repeatingMap: TimelineMap = {};
             const indefiniteMap: TimelineMap = {};
-            const indefiniteBegin: ObjectMap<number> = {};
-            const repeatingAnimations: SvgAnimate[] = [];
-            const indefiniteAnimations: SvgAnimate[] = [];
+            const indefiniteBeginMap: ObjectMap<number> = {};
+            const repeatingAnimations = new Set<SvgAnimate>();
+            const indefiniteAnimations = new Set<SvgAnimate>();
             const freezeMap: FreezeMap = {};
-            const keyTimeMapList: KeyTimeMap[] = [];
+            let repeatingResult: KeyTimeMap | undefined;
+            let indefiniteResult: KeyTimeMap | undefined;
+            let indefiniteBegin = false;
             let indefiniteDurationTotal = 0;
             for (const attr in groupName) {
                 repeatingMap[attr] = new Map<number, number>();
@@ -512,7 +515,9 @@ export default class SvgShape extends SvgElement implements squared.svg.SvgShape
                                 }
                             }
                             if (lastVal !== undefined) {
-                                repeatingAnimations.push(item);
+                                if (!indefinite) {
+                                    repeatingAnimations.add(item);
+                                }
                                 baseVal = lastVal;
                                 const value = repeatingMap[attr].get(maxTime);
                                 if (value !== undefined) {
@@ -523,9 +528,11 @@ export default class SvgShape extends SvgElement implements squared.svg.SvgShape
                                 }
                             }
                             if (indefinite) {
+                                incomplete.forEach(pending => indefiniteAnimations.delete(pending.value));
                                 incomplete.length = 0;
+                                indefiniteAnimations.add(item);
                             }
-                            if (!complete && (indefinite || groupBegin[i] + durationTotal > minRestartTime)) {
+                            if (indefinite || !complete && groupBegin[i] + durationTotal > minRestartTime) {
                                 incomplete.push({
                                     time: begin,
                                     value: item
@@ -555,9 +562,11 @@ export default class SvgShape extends SvgElement implements squared.svg.SvgShape
                                             baseVal = result[1];
                                             joined = true;
                                             if (timeExceeded) {
-                                                result = insertSplitKeyTimeValue(repeatingMap[attr], item, baseVal, begin, j, maxThreadTime);
-                                                maxTime = result[0];
-                                                baseVal = result[1];
+                                                if (maxThreadTime > maxTime) {
+                                                    result = insertSplitKeyTimeValue(repeatingMap[attr], item, baseVal, begin, j, maxThreadTime);
+                                                    maxTime = result[0];
+                                                    baseVal = result[1];
+                                                }
                                                 break;
                                             }
                                         }
@@ -576,11 +585,13 @@ export default class SvgShape extends SvgElement implements squared.svg.SvgShape
                                     insertKeyTimes();
                                 }
                                 indefiniteMap[attr] = new Map<number, AnimateValue>();
-                                indefiniteBegin[attr] = durationTotal <= 0 ? begin : 0;
+                                indefiniteBeginMap[attr] = durationTotal <= 0 ? begin : 0;
                                 for (let j = 0; j < item.keyTimes.length; j++) {
                                     indefiniteMap[attr].set(item.keyTimes[j] * item.duration, getItemValue(item, j, 0, 0));
                                 }
-                                indefiniteAnimations.push(item);
+                                if(begin > 0) {
+                                    indefiniteBegin = true;
+                                }
                                 break animationEnd;
                             }
                             else {
@@ -597,7 +608,7 @@ export default class SvgShape extends SvgElement implements squared.svg.SvgShape
                     }
                 }
             }
-            if (repeatingAnimations.length) {
+            {
                 const keyTimesRepeating: number[] = [];
                 for (const attr in repeatingMap) {
                     keyTimesRepeating.push(...repeatingMap[attr].keys());
@@ -605,9 +616,9 @@ export default class SvgShape extends SvgElement implements squared.svg.SvgShape
                 const repeatingEndTime = $util.maxArray(keyTimesRepeating);
                 for (const attr in repeatingMap) {
                     const insertMap = repeatingMap[attr];
+                    const begin = indefiniteBeginMap[attr] || 0;
                     let maxTime = $util.maxArray(Array.from(insertMap.keys()));
-                    if (indefiniteMap[attr] && indefiniteBegin[attr] < repeatingEndTime && maxTime < repeatingEndTime) {
-                        const begin = indefiniteBegin[attr];
+                    if (indefiniteMap[attr] && begin < repeatingEndTime && maxTime < repeatingEndTime) {
                         do {
                             let insertTime = -1;
                             for (const [time, data] of indefiniteMap[attr].entries()) {
@@ -619,7 +630,7 @@ export default class SvgShape extends SvgElement implements squared.svg.SvgShape
                             maxTime = insertTime;
                         }
                         while (maxTime < repeatingEndTime);
-                        indefiniteBegin[attr] = 0;
+                        indefiniteBeginMap[attr] = 0;
                     }
                     if (indefiniteMap[attr] === undefined && freezeMap[attr] === undefined) {
                         let value: AnimateValue | undefined;
@@ -650,7 +661,7 @@ export default class SvgShape extends SvgElement implements squared.svg.SvgShape
                     }
                 }
                 const keyTimes = sortNumber(Array.from(new Set(keyTimesRepeating)));
-                const repeatingResult: TimelineMap = {};
+                const result: TimelineMap = {};
                 for (const attr in repeatingMap) {
                     const baseMap = repeatingMap[attr];
                     const insertMap = new Map<number, AnimateValue>();
@@ -667,33 +678,42 @@ export default class SvgShape extends SvgElement implements squared.svg.SvgShape
                             }
                         }
                     }
-                    repeatingResult[attr] = insertMap;
+                    result[attr] = insertMap;
                 }
                 repeatingDurationTotal = keyTimes[keyTimes.length - 1];
+                let keyTimeResult: KeyTimeMap;
                 if (useKeyTime) {
-                    keyTimeMapList.push(convertKeyTimeFraction(
-                        getKeyTimeMap(repeatingResult, keyTimes, freezeMap),
+                    keyTimeResult = convertKeyTimeFraction(
+                        getKeyTimeMap(result, keyTimes, freezeMap),
                         repeatingDurationTotal
-                    ));
+                    );
                 }
                 else {
-                    keyTimeMapList.push(getKeyTimeMap(repeatingResult, keyTimes, freezeMap));
+                    keyTimeResult = getKeyTimeMap(result, keyTimes, freezeMap);
+                }
+                if (repeatingAnimations.size || indefiniteAnimations.size === 0 || indefiniteBegin) {
+                    repeatingResult = keyTimeResult;
+                }
+                else {
+                    indefiniteResult = keyTimeResult;
+                    indefiniteDurationTotal = repeatingDurationTotal;
                 }
             }
-            if (indefiniteAnimations.length) {
-                indefiniteDurationTotal = getLeastCommonMultiple(indefiniteAnimations.map(item => item.duration));
-                const indefiniteResult: TimelineMap = {};
+            if (indefiniteResult === undefined && indefiniteAnimations.size) {
+                const indefiniteArray = Array.from(indefiniteAnimations);
+                indefiniteDurationTotal = getLeastCommonMultiple(indefiniteArray.map(item => item.duration));
+                const result: TimelineMap = {};
                 let keyTimes: number[] = [];
                 for (const attr in indefiniteMap) {
-                    indefiniteResult[attr] = new Map<number, number>();
-                    const object = indefiniteAnimations.find(item => item.attributeName === attr);
+                    result[attr] = new Map<number, number>();
+                    const object = indefiniteArray.find(item => item.attributeName === attr);
                     if (object) {
                         let maxTime = 0;
                         let i = 0;
                         do {
                             for (let [time, value] of indefiniteMap[attr].entries()) {
                                 time += object.duration * i;
-                                indefiniteResult[attr].set(time, value);
+                                result[attr].set(time, value);
                                 keyTimes.push(time);
                                 maxTime = time;
                             }
@@ -703,8 +723,8 @@ export default class SvgShape extends SvgElement implements squared.svg.SvgShape
                     }
                 }
                 keyTimes = sortNumber(Array.from(new Set(keyTimes)));
-                for (const attr in indefiniteResult) {
-                    const baseMap = indefiniteResult[attr];
+                for (const attr in result) {
+                    const baseMap = result[attr];
                     for (let i = 1; i < keyTimes.length; i++) {
                         const keyTime = keyTimes[i];
                         if (!baseMap.has(keyTime)) {
@@ -713,16 +733,16 @@ export default class SvgShape extends SvgElement implements squared.svg.SvgShape
                     }
                 }
                 if (useKeyTime) {
-                    keyTimeMapList.push(convertKeyTimeFraction(
-                        getKeyTimeMap(indefiniteResult, keyTimes),
+                    indefiniteResult = convertKeyTimeFraction(
+                        getKeyTimeMap(result, keyTimes),
                         keyTimes[keyTimes.length - 1]
-                    ));
+                    );
                 }
                 else {
-                    keyTimeMapList.push(getKeyTimeMap(indefiniteResult, keyTimes));
+                    indefiniteResult = getKeyTimeMap(result, keyTimes);
                 }
             }
-            if (keyTimeMapList.length) {
+            if (repeatingResult || indefiniteResult) {
                 $util.retainArray(animate, item => !animations.includes(<SvgAnimate> item));
                 const sequentialName = Array.from(new Set(animations.map(item => item.attributeName))).sort().join('-');
                 let x = 0;
@@ -731,116 +751,117 @@ export default class SvgShape extends SvgElement implements squared.svg.SvgShape
                     x = $util.optionalAsNumber(element, `x.baseVal.value`);
                     y = $util.optionalAsNumber(element, `y.baseVal.value`);
                 }
-                for (let i = 0; i < keyTimeMapList.length; i++) {
-                    const keyTimeMap = keyTimeMapList[i];
-                    const freezeIndefinite = repeatingDurationTotal === 0 || i > 0 ? freezeMap : undefined;
-                    const repeating = i === 0 && repeatingDurationTotal > 0;
-                    const animateElement = repeating ? repeatingAnimations[0].element : indefiniteAnimations[0].element;
-                    function setXY(item: Map<string, number>) {
-                        if (!item.has('x')) {
-                            item.set('x', x);
-                        }
-                        else {
-                            x = item.get('x') as number;
-                        }
-                        if (!item.has('y')) {
-                            item.set('y', y);
-                        }
-                        else {
-                            y = item.get('y') as number;
-                        }
-                    }
-                    function insertAnimate(item: SvgAnimate) {
-                        if (repeating) {
-                            item.repeatCount = 0;
-                        }
-                        else {
-                            item.begin = [0];
-                            item.repeatCount = -1;
-                        }
-                        item.end = undefined;
-                        item.from = item.values[0];
-                        item.to = item.values[item.values.length - 1];
-                        item.by = '';
-                        animate.push(item);
-                    }
-                    if (useKeyTime) {
-                        let object: SvgAnimate | undefined;
-                        if (path) {
-                            const pathData = getPathData(keyTimeMap, path, freezeIndefinite);
-                            if (pathData) {
-                                object = new SvgAnimate(animateElement, element);
-                                object.attributeName = 'd';
-                                object.keyTimes = pathData.map(item => item.time);
-                                object.values = pathData.map(item => item.value.toString());
+                [repeatingResult, indefiniteResult].forEach(result => {
+                    if (result) {
+                        const repeating = result === repeatingResult;
+                        const freezeIndefinite = repeating ? undefined : freezeMap;
+                        const animateElement = (repeating && repeatingAnimations.size > 0 || indefiniteAnimations.size === 0 ? repeatingAnimations : indefiniteAnimations).values().next().value.element;
+                        function setXY(item: Map<string, number>) {
+                            if (!item.has('x')) {
+                                item.set('x', x);
                             }
                             else {
-                                continue;
+                                x = item.get('x') as number;
+                            }
+                            if (!item.has('y')) {
+                                item.set('y', y);
+                            }
+                            else {
+                                y = item.get('y') as number;
                             }
                         }
-                        else {
-                            object = new SvgAnimateTransform(animateElement, element);
-                            object.attributeName = 'transform';
-                            (object as SvgAnimateTransform).type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
-                            object.keyTimes.length = 0;
-                            object.values.length = 0;
-                            for (const [keyTime, data] of keyTimeMap.entries()) {
-                                setXY(data as Map<string, number>);
-                                object.keyTimes.push(keyTime);
-                                object.values.push(`${x} ${y}`);
+                        function insertAnimate(item: SvgAnimate) {
+                            if (repeating) {
+                                item.repeatCount = 0;
                             }
+                            else {
+                                item.begin = [0];
+                                item.repeatCount = -1;
+                            }
+                            item.end = undefined;
+                            item.from = item.values[0];
+                            item.to = item.values[item.values.length - 1];
+                            item.by = '';
+                            animate.push(item);
                         }
-                        if (repeating) {
-                            object.begin = [0];
-                            object.duration = repeatingDurationTotal;
-                        }
-                        else {
-                            object.duration = indefiniteDurationTotal;
-                        }
-                        insertAnimate(object);
-                    }
-                    else {
-                        const entries = Array.from(keyTimeMap.entries());
-                        for (let j = 0, k = 0; j < entries.length - 1; j++) {
-                            const [keyTimeFrom, dataFrom] = entries[j];
-                            const [keyTimeTo, dataTo] = entries[j + 1];
+                        if (useKeyTime) {
                             let object: SvgAnimate | undefined;
-                            let name: string;
                             if (path) {
-                                const map = new Map<number, Map<string, AnimateValue>>();
-                                map.set(keyTimeFrom, dataFrom);
-                                map.set(keyTimeTo, dataTo);
-                                const pathData = getPathData(map, path, freezeIndefinite);
+                                const pathData = getPathData(result, path, freezeIndefinite);
                                 if (pathData) {
                                     object = new SvgAnimate(animateElement, element);
                                     object.attributeName = 'd';
+                                    object.keyTimes = pathData.map(item => item.time);
                                     object.values = pathData.map(item => item.value.toString());
                                 }
                                 else {
-                                    continue;
+                                    return;
                                 }
-                                name = sequentialName;
                             }
                             else {
                                 object = new SvgAnimateTransform(animateElement, element);
                                 object.attributeName = 'transform';
                                 (object as SvgAnimateTransform).type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
-                                object.values = [dataFrom, dataTo].map(data => {
+                                object.keyTimes.length = 0;
+                                object.values.length = 0;
+                                for (const [keyTime, data] of result.entries()) {
                                     setXY(data as Map<string, number>);
-                                    return `${x} ${y}`;
-                                });
-                                name = sequentialName + j;
+                                    object.keyTimes.push(keyTime);
+                                    object.values.push(`${x} ${y}`);
+                                }
                             }
                             if (repeating) {
-                                object.begin = [j === 0 ? keyTimeFrom : 0];
+                                object.begin = [0];
+                                object.duration = repeatingDurationTotal;
                             }
-                            object.duration = keyTimeTo - keyTimeFrom;
-                            object.keyTimes = [0, 1];
-                            object.sequential = { name, value: k++ };
+                            else {
+                                object.duration = indefiniteDurationTotal;
+                            }
                             insertAnimate(object);
                         }
+                        else {
+                            const entries = Array.from(result.entries());
+                            for (let j = 0, k = 0; j < entries.length - 1; j++) {
+                                const [keyTimeFrom, dataFrom] = entries[j];
+                                const [keyTimeTo, dataTo] = entries[j + 1];
+                                let object: SvgAnimate | undefined;
+                                let name: string;
+                                if (path) {
+                                    const map = new Map<number, Map<string, AnimateValue>>();
+                                    map.set(keyTimeFrom, dataFrom);
+                                    map.set(keyTimeTo, dataTo);
+                                    const pathData = getPathData(map, path, freezeIndefinite);
+                                    if (pathData) {
+                                        object = new SvgAnimate(animateElement, element);
+                                        object.attributeName = 'd';
+                                        object.values = pathData.map(item => item.value.toString());
+                                    }
+                                    else {
+                                        continue;
+                                    }
+                                    name = sequentialName;
+                                }
+                                else {
+                                    object = new SvgAnimateTransform(animateElement, element);
+                                    object.attributeName = 'transform';
+                                    (object as SvgAnimateTransform).type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
+                                    object.values = [dataFrom, dataTo].map(data => {
+                                        setXY(data as Map<string, number>);
+                                        return `${x} ${y}`;
+                                    });
+                                    name = sequentialName + j;
+                                }
+                                if (repeating) {
+                                    object.begin = [j === 0 ? keyTimeFrom : 0];
+                                }
+                                object.duration = keyTimeTo - keyTimeFrom;
+                                object.keyTimes = [0, 1];
+                                object.sequential = { name, value: k++ };
+                                insertAnimate(object);
+                            }
+                        }
                     }
-                }
+                });
             }
         }
         return animate;

@@ -56,8 +56,6 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                         break;
                     case SVGTransform.SVG_TRANSFORM_ROTATE:
                         if (item.angle !== 0) {
-                            center.x -= item.angle;
-                            center.y += item.angle;
                             center.angle = (center.angle || 0) + item.angle;
                         }
                         break;

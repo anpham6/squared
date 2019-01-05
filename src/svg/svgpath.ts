@@ -1,13 +1,20 @@
-import { SvgPathBaseVal } from './@types/object';
+import { SvgPathBaseVal, SvgTransform } from './@types/object';
 
 import SvgBuild from './svgbuild';
 import SvgElement from './svgelement';
 
-import { getTransformOrigin } from './lib/util';
+import { getRotateOrigin, getTransformOrigin } from './lib/util';
 
 const $color = squared.lib.color;
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
+
+function getTransformRotate(transform: SvgTransform[], hostRotateFirst: boolean) {
+    if (hostRotateFirst && transform.length > 1 && transform.findIndex(item => item.type === SVGTransform.SVG_TRANSFORM_ROTATE && item.method.x && item.method.y) === 0) {
+        return transform.shift();
+    }
+    return undefined;
+}
 
 export default class SvgPath extends SvgElement implements squared.svg.SvgPath {
     public static getLine(x1: number, y1: number, x2 = 0, y2 = 0) {
@@ -127,18 +134,11 @@ export default class SvgPath extends SvgElement implements squared.svg.SvgPath {
                 let commands = SvgBuild.toPathCommandList(d);
                 if (commands.length) {
                     const points = SvgBuild.toAbsolutePointList(commands);
-                    const center: PointR = SvgBuild.getPathCenter(points);
-                    const result = SvgBuild.applyTransforms(transform, points, getTransformOrigin(element), center);
+                    const result = this.transformPoints(transform, points);
                     if (result.length) {
                         commands = SvgBuild.fromAbsolutePointList(commands, result);
                         if (commands.length) {
                             d = SvgBuild.fromPathCommandList(commands);
-                            if (center.angle !== undefined) {
-                                center.angle = 0;
-                                this.rotateOrigin = center;
-                            }
-                            this.transformed = true;
-                            this.baseVal.transformed = transform;
                         }
                     }
                 }
@@ -155,19 +155,9 @@ export default class SvgPath extends SvgElement implements squared.svg.SvgPath {
                     { x: x1, y: y1 },
                     { x: x2, y: y2 }
                 ];
-                const center: PointR = {
-                    x: (x1 + x2) / 2,
-                    y: (y1 + y2) / 2
-                };
-                const result = SvgBuild.applyTransforms(transform, points, getTransformOrigin(element), center);
+                const result = this.transformPoints(transform, points);
                 if (result.length) {
                     d = SvgPath.getPolyline(result);
-                    if (center.angle !== undefined) {
-                        center.angle = 0;
-                        this.rotateOrigin = center;
-                    }
-                    this.transformed = true;
-                    this.baseVal.transformed = transform;
                 }
             }
             if (d === '') {
@@ -196,18 +186,10 @@ export default class SvgPath extends SvgElement implements squared.svg.SvgPath {
                     x: cx,
                     y: cy
                 };
-                const result = SvgBuild.applyTransforms(transform, points, getTransformOrigin(element), center);
+                const result = this.transformPoints(transform, points, center, true, rx === ry);
                 if (result.length) {
                     const pt = <Required<PointR>> result[0];
                     d = SvgPath.getEllipse(pt.x, pt.y, pt.rx, pt.ry);
-                    if (center.angle !== undefined) {
-                        if (rx === ry) {
-                            center.angle = 0;
-                        }
-                        this.rotateOrigin = center;
-                    }
-                    this.transformed = true;
-                    this.baseVal.transformed = transform;
                 }
             }
             if (d === '') {
@@ -227,19 +209,9 @@ export default class SvgPath extends SvgElement implements squared.svg.SvgPath {
                     { x: x + width, y: y + height },
                     { x, y: y + height }
                 ];
-                const center: PointR = {
-                    x: x + (width / 2),
-                    y: y + (height / 2)
-                };
-                const result = SvgBuild.applyTransforms(transform, points, getTransformOrigin(element), center);
+                const result = this.transformPoints(transform, points);
                 if (result.length) {
                     d = SvgPath.getPolygon(result);
-                    if (center.angle !== undefined) {
-                        center.angle = 0;
-                        this.rotateOrigin = center;
-                    }
-                    this.transformed = true;
-                    this.baseVal.transformed = transform;
                 }
             }
             if (d === '') {
@@ -250,16 +222,9 @@ export default class SvgPath extends SvgElement implements squared.svg.SvgPath {
             let points = this.baseVal.points !== null ? this.baseVal.points : SvgBuild.toPointList(element.points);
             const transform = this.filterTransform(exclusions);
             if (transform.length) {
-                const center: PointR = SvgBuild.getPathCenter(points);
-                const result = SvgBuild.applyTransforms(transform, points, getTransformOrigin(element), center);
+                const result = this.transformPoints(transform, points);
                 if (result.length) {
                     points = result;
-                    if (center.angle !== undefined) {
-                        center.angle = 0;
-                        this.rotateOrigin = center;
-                    }
-                    this.transformed = true;
-                    this.baseVal.transformed = transform;
                 }
             }
             d = element.tagName === 'polygon' ? SvgPath.getPolygon(points) : SvgPath.getPolyline(points);
@@ -323,5 +288,22 @@ export default class SvgPath extends SvgElement implements squared.svg.SvgPath {
             this.strokeLinejoin = $dom.cssAttribute(element, 'stroke-linejoin', true);
             this.strokeMiterlimit = $dom.cssAttribute(element, 'stroke-miterlimit', true);
         }
+    }
+
+    private transformPoints(transform: SvgTransform[], points: Point[], center?: PointR, hostRotateFirst = false, resetAngle = true) {
+        const rotate = getTransformRotate(transform, hostRotateFirst);
+        const origin = center ? Object.assign({}, center) : undefined;
+        const result = SvgBuild.applyTransforms(transform, points, getTransformOrigin(this.element), origin);
+        if (rotate) {
+            this.rotateOrigin = { angle: rotate.angle, ...getRotateOrigin(this.element) };
+        }
+        else if (origin && origin.angle !== undefined && !resetAngle) {
+            this.rotateOrigin = origin;
+        }
+        if (result.length) {
+            this.transformed = true;
+            this.baseVal.transformed = transform;
+        }
+        return result;
     }
 }

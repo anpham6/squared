@@ -14,7 +14,7 @@ import View from '../../view';
 import { getXmlNs } from '../../lib/util';
 
 if (!squared.svg) {
-    squared.svg = {} as any;
+    squared.svg = { lib: {} } as any;
 }
 
 import $SvgAnimate = squared.svg.SvgAnimate;
@@ -29,6 +29,7 @@ import $SvgImage = squared.svg.SvgImage;
 import $SvgPath = squared.svg.SvgPath;
 import $SvgShape = squared.svg.SvgShape;
 import $SvgUse = squared.svg.SvgUse;
+import $utilS = squared.svg.lib.util;
 
 interface ResourceSvgOptions {
     exludeFromTransform: number[];
@@ -153,14 +154,9 @@ function createTransformData(element: SVGGraphicsElement) {
                 case SVGTransform.SVG_TRANSFORM_ROTATE:
                     if (item.angle !== 0) {
                         data.rotation = item.angle;
-                        const transform = element.attributes.getNamedItem('transform');
-                        if (transform) {
-                            const match = /rotate\((\d+), (\d+), (\d+)\)/.exec(transform.value);
-                            if (match) {
-                                data.pivotX = parseInt(match[2]);
-                                data.pivotY = parseInt(match[3]);
-                            }
-                        }
+                        const origin = $utilS.getRotateOrigin(element);
+                        data.pivotX = origin.x;
+                        data.pivotY = origin.y;
                         data.operations.push(item.type);
                     }
                     break;

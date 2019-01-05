@@ -151,6 +151,20 @@ export function createTransform(type: number, matrix: SvgMatrix | DOMMatrix, ang
     };
 }
 
+export function getRotateOrigin(element: SVGGraphicsElement): Point {
+    let x = 0;
+    let y = 0;
+    const attr = element.attributes.getNamedItem('transform');
+    if (attr) {
+        const match = /rotate\((-?[\d.]+),\s*(-?[\d.]+),\s*(-?[\d.]+)\)/.exec(attr.value);
+        if (match) {
+            x = parseFloat(match[2]);
+            y = parseFloat(match[3]);
+        }
+    }
+    return { x, y };
+}
+
 export function getTransform(element: SVGGraphicsElement): SvgTransform[] | undefined {
     const value = $dom.cssInline(element, 'transform');
     if (value !== '') {

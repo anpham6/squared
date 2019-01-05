@@ -6,7 +6,7 @@ declare global {
             transform: SvgTransform[];
             transformed: boolean;
             readonly animatable: boolean;
-            build(exclusions?: number[]): string;
+            build(exclusions?: number[], savePath?: boolean): string;
             filterTransform(exclusions?: number[]): SvgTransform[];
         }
 
