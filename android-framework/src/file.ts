@@ -248,7 +248,9 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 for (const style of styles) {
                     if (Array.isArray(style.items)) {
                         style.items.sort((a, b) => a.name >= b.name ? 1 : -1);
-                        data.A.push(style.items as ExternalData);
+                        const itemA = Object.assign({}, style);
+                        delete itemA.ids;
+                        data.A.push(itemA as ExternalData);
                     }
                 }
                 files.push({ filename: 'res/values/styles.xml', data });

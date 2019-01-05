@@ -61,7 +61,7 @@ export interface SvgPathBaseVal extends SvgImageBaseVal {
     x2: number | null;
     y1: number | null;
     y2: number | null;
-    points: SVGPointList | Point[] | null;
+    points: Point[] | null;
 }
 
 export interface SvgTransform {

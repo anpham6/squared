@@ -247,7 +247,7 @@ export default class SvgPath extends SvgElement implements squared.svg.SvgPath {
             }
         }
         else if (element instanceof SVGPolygonElement || element instanceof SVGPolylineElement) {
-            let points = SvgBuild.toPointList(this.baseVal.points !== null ? this.baseVal.points : element.points);
+            let points = this.baseVal.points !== null ? this.baseVal.points : SvgBuild.toPointList(element.points);
             const transform = this.filterTransform(exclusions);
             if (transform.length) {
                 const center: PointR = SvgBuild.getPathCenter(points);
@@ -299,7 +299,7 @@ export default class SvgPath extends SvgElement implements squared.svg.SvgPath {
             this.baseVal.ry = element.ry.baseVal.value;
         }
         else if (element instanceof SVGPolygonElement || element instanceof SVGPolylineElement) {
-            this.baseVal.points = element.points;
+            this.baseVal.points = SvgBuild.toPointList(element.points);
         }
         const clipPath = $util.REGEX_PATTERN.CSS_URL.exec($dom.cssAttribute(element, 'clip-path'));
         if (clipPath) {

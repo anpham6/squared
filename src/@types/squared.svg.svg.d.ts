@@ -34,6 +34,7 @@ declare global {
             public static toCoordinateList(value: string): number[];
             public static toAbsolutePointList(values: SvgPathCommand[]): PointR[];
             public static toPathCommandList(value: string): SvgPathCommand[];
+            public static fromPointsValue(value: string): Point[];
             public static fromNumberList(values: number[]): Point[];
             public static fromAbsolutePointList(values: SvgPathCommand[], points: Point[] | PointR[]): SvgPathCommand[];
             public static fromPathCommandList(values: SvgPathCommand[]): string;

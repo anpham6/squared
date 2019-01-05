@@ -308,6 +308,15 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
+    public static fromPointsValue(value: string) {
+        const result: Point[] = [];
+        value.trim().split(/\s+/).forEach(point => {
+            const [x, y] = point.split(',').map(pt => parseFloat(pt));
+            result.push({ x, y });
+        });
+        return result;
+    }
+
     public static fromNumberList(values: number[]) {
         const result: Point[] = [];
         for (let i = 0; i < values.length; i += 2) {
