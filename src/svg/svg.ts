@@ -2,7 +2,6 @@ import { SvgBaseValue, SvgLinearGradient, SvgRadialGradient, SvgTransform } from
 
 import SvgAnimation from './svganimation';
 import SvgCreate from './svgcreate';
-import SvgElement from './svgelement';
 import SvgShape from './svgshape';
 import SvgGroup from './svggroup';
 import SvgGroupPaint from './svggrouppaint';
@@ -38,6 +37,8 @@ export default class Svg extends squared.lib.base.Container<SvgGroup> implements
 
     public readonly name: string;
     public readonly defs = {
+        shape: new Map<string, SvgShape>(),
+        image: new Map<string, SvgImage>(),
         symbol: new Map<string, SvgSymbol>(),
         clipPath: new Map<string, SvgGroup>(),
         gradient: new Map<string, Gradient>(),
@@ -117,67 +118,80 @@ export default class Svg extends squared.lib.base.Container<SvgGroup> implements
                 }
             }
         });
-        const useMap = new Map<string, SvgElement>();
-        let currentGroup: SvgGroup | undefined;
-        function groupAppend(group: SvgGroup, item: Element) {
+        let current: SvgGroup | undefined;
+        const groupAppend = (group: SvgGroup, item: Element) => {
             if (item instanceof SVGUseElement) {
                 group.append(new SvgUse(item));
             }
             else {
-                let shape: SvgElement | undefined;
                 if (isSvgShape(item)) {
-                    shape = new SvgShape(item);
+                    const shape = new SvgShape(item);
+                    if (item.id) {
+                        this.defs.shape.set(`#${item.id}`, shape);
+                    }
+                    group.append(shape);
                 }
                 else if (isSvgImage(item)) {
-                    shape = new SvgImage(item);
-                }
-                if (shape) {
-                    group.append(shape);
+                    const image = new SvgImage(item);
                     if (item.id) {
-                        useMap.set(`#${item.id}`, shape);
+                        this.defs.image.set(`#${item.id}`, image);
                     }
+                    group.append(image);
                 }
             }
-        }
+        };
         for (let i = 0; i < element.children.length; i++) {
             const item = element.children[i];
             if (item instanceof SVGSVGElement) {
-                currentGroup = new SvgGroupRect(item);
-                this.append(currentGroup);
+                current = new SvgGroupRect(item);
+                this.append(current);
             }
             else if (item instanceof SVGGElement) {
-                currentGroup = new SvgGroupPaint(item);
-                this.append(currentGroup);
+                current = new SvgGroupPaint(item);
+                this.append(current);
             }
             else {
-                if (currentGroup === undefined) {
-                    currentGroup = new SvgGroup(element);
-                    this.append(currentGroup);
+                if (item instanceof SVGUseElement) {
+                    const symbol = this.defs.symbol.get(item.href.baseVal);
+                    if (symbol) {
+                        const group = new SvgGroupRect(item, symbol.element);
+                        symbol.each(child => {
+                            const shape = new SvgShape(child.element);
+                            if (shape.path) {
+                                group.append(shape);
+                            }
+                        });
+                        this.append(group);
+                        current = undefined;
+                        continue;
+                    }
                 }
-                groupAppend(currentGroup, item);
+                if (current === undefined) {
+                    current = new SvgGroup(element);
+                    this.append(current);
+                }
+                groupAppend(current, item);
                 continue;
             }
             for (let j = 0; j < item.children.length; j++) {
-                groupAppend(currentGroup, item.children[j]);
+                groupAppend(current, item.children[j]);
             }
-            currentGroup = undefined;
+            current = undefined;
         }
         this.each(group => {
             for (let i = 0; i < group.children.length; i++) {
                 const item = group.children[i];
                 if (item instanceof SvgUse) {
-                    const shape = useMap.get(item.element.href.baseVal);
+                    const href = item.href;
+                    const shape = this.defs.shape.get(href);
                     if (shape) {
-                        if (shape instanceof SvgShape) {
-                            if (shape.path) {
-                                item.setPath(shape.path);
-                                continue;
-                            }
-                        }
-                        else if (shape instanceof SvgImage) {
-                            group.children[i] = new SvgImage(item.element, shape.href);
-                            continue;
-                        }
+                        item.setShape(shape.element);
+                        continue;
+                    }
+                    const image = this.defs.image.get(href);
+                    if (image) {
+                        group.children[i] = new SvgImage(item.element, image.href);
+                        continue;
                     }
                     item.visible = false;
                 }

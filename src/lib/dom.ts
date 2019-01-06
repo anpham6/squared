@@ -310,7 +310,7 @@ export function cssFromParent(element: Element | null, attr: string) {
 }
 
 export function cssAttribute(element: Element, attr: string, computed = false) {
-    const attribute = element.attributes.getNamedItem(attr) || (!computed && element.parentElement instanceof SVGGElement ? element.parentElement.attributes.getNamedItem(attr) : '');
+    const attribute = element.attributes.getNamedItem(attr);
     if (attribute) {
         return attribute.value.trim();
     }

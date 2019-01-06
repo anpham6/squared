@@ -13,8 +13,9 @@ declare global {
             transform: SvgTransform[];
             visible: boolean;
             baseValue: SvgBaseValue;
-            readonly element: SVGGraphicsElement;
             readonly name: string;
+            readonly element: SVGGraphicsElement;
+            readonly parentElement?: SVGGraphicsElement;
         }
 
         interface SvgViewRect extends SvgRect {
@@ -23,7 +24,7 @@ declare global {
         }
 
         interface SvgViewBox {
-            viewBox: DOMRect;
+            viewBox?: DOMRect;
         }
 
         interface SvgTransformable {
@@ -53,15 +54,16 @@ declare global {
         }
 
         interface Svg extends Container<SvgGroup>, SvgView, Dimension, SvgViewBox {
+            viewBox: DOMRect;
+            width: number;
+            height: number;
+            opacity: number;
             readonly element: SVGSVGElement;
             readonly defs: {
                 symbol: Map<string, SvgSymbol>;
                 clipPath: Map<string, SvgGroup>;
                 gradient: Map<string, Gradient>;
             };
-            width: number;
-            height: number;
-            opacity: number;
         }
 
         class Svg implements Svg {

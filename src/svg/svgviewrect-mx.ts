@@ -15,7 +15,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
         }
 
         private getElement() {
-            return this.element instanceof SVGImageElement || this.element instanceof SVGSVGElement ? this.element : undefined;
+            return this.element instanceof SVGSVGElement || this.element instanceof SVGUseElement || this.element instanceof SVGImageElement ? this.element : undefined;
         }
 
         set x(value) {

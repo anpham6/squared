@@ -877,9 +877,8 @@ export default class SvgShape extends SvgElement implements squared.svg.SvgShape
 
     public build(exclusions?: number[]) {
         if (this.path) {
-            return this.path.build(exclusions);
+            this.path.build(exclusions);
         }
-        return '';
     }
 
     public synchronize(useKeyTime = true) {

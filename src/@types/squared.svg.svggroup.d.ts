@@ -10,12 +10,12 @@ declare global {
         }
 
         interface SvgGroupPaint extends SvgGroup, SvgPaint {
-            readonly element: SVGGElement;
+            readonly element: SVGGElement | SVGUseElement;
         }
 
         interface SvgGroupRect extends SvgGroup, SvgViewRect, SvgViewBox {
             baseValue: SvgRectBaseValue;
-            readonly element: SVGSVGElement;
+            readonly element: SVGSVGElement | SVGUseElement;
         }
 
         class SvgGroup implements SvgGroup {
@@ -23,11 +23,11 @@ declare global {
         }
 
         class SvgGroupPaint implements SvgGroupPaint {
-            constructor(element: SVGGElement);
+            constructor(element: SVGGElement | SVGUseElement);
         }
 
         class SvgGroupRect implements SvgGroupRect {
-            constructor(element: SVGSVGElement);
+            constructor(element: SVGSVGElement | SVGUseElement, symbol?: SVGSymbolElement);
         }
     }
 }

@@ -494,10 +494,12 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             viewportHeight: height.toString(),
                             alpha: '',
                             A: [{
+                                group: [[{ name: `${node.controlId}_gradient` }]],
                                 AA: [{
+                                    name: `${node.controlId}_gradient_path`,
                                     d: squared.svg.SvgPath.getRect(width, height),
                                     BBB: false,
-                                    fillGradient: [{ 'gradients': backgroundGradient }]
+                                    fillPattern: [{ gradients: backgroundGradient }]
                                 }]
                             }]
                         };
@@ -510,11 +512,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         backgroundVector.push({ vectorName });
                     }
                     let template: StringMap;
-                    if (stored.border && !(
-                            stored.border.style === 'double' && parseInt(stored.border.width) > 2 ||
-                            (stored.border.style === 'groove' || stored.border.style === 'ridge') && parseInt(stored.border.width) > 1
-                       ))
-                    {
+                    const border = stored.border;
+                    if (border && !(border.style === 'double' && parseInt(border.width) > 2 || (border.style === 'groove' || border.style === 'ridge') && parseInt(border.width) > 1)) {
                         const stroke = getShapeAttribute(stored, 'stroke') || [];
                         if (!hasBackgroundImage && backgroundGradient.length <= 1 && !vectorGradient) {
                             if (borderRadius && borderRadius[0]['radius'] === undefined) {
@@ -587,12 +586,12 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         else {
                             for (let i = 0; i < borders.length; i++) {
                                 if (borderVisible[i]) {
-                                    const border = borders[i];
-                                    const width = parseInt(border.width);
-                                    if (width > 2 && border.style === 'double') {
+                                    const item = borders[i];
+                                    const width = parseInt(item.width);
+                                    if (width > 2 && item.style === 'double') {
                                         insertDoubleBorder.apply(null, [
                                             data,
-                                            border,
+                                            item,
                                             i === 0,
                                             i === 1,
                                             i === 2,
@@ -601,17 +600,18 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         ]);
                                     }
                                     else if (data.G) {
-                                        const hasInset = width > 1 && (border.style === 'groove' || border.style === 'ridge');
+                                        const hasInset = width > 1 && (item.style === 'groove' || item.style === 'ridge');
                                         const outsetWidth = hasInset ? Math.ceil(width / 2) : width;
                                         const baseWidth = getHideWidth(outsetWidth);
+                                        const visible = !visibleAll && item.width === '1px';
                                         let hideWidth = `-${$util.formatPX(baseWidth)}`;
                                         let hideTopWidth = `-${$util.formatPX(baseWidth + (visibleAll ? 1 : 0))}`;
                                         data.G.push({
                                             top:  i === 0 ? '' : hideTopWidth,
-                                            right: i === 1 ? (!visibleAll && border.width === '1px' ? border.width : '') : hideWidth,
-                                            bottom: i === 2 ? (!visibleAll && border.width === '1px' ? border.width : '') : hideWidth,
+                                            right: i === 1 ? (visible ? item.width : '') : hideWidth,
+                                            bottom: i === 2 ? (visible ? item.width : '') : hideWidth,
                                             left: i === 3 ? '' : hideWidth,
-                                            stroke: getShapeAttribute(<BoxStyle> { border }, 'stroke', i, hasInset),
+                                            stroke: getShapeAttribute(<BoxStyle> { border: item }, 'stroke', i, hasInset),
                                             corners: borderRadius
                                         });
                                         if (hasInset) {
@@ -619,10 +619,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                             hideTopWidth = `-${$util.formatPX(width + (visibleAll ? 1 : 0))}`;
                                             data.G.unshift({
                                                 top:  i === 0 ? '' : hideTopWidth,
-                                                right: i === 1 ? (!visibleAll && border.width === '1px' ? border.width : '') : hideWidth,
-                                                bottom: i === 2 ? (!visibleAll && border.width === '1px' ? border.width : '') : hideWidth,
+                                                right: i === 1 ? (visible ? item.width : '') : hideWidth,
+                                                bottom: i === 2 ? (visible ? item.width : '') : hideWidth,
                                                 left: i === 3 ? '' : hideWidth,
-                                                stroke: getShapeAttribute(<BoxStyle> { border }, 'stroke', i, true, true),
+                                                stroke: getShapeAttribute(<BoxStyle> { border: item }, 'stroke', i, true, true),
                                                 corners: false
                                             });
                                         }

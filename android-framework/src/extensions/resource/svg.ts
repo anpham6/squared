@@ -1026,14 +1026,16 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                         const scaleY = svg.height / svg.viewBox.height;
                         let x = item.baseValue.x * scaleX;
                         let y = item.baseValue.y * scaleY;
+                        let width = item.baseValue.width;
+                        let height = item.baseValue.height;
                         const offsetParent = getSvgOffset(item.element, <SVGSVGElement> svg.element);
                         x += offsetParent.x;
                         y += offsetParent.y;
-                        item.width *= scaleX;
-                        item.height *= scaleY;
+                        width *= scaleX;
+                        height *= scaleY;
                         const data: StringMap = {
-                            width: item.width > 0 ? $util.formatPX(item.width) : '',
-                            height: item.height > 0 ? $util.formatPX(item.height) : '',
+                            width: $util.formatPX(width),
+                            height: $util.formatPX(height),
                             left: x !== 0 ? $util.formatPX(x) : '',
                             top: y !== 0 ? $util.formatPX(y) : '',
                             src: Resource.addImage({ mdpi: item.href })

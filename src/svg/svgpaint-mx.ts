@@ -23,8 +23,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
         public clipRule = '';
 
         public setPaint() {
-            const element = this.element;
-            const opacity = $dom.cssAttribute(element, 'opacity');
+            const opacity = this.getAttribute('opacity');
             if (opacity !== '') {
                 this.opacity = Math.min(parseFloat(opacity), 1).toString();
             }
@@ -40,14 +39,14 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
             this.setAttribute('stroke-miterlimit');
             this.setAttribute('stroke-dasharray');
             this.setAttribute('stroke-dashoffset');
-            const match = $util.REGEX_PATTERN.CSS_URL.exec($dom.cssAttribute(element, 'clip-path'));
+            const match = $util.REGEX_PATTERN.CSS_URL.exec(this.getAttribute('clip-path'));
             this.clipPath = match ? match[1] : '';
-            this.clipRule = $dom.cssAttribute(element, 'clip-rule');
+            this.clipRule = this.getAttribute('clip-rule');
         }
 
         private setColor(attr: string) {
             const element = this.element;
-            let value: string | null = $dom.cssAttribute(element, attr);
+            let value: string | null = this.getAttribute(attr);
             const match = $util.REGEX_PATTERN.CSS_URL.exec(value);
             if (match) {
                 this[`${attr}Pattern`] = match[1];
@@ -75,10 +74,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                 }
             }
             else {
-                if (element.parentElement instanceof SVGGElement) {
-                    value = $dom.cssAttribute(element.parentElement, attr);
-                }
-                if (value === '' && attr === 'fill') {
+                if (attr === 'fill') {
                     value = null;
                 }
             }
@@ -88,16 +84,16 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
         }
 
         private setOpacity(attr: string) {
-            const opacity = $dom.cssAttribute(this.element, `${attr}-opacity`);
+            const opacity = this.getAttribute(`${attr}-opacity`);
             this[`${attr}Opacity`] = opacity ? (parseFloat(opacity) * parseFloat(this.opacity)).toString() : this.opacity;
         }
 
+        private getAttribute(attr: string) {
+            return $dom.cssAttribute(this.element, attr) || (this.parentElement ? $dom.cssAttribute(this.parentElement, attr) : '');
+        }
+
         private setAttribute(attr: string) {
-            const element = this.element;
-            let value = $dom.cssAttribute(element, attr);
-            if (value === '' && element.parentElement instanceof SVGGElement) {
-                value = $dom.cssAttribute(element.parentElement, attr);
-            }
+            const value = this.getAttribute(attr);
             if (value !== '') {
                 this[$util.convertCamelCase(attr)] = value;
             }

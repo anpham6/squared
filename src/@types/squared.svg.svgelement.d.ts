@@ -12,6 +12,7 @@ declare global {
         interface SvgShape extends SvgElement {
             path?: SvgPath;
             synchronize(useKeyTime?: boolean): void;
+            build(exclusions?: number[]): void;
         }
 
         interface SvgImage extends SvgElement, SvgViewRect, SvgTransformable {
@@ -21,13 +22,13 @@ declare global {
         }
 
         interface SvgUse extends SvgShape, Point {
-            group?: SvgGroup;
-            setPath(value: SvgPath): void;
+            href: string;
+            setShape(value: SVGGraphicsElement): void;
         }
 
         interface SvgPath extends SvgElement, SvgTransformable, SvgPaint {
-            name: string;
             d: string;
+            name: string;
             baseValue: SvgPathBaseValue;
             build(exclusions?: number[], save?: boolean): string;
         }

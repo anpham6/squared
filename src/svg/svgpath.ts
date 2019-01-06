@@ -32,8 +32,9 @@ export default class SvgPath extends SvgPaint$MX(SvgElement) implements squared.
         return points.length ? `M${(points as SvgPoint[]).map(item => `${item.x},${item.y}`).join(' ')}` : '';
     }
 
-    public name!: string;
+    public d = '';
     public animatable = false;
+    public name!: string;
     public baseValue: SvgPathBaseValue = {
         d: null,
         cx: null,
@@ -56,9 +57,12 @@ export default class SvgPath extends SvgPaint$MX(SvgElement) implements squared.
 
     constructor(
         public readonly element: SVGGraphicsElement,
-        public d = '')
+        public readonly parentElement?: SVGGraphicsElement)
     {
         super(element);
+        if (parentElement === undefined && element.parentElement instanceof SVGGElement) {
+            this.parentElement = element.parentElement;
+        }
         this.init();
     }
 
