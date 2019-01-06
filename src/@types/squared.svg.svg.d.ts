@@ -1,4 +1,4 @@
-import { SvgBaseValue, SvgMatrix, SvgPathCommand, SvgRect, SvgTransform } from '../svg/@types/object';
+import { SvgBaseValue, SvgMatrix, SvgPathCommand, SvgPoint, SvgRect, SvgRectBaseValue, SvgTransform } from '../svg/@types/object';
 
 import Container = squared.lib.base.Container;
 
@@ -17,9 +17,39 @@ declare global {
             readonly name: string;
         }
 
+        interface SvgViewRect extends SvgRect {
+            baseValue: SvgRectBaseValue;
+            setRect(): void;
+        }
+
         interface SvgViewBox {
-            readonly viewBox: SvgRect;
-            setViewBox(value: SvgRect): void;
+            viewBox: DOMRect;
+        }
+
+        interface SvgTransformable {
+            rotateOrigin?: SvgPoint;
+            transformResidual?: SvgTransform[][];
+        }
+
+        interface SvgPaint {
+            opacity: string;
+            color: string;
+            fill: string;
+            fillPattern: string;
+            fillOpacity: string;
+            fillRule: string;
+            stroke: string;
+            strokeWidth: string;
+            strokePattern: string;
+            strokeOpacity: string;
+            strokeLinecap: string;
+            strokeLinejoin: string;
+            strokeMiterlimit: string;
+            strokeDashArray: string;
+            strokeDashOffset: string;
+            clipPath: string;
+            clipRule: string;
+            setPaint(): void;
         }
 
         interface Svg extends Container<SvgGroup>, SvgView, Dimension, SvgViewBox {
@@ -29,11 +59,9 @@ declare global {
                 clipPath: Map<string, SvgGroup>;
                 gradient: Map<string, Gradient>;
             };
-            readonly width: number;
-            readonly height: number;
-            readonly opacity: number;
-            setOpacity(value: string | number): void;
-            setDimensions(width: number, height: number): void;
+            width: number;
+            height: number;
+            opacity: number;
         }
 
         class Svg implements Svg {

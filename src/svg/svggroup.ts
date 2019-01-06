@@ -5,14 +5,13 @@ import SvgAnimate from './svganimate';
 import SvgCreate from './svgcreate';
 import SvgElement from './svgelement';
 
-import { getTransform, isSvgVisible } from './lib/util';
+import { getTransform, isVisible, setVisible } from './lib/util';
 
 export default class SvgGroup extends squared.lib.base.Container<SvgElement> implements squared.svg.SvgGroup {
     public baseValue: SvgBaseValue = {
         transformed: null
     };
 
-    public readonly visible: boolean;
     public readonly name: string;
 
     private _animate: SvgAnimation[];
@@ -21,7 +20,6 @@ export default class SvgGroup extends squared.lib.base.Container<SvgElement> imp
     constructor(public readonly element: SVGGElement | SVGSVGElement) {
         super();
         this.name = SvgCreate.setName(element);
-        this.visible = isSvgVisible(element);
         this._animate = SvgCreate.toAnimateList(element);
     }
 
@@ -41,5 +39,12 @@ export default class SvgGroup extends squared.lib.base.Container<SvgElement> imp
             }
         }
         return this._animate;
+    }
+
+    set visible(value) {
+        setVisible(this.element, value);
+    }
+    get visible() {
+        return isVisible(this.element);
     }
 }

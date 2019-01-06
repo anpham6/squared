@@ -1,3 +1,3 @@
-import View$Base from './view-base';
+import View$MX from './view-mx';
 
-export default class View extends View$Base(squared.base.Node) implements android.base.View {}
+export default class View extends View$MX(squared.base.Node) implements android.base.View {}

@@ -25,6 +25,11 @@ function getFontSize(element: SVGGraphicsElement) {
     return parseInt($dom.getStyle(element).fontSize || '16');
 }
 
+function setAttribute(element: SVGGraphicsElement, attr: string, value: string) {
+    element.style[attr] = value;
+    element.setAttribute(attr, value);
+}
+
 export const MATRIX = {
     rotate(angle: number): SvgMatrix {
         const r = convertRadian(angle);
@@ -71,14 +76,6 @@ export const MATRIX = {
     }
 };
 
-export function getHrefTarget(element: Element) {
-    const href = element.attributes.getNamedItem('href');
-    if (href && href.value !== '') {
-        return href.value.charAt(0) === '#' ? <SVGGraphicsElement> (document.getElementById(href.value.replace('#', '')) as unknown) : null;
-    }
-    return null;
-}
-
 export function isSvgShape(element: Element): element is SVGGraphicsElement {
     switch (element.tagName) {
         case 'path':
@@ -97,9 +94,22 @@ export function isSvgImage(element: Element): element is SVGImageElement {
     return element.tagName === 'image';
 }
 
-export function isSvgVisible(element: Element) {
+export function isVisible(element: Element) {
     const value = $dom.cssAttribute(element, 'visibility', true);
     return value !== 'hidden' && value !== 'collapse' && $dom.cssAttribute(element, 'display', true) !== 'none';
+}
+
+export function setVisible(element: SVGGraphicsElement, value: boolean) {
+    setAttribute(element, 'display', value ? 'block' : 'none');
+    setAttribute(element, 'visibility', value ? 'visible' : 'hidden');
+}
+
+export function getHrefElementId(element: Element) {
+    const href = element.attributes.getNamedItem('href');
+    if (href && href.value !== '') {
+        return href.value.charAt(0) === '#' ? <SVGGraphicsElement> (document.getElementById(href.value.replace('#', '')) as unknown) : null;
+    }
+    return null;
 }
 
 export function getTransformMatrix(element: SVGGraphicsElement): SvgMatrix | undefined {

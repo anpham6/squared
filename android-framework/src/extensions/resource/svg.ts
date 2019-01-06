@@ -182,7 +182,6 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
             TEMPLATES.ANIMATED = $xml.parseTemplate(ANIMATEDVECTOR_TMPL);
             TEMPLATES.LAYER_LIST = $xml.parseTemplate(LAYERLIST_TMPL);
             TEMPLATES.SET_OBJECTANIMATOR = $xml.parseTemplate(SETOBJECTANIMATOR_TMPL);
-            TEMPLATES.VECTOR = $xml.parseTemplate(VECTOR_TMPL);
         }
         if ($SvgBuild) {
             $SvgCreate.setName();
@@ -260,11 +259,11 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                         const useTarget = target instanceof $SvgUse;
                         const exclusions = useTarget ? ['x', 'y'] : [];
                         const shape: TransformData<string>[][] = [[]];
-                        if (path.transformHost) {
-                            for (let i = 0; i < path.transformHost.length; i++) {
+                        if (path.transformResidual) {
+                            for (let i = 0; i < path.transformResidual.length; i++) {
                                 shape[0].push({
                                     groupName: `${target.name}_transform_${i + 1}`,
-                                    ...createTransformData(path.transformHost[i])
+                                    ...createTransformData(path.transformResidual[i])
                                 });
                             }
                         }
@@ -393,7 +392,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                     }
                     groups = groups.filter(item => item.AA.length > 0);
                     if (groups.length) {
-                        const xml = $xml.createTemplate(TEMPLATES.VECTOR, <TemplateDataA> {
+                        const xml = $xml.createTemplate($xml.parseTemplate(VECTOR_TMPL), <TemplateDataA> {
                             namespace: namespace.size ? getXmlNs(...Array.from(namespace)) : '',
                             name: svg.name,
                             width: $util.formatPX(svg.width),
@@ -1025,8 +1024,8 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                     for (const item of images) {
                         const scaleX = svg.width / svg.viewBox.width;
                         const scaleY = svg.height / svg.viewBox.height;
-                        let x = item.x * scaleX;
-                        let y = item.y * scaleY;
+                        let x = item.baseValue.x * scaleX;
+                        let y = item.baseValue.y * scaleY;
                         const offsetParent = getSvgOffset(item.element, <SVGSVGElement> svg.element);
                         x += offsetParent.x;
                         y += offsetParent.y;

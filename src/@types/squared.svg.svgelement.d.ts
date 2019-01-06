@@ -1,4 +1,4 @@
-import { SvgImageBaseValue, SvgPathBaseValue, SvgPoint, SvgRect, SvgTransform } from '../svg/@types/object';
+import { SvgRectBaseValue, SvgPathBaseValue, SvgPoint, SvgTransform } from '../svg/@types/object';
 
 declare global {
     namespace squared.svg {
@@ -14,14 +14,9 @@ declare global {
             synchronize(useKeyTime?: boolean): void;
         }
 
-        interface SvgTransformable {
-            rotateOrigin?: SvgPoint;
-            transformHost?: SvgTransform[][];
-        }
-
-        interface SvgImage extends SvgRect, SvgElement, SvgTransformable {
+        interface SvgImage extends SvgElement, SvgViewRect, SvgTransformable {
             href: string;
-            baseValue: SvgImageBaseValue;
+            baseValue: Required<SvgRectBaseValue>;
             readonly element: SVGImageElement | SVGUseElement;
         }
 
@@ -30,27 +25,10 @@ declare global {
             setPath(value: SvgPath): void;
         }
 
-        interface SvgPath extends SvgElement, SvgTransformable {
+        interface SvgPath extends SvgElement, SvgTransformable, SvgPaint {
             name: string;
-            opacity: number;
             d: string;
-            color: string;
-            fillRule: string;
-            fill: string;
-            fillPattern: string;
-            fillOpacity: string;
-            stroke: string;
-            strokeWidth: string;
-            strokePattern: string;
-            strokeOpacity: string;
-            strokeLinecap: string;
-            strokeLinejoin: string;
-            strokeMiterlimit: string;
-            clipPath: string;
-            clipRule: string;
             baseValue: SvgPathBaseValue;
-            setColor(attr: string): void;
-            setOpacity(attr: string): void;
             build(exclusions?: number[], save?: boolean): string;
         }
 

@@ -41,14 +41,14 @@ export interface SvgBaseValue {
     transformed: SvgTransform[] | null;
 }
 
-export interface SvgImageBaseValue extends SvgBaseValue {
-    x: number | null;
-    y: number | null;
-    width: number | null;
-    height: number | null;
+export interface SvgRectBaseValue extends SvgBaseValue, SvgRect {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
 }
 
-export interface SvgPathBaseValue extends SvgImageBaseValue {
+export interface SvgPathBaseValue extends SvgBaseValue {
     d: string | null;
     cx: number | null;
     cy: number | null;
@@ -59,6 +59,10 @@ export interface SvgPathBaseValue extends SvgImageBaseValue {
     x2: number | null;
     y1: number | null;
     y2: number | null;
+    x: number | null;
+    y: number | null;
+    width: number | null;
+    height: number | null;
     points: Point[] | null;
 }
 

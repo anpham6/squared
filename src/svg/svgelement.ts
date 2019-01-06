@@ -5,27 +5,25 @@ import SvgAnimate from './svganimate';
 import SvgBuild from './svgbuild';
 import SvgCreate from './svgcreate';
 
-import { getTransform, getTransformOrigin, isSvgVisible } from './lib/util';
+import { getTransform, getTransformOrigin, isVisible, setVisible } from './lib/util';
 
-export default abstract class SvgElement implements squared.svg.SvgElement {
+export default class SvgElement implements squared.svg.SvgElement {
     public animatable = true;
     public baseValue: SvgBaseValue = {
         transformed: null
     };
-    public visible: boolean;
 
     public readonly name: string;
 
-    private _transform?: SvgTransform[];
     private _animate: SvgAnimation[];
+    private _transform?: SvgTransform[];
 
     constructor(public readonly element: SVGGraphicsElement) {
         this.name = SvgCreate.setName(element);
         this._animate = this.animatable ? SvgCreate.toAnimateList(element) : [];
-        this.visible = isSvgVisible(element);
     }
 
-    public abstract build(): string | void;
+    public build() {}
 
     public transformFilter(exclusions?: number[]) {
         return (exclusions ? this.transform.filter(item => !exclusions.includes(item.type)) : this.transform).filter(item => !(item.type === SVGTransform.SVG_TRANSFORM_SCALE && item.matrix.a === 1 && item.matrix.d === 1));
@@ -52,5 +50,12 @@ export default abstract class SvgElement implements squared.svg.SvgElement {
             }
         }
         return this._animate;
+    }
+
+    set visible(value) {
+        setVisible(this.element, value);
+    }
+    get visible() {
+        return isVisible(this.element);
     }
 }

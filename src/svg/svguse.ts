@@ -3,16 +3,11 @@ import SvgPath from './svgpath';
 import SvgShape from './svgshape';
 
 export default class SvgUse extends SvgShape implements squared.svg.SvgUse {
-    public x: number;
-    public y: number;
-
     private _hrefPath?: SvgPath;
     private _hrefGroup?: SvgGroup;
 
     constructor(public readonly element: SVGUseElement) {
         super(element);
-        this.x = element.x.baseVal.value;
-        this.y = element.y.baseVal.value;
     }
 
     public setPath(value: SvgPath) {
@@ -36,5 +31,19 @@ export default class SvgUse extends SvgShape implements squared.svg.SvgUse {
     }
     get group() {
         return this._hrefGroup;
+    }
+
+    set x(value) {
+        this.element.x.baseVal.value = value;
+    }
+    get x() {
+        return this.element.x.baseVal.value;
+    }
+
+    set y(value) {
+        this.element.y.baseVal.value = value;
+    }
+    get y() {
+        return this.element.y.baseVal.value;
     }
 }

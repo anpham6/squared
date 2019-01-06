@@ -112,7 +112,7 @@ export function createTemplate(value: StringMap | string, data: ExternalData, in
         let hash = '';
         if (isArray(unknown)) {
             array = true;
-            if (unknown.every(item => Array.isArray(item))) {
+            if (Array.isArray(unknown[0])) {
                 const match = new RegExp(partial(attr, 'start') + `([\\w\\W]*?)` + partial(attr, 'end')).exec(output);
                 if (match) {
                     let outputStart = '';
@@ -142,14 +142,14 @@ export function createTemplate(value: StringMap | string, data: ExternalData, in
                     output = output
                         .replace(match[3], outputStart).replace(match[8], '\n' + outputEnd)
                         .replace(match[1], '').replace(match[4], '')
-                        .replace(new RegExp(`\\t*${match[6]}`), '').replace(new RegExp(`\\t*${match[9]}`), '')
-                        .split('\n').filter(line => line !== '').join('\n');
+                        .replace(new RegExp(`\\t*${match[6]}`), '').replace(new RegExp(`\\t*${match[9]}`), '');
+                    output = output.split('\n').filter(line => line !== '').join('\n') + '\n';
                 }
                 else {
                     result = false;
                 }
             }
-            else if (unknown.some(item => !item || typeof item !== 'object')) {
+            else if (typeof unknown[0] !== 'object') {
                 result = false;
             }
             else {

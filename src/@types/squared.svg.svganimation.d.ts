@@ -29,6 +29,7 @@ declare global {
 
         interface SvgAnimateTransform extends SvgAnimate {
             type: number;
+            readonly element: SVGAnimateTransformElement;
         }
 
         interface SvgAnimateMotion extends SvgAnimate {
@@ -38,6 +39,7 @@ declare global {
             rotate: number;
             rotateAuto: boolean;
             rotateAutoReverse: boolean;
+            readonly element: SVGAnimateMotionElement;
         }
 
         class SvgAnimation implements SvgAnimation {

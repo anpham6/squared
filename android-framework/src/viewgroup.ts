@@ -1,7 +1,7 @@
+import View$MX from './view-mx';
 import View from './view';
-import View$Base from './view-base';
 
-export default class ViewGroup<T extends View> extends View$Base(squared.base.NodeGroup) {
+export default class ViewGroup<T extends View> extends View$MX(squared.base.NodeGroup) {
     constructor(
         id: number,
         node: T,

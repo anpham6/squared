@@ -1,13 +1,12 @@
 import { SvgPathBaseValue, SvgPoint, SvgTransform } from './@types/object';
 
+import SvgPaint$MX from './svgpaint-mx';
 import SvgBuild from './svgbuild';
 import SvgElement from './svgelement';
 
-const $color = squared.lib.color;
 const $dom = squared.lib.dom;
-const $util = squared.lib.util;
 
-export default class SvgPath extends SvgElement implements squared.svg.SvgPath {
+export default class SvgPath extends SvgPaint$MX(SvgElement) implements squared.svg.SvgPath {
     public static getLine(x1: number, y1: number, x2 = 0, y2 = 0) {
         return `M${x1},${y1} L${x2},${y2}`;
     }
@@ -35,21 +34,6 @@ export default class SvgPath extends SvgElement implements squared.svg.SvgPath {
 
     public name!: string;
     public animatable = false;
-    public opacity = 1;
-    public color = '';
-    public fill!: string;
-    public fillPattern = '';
-    public fillOpacity = '';
-    public fillRule = '';
-    public stroke!: string;
-    public strokeWidth = '';
-    public strokePattern = '';
-    public strokeOpacity = '';
-    public strokeLinecap = '';
-    public strokeLinejoin = '';
-    public strokeMiterlimit = '';
-    public clipPath = '';
-    public clipRule = '';
     public baseValue: SvgPathBaseValue = {
         d: null,
         cx: null,
@@ -68,7 +52,7 @@ export default class SvgPath extends SvgElement implements squared.svg.SvgPath {
         points: null,
         transformed: null
     };
-    public transformHost?: SvgTransform[][];
+    public transformResidual?: SvgTransform[][];
 
     constructor(
         public readonly element: SVGGraphicsElement,
@@ -78,53 +62,14 @@ export default class SvgPath extends SvgElement implements squared.svg.SvgPath {
         this.init();
     }
 
-    public setColor(attr: string) {
-        let value = $dom.cssAttribute(this.element, attr);
-        const match = $util.REGEX_PATTERN.CSS_URL.exec(value);
-        if (match) {
-            this[`${attr}Pattern`] = match[1];
-            value = '';
-        }
-        else if (value !== '') {
-            switch (value.toLowerCase()) {
-                case 'none':
-                case 'transparent':
-                case 'rgba(0, 0, 0, 0)':
-                    value = '';
-                    break;
-                case 'currentcolor': {
-                    const color = $color.parseRGBA($dom.cssAttribute(this.element, 'color', true));
-                    value = color ? color.valueRGB : '#000000';
-                    break;
-                }
-                default: {
-                    const color = $color.parseRGBA(value);
-                    if (color) {
-                        value = color.valueRGB;
-                    }
-                    break;
-                }
-            }
-        }
-        else {
-            if (attr === 'fill' && !(this.element.parentElement instanceof SVGGElement)) {
-                value = '#000000';
-            }
-        }
-        this[attr] = value;
-    }
-
-    public setOpacity(attr: string) {
-        const opacity = $dom.cssAttribute(this.element, `${attr}-opacity`);
-        this[`${attr}Opacity`] = opacity ? (parseFloat(opacity) * this.opacity).toString() : this.opacity.toString();
-    }
-
     public build(exclusions?: number[], save = true) {
         const element = this.element;
         let d = '';
+        if (save) {
+            this.baseValue.transformed = null;
+        }
         if (element instanceof SVGPathElement) {
             d = this.baseValue.d || $dom.cssAttribute(element, 'd');
-            this.baseValue.transformed = null;
             const transform = this.transformFilter(exclusions);
             if (transform.length) {
                 let commands = SvgBuild.toPathCommandList(d);
@@ -146,7 +91,6 @@ export default class SvgPath extends SvgElement implements squared.svg.SvgPath {
             const y1 = this.baseValue.y1 !== null ? this.baseValue.y1 : element.y1.baseVal.value;
             const x2 = this.baseValue.x2 !== null ? this.baseValue.x2 : element.x2.baseVal.value;
             const y2 = this.baseValue.y2 !== null ? this.baseValue.y2 : element.y2.baseVal.value;
-            this.baseValue.transformed = null;
             const transform = this.transformFilter(exclusions);
             if (transform.length) {
                 const points: SvgPoint[] = [
@@ -176,7 +120,6 @@ export default class SvgPath extends SvgElement implements squared.svg.SvgPath {
                 rx = this.baseValue.rx !== null ? this.baseValue.rx : element.rx.baseVal.value;
                 ry = this.baseValue.ry !== null ? this.baseValue.ry : element.ry.baseVal.value;
             }
-            this.baseValue.transformed = null;
             let transform = this.transformFilter(exclusions);
             if (transform.length) {
                 const points: SvgPoint[] = [
@@ -184,7 +127,7 @@ export default class SvgPath extends SvgElement implements squared.svg.SvgPath {
                 ];
                 const index = transform.findIndex(item => item.type === SVGTransform.SVG_TRANSFORM_ROTATE);
                 if (index !== -1 && (rx !== ry || transform.length > 1 && transform.some(item => item.type === SVGTransform.SVG_TRANSFORM_SCALE && item.matrix.a !== item.matrix.d))) {
-                    [this.transformHost, transform] = SvgBuild.partitionTransforms(this.element, transform, true);
+                    [this.transformResidual, transform] = SvgBuild.partitionTransforms(this.element, transform, true);
                 }
                 if (transform.length) {
                     const result = this.transformPoints(transform, points);
@@ -204,7 +147,6 @@ export default class SvgPath extends SvgElement implements squared.svg.SvgPath {
             const y = this.baseValue.y !== null ? this.baseValue.y : element.y.baseVal.value;
             const width = this.baseValue.width !== null ? this.baseValue.width : element.width.baseVal.value;
             const height = this.baseValue.height !== null ? this.baseValue.height : element.height.baseVal.value;
-            this.baseValue.transformed = null;
             const transform = this.transformFilter(exclusions);
             if (transform.length) {
                 const points: SvgPoint[] = [
@@ -226,7 +168,6 @@ export default class SvgPath extends SvgElement implements squared.svg.SvgPath {
         else if (element instanceof SVGPolygonElement || element instanceof SVGPolylineElement) {
             let points = this.baseValue.points !== null ? this.baseValue.points : SvgBuild.toPointList(element.points);
             const transform = this.transformFilter(exclusions);
-            this.baseValue.transformed = null;
             if (transform.length) {
                 const result = this.transformPoints(transform, points);
                 if (result.length) {
@@ -273,27 +214,6 @@ export default class SvgPath extends SvgElement implements squared.svg.SvgPath {
         else if (element instanceof SVGPolygonElement || element instanceof SVGPolylineElement) {
             this.baseValue.points = SvgBuild.toPointList(element.points);
         }
-        const clipPath = $util.REGEX_PATTERN.CSS_URL.exec($dom.cssAttribute(element, 'clip-path'));
-        if (clipPath) {
-            this.clipPath = clipPath[1];
-            this.clipRule = $dom.cssAttribute(element, 'clip-rule', true);
-        }
-        const opacity = $dom.cssAttribute(element, 'opacity');
-        if (opacity !== '') {
-            this.opacity = Math.min(parseFloat(opacity), 1);
-        }
-        this.setColor('fill');
-        if (this.fill !== '') {
-            this.setOpacity('fill');
-            this.fillRule = $dom.cssAttribute(element, 'fill-rule', true);
-        }
-        this.setColor('stroke');
-        if (this.stroke !== '') {
-            this.setOpacity('stroke');
-            this.strokeWidth = $dom.cssAttribute(element, 'stroke-width') || '1';
-            this.strokeLinecap = $dom.cssAttribute(element, 'stroke-linecap', true);
-            this.strokeLinejoin = $dom.cssAttribute(element, 'stroke-linejoin', true);
-            this.strokeMiterlimit = $dom.cssAttribute(element, 'stroke-miterlimit', true);
-        }
+        this.setPaint();
     }
 }

@@ -1,18 +1,20 @@
-import { SvgBaseValue, SvgLinearGradient, SvgRadialGradient, SvgRect, SvgTransform } from './@types/object';
+import { SvgBaseValue, SvgLinearGradient, SvgRadialGradient, SvgTransform } from './@types/object';
 
 import SvgAnimation from './svganimation';
 import SvgCreate from './svgcreate';
 import SvgElement from './svgelement';
 import SvgShape from './svgshape';
 import SvgGroup from './svggroup';
+import SvgGroupPaint from './svggrouppaint';
 import SvgGroupRect from './svggrouprect';
 import SvgSymbol from './svgsymbol';
 import SvgImage from './svgimage';
 import SvgUse from './svguse';
 
-import { getHrefTarget, getTransform, isSvgImage, isSvgShape, isSvgVisible } from './lib/util';
+import { getHrefElementId, getTransform, isVisible, isSvgImage, isSvgShape, setVisible } from './lib/util';
 
 const $dom = squared.lib.dom;
+const $util = squared.lib.util;
 
 function setChildren(group: SvgGroup | SvgSymbol) {
     for (const item of Array.from(group.element.children)) {
@@ -29,62 +31,35 @@ function setChildren(group: SvgGroup | SvgSymbol) {
 }
 
 export default class Svg extends squared.lib.base.Container<SvgGroup> implements squared.svg.Svg {
-    public name: string;
     public animate: SvgAnimation[];
-    public visible: boolean;
     public baseValue: SvgBaseValue = {
         transformed: null
     };
 
+    public readonly name: string;
     public readonly defs = {
         symbol: new Map<string, SvgSymbol>(),
         clipPath: new Map<string, SvgGroup>(),
         gradient: new Map<string, Gradient>(),
     };
 
-    private _width!: number;
-    private _height!: number;
-    private _viewBox!: SvgRect;
-    private _opacity!: number;
+    private _width: number | undefined;
+    private _height: number | undefined;
     private _transform?: SvgTransform[];
 
     constructor(public readonly element: SVGSVGElement) {
         super();
         this.name = SvgCreate.setName(element);
         this.animate = SvgCreate.toAnimateList(element);
-        this.visible = isSvgVisible(element);
         this.init();
-    }
-
-    public setDimensions(width: number, height: number) {
-        this._width = width;
-        this._height = height;
-    }
-
-    public setViewBox(value: SvgRect) {
-        this._viewBox = value;
-    }
-
-    public setOpacity(value: string | number) {
-        value = parseFloat(value.toString());
-        this._opacity = !isNaN(value) && value < 1 ? value : 1;
     }
 
     private init() {
         const element = this.element;
-        this.setViewBox(element.viewBox.baseVal);
-        this.setOpacity($dom.cssAttribute(element, 'opacity'));
-        this.setDimensions(element.width.baseVal.value, element.height.baseVal.value);
-        if ($dom.isUserAgent($dom.USER_AGENT.FIREFOX)) {
-            const bounds = element.getBoundingClientRect();
-            if (bounds.width > this.width && bounds.height > this.height) {
-                this.setDimensions(bounds.width, bounds.height);
-            }
-        }
         element.querySelectorAll('set, animate, animateTransform, animateMotion').forEach((svg: SVGAnimationElement) => {
             const href = svg.attributes.getNamedItem('href');
             if (href && href.value !== '') {
-                const target = getHrefTarget(svg);
+                const target = getHrefElementId(svg);
                 if (svg.parentElement) {
                     svg.parentElement.removeChild(svg);
                 }
@@ -171,7 +146,7 @@ export default class Svg extends squared.lib.base.Container<SvgGroup> implements
                 this.append(currentGroup);
             }
             else if (item instanceof SVGGElement) {
-                currentGroup = new SvgGroup(item);
+                currentGroup = new SvgGroupPaint(item);
                 this.append(currentGroup);
             }
             else {
@@ -211,19 +186,71 @@ export default class Svg extends squared.lib.base.Container<SvgGroup> implements
         this.retain(this.filter(item => item.length > 0));
     }
 
+    set width(value) {
+        if ($dom.isUserAgent($dom.USER_AGENT.FIREFOX)) {
+            this._width = value;
+        }
+        else {
+            this.element.width.baseVal.value = value;
+        }
+    }
     get width() {
-        return this._width;
+        if ($dom.isUserAgent($dom.USER_AGENT.FIREFOX)) {
+            if (this._width !== undefined) {
+                return this._width;
+            }
+            else {
+                const bounds = this.element.getBoundingClientRect();
+                return bounds.width;
+            }
+        }
+        else {
+            return this.element.width.baseVal.value;
+        }
+    }
+
+    set height(value) {
+        if ($dom.isUserAgent($dom.USER_AGENT.FIREFOX)) {
+            this._height = value;
+        }
+        else {
+            this.element.height.baseVal.value = value;
+        }
     }
     get height() {
-        return this._height;
+        if ($dom.isUserAgent($dom.USER_AGENT.FIREFOX)) {
+            if (this._height !== undefined) {
+                return this._height;
+            }
+            else {
+                const bounds = this.element.getBoundingClientRect();
+                return bounds.height;
+            }
+        }
+        else {
+            return this.element.height.baseVal.value;
+        }
     }
 
     get viewBox() {
-        return this._viewBox;
+        return this.element.viewBox.baseVal;
     }
 
+    set opacity(value) {
+        if ($util.isNumber(value)) {
+            let opacity = parseFloat(value.toString());
+            if (opacity <= 0) {
+                opacity = 0;
+            }
+            else if (opacity >= 1) {
+                opacity = 1;
+            }
+            this.element.style.opacity = opacity.toString();
+            this.element.setAttribute('opacity', opacity.toString());
+        }
+    }
     get opacity() {
-        return this._opacity;
+        return parseFloat($dom.cssAttribute(this.element, 'opacity'));
     }
 
     get transform() {
@@ -231,5 +258,12 @@ export default class Svg extends squared.lib.base.Container<SvgGroup> implements
             this._transform = getTransform(this.element) || SvgCreate.toTransformList(this.element.transform.baseVal);
         }
         return this._transform;
+    }
+
+    set visible(value) {
+        setVisible(this.element, value);
+    }
+    get visible() {
+        return isVisible(this.element);
     }
 }
