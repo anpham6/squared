@@ -131,7 +131,7 @@ export interface TemplateDataA {
     E?: TemplateDataAA[] | false;
     F?: TemplateDataAA[] | false;
     G?: TemplateDataAA[] | false;
-    [name: string]: Undefined<string | TemplateDataAA[] | false>;
+    [name: string]: Undefined<string | ExternalData[] | false>;
 }
 
 export interface TemplateDataAA {
@@ -142,7 +142,7 @@ export interface TemplateDataAA {
     EE?: TemplateDataAAA[] | false;
     FF?: TemplateDataAAA[] | false;
     GG?: TemplateDataAAA[] | false;
-    [name: string]: Undefined<string | TemplateDataAAA[] | false>;
+    [name: string]: Undefined<string | ExternalData[] | false>;
 }
 
 export interface TemplateDataAAA {

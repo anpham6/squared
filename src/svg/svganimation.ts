@@ -52,10 +52,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     public begin = [0];
     public duration: number;
 
-    constructor(
-        public element: SVGAnimationElement,
-        public parentElement: SVGGraphicsElement)
-    {
+    constructor(public element: SVGAnimationElement) {
         this.setAttribute('attributeName');
         this.setAttribute('to');
         const begin = this.getAttribute('begin');

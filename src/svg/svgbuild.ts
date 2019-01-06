@@ -1,11 +1,11 @@
-import { SvgPathCommand, SvgTransform } from './@types/object';
+import { SvgPathCommand, SvgPoint, SvgTransform } from './@types/object';
 
-import { applyMatrixX, applyMatrixY, getRadiusY } from './lib/util';
+import { applyMatrixX, applyMatrixY, getRadiusY, getRotateOrigin } from './lib/util';
 
 const $util = squared.lib.util;
 
 export default class SvgBuild implements squared.svg.SvgBuild {
-    public static applyTransforms(transform: SvgTransform[], values: Point[] | PointR[], origin?: Point, center?: PointR) {
+    public static applyTransforms(transform: SvgTransform[], values: SvgPoint[], origin?: SvgPoint, center?: SvgPoint) {
         const result = SvgBuild.toPointList(values);
         const items = transform.slice().reverse();
         for (const item of items) {
@@ -83,7 +83,98 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
-    public static getPathCenter(values: Point[]): Point {
+    public static partitionTransforms(element: SVGGraphicsElement, transform: SvgTransform[], fromPath = false): [SvgTransform[][], SvgTransform[]] {
+        const host: SvgTransform[][] = [];
+        const client: SvgTransform[] = [];
+        if (transform.length) {
+            const rotateOrigin = transform[0].css ? [] : getRotateOrigin(element);
+            rotateOrigin.reverse();
+            const partition = transform.slice().reverse();
+            const typeIndex = new Set<number>();
+            let rx = 1;
+            let ry = 1;
+            if (fromPath && element instanceof SVGEllipseElement) {
+                rx = element.rx.baseVal.value;
+                ry = element.ry.baseVal.value;
+            }
+            let current: SvgTransform[] = [];
+            for (let i = 0; i < partition.length; i++) {
+                const item = partition[i];
+                let prerotate = fromPath && host.length === 0 && current.length === 0;
+                if (!prerotate && typeIndex.has(item.type)) {
+                    current.reverse();
+                    host.push(current);
+                    current = [item];
+                    typeIndex.clear();
+                }
+                else {
+                    switch (item.type) {
+                        case SVGTransform.SVG_TRANSFORM_TRANSLATE:
+                            if (prerotate) {
+                                client.push(item);
+                            }
+                            else {
+                                current.push(item);
+                            }
+                            break;
+                        case SVGTransform.SVG_TRANSFORM_SCALE:
+                            if (prerotate) {
+                                client.push(item);
+                            }
+                            else {
+                                current.push(item);
+                            }
+                            break;
+                        case SVGTransform.SVG_TRANSFORM_MATRIX:
+                            if (prerotate && item.matrix.b === 0 && item.matrix.c === 0) {
+                                client.push(item);
+                            }
+                            else {
+                                current.push(item);
+                                prerotate = false;
+                            }
+                            break;
+                        case SVGTransform.SVG_TRANSFORM_ROTATE:
+                            if (rotateOrigin.length) {
+                                const origin = rotateOrigin.shift() as SvgPoint;
+                                if (origin.angle === item.angle) {
+                                    item.origin = origin;
+                                }
+                            }
+                            if (prerotate && rx === ry && (i === 0 || client[client.length - 1].type === SVGTransform.SVG_TRANSFORM_ROTATE)) {
+                                client.push(item);
+                            }
+                            else {
+                                if (!prerotate) {
+                                    current.reverse();
+                                    host.push(current);
+                                    current = [];
+                                    typeIndex.clear();
+                                }
+                                current.push(item);
+                                continue;
+                            }
+                            break;
+                        case SVGTransform.SVG_TRANSFORM_SKEWX:
+                        case SVGTransform.SVG_TRANSFORM_SKEWY:
+                            current.push(item);
+                            prerotate = false;
+                            break;
+                    }
+                }
+                if (!prerotate) {
+                    typeIndex.add(item.type);
+                }
+            }
+            if (current.length) {
+                current.reverse();
+                host.push(current);
+            }
+        }
+        return [host, client];
+    }
+
+    public static getPathCenter(values: SvgPoint[]): SvgPoint {
         const pointsX = values.map(pt => pt.x);
         const pointsY = values.map(pt => pt.y);
         return {
@@ -105,8 +196,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
-    public static toPointList(values: SVGPointList | Point[] | PointR[]) {
-        const result: PointR[] = [];
+    public static toPointList(values: SVGPointList | SvgPoint[]) {
+        const result: SvgPoint[] = [];
         if (values instanceof SVGPointList) {
             for (let j = 0; j < values.numberOfItems; j++) {
                 const pt = values.getItem(j);
@@ -114,8 +205,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             }
         }
         else {
-            for (const pt of values as PointR[]) {
-                const item: PointR = { x: pt.x, y: pt.y };
+            for (const pt of values as SvgPoint[]) {
+                const item: SvgPoint = { x: pt.x, y: pt.y };
                 if (pt.rx !== undefined && pt.ry !== undefined) {
                     item.rx = pt.rx;
                     item.ry = pt.ry;
@@ -127,7 +218,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static toAbsolutePointList(values: SvgPathCommand[]) {
-        const result: PointR[] = [];
+        const result: SvgPoint[] = [];
         let x = 0;
         let y = 0;
         for (let i = 0; i < values.length; i++) {
@@ -141,7 +232,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     x = item.coordinates[j];
                     y = item.coordinates[j + 1];
                 }
-                const pt: PointR = { x, y };
+                const pt: SvgPoint = { x, y };
                 if (item.command.toUpperCase() === 'A') {
                     pt.rx = item.radiusX;
                     pt.ry = item.radiusY;
@@ -278,7 +369,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     continue;
             }
             if (coordinates.length > 1) {
-                const points: Point[] = [];
+                const points: SvgPoint[] = [];
                 const relative = /[a-z]/.test(command[1]);
                 for (let i = 0; i < coordinates.length; i += 2) {
                     let x = coordinates[i];
@@ -307,7 +398,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static fromPointsValue(value: string) {
-        const result: Point[] = [];
+        const result: SvgPoint[] = [];
         value.trim().split(/\s+/).forEach(point => {
             const [x, y] = point.split(',').map(pt => parseFloat(pt));
             result.push({ x, y });
@@ -316,14 +407,14 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static fromNumberList(values: number[]) {
-        const result: Point[] = [];
+        const result: SvgPoint[] = [];
         for (let i = 0; i < values.length; i += 2) {
             result.push({ x: values[i], y: values[i + 1] });
         }
         return result.length % 2 === 0 ? result : [];
     }
 
-    public static fromAbsolutePointList(values: SvgPathCommand[], points: Point[] | PointR[]) {
+    public static fromAbsolutePointList(values: SvgPathCommand[], points: SvgPoint[]) {
         const absolute = points.slice();
         invalidPoint: {
             for (const item of values) {
@@ -350,7 +441,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                         break;
                     }
                     case 'A': {
-                        const pt = <PointR> absolute.shift();
+                        const pt = <SvgPoint> absolute.shift();
                         if (pt && pt.rx !== undefined && pt.ry !== undefined) {
                             item.coordinates[0] = pt.x;
                             item.coordinates[1] = pt.y;

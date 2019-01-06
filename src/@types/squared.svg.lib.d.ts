@@ -1,4 +1,4 @@
-import { SvgMatrix, SvgTransform } from '../svg/@types/object';
+import { SvgMatrix, SvgPoint, SvgTransform } from '../svg/@types/object';
 
 import * as $util from '../svg/lib/util';
 
@@ -11,7 +11,7 @@ declare global {
             function isSvgImage(element: Element): element is SVGImageElement;
             function isSvgVisible(element: SVGGraphicsElement): boolean;
             function sortNumber(values: number[], descending?: boolean): boolean;
-            function getRotateOrigin(element: SVGGraphicsElement): Point;
+            function getRotateOrigin(element: SVGGraphicsElement): SvgPoint[];
             function createTransform(type: number, matrix: SvgMatrix | DOMMatrix, angle?: number, x?: boolean, y?: boolean): SvgTransform;
             function getTransform(element: SVGGraphicsElement): SvgTransform[] | undefined;
             function getTransformOrigin(element: SVGGraphicsElement): Point | undefined;

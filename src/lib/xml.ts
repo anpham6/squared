@@ -1,4 +1,4 @@
-import { convertInt, isArray, isString, repeat, trimEnd } from './util';
+import { isArray, isString, repeat, trimEnd } from './util';
 
 export function formatPlaceholder(id: string | number, symbol = ':') {
     return `{${symbol + id.toString()}}`;
@@ -7,6 +7,17 @@ export function formatPlaceholder(id: string | number, symbol = ':') {
 export function replacePlaceholder(value: string, id: string | number, content: string, before = false) {
     const placeholder = typeof id === 'number' ? formatPlaceholder(id) : id;
     return value.replace(placeholder, (before ? placeholder : '') + content + (before ? '' : placeholder));
+}
+
+export function pushIndent(value: string, depth: number, excludePattern?: RegExp, char = '\t') {
+    const indent = repeat(depth, char);
+    return value.split('\n').map(line => {
+        if (line !== '' && (excludePattern === undefined || !excludePattern.test(line))) {
+            return indent + line;
+        }
+        return line;
+    })
+    .join('\n');
 }
 
 export function replaceIndent(value: string, depth: number, pattern: RegExp) {
@@ -89,8 +100,11 @@ export function parseTemplate(value: string) {
     return result;
 }
 
-export function createTemplate(value: StringMap, data: ExternalData, index?: string) {
-    let output = index === undefined ? value['__root'].trim() : value[index];
+export function createTemplate(value: StringMap | string, data: ExternalData, index?: string | null) {
+    function partial(attr: string, section: string) {
+        return `(\\t*##${attr}-${section}:(\\d+)##\\s*\\n)([\\w\\W]*?)\\s*\\n(\\t*##${attr}-${section}##\\s*\\n)`;
+    }
+    let output = typeof value === 'string' ? value : !index ? value['__root'].trim() : value[index];
     for (const attr in data) {
         const unknown = data[attr];
         let array = false;
@@ -98,7 +112,44 @@ export function createTemplate(value: StringMap, data: ExternalData, index?: str
         let hash = '';
         if (isArray(unknown)) {
             array = true;
-            if (unknown.some(item => !item || typeof item !== 'object')) {
+            if (unknown.every(item => Array.isArray(item))) {
+                const match = new RegExp(partial(attr, 'start') + `([\\w\\W]*?)` + partial(attr, 'end')).exec(output);
+                if (match) {
+                    let outputStart = '';
+                    let outputEnd = '';
+                    let depth = (unknown[0] as any[][]).length;
+                    for (let i = 0; i < depth; i++) {
+                        let templateStart = match[3];
+                        let templateEnd = match[8];
+                        if (i > 0) {
+                            templateStart = '\n' + pushIndent(templateStart, i);
+                            templateEnd = pushIndent(templateEnd, i) + '\n';
+                        }
+                        outputStart += createTemplate(templateStart, unknown[0][i], attr.toString());
+                        outputEnd = templateEnd + outputEnd;
+                    }
+                    depth += parseInt(match[2]) - 1;
+                    if (depth > 0) {
+                        const pattern = /\s*{%(\w+)}\s*/g;
+                        let inline: RegExpExecArray | null = null;
+                        while ((inline = pattern.exec(match[5])) !== null) {
+                            if (value[inline[1]]) {
+                                value[inline[1]] = pushIndent(value[inline[1]], depth, /^{%\w+}/);
+                            }
+                        }
+                        output = output.replace(match[5], pushIndent(match[5].replace(/\s*$/, ''), depth, /^{%\w+}/));
+                    }
+                    output = output
+                        .replace(match[3], outputStart).replace(match[8], '\n' + outputEnd)
+                        .replace(match[1], '').replace(match[4], '')
+                        .replace(new RegExp(`\\t*${match[6]}`), '').replace(new RegExp(`\\t*${match[9]}`), '')
+                        .split('\n').filter(line => line !== '').join('\n');
+                }
+                else {
+                    result = false;
+                }
+            }
+            else if (unknown.some(item => !item || typeof item !== 'object')) {
                 result = false;
             }
             else {
@@ -132,14 +183,19 @@ export function createTemplate(value: StringMap, data: ExternalData, index?: str
             return '';
         }
     }
-    if (index === undefined) {
+    if (!index) {
         output = output.replace(/\n{%\w+}\n/g, '\n');
-        const pattern = new RegExp(`\\t*(!!([\\w:]+)!!)\\s*\\n([\\w\\W]*)\\n\\t*\\1\\s*`, 'g');
-        let match: RegExpExecArray | null = null;
-        while ((match = pattern.exec(output)) !== null) {
-            const indent = repeat(convertInt(match[2].split(':')[1]) || 1);
-            output = output.replace(match[3], match[3].split('\n').map(line => indent + line).join('\n'));
-            output = output.replace(new RegExp(`\\s*${match[1]}`, 'g'), '');
+        if (index === null) {
+            ['start', 'end'].every(section => {
+                const pattern = new RegExp(partial('\\w+', section), 'g');
+                let match: RegExpExecArray | null = null;
+                let valid = false;
+                while ((match = pattern.exec(output)) !== null) {
+                    output = output.replace(match[0], '');
+                    valid = true;
+                }
+                return valid;
+            });
         }
     }
     return output.replace(/\s+([\w:]+="[^"]*)?{~\w+}"?/g, '');

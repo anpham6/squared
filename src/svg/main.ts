@@ -7,10 +7,11 @@ import SvgBuild from './svgbuild';
 import SvgCreate from './svgcreate';
 import SvgElement from './svgelement';
 import SvgGroup from './svggroup';
-import SvgGroupViewBox from './svggroupviewbox';
+import SvgGroupRect from './svggrouprect';
 import SvgImage from './svgimage';
 import SvgPath from './svgpath';
 import SvgShape from './svgshape';
+import SvgSymbol from './svgsymbol';
 import SvgUse from './svguse';
 
 import * as util from './lib/util';
@@ -29,10 +30,11 @@ export {
     SvgCreate,
     SvgElement,
     SvgGroup,
-    SvgGroupViewBox,
+    SvgGroupRect,
     SvgImage,
     SvgPath,
     SvgShape,
+    SvgSymbol,
     SvgUse,
     lib
 };

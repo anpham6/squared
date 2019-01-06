@@ -1,5 +1,4 @@
 import SvgAnimation from './svganimation';
-import SvgPath from './svgpath';
 
 import { sortNumber } from './lib/util';
 
@@ -29,16 +28,13 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public accumulateSum = false;
     public fillFreeze = false;
     public end?: number;
-    public parentPath?: SvgPath;
+    public parent?: squared.svg.SvgView;
     public sequential?: NameValue;
 
     private _repeatCount: number;
 
-    constructor(
-        public element: SVGAnimateElement,
-        public parentElement: SVGGraphicsElement)
-    {
-        super(element, parentElement);
+    constructor(public element: SVGAnimateElement) {
+        super(element);
         const values = this.getAttribute('values');
         const from = this.getAttribute('from');
         if (values !== '') {
@@ -62,13 +58,13 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             if (from !== '') {
                 this.from = from;
             }
-            else {
-                const value = $util.optionalAsString(parentElement, `${this.attributeName}.baseVal.value`);
+            else if (element.parentElement) {
+                const value = $util.optionalAsString(element.parentElement, `${this.attributeName}.baseVal.value`);
                 if (value !== '') {
                     this.from = value;
                 }
                 else {
-                    const current = parentElement.attributes.getNamedItem(this.attributeName);
+                    const current = element.parentElement.attributes.getNamedItem(this.attributeName);
                     if (current) {
                         this.from = current.value.trim();
                     }

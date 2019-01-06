@@ -1,4 +1,4 @@
-import { SvgImageBaseVal } from './@types/object';
+import { SvgImageBaseValue, SvgPoint } from './@types/object';
 
 import SvgElement from './svgelement';
 
@@ -12,14 +12,14 @@ export default class SvgImage extends SvgElement implements squared.svg.SvgImage
     public width: number;
     public height: number;
     public href: string;
-    public rotateOrigin?: PointR;
-    public baseVal: SvgImageBaseVal = {
+    public baseValue: SvgImageBaseValue = {
         x: null,
         y: null,
         width: null,
         height: null,
         transformed: null
     };
+    public rotateOrigin?: SvgPoint;
 
     constructor(
         public readonly element: SVGImageElement | SVGUseElement,
@@ -30,12 +30,17 @@ export default class SvgImage extends SvgElement implements squared.svg.SvgImage
         this.y = element.y.baseVal.value;
         this.width = element.width.baseVal.value;
         this.height = element.height.baseVal.value;
-        this.href = element instanceof SVGUseElement ? href : $util.resolvePath(element.href.baseVal);
+        if (element instanceof SVGUseElement) {
+            this.href = href;
+        }
+        else {
+            this.href = $util.resolvePath(element.href.baseVal) || href;
+        }
         this.init();
     }
 
     public build(exclusions?: number[]) {
-        const transform = this.filterTransform(exclusions);
+        const transform = this.transformFilter(exclusions);
         if (transform.length) {
             let x = this.x;
             let y = this.y;
@@ -81,16 +86,14 @@ export default class SvgImage extends SvgElement implements squared.svg.SvgImage
             }
             this.x = x;
             this.y = y;
-            this.baseVal.transformed = transform;
-            this.transformed = true;
+            this.baseValue.transformed = transform;
         }
-        return '';
     }
 
     private init() {
-        this.baseVal.x = this.x;
-        this.baseVal.y = this.y;
-        this.baseVal.width = this.width;
-        this.baseVal.height = this.height;
+        this.baseValue.x = this.x;
+        this.baseValue.y = this.y;
+        this.baseValue.width = this.width;
+        this.baseValue.height = this.height;
     }
 }

@@ -1,53 +1,57 @@
-import { SvgImageBaseVal, SvgPathBaseVal, SvgTransform, SvgViewBox } from '../svg/@types/object';
+import { SvgImageBaseValue, SvgPathBaseValue, SvgPoint, SvgRect, SvgTransform } from '../svg/@types/object';
 
 declare global {
     namespace squared.svg {
-        interface SvgElement extends SvgBase {
-            transform: SvgTransform[];
-            transformed: boolean;
+        interface SvgElement extends SvgView {
             readonly animatable: boolean;
-            build(exclusions?: number[]): string;
-            filterTransform(exclusions?: number[]): SvgTransform[];
-            transformPoints(transform: SvgTransform[], points: Point[], center?: PointR): PointR[];
+            build(exclusions?: number[]): void | string;
+            transformFilter(exclusions?: number[]): SvgTransform[];
+            transformPoints(transform: SvgTransform[], points: SvgPoint[], center?: SvgPoint): SvgPoint[];
         }
 
         interface SvgShape extends SvgElement {
             path?: SvgPath;
-            setPath(value: SvgPath): void;
             synchronize(useKeyTime?: boolean): void;
         }
 
         interface SvgTransformable {
-            baseVal: SvgImageBaseVal;
-            rotateOrigin?: PointR;
-            transformResidual?: SvgTransform[];
+            rotateOrigin?: SvgPoint;
+            transformHost?: SvgTransform[][];
         }
 
-        interface SvgImage extends SvgElement, SvgViewBox, SvgTransformable {
+        interface SvgImage extends SvgRect, SvgElement, SvgTransformable {
             href: string;
+            baseValue: SvgImageBaseValue;
+            readonly element: SVGImageElement | SVGUseElement;
         }
 
-        interface SvgUse extends SvgShape, Point {}
+        interface SvgUse extends SvgShape, Point {
+            group?: SvgGroup;
+            setPath(value: SvgPath): void;
+        }
 
         interface SvgPath extends SvgElement, SvgTransformable {
+            name: string;
             opacity: number;
             d: string;
             color: string;
             fillRule: string;
             fill: string;
+            fillPattern: string;
             fillOpacity: string;
             stroke: string;
             strokeWidth: string;
+            strokePattern: string;
             strokeOpacity: string;
             strokeLinecap: string;
             strokeLinejoin: string;
             strokeMiterlimit: string;
             clipPath: string;
             clipRule: string;
-            baseVal: SvgPathBaseVal;
+            baseValue: SvgPathBaseValue;
             setColor(attr: string): void;
             setOpacity(attr: string): void;
-            build(exclusions?: number[], savePath?: boolean): string;
+            build(exclusions?: number[], save?: boolean): string;
         }
 
         class SvgElement implements SvgElement {

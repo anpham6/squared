@@ -12,8 +12,8 @@ export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.
     public rotateAuto = false;
     public rotateAutoReverse = false;
 
-    constructor(element: SVGAnimateMotionElement, parentElement: SVGGraphicsElement) {
-        super(element, parentElement);
+    constructor(element: SVGAnimateMotionElement) {
+        super(element);
         this.setAttribute('path');
         const rotate = this.getAttribute('rotate');
         switch (rotate) {

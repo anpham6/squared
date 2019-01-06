@@ -13,7 +13,7 @@ const $dom = squared.lib.dom;
 const NAME_GRAPHICS = new Map<string, number>();
 
 export default class SvgCreate implements squared.svg.SvgCreate {
-    public static setName(element?: SVGGraphicsElement) {
+    public static setName(element?: SVGElement) {
         if (element) {
             let result = '';
             let tagName: string | undefined;
@@ -57,22 +57,24 @@ export default class SvgCreate implements squared.svg.SvgCreate {
         return result;
     }
 
-    public static toAnimateList(element: SVGGraphicsElement) {
+    public static toAnimateList(element: SVGElement) {
         const result: SvgAnimation[] = [];
-        for (let i = 0; i < element.children.length; i++) {
-            const item = element.children[i];
-            if (item instanceof SVGAnimationElement) {
-                if (item instanceof SVGAnimateTransformElement) {
-                    result.push(new SvgAnimateTransform(item, element));
-                }
-                else if (item instanceof SVGAnimateMotionElement) {
-                    result.push(new SvgAnimateMotion(item, element));
-                }
-                else if (item instanceof SVGAnimateElement) {
-                    result.push(new SvgAnimate(item, element));
-                }
-                else {
-                    result.push(new SvgAnimation(item, element));
+        if (element instanceof SVGGraphicsElement) {
+            for (let i = 0; i < element.children.length; i++) {
+                const item = element.children[i];
+                if (item instanceof SVGAnimationElement) {
+                    if (item instanceof SVGAnimateTransformElement) {
+                        result.push(new SvgAnimateTransform(item));
+                    }
+                    else if (item instanceof SVGAnimateMotionElement) {
+                        result.push(new SvgAnimateMotion(item));
+                    }
+                    else if (item instanceof SVGAnimateElement) {
+                        result.push(new SvgAnimate(item));
+                    }
+                    else {
+                        result.push(new SvgAnimation(item));
+                    }
                 }
             }
         }

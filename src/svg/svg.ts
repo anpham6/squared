@@ -1,11 +1,12 @@
-import { SvgDefs, SvgLinearGradient, SvgRadialGradient, SvgTransform } from './@types/object';
+import { SvgBaseValue, SvgLinearGradient, SvgRadialGradient, SvgRect, SvgTransform } from './@types/object';
 
 import SvgAnimation from './svganimation';
 import SvgCreate from './svgcreate';
 import SvgElement from './svgelement';
 import SvgShape from './svgshape';
 import SvgGroup from './svggroup';
-import SvgGroupViewBox from './svggroupviewbox';
+import SvgGroupRect from './svggrouprect';
+import SvgSymbol from './svgsymbol';
 import SvgImage from './svgimage';
 import SvgUse from './svguse';
 
@@ -13,21 +14,38 @@ import { getHrefTarget, getTransform, isSvgImage, isSvgShape, isSvgVisible } fro
 
 const $dom = squared.lib.dom;
 
+function setChildren(group: SvgGroup | SvgSymbol) {
+    for (const item of Array.from(group.element.children)) {
+        if (isSvgShape(item)) {
+            const shape = new SvgShape(item);
+            if (shape.path) {
+                group.append(shape);
+            }
+        }
+        else if (isSvgImage(item)) {
+            group.append(new SvgImage(item));
+        }
+    }
+}
+
 export default class Svg extends squared.lib.base.Container<SvgGroup> implements squared.svg.Svg {
     public name: string;
     public animate: SvgAnimation[];
     public visible: boolean;
-
-    public readonly defs: SvgDefs = {
-        clipPath: new Map<string, SvgGroup>(),
-        gradient: new Map<string, Gradient>()
+    public baseValue: SvgBaseValue = {
+        transformed: null
     };
 
-    private _width = 0;
-    private _height = 0;
-    private _viewBoxWidth = 0;
-    private _viewBoxHeight = 0;
-    private _opacity = 1;
+    public readonly defs = {
+        symbol: new Map<string, SvgSymbol>(),
+        clipPath: new Map<string, SvgGroup>(),
+        gradient: new Map<string, Gradient>(),
+    };
+
+    private _width!: number;
+    private _height!: number;
+    private _viewBox!: SvgRect;
+    private _opacity!: number;
     private _transform?: SvgTransform[];
 
     constructor(public readonly element: SVGSVGElement) {
@@ -43,9 +61,8 @@ export default class Svg extends squared.lib.base.Container<SvgGroup> implements
         this._height = height;
     }
 
-    public setViewBox(width: number, height: number) {
-        this._viewBoxWidth = width;
-        this._viewBoxHeight = height;
+    public setViewBox(value: SvgRect) {
+        this._viewBox = value;
     }
 
     public setOpacity(value: string | number) {
@@ -55,7 +72,7 @@ export default class Svg extends squared.lib.base.Container<SvgGroup> implements
 
     private init() {
         const element = this.element;
-        this.setViewBox(element.viewBox.baseVal.width, element.viewBox.baseVal.height);
+        this.setViewBox(element.viewBox.baseVal);
         this.setOpacity($dom.cssAttribute(element, 'opacity'));
         this.setDimensions(element.width.baseVal.value, element.height.baseVal.value);
         if ($dom.isUserAgent($dom.USER_AGENT.FIREFOX)) {
@@ -76,24 +93,25 @@ export default class Svg extends squared.lib.base.Container<SvgGroup> implements
                 }
             }
         });
-        element.querySelectorAll('clipPath, linearGradient, radialGradient').forEach((svg: SVGElement) => {
+        element.querySelectorAll('symbol, clipPath, linearGradient, radialGradient').forEach((svg: SVGElement) => {
             if (svg.id) {
-                if (svg instanceof SVGClipPathElement) {
-                    const group = new SvgGroup(svg);
-                    for (const item of Array.from(svg.children)) {
-                        if (isSvgShape(item)) {
-                            const shape = new SvgShape(item);
-                            if (shape.path) {
-                                group.append(shape);
-                            }
-                        }
+                const id = `#${svg.id}`;
+                if (svg instanceof SVGSymbolElement) {
+                    const symbol = new SvgSymbol(svg);
+                    setChildren(symbol);
+                    if (symbol.length) {
+                        this.defs.symbol.set(id, symbol);
                     }
+                }
+                else if (svg instanceof SVGClipPathElement) {
+                    const group = new SvgGroup(svg);
+                    setChildren(group);
                     if (group.length) {
-                        this.defs.clipPath.set(svg.id, group);
+                        this.defs.clipPath.set(id, group);
                     }
                 }
                 else if (svg instanceof SVGLinearGradientElement) {
-                    this.defs.gradient.set(`@${svg.id}`, <SvgLinearGradient> {
+                    this.defs.gradient.set(id, <SvgLinearGradient> {
                         type: 'linear',
                         x1: svg.x1.baseVal.value,
                         x2: svg.x2.baseVal.value,
@@ -107,7 +125,7 @@ export default class Svg extends squared.lib.base.Container<SvgGroup> implements
                     });
                 }
                 else if (svg instanceof SVGRadialGradientElement) {
-                    this.defs.gradient.set(`@${svg.id}`, <SvgRadialGradient> {
+                    this.defs.gradient.set(id, <SvgRadialGradient> {
                         type: 'radial',
                         cx: svg.cx.baseVal.value,
                         cy: svg.cy.baseVal.value,
@@ -126,7 +144,7 @@ export default class Svg extends squared.lib.base.Container<SvgGroup> implements
         });
         const useMap = new Map<string, SvgElement>();
         let currentGroup: SvgGroup | undefined;
-        function appendShape(group: SvgGroup, item: Element) {
+        function groupAppend(group: SvgGroup, item: Element) {
             if (item instanceof SVGUseElement) {
                 group.append(new SvgUse(item));
             }
@@ -149,7 +167,7 @@ export default class Svg extends squared.lib.base.Container<SvgGroup> implements
         for (let i = 0; i < element.children.length; i++) {
             const item = element.children[i];
             if (item instanceof SVGSVGElement) {
-                currentGroup = new SvgGroupViewBox(item);
+                currentGroup = new SvgGroupRect(item);
                 this.append(currentGroup);
             }
             else if (item instanceof SVGGElement) {
@@ -161,11 +179,11 @@ export default class Svg extends squared.lib.base.Container<SvgGroup> implements
                     currentGroup = new SvgGroup(element);
                     this.append(currentGroup);
                 }
-                appendShape(currentGroup, item);
+                groupAppend(currentGroup, item);
                 continue;
             }
             for (let j = 0; j < item.children.length; j++) {
-                appendShape(currentGroup, item.children[j]);
+                groupAppend(currentGroup, item.children[j]);
             }
             currentGroup = undefined;
         }
@@ -200,11 +218,8 @@ export default class Svg extends squared.lib.base.Container<SvgGroup> implements
         return this._height;
     }
 
-    get viewBoxWidth() {
-        return this._viewBoxWidth;
-    }
-    get viewBoxHeight() {
-        return this._viewBoxHeight;
+    get viewBox() {
+        return this._viewBox;
     }
 
     get opacity() {

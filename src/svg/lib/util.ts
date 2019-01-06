@@ -1,4 +1,4 @@
-import { SvgMatrix, SvgTransform } from '../@types/object';
+import { SvgMatrix, SvgPoint, SvgTransform } from '../@types/object';
 
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
@@ -97,7 +97,7 @@ export function isSvgImage(element: Element): element is SVGImageElement {
     return element.tagName === 'image';
 }
 
-export function isSvgVisible(element: SVGGraphicsElement) {
+export function isSvgVisible(element: Element) {
     const value = $dom.cssAttribute(element, 'visibility', true);
     return value !== 'hidden' && value !== 'collapse' && $dom.cssAttribute(element, 'display', true) !== 'none';
 }
@@ -151,24 +151,27 @@ export function createTransform(type: number, matrix: SvgMatrix | DOMMatrix, ang
     };
 }
 
-export function getRotateOrigin(element: SVGGraphicsElement): Point {
-    let x = 0;
-    let y = 0;
+export function getRotateOrigin(element: SVGGraphicsElement): SvgPoint[] {
+    const result: SvgPoint[] = [];
     const attr = element.attributes.getNamedItem('transform');
     if (attr) {
-        const match = /rotate\((-?[\d.]+),\s*(-?[\d.]+),\s*(-?[\d.]+)\)/.exec(attr.value);
-        if (match) {
-            x = parseFloat(match[2]);
-            y = parseFloat(match[3]);
+        const pattern = /rotate\((-?[\d.]+),\s*(-?[\d.]+),\s*(-?[\d.]+)\)/g;
+        let match: RegExpExecArray | null = null;
+        while ((match = pattern.exec(attr.value)) !== null) {
+            result.push({
+                angle: parseFloat(match[1]),
+                x: parseFloat(match[2]),
+                y: parseFloat(match[3])
+            });
         }
     }
-    return { x, y };
+    return result.length ? result : [{ angle: 0, x: 0, y: 0 }];
 }
 
 export function getTransform(element: SVGGraphicsElement): SvgTransform[] | undefined {
     const value = $dom.cssInline(element, 'transform');
     if (value !== '') {
-        const result: SvgTransform[] = [];
+        let result: SvgTransform[] = [];
         for (const name in REGEX_TRANSFORM) {
             const pattern = new RegExp(REGEX_TRANSFORM[name], 'g');
             let match: RegExpExecArray | null = null;
@@ -231,7 +234,9 @@ export function getTransform(element: SVGGraphicsElement): SvgTransform[] | unde
                 }
             }
         }
-        return result.filter(item => item);
+        result = result.filter(item => item);
+        result.forEach(item => item.css = true);
+        return result;
     }
     return undefined;
 }

@@ -1,9 +1,4 @@
-export interface SvgDefs {
-    clipPath: Map<string, squared.svg.SvgGroup>;
-    gradient: Map<string, Gradient>;
-}
-
-export interface SvgViewBox extends Point, Dimension {
+export interface SvgRect extends Point, Dimension {
 }
 
 export interface SvgLinearGradient extends Gradient {
@@ -42,15 +37,18 @@ export interface SvgPathCommand {
     sweepFlag?: number;
 }
 
-export interface SvgImageBaseVal {
+export interface SvgBaseValue {
+    transformed: SvgTransform[] | null;
+}
+
+export interface SvgImageBaseValue extends SvgBaseValue {
     x: number | null;
     y: number | null;
     width: number | null;
     height: number | null;
-    transformed: SvgTransform[] | null;
 }
 
-export interface SvgPathBaseVal extends SvgImageBaseVal {
+export interface SvgPathBaseValue extends SvgImageBaseValue {
     d: string | null;
     cx: number | null;
     cy: number | null;
@@ -72,6 +70,8 @@ export interface SvgTransform {
         x: boolean;
         y: boolean;
     };
+    origin?: Point;
+    css?: boolean;
 }
 
 export interface SvgMatrix {
@@ -83,7 +83,8 @@ export interface SvgMatrix {
     f: number;
 }
 
-export type KeyTimeValue<T> = {
-    time: number;
-    value: T;
-};
+export interface SvgPoint extends Point {
+    rx?: number;
+    ry?: number;
+    angle?: number;
+}

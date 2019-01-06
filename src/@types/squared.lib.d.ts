@@ -114,7 +114,7 @@ declare global {
             function replaceEntity(value: string): string;
             function replaceCharacter(value: string): string;
             function parseTemplate(value: string): StringMap;
-            function createTemplate(value: StringMap, data: ExternalData, index?: string): string;
+            function createTemplate(value: StringMap, data: ExternalData, index?: string | null): string;
         }
     }
 }

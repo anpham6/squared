@@ -6,7 +6,6 @@ declare global {
             to: string;
             duration: number;
             readonly element: SVGAnimationElement;
-            readonly parentElement: SVGGraphicsElement;
             setAttribute(attr: string, equality?: string): void;
             getAttribute(attr: string): string;
         }
@@ -23,7 +22,7 @@ declare global {
             accumulateSum: boolean;
             fillFreeze: boolean;
             end?: number;
-            parentPath?: SvgPath;
+            parent?: SvgView;
             sequential?: NameValue;
             readonly element: SVGAnimateElement;
         }
@@ -43,23 +42,23 @@ declare global {
 
         class SvgAnimation implements SvgAnimation {
             public static convertClockTime(value: string): number;
-            constructor(element: SVGAnimationElement, parentElement: SVGGraphicsElement);
+            constructor(element: SVGAnimationElement);
         }
 
         class SvgAnimate implements SvgAnimate {
             public static toFractionList(value: string, delimiter?: string): number[];
-            constructor(element: SVGAnimateElement, parentElement: SVGGraphicsElement);
+            constructor(element: SVGAnimateElement);
         }
 
         class SvgAnimateTransform implements SvgAnimateTransform {
             public static toRotateList(values: string[]): (null[] | number[])[] | undefined;
             public static toScaleList(values: string[]): (null[] | number[])[] | undefined;
             public static toTranslateList(values: string[]): (null[] | number[])[] | undefined;
-            constructor(element: SVGAnimateTransformElement, parentElement: SVGGraphicsElement);
+            constructor(element: SVGAnimateTransformElement);
         }
 
         class SvgAnimateMotion implements SvgAnimateMotion {
-            constructor(element: SVGAnimateMotionElement, parentElement: SVGGraphicsElement);
+            constructor(element: SVGAnimateMotionElement);
         }
     }
 }

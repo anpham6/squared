@@ -60,8 +60,8 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
 
     public type: number;
 
-    constructor(element: SVGAnimateTransformElement, parentElement: SVGGraphicsElement) {
-        super(element, parentElement);
+    constructor(element: SVGAnimateTransformElement) {
+        super(element);
         switch (this.getAttribute('type')) {
             case 'translate':
                 this.type = SVGTransform.SVG_TRANSFORM_TRANSLATE;

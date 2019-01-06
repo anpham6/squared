@@ -41,7 +41,7 @@ function compareObject(obj1: {}, obj2: {}, attr: string, numeric: boolean) {
 }
 
 export const REGEX_PATTERN = {
-    CSS_URL: /url\("?#?(.*?)"?\)/,
+    CSS_URL: /url\("?(#?.*?)"?\)/,
     URI: /^[A-Za-z]+:\/\//,
     UNIT: /^(?:\s*(-?[\d.]+)(px|em|ch|pc|pt|vw|vh|vmin|vmax|mm|cm|in))+$/
 };

@@ -41,10 +41,4 @@ interface Dimension {
     height: number;
 }
 
-interface PointR extends Point {
-    rx?: number;
-    ry?: number;
-    angle?: number;
-}
-
 type ExternalData = ObjectMap<any>;

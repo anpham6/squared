@@ -501,7 +501,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 }]
                             }]
                         };
-                        const xml = $xml.createTemplate(TEMPLATES.VECTOR, vectorData);
+                        const xml = $xml.createTemplate(TEMPLATES.VECTOR, vectorData, null);
                         let vectorName = Resource.getStoredName('drawables', xml);
                         if (vectorName === '') {
                             vectorName = `${node.tagName.toLowerCase()}_${node.controlId}_gradient`;

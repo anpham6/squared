@@ -1,3 +1,4 @@
+import SvgGroup from './svggroup';
 import SvgPath from './svgpath';
 import SvgShape from './svgshape';
 
@@ -5,7 +6,8 @@ export default class SvgUse extends SvgShape implements squared.svg.SvgUse {
     public x: number;
     public y: number;
 
-    private _path: SvgPath | undefined;
+    private _hrefPath?: SvgPath;
+    private _hrefGroup?: SvgGroup;
 
     constructor(public readonly element: SVGUseElement) {
         super(element);
@@ -14,16 +16,25 @@ export default class SvgUse extends SvgShape implements squared.svg.SvgUse {
     }
 
     public setPath(value: SvgPath) {
-        this._path = value;
+        this._hrefPath = value;
+        this._hrefGroup = undefined;
     }
 
     public build(exclusions?: number[]) {
         let d = '';
-        if (this._path) {
-            d = this._path.build(exclusions, false);
+        if (this._hrefPath) {
+            d = this._hrefPath.build(exclusions, false);
             const path = new SvgPath(this.element, d);
-            super.setPath(path);
+            super.path = path;
         }
         return d;
+    }
+
+    set group(value) {
+        this._hrefGroup = value;
+        super.path = undefined;
+    }
+    get group() {
+        return this._hrefGroup;
     }
 }
