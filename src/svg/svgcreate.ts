@@ -5,7 +5,7 @@ import SvgAnimateMotion from './svganimatemotion';
 import SvgAnimateTransform from './svganimatetransform';
 import SvgAnimation from './svganimation';
 
-import { createTransform } from './lib/util';
+import { createTransform, getHrefTargetElement, isSvgImage, isSvgShape } from './lib/util';
 
 const $color = squared.lib.color;
 const $dom = squared.lib.dom;
@@ -40,6 +40,24 @@ export default class SvgCreate implements squared.svg.SvgCreate {
             NAME_GRAPHICS.clear();
             return '';
         }
+    }
+
+    public static getUseTarget(element: SVGUseElement, includeSymbol = false, parentElement?: SVGGraphicsElement | HTMLElement) {
+        const target = getHrefTargetElement(element, parentElement);
+        if (target) {
+            if (target instanceof SVGSymbolElement) {
+                if (includeSymbol) {
+                    return new squared.svg.SvgGroupRect(element, target);
+                }
+            }
+            else if (isSvgImage(target)) {
+                return new squared.svg.SvgImage(element, target.href.baseVal);
+            }
+            else if (isSvgShape(target)) {
+                return new squared.svg.SvgUse(element, target);
+            }
+        }
+        return undefined;
     }
 
     public static toColorStopList(element: SVGGradientElement) {

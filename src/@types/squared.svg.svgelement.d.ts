@@ -23,6 +23,7 @@ declare global {
 
         interface SvgUse extends SvgShape, Point {
             href: string;
+            shapeElement?: SVGGraphicsElement;
             setShape(value: SVGGraphicsElement): void;
         }
 
@@ -30,7 +31,7 @@ declare global {
             d: string;
             name: string;
             baseValue: SvgPathBaseValue;
-            build(exclusions?: number[], save?: boolean): string;
+            build(exclusions?: number[], save?: boolean, residual?: boolean): string;
         }
 
         class SvgElement implements SvgElement {
@@ -43,7 +44,7 @@ declare global {
         }
 
         class SvgUse implements SvgUse {
-            constructor(element: SVGUseElement, d: string);
+            constructor(element: SVGUseElement, shapeElement?: SVGGraphicsElement);
         }
 
         class SvgImage implements SvgImage {

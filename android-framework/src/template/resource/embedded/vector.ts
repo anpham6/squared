@@ -3,15 +3,15 @@ export default `
 <vector xmlns:android="http://schemas.android.com/apk/res/android" {~namespace} android:name="{&name}" android:width="{&width}" android:height="{&height}" android:viewportWidth="{&viewportWidth}" android:viewportHeight="{&viewportHeight}" android:alpha="{~alpha}">
 <<A>>
 	##group-start:0##
-	<group android:name="{&name}" android:rotation="{~rotation}" android:pivotX="{~pivotX}" android:pivotY="{~pivotY}" android:scaleX="{~scaleX}" android:scaleY="{~scaleY}" android:translateX="{~translateX}" android:translateY="{~translateY}">
+	<group android:name="{~groupName}" android:rotation="{~rotation}" android:pivotX="{~pivotX}" android:pivotY="{~pivotY}" android:scaleX="{~scaleX}" android:scaleY="{~scaleY}" android:translateX="{~translateX}" android:translateY="{~translateY}">
 	##group-start##
 	<<AA>>
-		##shape-start:1##
-		<group android:name="{&groupName}" android:rotation="{~rotation}" android:pivotX="{~pivotX}" android:pivotY="{~pivotY}" android:scaleX="{~scaleX}" android:scaleY="{~scaleY}" android:translateX="{~translateX}" android:translateY="{~translateY}">
-		##shape-start##
-		<<BBB>>
-		<clip-path android:name="{&clipName}" android:pathData="{&clipPathData}" />
-		<<BBB>>
+		##render-start:1##
+		<group android:name="{~groupName}" android:rotation="{~rotation}" android:pivotX="{~pivotX}" android:pivotY="{~pivotY}" android:scaleX="{~scaleX}" android:scaleY="{~scaleY}" android:translateX="{~translateX}" android:translateY="{~translateY}">
+		##render-start##
+		<<clipPaths>>
+		<clip-path android:name="{~clipPathName}" android:pathData="{~clipPathData}" />
+		<<clipPaths>>
 		<path android:name="{&name}" android:pathData="{&d}"
 			android:fillColor="{~fill}" android:fillAlpha="{~fillOpacity}" android:fillType="{~fillRule}"
 			android:strokeColor="{~stroke}" android:strokeAlpha="{~strokeOpacity}" android:strokeWidth="{~strokeWidth}"
@@ -28,9 +28,9 @@ export default `
 			</aapt:attr>
 		<<fillPattern>>
 		</path>
-		##shape-end:1##
+		##render-end:1##
 		</group>
-		##shape-end##
+		##render-end##
 	<<AA>>
 	##group-end:0##
 	</group>

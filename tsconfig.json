@@ -7,13 +7,13 @@
     "inlineSourceMap": true,
     "lib": ["es2015", "es2016", "dom"],
     "noUnusedLocals": true,
+    "strictBindCallApply": true,
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
     "noImplicitAny": true,
     "noImplicitThis": true,
     "noImplicitReturns": true,
-    "suppressImplicitAnyIndexErrors": true,
-    "downlevelIteration": true
+    "suppressImplicitAnyIndexErrors": true
   },
   "include": [
     "android-framework/**/*",

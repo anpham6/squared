@@ -4,8 +4,8 @@ import SvgAnimate from './svganimate';
 import SvgAnimateTransform from './svganimatetransform';
 import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
-import SvgPath from './svgpath';
 import SvgElement from './svgelement';
+import SvgPath from './svgpath';
 
 import { getLeastCommonMultiple, getTransformOrigin, isSvgShape, sortNumber } from './lib/util';
 
@@ -907,7 +907,7 @@ export default class SvgShape extends SvgElement implements squared.svg.SvgShape
     set path(value) {
         this._path = value;
         if (this._path) {
-            this._path.name = `${this.name}_shape`;
+            this._path.name = this.name;
         }
         for (const item of this.animate) {
             if (item instanceof SvgAnimate) {

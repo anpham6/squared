@@ -482,7 +482,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     });
                     const backgroundColor = getShapeAttribute(stored, 'backgroundColor') || [];
                     const borderRadius = getShapeAttribute(stored, 'radius');
-                    const vectorGradient = !!squared.svg.SvgPath && backgroundGradient.length > 0 && backgroundGradient.some(gradient => gradient.colorStops.length > 0);
+                    const vectorGradient = !!squared.svg && !!squared.svg.SvgPath && backgroundGradient.length > 0 && backgroundGradient.some(gradient => gradient.colorStops.length > 0);
                     if (vectorGradient) {
                         const width = node.bounds.width;
                         const height = node.bounds.height;
@@ -494,16 +494,17 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             viewportHeight: height.toString(),
                             alpha: '',
                             A: [{
-                                group: [[{ name: `${node.controlId}_gradient` }]],
+                                group: [[]],
                                 AA: [{
+                                    render: [[]],
                                     name: `${node.controlId}_gradient_path`,
+                                    clipPaths: false,
                                     d: squared.svg.SvgPath.getRect(width, height),
-                                    BBB: false,
                                     fillPattern: [{ gradients: backgroundGradient }]
                                 }]
                             }]
                         };
-                        const xml = $xml.createTemplate(TEMPLATES.VECTOR, vectorData, null);
+                        const xml = $xml.createTemplate(TEMPLATES.VECTOR, vectorData);
                         let vectorName = Resource.getStoredName('drawables', xml);
                         if (vectorName === '') {
                             vectorName = `${node.tagName.toLowerCase()}_${node.controlId}_gradient`;
@@ -536,7 +537,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 D: false,
                                 E: images5.length ? images5 : false,
                                 F: images6.length ? images6 : false,
-                                G: Resource.isBorderVisible(stored.border) || borderRadius ? [{ stroke, corners: borderRadius }] : false
+                                G: Resource.isBorderVisible(border) || borderRadius ? [{ stroke, corners: borderRadius }] : false
                             };
                         }
                     }
@@ -560,11 +561,14 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                         if (borderWidth.size === 1 && borderStyle.size === 1 && !(borderData.style === 'groove' || borderData.style === 'ridge')) {
                             const width = parseInt(borderData.width);
-                            if (width > 2 && borderData.style === 'double') {
+                            if (borderData.style === 'double' && width > 2) {
                                 insertDoubleBorder.apply(null, [
                                     data,
                                     borderData,
-                                    ...borderVisible,
+                                    borderVisible[0],
+                                    borderVisible[1],
+                                    borderVisible[2],
+                                    borderVisible[3],
                                     borderRadius
                                 ]);
                             }
@@ -588,7 +592,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 if (borderVisible[i]) {
                                     const item = borders[i];
                                     const width = parseInt(item.width);
-                                    if (width > 2 && item.style === 'double') {
+                                    if (item.style === 'double' && width > 2) {
                                         insertDoubleBorder.apply(null, [
                                             data,
                                             item,

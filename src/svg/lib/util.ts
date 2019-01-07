@@ -76,6 +76,10 @@ export const MATRIX = {
     }
 };
 
+export function isSvgUse(element: Element): element is SVGUseElement {
+    return element.tagName === 'use';
+}
+
 export function isSvgShape(element: Element): element is SVGGraphicsElement {
     switch (element.tagName) {
         case 'path':
@@ -104,10 +108,28 @@ export function setVisible(element: SVGGraphicsElement, value: boolean) {
     setAttribute(element, 'visibility', value ? 'visible' : 'hidden');
 }
 
-export function getHrefElementId(element: Element) {
+export function getHrefTargetElement(element: Element, parentElement?: SVGGraphicsElement | HTMLElement | null) {
     const href = element.attributes.getNamedItem('href');
-    if (href && href.value !== '') {
-        return href.value.charAt(0) === '#' ? <SVGGraphicsElement> (document.getElementById(href.value.replace('#', '')) as unknown) : null;
+    if (href && href.value.charAt(0) === '#') {
+        const id = href.value.replace('#', '');
+        if (parentElement) {
+            for (const target of Array.from(parentElement.querySelectorAll('*'))) {
+                if (target.id === id) {
+                    if (target instanceof SVGGraphicsElement) {
+                        return target;
+                    }
+                    else {
+                        return null;
+                    }
+                }
+            }
+        }
+        else {
+            const target = document.getElementById(id);
+            if (target instanceof SVGGraphicsElement) {
+                return target;
+            }
+        }
     }
     return null;
 }

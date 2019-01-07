@@ -1,6 +1,6 @@
 import SvgAnimate from './svganimate';
 
-import { getHrefElementId } from './lib/util';
+import { getHrefTargetElement } from './lib/util';
 
 const $util = squared.lib.util;
 
@@ -39,7 +39,7 @@ export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.
         for (let i = 0; i < element.children.length; i++) {
             const item = element.children[i];
             if (item.tagName === 'mpath') {
-                const target = getHrefElementId(item);
+                const target = getHrefTargetElement(item);
                 if (target) {
                     this.mpath = target;
                     break;

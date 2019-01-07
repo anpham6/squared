@@ -3,33 +3,16 @@ import { SvgBaseValue, SvgLinearGradient, SvgRadialGradient, SvgTransform } from
 import SvgAnimation from './svganimation';
 import SvgCreate from './svgcreate';
 import SvgShape from './svgshape';
-import SvgGroup from './svggroup';
 import SvgGroupPaint from './svggrouppaint';
 import SvgGroupRect from './svggrouprect';
-import SvgSymbol from './svgsymbol';
 import SvgImage from './svgimage';
-import SvgUse from './svguse';
 
-import { getHrefElementId, getTransform, isVisible, isSvgImage, isSvgShape, setVisible } from './lib/util';
+import { getHrefTargetElement, getTransform, isVisible, isSvgImage, isSvgShape, setVisible } from './lib/util';
 
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
-function setChildren(group: SvgGroup | SvgSymbol) {
-    for (const item of Array.from(group.element.children)) {
-        if (isSvgShape(item)) {
-            const shape = new SvgShape(item);
-            if (shape.path) {
-                group.append(shape);
-            }
-        }
-        else if (isSvgImage(item)) {
-            group.append(new SvgImage(item));
-        }
-    }
-}
-
-export default class Svg extends squared.lib.base.Container<SvgGroup> implements squared.svg.Svg {
+export default class Svg extends squared.lib.base.Container<squared.svg.SvgView> implements squared.svg.Svg {
     public animate: SvgAnimation[];
     public baseValue: SvgBaseValue = {
         transformed: null
@@ -37,11 +20,8 @@ export default class Svg extends squared.lib.base.Container<SvgGroup> implements
 
     public readonly name: string;
     public readonly defs = {
-        shape: new Map<string, SvgShape>(),
-        image: new Map<string, SvgImage>(),
-        symbol: new Map<string, SvgSymbol>(),
-        clipPath: new Map<string, SvgGroup>(),
-        gradient: new Map<string, Gradient>(),
+        clipPath: new Map<string, SvgGroupPaint>(),
+        gradient: new Map<string, Gradient>()
     };
 
     private _width: number | undefined;
@@ -53,6 +33,33 @@ export default class Svg extends squared.lib.base.Container<SvgGroup> implements
         this.name = SvgCreate.setName(element);
         this.animate = SvgCreate.toAnimateList(element);
         this.init();
+        this.setChildren();
+    }
+
+    public setChildren() {
+        this.clear();
+        const element = this.element;
+        for (let i = 0; i < element.children.length; i++) {
+            const item = element.children[i];
+            if (item instanceof SVGGElement) {
+                this.append(new SvgGroupPaint(item));
+            }
+            else if (item instanceof SVGSVGElement) {
+                this.append(new SvgGroupRect(item));
+            }
+            else if (item instanceof SVGUseElement) {
+                const use = SvgCreate.getUseTarget(item, true, element);
+                if (use) {
+                    this.append(use);
+                }
+            }
+            else if (isSvgImage(item)) {
+                this.append(new SvgImage(item));
+            }
+            else if (isSvgShape(item)) {
+                this.append(new SvgShape(item));
+            }
+        }
     }
 
     private init() {
@@ -60,7 +67,7 @@ export default class Svg extends squared.lib.base.Container<SvgGroup> implements
         element.querySelectorAll('set, animate, animateTransform, animateMotion').forEach((svg: SVGAnimationElement) => {
             const href = svg.attributes.getNamedItem('href');
             if (href && href.value !== '') {
-                const target = getHrefElementId(svg);
+                const target = getHrefTargetElement(svg);
                 if (svg.parentElement) {
                     svg.parentElement.removeChild(svg);
                 }
@@ -69,19 +76,11 @@ export default class Svg extends squared.lib.base.Container<SvgGroup> implements
                 }
             }
         });
-        element.querySelectorAll('symbol, clipPath, linearGradient, radialGradient').forEach((svg: SVGElement) => {
+        element.querySelectorAll('clipPath, linearGradient, radialGradient').forEach((svg: SVGElement) => {
             if (svg.id) {
                 const id = `#${svg.id}`;
-                if (svg instanceof SVGSymbolElement) {
-                    const symbol = new SvgSymbol(svg);
-                    setChildren(symbol);
-                    if (symbol.length) {
-                        this.defs.symbol.set(id, symbol);
-                    }
-                }
-                else if (svg instanceof SVGClipPathElement) {
-                    const group = new SvgGroup(svg);
-                    setChildren(group);
+                if (svg instanceof SVGClipPathElement) {
+                    const group = new SvgGroupPaint(svg);
                     if (group.length) {
                         this.defs.clipPath.set(id, group);
                     }
@@ -118,86 +117,6 @@ export default class Svg extends squared.lib.base.Container<SvgGroup> implements
                 }
             }
         });
-        let current: SvgGroup | undefined;
-        const groupAppend = (group: SvgGroup, item: Element) => {
-            if (item instanceof SVGUseElement) {
-                group.append(new SvgUse(item));
-            }
-            else {
-                if (isSvgShape(item)) {
-                    const shape = new SvgShape(item);
-                    if (item.id) {
-                        this.defs.shape.set(`#${item.id}`, shape);
-                    }
-                    group.append(shape);
-                }
-                else if (isSvgImage(item)) {
-                    const image = new SvgImage(item);
-                    if (item.id) {
-                        this.defs.image.set(`#${item.id}`, image);
-                    }
-                    group.append(image);
-                }
-            }
-        };
-        for (let i = 0; i < element.children.length; i++) {
-            const item = element.children[i];
-            if (item instanceof SVGSVGElement) {
-                current = new SvgGroupRect(item);
-                this.append(current);
-            }
-            else if (item instanceof SVGGElement) {
-                current = new SvgGroupPaint(item);
-                this.append(current);
-            }
-            else {
-                if (item instanceof SVGUseElement) {
-                    const symbol = this.defs.symbol.get(item.href.baseVal);
-                    if (symbol) {
-                        const group = new SvgGroupRect(item, symbol.element);
-                        symbol.each(child => {
-                            const shape = new SvgShape(child.element);
-                            if (shape.path) {
-                                group.append(shape);
-                            }
-                        });
-                        this.append(group);
-                        current = undefined;
-                        continue;
-                    }
-                }
-                if (current === undefined) {
-                    current = new SvgGroup(element);
-                    this.append(current);
-                }
-                groupAppend(current, item);
-                continue;
-            }
-            for (let j = 0; j < item.children.length; j++) {
-                groupAppend(current, item.children[j]);
-            }
-            current = undefined;
-        }
-        this.each(group => {
-            for (let i = 0; i < group.children.length; i++) {
-                const item = group.children[i];
-                if (item instanceof SvgUse) {
-                    const href = item.href;
-                    const shape = this.defs.shape.get(href);
-                    if (shape) {
-                        item.setShape(shape.element);
-                        continue;
-                    }
-                    const image = this.defs.image.get(href);
-                    if (image) {
-                        group.children[i] = new SvgImage(item.element, image.href);
-                        continue;
-                    }
-                    item.visible = false;
-                }
-            }
-        });
-        this.retain(this.filter(item => item.length > 0));
     }
 
     set width(value) {

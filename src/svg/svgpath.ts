@@ -66,7 +66,7 @@ export default class SvgPath extends SvgPaint$MX(SvgElement) implements squared.
         this.init();
     }
 
-    public build(exclusions?: number[], save = true) {
+    public build(exclusions?: number[], save = true, residual = true) {
         const element = this.element;
         let d = '';
         if (save) {
@@ -78,8 +78,7 @@ export default class SvgPath extends SvgPaint$MX(SvgElement) implements squared.
             if (transform.length) {
                 let commands = SvgBuild.toPathCommandList(d);
                 if (commands.length) {
-                    const points = SvgBuild.toAbsolutePointList(commands);
-                    const result = this.transformPoints(transform, points);
+                    const result = this.transformPoints(transform, SvgBuild.toAbsolutePointList(commands));
                     if (result.length) {
                         commands = SvgBuild.fromAbsolutePointList(commands, result);
                         if (commands.length) {
@@ -129,9 +128,11 @@ export default class SvgPath extends SvgPaint$MX(SvgElement) implements squared.
                 const points: SvgPoint[] = [
                     { x: cx, y: cy, rx, ry }
                 ];
-                const index = transform.findIndex(item => item.type === SVGTransform.SVG_TRANSFORM_ROTATE);
-                if (index !== -1 && (rx !== ry || transform.length > 1 && transform.some(item => item.type === SVGTransform.SVG_TRANSFORM_SCALE && item.matrix.a !== item.matrix.d))) {
-                    [this.transformResidual, transform] = SvgBuild.partitionTransforms(this.element, transform, true);
+                if (residual) {
+                    const index = transform.findIndex(item => item.type === SVGTransform.SVG_TRANSFORM_ROTATE);
+                    if (index !== -1 && (rx !== ry || transform.length > 1 && transform.some(item => item.type === SVGTransform.SVG_TRANSFORM_SCALE && item.matrix.a !== item.matrix.d))) {
+                        [this.transformResidual, transform] = SvgBuild.partitionTransforms(this.element, transform, true);
+                    }
                 }
                 if (transform.length) {
                     const result = this.transformPoints(transform, points);

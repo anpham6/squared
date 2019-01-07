@@ -18,6 +18,10 @@ declare global {
             readonly parentElement?: SVGGraphicsElement;
         }
 
+        interface SvgParent {
+            setChildren(): void;
+        }
+
         interface SvgViewRect extends SvgRect {
             baseValue: SvgRectBaseValue;
             setRect(): void;
@@ -53,14 +57,13 @@ declare global {
             setPaint(): void;
         }
 
-        interface Svg extends Container<SvgGroup>, SvgView, Dimension, SvgViewBox {
-            viewBox: DOMRect;
+        interface Svg extends Container<SvgView>, SvgView, SvgParent, Dimension, SvgViewBox {
             width: number;
             height: number;
             opacity: number;
+            viewBox: DOMRect;
             readonly element: SVGSVGElement;
             readonly defs: {
-                symbol: Map<string, SvgSymbol>;
                 clipPath: Map<string, SvgGroup>;
                 gradient: Map<string, Gradient>;
             };
@@ -86,6 +89,7 @@ declare global {
 
         class SvgCreate {
             public static setName(element?: SVGElement): string;
+            public static getUseTarget(element: SVGUseElement, includeSymbol?: boolean, parentElement?: SVGGraphicsElement): SvgView;
             public static toColorStopList(element: SVGGradientElement): ColorStop[];
             public static toAnimateList(element: SVGElement): SvgAnimation[];
             public static toTransformList(transform: SVGTransformList): SvgTransform[];

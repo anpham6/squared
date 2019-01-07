@@ -6,11 +6,12 @@ declare global {
     namespace squared.svg.lib {
         namespace util {
             export import MATRIX = $util.MATRIX;
+            function isSvgUse(element: Element): element is SVGUseElement;
             function isSvgShape(element: Element): element is SVGGraphicsElement;
             function isSvgImage(element: Element): element is SVGImageElement;
             function isVisible(element: Element): boolean;
             function setVisible(element: SVGGraphicsElement, value: boolean): void;
-            function getHrefElementId(element: Element): SVGGraphicsElement | null;
+            function getHrefTargetElement(element: Element, parentElement?: HTMLElement | null): SVGGraphicsElement | null;
             function sortNumber(values: number[], descending?: boolean): boolean;
             function getRotateOrigin(element: SVGGraphicsElement): SvgPoint[];
             function createTransform(type: number, matrix: SvgMatrix | DOMMatrix, angle?: number, x?: boolean, y?: boolean): SvgTransform;

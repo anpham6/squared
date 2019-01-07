@@ -3,21 +3,22 @@ import SvgPath from './svgpath';
 import SvgShape from './svgshape';
 
 export default class SvgUse extends SvgPaint$MX(SvgShape) implements squared.svg.SvgUse {
-    private _shape?: SVGGraphicsElement;
-
-    constructor(public readonly element: SVGUseElement) {
+    constructor(
+        public readonly element: SVGUseElement,
+        public shapeElement?: SVGGraphicsElement)
+    {
         super(element);
         this.setPaint();
     }
 
     public setShape(value: SVGGraphicsElement) {
-        this._shape = value;
+        this.shapeElement = value;
     }
 
     public build(exclusions?: number[]) {
-        if (this._shape) {
+        if (this.shapeElement) {
             if (this.path === undefined) {
-                const path = new SvgPath(this._shape, this.element);
+                const path = new SvgPath(this.shapeElement, this.element);
                 super.path = path;
             }
             super.build(exclusions);

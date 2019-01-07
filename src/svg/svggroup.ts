@@ -3,11 +3,13 @@ import { SvgBaseValue, SvgTransform } from './@types/object';
 import SvgAnimation from './svganimation';
 import SvgAnimate from './svganimate';
 import SvgCreate from './svgcreate';
-import SvgElement from './svgelement';
+import SvgImage from './svgimage';
+import SvgShape from './svgshape';
+import SvgUse from './svguse';
 
-import { getTransform, isVisible, setVisible } from './lib/util';
+import { getTransform, isSvgImage, isSvgShape, isSvgUse, isVisible, setVisible } from './lib/util';
 
-export default class SvgGroup extends squared.lib.base.Container<SvgElement> implements squared.svg.SvgGroup {
+export default class SvgGroup extends squared.lib.base.Container<squared.svg.SvgElement> implements squared.svg.SvgGroup {
     public baseValue: SvgBaseValue = {
         transformed: null
     };
@@ -21,9 +23,31 @@ export default class SvgGroup extends squared.lib.base.Container<SvgElement> imp
         super();
         this.name = SvgCreate.setName(element);
         this._animate = SvgCreate.toAnimateList(element);
+        this.setChildren();
     }
 
     public synchronize(useKeyTime = true) {}
+
+    public setChildren() {
+        this.clear();
+        for (const element of Array.from(this.element.children)) {
+            if (isSvgUse(element)) {
+                const use = SvgCreate.getUseTarget(element, false, <HTMLElement> this.element.parentElement);
+                if (use) {
+                    this.append(use as SvgUse);
+                }
+            }
+            else if (isSvgShape(element)) {
+                const shape = new SvgShape(element);
+                if (shape.path) {
+                    this.append(shape);
+                }
+            }
+            else if (isSvgImage(element)) {
+                this.append(new SvgImage(element));
+            }
+        }
+    }
 
     get transform() {
         if (this._transform === undefined) {

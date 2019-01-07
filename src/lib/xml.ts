@@ -20,6 +20,10 @@ export function pushIndent(value: string, depth: number, excludePattern?: RegExp
     .join('\n');
 }
 
+export function pullIndent(value: string, depth: number, char = '\t') {
+    return value.split('\n').map(line => line.length > depth && line.charAt(0) === char ? line.substring(depth) : line).join('\n');
+}
+
 export function replaceIndent(value: string, depth: number, pattern: RegExp) {
     if (depth >= 0) {
         let indent = -1;
@@ -100,11 +104,12 @@ export function parseTemplate(value: string) {
     return result;
 }
 
-export function createTemplate(value: StringMap | string, data: ExternalData, index?: string | null) {
+export function createTemplate(value: StringMap | string, data: ExternalData, index?: string) {
     function partial(attr: string, section: string) {
         return `(\\t*##${attr}-${section}:(\\d+)##\\s*\\n)([\\w\\W]*?)\\s*\\n(\\t*##${attr}-${section}##\\s*\\n)`;
     }
     let output = typeof value === 'string' ? value : !index ? value['__root'].trim() : value[index];
+    const indentData: StringMap = {};
     for (const attr in data) {
         const unknown = data[attr];
         let array = false;
@@ -128,16 +133,35 @@ export function createTemplate(value: StringMap | string, data: ExternalData, in
                         outputStart += createTemplate(templateStart, unknown[0][i], attr.toString());
                         outputEnd = templateEnd + outputEnd;
                     }
-                    depth += parseInt(match[2]) - 1;
-                    if (depth > 0) {
-                        const pattern = /\s*{%(\w+)}\s*/g;
+                    const indent = parseInt(match[2]);
+                    const pattern = /{%(\w+)}\s*/g;
+                    if (depth === 0 && indent === 0) {
+                        const replaced: string[] = [];
                         let inline: RegExpExecArray | null = null;
-                        while ((inline = pattern.exec(match[5])) !== null) {
-                            if (value[inline[1]]) {
-                                value[inline[1]] = pushIndent(value[inline[1]], depth, /^{%\w+}/);
+                        do {
+                            if (replaced.length) {
+                                match[5] = value[replaced.shift() as string];
+                            }
+                            while ((inline = pattern.exec(match[5])) !== null) {
+                                if (value[inline[1]]) {
+                                    indentData[inline[1]] = pullIndent(value[inline[1]], 1);
+                                    replaced.push(inline[1]);
+                                }
                             }
                         }
-                        output = output.replace(match[5], pushIndent(match[5].replace(/\s*$/, ''), depth, /^{%\w+}/));
+                        while (replaced.length > 0);
+                    }
+                    else {
+                        depth += indent - 1;
+                        if (depth > 0) {
+                            let inline: RegExpExecArray | null = null;
+                            while ((inline = pattern.exec(match[5])) !== null) {
+                                if (value[inline[1]]) {
+                                    value[inline[1]] = pushIndent(value[inline[1]], depth, /^{%\w+}/);
+                                }
+                            }
+                            output = output.replace(match[5], pushIndent(match[5].replace(/\s*$/, ''), depth, /^{%\w+}/));
+                        }
                     }
                     output = output
                         .replace(match[3], outputStart).replace(match[8], '\n' + outputEnd)
@@ -152,9 +176,16 @@ export function createTemplate(value: StringMap | string, data: ExternalData, in
             else if (typeof unknown[0] !== 'object') {
                 result = false;
             }
-            else {
+            else if (typeof value === 'object') {
+                let segmentData: ExternalData;
+                if (indentData[attr]) {
+                    segmentData = { ...value, ...indentData };
+                }
+                else {
+                    segmentData = value;
+                }
                 for (let i = 0; i < unknown.length; i++) {
-                    result += createTemplate(value, unknown[i], attr.toString());
+                    result += createTemplate(segmentData, unknown[i], attr.toString());
                 }
                 if (result === '') {
                     result = false;
@@ -183,20 +214,8 @@ export function createTemplate(value: StringMap | string, data: ExternalData, in
             return '';
         }
     }
-    if (!index) {
+    if (index === undefined) {
         output = output.replace(/\n{%\w+}\n/g, '\n');
-        if (index === null) {
-            ['start', 'end'].every(section => {
-                const pattern = new RegExp(partial('\\w+', section), 'g');
-                let match: RegExpExecArray | null = null;
-                let valid = false;
-                while ((match = pattern.exec(output)) !== null) {
-                    output = output.replace(match[0], '');
-                    valid = true;
-                }
-                return valid;
-            });
-        }
     }
     return output.replace(/\s+([\w:]+="[^"]*)?{~\w+}"?/g, '');
 }
