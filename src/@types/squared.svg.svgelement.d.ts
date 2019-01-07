@@ -1,35 +1,27 @@
-import { SvgRectBaseValue, SvgPathBaseValue, SvgPoint, SvgTransform } from '../svg/@types/object';
+import { SvgRectBaseValue } from '../svg/@types/object';
 
 declare global {
     namespace squared.svg {
-        interface SvgElement extends SvgView {
+        interface SvgElement extends SvgBuildable {
             readonly element: SVGGraphicsElement;
-            nested: boolean;
         }
 
-        interface SvgShape extends SvgElement {
+        interface SvgShape extends SvgElement, SvgView {
+            type: number;
             path?: SvgPath;
+            setType(element?: SVGGraphicsElement): void;
         }
 
-        interface SvgImage extends SvgElement, SvgViewRect, SvgTransformable {
-            href: string;
+        interface SvgImage extends SvgElement, SvgView, SvgViewRect, SvgTransformable {
             baseValue: Required<SvgRectBaseValue>;
+            href: string;
             readonly element: SVGImageElement | SVGUseElement;
-            extract(exclusions?: number[]): void;
+            extract(exclude?: number[]): void;
         }
 
-        interface SvgUse extends SvgShape, Point {
-            href: string;
+        interface SvgUse extends SvgElement, SvgView, SvgShape, Point {
             shapeElement?: SVGGraphicsElement;
             setShape(value: SVGGraphicsElement): void;
-        }
-
-        interface SvgPath extends SvgElement, SvgTransformable, SvgPaint {
-            d: string;
-            name: string;
-            baseValue: SvgPathBaseValue;
-            build(exclusions?: number[], save?: boolean, residual?: boolean): string;
-            transformPoints(transform: SvgTransform[], points: SvgPoint[], center?: SvgPoint): SvgPoint[];
         }
 
         class SvgElement implements SvgElement {
@@ -41,22 +33,12 @@ declare global {
             constructor(element: SVGGraphicsElement);
         }
 
-        class SvgUse implements SvgUse {
-            constructor(element: SVGUseElement, shapeElement?: SVGGraphicsElement);
-        }
-
         class SvgImage implements SvgImage {
             constructor(element: SVGImageElement | SVGUseElement, href?: string);
         }
 
-        class SvgPath implements SvgPath {
-            public static getLine(x1: number, y1: number, x2?: number, y2?: number): string;
-            public static getCircle(cx: number, cy: number, r: number): string;
-            public static getEllipse(cx: number, cy: number, rx: number, ry: number): string;
-            public static getRect(width: number, height: number, x?: number, y?: number): string;
-            public static getPolygon(points: Point[] | DOMPoint[]): string;
-            public static getPolyline(points: Point[] | DOMPoint[]): string;
-            constructor(element: SVGGraphicsElement, d?: string);
+        class SvgUse implements SvgUse {
+            constructor(element: SVGUseElement, shapeElement?: SVGGraphicsElement);
         }
     }
 }

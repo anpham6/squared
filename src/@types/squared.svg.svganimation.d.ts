@@ -22,7 +22,7 @@ declare global {
             accumulateSum: boolean;
             fillFreeze: boolean;
             end?: number;
-            parent?: SvgView;
+            parent?: SvgView | SvgPath;
             sequential?: NameValue;
             readonly element: SVGAnimateElement;
         }
@@ -34,11 +34,11 @@ declare global {
 
         interface SvgAnimateMotion extends SvgAnimate {
             path: string;
-            mpath?: SVGGraphicsElement;
             keyPoints: number[];
             rotate: number;
             rotateAuto: boolean;
             rotateAutoReverse: boolean;
+            mpath?: SVGGraphicsElement;
             readonly element: SVGAnimateMotionElement;
         }
 

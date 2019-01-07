@@ -47,7 +47,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                             let cyDiameter: number | undefined;
                             switch (svgPath.element.tagName) {
                                 case 'path': {
-                                    squared.svg.SvgBuild.toPathCommandList(svgPath.d).forEach(path => mapPoint.push(...path.points));
+                                    squared.svg.SvgBuild.toPathCommandList(svgPath.value).forEach(path => mapPoint.push(...path.points));
                                     if (!mapPoint.length) {
                                         break;
                                     }

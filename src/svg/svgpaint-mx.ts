@@ -1,8 +1,10 @@
+import { setOpacity } from './lib/util';
+
 const $color = squared.lib.color;
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
-export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
+export default <T extends Constructor<squared.svg.SvgBase>>(Base: T) => {
     return class extends Base implements squared.svg.SvgPaint {
         public fill = 'black';
         public fillPattern = '';
@@ -18,9 +20,10 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
         public strokeDashArray = '';
         public strokeDashOffset = '0';
         public color = '';
-        public opacity = '1';
         public clipPath = '';
         public clipRule = '';
+
+        public readonly parentElement?: SVGGraphicsElement;
 
         public setPaint() {
             const opacity = this.getAttribute('opacity');
@@ -81,6 +84,13 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
             if (value !== null) {
                 this[attr] = value;
             }
+        }
+
+        set opacity(value) {
+            setOpacity(this.element, value);
+        }
+        get opacity() {
+            return $dom.cssAttribute(this.element, 'opacity') || '1';
         }
 
         private setOpacity(attr: string) {

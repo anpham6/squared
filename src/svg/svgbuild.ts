@@ -1,10 +1,10 @@
 import { SvgPathCommand, SvgPoint, SvgTransform } from './@types/object';
 
-import { applyMatrixX, applyMatrixY, createTransform, getHrefTargetElement, getRadiusY, getRotateOrigin, isSvgImage, isSvgShape } from './lib/util';
+import { applyMatrixX, applyMatrixY, createTransform, getRadiusY, getRotateOrigin } from './lib/util';
 
-const $util = squared.lib.util;
 const $color = squared.lib.color;
 const $dom = squared.lib.dom;
+const $util = squared.lib.util;
 
 const NAME_GRAPHICS = new Map<string, number>();
 
@@ -38,26 +38,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         }
     }
 
-    public static createUseTarget(element: SVGUseElement, includeSymbol = false, parentElement?: SVGGraphicsElement | HTMLElement) {
-        const target = getHrefTargetElement(element, parentElement);
-        if (target) {
-            if (target instanceof SVGSymbolElement) {
-                if (includeSymbol) {
-                    return new squared.svg.SvgGroupRect(element, target);
-                }
-            }
-            else if (isSvgImage(target)) {
-                return new squared.svg.SvgImage(element, target.href.baseVal);
-            }
-            else if (isSvgShape(target)) {
-                return new squared.svg.SvgUse(element, target);
-            }
-        }
-        return undefined;
-    }
-
-    public static filterTransforms(transform: SvgTransform[], exclusions?: number[]) {
-        return (exclusions ? transform.filter(item => !exclusions.includes(item.type)) : transform).filter(item => !(item.type === SVGTransform.SVG_TRANSFORM_SCALE && item.matrix.a === 1 && item.matrix.d === 1));
+    public static filterTransforms(transform: SvgTransform[], exclude?: number[]) {
+        return (exclude ? transform.filter(item => !exclude.includes(item.type)) : transform).filter(item => !(item.type === SVGTransform.SVG_TRANSFORM_SCALE && item.matrix.a === 1 && item.matrix.d === 1));
     }
 
     public static applyTransforms(transform: SvgTransform[], values: SvgPoint[], origin?: SvgPoint, center?: SvgPoint) {

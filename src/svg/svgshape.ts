@@ -1,5 +1,6 @@
-import { SvgPoint } from './@types/object';
+import { SvgPoint, SvgTransformExclusions } from './@types/object';
 
+import SvgView$MX from './svgview-mx';
 import SvgAnimate from './svganimate';
 import SvgAnimateTransform from './svganimatetransform';
 import SvgAnimation from './svganimation';
@@ -7,7 +8,7 @@ import SvgBuild from './svgbuild';
 import SvgElement from './svgelement';
 import SvgPath from './svgpath';
 
-import { getLeastCommonMultiple, getTransformOrigin, isSvgShape, sortNumber } from './lib/util';
+import { SHAPES, getLeastCommonMultiple, getTransformOrigin, sortNumber } from './lib/util';
 
 type AnimateValue = number | Point[];
 type TimelineIndex = Map<number, AnimateValue>;
@@ -287,7 +288,7 @@ function getNumberValue(item: SvgAnimate, index: number, baseVal = 0, iteration 
     return result;
 }
 
-export default class SvgShape extends SvgElement implements squared.svg.SvgShape {
+export default class SvgShape extends SvgView$MX(SvgElement) implements squared.svg.SvgShape {
     public static synchronizeAnimate(element: SVGGraphicsElement, animate: SvgAnimation[], useKeyTime = false, path?: SvgPath) {
         const animations: SvgAnimate[] = [];
         const tagName = element.tagName;
@@ -866,41 +867,31 @@ export default class SvgShape extends SvgElement implements squared.svg.SvgShape
         return animate;
     }
 
+    public type!: number;
+
     private _path?: SvgPath;
 
     constructor(public readonly element: SVGGraphicsElement) {
         super(element);
-        if (isSvgShape(element)) {
+        this.setType();
+        if (this.type !== 0) {
             this.path = new SvgPath(element);
         }
     }
 
-    public build(exclusions?: number[]) {
+    public setType(element?: SVGGraphicsElement) {
+        this.type = SHAPES[(element || this.element).tagName] || 0;
+    }
+
+    public build(residual = false, exclusions?: SvgTransformExclusions) {
         if (this.path) {
-            this.path.build(exclusions);
+            this.path.draw(SvgBuild.filterTransforms(this.transform, exclusions ? exclusions[this.path.element.tagName] : undefined), residual);
         }
     }
 
     public synchronize(useKeyTime = false) {
         if (this.path && this.animate.length) {
             SvgShape.synchronizeAnimate(this.element, this.animate, useKeyTime, this.path);
-        }
-    }
-
-    set transform(value) {
-        if (this.path) {
-            this.path.transform = value;
-        }
-        else {
-            super.transform = value;
-        }
-    }
-    get transform() {
-        if (this.path) {
-            return this.path.transform;
-        }
-        else {
-            return super.transform;
         }
     }
 

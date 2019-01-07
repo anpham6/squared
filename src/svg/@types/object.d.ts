@@ -92,3 +92,14 @@ export interface SvgPoint extends Point {
     ry?: number;
     angle?: number;
 }
+
+export interface SvgTransformExclusions {
+    path?: number[];
+    line?: number[];
+    rect?: number[];
+    ellipse?: number[];
+    circle?: number[];
+    polyline?: number[];
+    polygon?: number[];
+    image?: number[];
+}

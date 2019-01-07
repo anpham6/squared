@@ -4,8 +4,8 @@ import Container = squared.lib.base.Container;
 
 declare global {
     namespace squared.svg {
-        interface SvgGroup extends Container<SvgView>, SvgView {
-            readonly element: SVGGraphicsElement;
+        interface SvgGroup extends SvgContainer, SvgView {
+            namespaceElement: SVGSVGElement;
         }
 
         interface SvgGroupPaint extends SvgGroup, SvgPaint {

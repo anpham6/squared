@@ -1,6 +1,6 @@
 import { SvgRectBaseValue } from './@types/object';
 
-export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
+export default <T extends Constructor<squared.svg.SvgBase>>(Base: T) => {
     return class extends Base implements squared.svg.SvgViewRect {
         public baseValue!: SvgRectBaseValue;
 

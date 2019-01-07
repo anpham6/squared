@@ -1,5 +1,6 @@
 import { SvgPoint } from './@types/object';
 
+import SvgView$MX from './svgview-mx';
 import SvgViewRect$MX from './svgviewrect-mx';
 import SvgBuild from './svgbuild';
 import SvgElement from './svgelement';
@@ -8,7 +9,7 @@ import { applyMatrixX, applyMatrixY } from './lib/util';
 
 const $util = squared.lib.util;
 
-export default class SvgImage extends SvgViewRect$MX(SvgElement) implements squared.svg.SvgImage {
+export default class SvgImage extends SvgViewRect$MX(SvgView$MX(SvgElement)) implements squared.svg.SvgImage {
     public rotateOrigin?: SvgPoint;
 
     private _href = '';
@@ -24,8 +25,8 @@ export default class SvgImage extends SvgViewRect$MX(SvgElement) implements squa
         this.setRect();
     }
 
-    public extract(exclusions?: number[]) {
-        const transform = SvgBuild.filterTransforms(this.transform, exclusions);
+    public extract(exclude?: number[]) {
+        const transform = SvgBuild.filterTransforms(this.transform, exclude);
         if (transform.length) {
             let x = this.x;
             let y = this.y;

@@ -34,9 +34,8 @@ export default class SvgPath extends SvgPaint$MX(SvgElement) implements squared.
         return points.length ? `M${(points as SvgPoint[]).map(item => `${item.x},${item.y}`).join(' ')}` : '';
     }
 
-    public nested = true;
-    public d = '';
-    public name!: string;
+    public name = '';
+    public value = '';
     public baseValue: SvgPathBaseValue = {
         d: null,
         cx: null,
@@ -62,13 +61,13 @@ export default class SvgPath extends SvgPaint$MX(SvgElement) implements squared.
         public readonly parentElement?: SVGGraphicsElement)
     {
         super(element);
-        if (parentElement === undefined && element.parentElement instanceof SVGGElement) {
+        if (parentElement === undefined && (element.parentElement instanceof SVGGElement || element.parentElement instanceof SVGUseElement)) {
             this.parentElement = element.parentElement;
         }
         this.init();
     }
 
-    public build(exclusions?: number[], save = true, residual = true) {
+    public draw(transform?: SvgTransform[], residual = true, save = true) {
         const element = this.element;
         let d = '';
         if (save) {
@@ -76,8 +75,7 @@ export default class SvgPath extends SvgPaint$MX(SvgElement) implements squared.
         }
         if (element instanceof SVGPathElement) {
             d = this.baseValue.d || $dom.cssAttribute(element, 'd');
-            const transform = SvgBuild.filterTransforms(this.transform, exclusions);
-            if (transform.length) {
+            if (transform && transform.length) {
                 let commands = SvgBuild.toPathCommandList(d);
                 if (commands.length) {
                     const result = this.transformPoints(transform, SvgBuild.toAbsolutePointList(commands));
@@ -96,8 +94,7 @@ export default class SvgPath extends SvgPaint$MX(SvgElement) implements squared.
             const y1 = this.baseValue.y1 !== null ? this.baseValue.y1 : element.y1.baseVal.value;
             const x2 = this.baseValue.x2 !== null ? this.baseValue.x2 : element.x2.baseVal.value;
             const y2 = this.baseValue.y2 !== null ? this.baseValue.y2 : element.y2.baseVal.value;
-            const transform = SvgBuild.filterTransforms(this.transform, exclusions);
-            if (transform.length) {
+            if (transform && transform.length) {
                 const points: SvgPoint[] = [
                     { x: x1, y: y1 },
                     { x: x2, y: y2 }
@@ -125,8 +122,7 @@ export default class SvgPath extends SvgPaint$MX(SvgElement) implements squared.
                 rx = this.baseValue.rx !== null ? this.baseValue.rx : element.rx.baseVal.value;
                 ry = this.baseValue.ry !== null ? this.baseValue.ry : element.ry.baseVal.value;
             }
-            let transform = SvgBuild.filterTransforms(this.transform, exclusions);
-            if (transform.length) {
+            if (transform && transform.length) {
                 const points: SvgPoint[] = [
                     { x: cx, y: cy, rx, ry }
                 ];
@@ -154,8 +150,7 @@ export default class SvgPath extends SvgPaint$MX(SvgElement) implements squared.
             const y = this.baseValue.y !== null ? this.baseValue.y : element.y.baseVal.value;
             const width = this.baseValue.width !== null ? this.baseValue.width : element.width.baseVal.value;
             const height = this.baseValue.height !== null ? this.baseValue.height : element.height.baseVal.value;
-            const transform = SvgBuild.filterTransforms(this.transform, exclusions);
-            if (transform.length) {
+            if (transform && transform.length) {
                 const points: SvgPoint[] = [
                     { x, y },
                     { x: x + width, y },
@@ -174,8 +169,7 @@ export default class SvgPath extends SvgPaint$MX(SvgElement) implements squared.
         }
         else if (element instanceof SVGPolygonElement || element instanceof SVGPolylineElement) {
             let points = this.baseValue.points !== null ? this.baseValue.points : SvgBuild.toPointList(element.points);
-            const transform = SvgBuild.filterTransforms(this.transform, exclusions);
-            if (transform.length) {
+            if (transform && transform.length) {
                 const result = this.transformPoints(transform, points);
                 if (result.length) {
                     points = result;
@@ -185,7 +179,7 @@ export default class SvgPath extends SvgPaint$MX(SvgElement) implements squared.
             d = element.tagName === 'polygon' ? SvgPath.getPolygon(points) : SvgPath.getPolyline(points);
         }
         if (save) {
-            this.d = d;
+            this.value = d;
         }
         return d;
     }

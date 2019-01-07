@@ -17,6 +17,16 @@ const REGEX_TRANSFORM = {
     TRANSLATE: `(translate[XY]?)\\(${REGEX_UNIT.LENGTH}(?:, ${REGEX_UNIT.LENGTH})?\\)`
 };
 
+export const SHAPES = {
+    path: 1,
+    line: 2,
+    rect: 3,
+    ellipse: 4,
+    circle: 5,
+    polyline: 6,
+    polygon: 7
+};
+
 function getHostDPI() {
     return $util.optionalAsNumber(squared, 'settings.resolutionDPI') || 96;
 }
@@ -76,22 +86,25 @@ export const MATRIX = {
     }
 };
 
+export function ascendToViewport(element: SVGGraphicsElement) {
+    const result: SVGGraphicsElement[] = [];
+    let parent = element.parentElement;
+    while (parent instanceof SVGGraphicsElement) {
+        result.push(parent);
+        parent = parent.parentElement;
+        if (parent instanceof HTMLElement) {
+            break;
+        }
+    }
+    return result;
+}
+
 export function isSvgUse(element: Element): element is SVGUseElement {
     return element.tagName === 'use';
 }
 
 export function isSvgShape(element: Element): element is SVGGraphicsElement {
-    switch (element.tagName) {
-        case 'path':
-        case 'circle':
-        case 'ellipse':
-        case 'line':
-        case 'rect':
-        case 'polygon':
-        case 'polyline':
-            return true;
-    }
-    return false;
+    return SHAPES[element.tagName] !== undefined;
 }
 
 export function isSvgImage(element: Element): element is SVGImageElement {
@@ -106,6 +119,20 @@ export function isVisible(element: Element) {
 export function setVisible(element: SVGGraphicsElement, value: boolean) {
     setAttribute(element, 'display', value ? 'block' : 'none');
     setAttribute(element, 'visibility', value ? 'visible' : 'hidden');
+}
+
+export function setOpacity(element: SVGGraphicsElement, value: string) {
+    if ($util.isNumber(value)) {
+        let opacity = parseFloat(value.toString());
+        if (opacity <= 0) {
+            opacity = 0;
+        }
+        else if (opacity >= 1) {
+            opacity = 1;
+        }
+        element.style.opacity = opacity.toString();
+        element.setAttribute('opacity', opacity.toString());
+    }
 }
 
 export function getHrefTargetElement(element: Element, parentElement?: SVGGraphicsElement | HTMLElement | null) {

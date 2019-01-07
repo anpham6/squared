@@ -1,3 +1,5 @@
+import { SvgTransformExclusions } from './@types/object';
+
 import SvgPaint$MX from './svgpaint-mx';
 import SvgPath from './svgpath';
 import SvgShape from './svgshape';
@@ -13,16 +15,17 @@ export default class SvgUse extends SvgPaint$MX(SvgShape) implements squared.svg
 
     public setShape(value: SVGGraphicsElement) {
         this.shapeElement = value;
+        this.setType(value);
         this.path = undefined;
     }
 
-    public build(exclusions?: number[]) {
+    public build(residual = false, exclusions?: SvgTransformExclusions) {
         if (this.shapeElement) {
             if (this.path === undefined) {
                 const path = new SvgPath(this.shapeElement, this.element);
                 super.path = path;
             }
-            super.build(exclusions);
+            super.build(residual, exclusions);
         }
     }
 

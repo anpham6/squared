@@ -28,7 +28,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public accumulateSum = false;
     public fillFreeze = false;
     public end?: number;
-    public parent?: squared.svg.SvgView;
+    public parent?: squared.svg.SvgView | squared.svg.SvgPath;
     public sequential?: NameValue;
 
     private _repeatCount: number;

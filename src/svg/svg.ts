@@ -1,120 +1,71 @@
-import { SvgBaseValue, SvgLinearGradient, SvgRadialGradient, SvgTransform } from './@types/object';
+import { SvgLinearGradient, SvgRadialGradient } from './@types/object';
 
-import SvgAnimation from './svganimation';
+import SvgView$MX from './svgview-mx';
 import SvgBuild from './svgbuild';
-import SvgGroupPaint from './svggrouppaint';
-import SvgGroupRect from './svggrouprect';
-import SvgImage from './svgimage';
-import SvgShape from './svgshape';
+import SvgContainer from './svgcontainer';
 
-import { getHrefTargetElement, getTransform, isVisible, isSvgImage, isSvgShape, setVisible } from './lib/util';
+import { getHrefTargetElement } from './lib/util';
 
 const $dom = squared.lib.dom;
-const $util = squared.lib.util;
 
-export default class Svg extends squared.lib.base.Container<squared.svg.SvgView> implements squared.svg.Svg {
-    public animate: SvgAnimation[];
-    public baseValue: SvgBaseValue = {
-        transformed: null
-    };
-
-    public readonly name: string;
-    public readonly defs = {
-        clipPath: new Map<string, SvgGroupPaint>(),
+export default class Svg extends SvgView$MX(SvgContainer) implements squared.svg.Svg {
+    public readonly patterns = {
+        clipPath: new Map<string, SVGClipPathElement>(),
         gradient: new Map<string, Gradient>()
     };
 
     private _width: number | undefined;
     private _height: number | undefined;
-    private _transform?: SvgTransform[];
 
     constructor(public readonly element: SVGSVGElement) {
-        super();
-        this.name = SvgBuild.setName(element);
-        this.animate = SvgBuild.toAnimateList(element);
+        super(element);
         this.init();
     }
 
-    public build(exclusions?: number[]) {
-        this.clear();
-        const element = this.element;
-        for (let i = 0; i < element.children.length; i++) {
-            const item = element.children[i];
-            let child: squared.svg.SvgView | undefined;
-            if (item instanceof SVGGElement) {
-                child = new SvgGroupPaint(item);
-            }
-            else if (item instanceof SVGSVGElement) {
-                child = new SvgGroupRect(item);
-            }
-            else if (item instanceof SVGUseElement) {
-                child = SvgBuild.createUseTarget(item, true, element);
-            }
-            else if (isSvgImage(item)) {
-                child = new SvgImage(item);
-            }
-            else if (isSvgShape(item)) {
-                child = new SvgShape(item);
-            }
-            if (child) {
-                child.build(exclusions);
-                this.append(child);
-            }
-        }
-    }
-
-    public synchronize(useKeyTime = false) {
-        this.each(item => item.synchronize(useKeyTime));
-    }
-
     private init() {
-        const element = this.element;
-        element.querySelectorAll('set, animate, animateTransform, animateMotion').forEach((svg: SVGAnimationElement) => {
-            const href = svg.attributes.getNamedItem('href');
-            if (href && href.value !== '') {
-                const target = getHrefTargetElement(svg);
-                if (svg.parentElement) {
-                    svg.parentElement.removeChild(svg);
+        this.element.querySelectorAll('set, animate, animateTransform, animateMotion').forEach((animation: SVGAnimationElement) => {
+            const target = getHrefTargetElement(animation, this.element);
+            if (target) {
+                if (animation.parentElement) {
+                    animation.parentElement.removeChild(animation);
                 }
-                if (target) {
-                    target.appendChild(svg);
-                }
+                target.appendChild(animation);
             }
         });
-        element.querySelectorAll('clipPath, linearGradient, radialGradient').forEach((svg: SVGElement) => {
-            if (svg.id) {
-                const id = `#${svg.id}`;
-                if (svg instanceof SVGClipPathElement) {
-                    this.defs.clipPath.set(id, new SvgGroupPaint(svg));
+        this.element.querySelectorAll('clipPath, linearGradient, radialGradient').forEach((pattern: SVGElement) => {
+            if (pattern.id) {
+                const id = `#${pattern.id}`;
+                if (pattern instanceof SVGClipPathElement) {
+                    this.patterns.clipPath.set(id, pattern);
                 }
-                else if (svg instanceof SVGLinearGradientElement) {
-                    this.defs.gradient.set(id, <SvgLinearGradient> {
+                else if (pattern instanceof SVGLinearGradientElement) {
+                    this.patterns.gradient.set(id, <SvgLinearGradient> {
                         type: 'linear',
-                        x1: svg.x1.baseVal.value,
-                        x2: svg.x2.baseVal.value,
-                        y1: svg.y1.baseVal.value,
-                        y2: svg.y2.baseVal.value,
-                        x1AsString: svg.x1.baseVal.valueAsString,
-                        x2AsString: svg.x2.baseVal.valueAsString,
-                        y1AsString: svg.y1.baseVal.valueAsString,
-                        y2AsString: svg.y2.baseVal.valueAsString,
-                        colorStop: SvgBuild.toColorStopList(svg)
+                        x1: pattern.x1.baseVal.value,
+                        x2: pattern.x2.baseVal.value,
+                        y1: pattern.y1.baseVal.value,
+                        y2: pattern.y2.baseVal.value,
+                        x1AsString: pattern.x1.baseVal.valueAsString,
+                        x2AsString: pattern.x2.baseVal.valueAsString,
+                        y1AsString: pattern.y1.baseVal.valueAsString,
+                        y2AsString: pattern.y2.baseVal.valueAsString,
+                        colorStop: SvgBuild.toColorStopList(pattern)
                     });
                 }
-                else if (svg instanceof SVGRadialGradientElement) {
-                    this.defs.gradient.set(id, <SvgRadialGradient> {
+                else if (pattern instanceof SVGRadialGradientElement) {
+                    this.patterns.gradient.set(id, <SvgRadialGradient> {
                         type: 'radial',
-                        cx: svg.cx.baseVal.value,
-                        cy: svg.cy.baseVal.value,
-                        r: svg.r.baseVal.value,
-                        cxAsString: svg.cx.baseVal.valueAsString,
-                        cyAsString: svg.cy.baseVal.valueAsString,
-                        rAsString: svg.r.baseVal.valueAsString,
-                        fx: svg.fx.baseVal.value,
-                        fy: svg.fy.baseVal.value,
-                        fxAsString: svg.fx.baseVal.valueAsString,
-                        fyAsString: svg.fy.baseVal.valueAsString,
-                        colorStop: SvgBuild.toColorStopList(svg)
+                        cx: pattern.cx.baseVal.value,
+                        cy: pattern.cy.baseVal.value,
+                        r: pattern.r.baseVal.value,
+                        cxAsString: pattern.cx.baseVal.valueAsString,
+                        cyAsString: pattern.cy.baseVal.valueAsString,
+                        rAsString: pattern.r.baseVal.valueAsString,
+                        fx: pattern.fx.baseVal.value,
+                        fy: pattern.fy.baseVal.value,
+                        fxAsString: pattern.fx.baseVal.valueAsString,
+                        fyAsString: pattern.fy.baseVal.valueAsString,
+                        colorStop: SvgBuild.toColorStopList(pattern)
                     });
                 }
             }
@@ -169,36 +120,5 @@ export default class Svg extends squared.lib.base.Container<squared.svg.SvgView>
 
     get viewBox() {
         return this.element.viewBox.baseVal;
-    }
-
-    set opacity(value) {
-        if ($util.isNumber(value)) {
-            let opacity = parseFloat(value.toString());
-            if (opacity <= 0) {
-                opacity = 0;
-            }
-            else if (opacity >= 1) {
-                opacity = 1;
-            }
-            this.element.style.opacity = opacity.toString();
-            this.element.setAttribute('opacity', opacity.toString());
-        }
-    }
-    get opacity() {
-        return parseFloat($dom.cssAttribute(this.element, 'opacity'));
-    }
-
-    get transform() {
-        if (this._transform === undefined) {
-            this._transform = getTransform(this.element) || SvgBuild.toTransformList(this.element.transform.baseVal);
-        }
-        return this._transform;
-    }
-
-    set visible(value) {
-        setVisible(this.element, value);
-    }
-    get visible() {
-        return isVisible(this.element);
     }
 }
