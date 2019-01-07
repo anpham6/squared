@@ -16,7 +16,7 @@ export default class SvgGroupRect extends SvgViewRect$MX(SvgGroup) implements sq
         }
     }
 
-    public synchronize(useKeyTime = true) {
+    public synchronize(useKeyTime = false) {
         if (this.animate.length) {
             SvgShape.synchronizeAnimate(this.element, this.animate, useKeyTime);
         }

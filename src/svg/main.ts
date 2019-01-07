@@ -4,7 +4,6 @@ import SvgAnimateMotion from './svganimatemotion';
 import SvgAnimateTransform from './svganimatetransform';
 import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
-import SvgCreate from './svgcreate';
 import SvgElement from './svgelement';
 import SvgGroup from './svggroup';
 import SvgGroupPaint from './svggrouppaint';
@@ -29,7 +28,6 @@ export {
     SvgAnimateTransform,
     SvgAnimation,
     SvgBuild,
-    SvgCreate,
     SvgElement,
     SvgGroup,
     SvgGroupPaint,

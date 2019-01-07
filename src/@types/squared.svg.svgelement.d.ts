@@ -3,22 +3,19 @@ import { SvgRectBaseValue, SvgPathBaseValue, SvgPoint, SvgTransform } from '../s
 declare global {
     namespace squared.svg {
         interface SvgElement extends SvgView {
-            readonly animatable: boolean;
-            build(exclusions?: number[]): void | string;
-            transformFilter(exclusions?: number[]): SvgTransform[];
-            transformPoints(transform: SvgTransform[], points: SvgPoint[], center?: SvgPoint): SvgPoint[];
+            readonly element: SVGGraphicsElement;
+            nested: boolean;
         }
 
         interface SvgShape extends SvgElement {
             path?: SvgPath;
-            synchronize(useKeyTime?: boolean): void;
-            build(exclusions?: number[]): void;
         }
 
         interface SvgImage extends SvgElement, SvgViewRect, SvgTransformable {
             href: string;
             baseValue: Required<SvgRectBaseValue>;
             readonly element: SVGImageElement | SVGUseElement;
+            extract(exclusions?: number[]): void;
         }
 
         interface SvgUse extends SvgShape, Point {
@@ -32,6 +29,7 @@ declare global {
             name: string;
             baseValue: SvgPathBaseValue;
             build(exclusions?: number[], save?: boolean, residual?: boolean): string;
+            transformPoints(transform: SvgTransform[], points: SvgPoint[], center?: SvgPoint): SvgPoint[];
         }
 
         class SvgElement implements SvgElement {

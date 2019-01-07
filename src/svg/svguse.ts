@@ -13,6 +13,7 @@ export default class SvgUse extends SvgPaint$MX(SvgShape) implements squared.svg
 
     public setShape(value: SVGGraphicsElement) {
         this.shapeElement = value;
+        this.path = undefined;
     }
 
     public build(exclusions?: number[]) {

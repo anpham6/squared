@@ -16,10 +16,8 @@ declare global {
             readonly name: string;
             readonly element: SVGGraphicsElement;
             readonly parentElement?: SVGGraphicsElement;
-        }
-
-        interface SvgParent {
-            setChildren(): void;
+            build(exclusions?: number[]): void;
+            synchronize(useKeyTime?: boolean): void;
         }
 
         interface SvgViewRect extends SvgRect {
@@ -57,7 +55,7 @@ declare global {
             setPaint(): void;
         }
 
-        interface Svg extends Container<SvgView>, SvgView, SvgParent, Dimension, SvgViewBox {
+        interface Svg extends Container<SvgView>, SvgView, Dimension, SvgViewBox {
             width: number;
             height: number;
             opacity: number;
@@ -74,9 +72,15 @@ declare global {
         }
 
         class SvgBuild {
+            public static setName(element?: SVGElement): string;
+            public static createUseTarget(element: SVGUseElement, includeSymbol?: boolean, parentElement?: SVGGraphicsElement): SvgView;
+            public static filterTransforms(transform: SvgTransform[], exclusions?: number[]): SvgTransform[];
             public static applyTransforms(transform: SvgTransform[], values: Point[], origin?: Point, center?: Point): Point[];
             public static partitionTransforms(element: SVGGraphicsElement, transform: SvgTransform[], fromPath?: boolean): [SvgTransform[][], SvgTransform[]];
-            public static getPathCenter(values: Point[]): Point[];
+            public static getCenterPoint(values: Point[]): Point[];
+            public static toColorStopList(element: SVGGradientElement): ColorStop[];
+            public static toAnimateList(element: SVGElement): SvgAnimation[];
+            public static toTransformList(transform: SVGTransformList): SvgTransform[];
             public static toPointList(values: SVGPointList | Point[]): Point[];
             public static toCoordinateList(value: string): number[];
             public static toAbsolutePointList(values: SvgPathCommand[]): Point[];
@@ -85,14 +89,6 @@ declare global {
             public static fromNumberList(values: number[]): Point[];
             public static fromAbsolutePointList(values: SvgPathCommand[], points: Point[]): SvgPathCommand[];
             public static fromPathCommandList(values: SvgPathCommand[]): string;
-        }
-
-        class SvgCreate {
-            public static setName(element?: SVGElement): string;
-            public static getUseTarget(element: SVGUseElement, includeSymbol?: boolean, parentElement?: SVGGraphicsElement): SvgView;
-            public static toColorStopList(element: SVGGradientElement): ColorStop[];
-            public static toAnimateList(element: SVGElement): SvgAnimation[];
-            public static toTransformList(transform: SVGTransformList): SvgTransform[];
         }
     }
 }

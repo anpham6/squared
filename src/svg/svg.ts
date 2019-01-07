@@ -1,11 +1,11 @@
 import { SvgBaseValue, SvgLinearGradient, SvgRadialGradient, SvgTransform } from './@types/object';
 
 import SvgAnimation from './svganimation';
-import SvgCreate from './svgcreate';
-import SvgShape from './svgshape';
+import SvgBuild from './svgbuild';
 import SvgGroupPaint from './svggrouppaint';
 import SvgGroupRect from './svggrouprect';
 import SvgImage from './svgimage';
+import SvgShape from './svgshape';
 
 import { getHrefTargetElement, getTransform, isVisible, isSvgImage, isSvgShape, setVisible } from './lib/util';
 
@@ -30,36 +30,41 @@ export default class Svg extends squared.lib.base.Container<squared.svg.SvgView>
 
     constructor(public readonly element: SVGSVGElement) {
         super();
-        this.name = SvgCreate.setName(element);
-        this.animate = SvgCreate.toAnimateList(element);
+        this.name = SvgBuild.setName(element);
+        this.animate = SvgBuild.toAnimateList(element);
         this.init();
-        this.setChildren();
     }
 
-    public setChildren() {
+    public build(exclusions?: number[]) {
         this.clear();
         const element = this.element;
         for (let i = 0; i < element.children.length; i++) {
             const item = element.children[i];
+            let child: squared.svg.SvgView | undefined;
             if (item instanceof SVGGElement) {
-                this.append(new SvgGroupPaint(item));
+                child = new SvgGroupPaint(item);
             }
             else if (item instanceof SVGSVGElement) {
-                this.append(new SvgGroupRect(item));
+                child = new SvgGroupRect(item);
             }
             else if (item instanceof SVGUseElement) {
-                const use = SvgCreate.getUseTarget(item, true, element);
-                if (use) {
-                    this.append(use);
-                }
+                child = SvgBuild.createUseTarget(item, true, element);
             }
             else if (isSvgImage(item)) {
-                this.append(new SvgImage(item));
+                child = new SvgImage(item);
             }
             else if (isSvgShape(item)) {
-                this.append(new SvgShape(item));
+                child = new SvgShape(item);
+            }
+            if (child) {
+                child.build(exclusions);
+                this.append(child);
             }
         }
+    }
+
+    public synchronize(useKeyTime = false) {
+        this.each(item => item.synchronize(useKeyTime));
     }
 
     private init() {
@@ -80,10 +85,7 @@ export default class Svg extends squared.lib.base.Container<squared.svg.SvgView>
             if (svg.id) {
                 const id = `#${svg.id}`;
                 if (svg instanceof SVGClipPathElement) {
-                    const group = new SvgGroupPaint(svg);
-                    if (group.length) {
-                        this.defs.clipPath.set(id, group);
-                    }
+                    this.defs.clipPath.set(id, new SvgGroupPaint(svg));
                 }
                 else if (svg instanceof SVGLinearGradientElement) {
                     this.defs.gradient.set(id, <SvgLinearGradient> {
@@ -96,7 +98,7 @@ export default class Svg extends squared.lib.base.Container<squared.svg.SvgView>
                         x2AsString: svg.x2.baseVal.valueAsString,
                         y1AsString: svg.y1.baseVal.valueAsString,
                         y2AsString: svg.y2.baseVal.valueAsString,
-                        colorStop: SvgCreate.toColorStopList(svg)
+                        colorStop: SvgBuild.toColorStopList(svg)
                     });
                 }
                 else if (svg instanceof SVGRadialGradientElement) {
@@ -112,7 +114,7 @@ export default class Svg extends squared.lib.base.Container<squared.svg.SvgView>
                         fy: svg.fy.baseVal.value,
                         fxAsString: svg.fx.baseVal.valueAsString,
                         fyAsString: svg.fy.baseVal.valueAsString,
-                        colorStop: SvgCreate.toColorStopList(svg)
+                        colorStop: SvgBuild.toColorStopList(svg)
                     });
                 }
             }
@@ -188,7 +190,7 @@ export default class Svg extends squared.lib.base.Container<squared.svg.SvgView>
 
     get transform() {
         if (this._transform === undefined) {
-            this._transform = getTransform(this.element) || SvgCreate.toTransformList(this.element.transform.baseVal);
+            this._transform = getTransform(this.element) || SvgBuild.toTransformList(this.element.transform.baseVal);
         }
         return this._transform;
     }

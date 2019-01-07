@@ -3,12 +3,11 @@ import { SvgBaseValue, SvgTransform } from './@types/object';
 import SvgAnimation from './svganimation';
 import SvgAnimate from './svganimate';
 import SvgBuild from './svgbuild';
-import SvgCreate from './svgcreate';
 
-import { getTransform, getTransformOrigin, isVisible, setVisible } from './lib/util';
+import { getTransform, isVisible, setVisible } from './lib/util';
 
 export default class SvgElement implements squared.svg.SvgElement {
-    public animatable = true;
+    public nested = false;
     public baseValue: SvgBaseValue = {
         transformed: null
     };
@@ -19,26 +18,19 @@ export default class SvgElement implements squared.svg.SvgElement {
     private _transform?: SvgTransform[];
 
     constructor(public readonly element: SVGGraphicsElement) {
-        this.name = SvgCreate.setName(element);
-        this._animate = this.animatable ? SvgCreate.toAnimateList(element) : [];
+        this.name = SvgBuild.setName(element);
+        this._animate = this.nested ? [] : SvgBuild.toAnimateList(element);
     }
 
     public build() {}
-
-    public transformFilter(exclusions?: number[]) {
-        return (exclusions ? this.transform.filter(item => !exclusions.includes(item.type)) : this.transform).filter(item => !(item.type === SVGTransform.SVG_TRANSFORM_SCALE && item.matrix.a === 1 && item.matrix.d === 1));
-    }
-
-    public transformPoints(transform: SvgTransform[], points: Point[], center?: Point) {
-        return SvgBuild.applyTransforms(transform, points, getTransformOrigin(this.element), center);
-    }
+    public synchronize() {}
 
     set transform(value) {
         this._transform = value;
     }
     get transform() {
         if (this._transform === undefined) {
-            this._transform = getTransform(this.element) || SvgCreate.toTransformList(this.element.transform.baseVal);
+            this._transform = getTransform(this.element) || SvgBuild.toTransformList(this.element.transform.baseVal);
         }
         return this._transform;
     }

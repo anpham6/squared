@@ -1,10 +1,65 @@
 import { SvgPathCommand, SvgPoint, SvgTransform } from './@types/object';
 
-import { applyMatrixX, applyMatrixY, getRadiusY, getRotateOrigin } from './lib/util';
+import { applyMatrixX, applyMatrixY, createTransform, getHrefTargetElement, getRadiusY, getRotateOrigin, isSvgImage, isSvgShape } from './lib/util';
 
 const $util = squared.lib.util;
+const $color = squared.lib.color;
+const $dom = squared.lib.dom;
+
+const NAME_GRAPHICS = new Map<string, number>();
 
 export default class SvgBuild implements squared.svg.SvgBuild {
+    public static setName(element?: SVGElement) {
+        if (element) {
+            let result = '';
+            let tagName: string | undefined;
+            if (element.id) {
+                if (!NAME_GRAPHICS.has(element.id)) {
+                    result = element.id;
+                }
+                tagName = element.id;
+            }
+            else {
+                tagName = element.tagName;
+            }
+            let index = NAME_GRAPHICS.get(tagName) || 0;
+            if (result !== '') {
+                NAME_GRAPHICS.set(tagName, index);
+                return result;
+            }
+            else {
+                NAME_GRAPHICS.set(tagName, ++index);
+                return `${tagName}_${index}`;
+            }
+        }
+        else {
+            NAME_GRAPHICS.clear();
+            return '';
+        }
+    }
+
+    public static createUseTarget(element: SVGUseElement, includeSymbol = false, parentElement?: SVGGraphicsElement | HTMLElement) {
+        const target = getHrefTargetElement(element, parentElement);
+        if (target) {
+            if (target instanceof SVGSymbolElement) {
+                if (includeSymbol) {
+                    return new squared.svg.SvgGroupRect(element, target);
+                }
+            }
+            else if (isSvgImage(target)) {
+                return new squared.svg.SvgImage(element, target.href.baseVal);
+            }
+            else if (isSvgShape(target)) {
+                return new squared.svg.SvgUse(element, target);
+            }
+        }
+        return undefined;
+    }
+
+    public static filterTransforms(transform: SvgTransform[], exclusions?: number[]) {
+        return (exclusions ? transform.filter(item => !exclusions.includes(item.type)) : transform).filter(item => !(item.type === SVGTransform.SVG_TRANSFORM_SCALE && item.matrix.a === 1 && item.matrix.d === 1));
+    }
+
     public static applyTransforms(transform: SvgTransform[], values: SvgPoint[], origin?: SvgPoint, center?: SvgPoint) {
         const result = SvgBuild.toPointList(values);
         const items = transform.slice().reverse();
@@ -174,7 +229,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return [host, client];
     }
 
-    public static getPathCenter(values: SvgPoint[]): SvgPoint {
+    public static getCenterPoint(values: SvgPoint[]): SvgPoint {
         const pointsX = values.map(pt => pt.x);
         const pointsY = values.map(pt => pt.y);
         return {
@@ -393,6 +448,54 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     sweepFlag
                 });
             }
+        }
+        return result;
+    }
+
+    public static toColorStopList(element: SVGGradientElement) {
+        const result: ColorStop[] = [];
+        for (const stop of Array.from(element.getElementsByTagName('stop'))) {
+            const color = $color.parseRGBA($dom.cssAttribute(stop, 'stop-color'), $dom.cssAttribute(stop, 'stop-opacity'));
+            if (color && color.visible) {
+                result.push({
+                    color: color.valueRGBA,
+                    offset: $dom.cssAttribute(stop, 'offset'),
+                    opacity: color.alpha
+                });
+            }
+        }
+        return result;
+    }
+
+    public static toAnimateList(element: SVGElement) {
+        const result: squared.svg.SvgAnimation[] = [];
+        if (element instanceof SVGGraphicsElement) {
+            for (let i = 0; i < element.children.length; i++) {
+                const item = element.children[i];
+                if (item instanceof SVGAnimationElement) {
+                    if (item instanceof SVGAnimateTransformElement) {
+                        result.push(new squared.svg.SvgAnimateTransform(item));
+                    }
+                    else if (item instanceof SVGAnimateMotionElement) {
+                        result.push(new squared.svg.SvgAnimateMotion(item));
+                    }
+                    else if (item instanceof SVGAnimateElement) {
+                        result.push(new squared.svg.SvgAnimate(item));
+                    }
+                    else {
+                        result.push(new squared.svg.SvgAnimation(item));
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    public static toTransformList(transform: SVGTransformList) {
+        const result: SvgTransform[] = [];
+        for (let i = 0; i < transform.numberOfItems; i++) {
+            const item = transform.getItem(i);
+            result.push(createTransform(item.type, item.matrix, item.angle));
         }
         return result;
     }

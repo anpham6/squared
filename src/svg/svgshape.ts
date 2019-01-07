@@ -288,7 +288,7 @@ function getNumberValue(item: SvgAnimate, index: number, baseVal = 0, iteration 
 }
 
 export default class SvgShape extends SvgElement implements squared.svg.SvgShape {
-    public static synchronizeAnimate(element: SVGGraphicsElement, animate: SvgAnimation[], useKeyTime = true, path?: SvgPath) {
+    public static synchronizeAnimate(element: SVGGraphicsElement, animate: SvgAnimation[], useKeyTime = false, path?: SvgPath) {
         const animations: SvgAnimate[] = [];
         const tagName = element.tagName;
         let valuePoints = false;
@@ -881,7 +881,7 @@ export default class SvgShape extends SvgElement implements squared.svg.SvgShape
         }
     }
 
-    public synchronize(useKeyTime = true) {
+    public synchronize(useKeyTime = false) {
         if (this.path && this.animate.length) {
             SvgShape.synchronizeAnimate(this.element, this.animate, useKeyTime, this.path);
         }

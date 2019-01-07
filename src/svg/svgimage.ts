@@ -1,6 +1,7 @@
 import { SvgPoint } from './@types/object';
 
 import SvgViewRect$MX from './svgviewrect-mx';
+import SvgBuild from './svgbuild';
 import SvgElement from './svgelement';
 
 import { applyMatrixX, applyMatrixY } from './lib/util';
@@ -23,8 +24,8 @@ export default class SvgImage extends SvgViewRect$MX(SvgElement) implements squa
         this.setRect();
     }
 
-    public build(exclusions?: number[]) {
-        const transform = this.transformFilter(exclusions);
+    public extract(exclusions?: number[]) {
+        const transform = SvgBuild.filterTransforms(this.transform, exclusions);
         if (transform.length) {
             let x = this.x;
             let y = this.y;
