@@ -1,13 +1,15 @@
 import { SvgTransformExclusions } from './@types/object';
 
 import SvgPaint$MX from './svgpaint-mx';
+import SvgViewRect$MX from './svgviewrect-mx';
 import SvgPath from './svgpath';
 import SvgShape from './svgshape';
+import { isSvgShape } from './lib/util';
 
-export default class SvgUse extends SvgPaint$MX(SvgShape) implements squared.svg.SvgUse {
+export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgShape)) implements squared.svg.SvgUse {
     constructor(
         public readonly element: SVGUseElement,
-        public shapeElement?: SVGGraphicsElement)
+        public shapeElement: SVGGraphicsElement)
     {
         super(element);
         this.setPaint();
@@ -20,32 +22,21 @@ export default class SvgUse extends SvgPaint$MX(SvgShape) implements squared.svg
     }
 
     public build(residual = false, exclusions?: SvgTransformExclusions) {
-        if (this.shapeElement) {
-            if (this.path === undefined) {
-                const path = new SvgPath(this.shapeElement, this.element);
-                super.path = path;
-            }
-            super.build(residual, exclusions);
+        if (this.path === undefined) {
+            const path = new SvgPath(this.shapeElement, this.element);
+            super.path = path;
         }
-    }
-
-    set x(value) {
-        this.element.x.baseVal.value = value;
-    }
-    get x() {
-        return this.element.x.baseVal.value;
-    }
-
-    set y(value) {
-        this.element.y.baseVal.value = value;
-    }
-    get y() {
-        return this.element.y.baseVal.value;
+        super.build(residual, exclusions);
     }
 
     set href(value) {
         if (value.charAt(0) === '#') {
-            this.element.href.baseVal = value;
+            const id = value.substring(1);
+            const target = document.getElementById(id);
+            if (target && isSvgShape(target)) {
+                this.setShape(target);
+                this.element.href.baseVal = value;
+            }
         }
     }
     get href() {

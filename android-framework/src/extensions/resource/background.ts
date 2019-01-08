@@ -498,8 +498,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 AA: [{
                                     render: [[]],
                                     name: `${node.controlId}_gradient_path`,
+                                    value: squared.svg.SvgPath.getRect(width, height),
                                     clipPaths: false,
-                                    d: squared.svg.SvgPath.getRect(width, height),
                                     fillPattern: [{ gradients: backgroundGradient }]
                                 }]
                             }]

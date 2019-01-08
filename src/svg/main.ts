@@ -3,17 +3,17 @@ import SvgAnimate from './svganimate';
 import SvgAnimateMotion from './svganimatemotion';
 import SvgAnimateTransform from './svganimatetransform';
 import SvgAnimation from './svganimation';
+import SvgBase from './svgbase';
 import SvgBuild from './svgbuild';
 import SvgContainer from './svgcontainer';
 import SvgElement from './svgelement';
-import SvgGroup from './svggroup';
-import SvgGroupPaint from './svggrouppaint';
-import SvgGroupRect from './svggrouprect';
+import SvgG from './svgg';
 import SvgImage from './svgimage';
 import SvgPaint from './svgpaint-mx';
 import SvgPath from './svgpath';
 import SvgShape from './svgshape';
 import SvgUse from './svguse';
+import SvgUseSymbol from './svgusesymbol';
 import SvgView from './svgview-mx';
 import SvgViewRect from './svgviewrect-mx';
 
@@ -29,17 +29,17 @@ export {
     SvgAnimateMotion,
     SvgAnimateTransform,
     SvgAnimation,
+    SvgBase,
     SvgBuild,
     SvgContainer,
     SvgElement,
-    SvgGroup,
-    SvgGroupPaint,
-    SvgGroupRect,
+    SvgG,
     SvgImage,
     SvgPaint,
     SvgPath,
     SvgShape,
     SvgUse,
+    SvgUseSymbol,
     SvgView,
     SvgViewRect,
     lib

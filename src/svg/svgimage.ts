@@ -12,16 +12,11 @@ const $util = squared.lib.util;
 export default class SvgImage extends SvgViewRect$MX(SvgView$MX(SvgElement)) implements squared.svg.SvgImage {
     public rotateOrigin?: SvgPoint;
 
-    private _href = '';
-
     constructor(
         public readonly element: SVGImageElement | SVGUseElement,
-        href?: string)
+        public readonly imageElement?: SVGImageElement)
     {
         super(element);
-        if (href) {
-            this._href = href;
-        }
         this.setRect();
     }
 
@@ -82,18 +77,49 @@ export default class SvgImage extends SvgViewRect$MX(SvgView$MX(SvgElement)) imp
         }
     }
 
+    get x() {
+        const value = super.x;
+        if (value === 0 && this.imageElement) {
+            return this.imageElement.x.baseVal.value;
+        }
+        return value;
+    }
+
+    get y() {
+        const value = super.y;
+        if (value === 0 && this.imageElement) {
+            return this.imageElement.y.baseVal.value;
+        }
+        return value;
+    }
+
+    get width() {
+        const value = super.width;
+        if (value === 0 && this.imageElement) {
+            return this.imageElement.width.baseVal.value;
+        }
+        return value;
+    }
+
+    get height() {
+        const value = super.height;
+        if (value === 0 && this.imageElement) {
+            return this.imageElement.height.baseVal.value;
+        }
+        return value;
+    }
+
     set href(value) {
-        this._href = value;
-        if (this.element instanceof SVGImageElement) {
-            this.element.href.baseVal = value;
+        const element = this.imageElement || this.element;
+        if (element instanceof SVGImageElement) {
+            element.href.baseVal = value;
         }
     }
     get href() {
-        if (this.element instanceof SVGUseElement) {
-            return this._href;
+        const element = this.imageElement || this.element;
+        if (element instanceof SVGImageElement) {
+            return $util.resolvePath(element.href.baseVal);
         }
-        else {
-            return $util.resolvePath(this.element.href.baseVal) || this._href;
-        }
+        return '';
     }
 }

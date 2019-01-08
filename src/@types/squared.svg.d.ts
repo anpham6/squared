@@ -8,7 +8,7 @@ declare global {
             readonly element: SVGGraphicsElement;
         }
 
-        interface SvgView {
+        interface SvgView extends SvgBase {
             baseValue: SvgBaseValue;
             animate: SvgAnimation[];
             transform: SvgTransform[];
@@ -30,13 +30,13 @@ declare global {
             transformResidual?: SvgTransform[][];
         }
 
-        interface SvgViewRect extends SvgRect {
+        interface SvgViewRect extends SvgView, SvgRect {
             baseValue: SvgRectBaseValue;
             setRect(): void;
         }
 
         interface SvgViewBox {
-            viewBox?: DOMRect;
+            viewBox: DOMRect;
         }
 
         interface SvgPaint {

@@ -138,7 +138,7 @@ export function setOpacity(element: SVGGraphicsElement, value: string) {
 export function getHrefTargetElement(element: Element, parentElement?: SVGGraphicsElement | HTMLElement | null) {
     const href = element.attributes.getNamedItem('href');
     if (href && href.value.charAt(0) === '#') {
-        const id = href.value.replace('#', '');
+        const id = href.value.substring(1);
         if (parentElement) {
             for (const target of Array.from(parentElement.querySelectorAll('*'))) {
                 if (target.id === id) {

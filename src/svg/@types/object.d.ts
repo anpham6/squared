@@ -49,21 +49,21 @@ export interface SvgRectBaseValue extends SvgBaseValue, SvgRect {
 }
 
 export interface SvgPathBaseValue extends SvgBaseValue {
-    d: string | null;
-    cx: number | null;
-    cy: number | null;
-    r: number | null;
-    rx: number | null;
-    ry: number | null;
-    x1: number | null;
-    x2: number | null;
-    y1: number | null;
-    y2: number | null;
-    x: number | null;
-    y: number | null;
-    width: number | null;
-    height: number | null;
-    points: Point[] | null;
+    d: string;
+    cx: number;
+    cy: number;
+    r: number;
+    rx: number;
+    ry: number;
+    x1: number;
+    x2: number;
+    y1: number;
+    y2: number;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    points: Point[];
 }
 
 export interface SvgTransform {

@@ -24,12 +24,13 @@ import $SvgAnimateMotion = squared.svg.SvgAnimateMotion;
 import $SvgAnimateTransform = squared.svg.SvgAnimateTransform;
 import $SvgAnimation = squared.svg.SvgAnimation;
 import $SvgBuild = squared.svg.SvgBuild;
-import $SvgGroup = squared.svg.SvgGroup;
-import $SvgGroupRect = squared.svg.SvgGroupRect;
+import $SvgContainer = squared.svg.SvgContainer;
 import $SvgImage = squared.svg.SvgImage;
 import $SvgPath = squared.svg.SvgPath;
 import $SvgShape = squared.svg.SvgShape;
 import $SvgUse = squared.svg.SvgUse;
+import $SvgUseSymbol = squared.svg.SvgUseSymbol;
+import $SvgView = squared.svg.SvgView;
 import $utilS = squared.svg.lib.util;
 
 interface ResourceSvgOptions {
@@ -125,7 +126,7 @@ const ATTRIBUTE_ANDROID = {
 const TEMPLATES: ObjectMap<StringMap> = {};
 const STORED = Resource.STORED as ResourceStoredMapAndroid;
 
-function queueAnimations(map: Map<string, AnimateGroup>, name: string, svg: $Svg | $SvgGroup | $SvgShape, predicate: IteratorPredicate<$SvgAnimation, void>, pathData = '') {
+function queueAnimations(map: Map<string, AnimateGroup>, svg: $SvgView, name: string, predicate: IteratorPredicate<$SvgAnimation, void>, pathData = '') {
     const animate = svg.animate.filter(predicate).filter(item => item.begin.length > 0);
     if (animate.length) {
         map.set(name, {
@@ -219,10 +220,11 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 const images: $SvgImage[] = [];
                 let drawable = '';
                 let vectorName = '';
-                const createGroup = (target: $SvgGroup | $SvgShape, transformable = false) => {
+                const createGroup = (target: $SvgView, transformable = false) => {
                     const name = target.element === node.element ? $SvgBuild.setName(target.element) : target.name;
                     const group: TransformData<string>[][] = [[]];
                     const groupName = `group_${name}`;
+                    const canTranslate = target instanceof $Svg || target instanceof $SvgUseSymbol;
                     const result: GroupData = { group, AA: [] };
                     if (transformable) {
                         const transform = $SvgBuild.partitionTransforms(target.element, target.transform)[0];
@@ -238,9 +240,9 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                             target.baseValue.transformed = transformed.reverse();
                         }
                     }
-                    queueAnimations(animateMap, groupName, target, item => item instanceof $SvgAnimateTransform || target instanceof $SvgGroupRect && (item.attributeName === 'x' || item.attributeName === 'y'));
+                    queueAnimations(animateMap, target, groupName, item => item instanceof $SvgAnimateTransform || canTranslate && (item.attributeName === 'x' || item.attributeName === 'y'));
                     group[0].push({ groupName });
-                    if (target instanceof $SvgGroupRect && (target.x !== 0 || target.y !== 0)) {
+                    if ((target instanceof $Svg || target instanceof $SvgUseSymbol) && (target.x !== 0 || target.y !== 0)) {
                         group[0].push({
                             groupName: `${name}_translate`,
                             translateX: target.x.toString(),
@@ -277,7 +279,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                         });
                     }
                     const animateName = `${target.name}_animate`;
-                    if (queueAnimations(animateMap, animateName, target, item => item instanceof $SvgAnimateTransform || useTarget && (item.attributeName === 'x' || item.attributeName === 'y'))) {
+                    if (queueAnimations(animateMap, target, animateName, item => item instanceof $SvgAnimateTransform || useTarget && (item.attributeName === 'x' || item.attributeName === 'y'))) {
                         render[0].push({ groupName: animateName });
                     }
                     if (target instanceof $SvgUse && (target.x !== 0 || target.y !== 0)) {
@@ -295,7 +297,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                     if (path.clipPath) {
                         const clipPath = svg.patterns.clipPath.get(path.clipPath);
                         if (clipPath) {
-                            const groupRect = new squared.svg.SvgGroupPaint(clipPath);
+                            const groupRect = new squared.svg.SvgG(clipPath);
                             groupRect.build(true, this.options.excludeFromTransform);
                             groupRect.synchronize();
                             groupRect.each((child: $SvgShape) => {
@@ -306,8 +308,8 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                     }
                                     queueAnimations(
                                         animateMap,
-                                        child.name,
                                         child,
+                                        child.name,
                                         item => !(item instanceof $SvgAnimateTransform || item instanceof $SvgAnimateMotion),
                                         child.path.value
                                     );
@@ -362,8 +364,8 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                     }
                     queueAnimations(
                         animateMap,
-                        path.name,
                         target,
+                        path.name,
                         item => !(item instanceof $SvgAnimateTransform || item instanceof $SvgAnimateMotion) && !exclusions.includes(item.attributeName),
                         result.value
                     );
@@ -371,8 +373,8 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 };
                 queueAnimations(
                     animateMap,
-                    svg.name,
                     svg,
+                    svg.name,
                     item => item.attributeName === 'opacity'
                 );
                 const setImageData = (image: $SvgImage) => {
@@ -393,7 +395,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 for (let i = 0; i < svg.children.length; i++) {
                     const item = svg.children[i];
                     let data: GroupData | undefined;
-                    if (item instanceof $SvgGroup) {
+                    if (item instanceof $SvgContainer) {
                         data = createGroup(item, true);
                         for (const view of item.children) {
                             if (view instanceof $SvgImage) {

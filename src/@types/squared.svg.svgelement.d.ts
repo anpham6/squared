@@ -12,15 +12,14 @@ declare global {
             setType(element?: SVGGraphicsElement): void;
         }
 
-        interface SvgImage extends SvgElement, SvgView, SvgViewRect, SvgTransformable {
-            baseValue: Required<SvgRectBaseValue>;
+        interface SvgImage extends SvgElement, SvgViewRect, SvgTransformable {
             href: string;
             readonly element: SVGImageElement | SVGUseElement;
             extract(exclude?: number[]): void;
         }
 
-        interface SvgUse extends SvgElement, SvgView, SvgShape, Point {
-            shapeElement?: SVGGraphicsElement;
+        interface SvgUse extends SvgElement, SvgViewRect {
+            shapeElement: SVGGraphicsElement;
             setShape(value: SVGGraphicsElement): void;
         }
 
@@ -34,11 +33,11 @@ declare global {
         }
 
         class SvgImage implements SvgImage {
-            constructor(element: SVGImageElement | SVGUseElement, href?: string);
+            constructor(element: SVGImageElement | SVGUseElement, imageElement?: SVGImageElement);
         }
 
         class SvgUse implements SvgUse {
-            constructor(element: SVGUseElement, shapeElement?: SVGGraphicsElement);
+            constructor(element: SVGUseElement, shapeElement: SVGGraphicsElement);
         }
     }
 }

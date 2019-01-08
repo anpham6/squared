@@ -3,13 +3,41 @@ import Container = squared.lib.base.Container;
 declare global {
     namespace squared.svg {
         interface SvgContainer extends Container<SvgView>, SvgBuildable {
-            readonly element: SVGGElement | SVGSVGElement | SVGUseElement;
-            namespaceElement?: SVGSVGElement;
+            readonly element: SVGSVGElement | SVGGElement | SVGUseElement;
+        }
+
+        interface Svg extends SvgContainer, SvgViewRect, SvgViewBox {
+            readonly documentRoot: boolean;
+            readonly element: SVGSVGElement;
+            readonly patterns: {
+                clipPath: Map<string, SVGClipPathElement>;
+                gradient: Map<string, Gradient>;
+            };
+        }
+
+        interface SvgG extends SvgContainer, SvgView, SvgPaint {
+            readonly element: SVGGElement;
+        }
+
+        interface SvgUseSymbol extends SvgContainer, SvgViewRect, SvgViewBox, SvgPaint {
+            readonly element: SVGUseElement;
+            readonly symbolElement: SVGSymbolElement;
         }
 
         class SvgContainer implements SvgContainer {
-            public static createUseTarget(element: SVGUseElement, parentElement?: SVGGraphicsElement): SvgView;
-            constructor(element: SVGGElement | SVGSVGElement | SVGUseElement);
+            constructor(element: SVGSVGElement | SVGGElement | SVGUseElement);
+        }
+
+        class Svg implements Svg {
+            constructor(element: SVGSVGElement, documentRoot?: boolean);
+        }
+
+        class SvgG implements SvgG {
+            constructor(element: SVGGElement);
+        }
+
+        class SvgUseSymbol implements SvgUseSymbol {
+            constructor(element: SVGUseElement, symbolElement: SVGSymbolElement);
         }
     }
 }

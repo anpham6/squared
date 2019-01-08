@@ -1,8 +1,13 @@
 import { SvgRectBaseValue } from './@types/object';
 
-export default <T extends Constructor<squared.svg.SvgBase>>(Base: T) => {
+const $dom = squared.lib.dom;
+
+export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
     return class extends Base implements squared.svg.SvgViewRect {
         public baseValue!: SvgRectBaseValue;
+
+        private _width: number | undefined;
+        private _height: number | undefined;
 
         public setRect() {
             this.baseValue = Object.assign(this.baseValue || {}, {
@@ -49,13 +54,29 @@ export default <T extends Constructor<squared.svg.SvgBase>>(Base: T) => {
         set width(value) {
             const element = this.getElement();
             if (element) {
-                element.width.baseVal.value = value;
+                if (element instanceof SVGSVGElement && $dom.isUserAgent($dom.USER_AGENT.FIREFOX)) {
+                    this._width = value;
+                }
+                else {
+                    element.width.baseVal.value = value;
+                }
             }
         }
         get width() {
             const element = this.getElement();
             if (element) {
-                return element.width.baseVal.value;
+                if (element instanceof SVGSVGElement && $dom.isUserAgent($dom.USER_AGENT.FIREFOX)) {
+                    if (this._width !== undefined) {
+                        return this._width;
+                    }
+                    else {
+                        const bounds = element.getBoundingClientRect();
+                        return bounds.width;
+                    }
+                }
+                else {
+                    return element.width.baseVal.value;
+                }
             }
             return 0;
         }
@@ -63,13 +84,29 @@ export default <T extends Constructor<squared.svg.SvgBase>>(Base: T) => {
         set height(value) {
             const element = this.getElement();
             if (element) {
-                element.height.baseVal.value = value;
+                if (element instanceof SVGSVGElement && $dom.isUserAgent($dom.USER_AGENT.FIREFOX)) {
+                    this._height = value;
+                }
+                else {
+                    element.height.baseVal.value = value;
+                }
             }
         }
         get height() {
             const element = this.getElement();
             if (element) {
-                return element.height.baseVal.value;
+                if (element instanceof SVGSVGElement && $dom.isUserAgent($dom.USER_AGENT.FIREFOX)) {
+                    if (this._height !== undefined) {
+                        return this._height;
+                    }
+                    else {
+                        const bounds = element.getBoundingClientRect();
+                        return bounds.height;
+                    }
+                }
+                else {
+                    return element.height.baseVal.value;
+                }
             }
             return 0;
         }

@@ -1,23 +1,26 @@
 import { SvgPathBaseValue, SvgPoint, SvgTransform } from './@types/object';
 
 import SvgPaint$MX from './svgpaint-mx';
+import SvgBase from './svgbase';
 import SvgBuild from './svgbuild';
-import SvgElement from './svgelement';
 
 import { getTransformOrigin } from './lib/util';
 
 const $dom = squared.lib.dom;
 
-export default class SvgPath extends SvgPaint$MX(SvgElement) implements squared.svg.SvgPath {
+export default class SvgPath extends SvgPaint$MX(SvgBase) implements squared.svg.SvgPath {
     public static getLine(x1: number, y1: number, x2 = 0, y2 = 0) {
         return `M${x1},${y1} L${x2},${y2}`;
     }
 
     public static getCircle(cx: number, cy: number, r: number) {
-        return SvgPath.getEllipse(cx, cy, r, r);
+        return SvgPath.getEllipse(cx, cy, r);
     }
 
-    public static getEllipse(cx: number, cy: number, rx: number, ry: number) {
+    public static getEllipse(cx: number, cy: number, rx: number, ry?: number) {
+        if (ry === undefined) {
+            ry = rx;
+        }
         return `M${cx - rx},${cy} a${rx},${ry},0,1,0,${rx * 2},0 a${rx},${ry},0,1,0,-${rx * 2},0`;
     }
 
@@ -36,7 +39,7 @@ export default class SvgPath extends SvgPaint$MX(SvgElement) implements squared.
 
     public name = '';
     public value = '';
-    public baseValue: SvgPathBaseValue = {
+    public baseValue: Nullable<SvgPathBaseValue> = {
         d: null,
         cx: null,
         cy: null,
