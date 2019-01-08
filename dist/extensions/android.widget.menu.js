@@ -6,14 +6,14 @@ this.android.widget = this.android.widget || {};
 this.android.widget.menu = (function () {
     'use strict';
 
-    var $const = squared.base.lib.constant;
-    var $enum = squared.base.lib.enumeration;
-    var $dom = squared.lib.dom;
-    var $util = squared.lib.util;
     var $Resource = android.base.Resource;
-    var $const_android = android.lib.constant;
-    var $enum_android = android.lib.enumeration;
-    var $util_android = android.lib.util;
+    const $const = squared.base.lib.constant;
+    const $enum = squared.base.lib.enumeration;
+    const $dom = squared.lib.dom;
+    const $util = squared.lib.util;
+    const $constA = android.lib.constant;
+    const $enumA = android.lib.enumeration;
+    const $utilA = android.lib.util;
     const VIEW_NAVIGATION = {
         MENU: 'menu',
         ITEM: 'item',
@@ -113,7 +113,7 @@ this.android.widget.menu = (function () {
         processNode(node) {
             node.documentRoot = true;
             node.alignmentType |= 4 /* AUTO_LAYOUT */;
-            node.setControlType(VIEW_NAVIGATION.MENU, $enum_android.CONTAINER_NODE.INLINE);
+            node.setControlType(VIEW_NAVIGATION.MENU, $enumA.CONTAINER_NODE.INLINE);
             node.exclude({ procedure: $enum.NODE_PROCEDURE.ALL, resource: $enum.NODE_RESOURCE.ALL });
             const output = this.application.controllerHandler.renderNodeStatic(VIEW_NAVIGATION.MENU, 0, {}, '', '', node, true);
             node.cascade().forEach(item => this.subscribersChild.add(item));
@@ -124,7 +124,7 @@ this.android.widget.menu = (function () {
                 node.hide();
                 return { output: '', next: true };
             }
-            const options = $util_android.createAttribute();
+            const options = $utilA.createViewAttribute();
             const element = node.element;
             let controlName;
             let title = '';
@@ -170,14 +170,14 @@ this.android.widget.menu = (function () {
                     parseDataSet(VALIDATE_ITEM, element, options);
                     if (!$util.hasValue(options.android.icon)) {
                         const style = $dom.getStyle(element);
-                        let src = $Resource.addImageUrl((style.backgroundImage !== 'none' ? style.backgroundImage : style.background), $const_android.PREFIX_ANDROID.MENU);
+                        let src = $Resource.addImageUrl((style.backgroundImage !== 'none' ? style.backgroundImage : style.background), $constA.PREFIX_ANDROID.MENU);
                         if (src !== '') {
                             options.android.icon = `@drawable/${src}`;
                         }
                         else {
                             const image = node.find(item => item.imageElement);
                             if (image) {
-                                src = $Resource.addImageSrcSet(image.element, $const_android.PREFIX_ANDROID.MENU);
+                                src = $Resource.addImageSrcSet(image.element, $constA.PREFIX_ANDROID.MENU);
                                 if (src !== '') {
                                     options.android.icon = `@drawable/${src}`;
                                 }
@@ -187,10 +187,10 @@ this.android.widget.menu = (function () {
                     break;
             }
             if (title !== '') {
-                const name = $Resource.addString(title, '', this.application.extensionManager.optionValueAsBoolean($const_android.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
+                const name = $Resource.addString(title, '', this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
                 options.android.title = name !== '' ? `@string/${name}` : title;
             }
-            node.setControlType(controlName, $enum_android.CONTAINER_NODE.INLINE);
+            node.setControlType(controlName, $enumA.CONTAINER_NODE.INLINE);
             node.exclude({ procedure: $enum.NODE_PROCEDURE.ALL, resource: $enum.NODE_RESOURCE.ALL });
             node.render(parent);
             const output = this.application.controllerHandler.renderNodeStatic(controlName, node.renderDepth, options, '', '', node, layout);

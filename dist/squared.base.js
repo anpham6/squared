@@ -48,8 +48,8 @@
         get NODE_PROCEDURE () { return NODE_PROCEDURE; }
     });
 
-    var $dom = squared.lib.dom;
-    var $util = squared.lib.util;
+    const $dom = squared.lib.dom;
+    const $util = squared.lib.util;
     class NodeList extends squared.lib.base.Container {
         constructor(children) {
             super(children);
@@ -352,7 +352,7 @@
         }
     }
 
-    var $util$1 = squared.lib.util;
+    const $util$1 = squared.lib.util;
     class Layout extends squared.lib.base.Container {
         constructor(parent, node, containerType = 0, alignmentType = 0, itemCount = 0, children) {
             super(children);
@@ -450,10 +450,10 @@
         }
     }
 
-    var $color = squared.lib.color;
-    var $dom$1 = squared.lib.dom;
-    var $util$2 = squared.lib.util;
-    var $xml = squared.lib.xml;
+    const $color = squared.lib.color;
+    const $dom$1 = squared.lib.dom;
+    const $util$2 = squared.lib.util;
+    const $xml = squared.lib.xml;
     function colorStop(parse) {
         return `${parse ? '' : '(?:'},?\\s*(${parse ? '' : '?:'}rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|[a-z]+)\\s*(${parse ? '' : '?:'}\\d+%)?${parse ? '' : ')'}`;
     }
@@ -482,9 +482,12 @@
             return name;
         }
         static getStoredName(asset, value) {
-            for (const [name, stored] of Resource.STORED[asset].entries()) {
-                if (JSON.stringify(value) === JSON.stringify(stored)) {
-                    return name;
+            const stored = Resource.STORED[asset];
+            if (stored) {
+                for (const [name, data] of Resource.STORED[asset].entries()) {
+                    if (JSON.stringify(value) === JSON.stringify(data)) {
+                        return name;
+                    }
                 }
             }
             return '';
@@ -522,13 +525,13 @@
                 border.color.length === 9 && border.color.endsWith('00'));
         }
         static hasDrawableBackground(object) {
-            return (!!object && (this.isBorderVisible(object.borderTop) ||
+            return !!object && (this.isBorderVisible(object.borderTop) ||
                 this.isBorderVisible(object.borderRight) ||
                 this.isBorderVisible(object.borderBottom) ||
                 this.isBorderVisible(object.borderLeft) ||
                 !!object.backgroundImage ||
                 !!object.borderRadius ||
-                !!object.backgroundGradient));
+                !!object.backgroundGradient);
         }
         finalize(data) { }
         reset() {
@@ -656,7 +659,7 @@
                                     else {
                                         gradient = {
                                             type: 'radial',
-                                            shapePosition: (() => {
+                                            position: (() => {
                                                 const result = ['ellipse', 'center'];
                                                 if (match[2]) {
                                                     const shape = match[2].split('at').map(item => item.trim());
@@ -971,15 +974,12 @@
         arrays: new Map(),
         fonts: new Map(),
         colors: new Map(),
-        styles: new Map(),
-        dimens: new Map(),
-        drawables: new Map(),
         images: new Map()
     };
 
-    var $dom$2 = squared.lib.dom;
-    var $util$3 = squared.lib.util;
-    var $xml$1 = squared.lib.xml;
+    const $dom$2 = squared.lib.dom;
+    const $util$3 = squared.lib.util;
+    const $xml$1 = squared.lib.xml;
     function prioritizeExtensions(documentRoot, element, extensions) {
         const tagged = [];
         let current = element;
@@ -1450,8 +1450,7 @@
             for (const element of Array.from(elements)) {
                 if (!this.parseElements.has(element)) {
                     prioritizeExtensions(documentRoot, element, Array.from(this.extensions)).some(item => item.init(element));
-                    if (!this.parseElements.has(element) && !(localSettings.unsupported.tagName.has(element.tagName) ||
-                        element instanceof HTMLInputElement && localSettings.unsupported.tagName.has(`${element.tagName}:${element.type}`))) {
+                    if (!this.parseElements.has(element) && !(localSettings.unsupported.tagName.has(element.tagName) || element instanceof HTMLInputElement && localSettings.unsupported.tagName.has(`${element.tagName}:${element.type}`))) {
                         let valid = true;
                         let current = element.parentElement;
                         while (current && current !== documentRoot) {
@@ -1664,7 +1663,7 @@
                     }
                     node.saveAsInitial();
                 }
-                $util$3.sortAsc(this.processing.cache.children, 'depth', 'id');
+                $util$3.sortArray(this.processing.cache.children, true, 'depth', 'id');
                 for (const ext of this.extensions) {
                     ext.afterInit(documentRoot);
                 }
@@ -2607,7 +2606,7 @@
             return node;
         }
         conditionElement(element) {
-            if (element.parentElement instanceof SVGSVGElement) {
+            if (element instanceof SVGGraphicsElement && !(element.parentElement instanceof HTMLElement)) {
                 return false;
             }
             else if ($dom$2.hasComputedStyle(element)) {
@@ -2795,8 +2794,8 @@
         }
     }
 
-    var $util$4 = squared.lib.util;
-    var $xml$2 = squared.lib.xml;
+    const $util$4 = squared.lib.util;
+    const $xml$2 = squared.lib.xml;
     class Controller {
         constructor(application, cache) {
             this.application = application;
@@ -2882,8 +2881,8 @@
         }
     }
 
-    var $dom$3 = squared.lib.dom;
-    var $util$5 = squared.lib.util;
+    const $dom$3 = squared.lib.dom;
+    const $util$5 = squared.lib.util;
     class Extension {
         constructor(name, framework, tagNames, options) {
             this.name = name;
@@ -2987,7 +2986,7 @@
         }
     }
 
-    var $util$6 = squared.lib.util;
+    const $util$6 = squared.lib.util;
     class ExtensionManager {
         constructor(application) {
             this.application = application;
@@ -3044,7 +3043,7 @@
         }
     }
 
-    var $util$7 = squared.lib.util;
+    const $util$7 = squared.lib.util;
     class File {
         constructor(resource) {
             this.resource = resource;
@@ -3155,8 +3154,8 @@
         EXT_NAME: EXT_NAME
     });
 
-    var $dom$4 = squared.lib.dom;
-    var $util$8 = squared.lib.util;
+    const $dom$4 = squared.lib.dom;
+    const $util$8 = squared.lib.util;
     class Node extends squared.lib.base.Container {
         constructor(id, element) {
             super();
@@ -3269,15 +3268,13 @@
             }
         }
         apply(options) {
-            if (typeof options === 'object') {
-                for (const obj in options) {
-                    const attrs = options[obj];
-                    if (typeof attrs === 'object') {
-                        for (const attr in attrs) {
-                            this.attr(obj, attr, attrs[attr]);
-                        }
-                        delete options[obj];
+            for (const obj in options) {
+                const namespace = options[obj];
+                if (typeof namespace === 'object') {
+                    for (const attr in namespace) {
+                        this.attr(obj, attr, namespace[attr]);
                     }
+                    delete options[obj];
                 }
             }
         }
@@ -4686,7 +4683,7 @@
         }
     }
 
-    var $dom$5 = squared.lib.dom;
+    const $dom$5 = squared.lib.dom;
     class NodeGroup extends Node {
         init() {
             if (this.length) {
@@ -4842,8 +4839,8 @@
         }
     }
 
-    var $dom$6 = squared.lib.dom;
-    var $util$9 = squared.lib.util;
+    const $dom$6 = squared.lib.dom;
+    const $util$9 = squared.lib.util;
     class Accessibility extends Extension {
         afterInit() {
             for (const node of this.application.processing.cache.elements) {
@@ -4881,7 +4878,7 @@
         }
     }
 
-    var $util$a = squared.lib.util;
+    const $util$a = squared.lib.util;
     const REGEX_PARTIAL = {
         UNIT: '[\\d.]+[a-z%]+|auto|max-content|min-content',
         MINMAX: 'minmax\\((.*?), (.*?)\\)',
@@ -4958,12 +4955,7 @@
             return node.gridElement && node.length > 0;
         }
         processNode(node) {
-            const mainData = Object.assign(CssGrid.createDataAttribute(), {
-                alignItems: node.css('alignItems'),
-                alignContent: node.css('alignContent'),
-                justifyItems: node.css('justifyItems'),
-                justifyContent: node.css('justifyContent')
-            });
+            const mainData = Object.assign({}, CssGrid.createDataAttribute(), { alignItems: node.css('alignItems'), alignContent: node.css('alignContent'), justifyItems: node.css('justifyItems'), justifyContent: node.css('justifyContent') });
             const gridAutoFlow = node.css('gridAutoFlow');
             const horizontal = gridAutoFlow.indexOf('row') !== -1;
             const dense = gridAutoFlow.indexOf('dense') !== -1;
@@ -5492,7 +5484,6 @@
         }
     }
 
-    var $util$b = squared.lib.util;
     class Flexbox extends Extension {
         static createDataAttribute(children) {
             return {
@@ -5514,14 +5505,7 @@
             const controller = this.application.controllerHandler;
             const pageFlow = node.children.filter(item => item.pageFlow);
             const flex = node.flexbox;
-            const mainData = Object.assign(Flexbox.createDataAttribute(pageFlow), {
-                wrap: flex.wrap.startsWith('wrap'),
-                wrapReverse: flex.wrap === 'wrap-reverse',
-                directionReverse: flex.direction.endsWith('reverse'),
-                justifyContent: flex.justifyContent,
-                rowDirection: flex.direction.startsWith('row'),
-                columnDirection: flex.direction.startsWith('column')
-            });
+            const mainData = Object.assign({}, Flexbox.createDataAttribute(pageFlow), { wrap: flex.wrap.startsWith('wrap'), wrapReverse: flex.wrap === 'wrap-reverse', directionReverse: flex.direction.endsWith('reverse'), justifyContent: flex.justifyContent, rowDirection: flex.direction.startsWith('row'), columnDirection: flex.direction.startsWith('column') });
             if (node.cssTry('display', 'block')) {
                 for (const item of pageFlow) {
                     if (item.element) {
@@ -5582,10 +5566,10 @@
             else {
                 if (pageFlow.some(item => item.flexbox.order !== 0)) {
                     if (mainData.directionReverse) {
-                        $util$b.sortDesc(node.children, 'flexbox.order');
+                        node.sort((a, b) => a.flexbox.order <= b.flexbox.order ? 1 : -1);
                     }
                     else {
-                        $util$b.sortAsc(node.children, 'flexbox.order');
+                        node.sort((a, b) => a.flexbox.order >= b.flexbox.order ? 1 : -1);
                     }
                 }
                 if (mainData.rowDirection) {
@@ -5602,7 +5586,7 @@
         }
     }
 
-    var $dom$7 = squared.lib.dom;
+    const $dom$7 = squared.lib.dom;
     class External extends Extension {
         beforeInit(element, internal = false) {
             if (internal || this.included(element)) {
@@ -5642,11 +5626,11 @@
         }
     }
 
-    var $dom$8 = squared.lib.dom;
-    var $util$c = squared.lib.util;
+    const $dom$8 = squared.lib.dom;
+    const $util$b = squared.lib.util;
     function getRowIndex(columns, target) {
         for (const column of columns) {
-            const index = column.findIndex(item => $util$c.withinFraction(target.linear.top, item.linear.top) || target.linear.top > item.linear.top && target.linear.top < item.linear.bottom);
+            const index = column.findIndex(item => $util$b.withinFraction(target.linear.top, item.linear.top) || target.linear.top > item.linear.top && target.linear.top < item.linear.bottom);
             if (index !== -1) {
                 return index;
             }
@@ -5809,8 +5793,8 @@
                             else {
                                 const current = columns.length - 1;
                                 if (columns[current]) {
-                                    const minLeft = $util$c.minArray(columns[current].map(item => item.linear.left));
-                                    const maxRight = $util$c.maxArray(columns[current].map(item => item.linear.right));
+                                    const minLeft = $util$b.minArray(columns[current].map(item => item.linear.left));
+                                    const maxRight = $util$b.maxArray(columns[current].map(item => item.linear.right));
                                     if (left > minLeft && right > maxRight) {
                                         const filtered = columns.filter(item => item);
                                         const index = getRowIndex(columns, nextX);
@@ -5856,7 +5840,7 @@
                 columnEnd.push(node.box.right);
             }
             if (columns.length > 1 && columns[0].length === node.length) {
-                const mainData = Object.assign(Grid.createDataAttribute(), { columnCount: columnBalance ? columns[0].length : columns.length });
+                const mainData = Object.assign({}, Grid.createDataAttribute(), { columnCount: columnBalance ? columns[0].length : columns.length });
                 node.duplicate().forEach(item => node.remove(item) && item.hide());
                 for (let l = 0, count = 0; l < columns.length; l++) {
                     let spacer = 0;
@@ -5864,7 +5848,7 @@
                         const item = columns[l][m];
                         if (!item.spacer) {
                             item.parent = node;
-                            const data = Object.assign(Grid.createDataCellAttribute(), item.data(EXT_NAME.GRID, 'cellData') || {});
+                            const data = Object.assign(Grid.createDataCellAttribute(), item.data(EXT_NAME.GRID, 'cellData'));
                             if (columnBalance) {
                                 data.rowStart = m === 0;
                                 data.rowEnd = m === columns[l].length - 1;
@@ -5897,7 +5881,7 @@
                                 }
                                 const index = Math.min(l + (columnSpan - 1), columnEnd.length - 1);
                                 const documentParent = item.documentParent.element;
-                                data.siblings.push(...$util$c.flatMap(Array.from(documentParent.children), element => {
+                                data.siblings.push(...$util$b.flatMap(Array.from(documentParent.children), element => {
                                     const sibling = $dom$8.getElementAsNode(element);
                                     return (sibling &&
                                         sibling.visible &&
@@ -5921,7 +5905,7 @@
                         }
                     }
                 }
-                $util$c.sortAsc(node.children, 'documentParent.siblingIndex', 'siblingIndex');
+                $util$b.sortArray(node.children, true, 'documentParent.siblingIndex', 'siblingIndex');
                 node.each((item, index) => item.siblingIndex = index);
                 if (node.tableElement && node.css('borderCollapse') === 'collapse') {
                     node.modifyBox(32 /* PADDING_TOP */, null);
@@ -5935,7 +5919,7 @@
         }
     }
 
-    var $util$d = squared.lib.util;
+    const $util$c = squared.lib.util;
     function hasSingleImage(node) {
         return node.visibleStyle.backgroundImage && !node.visibleStyle.backgroundRepeat;
     }
@@ -5982,17 +5966,17 @@
                                 break;
                             case 'lower-alpha':
                             case 'lower-latin':
-                                mainData.ordinal = `${$util$d.convertAlpha(i).toLowerCase()}.`;
+                                mainData.ordinal = `${$util$c.convertAlpha(i).toLowerCase()}.`;
                                 break;
                             case 'upper-alpha':
                             case 'upper-latin':
-                                mainData.ordinal = `${$util$d.convertAlpha(i)}.`;
+                                mainData.ordinal = `${$util$c.convertAlpha(i)}.`;
                                 break;
                             case 'lower-roman':
-                                mainData.ordinal = `${$util$d.convertRoman(i + 1).toLowerCase()}.`;
+                                mainData.ordinal = `${$util$c.convertRoman(i + 1).toLowerCase()}.`;
                                 break;
                             case 'upper-roman':
-                                mainData.ordinal = `${$util$d.convertRoman(i + 1)}.`;
+                                mainData.ordinal = `${$util$c.convertRoman(i + 1)}.`;
                                 break;
                             case 'none':
                                 src = '';
@@ -6024,10 +6008,10 @@
         }
     }
 
-    var $util$e = squared.lib.util;
+    const $util$d = squared.lib.util;
     class Relative extends Extension {
         condition(node) {
-            return node.positionRelative && !node.positionStatic || $util$e.convertInt(node.cssInitial('verticalAlign')) !== 0;
+            return node.positionRelative && !node.positionStatic || $util$d.convertInt(node.cssInitial('verticalAlign')) !== 0;
         }
         processNode() {
             return { output: '', include: true };
@@ -6036,7 +6020,7 @@
             const renderParent = node.renderParent;
             if (renderParent) {
                 let target = node;
-                const verticalAlign = $util$e.convertInt(node.verticalAlign);
+                const verticalAlign = $util$d.convertInt(node.verticalAlign);
                 if (renderParent.support.container.positionRelative && node.length === 0 && (node.top !== 0 || node.bottom !== 0 || verticalAlign !== 0)) {
                     target = node.clone(this.application.nextId, true, true);
                     node.hide(true);
@@ -6068,16 +6052,16 @@
         }
     }
 
-    var $dom$9 = squared.lib.dom;
-    var $util$f = squared.lib.util;
+    const $dom$9 = squared.lib.dom;
+    const $util$e = squared.lib.util;
     class Sprite extends Extension {
         condition(node) {
             let valid = false;
             if (node.hasWidth && node.hasHeight && node.length === 0 && !node.inlineText) {
                 let url = node.css('backgroundImage');
-                if (!$util$f.hasValue(url) || url === 'none') {
+                if (!$util$e.hasValue(url) || url === 'none') {
                     url = '';
-                    const match = $util$f.REGEX_PATTERN.CSS_URL.exec(node.css('background'));
+                    const match = $util$e.REGEX_PATTERN.CSS_URL.exec(node.css('background'));
                     if (match) {
                         url = match[0];
                     }
@@ -6099,11 +6083,11 @@
                     }
                 }
             }
-            return valid && (!$util$f.hasValue(node.dataset.use) || this.included(node.element));
+            return valid && (!$util$e.hasValue(node.dataset.use) || this.included(node.element));
         }
     }
 
-    var $dom$a = squared.lib.dom;
+    const $dom$a = squared.lib.dom;
     class Substitute extends Extension {
         constructor(name, framework, tagNames, options) {
             super(name, framework, tagNames, options);
@@ -6129,8 +6113,8 @@
         }
     }
 
-    var $dom$b = squared.lib.dom;
-    var $util$g = squared.lib.util;
+    const $dom$b = squared.lib.dom;
+    const $util$f = squared.lib.util;
     class Table extends Extension {
         static createDataAttribute() {
             return {
@@ -6146,7 +6130,7 @@
                 td.data(EXT_NAME.TABLE, 'expand', true);
             }
             function setBoundsWidth(td) {
-                td.css('width', $util$g.formatPX(td.bounds.width), true);
+                td.css('width', $util$f.formatPX(td.bounds.width), true);
             }
             const mainData = Table.createDataAttribute();
             const table = [];
@@ -6189,8 +6173,8 @@
                 node.modifyBox(32 /* PADDING_TOP */, null);
                 node.modifyBox(128 /* PADDING_BOTTOM */, null);
             }
-            const spacingWidth = $util$g.formatPX(horizontal > 1 ? Math.round(horizontal / 2) : horizontal);
-            const spacingHeight = $util$g.formatPX(vertical > 1 ? Math.round(vertical / 2) : vertical);
+            const spacingWidth = $util$f.formatPX(horizontal > 1 ? Math.round(horizontal / 2) : horizontal);
+            const spacingHeight = $util$f.formatPX(vertical > 1 ? Math.round(vertical / 2) : vertical);
             const rowWidth = [];
             const mapBounds = [];
             const tableFilled = [];
@@ -6260,12 +6244,12 @@
                             }
                         }
                         else {
-                            const unit = $util$g.isUnit(mapWidth[m]);
-                            const percent = $util$g.isPercent(columnWidth);
+                            const unit = $util$f.isUnit(mapWidth[m]);
+                            const percent = $util$f.isPercent(columnWidth);
                             if (reevaluate || td.bounds.width < mapBounds[m] || (td.bounds.width === mapBounds[m] && ((unit || percent) ||
                                 unit && percent ||
-                                percent && $util$g.isPercent(mapWidth[m]) && $util$g.convertFloat(columnWidth) > $util$g.convertFloat(mapWidth[m]) ||
-                                unit && $util$g.isUnit(columnWidth) && $util$g.convertInt(columnWidth) > $util$g.convertInt(mapWidth[m])))) {
+                                percent && $util$f.isPercent(mapWidth[m]) && $util$f.convertFloat(columnWidth) > $util$f.convertFloat(mapWidth[m]) ||
+                                unit && $util$f.isUnit(columnWidth) && $util$f.convertInt(columnWidth) > $util$f.convertInt(mapWidth[m])))) {
                                 mapWidth[m] = columnWidth;
                             }
                             if (reevaluate || element.colSpan === 1) {
@@ -6288,15 +6272,15 @@
                     columnIndex[i] += element.colSpan;
                 }
             }
-            if (node.has('width', 2 /* UNIT */) && mapWidth.some(value => $util$g.isPercent(value))) {
+            if (node.has('width', 2 /* UNIT */) && mapWidth.some(value => $util$f.isPercent(value))) {
                 mapWidth = mapWidth.map((value, index) => {
                     if (value === 'auto' && mapBounds[index] > 0) {
-                        value = $util$g.formatPX(mapBounds[index]);
+                        value = $util$f.formatPX(mapBounds[index]);
                     }
                     return value;
                 });
             }
-            if (mapWidth.every(value => $util$g.isPercent(value)) && mapWidth.reduce((a, b) => a + parseFloat(b), 0) > 1) {
+            if (mapWidth.every(value => $util$f.isPercent(value)) && mapWidth.reduce((a, b) => a + parseFloat(b), 0) > 1) {
                 let percentTotal = 100;
                 mapWidth = mapWidth.map(value => {
                     const percent = parseFloat(value);
@@ -6304,13 +6288,13 @@
                         value = '0px';
                     }
                     else if (percentTotal - percent < 0) {
-                        value = $util$g.formatPercent(percentTotal);
+                        value = $util$f.formatPercent(percentTotal);
                     }
                     percentTotal -= percent;
                     return value;
                 });
             }
-            else if (mapWidth.every(value => $util$g.isUnit(value))) {
+            else if (mapWidth.every(value => $util$f.isUnit(value))) {
                 const width = mapWidth.reduce((a, b) => a + parseInt(b), 0);
                 if (width < node.width) {
                     mapWidth = mapWidth.map(value => value !== '0px' ? `${(parseInt(value) / width) * 100}%` : value);
@@ -6322,9 +6306,9 @@
                     }
                 }
             }
-            const mapPercent = mapWidth.reduce((a, b) => a + ($util$g.isPercent(b) ? parseFloat(b) : 0), 0);
+            const mapPercent = mapWidth.reduce((a, b) => a + ($util$f.isPercent(b) ? parseFloat(b) : 0), 0);
             mainData.layoutType = (() => {
-                if (mapWidth.some(value => $util$g.isPercent(value)) || mapWidth.every(value => $util$g.isUnit(value) && value !== '0px')) {
+                if (mapWidth.some(value => $util$f.isPercent(value)) || mapWidth.every(value => $util$f.isUnit(value) && value !== '0px')) {
                     return 3 /* VARIABLE */;
                 }
                 if (mapWidth.every(value => value === mapWidth[0])) {
@@ -6338,7 +6322,7 @@
                         return 2 /* FIXED */;
                     }
                 }
-                if (mapWidth.every(value => value === 'auto' || ($util$g.isUnit(value) && value !== '0px'))) {
+                if (mapWidth.every(value => value === 'auto' || ($util$f.isUnit(value) && value !== '0px'))) {
                     return 1 /* STRETCH */;
                 }
                 return 0 /* NONE */;
@@ -6346,7 +6330,7 @@
             if (multiLine || (mainData.layoutType === 1 /* STRETCH */ && !node.hasWidth)) {
                 mainData.expand = true;
             }
-            const columnCount = $util$g.maxArray(columnIndex);
+            const columnCount = $util$f.maxArray(columnIndex);
             let rowCount = table.length;
             const caption = node.find(item => item.tagName === 'CAPTION');
             node.clear();
@@ -6354,10 +6338,10 @@
                 if (!caption.hasWidth && !$dom$b.isUserAgent(8 /* EDGE */)) {
                     if (caption.textElement) {
                         if (!caption.has('maxWidth')) {
-                            caption.css('maxWidth', $util$g.formatPX(caption.bounds.width));
+                            caption.css('maxWidth', $util$f.formatPX(caption.bounds.width));
                         }
                     }
-                    else if (caption.bounds.width > $util$g.maxArray(rowWidth)) {
+                    else if (caption.bounds.width > $util$f.maxArray(rowWidth)) {
                         setBoundsWidth(caption);
                     }
                 }
@@ -6407,11 +6391,11 @@
                                         setAutoWidth(td);
                                     }
                                 }
-                                else if ($util$g.isPercent(columnWidth)) {
+                                else if ($util$f.isPercent(columnWidth)) {
                                     td.data(EXT_NAME.TABLE, 'percent', columnWidth);
                                     td.data(EXT_NAME.TABLE, 'expand', true);
                                 }
-                                else if ($util$g.isUnit(columnWidth) && parseInt(columnWidth) > 0) {
+                                else if ($util$f.isUnit(columnWidth) && parseInt(columnWidth) > 0) {
                                     if (td.bounds.width >= parseInt(columnWidth)) {
                                         setBoundsWidth(td);
                                         td.data(EXT_NAME.TABLE, 'expand', false);
@@ -6560,11 +6544,11 @@
         }
     }
 
-    var $util$h = squared.lib.util;
+    const $util$g = squared.lib.util;
     class VerticalAlign extends Extension {
         condition(node) {
             const nodes = node.filter(item => item.inlineVertical);
-            return nodes.length > 1 && nodes.some(item => $util$h.convertInt(item.verticalAlign) !== 0) && NodeList.linearX(node.children);
+            return nodes.length > 1 && nodes.some(item => $util$g.convertInt(item.verticalAlign) !== 0) && NodeList.linearX(node.children);
         }
         processNode(node) {
             const belowBaseline = [];
@@ -6586,7 +6570,7 @@
                         if (aboveBaseline.includes(item)) {
                             reset = true;
                         }
-                        else if (item.inlineVertical && !item.baseline && $util$h.isUnit(item.verticalAlign)) {
+                        else if (item.inlineVertical && !item.baseline && $util$g.isUnit(item.verticalAlign)) {
                             item.modifyBox(2 /* MARGIN_TOP */, item.linear.top - aboveBaseline[0].linear.top);
                             belowBaseline.push(item);
                             reset = true;
@@ -6598,7 +6582,7 @@
                 }
             }
             else {
-                aboveBaseline = aboveBaseline.filter(item => $util$h.isUnit(item.verticalAlign) && $util$h.convertInt(item.verticalAlign) > 0);
+                aboveBaseline = aboveBaseline.filter(item => $util$g.isUnit(item.verticalAlign) && $util$g.convertInt(item.verticalAlign) > 0);
             }
             if (aboveBaseline.length) {
                 node.data(EXT_NAME.VERTICAL_ALIGN, 'mainData', {
@@ -6617,7 +6601,7 @@
                 }
                 else {
                     [...mainData.belowBaseline, ...mainData.aboveBaseline].some(item => {
-                        const verticalAlign = $util$h.convertInt(item.cssInitial('verticalAlign'));
+                        const verticalAlign = $util$g.convertInt(item.cssInitial('verticalAlign'));
                         if (verticalAlign > 0) {
                             item.modifyBox(8 /* MARGIN_BOTTOM */, verticalAlign);
                             return true;
@@ -6629,11 +6613,11 @@
         }
     }
 
-    var $dom$c = squared.lib.dom;
-    var $util$i = squared.lib.util;
+    const $dom$c = squared.lib.dom;
+    const $util$h = squared.lib.util;
     function setMinHeight(node, offset) {
         const minHeight = node.has('minHeight', 2 /* UNIT */) ? node.toInt('minHeight') : 0;
-        node.css('minHeight', $util$i.formatPX(Math.max(offset, minHeight)));
+        node.css('minHeight', $util$h.formatPX(Math.max(offset, minHeight)));
     }
     function applyMarginCollapse(parent, node, direction) {
         if (!node.lineBreak &&
@@ -6667,10 +6651,10 @@
                                     if (previous.blockStatic && !previous.lineBreak) {
                                         current = (current.renderAs || current);
                                         previous = (previous.renderAs || previous);
-                                        let marginTop = $util$i.convertInt(current.cssInitial('marginTop', false, true));
-                                        const marginBottom = $util$i.convertInt(current.cssInitial('marginBottom', false, true));
-                                        const previousMarginTop = $util$i.convertInt(previous.cssInitial('marginTop', false, true));
-                                        let previousMarginBottom = $util$i.convertInt(previous.cssInitial('marginBottom', false, true));
+                                        let marginTop = $util$h.convertInt(current.cssInitial('marginTop', false, true));
+                                        const marginBottom = $util$h.convertInt(current.cssInitial('marginBottom', false, true));
+                                        const previousMarginTop = $util$h.convertInt(previous.cssInitial('marginTop', false, true));
+                                        let previousMarginBottom = $util$h.convertInt(previous.cssInitial('marginBottom', false, true));
                                         if (previous.excluded && !current.excluded) {
                                             const offset = Math.min(previousMarginTop, previousMarginBottom);
                                             if (offset < 0) {
@@ -6699,14 +6683,14 @@
                                             if (marginTop === 0 && current.length > 0) {
                                                 const topChild = current.firstChild;
                                                 if (topChild && topChild.blockStatic) {
-                                                    marginTop = $util$i.convertInt(topChild.cssInitial('marginTop', false, true));
+                                                    marginTop = $util$h.convertInt(topChild.cssInitial('marginTop', false, true));
                                                     current = topChild;
                                                 }
                                             }
                                             if (previousMarginBottom === 0 && previous.length > 0) {
                                                 const bottomChild = previous.lastChild;
                                                 if (bottomChild && bottomChild.blockStatic) {
-                                                    previousMarginBottom = $util$i.convertInt(bottomChild.cssInitial('marginBottom', false, true));
+                                                    previousMarginBottom = $util$h.convertInt(bottomChild.cssInitial('marginBottom', false, true));
                                                     previous = bottomChild;
                                                 }
                                             }
@@ -6734,7 +6718,7 @@
             }
             if (this.application.processing.node) {
                 if (this.application.processing.node.htmlElement) {
-                    $util$i.flatMap(Array.from(this.application.processing.node.element.getElementsByTagName('BR')), (item) => $dom$c.getElementAsNode(item)).forEach((node) => {
+                    $util$h.flatMap(Array.from(this.application.processing.node.element.getElementsByTagName('BR')), (item) => $dom$c.getElementAsNode(item)).forEach((node) => {
                         if (!processed.has(node)) {
                             const actualParent = node.actualParent;
                             const previousSiblings = node.previousSiblings(true, true, true);

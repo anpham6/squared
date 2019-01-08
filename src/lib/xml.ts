@@ -1,4 +1,11 @@
-import { isArray, isString, repeat, trimEnd } from './util';
+import { isString, repeat, trimEnd } from './util';
+
+type XMLTagData = {
+    tag: string;
+    tagName: string;
+    value: string;
+    closing: boolean;
+};
 
 export function formatPlaceholder(id: string | number, symbol = ':') {
     return `{${symbol + id.toString()}}`;
@@ -9,26 +16,11 @@ export function replacePlaceholder(value: string, id: string | number, content: 
     return value.replace(placeholder, (before ? placeholder : '') + content + (before ? '' : placeholder));
 }
 
-export function pushIndent(value: string, depth: number, excludePattern?: RegExp, char = '\t') {
-    const indent = repeat(depth, char);
-    return value.split('\n').map(line => {
-        if (line !== '' && (excludePattern === undefined || !excludePattern.test(line))) {
-            return indent + line;
-        }
-        return line;
-    })
-    .join('\n');
-}
-
-export function pullIndent(value: string, depth: number, char = '\t') {
-    return value.split('\n').map(line => line.length > depth && line.charAt(0) === char ? line.substring(depth) : line).join('\n');
-}
-
-export function replaceIndent(value: string, depth: number, pattern: RegExp) {
+export function replaceIndent(value: string, depth: number, leadingPattern: RegExp) {
     if (depth >= 0) {
         let indent = -1;
         return value.split('\n').map(line => {
-            const match = pattern.exec(line);
+            const match = leadingPattern.exec(line);
             if (match) {
                 if (indent === -1) {
                     indent = match[2].length;
@@ -83,7 +75,7 @@ export function replaceCharacter(value: string) {
 }
 
 export function parseTemplate(value: string) {
-    const result: StringMap = { '__root': value };
+    const result: StringMap = { '__ROOT__': value };
     function parseSection(section: string) {
         const pattern = /(\t*<<(\w+)>>)\n[\w\W]*\n*\1/g;
         let match: RegExpExecArray | null = null;
@@ -104,118 +96,126 @@ export function parseTemplate(value: string) {
     return result;
 }
 
-export function createTemplate(value: StringMap | string, data: ExternalData, index?: string) {
+export function createTemplate(value: StringMap | string, data: ExternalData, format = false, index?: string) {
     function partial(attr: string, section: string) {
-        return `(\\t*##${attr}-${section}:(\\d+)##\\s*\\n)([\\w\\W]*?)\\s*\\n(\\t*##${attr}-${section}##\\s*\\n)`;
+        return `(\\t*##${attr}-${section}##\\s*\\n)([\\w\\W]*?\\s*\\n)(\\t*##${attr}-${section}##\\s*\\n)`;
     }
-    let output = typeof value === 'string' ? value : !index ? value['__root'].trim() : value[index];
-    const indentData: StringMap = {};
+    let output: string = index === undefined ? value['__ROOT__'] : value[index];
     for (const attr in data) {
         const unknown = data[attr];
-        let array = false;
-        let result: any = '';
+        let result: string | false = '';
         let hash = '';
-        if (isArray(unknown)) {
-            array = true;
+        if (Array.isArray(unknown)) {
+            hash = '%';
             if (Array.isArray(unknown[0])) {
                 const match = new RegExp(partial(attr, 'start') + `([\\w\\W]*?)` + partial(attr, 'end')).exec(output);
                 if (match) {
-                    let outputStart = '';
-                    let outputEnd = '';
-                    let depth = (unknown[0] as any[][]).length;
+                    let tagStart = '';
+                    let tagEnd = '';
+                    const depth = (unknown[0] as any[][]).length;
+                    const guard = Object.assign({}, value);
                     for (let i = 0; i < depth; i++) {
-                        let templateStart = match[3];
-                        let templateEnd = match[8];
-                        if (i > 0) {
-                            templateStart = '\n' + pushIndent(templateStart, i);
-                            templateEnd = pushIndent(templateEnd, i) + '\n';
-                        }
-                        outputStart += createTemplate(templateStart, unknown[0][i], attr.toString());
-                        outputEnd = templateEnd + outputEnd;
-                    }
-                    const indent = parseInt(match[2]);
-                    const pattern = /{%(\w+)}\s*/g;
-                    if (depth === 0 && indent === 0) {
-                        const replaced: string[] = [];
-                        let inline: RegExpExecArray | null = null;
-                        do {
-                            if (replaced.length) {
-                                match[5] = value[replaced.shift() as string];
-                            }
-                            while ((inline = pattern.exec(match[5])) !== null) {
-                                if (value[inline[1]]) {
-                                    indentData[inline[1]] = pullIndent(value[inline[1]], 1);
-                                    replaced.push(inline[1]);
-                                }
-                            }
-                        }
-                        while (replaced.length > 0);
-                    }
-                    else {
-                        depth += indent - 1;
-                        if (depth > 0) {
-                            let inline: RegExpExecArray | null = null;
-                            while ((inline = pattern.exec(match[5])) !== null) {
-                                if (value[inline[1]]) {
-                                    value[inline[1]] = pushIndent(value[inline[1]], depth, /^{%\w+}/);
-                                }
-                            }
-                            output = output.replace(match[5], pushIndent(match[5].replace(/\s*$/, ''), depth, /^{%\w+}/));
-                        }
+                        const key = `${index}_${attr}_${i}`;
+                        guard[key] = match[2];
+                        tagStart += createTemplate(guard, unknown[0][i], format, key);
+                        tagEnd = match[6] + tagEnd;
                     }
                     output = output
-                        .replace(match[3], outputStart).replace(match[8], '\n' + outputEnd)
-                        .replace(match[1], '').replace(match[4], '')
-                        .replace(new RegExp(`\\t*${match[6]}`), '').replace(new RegExp(`\\t*${match[9]}`), '');
-                    output = output.split('\n').filter(line => line !== '').join('\n') + '\n';
+                                .replace(match[2], tagStart).replace(match[6], tagEnd)
+                                .replace(match[1], '').replace(match[3], '')
+                                .replace(new RegExp(`\\t*${match[5]}`), '').replace(new RegExp(`\\t*${match[7]}`), '');
                 }
                 else {
                     result = false;
                 }
             }
-            else if (typeof unknown[0] !== 'object') {
+            else if (unknown.length === 0 || typeof unknown[0] !== 'object') {
                 result = false;
             }
-            else if (typeof value === 'object') {
-                let segmentData: ExternalData;
-                if (indentData[attr]) {
-                    segmentData = { ...value, ...indentData };
-                }
-                else {
-                    segmentData = value;
-                }
+            else {
                 for (let i = 0; i < unknown.length; i++) {
-                    result += createTemplate(segmentData, unknown[i], attr.toString());
+                    result += createTemplate(value, unknown[i], format, attr.toString());
                 }
                 if (result === '') {
                     result = false;
                 }
                 else {
-                    result = trimEnd(result, '\\n');
+                    result = trimEnd(result, '\n');
                 }
             }
         }
         else {
-            result = unknown;
+            hash = '[&~]';
+            result = typeof result === 'boolean' ? false : unknown.toString();
         }
-        if (isString(result)) {
-            if (array) {
-                hash = '%';
-            }
-            else {
-                hash = '[&~]';
-            }
-            output = output.replace(new RegExp(`{${hash + attr}}`, 'g'), result);
+        if (result === false) {
+            output = output.replace(new RegExp(`\\s*{${hash + attr}}\\n*`), '');
         }
-        if (result === false || Array.isArray(result) && result.length === 0) {
-            output = output.replace(new RegExp(`\\t*{%${attr}}\\n*`, 'g'), '');
+        else if (isString(result)) {
+            output = output.replace(new RegExp(`{${hash + attr}}`), result);
         }
-        if (hash === '' && new RegExp(`{&${attr}}`).test(output)) {
+        else if (new RegExp(`{&${attr}}`).test(output)) {
             return '';
         }
     }
     if (index === undefined) {
-        output = output.replace(/\n{%\w+}\n/g, '\n');
+        output = output.replace(/\n{%\w+}\n/g, '\n').trim();
+        if (format) {
+            output = formatTemplate(output);
+        }
     }
     return output.replace(/\s*([\w:]+="[^"]*)?{~\w+}"?/g, '');
+}
+
+export function formatTemplate(value: string, closeEmpty = true, char = '\t') {
+    const lines: XMLTagData[] = [];
+    const pattern = /\s*(<(\/)?([?\w]+)[^>]*>)\n{0,1}([^<]*)/g;
+    let match: RegExpExecArray | null = null;
+    while ((match = pattern.exec(value)) !== null) {
+        lines.push({
+            tag: match[1],
+            closing: !!match[2],
+            tagName: match[3],
+            value: match[4].trim() === '' ? '' : match[4]
+        });
+    }
+    const closed = /\/>\n*$/;
+    let result = '';
+    let indent = -1;
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        let previous = indent;
+        if (i > 0) {
+            if (line.closing) {
+                indent--;
+            }
+            else {
+                previous++;
+                if (!closed.exec(line.tag)) {
+                    if (closeEmpty && line.value.trim() === '') {
+                        const next = lines[i + 1];
+                        if (next && next.closing && next.tagName === line.tagName) {
+                            line.tag = line.tag.replace(/\s*>$/, ' />');
+                            i++;
+                        }
+                        else {
+                            indent++;
+                        }
+                    }
+                    else {
+                        indent++;
+                    }
+                }
+            }
+            line.tag.trim().split('\n').forEach((partial, index) => {
+                const depth = previous + (index > 0 ? 1 : 0);
+                result += (depth > 0 ? repeat(depth, char) : '') + partial.trim() + '\n';
+            });
+        }
+        else {
+            result += line.tag + '\n';
+        }
+        result += line.value;
+    }
+    return result.trim();
 }

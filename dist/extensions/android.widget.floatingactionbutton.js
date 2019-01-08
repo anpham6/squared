@@ -6,13 +6,13 @@ this.android.widget = this.android.widget || {};
 this.android.widget.floatingactionbutton = (function () {
     'use strict';
 
-    var $enum = squared.base.lib.enumeration;
-    var $color = squared.lib.color;
-    var $util = squared.lib.util;
     var $Resource = android.base.Resource;
-    var $const_android = android.lib.constant;
-    var $enum_android = android.lib.enumeration;
-    var $util_android = android.lib.util;
+    const $enum = squared.base.lib.enumeration;
+    const $color = squared.lib.color;
+    const $util = squared.lib.util;
+    const $constA = android.lib.constant;
+    const $enumA = android.lib.enumeration;
+    const $utilA = android.lib.util;
     class FloatingActionButton extends squared.base.Extension {
         is(node) {
             const element = node.element;
@@ -24,7 +24,7 @@ this.android.widget.floatingactionbutton = (function () {
         processNode(node, parent) {
             const element = node.element;
             const target = $util.hasValue(node.dataset.target);
-            const options = $util_android.createAttribute(this.options[element.id]);
+            const options = $utilA.createViewAttribute(this.options[element.id]);
             const backgroundColor = $color.parseRGBA(node.css('backgroundColor'), node.css('opacity'));
             let colorValue = '';
             if (backgroundColor) {
@@ -37,24 +37,24 @@ this.android.widget.floatingactionbutton = (function () {
             let src = '';
             switch (element.tagName) {
                 case 'IMG':
-                    src = $Resource.addImageSrcSet(element, $const_android.PREFIX_ANDROID.DIALOG);
+                    src = $Resource.addImageSrcSet(element, $constA.PREFIX_ANDROID.DIALOG);
                     break;
                 case 'INPUT':
                     if (element.type === 'image') {
-                        src = $Resource.addImage({ mdpi: element.src }, $const_android.PREFIX_ANDROID.DIALOG);
+                        src = $Resource.addImage({ mdpi: element.src }, $constA.PREFIX_ANDROID.DIALOG);
                     }
                     else {
-                        src = $Resource.addImageUrl(node.css('backgroundImage'), $const_android.PREFIX_ANDROID.DIALOG);
+                        src = $Resource.addImageUrl(node.css('backgroundImage'), $constA.PREFIX_ANDROID.DIALOG);
                     }
                     break;
                 case 'BUTTON':
-                    src = $Resource.addImageUrl(node.css('backgroundImage'), $const_android.PREFIX_ANDROID.DIALOG);
+                    src = $Resource.addImageUrl(node.css('backgroundImage'), $constA.PREFIX_ANDROID.DIALOG);
                     break;
             }
             if (src !== '') {
                 $util.defaultWhenNull(options, 'app', 'srcCompat', `@drawable/${src}`);
             }
-            node.setControlType($const_android.SUPPORT_ANDROID.FLOATING_ACTION_BUTTON, $enum_android.CONTAINER_NODE.BUTTON);
+            node.setControlType($constA.SUPPORT_ANDROID.FLOATING_ACTION_BUTTON, $enumA.CONTAINER_NODE.BUTTON);
             node.exclude({ resource: $enum.NODE_RESOURCE.BOX_STYLE | $enum.NODE_RESOURCE.ASSET });
             if (!node.pageFlow || target) {
                 const horizontalBias = node.horizontalBias();
@@ -99,7 +99,7 @@ this.android.widget.floatingactionbutton = (function () {
                 }
                 if (target) {
                     let anchor = parent.documentId;
-                    if (parent.controlName === $const_android.SUPPORT_ANDROID.TOOLBAR) {
+                    if (parent.controlName === $constA.SUPPORT_ANDROID.TOOLBAR) {
                         const outerParent = parent.data("android.widget.toolbar" /* TOOLBAR */, 'outerParent');
                         if (outerParent) {
                             anchor = outerParent;
@@ -121,7 +121,7 @@ this.android.widget.floatingactionbutton = (function () {
             else {
                 node.render(parent);
             }
-            const output = this.application.controllerHandler.renderNodeStatic($const_android.SUPPORT_ANDROID.FLOATING_ACTION_BUTTON, target ? -1 : node.renderDepth, $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($const_android.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')), 'wrap_content', 'wrap_content', node);
+            const output = this.application.controllerHandler.renderNodeStatic($constA.SUPPORT_ANDROID.FLOATING_ACTION_BUTTON, target ? -1 : node.renderDepth, $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')), 'wrap_content', 'wrap_content', node);
             return { output, complete: true };
         }
     }

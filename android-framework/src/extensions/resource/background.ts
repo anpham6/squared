@@ -495,16 +495,20 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             alpha: '',
                             A: [{
                                 group: [[]],
-                                AA: [{
-                                    render: [[]],
-                                    name: `${node.controlId}_gradient_path`,
-                                    value: squared.svg.SvgPath.getRect(width, height),
-                                    clipPaths: false,
-                                    fillPattern: [{ gradients: backgroundGradient }]
+                                BB: [{
+                                    CCC: [{
+                                        render: [[]],
+                                        name: `${node.controlId}_gradient_path`,
+                                        value: squared.svg.SvgPath.getRect(width, height),
+                                        clipPaths: false,
+                                        fillPattern: [{ gradients: backgroundGradient }]
+                                    }],
+                                    DDD: false
                                 }]
-                            }]
+                            }],
+                            B: false
                         };
-                        const xml = $xml.createTemplate(TEMPLATES.VECTOR, vectorData);
+                        const xml = $xml.createTemplate(TEMPLATES.VECTOR, vectorData, true);
                         let vectorName = Resource.getStoredName('drawables', xml);
                         if (vectorName === '') {
                             vectorName = `${node.tagName.toLowerCase()}_${node.controlId}_gradient`;

@@ -516,11 +516,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         for (const element of Array.from(elements) as HTMLElement[]) {
             if (!this.parseElements.has(element)) {
                 prioritizeExtensions(documentRoot, element, Array.from(this.extensions)).some(item => item.init(element));
-                if (!this.parseElements.has(element) && !(
-                        localSettings.unsupported.tagName.has(element.tagName) ||
-                        element instanceof HTMLInputElement && localSettings.unsupported.tagName.has(`${element.tagName}:${element.type}`)
-                   ))
-                {
+                if (!this.parseElements.has(element) && !(localSettings.unsupported.tagName.has(element.tagName) || element instanceof HTMLInputElement && localSettings.unsupported.tagName.has(`${element.tagName}:${element.type}`))) {
                     let valid = true;
                     let current = element.parentElement;
                     while (current && current !== documentRoot) {
@@ -1747,7 +1743,7 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     protected conditionElement(element: Element) {
-        if (element.parentElement instanceof SVGSVGElement) {
+        if (element instanceof SVGGraphicsElement && !(element.parentElement instanceof HTMLElement)) {
             return false;
         }
         else if ($dom.hasComputedStyle(element)) {

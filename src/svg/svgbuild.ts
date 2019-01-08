@@ -13,7 +13,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         if (element) {
             let result = '';
             let tagName: string | undefined;
-            if (element.id) {
+            if ($util.isString(element.id)) {
                 if (!NAME_GRAPHICS.has(element.id)) {
                     result = element.id;
                 }

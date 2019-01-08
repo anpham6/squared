@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Language" content="en">
+    <title>https://github.com/anpham6/squared</title>
+    <link rel="stylesheet" type="text/css" href="common/dev.css">
+    <style>
+        #squared_ui {
+            padding: 10px;
+        }
+        #squared_ui > div {
+            margin-bottom: 20px;
+        }
+        .list-group-item:first-child {
+            border-top-right-radius: 4px;
+            border-top-left-radius: 4px;
+        }
+        .list-group-item:last-child {
+            border-bottom-right-radius: 4px;
+            border-bottom-left-radius: 4px;
+        }
+        .list-group-item {
+            position: relative;
+            color: #555;
+            padding: 10px 15px;
+            margin-bottom: -1px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            display: inline-block;
+        }
+        .svg-inline--fa {
+            display: inline-block;
+            height: 1em;
+            vertical-align: -.125em;
+            overflow: visible;
+        }
+        .fa-1x {
+            font-size: 1em;
+        }
+        .svg-inline--fa.fa-w-14 {
+            width: 0.875em;
+        }
+        .svg-inline--fa.fa-w-16 {
+            width: 1em;
+        }
+        .svg-inline--fa.fa-w-18 {
+            width: 1.125em;
+        }
+        a {
+            width: 200px;
+            text-decoration: none;
+        }
+    </style>
+    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="common/dev.js"></script>
+    <script>
+        System.import('/build/src/main.js').then(result => {
+            squared = result;
+            System.import('/build/src/base/main.js').then(result => {
+                squared.base = result;
+                System.import('/build/src/svg/main.js').then(result => {
+                    squared.svg = result;
+                    System.import('/build/android-framework/src/main.js').then(result => {
+                        android = result.default;
+                        squared.setFramework(android);
+                        squared.parseDocument('squared_ui');
+                        squared.close();
+
+                        var views = squared.system.writeLayoutAllXml();
+                        document.getElementById('output').innerHTML = stringify(views).replace(/</g, '&lt;');
+
+                        var resource = squared.system.writeResourceAllXml();
+                        document.getElementById('resource').innerHTML = stringify(resource).replace(/</g, '&lt;');
+                    });
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <!-- START: DEMO -->
+    <div id="squared_ui" style="width: 300px;">
+        <svg viewBox="0 0 200 100">
+            <g fill="grey" transform="scale(1 0.5) rotate(-10 50 100) translate(-36 45.5)">
+                <path id="heart" d="M 50,30 A 20,20 0,0,1 90,30 A 20,20 0,0,1 130,30 Q 130,60 90,90 Q 50,60 50,30 z" />
+                <svg x="0" y="15">
+                    <rect width="200" height="75" fill="none" stroke="red" />
+                    <svg x="0" y="15">
+                        <rect width="200" height="75" fill="none" stroke="red" />
+                        <svg x="0" y="15">
+                            <rect width="200" height="75" fill="none" stroke="red" />
+                            <svg x="0" y="15">
+                                <rect width="200" height="75" fill="none" stroke="red" />
+                                <rect width="100" height="50" fill="none" stroke="red" />
+                                <rect width="50" height="75" fill="none" stroke="red" />
+                            </svg>
+                        </svg>
+                    </svg>
+                </svg>
+            </g>
+            <use href="#heart" fill="none" stroke="red"/>
+        </svg>
+    </div>
+    <!-- END: DEMO -->
+
+    <div>
+        <div class="output">
+            <pre id="output"></pre>
+            <div>
+                <button onclick="copy('output');">Copy</button>
+                <button onclick="squared.system.writeLayoutAllXml(true);">Save</button>
+                <button onclick="squared.saveAllToDisk();">Save All</button>
+            </div>
+        </div>
+        <div class="output">
+            <pre id="resource"></pre>
+            <div>
+                <button onclick="copy('resource');">Copy</button>
+                <button onclick="squared.system.writeResourceAllXml(true);">Save</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -13,22 +13,6 @@
         '', 'X', 'XX', 'XXX', 'XL', 'L', 'LX', 'LXX', 'LXXX', 'XC',
         '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'
     ];
-    function sort(list, asc, ...attrs) {
-        return list.sort((a, b) => {
-            for (const attr of attrs) {
-                const result = compareObject(a, b, attr, true);
-                if (result && result[0] !== result[1]) {
-                    if (asc === 1) {
-                        return result[0] > result[1] ? 1 : -1;
-                    }
-                    else {
-                        return result[0] < result[1] ? 1 : -1;
-                    }
-                }
-            }
-            return 0;
-        });
-    }
     function compareObject(obj1, obj2, attr, numeric) {
         const namespaces = attr.split('.');
         let current1 = obj1;
@@ -64,7 +48,7 @@
         return [current1, current2];
     }
     const REGEX_PATTERN = {
-        CSS_URL: /url\("?#?(.*?)"?\)/,
+        CSS_URL: /url\("?(#?.*?)"?\)/,
         URI: /^[A-Za-z]+:\/\//,
         UNIT: /^(?:\s*(-?[\d.]+)(px|em|ch|pc|pt|vw|vh|vmin|vmax|mm|cm|in))+$/
     };
@@ -94,18 +78,18 @@
         return value;
     }
     function convertWord(value) {
-        return value ? value.replace(/[^\w]/g, '_').trim() : '';
+        return value && value.replace(/[^\w]/g, '_').trim() || '';
     }
     function convertInt(value) {
-        return (value && parseInt(value)) || 0;
+        return value && parseInt(value) || 0;
     }
     function convertFloat(value) {
-        return (value && parseFloat(value)) || 0;
+        return value && parseFloat(value) || 0;
     }
     function convertPX(value, dpi, fontSize) {
         if (value) {
             if (isNumber(value)) {
-                return `${Math.round(value)}px`;
+                return `${value}px`;
             }
             else {
                 value = value.trim();
@@ -223,6 +207,20 @@
     function includes(source, value, delimiter = ',') {
         return source ? source.split(delimiter).map(segment => segment.trim()).includes(value) : false;
     }
+    function cloneObject(data) {
+        const result = {};
+        for (const attr in data) {
+            if (data.hasOwnProperty(attr)) {
+                if (data && typeof data[attr] === 'object') {
+                    result[attr] = cloneObject(data[attr]);
+                }
+                else {
+                    result[attr] = data[attr];
+                }
+            }
+        }
+        return result;
+    }
     function optional(obj, value, type) {
         let valid = false;
         let result;
@@ -320,18 +318,6 @@
     function lastIndexOf(value, char = '/') {
         return value.substring(value.lastIndexOf(char) + 1);
     }
-    function minArray(list) {
-        if (list.length) {
-            return Math.min.apply(null, list);
-        }
-        return Number.MAX_VALUE;
-    }
-    function maxArray(list) {
-        if (list.length) {
-            return Math.max.apply(null, list);
-        }
-        return Number.MAX_VALUE * -1;
-    }
     function hasSameValue(obj1, obj2, ...attrs) {
         for (const attr of attrs) {
             const value = compareObject(obj1, obj2, attr, false);
@@ -416,7 +402,19 @@
             }
         }
     }
-    function partition(list, predicate) {
+    function minArray(list) {
+        if (list.length) {
+            return Math.min.apply(null, list);
+        }
+        return Number.MAX_VALUE;
+    }
+    function maxArray(list) {
+        if (list.length) {
+            return Math.max.apply(null, list);
+        }
+        return Number.MAX_VALUE * -1;
+    }
+    function partitionArray(list, predicate) {
         const valid = [];
         const invalid = [];
         for (let i = 0; i < list.length; i++) {
@@ -454,11 +452,21 @@
     function flatMap(list, predicate) {
         return list.map((item, index) => predicate(item, index)).filter((item) => hasValue(item));
     }
-    function sortAsc(list, ...attrs) {
-        return sort(list, 1, ...attrs);
-    }
-    function sortDesc(list, ...attrs) {
-        return sort(list, 2, ...attrs);
+    function sortArray(list, ascending, ...attrs) {
+        return list.sort((a, b) => {
+            for (const attr of attrs) {
+                const result = compareObject(a, b, attr, true);
+                if (result && result[0] !== result[1]) {
+                    if (ascending) {
+                        return result[0] > result[1] ? 1 : -1;
+                    }
+                    else {
+                        return result[0] < result[1] ? 1 : -1;
+                    }
+                }
+            }
+            return 0;
+        });
     }
 
     var util = /*#__PURE__*/Object.freeze({
@@ -484,6 +492,7 @@
         isUnit: isUnit,
         isPercent: isPercent,
         includes: includes,
+        cloneObject: cloneObject,
         optional: optional,
         optionalAsObject: optionalAsObject,
         optionalAsString: optionalAsString,
@@ -497,8 +506,6 @@
         repeat: repeat,
         indexOf: indexOf,
         lastIndexOf: lastIndexOf,
-        minArray: minArray,
-        maxArray: maxArray,
         hasSameValue: hasSameValue,
         searchObject: searchObject,
         hasValue: hasValue,
@@ -506,13 +513,14 @@
         withinFraction: withinFraction,
         assignWhenNull: assignWhenNull,
         defaultWhenNull: defaultWhenNull,
-        partition: partition,
+        minArray: minArray,
+        maxArray: maxArray,
+        partitionArray: partitionArray,
         retainArray: retainArray,
         spliceArray: spliceArray,
         flatArray: flatArray,
         flatMap: flatMap,
-        sortAsc: sortAsc,
-        sortDesc: sortDesc
+        sortArray: sortArray
     });
 
     class Container {
@@ -599,7 +607,7 @@
             return this._children.map(predicate).filter(item => item);
         }
         partition(predicate) {
-            return partition(this._children, predicate);
+            return partitionArray(this._children, predicate);
         }
         sort(predicate) {
             this._children.sort(predicate);
@@ -620,160 +628,160 @@
     }
 
     const X11_CSS3 = {
-        'Pink': { 'hex': '#FFC0CB' },
-        'LightPink': { 'hex': '#FFB6C1' },
-        'HotPink': { 'hex': '#FF69B4' },
-        'DeepPink': { 'hex': '#FF1493' },
-        'PaleVioletRed': { 'hex': '#DB7093' },
-        'MediumVioletRed': { 'hex': '#C71585' },
-        'LightSalmon': { 'hex': '#FFA07A' },
-        'Salmon': { 'hex': '#FA8072' },
-        'DarkSalmon': { 'hex': '#E9967A' },
-        'LightCoral': { 'hex': '#F08080' },
-        'IndianRed': { 'hex': '#CD5C5C' },
-        'Crimson': { 'hex': '#DC143C' },
-        'Firebrick': { 'hex': '#B22222' },
-        'DarkRed': { 'hex': '#8B0000' },
-        'Red': { 'hex': '#FF0000' },
-        'OrangeRed': { 'hex': '#FF4500' },
-        'Tomato': { 'hex': '#FF6347' },
-        'Coral': { 'hex': '#FF7F50' },
-        'Orange': { 'hex': '#FFA500' },
-        'DarkOrange': { 'hex': '#FF8C00' },
-        'Yellow': { 'hex': '#FFFF00' },
-        'LightYellow': { 'hex': '#FFFFE0' },
-        'LemonChiffon': { 'hex': '#FFFACD' },
-        'LightGoldenrodYellow': { 'hex': '#FAFAD2' },
-        'PapayaWhip': { 'hex': '#FFEFD5' },
-        'Moccasin': { 'hex': '#FFE4B5' },
-        'PeachPuff': { 'hex': '#FFDAB9' },
-        'PaleGoldenrod': { 'hex': '#EEE8AA' },
-        'Khaki': { 'hex': '#F0E68C' },
-        'DarkKhaki': { 'hex': '#BDB76B' },
-        'Gold': { 'hex': '#FFD700' },
-        'Cornsilk': { 'hex': '#FFF8DC' },
-        'BlanchedAlmond': { 'hex': '#FFEBCD' },
-        'Bisque': { 'hex': '#FFE4C4' },
-        'NavajoWhite': { 'hex': '#FFDEAD' },
-        'Wheat': { 'hex': '#F5DEB3' },
-        'Burlywood': { 'hex': '#DEB887' },
-        'Tan': { 'hex': '#D2B48C' },
-        'RosyBrown': { 'hex': '#BC8F8F' },
-        'SandyBrown': { 'hex': '#F4A460' },
-        'Goldenrod': { 'hex': '#DAA520' },
-        'DarkGoldenrod': { 'hex': '#B8860B' },
-        'Peru': { 'hex': '#CD853F' },
-        'Chocolate': { 'hex': '#D2691E' },
-        'SaddleBrown': { 'hex': '#8B4513' },
-        'Sienna': { 'hex': '#A0522D' },
-        'Brown': { 'hex': '#A52A2A' },
-        'Maroon': { 'hex': '#800000' },
-        'DarkOliveGreen': { 'hex': '#556B2F' },
-        'Olive': { 'hex': '#808000' },
-        'OliveDrab': { 'hex': '#6B8E23' },
-        'YellowGreen': { 'hex': '#9ACD32' },
-        'LimeGreen': { 'hex': '#32CD32' },
-        'Lime': { 'hex': '#00FF00' },
-        'LawnGreen': { 'hex': '#7CFC00' },
-        'Chartreuse': { 'hex': '#7FFF00' },
-        'GreenYellow': { 'hex': '#ADFF2F' },
-        'SpringGreen': { 'hex': '#00FF7F' },
-        'MediumSpringGreen': { 'hex': '#00FA9A' },
-        'LightGreen': { 'hex': '#90EE90' },
-        'PaleGreen': { 'hex': '#98FB98' },
-        'DarkSeaGreen': { 'hex': '#8FBC8F' },
-        'MediumAquamarine': { 'hex': '#66CDAA' },
-        'MediumSeaGreen': { 'hex': '#3CB371' },
-        'SeaGreen': { 'hex': '#2E8B57' },
-        'ForestGreen': { 'hex': '#228B22' },
-        'Green': { 'hex': '#008000' },
-        'DarkGreen': { 'hex': '#006400' },
-        'Aqua': { 'hex': '#00FFFF' },
-        'Cyan': { 'hex': '#00FFFF' },
-        'LightCyan': { 'hex': '#E0FFFF' },
-        'PaleTurquoise': { 'hex': '#AFEEEE' },
-        'Aquamarine': { 'hex': '#7FFFD4' },
-        'Turquoise': { 'hex': '#40E0D0' },
-        'DarkTurquoise': { 'hex': '#00CED1' },
-        'MediumTurquoise': { 'hex': '#48D1CC' },
-        'LightSeaGreen': { 'hex': '#20B2AA' },
-        'CadetBlue': { 'hex': '#5F9EA0' },
-        'DarkCyan': { 'hex': '#008B8B' },
-        'Teal': { 'hex': '#008080' },
-        'LightSteelBlue': { 'hex': '#B0C4DE' },
-        'PowderBlue': { 'hex': '#B0E0E6' },
-        'LightBlue': { 'hex': '#ADD8E6' },
-        'SkyBlue': { 'hex': '#87CEEB' },
-        'LightSkyBlue': { 'hex': '#87CEFA' },
-        'DeepSkyBlue': { 'hex': '#00BFFF' },
-        'DodgerBlue': { 'hex': '#1E90FF' },
-        'Cornflower': { 'hex': '#6495ED' },
-        'SteelBlue': { 'hex': '#4682B4' },
-        'RoyalBlue': { 'hex': '#4169E1' },
-        'Blue': { 'hex': '#0000FF' },
-        'MediumBlue': { 'hex': '#0000CD' },
-        'DarkBlue': { 'hex': '#00008B' },
-        'Navy': { 'hex': '#000080' },
-        'MidnightBlue': { 'hex': '#191970' },
-        'Lavender': { 'hex': '#E6E6FA' },
-        'Thistle': { 'hex': '#D8BFD8' },
-        'Plum': { 'hex': '#DDA0DD' },
-        'Violet': { 'hex': '#EE82EE' },
-        'Orchid': { 'hex': '#DA70D6' },
-        'Fuchsia': { 'hex': '#FF00FF' },
-        'Magenta': { 'hex': '#FF00FF' },
-        'MediumOrchid': { 'hex': '#BA55D3' },
-        'MediumPurple': { 'hex': '#9370DB' },
-        'BlueViolet': { 'hex': '#8A2BE2' },
-        'DarkViolet': { 'hex': '#9400D3' },
-        'DarkOrchid': { 'hex': '#9932CC' },
-        'DarkMagenta': { 'hex': '#8B008B' },
-        'Purple': { 'hex': '#800080' },
-        'RebeccaPurple': { 'hex': '#663399' },
-        'Indigo': { 'hex': '#4B0082' },
-        'DarkSlateBlue': { 'hex': '#483D8B' },
-        'SlateBlue': { 'hex': '#6A5ACD' },
-        'MediumSlateBlue': { 'hex': '#7B68EE' },
-        'White': { 'hex': '#FFFFFF' },
-        'Snow': { 'hex': '#FFFAFA' },
-        'Honeydew': { 'hex': '#F0FFF0' },
-        'MintCream': { 'hex': '#F5FFFA' },
-        'Azure': { 'hex': '#F0FFFF' },
-        'AliceBlue': { 'hex': '#F0F8FF' },
-        'GhostWhite': { 'hex': '#F8F8FF' },
-        'WhiteSmoke': { 'hex': '#F5F5F5' },
-        'Seashell': { 'hex': '#FFF5EE' },
-        'Beige': { 'hex': '#F5F5DC' },
-        'OldLace': { 'hex': '#FDF5E6' },
-        'FloralWhite': { 'hex': '#FFFAF0' },
-        'Ivory': { 'hex': '#FFFFF0' },
-        'AntiqueWhite': { 'hex': '#FAEBD7' },
-        'Linen': { 'hex': '#FAF0E6' },
-        'LavenderBlush': { 'hex': '#FFF0F5' },
-        'MistyRose': { 'hex': '#FFE4E1' },
-        'Gainsboro': { 'hex': '#DCDCDC' },
-        'LightGray': { 'hex': '#D3D3D3' },
-        'Silver': { 'hex': '#C0C0C0' },
-        'DarkGray': { 'hex': '#A9A9A9' },
-        'Gray': { 'hex': '#808080' },
-        'DimGray': { 'hex': '#696969' },
-        'LightSlateGray': { 'hex': '#778899' },
-        'SlateGray': { 'hex': '#708090' },
-        'DarkSlateGray': { 'hex': '#2F4F4F' },
-        'LightGrey': { 'hex': '#D3D3D3' },
-        'DarkGrey': { 'hex': '#A9A9A9' },
-        'Grey': { 'hex': '#808080' },
-        'DimGrey': { 'hex': '#696969' },
-        'LightSlateGrey': { 'hex': '#778899' },
-        'SlateGrey': { 'hex': '#708090' },
-        'DarkSlateGrey': { 'hex': '#2F4F4F' },
-        'Black': { 'hex': '#000000' }
+        'Pink': { value: '#FFC0CB' },
+        'LightPink': { value: '#FFB6C1' },
+        'HotPink': { value: '#FF69B4' },
+        'DeepPink': { value: '#FF1493' },
+        'PaleVioletRed': { value: '#DB7093' },
+        'MediumVioletRed': { value: '#C71585' },
+        'LightSalmon': { value: '#FFA07A' },
+        'Salmon': { value: '#FA8072' },
+        'DarkSalmon': { value: '#E9967A' },
+        'LightCoral': { value: '#F08080' },
+        'IndianRed': { value: '#CD5C5C' },
+        'Crimson': { value: '#DC143C' },
+        'Firebrick': { value: '#B22222' },
+        'DarkRed': { value: '#8B0000' },
+        'Red': { value: '#FF0000' },
+        'OrangeRed': { value: '#FF4500' },
+        'Tomato': { value: '#FF6347' },
+        'Coral': { value: '#FF7F50' },
+        'Orange': { value: '#FFA500' },
+        'DarkOrange': { value: '#FF8C00' },
+        'Yellow': { value: '#FFFF00' },
+        'LightYellow': { value: '#FFFFE0' },
+        'LemonChiffon': { value: '#FFFACD' },
+        'LightGoldenrodYellow': { value: '#FAFAD2' },
+        'PapayaWhip': { value: '#FFEFD5' },
+        'Moccasin': { value: '#FFE4B5' },
+        'PeachPuff': { value: '#FFDAB9' },
+        'PaleGoldenrod': { value: '#EEE8AA' },
+        'Khaki': { value: '#F0E68C' },
+        'DarkKhaki': { value: '#BDB76B' },
+        'Gold': { value: '#FFD700' },
+        'Cornsilk': { value: '#FFF8DC' },
+        'BlanchedAlmond': { value: '#FFEBCD' },
+        'Bisque': { value: '#FFE4C4' },
+        'NavajoWhite': { value: '#FFDEAD' },
+        'Wheat': { value: '#F5DEB3' },
+        'Burlywood': { value: '#DEB887' },
+        'Tan': { value: '#D2B48C' },
+        'RosyBrown': { value: '#BC8F8F' },
+        'SandyBrown': { value: '#F4A460' },
+        'Goldenrod': { value: '#DAA520' },
+        'DarkGoldenrod': { value: '#B8860B' },
+        'Peru': { value: '#CD853F' },
+        'Chocolate': { value: '#D2691E' },
+        'SaddleBrown': { value: '#8B4513' },
+        'Sienna': { value: '#A0522D' },
+        'Brown': { value: '#A52A2A' },
+        'Maroon': { value: '#800000' },
+        'DarkOliveGreen': { value: '#556B2F' },
+        'Olive': { value: '#808000' },
+        'OliveDrab': { value: '#6B8E23' },
+        'YellowGreen': { value: '#9ACD32' },
+        'LimeGreen': { value: '#32CD32' },
+        'Lime': { value: '#00FF00' },
+        'LawnGreen': { value: '#7CFC00' },
+        'Chartreuse': { value: '#7FFF00' },
+        'GreenYellow': { value: '#ADFF2F' },
+        'SpringGreen': { value: '#00FF7F' },
+        'MediumSpringGreen': { value: '#00FA9A' },
+        'LightGreen': { value: '#90EE90' },
+        'PaleGreen': { value: '#98FB98' },
+        'DarkSeaGreen': { value: '#8FBC8F' },
+        'MediumAquamarine': { value: '#66CDAA' },
+        'MediumSeaGreen': { value: '#3CB371' },
+        'SeaGreen': { value: '#2E8B57' },
+        'ForestGreen': { value: '#228B22' },
+        'Green': { value: '#008000' },
+        'DarkGreen': { value: '#006400' },
+        'Aqua': { value: '#00FFFF' },
+        'Cyan': { value: '#00FFFF' },
+        'LightCyan': { value: '#E0FFFF' },
+        'PaleTurquoise': { value: '#AFEEEE' },
+        'Aquamarine': { value: '#7FFFD4' },
+        'Turquoise': { value: '#40E0D0' },
+        'DarkTurquoise': { value: '#00CED1' },
+        'MediumTurquoise': { value: '#48D1CC' },
+        'LightSeaGreen': { value: '#20B2AA' },
+        'CadetBlue': { value: '#5F9EA0' },
+        'DarkCyan': { value: '#008B8B' },
+        'Teal': { value: '#008080' },
+        'LightSteelBlue': { value: '#B0C4DE' },
+        'PowderBlue': { value: '#B0E0E6' },
+        'LightBlue': { value: '#ADD8E6' },
+        'SkyBlue': { value: '#87CEEB' },
+        'LightSkyBlue': { value: '#87CEFA' },
+        'DeepSkyBlue': { value: '#00BFFF' },
+        'DodgerBlue': { value: '#1E90FF' },
+        'Cornflower': { value: '#6495ED' },
+        'SteelBlue': { value: '#4682B4' },
+        'RoyalBlue': { value: '#4169E1' },
+        'Blue': { value: '#0000FF' },
+        'MediumBlue': { value: '#0000CD' },
+        'DarkBlue': { value: '#00008B' },
+        'Navy': { value: '#000080' },
+        'MidnightBlue': { value: '#191970' },
+        'Lavender': { value: '#E6E6FA' },
+        'Thistle': { value: '#D8BFD8' },
+        'Plum': { value: '#DDA0DD' },
+        'Violet': { value: '#EE82EE' },
+        'Orchid': { value: '#DA70D6' },
+        'Fuchsia': { value: '#FF00FF' },
+        'Magenta': { value: '#FF00FF' },
+        'MediumOrchid': { value: '#BA55D3' },
+        'MediumPurple': { value: '#9370DB' },
+        'BlueViolet': { value: '#8A2BE2' },
+        'DarkViolet': { value: '#9400D3' },
+        'DarkOrchid': { value: '#9932CC' },
+        'DarkMagenta': { value: '#8B008B' },
+        'Purple': { value: '#800080' },
+        'RebeccaPurple': { value: '#663399' },
+        'Indigo': { value: '#4B0082' },
+        'DarkSlateBlue': { value: '#483D8B' },
+        'SlateBlue': { value: '#6A5ACD' },
+        'MediumSlateBlue': { value: '#7B68EE' },
+        'White': { value: '#FFFFFF' },
+        'Snow': { value: '#FFFAFA' },
+        'Honeydew': { value: '#F0FFF0' },
+        'MintCream': { value: '#F5FFFA' },
+        'Azure': { value: '#F0FFFF' },
+        'AliceBlue': { value: '#F0F8FF' },
+        'GhostWhite': { value: '#F8F8FF' },
+        'WhiteSmoke': { value: '#F5F5F5' },
+        'Seashell': { value: '#FFF5EE' },
+        'Beige': { value: '#F5F5DC' },
+        'OldLace': { value: '#FDF5E6' },
+        'FloralWhite': { value: '#FFFAF0' },
+        'Ivory': { value: '#FFFFF0' },
+        'AntiqueWhite': { value: '#FAEBD7' },
+        'Linen': { value: '#FAF0E6' },
+        'LavenderBlush': { value: '#FFF0F5' },
+        'MistyRose': { value: '#FFE4E1' },
+        'Gainsboro': { value: '#DCDCDC' },
+        'LightGray': { value: '#D3D3D3' },
+        'Silver': { value: '#C0C0C0' },
+        'DarkGray': { value: '#A9A9A9' },
+        'Gray': { value: '#808080' },
+        'DimGray': { value: '#696969' },
+        'LightSlateGray': { value: '#778899' },
+        'SlateGray': { value: '#708090' },
+        'DarkSlateGray': { value: '#2F4F4F' },
+        'LightGrey': { value: '#D3D3D3' },
+        'DarkGrey': { value: '#A9A9A9' },
+        'Grey': { value: '#808080' },
+        'DimGrey': { value: '#696969' },
+        'LightSlateGrey': { value: '#778899' },
+        'SlateGrey': { value: '#708090' },
+        'DarkSlateGrey': { value: '#2F4F4F' },
+        'Black': { value: '#000000' }
     };
     const HSL_SORTED = [];
     for (const name in X11_CSS3) {
         const x11 = X11_CSS3[name];
         x11.name = name;
-        const rgba = convertRGBA(x11.hex);
+        const rgba = convertRGBA(x11.value);
         if (rgba) {
             x11.rgba = rgba;
             x11.hsl = convertHSL(x11.rgba);
@@ -845,7 +853,7 @@
     }
     function getColorByShade(value) {
         const result = HSL_SORTED.slice();
-        let index = result.findIndex(item => item.hex === value);
+        let index = result.findIndex(item => item.value === value);
         if (index !== -1) {
             return result[index];
         }
@@ -856,9 +864,9 @@
                 if (hsl) {
                     result.push({
                         name: '',
+                        value: '',
                         hsl,
                         rgba: { r: -1, g: -1, b: -1, a: 1 },
-                        hex: ''
                     });
                     result.sort(sortHSL);
                     index = result.findIndex(item => item.name === '');
@@ -1166,7 +1174,7 @@
                 }
             }
         }
-        return Object.assign(bounds, { multiLine });
+        return Object.assign({}, bounds, { multiLine });
     }
     function assignBounds(bounds) {
         return {
@@ -1253,18 +1261,35 @@
         return false;
     }
     function cssAttribute(element, attr, computed = false) {
-        const attribute = element.attributes.getNamedItem(attr) || (!computed && element.parentElement instanceof SVGGElement ? element.parentElement.attributes.getNamedItem(attr) : '');
+        const attribute = element.attributes.getNamedItem(attr);
         if (attribute) {
             return attribute.value.trim();
         }
         else {
+            attr = convertCamelCase(attr);
             const node = getElementAsNode(element);
             let value = '';
             if (node) {
                 value = node.cssInitial(attr);
             }
-            return value || computed && getStyle(element)[convertCamelCase(attr)] || '';
+            else {
+                value = cssInline(element, attr);
+            }
+            return value || computed && getStyle(element)[attr] || '';
         }
+    }
+    function cssInline(element, attr) {
+        let value = '';
+        if (typeof element['style'] === 'object') {
+            value = element['style'][attr];
+        }
+        if (!value) {
+            const styleMap = getElementCache(element, 'styleMap');
+            if (styleMap) {
+                value = styleMap[attr];
+            }
+        }
+        return value;
     }
     function getBackgroundPosition(value, dimension, dpi, fontSize, leftPerspective = false, percent = false) {
         const result = {
@@ -1571,6 +1596,7 @@
         cssParent: cssParent,
         cssFromParent: cssFromParent,
         cssAttribute: cssAttribute,
+        cssInline: cssInline,
         getBackgroundPosition: getBackgroundPosition,
         getFirstChildElement: getFirstChildElement,
         getLastChildElement: getLastChildElement,
@@ -1596,11 +1622,11 @@
         const placeholder = typeof id === 'number' ? formatPlaceholder(id) : id;
         return value.replace(placeholder, (before ? placeholder : '') + content + (before ? '' : placeholder));
     }
-    function replaceIndent(value, depth, pattern) {
+    function replaceIndent(value, depth, leadingPattern) {
         if (depth >= 0) {
             let indent = -1;
             return value.split('\n').map(line => {
-                const match = pattern.exec(line);
+                const match = leadingPattern.exec(line);
                 if (match) {
                     if (indent === -1) {
                         indent = match[2].length;
@@ -1632,7 +1658,7 @@
         return value;
     }
     function replaceEntity(value) {
-        return (value.replace(/&#(\d+);/g, (match, capture) => String.fromCharCode(parseInt(capture)))
+        return value.replace(/&#(\d+);/g, (match, capture) => String.fromCharCode(parseInt(capture)))
             .replace(/\u00A0/g, '&#160;')
             .replace(/\u2002/g, '&#8194;')
             .replace(/\u2003/g, '&#8195;')
@@ -1640,107 +1666,157 @@
             .replace(/\u200C/g, '&#8204;')
             .replace(/\u200D/g, '&#8205;')
             .replace(/\u200E/g, '&#8206;')
-            .replace(/\u200F/g, '&#8207;'));
+            .replace(/\u200F/g, '&#8207;');
     }
     function replaceCharacter(value) {
-        return (value.replace(/&nbsp;/g, '&#160;')
+        return value.replace(/&nbsp;/g, '&#160;')
             .replace(/&(?!#?[A-Za-z0-9]{2,};)/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
             .replace(/'/g, '&apos;')
-            .replace(/"/g, '&quot;'));
+            .replace(/"/g, '&quot;');
     }
     function parseTemplate(value) {
-        const result = { '__root': value };
-        let pattern;
-        let match = false;
-        let characters = value.length;
-        let section = '';
-        do {
-            if (match) {
-                const segment = match[0].replace(new RegExp(`^${match[1]}\\n`), '').replace(new RegExp(`${match[1]}$`), '');
-                for (const index in result) {
-                    result[index] = result[index].replace(new RegExp(match[0], 'g'), `{%${match[2]}}`);
-                }
-                result[match[2]] = segment;
-                characters -= match[0].length;
-                section = match[2];
-            }
-            if (match === null || characters === 0) {
-                if (section) {
-                    value = result[section];
-                    if (!value) {
-                        break;
+        const result = { '__ROOT__': value };
+        function parseSection(section) {
+            const pattern = /(\t*<<(\w+)>>)\n[\w\W]*\n*\1/g;
+            let match = null;
+            do {
+                match = pattern.exec(section);
+                if (match) {
+                    const segment = match[0].replace(new RegExp(`^${match[1]}\\n`), '').replace(new RegExp(`${match[1]}$`), '');
+                    for (const index in result) {
+                        result[index] = result[index].replace(match[0], `{%${match[2]}}`);
                     }
-                    characters = value.length;
-                    section = '';
-                    match = null;
+                    result[match[2]] = segment;
+                    parseSection(segment);
                 }
-                else {
-                    break;
-                }
-            }
-            if (!match) {
-                pattern = /(!(\w+))\n[\w\W]*\n*\1/g;
-            }
-            if (pattern) {
-                match = pattern.exec(value);
-            }
-            else {
-                break;
-            }
-        } while (true);
+            } while (match);
+        }
+        parseSection(value);
         return result;
     }
-    function createTemplate(value, data, index) {
-        let output = index === undefined ? value['__root'].trim() : value[index];
+    function createTemplate(value, data, format = false, index) {
+        function partial(attr, section) {
+            return `(\\t*##${attr}-${section}##\\s*\\n)([\\w\\W]*?\\s*\\n)(\\t*##${attr}-${section}##\\s*\\n)`;
+        }
+        let output = index === undefined ? value['__ROOT__'] : value[index];
         for (const attr in data) {
+            const unknown = data[attr];
             let result = '';
-            if (isArray(data[attr])) {
-                for (let i = 0; i < data[attr].length; i++) {
-                    result += createTemplate(value, data[attr][i], attr.toString());
-                }
-                result = trimEnd(result, '\\n');
-            }
-            else {
-                result = data[attr];
-            }
             let hash = '';
-            if (isString(result)) {
-                if (isArray(data[attr])) {
-                    hash = '%';
+            if (Array.isArray(unknown)) {
+                hash = '%';
+                if (Array.isArray(unknown[0])) {
+                    const match = new RegExp(partial(attr, 'start') + `([\\w\\W]*?)` + partial(attr, 'end')).exec(output);
+                    if (match) {
+                        let tagStart = '';
+                        let tagEnd = '';
+                        const depth = unknown[0].length;
+                        const guard = Object.assign({}, value);
+                        for (let i = 0; i < depth; i++) {
+                            const key = `${index}_${attr}_${i}`;
+                            guard[key] = match[2];
+                            tagStart += createTemplate(guard, unknown[0][i], format, key);
+                            tagEnd = match[6] + tagEnd;
+                        }
+                        output = output
+                            .replace(match[2], tagStart).replace(match[6], tagEnd)
+                            .replace(match[1], '').replace(match[3], '')
+                            .replace(new RegExp(`\\t*${match[5]}`), '').replace(new RegExp(`\\t*${match[7]}`), '');
+                    }
+                    else {
+                        result = false;
+                    }
+                }
+                else if (unknown.length === 0 || typeof unknown[0] !== 'object') {
+                    result = false;
                 }
                 else {
-                    hash = '[&~]';
+                    for (let i = 0; i < unknown.length; i++) {
+                        result += createTemplate(value, unknown[i], format, attr.toString());
+                    }
+                    if (result === '') {
+                        result = false;
+                    }
+                    else {
+                        result = trimEnd(result, '\n');
+                    }
                 }
-                output = output.replace(new RegExp(`{${hash + attr}}`, 'g'), result);
             }
-            if (result === false ||
-                Array.isArray(result) && result.length === 0 ||
-                hash && hash !== '%') {
-                output = output.replace(new RegExp(`{%${attr}}\\n*`, 'g'), '');
+            else {
+                hash = '[&~]';
+                result = typeof result === 'boolean' ? false : unknown.toString();
             }
-            if (hash === '' && new RegExp(`{&${attr}}`).test(output)) {
-                output = '';
+            if (result === false) {
+                output = output.replace(new RegExp(`\\s*{${hash + attr}}\\n*`), '');
+            }
+            else if (isString(result)) {
+                output = output.replace(new RegExp(`{${hash + attr}}`), result);
+            }
+            else if (new RegExp(`{&${attr}}`).test(output)) {
+                return '';
             }
         }
         if (index === undefined) {
-            output = output.replace(/\n{%\w+}\n/g, '\n');
+            output = output.replace(/\n{%\w+}\n/g, '\n').trim();
+            if (format) {
+                output = formatTemplate(output);
+            }
         }
-        return output.replace(/\s+([\w:]+="[^"]*)?{~\w+}"?/g, '');
+        return output.replace(/\s*([\w:]+="[^"]*)?{~\w+}"?/g, '');
     }
-    function getTemplateSection(data, ...levels) {
-        let current = data;
-        for (const level of levels) {
-            const [index, array = '0'] = level.split('-');
-            if (current[index] && current[index][parseInt(array)]) {
-                current = current[index][parseInt(array)];
+    function formatTemplate(value, closeEmpty = true, char = '\t') {
+        const lines = [];
+        const pattern = /\s*(<(\/)?([?\w]+)[^>]*>)\n{0,1}([^<]*)/g;
+        let match = null;
+        while ((match = pattern.exec(value)) !== null) {
+            lines.push({
+                tag: match[1],
+                closing: !!match[2],
+                tagName: match[3],
+                value: match[4].trim() === '' ? '' : match[4]
+            });
+        }
+        const closed = /\/>\n*$/;
+        let result = '';
+        let indent = -1;
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            let previous = indent;
+            if (i > 0) {
+                if (line.closing) {
+                    indent--;
+                }
+                else {
+                    previous++;
+                    if (!closed.exec(line.tag)) {
+                        if (closeEmpty && line.value.trim() === '') {
+                            const next = lines[i + 1];
+                            if (next && next.closing && next.tagName === line.tagName) {
+                                line.tag = line.tag.replace(/\s*>$/, ' />');
+                                i++;
+                            }
+                            else {
+                                indent++;
+                            }
+                        }
+                        else {
+                            indent++;
+                        }
+                    }
+                }
+                line.tag.trim().split('\n').forEach((partial, index) => {
+                    const depth = previous + (index > 0 ? 1 : 0);
+                    result += (depth > 0 ? repeat(depth, char) : '') + partial.trim() + '\n';
+                });
             }
             else {
-                return {};
+                result += line.tag + '\n';
             }
+            result += line.value;
         }
-        return current;
+        return result.trim();
     }
 
     var xml = /*#__PURE__*/Object.freeze({
@@ -1752,15 +1828,15 @@
         replaceCharacter: replaceCharacter,
         parseTemplate: parseTemplate,
         createTemplate: createTemplate,
-        getTemplateSection: getTemplateSection
+        formatTemplate: formatTemplate
     });
 
+    let main;
+    let framework;
     exports.settings = {};
     exports.system = {};
     const extensionsAsync = new Set();
     const optionsAsync = new Map();
-    let main;
-    let framework;
     function setFramework(value, cached = false) {
         if (framework !== value) {
             const appBase = cached ? value.cached() : value.create();
@@ -1778,9 +1854,9 @@
                         register.add(main.builtInExtensions[namespace]);
                     }
                     else {
-                        for (const ext in main.builtInExtensions) {
-                            if (ext.startsWith(`${namespace}.`)) {
-                                register.add(main.builtInExtensions[ext]);
+                        for (const extension in main.builtInExtensions) {
+                            if (extension.startsWith(`${namespace}.`)) {
+                                register.add(main.builtInExtensions[extension]);
                             }
                         }
                     }
@@ -1829,9 +1905,9 @@
             }
             else if (typeof value === 'string') {
                 value = value.trim();
-                const ext = main.builtInExtensions[value] || retrieve(value);
-                if (ext) {
-                    return main.extensionManager.include(ext);
+                const extension = main.builtInExtensions[value] || retrieve(value);
+                if (extension) {
+                    return main.extensionManager.include(extension);
                 }
             }
         }
@@ -1863,9 +1939,9 @@
             }
             else if (typeof value === 'string') {
                 value = value.trim();
-                const ext = main.extensionManager.retrieve(value);
-                if (ext) {
-                    return main.extensionManager.exclude(ext);
+                const extension = main.extensionManager.retrieve(value);
+                if (extension) {
+                    return main.extensionManager.exclude(extension);
                 }
             }
         }
@@ -1880,9 +1956,9 @@
             else if (typeof value === 'string') {
                 if (main) {
                     value = value.trim();
-                    const ext = main.extensionManager.retrieve(value) || Array.from(extensionsAsync).find(item => item.name === value);
-                    if (ext) {
-                        Object.assign(ext.options, options);
+                    const extension = main.extensionManager.retrieve(value) || Array.from(extensionsAsync).find(item => item.name === value);
+                    if (extension) {
+                        Object.assign(extension.options, options);
                         return true;
                     }
                     else {

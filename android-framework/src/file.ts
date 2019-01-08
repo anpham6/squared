@@ -39,7 +39,7 @@ function parseImageDetails(files: string[]) {
 
 function parseFileDetails(files: string[]) {
     const result: FileAsset[] = [];
-    const pattern = /^<\?xml[\w\W]*?(<!-- filename: (.+)\/(.*?\.xml) -->)$/;
+    const pattern = /^[\w\W]*?(<!-- filename: (.+)\/(.*?\.xml) -->)$/;
     for (const xml of files) {
         const match = pattern.exec(xml);
         if (match) {

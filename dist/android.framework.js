@@ -213,6 +213,9 @@ var android = (function () {
         'volatile',
         'while'
     ];
+    const REGEX_ANDROID = {
+        ATTRIBUTE: /(.*?)="(.*?)"/
+    };
 
     var constant = /*#__PURE__*/Object.freeze({
         EXT_ANDROID: EXT_ANDROID,
@@ -224,7 +227,8 @@ var android = (function () {
         LAYOUT_ANDROID: LAYOUT_ANDROID,
         XMLNS_ANDROID: XMLNS_ANDROID,
         PREFIX_ANDROID: PREFIX_ANDROID,
-        RESERVED_JAVA: RESERVED_JAVA
+        RESERVED_JAVA: RESERVED_JAVA,
+        REGEX_ANDROID: REGEX_ANDROID
     });
 
     function substitute(result, value, api, minApi = 0) {
@@ -803,17 +807,27 @@ var android = (function () {
 
     var BASE_TMPL = '<?xml version="1.0" encoding="utf-8"?>\n{:0}';
 
-    var $color = squared.lib.color;
-    var $dom = squared.lib.dom;
-    var $util = squared.lib.util;
-    var $xml = squared.lib.xml;
+    const $Resource = squared.base.Resource;
+    const $color = squared.lib.color;
+    const $dom = squared.lib.dom;
+    const $util = squared.lib.util;
+    const $xml = squared.lib.xml;
     function getHexARGB(value) {
         return value ? (value.opaque ? value.valueARGB : value.valueRGB) : '';
     }
     function getRadiusPercent(value) {
         return $util.isPercent(value) ? parseInt(value) / 100 : 0.5;
     }
+    const STORED = $Resource.STORED;
     class Resource extends squared.base.Resource {
+        constructor(application, cache) {
+            super(application, cache);
+            STORED.styles = new Map();
+            STORED.themes = new Map();
+            STORED.dimens = new Map();
+            STORED.drawables = new Map();
+            STORED.animators = new Map();
+        }
         static createBackgroundGradient(node, gradients, svgPath) {
             const result = [];
             const hasStop = node.svgElement || gradients.some(item => item.colorStop.filter(stop => parseInt(stop.offset) > 0).length > 0);
@@ -823,7 +837,7 @@ var android = (function () {
                     startColor: !hasStop ? Resource.addColor(item.colorStop[0].color) : '',
                     centerColor: !hasStop && item.colorStop.length > 2 ? Resource.addColor(item.colorStop[1].color) : '',
                     endColor: !hasStop ? Resource.addColor(item.colorStop[item.colorStop.length - 1].color) : '',
-                    colorStop: []
+                    colorStops: []
                 };
                 switch (item.type) {
                     case 'radial':
@@ -837,7 +851,7 @@ var android = (function () {
                                 let cyDiameter;
                                 switch (svgPath.element.tagName) {
                                     case 'path': {
-                                        squared.svg.SvgBuild.toPathCommandList(svgPath.d).forEach(path => mapPoint.push(...path.points));
+                                        squared.svg.SvgBuild.toPathCommandList(svgPath.value).forEach(path => mapPoint.push(...path.points));
                                         if (!mapPoint.length) {
                                             break;
                                         }
@@ -889,8 +903,8 @@ var android = (function () {
                         else {
                             const radial = item;
                             let boxPosition;
-                            if (radial.shapePosition && radial.shapePosition.length > 1) {
-                                boxPosition = $dom.getBackgroundPosition(radial.shapePosition[1], node.bounds, node.dpi, node.fontSize, true, !hasStop);
+                            if (radial.position && radial.position.length > 1) {
+                                boxPosition = $dom.getBackgroundPosition(radial.position[1], node.bounds, node.dpi, node.fontSize, true, !hasStop);
                             }
                             if (hasStop) {
                                 gradient.gradientRadius = node.bounds.width.toString();
@@ -918,21 +932,19 @@ var android = (function () {
                         }
                         else {
                             const linear = item;
-                            if (linear.angle !== undefined) {
-                                if (hasStop) {
-                                    const x = Math.round(node.bounds.width / 2);
-                                    const y = Math.round(node.bounds.height / 2);
-                                    const util = squared.svg.lib.util;
-                                    if (util) {
-                                        gradient.startX = Math.round(util.getRadiusX(linear.angle + 180, x) + x).toString();
-                                        gradient.startY = Math.round(util.getRadiusY(linear.angle + 180, y) + y).toString();
-                                        gradient.endX = Math.round(util.getRadiusX(linear.angle, x) + x).toString();
-                                        gradient.endY = Math.round(util.getRadiusY(linear.angle, y) + y).toString();
-                                    }
+                            if (hasStop) {
+                                const x = Math.round(node.bounds.width / 2);
+                                const y = Math.round(node.bounds.height / 2);
+                                const util = squared.svg.lib.util;
+                                if (util) {
+                                    gradient.startX = Math.round(util.getRadiusX(linear.angle + 180, x) + x).toString();
+                                    gradient.startY = Math.round(util.getRadiusY(linear.angle + 180, y) + y).toString();
+                                    gradient.endX = Math.round(util.getRadiusX(linear.angle, x) + x).toString();
+                                    gradient.endY = Math.round(util.getRadiusY(linear.angle, y) + y).toString();
                                 }
-                                else {
-                                    gradient.angle = (Math.floor(linear.angle / 45) * 45).toString();
-                                }
+                            }
+                            else {
+                                gradient.angle = (Math.floor(linear.angle / 45) * 45).toString();
                             }
                         }
                         break;
@@ -944,7 +956,7 @@ var android = (function () {
                         let offset = parseInt(stop.offset);
                         if (i === 0) {
                             if (!node.svgElement && offset !== 0) {
-                                gradient.colorStop.push({
+                                gradient.colorStops.push({
                                     color,
                                     offset: '0',
                                     opacity: stop.opacity
@@ -959,7 +971,7 @@ var android = (function () {
                                 offset = 100;
                             }
                         }
-                        gradient.colorStop.push({
+                        gradient.colorStops.push({
                             color,
                             offset: (offset / 100).toFixed(2),
                             opacity: stop.opacity
@@ -1038,6 +1050,48 @@ var android = (function () {
             }
             return [stringArray.length ? stringArray : null, numberArray && numberArray.length ? numberArray : null];
         }
+        static addTheme(...values) {
+            const themes = STORED.themes;
+            for (const theme of values) {
+                const path = $util.isString(theme.output.path) ? theme.output.path : '';
+                const file = $util.isString(theme.output.file) ? theme.output.file : 'themes.xml';
+                const filename = `${$util.trimString(path.trim(), '/')}/${$util.trimString(file.trim(), '/')}`;
+                const stored = themes.get(filename) || new Map();
+                let appTheme = '';
+                if (theme.name === '' || theme.name.charAt(0) === '.') {
+                    if (themes.size) {
+                        foundTheme: {
+                            for (const themeData of themes.values()) {
+                                for (const name in themeData) {
+                                    for (const parentName in themeData[name]) {
+                                        appTheme = themeData[name][parentName].appTheme;
+                                        break foundTheme;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (appTheme === '') {
+                        appTheme = 'AppTheme';
+                    }
+                }
+                else {
+                    appTheme = theme.name;
+                }
+                theme.name = appTheme + (theme.name.charAt(0) === '.' ? theme.name : '');
+                Resource.formatOptions(theme.items);
+                if (!stored.has(theme.name)) {
+                    stored.set(theme.name, theme);
+                }
+                else {
+                    const data = stored.get(theme.name);
+                    for (const attr in theme.items) {
+                        data.items[attr] = theme.items[attr];
+                    }
+                }
+                themes.set(filename, stored);
+            }
+        }
         static addString(value, name = '', numberAlias = false) {
             if (value !== '') {
                 if (name === '') {
@@ -1045,7 +1099,7 @@ var android = (function () {
                 }
                 const numeric = $util.isNumber(value);
                 if (!numeric || numberAlias) {
-                    for (const [resourceName, resourceValue] of Resource.STORED.strings.entries()) {
+                    for (const [resourceName, resourceValue] of STORED.strings.entries()) {
                         if (resourceValue === value) {
                             return resourceName;
                         }
@@ -1063,10 +1117,10 @@ var android = (function () {
                     else if (name === '') {
                         name = `__symbol${Math.ceil(Math.random() * 100000)}`;
                     }
-                    if (Resource.STORED.strings.has(name)) {
+                    if (STORED.strings.has(name)) {
                         name = Resource.generateId('string', name, 1);
                     }
-                    Resource.STORED.strings.set(name, value);
+                    STORED.strings.set(name, value);
                 }
                 return name;
             }
@@ -1147,38 +1201,23 @@ var android = (function () {
             }
             if (value && value.valueRGBA !== '#00000000') {
                 const valueARGB = getHexARGB(value);
-                let name = Resource.STORED.colors.get(valueARGB) || '';
+                let name = STORED.colors.get(valueARGB) || '';
                 if (name === '') {
                     const shade = $color.getColorByShade(value.valueRGB);
                     if (shade) {
                         shade.name = $util.convertUnderscore(shade.name);
-                        if (!value.opaque && shade.hex === value.valueRGB) {
+                        if (!value.opaque && shade.value === value.valueRGB) {
                             name = shade.name;
                         }
                         else {
                             name = Resource.generateId('color', shade.name, 1);
                         }
-                        Resource.STORED.colors.set(valueARGB, name);
+                        STORED.colors.set(valueARGB, name);
                     }
                 }
                 return name;
             }
             return '';
-        }
-        addStyleTheme(template, data, options) {
-            if (options.items && $util.isArray(data.items)) {
-                const items = Resource.formatOptions(options.items, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
-                for (const name in items) {
-                    data.items.push({
-                        name,
-                        value: items[name]
-                    });
-                }
-            }
-            const xml = $xml.createTemplate($xml.parseTemplate(template), data);
-            if (this.fileHandler) {
-                this.fileHandler.addAsset(options.output.path, options.output.file, xml);
-            }
         }
         get userSettings() {
             return this.application.userSettings;
@@ -1190,8 +1229,27 @@ var android = (function () {
     function stripId(value) {
         return value ? value.replace(/@\+?id\//, '') : '';
     }
-    function createAttribute(options = {}) {
-        return Object.assign({ android: {}, app: {} }, options && typeof options === 'object' ? options : {});
+    function createViewAttribute(options) {
+        return Object.assign({ android: {}, app: {} }, (options && typeof options === 'object' ? options : {}));
+    }
+    function createStyleAttribute(options) {
+        const result = {
+            output: {
+                path: '',
+                file: ''
+            },
+            name: '',
+            parent: '',
+            items: {}
+        };
+        if (options && typeof options === 'object') {
+            for (const attr in result) {
+                if (typeof options[attr] === typeof result[attr]) {
+                    result[attr] = options[attr];
+                }
+            }
+        }
+        return result;
     }
     function validateString(value) {
         return value ? value.trim().replace(/[^\w$\-_.]/g, '_') : '';
@@ -1250,7 +1308,8 @@ var android = (function () {
 
     var util = /*#__PURE__*/Object.freeze({
         stripId: stripId,
-        createAttribute: createAttribute,
+        createViewAttribute: createViewAttribute,
+        createStyleAttribute: createStyleAttribute,
         validateString: validateString,
         convertUnit: convertUnit,
         replaceUnit: replaceUnit,
@@ -1262,10 +1321,10 @@ var android = (function () {
     });
 
     var $NodeList = squared.base.NodeList;
-    var $Resource = squared.base.Resource;
-    var $enum = squared.base.lib.enumeration;
-    var $dom$1 = squared.lib.dom;
-    var $util$2 = squared.lib.util;
+    var $Resource$1 = squared.base.Resource;
+    const $enum = squared.base.lib.enumeration;
+    const $dom$1 = squared.lib.dom;
+    const $util$2 = squared.lib.util;
     function setLineHeight(node, lineHeight) {
         const offset = lineHeight - (node.hasHeight ? node.height : node.bounds.height);
         if (offset > 0) {
@@ -1273,7 +1332,7 @@ var android = (function () {
             node.modifyBox(8 /* MARGIN_BOTTOM */, Math.ceil(offset / 2));
         }
     }
-    var View$Base = (Base) => {
+    var View$MX = (Base) => {
         return class View extends Base {
             constructor(id = 0, element, afterInit) {
                 super(id, element);
@@ -1351,7 +1410,7 @@ var android = (function () {
                 return this.__app[attr] || '';
             }
             apply(options) {
-                if (typeof options === 'object') {
+                if (options && typeof options === 'object') {
                     const local = Object.assign({}, options);
                     super.apply(local);
                     for (const obj in local) {
@@ -1543,26 +1602,11 @@ var android = (function () {
                     const obj = this[`__${name}`];
                     if (objs.length === 0 || objs.includes(name)) {
                         for (const attr in obj) {
-                            if (name !== '_') {
-                                result.push(`${name}:${attr}="${obj[attr]}"`);
-                            }
-                            else {
-                                result.push(`${attr}="${obj[attr]}"`);
-                            }
+                            result.push(name !== '_' ? `${name}:${attr}="${obj[attr]}"` : `${attr}="${obj[attr]}"`);
                         }
                     }
                 }
-                return result.sort((a, b) => {
-                    if (a.startsWith('android:id=')) {
-                        return -1;
-                    }
-                    else if (b.startsWith('android:id=')) {
-                        return 1;
-                    }
-                    else {
-                        return a > b ? 1 : -1;
-                    }
-                });
+                return result.sort((a, b) => a > b || b.startsWith('android:id=') ? 1 : -1);
             }
             localizeString(value) {
                 if (!this.hasBit('excludeProcedure', $enum.NODE_PROCEDURE.LOCALIZATION)) {
@@ -1662,7 +1706,7 @@ var android = (function () {
                             name = `_${name}`;
                         }
                     }
-                    this.controlId = $util$2.convertWord($Resource.generateId('android', name || $util$2.lastIndexOf(this.controlName, '.').toLowerCase(), name ? 0 : 1));
+                    this.controlId = $util$2.convertWord($Resource$1.generateId('android', name || $util$2.lastIndexOf(this.controlName, '.').toLowerCase(), name ? 0 : 1));
                     this.android('id', this.documentId);
                 }
             }
@@ -2253,10 +2297,10 @@ var android = (function () {
         };
     };
 
-    class View extends View$Base(squared.base.Node) {
+    class View extends View$MX(squared.base.Node) {
     }
 
-    class ViewGroup extends View$Base(squared.base.NodeGroup) {
+    class ViewGroup extends View$MX(squared.base.NodeGroup) {
         constructor(id, node, children, afterInit) {
             super(id, undefined, afterInit);
             this.tagName = `${node.tagName}_GROUP`;
@@ -2266,11 +2310,11 @@ var android = (function () {
     }
 
     var $NodeList$1 = squared.base.NodeList;
-    var $enum$1 = squared.base.lib.enumeration;
-    var $color$1 = squared.lib.color;
-    var $dom$2 = squared.lib.dom;
-    var $util$3 = squared.lib.util;
-    var $xml$2 = squared.lib.xml;
+    const $enum$1 = squared.base.lib.enumeration;
+    const $color$1 = squared.lib.color;
+    const $dom$2 = squared.lib.dom;
+    const $util$3 = squared.lib.util;
+    const $xml$2 = squared.lib.xml;
     function sortHorizontalFloat(list) {
         if (list.some(node => node.floating)) {
             const result = list.slice().sort((a, b) => {
@@ -2756,9 +2800,9 @@ var android = (function () {
                         }
                     }
                 }
-                ordered.push(...$util$3.sortAsc(below, 'zIndex', 'id'));
+                ordered.push(...$util$3.sortArray(below, true, 'zIndex', 'id'));
                 ordered.push(...middle);
-                ordered.push(...$util$3.sortAsc(above, 'zIndex', 'id'));
+                ordered.push(...$util$3.sortArray(above, true, 'zIndex', 'id'));
                 return ordered;
             }
             return [];
@@ -2802,7 +2846,7 @@ var android = (function () {
                     const children = node.renderChildren.filter(item => !item.positioned);
                     if (children.length) {
                         if (node.layoutConstraint) {
-                            const [pageFlow, absolute] = $util$3.partition(children, item => item.pageFlow);
+                            const [pageFlow, absolute] = $util$3.partitionArray(children, item => item.pageFlow);
                             const bottomParent = Math.max(absolute.length ? $util$3.maxArray(node.renderChildren.map(item => item.linear.bottom)) : 0, node.box.bottom);
                             for (const item of absolute) {
                                 if (!item.positionAuto && (item.documentParent === item.absoluteParent || item.position === 'fixed')) {
@@ -2915,7 +2959,7 @@ var android = (function () {
         }
         renderNodeGroup(layout) {
             const [node, parent, containerType, alignmentType] = [layout.node, layout.parent, layout.containerType, layout.alignmentType];
-            const options = createAttribute();
+            const options = createViewAttribute();
             let valid = false;
             switch (containerType) {
                 case CONTAINER_NODE.LINEAR: {
@@ -3174,14 +3218,6 @@ var android = (function () {
                             return false;
                         });
                     }
-                    if (node.has('maxWidth')) {
-                        const value = node.convertPX(node.css('maxWidth'));
-                        node.android('maxWidth', value);
-                    }
-                    if (node.has('maxHeight')) {
-                        const value = node.convertPX(node.css('maxHeight'), false);
-                        node.android('maxHeight', value);
-                    }
                     break;
                 case CONTAINER_ANDROID.BUTTON:
                     if (!node.cssInitial('verticalAlign')) {
@@ -3193,6 +3229,16 @@ var android = (function () {
                         node.android('layout_height', $util$3.formatPX(node.contentBoxHeight || 1));
                     }
                     break;
+            }
+            if (node.textElement || node.imageElement || node.svgElement) {
+                if (node.has('maxWidth')) {
+                    const value = node.convertPX(node.css('maxWidth'));
+                    node.android('maxWidth', value);
+                }
+                if (node.has('maxHeight')) {
+                    const value = node.convertPX(node.css('maxHeight'), false);
+                    node.android('maxHeight', value);
+                }
             }
             node.render(target ? node : parent);
             return this.getEnclosingTag(controlName, node.id, target ? -1 : node.renderDepth);
@@ -3222,7 +3268,7 @@ var android = (function () {
             return output;
         }
         renderSpace(depth, width, height = '', columnSpan = 0, rowSpan = 0, options) {
-            options = createAttribute(options);
+            options = createViewAttribute(options);
             let percentWidth = '';
             let percentHeight = '';
             if ($util$3.isPercent(width)) {
@@ -3383,7 +3429,7 @@ var android = (function () {
                             }
                         }
                         if (!found) {
-                            const options = createAttribute({
+                            const options = createViewAttribute({
                                 android: {
                                     orientation: index === 0 ? AXIS_ANDROID.VERTICAL : AXIS_ANDROID.HORIZONTAL
                                 },
@@ -3481,7 +3527,7 @@ var android = (function () {
             let rowWidth = 0;
             let rowPreviousLeft;
             let rowPreviousBottom;
-            const [right, left] = $util$3.partition(children, item => item.float === 'right');
+            const [right, left] = $util$3.partitionArray(children, item => item.float === 'right');
             sortHorizontalFloat(left);
             [left, right].forEach((segment, index) => {
                 const alignParent = index === 0 ? 'left' : 'right';
@@ -4013,8 +4059,8 @@ var android = (function () {
         }
         get afterInsertNode() {
             const settings = this.userSettings;
-            return (self) => {
-                self.localSettings = {
+            return (target) => {
+                target.localSettings = {
                     targetAPI: settings.targetAPI !== undefined ? settings.targetAPI : 28 /* LATEST */,
                     resolutionDPI: settings.resolutionDPI !== undefined ? settings.resolutionDPI : 160 /* MDPI */,
                     supportRTL: settings.supportRTL !== undefined ? settings.supportRTL : true,
@@ -4028,112 +4074,102 @@ var android = (function () {
     class ExtensionManager extends squared.base.ExtensionManager {
     }
 
-    const template = [
-        '<?xml version="1.0" encoding="utf-8"?>',
-        '<resources>',
-        '!1',
-        '	<color name="{&value}">{&name}</color>',
-        '!1',
-        '</resources>',
-        '<!-- filename: res/values/colors.xml -->'
-    ];
-    var COLOR_TMPL = template.join('\n');
+    var COLOR_TMPL = `
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<<A>>
+	<color name="{&value}">{&name}</color>
+<<A>>
+</resources>
+<!-- filename: res/values/colors.xml -->`;
 
-    const template$1 = [
-        '<?xml version="1.0" encoding="utf-8"?>',
-        '<resources>',
-        '!1',
-        '	<dimen name="{&name}">{&value}</dimen>',
-        '!1',
-        '</resources>',
-        '<!-- filename: res/values/dimens.xml -->'
-    ];
-    var DIMEN_TMPL = template$1.join('\n');
+    var DIMEN_TMPL = `
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<<A>>
+	<dimen name="{&name}">{&value}</dimen>
+<<A>>
+</resources>
+<!-- filename: res/values/dimens.xml -->`;
 
-    const template$2 = [
-        '{&value}',
-        '<!-- filename: {&name} -->'
-    ];
-    var DRAWABLE_TMPL = template$2.join('\n');
+    var DRAWABLE_TMPL = `
+{&value}
+<!-- filename: {&name} -->`;
 
-    const template$3 = [
-        '<?xml version="1.0" encoding="utf-8"?>',
-        '<font-family {&namespace}>',
-        '!1',
-        '	<font android:fontStyle="{&style}" android:fontWeight="{&weight}" android:font="{&font}" />',
-        '!1',
-        '</font-family>',
-        '<!-- filename: res/font/{&name}.xml -->'
-    ];
-    var FONT_TMPL = template$3.join('\n');
+    var FONT_TMPL = `
+<?xml version="1.0" encoding="utf-8"?>
+<font-family {&namespace}>
+<<A>>
+	<font android:fontStyle="{&style}" android:fontWeight="{&weight}" android:font="{&font}" />
+<<A>>
+</font-family>
+<!-- filename: res/font/{&name}.xml -->`;
 
-    const template$4 = [
-        '<?xml version="1.0" encoding="utf-8"?>',
-        '<resources>',
-        '!1',
-        '	<string name="{&name}">{~value}</string>',
-        '!1',
-        '</resources>',
-        '<!-- filename: res/values/strings.xml -->'
-    ];
-    var STRING_TMPL = template$4.join('\n');
+    var STRING_TMPL = `
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<<A>>
+	<string name="{&name}">{~value}</string>
+<<A>>
+</resources>
+<!-- filename: res/values/strings.xml -->`;
 
-    const template$5 = [
-        '<?xml version="1.0" encoding="utf-8"?>',
-        '<resources>',
-        '!1',
-        '	<string-array name="{&name}">',
-        '!items',
-        '		<item>{&value}</item>',
-        '!items',
-        '	</string-array>',
-        '!1',
-        '</resources>',
-        '<!-- filename: res/values/string_arrays.xml -->'
-    ];
-    var STRINGARRAY_TMPL = template$5.join('\n');
+    var STRINGARRAY_TMPL = `
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<<A>>
+	<string-array name="{&name}">
+	<<AA>>
+		<item>{&value}</item>
+	<<AA>>
+	</string-array>
+<<A>>
+</resources>
+<!-- filename: res/values/string_arrays.xml -->`;
 
-    const template$6 = [
-        '<?xml version="1.0" encoding="utf-8"?>',
-        '<resources>',
-        '!1',
-        '	<style name="{&name}" parent="{~parent}">',
-        '!items',
-        '		<item name="{&name}">{&value}</item>',
-        '!items',
-        '	</style>',
-        '!1',
-        '</resources>',
-        '<!-- filename: res/values/styles.xml -->'
-    ];
-    var STYLE_TMPL = template$6.join('\n');
+    var STYLE_TMPL = `
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<<A>>
+	<style name="{&name}" parent="{~parent}">
+	<<items>>
+		<item name="{&name}">{&value}</item>
+	<<items>>
+	</style>
+<<A>>
+</resources>
+<!-- filename: {0} -->`;
 
-    var $util$4 = squared.lib.util;
-    var $xml$3 = squared.lib.xml;
-    function parseImageDetails(xml) {
+    const $util$4 = squared.lib.util;
+    const $xml$3 = squared.lib.xml;
+    function parseImageDetails(files) {
         const result = [];
-        const pattern = /<!-- image: (.+) -->\n<!-- filename: (.+)\/(.*?\.\w+) -->/g;
-        let match;
-        while ((match = pattern.exec(xml)) !== null) {
-            result.push({
-                uri: match[1],
-                pathname: match[2],
-                filename: match[3],
-                content: ''
-            });
+        const pattern = /^<!-- image: (.+) -->\n<!-- filename: (.+)\/(.*?\.\w+) -->$/;
+        for (const xml of files) {
+            const match = pattern.exec(xml);
+            if (match) {
+                result.push({
+                    uri: match[1],
+                    pathname: match[2],
+                    filename: match[3],
+                    content: ''
+                });
+            }
         }
         return result;
     }
-    function parseFileDetails(xml) {
+    function parseFileDetails(files) {
         const result = [];
-        const pattern = /<\?xml[\w\W]*?(<!-- filename: (.+)\/(.*?\.xml) -->)/g;
-        let match;
-        while ((match = pattern.exec(xml)) !== null) {
-            result.push({
-                content: match[0].replace(match[1], '').trim(),
-                pathname: match[2],
-                filename: match[3]
-            });
+        const pattern = /^[\w\W]*?(<!-- filename: (.+)\/(.*?\.xml) -->)$/;
+        for (const xml of files) {
+            const match = pattern.exec(xml);
+            if (match) {
+                result.push({
+                    content: match[0].replace(match[1], '').trim(),
+                    pathname: match[2],
+                    filename: match[3]
+                });
+            }
         }
         return result;
     }
@@ -4155,14 +4191,15 @@ var android = (function () {
                 const view = views[i];
                 files.push(createFileAsset(view.pathname, i === 0 ? this.userSettings.outputMainFileName : `${view.filename}.xml`, view.content));
             }
-            const xml = this.resourceDrawableToXml();
             files.push(...parseFileDetails(this.resourceStringToXml()));
             files.push(...parseFileDetails(this.resourceStringArrayToXml()));
             files.push(...parseFileDetails(this.resourceFontToXml()));
             files.push(...parseFileDetails(this.resourceColorToXml()));
             files.push(...parseFileDetails(this.resourceStyleToXml()));
             files.push(...parseFileDetails(this.resourceDimenToXml()));
-            files.push(...parseImageDetails(xml), ...parseFileDetails(xml));
+            files.push(...parseFileDetails(this.resourceDrawableToXml()));
+            files.push(...parseImageDetails(this.resourceDrawableImageToXml()));
+            files.push(...parseFileDetails(this.resourceAnimatorToXml()));
             this.saveToDisk(files);
         }
         layoutAllToXml(data, saveToDisk = false) {
@@ -4171,7 +4208,7 @@ var android = (function () {
             const views = [...data.views, ...data.includes];
             for (let i = 0; i < views.length; i++) {
                 const view = views[i];
-                result[view.filename] = view.content;
+                result[view.filename] = [view.content];
                 if (saveToDisk) {
                     files.push(createFileAsset(view.pathname, i === 0 ? this.userSettings.outputMainFileName : `${view.filename}.xml`, view.content));
                 }
@@ -4189,68 +4226,75 @@ var android = (function () {
                 color: this.resourceColorToXml(),
                 style: this.resourceStyleToXml(),
                 dimen: this.resourceDimenToXml(),
-                drawable: this.resourceDrawableToXml()
+                drawable: this.resourceDrawableToXml(),
+                image: this.resourceDrawableImageToXml(),
+                animator: this.resourceAnimatorToXml()
             };
             for (const resource in result) {
-                if (result[resource] === '') {
+                if (result[resource].length === 0) {
                     delete result[resource];
                 }
             }
             if (saveToDisk) {
                 const files = [];
                 for (const resource in result) {
-                    if (resource === 'drawable') {
+                    if (resource === 'image') {
                         files.push(...parseImageDetails(result[resource]));
                     }
-                    files.push(...parseFileDetails(result[resource]));
+                    else {
+                        files.push(...parseFileDetails(result[resource]));
+                    }
                 }
                 this.saveToDisk(files);
             }
             return result;
         }
         resourceStringToXml(saveToDisk = false) {
-            const data = { '1': [] };
+            const result = [];
+            const data = { A: [] };
             this.stored.strings = new Map([...this.stored.strings.entries()].sort(caseInsensitive));
             if (this.appName !== '' && !this.stored.strings.has('app_name')) {
-                data['1'].push({
+                data.A.push({
                     name: 'app_name',
                     value: this.appName
                 });
             }
             for (const [name, value] of this.stored.strings.entries()) {
-                data['1'].push({
+                data.A.push({
                     name,
                     value
                 });
             }
             let xml = $xml$3.createTemplate($xml$3.parseTemplate(STRING_TMPL), data);
             xml = replaceTab(xml, this.userSettings.insertSpaces, true);
+            result.push(xml);
             if (saveToDisk) {
-                this.saveToDisk(parseFileDetails(xml));
+                this.saveToDisk(parseFileDetails(result));
             }
-            return xml;
+            return result;
         }
         resourceStringArrayToXml(saveToDisk = false) {
-            let xml = '';
+            const result = [];
             if (this.stored.arrays.size) {
-                const data = { '1': [] };
+                const data = { A: [] };
                 this.stored.arrays = new Map([...this.stored.arrays.entries()].sort());
                 for (const [name, values] of this.stored.arrays.entries()) {
-                    data['1'].push({
+                    data.A.push({
                         name,
-                        items: values.map(value => ({ value }))
+                        AA: values.map(value => ({ value }))
                     });
                 }
-                xml = $xml$3.createTemplate($xml$3.parseTemplate(STRINGARRAY_TMPL), data);
+                let xml = $xml$3.createTemplate($xml$3.parseTemplate(STRINGARRAY_TMPL), data);
                 xml = replaceTab(xml, this.userSettings.insertSpaces, true);
+                result.push(xml);
                 if (saveToDisk) {
-                    this.saveToDisk(parseFileDetails(xml));
+                    this.saveToDisk(parseFileDetails(result));
                 }
             }
-            return xml;
+            return result;
         }
         resourceFontToXml(saveToDisk = false) {
-            let xml = '';
+            const result = [];
             if (this.stored.fonts.size) {
                 const settings = this.userSettings;
                 this.stored.fonts = new Map([...this.stored.fonts.entries()].sort());
@@ -4259,141 +4303,209 @@ var android = (function () {
                     const data = {
                         name,
                         namespace: getXmlNs(namespace),
-                        '1': []
+                        A: []
                     };
+                    let xml = '';
                     for (const attr in font) {
                         const [style, weight] = attr.split('-');
-                        data['1'].push({
+                        data.A.push({
                             style,
                             weight,
                             font: `@font/${name + (style === 'normal' && weight === 'normal' ? `_${style}` : (style !== 'normal' ? `_${style}` : '') + (weight !== 'normal' ? `_${weight}` : ''))}`
                         });
                     }
-                    xml += '\n\n' + $xml$3.createTemplate($xml$3.parseTemplate(FONT_TMPL), data);
+                    xml += $xml$3.createTemplate($xml$3.parseTemplate(FONT_TMPL), data);
+                    if (settings.targetAPI < 26 /* OREO */) {
+                        xml = xml.replace(/android/g, 'app');
+                    }
+                    xml = replaceTab(xml, settings.insertSpaces);
+                    result.push(xml);
                 }
-                if (settings.targetAPI < 26 /* OREO */) {
-                    xml = xml.replace(/android/g, 'app');
-                }
-                xml = replaceTab(xml, settings.insertSpaces);
                 if (saveToDisk) {
-                    this.saveToDisk(parseFileDetails(xml));
+                    this.saveToDisk(parseFileDetails(result));
                 }
             }
-            return xml.trim();
+            return result;
         }
         resourceColorToXml(saveToDisk = false) {
-            let xml = '';
+            const result = [];
             if (this.stored.colors.size) {
-                const data = { '1': [] };
+                const data = { A: [] };
                 this.stored.colors = new Map([...this.stored.colors.entries()].sort());
                 for (const [name, value] of this.stored.colors.entries()) {
-                    data['1'].push({
+                    data.A.push({
                         name,
                         value
                     });
                 }
-                xml = $xml$3.createTemplate($xml$3.parseTemplate(COLOR_TMPL), data);
+                let xml = $xml$3.createTemplate($xml$3.parseTemplate(COLOR_TMPL), data);
                 xml = replaceTab(xml, this.userSettings.insertSpaces);
+                result.push(xml);
                 if (saveToDisk) {
-                    this.saveToDisk(parseFileDetails(xml));
+                    this.saveToDisk(parseFileDetails(result));
                 }
             }
-            return xml;
+            return result;
         }
         resourceStyleToXml(saveToDisk = false) {
-            let xml = '';
+            const result = [];
             if (this.stored.styles.size) {
                 const settings = this.userSettings;
-                const data = { '1': [] };
-                const styles = Array.from(this.stored.styles.values()).sort((a, b) => a.name.toString().toLowerCase() >= b.name.toString().toLowerCase() ? 1 : -1);
-                for (const style of styles) {
-                    const items = [];
-                    style.attrs.split(';').sort().forEach((attr) => {
-                        const [name, value] = attr.split('=');
-                        items.push({
-                            name,
-                            value: value.replace(/"/g, '')
-                        });
-                    });
-                    data['1'].push({
-                        name: style.name,
-                        parent: style.parent || '',
-                        items
-                    });
+                const template = $xml$3.parseTemplate(STYLE_TMPL);
+                const files = [];
+                {
+                    const styles = Array.from(this.stored.styles.values()).sort((a, b) => a.name.toString().toLowerCase() >= b.name.toString().toLowerCase() ? 1 : -1);
+                    const data = { A: [] };
+                    for (const style of styles) {
+                        if (Array.isArray(style.items)) {
+                            style.items.sort((a, b) => a.name >= b.name ? 1 : -1);
+                            const itemA = Object.assign({}, style);
+                            data.A.push(itemA);
+                        }
+                    }
+                    files.push({ filename: 'res/values/styles.xml', data });
                 }
-                xml = $xml$3.createTemplate($xml$3.parseTemplate(STYLE_TMPL), data);
-                xml = replaceUnit(xml.trim(), settings.resolutionDPI, settings.convertPixels, true);
-                xml = replaceTab(xml, settings.insertSpaces);
+                const appTheme = {};
+                for (const [filename, theme] of this.stored.themes.entries()) {
+                    const data = { A: [] };
+                    const filepath = filename.substring(0, filename.lastIndexOf('/'));
+                    for (const [themeName, themeData] of theme.entries()) {
+                        const items = [];
+                        for (const name in themeData.items) {
+                            items.push({
+                                name,
+                                value: themeData.items[name]
+                            });
+                        }
+                        if (!appTheme[filepath] || themeName !== 'AppTheme' || items.length > 0) {
+                            data.A.push({
+                                name: themeName,
+                                parent: themeData.parent,
+                                items
+                            });
+                        }
+                        if (themeName === 'AppTheme') {
+                            appTheme[filepath] = true;
+                        }
+                    }
+                    files.push({ filename, data });
+                }
+                for (const style of files) {
+                    let xml = $xml$3.createTemplate(template, style.data);
+                    xml = replaceUnit(xml.trim(), settings.resolutionDPI, settings.convertPixels, true);
+                    xml = replaceTab(xml, settings.insertSpaces);
+                    xml = xml.replace('filename: {0}', `filename: ${style.filename}`);
+                    result.push(xml);
+                }
                 if (saveToDisk) {
-                    this.saveToDisk(parseFileDetails(xml));
+                    this.saveToDisk(parseFileDetails(result));
                 }
             }
-            return xml;
+            return result;
         }
         resourceDimenToXml(saveToDisk = false) {
-            let xml = '';
+            const result = [];
             if (this.stored.dimens.size) {
                 const settings = this.userSettings;
-                const data = { '1': [] };
+                const data = { A: [] };
                 this.stored.dimens = new Map([...this.stored.dimens.entries()].sort());
                 for (const [name, value] of this.stored.dimens.entries()) {
-                    data['1'].push({
+                    data.A.push({
                         name,
                         value
                     });
                 }
-                xml = $xml$3.createTemplate($xml$3.parseTemplate(DIMEN_TMPL), data);
+                let xml = $xml$3.createTemplate($xml$3.parseTemplate(DIMEN_TMPL), data);
                 xml = replaceUnit(xml.trim(), settings.resolutionDPI, settings.convertPixels);
                 xml = replaceTab(xml, settings.insertSpaces);
+                result.push(xml);
                 if (saveToDisk) {
-                    this.saveToDisk(parseFileDetails(xml));
+                    this.saveToDisk(parseFileDetails(result));
                 }
             }
-            return xml;
+            return result;
         }
         resourceDrawableToXml(saveToDisk = false) {
-            let xml = '';
-            if (this.stored.drawables.size || this.stored.images.size) {
+            const result = [];
+            if (this.stored.drawables.size) {
                 const settings = this.userSettings;
                 const template = $xml$3.parseTemplate(DRAWABLE_TMPL);
                 for (const [name, value] of this.stored.drawables.entries()) {
-                    xml += '\n\n' + $xml$3.createTemplate(template, {
+                    let xml = $xml$3.createTemplate(template, {
                         name: `res/drawable/${name}.xml`,
                         value
                     });
+                    xml = replaceUnit(xml, settings.resolutionDPI, settings.convertPixels);
+                    xml = replaceTab(xml, settings.insertSpaces);
+                    result.push(xml);
                 }
+                if (saveToDisk) {
+                    this.saveToDisk(parseFileDetails(result));
+                }
+            }
+            return result;
+        }
+        resourceDrawableImageToXml(saveToDisk = false) {
+            const result = [];
+            if (this.stored.images.size) {
+                const settings = this.userSettings;
+                const template = $xml$3.parseTemplate(DRAWABLE_TMPL);
                 for (const [name, images] of this.stored.images.entries()) {
+                    let xml = '';
                     if (Object.keys(images).length > 1) {
                         for (const dpi in images) {
-                            xml += '\n\n' + $xml$3.createTemplate(template, {
+                            xml = $xml$3.createTemplate(template, {
                                 name: `res/drawable-${dpi}/${name}.${$util$4.lastIndexOf(images[dpi], '.')}`,
                                 value: `<!-- image: ${images[dpi]} -->`
                             });
                         }
                     }
                     else if (images.mdpi) {
-                        xml += '\n\n' + $xml$3.createTemplate(template, {
+                        xml = $xml$3.createTemplate(template, {
                             name: `res/drawable/${name}.${$util$4.lastIndexOf(images.mdpi, '.')}`,
                             value: `<!-- image: ${images.mdpi} -->`
                         });
                     }
+                    if (xml !== '') {
+                        xml = replaceTab(xml, settings.insertSpaces);
+                        result.push(xml);
+                    }
                 }
-                xml = replaceUnit(xml.trim(), settings.resolutionDPI, settings.convertPixels);
-                xml = replaceTab(xml, settings.insertSpaces);
                 if (saveToDisk) {
-                    this.saveToDisk([...parseImageDetails(xml), ...parseFileDetails(xml)]);
+                    this.saveToDisk(parseImageDetails(result));
                 }
             }
-            return xml;
+            return result;
+        }
+        resourceAnimatorToXml(saveToDisk = false) {
+            const result = [];
+            if (this.stored.animators.size) {
+                const template = $xml$3.parseTemplate(DRAWABLE_TMPL);
+                for (const [name, value] of this.stored.animators.entries()) {
+                    let xml = $xml$3.createTemplate(template, {
+                        name: `res/animator/${name}.xml`,
+                        value
+                    });
+                    xml = replaceTab(xml, this.userSettings.insertSpaces);
+                    result.push(xml);
+                }
+                if (saveToDisk) {
+                    this.saveToDisk(parseFileDetails(result));
+                }
+            }
+            return result;
         }
         get userSettings() {
             return this.resource.userSettings;
         }
+        get stored() {
+            return this.resource.stored;
+        }
     }
 
-    var $dom$3 = squared.lib.dom;
-    var $enum$2 = squared.base.lib.enumeration;
-    var $util$5 = squared.lib.util;
+    const $enum$2 = squared.base.lib.enumeration;
+    const $dom$3 = squared.lib.dom;
+    const $util$5 = squared.lib.util;
     class Accessibility extends squared.base.extensions.Accessibility {
         constructor() {
             super(...arguments);
@@ -4439,10 +4551,10 @@ var android = (function () {
     }
 
     var $Layout = squared.base.Layout;
-    var $const = squared.base.lib.constant;
-    var $dom$4 = squared.lib.dom;
-    var $enum$3 = squared.base.lib.enumeration;
-    var $util$6 = squared.lib.util;
+    const $const = squared.base.lib.constant;
+    const $enum$3 = squared.base.lib.enumeration;
+    const $dom$4 = squared.lib.dom;
+    const $util$6 = squared.lib.util;
     function getRowData(mainData, direction) {
         const result = [];
         if (direction === 'column') {
@@ -4788,7 +4900,7 @@ var android = (function () {
                     if (percentTotal < 100) {
                         node.android('columnCount', (mainData.column.count + 1).toString());
                         for (let i = 0; i < mainData.row.count; i++) {
-                            controller.appendAfter(lastChild.id, controller.renderSpace(node.renderDepth + 1, $util$6.formatPercent(100 - percentTotal), 'wrap_content', 0, 0, createAttribute({
+                            controller.appendAfter(lastChild.id, controller.renderSpace(node.renderDepth + 1, $util$6.formatPercent(100 - percentTotal), 'wrap_content', 0, 0, createViewAttribute({
                                 android: {
                                     [node.localizeString(BOX_ANDROID.MARGIN_LEFT)]: $util$6.formatPX(mainData.column.gap),
                                     layout_row: i.toString(),
@@ -4803,7 +4915,7 @@ var android = (function () {
                     if (item) {
                         for (let j = 0; j < item.length; j++) {
                             if (item[j] === 1) {
-                                controller.appendAfter(lastChild.id, controller.renderSpace(node.renderDepth + 1, 'wrap_content', $util$6.formatPX(mainData.row.gap), 0, 0, createAttribute({
+                                controller.appendAfter(lastChild.id, controller.renderSpace(node.renderDepth + 1, 'wrap_content', $util$6.formatPX(mainData.row.gap), 0, 0, createViewAttribute({
                                     android: {
                                         layout_row: i.toString(),
                                         layout_column: j.toString()
@@ -4827,9 +4939,9 @@ var android = (function () {
 
     var $Layout$1 = squared.base.Layout;
     var $NodeList$2 = squared.base.NodeList;
-    var $const$1 = squared.base.lib.constant;
-    var $enum$4 = squared.base.lib.enumeration;
-    var $util$7 = squared.lib.util;
+    const $const$1 = squared.base.lib.constant;
+    const $enum$4 = squared.base.lib.enumeration;
+    const $util$7 = squared.lib.util;
     const CHAIN_MAP = {
         leftTop: ['left', 'top'],
         rightBottom: ['right', 'bottom'],
@@ -5066,9 +5178,9 @@ var android = (function () {
     }
 
     var $Layout$2 = squared.base.Layout;
-    var $const$2 = squared.base.lib.constant;
-    var $enum$5 = squared.base.lib.enumeration;
-    var $util$8 = squared.lib.util;
+    const $const$2 = squared.base.lib.constant;
+    const $enum$5 = squared.base.lib.enumeration;
+    const $util$8 = squared.lib.util;
     function transferData(parent, siblings) {
         let destination;
         for (let i = 0; i < siblings.length; i++) {
@@ -5190,10 +5302,10 @@ var android = (function () {
 
     var $Layout$3 = squared.base.Layout;
     var $NodeList$3 = squared.base.NodeList;
-    var $const$3 = squared.base.lib.constant;
-    var $dom$5 = squared.lib.dom;
-    var $enum$6 = squared.base.lib.enumeration;
-    var $util$9 = squared.lib.util;
+    const $const$3 = squared.base.lib.constant;
+    const $enum$6 = squared.base.lib.enumeration;
+    const $dom$5 = squared.lib.dom;
+    const $util$9 = squared.lib.util;
     class List extends squared.base.extensions.List {
         processNode(node, parent) {
             super.processNode(node, parent);
@@ -5289,7 +5401,7 @@ var android = (function () {
                     })();
                     const marginLeft = left > 0 ? $util$9.formatPX(left) : '';
                     const minWidth = paddingLeft > 0 ? $util$9.formatPX(paddingLeft) : '';
-                    const options = createAttribute({
+                    const options = createViewAttribute({
                         android: {
                             layout_columnWeight: columnWeight
                         }
@@ -5378,7 +5490,7 @@ var android = (function () {
                     current.modifyBox(2 /* MARGIN_TOP */, null);
                 }
                 if (spaceHeight > 0) {
-                    const options = createAttribute({
+                    const options = createViewAttribute({
                         android: {
                             layout_columnSpan: columnCount.toString()
                         }
@@ -5399,9 +5511,9 @@ var android = (function () {
     }
 
     var $Layout$4 = squared.base.Layout;
-    var $enum$7 = squared.base.lib.enumeration;
-    var $const$4 = squared.base.lib.constant;
-    var $util$a = squared.lib.util;
+    const $const$4 = squared.base.lib.constant;
+    const $enum$7 = squared.base.lib.enumeration;
+    const $util$a = squared.lib.util;
     class Sprite extends squared.base.extensions.Sprite {
         processNode(node, parent) {
             let output = '';
@@ -5464,15 +5576,15 @@ var android = (function () {
             return super.processNode(node, parent);
         }
         postProcedure(node) {
-            const options = createAttribute(node.element ? this.options[node.element.id] : undefined);
+            const options = createViewAttribute(node.element ? this.options[node.element.id] : undefined);
             node.apply(Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')));
         }
     }
 
     var $Layout$5 = squared.base.Layout;
-    var $const$5 = squared.base.lib.constant;
-    var $enum$8 = squared.base.lib.enumeration;
-    var $util$b = squared.lib.util;
+    const $const$5 = squared.base.lib.constant;
+    const $enum$8 = squared.base.lib.enumeration;
+    const $util$b = squared.lib.util;
     class Table extends squared.base.extensions.Table {
         processNode(node, parent) {
             super.processNode(node, parent);
@@ -5576,8 +5688,8 @@ var android = (function () {
     }
 
     var $Layout$6 = squared.base.Layout;
-    var $const$6 = squared.base.lib.constant;
-    var $enum$9 = squared.base.lib.enumeration;
+    const $const$6 = squared.base.lib.constant;
+    const $enum$9 = squared.base.lib.enumeration;
     class VerticalAlign extends squared.base.extensions.VerticalAlign {
         processNode(node, parent) {
             super.processNode(node, parent);
@@ -5600,8 +5712,8 @@ var android = (function () {
     }
 
     var $Layout$7 = squared.base.Layout;
-    var $enum$a = squared.base.lib.enumeration;
-    var $util$c = squared.lib.util;
+    const $enum$a = squared.base.lib.enumeration;
+    const $util$c = squared.lib.util;
     class Guideline extends squared.base.Extension {
         constructor() {
             super(...arguments);
@@ -5733,9 +5845,9 @@ var android = (function () {
 
     var $Layout$8 = squared.base.Layout;
     var $NodeList$4 = squared.base.NodeList;
-    var $dom$6 = squared.lib.dom;
-    var $enum$b = squared.base.lib.enumeration;
-    var $util$d = squared.lib.util;
+    const $enum$b = squared.base.lib.enumeration;
+    const $dom$6 = squared.lib.dom;
+    const $util$d = squared.lib.util;
     function getFixedNodes(node) {
         return node.filter(item => !item.pageFlow && (item.position === 'fixed' || item.absoluteParent === node));
     }
@@ -5783,11 +5895,11 @@ var android = (function () {
                 procedure: $enum$b.NODE_PROCEDURE.NONPOSITIONAL,
                 resource: $enum$b.NODE_RESOURCE.BOX_STYLE | $enum$b.NODE_RESOURCE.ASSET
             });
-            const [normal, nested] = $util$d.partition(getFixedNodes(node), item => item.absoluteParent === node);
+            const [normal, nested] = $util$d.partitionArray(getFixedNodes(node), item => item.absoluteParent === node);
             normal.push(container);
             const children = [
-                ...$util$d.sortAsc(normal, 'zIndex', 'id'),
-                ...$util$d.sortAsc(nested, 'zIndex', 'id')
+                ...$util$d.sortArray(normal, true, 'zIndex', 'id'),
+                ...$util$d.sortArray(nested, true, 'zIndex', 'id')
             ];
             node.duplicate().forEach((item) => {
                 if (!children.includes(item)) {
@@ -5831,10 +5943,10 @@ var android = (function () {
     }
 
     var $Layout$9 = squared.base.Layout;
-    var $enum$c = squared.base.lib.enumeration;
+    const $enum$c = squared.base.lib.enumeration;
     class MaxWidthHeight extends squared.base.Extension {
         condition(node) {
-            return !node.textElement && (node.has('maxWidth') || node.has('maxHeight'));
+            return !node.textElement && !node.imageElement && !node.svgElement && (node.has('maxWidth') || node.has('maxHeight'));
         }
         processNode(node, parent) {
             const controller = this.application.controllerHandler;
@@ -5854,8 +5966,8 @@ var android = (function () {
     }
 
     var $Layout$a = squared.base.Layout;
-    var $enum$d = squared.base.lib.enumeration;
-    var $util$e = squared.lib.util;
+    const $enum$d = squared.base.lib.enumeration;
+    const $util$e = squared.lib.util;
     class Percent extends squared.base.Extension {
         condition(node, parent) {
             return parent.layoutVertical && !node.documentBody && node.pageFlow && !node.imageElement && node.has('width', 32 /* PERCENT */, { not: '100%' });
@@ -5874,9 +5986,9 @@ var android = (function () {
     }
 
     var $NodeList$5 = squared.base.NodeList;
-    var $enum$e = squared.base.lib.enumeration;
-    var $util$f = squared.lib.util;
-    var $xml$4 = squared.lib.xml;
+    const $enum$e = squared.base.lib.enumeration;
+    const $util$f = squared.lib.util;
+    const $xml$4 = squared.lib.xml;
     const RADIO_GROUP = 'RadioGroup';
     class ScrollView extends squared.base.Extension {
         condition(node) {
@@ -5941,10 +6053,10 @@ var android = (function () {
         }
     }
 
-    var $dom$7 = squared.lib.dom;
-    var $enum$f = squared.base.lib.enumeration;
-    var $util$g = squared.lib.util;
-    var $xml$5 = squared.lib.xml;
+    const $enum$f = squared.base.lib.enumeration;
+    const $dom$7 = squared.lib.dom;
+    const $util$g = squared.lib.util;
+    const $xml$5 = squared.lib.xml;
     const SCROLL_HORIZONTAL = 'HorizontalScrollView';
     const SCROLL_VERTICAL = 'android.support.v4.widget.NestedScrollView';
     class ScrollBar extends squared.base.Extension {
@@ -6057,111 +6169,129 @@ var android = (function () {
         }
     }
 
-    const template$7 = [
-        '<?xml version="1.0" encoding="utf-8"?>',
-        '<layer-list xmlns:android="http://schemas.android.com/apk/res/android">',
-        '!1',
-        '	<item>',
-        '		<shape android:shape="rectangle">',
-        '			<solid android:color="@color/{&color}" />',
-        '		</shape>',
-        '	</item>',
-        '!1',
-        '!2',
-        '	<item>',
-        '		<shape android:shape="rectangle">',
-        '			<gradient android:type="{&type}" android:startColor="@color/{~startColor}" android:endColor="@color/{~endColor}" android:centerColor="@color/{~centerColor}" android:angle="{~angle}" android:centerX="{~centerX}" android:centerY="{~centerY}" android:gradientRadius="{~gradientRadius}" android:visible="{~visible}" />',
-        '		</shape>',
-        '	</item>',
-        '!2',
-        '!3',
-        '	<item android:drawable="@drawable/{&vectorName}" />',
-        '!3',
-        '!4',
-        '	<item android:left="{~left}" android:top="{~top}" android:right="{~right}" android:bottom="{~bottom}" android:width="{~width}" android:height="{~height}">',
-        '		<rotate android:drawable="@drawable/{&src}" android:fromDegrees="{~fromDegrees}" android:toDegrees="{~toDegrees}" android:pivotX="{~pivotX}" android:pivotY="{~pivotY}" android:visible="{~visible}" />',
-        '	</item>',
-        '!4',
-        '!5',
-        '	<item android:left="{~left}" android:top="{~top}" android:right="{~right}" android:bottom="{~bottom}" android:drawable="@drawable/{&src}" android:width="{~width}" android:height="{~height}" />',
-        '!5',
-        '!6',
-        '	<item android:left="{~left}" android:top="{~top}" android:right="{~right}" android:bottom="{~bottom}" android:width="{~width}" android:height="{~height}">',
-        '		<bitmap android:src="@drawable/{&src}" android:gravity="{~gravity}" android:tileMode="{~tileMode}" android:tileModeX="{~tileModeX}" android:tileModeY="{~tileModeY}" />',
-        '	</item>',
-        '!6',
-        '!7',
-        '	<item android:left="{~left}" android:top="{~top}" android:right="{~right}" android:bottom="{~bottom}">',
-        '		<shape android:shape="rectangle">',
-        '!stroke',
-        '			<stroke android:width="{&width}" {~borderStyle} />',
-        '!stroke',
-        '!corners',
-        '			<corners android:radius="{~radius}" android:topLeftRadius="{~topLeftRadius}" android:topRightRadius="{~topRightRadius}" android:bottomRightRadius="{~bottomRightRadius}" android:bottomLeftRadius="{~bottomLeftRadius}" />',
-        '!corners',
-        '		</shape>',
-        '	</item>',
-        '!7',
-        '</layer-list>'
-    ];
-    var LAYERLIST_TMPL = template$7.join('\n');
+    var LAYERLIST_TMPL = `
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+<<A>>
+	<item>
+		<shape android:shape="rectangle">
+			<solid android:color="@color/{&color}" />
+		</shape>
+	</item>
+<<A>>
+<<B>>
+	<item>
+		<shape android:shape="rectangle">
+			<gradient android:type="{&type}" android:startColor="@color/{~startColor}" android:endColor="@color/{~endColor}" android:centerColor="@color/{~centerColor}" android:angle="{~angle}" android:centerX="{~centerX}" android:centerY="{~centerY}" android:gradientRadius="{~gradientRadius}" android:visible="{~visible}" />
+		</shape>
+	</item>
+<<B>>
+<<C>>
+	<item android:drawable="@drawable/{&vectorName}" />
+<<C>>
+<<D>>
+	<item android:left="{~left}" android:top="{~top}" android:right="{~right}" android:bottom="{~bottom}" android:width="{~width}" android:height="{~height}">
+		<rotate android:drawable="@drawable/{&src}" android:fromDegrees="{~fromDegrees}" android:toDegrees="{~toDegrees}" android:pivotX="{~pivotX}" android:pivotY="{~pivotY}" android:visible="{~visible}" />
+	</item>
+<<D>>
+<<E>>
+	<item android:left="{~left}" android:top="{~top}" android:right="{~right}" android:bottom="{~bottom}" android:drawable="@drawable/{&src}" android:width="{~width}" android:height="{~height}" />
+<<E>>
+<<F>>
+	<item android:left="{~left}" android:top="{~top}" android:right="{~right}" android:bottom="{~bottom}" android:width="{~width}" android:height="{~height}">
+		<bitmap android:src="@drawable/{&src}" android:gravity="{~gravity}" android:tileMode="{~tileMode}" android:tileModeX="{~tileModeX}" android:tileModeY="{~tileModeY}" />
+	</item>
+<<F>>
+<<G>>
+	<item android:left="{~left}" android:top="{~top}" android:right="{~right}" android:bottom="{~bottom}">
+		<shape android:shape="rectangle">
+		<<stroke>>
+			<stroke android:width="{&width}" {~borderStyle} />
+		<<stroke>>
+		<<corners>>
+			<corners android:radius="{~radius}" android:topLeftRadius="{~topLeftRadius}" android:topRightRadius="{~topRightRadius}" android:bottomRightRadius="{~bottomRightRadius}" android:bottomLeftRadius="{~bottomLeftRadius}" />
+		<<corners>>
+		</shape>
+	</item>
+<<G>>
+</layer-list>`;
 
-    const template$8 = [
-        '<?xml version="1.0" encoding="utf-8"?>',
-        '<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">',
-        '!1',
-        '	<stroke android:width="{&width}" {~borderStyle} />',
-        '!1',
-        '!2',
-        '	<solid android:color="@color/{&color}" />',
-        '!2',
-        '!3',
-        '	<corners android:radius="{~radius}" android:topLeftRadius="{~topLeftRadius}" android:topRightRadius="{~topRightRadius}" android:bottomLeftRadius="{~bottomLeftRadius}" android:bottomRightRadius="{~bottomRightRadius}" />',
-        '!3',
-        '!4',
-        '	<gradient android:type="{&type}" android:startColor="@color/{~startColor}" android:endColor="@color/{~endColor}" android:centerColor="@color/{~centerColor}" android:angle="{~angle}" android:centerX="{~centerX}" android:centerY="{~centerY}" android:gradientRadius="{~gradientRadius}" />',
-        '!4',
-        '</shape>'
-    ];
-    var SHAPE_TMPL = template$8.join('\n');
+    var SHAPE_TMPL = `
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+<<A>>
+	<stroke android:width="{&width}" {~borderStyle} />
+<<A>>
+<<B>>
+	<solid android:color="@color/{&color}" />
+<<B>>
+<<C>>
+	<corners android:radius="{~radius}" android:topLeftRadius="{~topLeftRadius}" android:topRightRadius="{~topRightRadius}" android:bottomLeftRadius="{~bottomLeftRadius}" android:bottomRightRadius="{~bottomRightRadius}" />
+<<C>>
+<<D>>
+	<gradient android:type="{&type}" android:startColor="@color/{~startColor}" android:endColor="@color/{~endColor}" android:centerColor="@color/{~centerColor}" android:angle="{~angle}" android:centerX="{~centerX}" android:centerY="{~centerY}" android:gradientRadius="{~gradientRadius}" />
+<<D>>
+</shape>`;
 
-    const template$9 = [
-        '<?xml version="1.0" encoding="utf-8"?>',
-        '<vector xmlns:android="http://schemas.android.com/apk/res/android" {~namespace} android:name="{&name}" android:width="{&width}" android:height="{&height}" android:viewportWidth="{&viewportWidth}" android:viewportHeight="{&viewportHeight}" android:alpha="{~alpha}">',
-        '!1',
-        '	<group android:name="{&name}" android:rotation="{~rotation}" android:pivotX="{~pivotX}" android:pivotY="{~pivotY}" android:scaleX="{~scaleX}" android:scaleY="{~scaleY}" android:translateX="{~translateX}" android:translateY="{~translateY}">',
-        '!2',
-        '!clipPaths',
-        '		<clip-path android:name="{&name}" android:pathData="{&d}" />',
-        '!clipPaths',
-        '		<path android:name="{&name}" android:pathData="{&d}"',
-        '			android:fillColor="{~fill}" android:fillAlpha="{~fillOpacity}" android:fillType="{~fillRule}"',
-        '			android:strokeColor="{~stroke}" android:strokeAlpha="{~strokeOpacity}" android:strokeWidth="{~strokeWidth}"',
-        '			android:strokeLineCap="{~strokeLinecap}" android:strokeLineJoin="{~strokeLinejoin}" android:strokeMiterLimit="{~strokeMiterlimit}">',
-        '!fill',
-        '			<aapt:attr name="android:fillColor">',
-        '!gradients',
-        '				<gradient android:type="{&type}" android:startColor="@color/{~startColor}" android:endColor="@color/{~endColor}" android:centerColor="@color/{~centerColor}" android:startX="{~startX}" android:startY="{~startY}" android:endX="{~endX}" android:endY="{~endY}" android:centerX="{~centerX}" android:centerY="{~centerY}" android:gradientRadius="{~gradientRadius}">',
-        '!colorStop',
-        '					<item android:offset="{&offset}" android:color="{&color}" />',
-        '!colorStop',
-        '				</gradient>',
-        '!gradients',
-        '			</aapt:attr>',
-        '!fill',
-        '		</path>',
-        '!2',
-        '	</group>',
-        '!1',
-        '</vector>'
-    ];
-    var VECTOR_TMPL = template$9.join('\n');
+    var VECTOR_TMPL = `
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android" {~namespace} android:name="{&name}" android:width="{&width}" android:height="{&height}" android:viewportWidth="{&viewportWidth}" android:viewportHeight="{&viewportHeight}" android:alpha="{~alpha}">
+<<A>>
+	##group-start##
+	<group android:name="{~groupName}" android:rotation="{~rotation}" android:pivotX="{~pivotX}" android:pivotY="{~pivotY}" android:scaleX="{~scaleX}" android:scaleY="{~scaleY}" android:translateX="{~translateX}" android:translateY="{~translateY}">
+	##group-start##
+		<<BB>>
+			<<CCC>>
+			##render-start##
+			<group android:name="{~groupName}" android:rotation="{~rotation}" android:pivotX="{~pivotX}" android:pivotY="{~pivotY}" android:scaleX="{~scaleX}" android:scaleY="{~scaleY}" android:translateX="{~translateX}" android:translateY="{~translateY}">
+			##render-start##
+				<<clipPaths>>
+				<clip-path android:name="{~clipPathName}" android:pathData="{~clipPathData}" />
+				<<clipPaths>>
+				<path android:name="{&name}" android:pathData="{&value}"
+					android:fillColor="{~fill}" android:fillAlpha="{~fillOpacity}" android:fillType="{~fillRule}"
+					android:strokeColor="{~stroke}" android:strokeAlpha="{~strokeOpacity}" android:strokeWidth="{~strokeWidth}"
+					android:strokeLineCap="{~strokeLinecap}" android:strokeLineJoin="{~strokeLinejoin}" android:strokeMiterLimit="{~strokeMiterlimit}">
+				<<fillPattern>>
+					<aapt:attr name="android:fillColor">
+					<<gradients>>
+						<gradient android:type="{&type}" android:startColor="@color/{~startColor}" android:endColor="@color/{~endColor}" android:centerColor="@color/{~centerColor}" android:startX="{~startX}" android:startY="{~startY}" android:endX="{~endX}" android:endY="{~endY}" android:centerX="{~centerX}" android:centerY="{~centerY}" android:gradientRadius="{~gradientRadius}">
+						<<colorStops>>
+							<item android:offset="{&offset}" android:color="{&color}" />
+						<<colorStops>>
+						</gradient>
+					<<gradients>>
+					</aapt:attr>
+				<<fillPattern>>
+				</path>
+			##render-end##
+			</group>
+			##render-end##
+			<<CCC>>
+			<<DDD>>
+			!!{&templateName}!!
+			<<DDD>>
+		<<BB>>
+	##group-end##
+	</group>
+	##group-end##
+<<A>>
+<<B>>
+!!{&templateName}!!
+<<B>>
+</vector>`;
 
-    var $color$2 = squared.lib.color;
-    var $dom$8 = squared.lib.dom;
-    var $enum$g = squared.base.lib.enumeration;
-    var $util$h = squared.lib.util;
-    var $xml$6 = squared.lib.xml;
+    const $enum$g = squared.base.lib.enumeration;
+    const $color$2 = squared.lib.color;
+    const $dom$8 = squared.lib.dom;
+    const $util$h = squared.lib.util;
+    const $xml$6 = squared.lib.xml;
+    const TEMPLATES = {
+        LAYER_LIST: $xml$6.parseTemplate(LAYERLIST_TMPL),
+        SHAPE: $xml$6.parseTemplate(SHAPE_TMPL),
+        VECTOR: $xml$6.parseTemplate(VECTOR_TMPL)
+    };
+    const STORED$1 = Resource.STORED;
     function getBorderStyle(border, direction = -1, halfSize = false) {
         const result = {
             solid: `android:color="@color/${border.color}"`,
@@ -6190,8 +6320,7 @@ var android = (function () {
                         if (direction === 0 || direction === 2) {
                             halfSize = !halfSize;
                         }
-                        if (color.valueRGB === '#000000' && (groove && (direction === 1 || direction === 3) ||
-                            !groove && (direction === 0 || direction === 2))) {
+                        if (color.valueRGB === '#000000' && (groove && (direction === 1 || direction === 3) || !groove && (direction === 0 || direction === 2))) {
                             halfSize = !halfSize;
                         }
                         if (halfSize) {
@@ -6269,7 +6398,7 @@ var android = (function () {
         }
         return false;
     }
-    function insertDoubleBorder(border, top, right, bottom, left, data, borderRadius) {
+    function insertDoubleBorder(data, border, top, right, bottom, left, borderRadius) {
         const width = parseInt(border.width);
         const baseWidth = Math.floor(width / 3);
         const remainder = width % 3;
@@ -6278,35 +6407,39 @@ var android = (function () {
         const rightWidth = baseWidth + offset;
         let indentWidth = `${$util$h.formatPX(width - baseWidth)}`;
         let hideWidth = `-${indentWidth}`;
-        data['7'].push({
+        data.G.push({
             top: top ? '' : hideWidth,
             right: right ? '' : hideWidth,
             bottom: bottom ? '' : hideWidth,
             left: left ? '' : hideWidth,
-            'stroke': [{ width: $util$h.formatPX(leftWidth), borderStyle: getBorderStyle(border) }],
-            'corners': borderRadius
+            stroke: [{ width: $util$h.formatPX(leftWidth), borderStyle: getBorderStyle(border) }],
+            corners: borderRadius
         });
         if (width === 3) {
             indentWidth = `${$util$h.formatPX(width)}`;
             hideWidth = `-${indentWidth}`;
         }
-        data['7'].push({
+        data.G.push({
             top: top ? indentWidth : hideWidth,
             right: right ? indentWidth : hideWidth,
             bottom: bottom ? indentWidth : hideWidth,
             left: left ? indentWidth : hideWidth,
-            'stroke': [{ width: $util$h.formatPX(rightWidth), borderStyle: getBorderStyle(border) }],
-            'corners': borderRadius
+            stroke: [{ width: $util$h.formatPX(rightWidth), borderStyle: getBorderStyle(border) }],
+            corners: borderRadius
         });
     }
     function checkBackgroundPosition(current, adjacent, defaultPosition) {
+        const initial = current === 'initial' || current === 'unset';
         if (current.indexOf(' ') === -1 && adjacent.indexOf(' ') !== -1) {
             if (/^[a-z]+$/.test(current)) {
-                return `${current === 'initial' ? defaultPosition : current} 0px`;
+                return `${initial ? defaultPosition : current} 0px`;
             }
             else {
                 return `${defaultPosition} ${current}`;
             }
+        }
+        else if (initial) {
+            return '0px';
         }
         return current;
     }
@@ -6340,9 +6473,7 @@ var android = (function () {
                                 backgroundImage[i] = Resource.addImageUrl(backgroundImage[i]);
                                 const postionX = backgroundPositionX[i] || backgroundPositionX[i - 1];
                                 const postionY = backgroundPositionY[i] || backgroundPositionY[i - 1];
-                                const x = checkBackgroundPosition(postionX, postionY, 'left');
-                                const y = checkBackgroundPosition(postionY, postionX, 'top');
-                                backgroundPosition[i] = `${x === 'initial' ? '0px' : x} ${y === 'initial' ? '0px' : y}`;
+                                backgroundPosition[i] = `${checkBackgroundPosition(postionX, postionY, 'left')} ${checkBackgroundPosition(postionY, postionX, 'top')}`;
                             }
                             else {
                                 backgroundImage[i] = '';
@@ -6595,72 +6726,81 @@ var android = (function () {
                                 }
                             }
                         });
-                        const backgroundColor = getShapeAttribute(stored, 'backgroundColor');
+                        const backgroundColor = getShapeAttribute(stored, 'backgroundColor') || [];
                         const borderRadius = getShapeAttribute(stored, 'radius');
-                        const vectorGradient = !!squared.svg.SvgPath && backgroundGradient.length > 0 && backgroundGradient.some(gradient => gradient.colorStop.length > 0);
+                        const vectorGradient = !!squared.svg && !!squared.svg.SvgPath && backgroundGradient.length > 0 && backgroundGradient.some(gradient => gradient.colorStops.length > 0);
                         if (vectorGradient) {
                             const width = node.bounds.width;
                             const height = node.bounds.height;
-                            const xml = $xml$6.createTemplate($xml$6.parseTemplate(VECTOR_TMPL), {
+                            const vectorData = {
                                 namespace: getXmlNs('aapt'),
                                 width: $util$h.formatPX(width),
                                 height: $util$h.formatPX(height),
                                 viewportWidth: width.toString(),
                                 viewportHeight: height.toString(),
                                 alpha: '',
-                                '1': [{
-                                        '2': [{
-                                                clipPaths: false,
-                                                d: squared.svg.SvgPath.getRect(width, height),
-                                                fill: [{ 'gradients': backgroundGradient }]
+                                A: [{
+                                        group: [[]],
+                                        BB: [{
+                                                CCC: [{
+                                                        render: [[]],
+                                                        name: `${node.controlId}_gradient_path`,
+                                                        value: squared.svg.SvgPath.getRect(width, height),
+                                                        clipPaths: false,
+                                                        fillPattern: [{ gradients: backgroundGradient }]
+                                                    }],
+                                                DDD: false
                                             }]
-                                    }]
-                            });
+                                    }],
+                                B: false
+                            };
+                            const xml = $xml$6.createTemplate(TEMPLATES.VECTOR, vectorData, true);
                             let vectorName = Resource.getStoredName('drawables', xml);
                             if (vectorName === '') {
                                 vectorName = `${node.tagName.toLowerCase()}_${node.controlId}_gradient`;
-                                Resource.STORED.drawables.set(vectorName, xml);
+                                STORED$1.drawables.set(vectorName, xml);
                             }
                             backgroundVector.push({ vectorName });
                         }
                         let template;
-                        if (stored.border && !(stored.border.style === 'double' && parseInt(stored.border.width) > 2 ||
-                            (stored.border.style === 'groove' || stored.border.style === 'ridge') && parseInt(stored.border.width) > 1)) {
+                        const border = stored.border;
+                        if (border && !(border.style === 'double' && parseInt(border.width) > 2 || (border.style === 'groove' || border.style === 'ridge') && parseInt(border.width) > 1)) {
+                            const stroke = getShapeAttribute(stored, 'stroke') || [];
                             if (!hasBackgroundImage && backgroundGradient.length <= 1 && !vectorGradient) {
                                 if (borderRadius && borderRadius[0]['radius'] === undefined) {
                                     borderRadius[0]['radius'] = '1px';
                                 }
-                                template = $xml$6.parseTemplate(SHAPE_TMPL);
+                                template = TEMPLATES.SHAPE;
                                 data = {
-                                    '1': getShapeAttribute(stored, 'stroke'),
-                                    '2': backgroundColor,
-                                    '3': borderRadius,
-                                    '4': backgroundGradient.length ? backgroundGradient : false
+                                    A: stroke,
+                                    B: backgroundColor,
+                                    C: borderRadius,
+                                    D: backgroundGradient.length ? backgroundGradient : false
                                 };
                             }
                             else {
-                                template = $xml$6.parseTemplate(LAYERLIST_TMPL);
+                                template = TEMPLATES.LAYER_LIST;
                                 data = {
-                                    '1': backgroundColor,
-                                    '2': !vectorGradient && backgroundGradient.length ? backgroundGradient : false,
-                                    '3': backgroundVector,
-                                    '4': false,
-                                    '5': images5.length ? images5 : false,
-                                    '6': images6.length ? images6 : false,
-                                    '7': Resource.isBorderVisible(stored.border) || borderRadius ? [{ 'stroke': getShapeAttribute(stored, 'stroke'), 'corners': borderRadius }] : false
+                                    A: backgroundColor,
+                                    B: !vectorGradient && backgroundGradient.length ? backgroundGradient : false,
+                                    C: backgroundVector,
+                                    D: false,
+                                    E: images5.length ? images5 : false,
+                                    F: images6.length ? images6 : false,
+                                    G: Resource.isBorderVisible(border) || borderRadius ? [{ stroke, corners: borderRadius }] : false
                                 };
                             }
                         }
                         else {
-                            template = $xml$6.parseTemplate(LAYERLIST_TMPL);
+                            template = TEMPLATES.LAYER_LIST;
                             data = {
-                                '1': backgroundColor,
-                                '2': !vectorGradient && backgroundGradient.length ? backgroundGradient : false,
-                                '3': backgroundVector,
-                                '4': false,
-                                '5': images5.length ? images5 : false,
-                                '6': images6.length ? images6 : false,
-                                '7': []
+                                A: backgroundColor,
+                                B: !vectorGradient && backgroundGradient.length ? backgroundGradient : false,
+                                C: backgroundVector,
+                                D: false,
+                                E: images5.length ? images5 : false,
+                                F: images6.length ? images6 : false,
+                                G: []
                             };
                             const borderWidth = new Set(borderFiltered.map(item => item.width));
                             const borderStyle = new Set(borderFiltered.map(item => getBorderStyle(item)));
@@ -6671,69 +6811,73 @@ var android = (function () {
                             }
                             if (borderWidth.size === 1 && borderStyle.size === 1 && !(borderData.style === 'groove' || borderData.style === 'ridge')) {
                                 const width = parseInt(borderData.width);
-                                if (width > 2 && borderData.style === 'double') {
+                                if (borderData.style === 'double' && width > 2) {
                                     insertDoubleBorder.apply(null, [
-                                        borderData,
-                                        ...borderVisible,
                                         data,
+                                        borderData,
+                                        borderVisible[0],
+                                        borderVisible[1],
+                                        borderVisible[2],
+                                        borderVisible[3],
                                         borderRadius
                                     ]);
                                 }
-                                else {
+                                else if (data.G) {
                                     const hideWidth = `-${$util$h.formatPX(getHideWidth(width))}`;
                                     const leftTop = !borderVisible[0] && !borderVisible[3];
                                     const topOnly = !borderVisible[0] && borderVisible[1] && borderVisible[2] && borderVisible[3];
                                     const leftOnly = borderVisible[0] && borderVisible[1] && borderVisible[2] && !borderVisible[3];
-                                    data['7'].push({
+                                    data.G.push({
                                         top: borderVisible[0] ? '' : hideWidth,
                                         right: borderVisible[1] ? (borderVisible[3] || leftTop || leftOnly ? '' : borderData.width) : hideWidth,
                                         bottom: borderVisible[2] ? (borderVisible[0] || leftTop || topOnly ? '' : borderData.width) : hideWidth,
                                         left: borderVisible[3] ? '' : hideWidth,
-                                        'stroke': getShapeAttribute({ border: borderData }, 'stroke'),
-                                        'corners': borderRadius
+                                        stroke: getShapeAttribute({ border: borderData }, 'stroke'),
+                                        corners: borderRadius
                                     });
                                 }
                             }
                             else {
                                 for (let i = 0; i < borders.length; i++) {
                                     if (borderVisible[i]) {
-                                        const border = borders[i];
-                                        const width = parseInt(border.width);
-                                        if (width > 2 && border.style === 'double') {
+                                        const item = borders[i];
+                                        const width = parseInt(item.width);
+                                        if (item.style === 'double' && width > 2) {
                                             insertDoubleBorder.apply(null, [
-                                                border,
+                                                data,
+                                                item,
                                                 i === 0,
                                                 i === 1,
                                                 i === 2,
                                                 i === 3,
-                                                data,
                                                 borderRadius
                                             ]);
                                         }
-                                        else {
-                                            const hasInset = width > 1 && (border.style === 'groove' || border.style === 'ridge');
+                                        else if (data.G) {
+                                            const hasInset = width > 1 && (item.style === 'groove' || item.style === 'ridge');
                                             const outsetWidth = hasInset ? Math.ceil(width / 2) : width;
                                             const baseWidth = getHideWidth(outsetWidth);
+                                            const visible = !visibleAll && item.width === '1px';
                                             let hideWidth = `-${$util$h.formatPX(baseWidth)}`;
                                             let hideTopWidth = `-${$util$h.formatPX(baseWidth + (visibleAll ? 1 : 0))}`;
-                                            data['7'].push({
+                                            data.G.push({
                                                 top: i === 0 ? '' : hideTopWidth,
-                                                right: i === 1 ? (!visibleAll && border.width === '1px' ? border.width : '') : hideWidth,
-                                                bottom: i === 2 ? (!visibleAll && border.width === '1px' ? border.width : '') : hideWidth,
+                                                right: i === 1 ? (visible ? item.width : '') : hideWidth,
+                                                bottom: i === 2 ? (visible ? item.width : '') : hideWidth,
                                                 left: i === 3 ? '' : hideWidth,
-                                                'stroke': getShapeAttribute({ border }, 'stroke', i, hasInset),
-                                                'corners': borderRadius
+                                                stroke: getShapeAttribute({ border: item }, 'stroke', i, hasInset),
+                                                corners: borderRadius
                                             });
                                             if (hasInset) {
                                                 hideWidth = `-${$util$h.formatPX(getHideWidth(width))}`;
                                                 hideTopWidth = `-${$util$h.formatPX(width + (visibleAll ? 1 : 0))}`;
-                                                data['7'].unshift({
+                                                data.G.unshift({
                                                     top: i === 0 ? '' : hideTopWidth,
-                                                    right: i === 1 ? (!visibleAll && border.width === '1px' ? border.width : '') : hideWidth,
-                                                    bottom: i === 2 ? (!visibleAll && border.width === '1px' ? border.width : '') : hideWidth,
+                                                    right: i === 1 ? (visible ? item.width : '') : hideWidth,
+                                                    bottom: i === 2 ? (visible ? item.width : '') : hideWidth,
                                                     left: i === 3 ? '' : hideWidth,
-                                                    'stroke': getShapeAttribute({ border }, 'stroke', i, true, true),
-                                                    'corners': false
+                                                    stroke: getShapeAttribute({ border: item }, 'stroke', i, true, true),
+                                                    corners: false
                                                 });
                                             }
                                         }
@@ -6746,7 +6890,7 @@ var android = (function () {
                             resourceName = Resource.getStoredName('drawables', xml);
                             if (resourceName === '') {
                                 resourceName = `${node.tagName.toLowerCase()}_${node.controlId}`;
-                                Resource.STORED.drawables.set(resourceName, xml);
+                                STORED$1.drawables.set(resourceName, xml);
                             }
                         }
                         node.android('background', `@drawable/${resourceName}`, false);
@@ -6809,7 +6953,8 @@ var android = (function () {
         }
     }
 
-    var $util$i = squared.lib.util;
+    const $util$i = squared.lib.util;
+    const STORED$2 = Resource.STORED;
     function getResourceKey(dimens, key, value) {
         for (const [storedKey, storedvalue] of dimens.entries()) {
             if (storedKey.startsWith(key) && value === storedvalue) {
@@ -6850,19 +6995,17 @@ var android = (function () {
                     }
                 });
             }
-            const dimens = Resource.STORED.dimens;
             for (const tagName in groups) {
                 const group = groups[tagName];
                 for (const name in group) {
                     const [namespace, attr, value] = name.split(',');
-                    const key = getResourceKey(dimens, `${getDisplayName(tagName)}_${getAttributeName(attr)}`, value);
+                    const key = getResourceKey(STORED$2.dimens, `${getDisplayName(tagName)}_${getAttributeName(attr)}`, value);
                     group[name].forEach(node => node[namespace](attr, `@dimen/${key}`));
-                    dimens.set(key, value);
+                    STORED$2.dimens.set(key, value);
                 }
             }
         }
         afterFinalize() {
-            const dimens = Resource.STORED.dimens;
             for (const view of this.application.viewData) {
                 const pattern = /[\s\n]+<[^<]*?(\w+):(\w+)="(-?[\d.]+(?:px|dp|sp))"/;
                 let match;
@@ -6870,8 +7013,8 @@ var android = (function () {
                 while ((match = pattern.exec(content)) !== null) {
                     const controlName = /^[\s\n]+<([\w\-.]+)[\s\n]/.exec(match[0]);
                     if (controlName) {
-                        const key = getResourceKey(dimens, `${getDisplayName(controlName[1]).toLowerCase()}_${getAttributeName(match[2])}`, match[3]);
-                        dimens.set(key, match[3]);
+                        const key = getResourceKey(STORED$2.dimens, `${getDisplayName(controlName[1]).toLowerCase()}_${getAttributeName(match[2])}`, match[3]);
+                        STORED$2.dimens.set(key, match[3]);
                         content = content.replace(match[0], match[0].replace(match[3], `@dimen/${key}`));
                     }
                 }
@@ -6880,9 +7023,9 @@ var android = (function () {
         }
     }
 
-    var $dom$9 = squared.lib.dom;
-    var $enum$h = squared.base.lib.enumeration;
-    var $util$j = squared.lib.util;
+    const $enum$h = squared.base.lib.enumeration;
+    const $dom$9 = squared.lib.dom;
+    const $util$j = squared.lib.util;
     const FONT_ANDROID = {
         'sans-serif': 14 /* ICE_CREAM_SANDWICH */,
         'sans-serif-thin': 16 /* JELLYBEAN */,
@@ -6922,9 +7065,6 @@ var android = (function () {
         'system-ui': 'sans-serif',
         '-apple-system': 'sans-serif'
     };
-    if ($dom$9.isUserAgent(8 /* EDGE */)) {
-        FONTREPLACE_ANDROID['consolas'] = 'monospace';
-    }
     const FONTWEIGHT_ANDROID = {
         '100': 'thin',
         '200': 'extra_light',
@@ -6944,6 +7084,10 @@ var android = (function () {
         'color': 'android:textColor="@color/{0}"',
         'backgroundColor': 'android:background="@color/{0}"'
     };
+    if ($dom$9.isUserAgent(8 /* EDGE */)) {
+        FONTREPLACE_ANDROID['consolas'] = 'monospace';
+    }
+    const STORED$3 = Resource.STORED;
     function deleteStyleAttribute(sorted, attrs, ids) {
         attrs.split(';').forEach(value => {
             for (let i = 0; i < sorted.length; i++) {
@@ -7212,16 +7356,27 @@ var android = (function () {
                 const tagData = style[tag];
                 const styleData = [];
                 for (const attrs in tagData) {
+                    const items = [];
+                    attrs.split(';').forEach(value => {
+                        const match = REGEX_ANDROID.ATTRIBUTE.exec(value);
+                        if (match) {
+                            items.push({ name: match[1], value: match[2] });
+                        }
+                    });
                     styleData.push({
                         name: '',
-                        attrs,
+                        parent: '',
+                        items,
                         ids: tagData[attrs]
                     });
                 }
                 styleData.sort((a, b) => {
-                    let [c, d] = [a.ids.length, b.ids.length];
+                    let [c, d] = [a.items.length, b.items.length];
                     if (c === d) {
-                        [c, d] = [a.attrs.split(';').length, b.attrs.split(';').length];
+                        [c, d] = [a.items[0].name, b.items[0].name];
+                    }
+                    if (c === d) {
+                        [c, d] = [a.items[0].value, b.items[0].value];
                     }
                     return c <= d ? 1 : -1;
                 });
@@ -7230,11 +7385,13 @@ var android = (function () {
             }
             for (const tag in resource) {
                 for (const group of resource[tag]) {
-                    for (const id of group.ids) {
-                        if (nodeMap[id] === undefined) {
-                            nodeMap[id] = { styles: [], attrs: [] };
+                    if (group.ids) {
+                        for (const id of group.ids) {
+                            if (nodeMap[id] === undefined) {
+                                nodeMap[id] = { styles: [], attrs: [] };
+                            }
+                            nodeMap[id].styles.push(group.name);
                         }
-                        nodeMap[id].styles.push(group.name);
                     }
                 }
                 const tagData = layout[tag];
@@ -7265,17 +7422,20 @@ var android = (function () {
                 value.split('.').forEach(name => {
                     const match = name.match(/^(\w*?)(?:_(\d+))?$/);
                     if (match) {
-                        const tagData = Object.assign({ name, parent }, resource[match[1].toUpperCase()][match[2] === undefined ? 0 : parseInt(match[2])]);
-                        Resource.STORED.styles.set(name, tagData);
-                        parent = name;
+                        const data = resource[match[1].toUpperCase()];
+                        const index = match[2] ? parseInt(match[2]) : 0;
+                        if (data[index]) {
+                            STORED$3.styles.set(name, Object.assign({}, data[index], { name, parent }));
+                            parent = name;
+                        }
                     }
                 });
             }
         }
     }
 
-    var $util$k = squared.lib.util;
-    var $xml$7 = squared.lib.xml;
+    const $util$k = squared.lib.util;
+    const $xml$7 = squared.lib.xml;
     class ResourceIncludes extends squared.base.Extension {
         constructor() {
             super(...arguments);
@@ -7389,10 +7549,10 @@ var android = (function () {
         }
     }
 
-    var $dom$a = squared.lib.dom;
-    var $enum$i = squared.base.lib.enumeration;
-    var $util$l = squared.lib.util;
-    var $xml$8 = squared.lib.xml;
+    const $enum$i = squared.base.lib.enumeration;
+    const $dom$a = squared.lib.dom;
+    const $util$l = squared.lib.util;
+    const $xml$8 = squared.lib.xml;
     class ResourceStrings extends squared.base.Extension {
         constructor() {
             super(...arguments);
@@ -7487,7 +7647,8 @@ var android = (function () {
         }
     }
 
-    var $util$m = squared.lib.util;
+    const $util$m = squared.lib.util;
+    const STORED$4 = Resource.STORED;
     class ResourceStyles extends squared.base.Extension {
         constructor() {
             super(...arguments);
@@ -7562,71 +7723,110 @@ var android = (function () {
                 }
             }
             for (const name in styles) {
-                Resource.STORED.styles.set(name, {
-                    name,
-                    attrs: styles[name].join(';'),
-                    ids: []
-                });
+                const items = [];
+                for (const attr in styles[name]) {
+                    const match = REGEX_ANDROID.ATTRIBUTE.exec(styles[name][attr]);
+                    if (match) {
+                        items.push({ name: match[1], value: match[2] });
+                    }
+                }
+                STORED$4.styles.set(name, Object.assign({}, createStyleAttribute(), { name, items, ids: [] }));
             }
         }
     }
 
-    const template$a = [
-        '<?xml version="1.0" encoding="utf-8"?>',
-        '<animated-vector xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt" android:drawable="@drawable/{&vectorName}">',
-        '!1',
-        '!targetSet',
-        '	<target android:name="{&name}">',
-        '		<aapt:attr name="android:animation">',
-        '			<set android:ordering="{~ordering}">',
-        '!objectAnimators',
-        '				<objectAnimator',
-        '					android:propertyName="{~propertyName}"',
-        '					android:valueType="{~valueType}"',
-        '					android:valueFrom="{~valueFrom}"',
-        '					android:valueTo="{~valueTo}"',
-        '					android:duration="{~duration}"',
-        '					android:repeatCount="{&repeatCount}"',
-        '					android:repeatMode="{~repeatMode}"',
-        '					android:startOffset="{~startOffset}"',
-        '					android:interpolator="{~interpolator}"',
-        '					android:fillAfter="{~fillAfter}"',
-        '					android:fillBefore="{~fillBefore}"',
-        '					android:fillEnabled="{~fillEnabled}">',
-        '!propertyValues',
-        '					<propertyValuesHolder android:propertyName="{&propertyName}">',
-        '!keyframes',
-        '						<keyframe android:fraction="{~fraction}" android:valueType="{~valueType}" android:value="{~value}" />',
-        '!keyframes',
-        '					</propertyValuesHolder>',
-        '!propertyValues',
-        '				</objectAnimator>',
-        '!objectAnimators',
-        '			</set>',
-        '		</aapt:attr>',
-        '	</target>',
-        '!targetSet',
-        '!1',
-        '</animated-vector>'
-    ];
-    var ANIMATEDVECTOR_TMPL = template$a.join('\n');
+    var ANIMATEDVECTOR_TMPL = `
+<?xml version="1.0" encoding="utf-8"?>
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android" android:drawable="@drawable/{&vectorName}">
+<<A>>
+	<target android:name="{&name}" android:animation="@animator/{&animationName}" />
+<<A>>
+</animated-vector>`;
 
-    var $color$3 = squared.lib.color;
-    var $dom$b = squared.lib.dom;
-    var $util$n = squared.lib.util;
-    var $xml$9 = squared.lib.xml;
-    if (squared.svg === undefined) {
+    var SETOBJECTANIMATOR_TMPL = `
+<?xml version="1.0" encoding="utf-8"?>
+<set xmlns:android="http://schemas.android.com/apk/res/android">
+<<A>>
+	<set android:ordering="{~ordering}">
+	<<AA>>
+		<set android:ordering="{~ordering}">
+		<<repeating>>
+			<objectAnimator
+				android:propertyName="{~propertyName}"
+				android:valueType="{~valueType}"
+				android:valueFrom="{~valueFrom}"
+				android:valueTo="{~valueTo}"
+				android:startOffset="{~startOffset}"
+				android:duration="{~duration}"
+				android:repeatCount="{&repeatCount}"
+				android:repeatMode="{~repeatMode}"
+				android:interpolator="{~interpolator}"
+				android:fillAfter="{~fillAfter}"
+				android:fillBefore="{~fillBefore}"
+				android:fillEnabled="{~fillEnabled}">
+			<<propertyValues>>
+				<propertyValuesHolder android:propertyName="{&propertyName}">
+				<<keyframes>>
+					<keyframe android:fraction="{~fraction}" android:value="{~value}" />
+				<<keyframes>>
+				</propertyValuesHolder>
+			<<propertyValues>>
+			</objectAnimator>
+		<<repeating>>
+		<<indefinite>>
+			<set android:ordering="{~ordering}">
+			<<repeat>>
+				<objectAnimator
+					android:propertyName="{&propertyName}"
+					android:valueType="{~valueType}"
+					android:valueFrom="{~valueFrom}"
+					android:valueTo="{&valueTo}"
+					android:startOffset="{~startOffset}"
+					android:duration="{~duration}"
+					android:repeatCount="{~repeatCount}" />
+			<<repeat>>
+			</set>
+		<<indefinite>>
+		</set>
+		<<fill>>
+		<set android:ordering="{~ordering}">
+		<<replace>>
+			<objectAnimator
+				android:propertyName="{&propertyName}"
+				android:valueType="{~valueType}"
+				android:valueFrom="{~valueFrom}"
+				android:valueTo="{&valueTo}"
+				android:startOffset="{~startOffset}"
+				android:duration="{~duration}"
+				android:repeatCount="{~repeatCount}" />
+		<<replace>>
+		</set>
+		<<fill>>
+	<<AA>>
+	</set>
+<<A>>
+</set>`;
+
+    if (!squared.svg) {
         squared.svg = { lib: {} };
     }
+    var $Svg = squared.svg.Svg;
     var $SvgAnimate = squared.svg.SvgAnimate;
     var $SvgAnimateMotion = squared.svg.SvgAnimateMotion;
     var $SvgAnimateTransform = squared.svg.SvgAnimateTransform;
     var $SvgBuild = squared.svg.SvgBuild;
-    var $SvgGroupViewBox = squared.svg.SvgGroupViewBox;
+    var $SvgContainer = squared.svg.SvgContainer;
+    var $SvgG = squared.svg.SvgG;
     var $SvgImage = squared.svg.SvgImage;
     var $SvgPath = squared.svg.SvgPath;
+    var $SvgShape = squared.svg.SvgShape;
     var $SvgUse = squared.svg.SvgUse;
-    var $util_svg = squared.svg.lib.util;
+    var $SvgUseSymbol = squared.svg.SvgUseSymbol;
+    var $utilS = squared.svg.lib.util;
+    const $color$3 = squared.lib.color;
+    const $dom$b = squared.lib.dom;
+    const $util$n = squared.lib.util;
+    const $xml$9 = squared.lib.xml;
     const INTERPOLATOR_ANDROID = {
         ACCELERATE_DECELERATE: '@android:anim/accelerate_decelerate_interpolator',
         ACCELERATE: '@android:anim/accelerate_interpolator',
@@ -7647,804 +7847,784 @@ var android = (function () {
         'stroke-width': 'strokeWidth',
         'd': 'pathData'
     };
-    function queueAnimations(animateMap, name, svg, predicate, pathData = '') {
-        const animate = svg.animate.filter(predicate).filter(item => item.begin.length > 0);
-        if (animate.length) {
-            animateMap.set(name, {
-                element: svg.element,
-                animate,
-                pathData
-            });
-        }
-    }
-    function createGroup(animateMap, group, inclusions = []) {
-        const name = `group_${group.name}`;
-        const data = {
-            name,
-            '2': []
-        };
-        let x = group instanceof $SvgGroupViewBox ? group.x : 0;
-        let y = group instanceof $SvgGroupViewBox ? group.y : 0;
-        if (group.transform.numberOfItems) {
-            const transform = $util_svg.createTransformData(group.element);
-            if (transform.operations.length) {
-                x += transform.translateX;
-                y += transform.translateY;
-                if (transform.scaleX !== 1) {
-                    data.scaleX = transform.scaleX.toString();
-                }
-                if (transform.scaleY !== 1) {
-                    data.scaleY = transform.scaleY.toString();
-                }
-                if (transform.rotateAngle !== 0) {
-                    data.rotation = transform.rotateAngle.toString();
-                }
-                let pivotX = transform.rotateOriginX || 0;
-                let pivotY = transform.rotateOriginY || 0;
-                if (transform.origin) {
-                    pivotX += transform.origin.x;
-                    pivotY += transform.origin.y;
-                }
-                if (pivotX !== 0) {
-                    data.pivotX = pivotX.toString();
-                }
-                if (pivotY !== 0) {
-                    data.pivotY = pivotY.toString();
+    const TEMPLATES$1 = {};
+    const STORED$5 = Resource.STORED;
+    function createTransformData(transform) {
+        const result = {};
+        if (transform) {
+            for (let i = 0; i < transform.length; i++) {
+                const item = transform[i];
+                const m = item.matrix;
+                switch (item.type) {
+                    case SVGTransform.SVG_TRANSFORM_SCALE:
+                        result.scaleX = m.a.toString();
+                        result.scaleY = m.d.toString();
+                        break;
+                    case SVGTransform.SVG_TRANSFORM_ROTATE:
+                        result.rotation = item.angle.toString();
+                        if (item.origin) {
+                            result.pivotX = item.origin.x.toString();
+                            result.pivotY = item.origin.y.toString();
+                        }
+                        break;
+                    case SVGTransform.SVG_TRANSFORM_TRANSLATE:
+                        result.translateX = m.e.toString();
+                        result.translateY = m.f.toString();
+                        break;
                 }
             }
         }
-        if (x !== 0) {
-            data.translateX = x.toString();
-        }
-        if (y !== 0) {
-            data.translateY = y.toString();
-        }
-        queueAnimations(animateMap, name, group, item => item instanceof $SvgAnimateTransform || inclusions.includes(item.attributeName), group instanceof $SvgUse && group.path ? group.path.d : '');
-        return data;
+        return result;
     }
-    function getSvgOffset(element, outerParent) {
-        let parent = element.parentElement;
+    function getSvgOffset(element, baseElement) {
         let x = 0;
         let y = 0;
-        while (parent instanceof SVGSVGElement && parent !== outerParent) {
-            const transform = $util_svg.createTransformData(parent);
-            x += parent.x.baseVal.value + transform.translateX;
-            y += parent.y.baseVal.value + transform.translateY;
-            parent = parent.parentElement;
-        }
+        $utilS.ascendToViewport(element).forEach(parent => {
+            if ((parent instanceof SVGSVGElement || parent instanceof SVGUseElement) && parent !== baseElement) {
+                x += parent.x.baseVal.value;
+                y += parent.y.baseVal.value;
+            }
+        });
         return { x, y };
     }
     class ResourceSvg extends squared.base.Extension {
         constructor() {
             super(...arguments);
             this.options = {
+                excludeFromTransform: {
+                    path: [],
+                    line: [],
+                    rect: [],
+                    ellipse: [SVGTransform.SVG_TRANSFORM_SKEWX, SVGTransform.SVG_TRANSFORM_SKEWY],
+                    circle: [SVGTransform.SVG_TRANSFORM_SKEWX, SVGTransform.SVG_TRANSFORM_SKEWY],
+                    polyline: [],
+                    polygon: [],
+                    image: [SVGTransform.SVG_TRANSFORM_SKEWX, SVGTransform.SVG_TRANSFORM_SKEWY]
+                },
                 vectorAnimateOrdering: 'together',
                 vectorAnimateInterpolator: INTERPOLATOR_ANDROID.LINEAR,
                 vectorAnimateAlwaysUseKeyframes: true
             };
             this.eventOnly = true;
+            this.VECTOR_DATA = new Map();
+            this.ANIMATE_DATA = new Map();
+            this.IMAGE_DATA = [];
+            this.NAMESPACE_AAPT = false;
         }
         beforeInit() {
+            if ($SvgBuild) {
+                if (TEMPLATES$1['ANIMATED'] === undefined) {
+                    TEMPLATES$1.ANIMATED = $xml$9.parseTemplate(ANIMATEDVECTOR_TMPL);
+                    TEMPLATES$1.LAYER_LIST = $xml$9.parseTemplate(LAYERLIST_TMPL);
+                    TEMPLATES$1.SET_OBJECTANIMATOR = $xml$9.parseTemplate(SETOBJECTANIMATOR_TMPL);
+                }
+                $SvgBuild.setName();
+            }
             this.application.controllerHandler.localSettings.unsupported.tagName.delete('svg');
         }
         afterResources() {
             for (const node of this.application.processing.cache) {
                 if (node.svgElement) {
-                    const svg = new squared.svg.Svg(node.element);
-                    const namespace = new Set();
-                    const animateMap = new Map();
-                    const templateName = `${node.tagName.toLowerCase()}_${node.controlId}`;
-                    const images = [];
+                    const svg = new $Svg(node.element);
+                    const templateName = `${node.tagName.toLowerCase()}_${node.controlId}_viewbox`;
+                    const getFilename = (prefix = '', suffix = '') => {
+                        return templateName + (prefix !== '' ? `_${prefix}` : '') + (this.IMAGE_DATA.length ? '_vector' : '') + (suffix !== '' ? `_${suffix}` : '');
+                    };
+                    this.VECTOR_DATA.clear();
+                    this.ANIMATE_DATA.clear();
+                    this.IMAGE_DATA.length = 0;
+                    this.NAMESPACE_AAPT = false;
+                    svg.build(true, this.options.excludeFromTransform);
+                    svg.synchronize();
+                    this.parseVectorData(node, svg, svg);
+                    this.queueAnimations(svg, svg.name, item => item.attributeName === 'opacity');
                     let drawable = '';
                     let vectorName = '';
-                    if (svg.length) {
-                        function createPath(target, path, exclusions = []) {
-                            const name = target.name;
-                            const clipPaths = [];
-                            if (path.clipPath !== '') {
-                                const clipPath = svg.defs.clipPath.get(path.clipPath);
-                                if (clipPath) {
-                                    clipPath.each(child => {
-                                        if (child.path) {
-                                            clipPaths.push({ name: child.name, d: child.path.d });
-                                            queueAnimations(animateMap, child.name, child, item => !(item instanceof $SvgAnimateTransform || item instanceof $SvgAnimateMotion), child.path.d);
-                                        }
-                                    });
-                                }
-                            }
-                            const result = Object.assign({}, path, { name, clipPaths });
-                            ['fill', 'stroke'].forEach(attr => {
-                                if ($util$n.isString(result[attr])) {
-                                    if (result[attr].charAt(0) === '@') {
-                                        const gradient = svg.defs.gradient.get(result[attr]);
-                                        if (gradient) {
-                                            switch (target.element.tagName) {
-                                                case 'path':
-                                                    if (!/[zZ]\s*$/.test(result.d)) {
-                                                        break;
-                                                    }
-                                                case 'rect':
-                                                case 'polygon':
-                                                case 'polyline':
-                                                case 'circle':
-                                                case 'ellipse':
-                                                    const gradients = Resource.createBackgroundGradient(node, [gradient], result);
-                                                    result[attr] = [{ gradients }];
-                                                    namespace.add('aapt');
-                                                    return;
-                                            }
-                                        }
-                                        else {
-                                            result[attr] = result.color;
-                                        }
-                                    }
-                                    const colorName = Resource.addColor(result[attr]);
-                                    if (colorName !== '') {
-                                        result[attr] = `@color/${colorName}`;
-                                    }
-                                }
-                            });
-                            if (result.fillRule) {
-                                switch (result.fillRule) {
-                                    case 'evenodd':
-                                        result.fillRule = 'evenOdd';
-                                        break;
-                                    default:
-                                        result.fillRule = 'nonZero';
-                                        break;
-                                }
-                            }
-                            queueAnimations(animateMap, name, target, item => !(item instanceof $SvgAnimateTransform || item instanceof $SvgAnimateMotion) && !exclusions.includes(item.attributeName), result.d);
-                            return result;
+                    {
+                        const template = $xml$9.parseTemplate(VECTOR_TMPL);
+                        let xml = $xml$9.createTemplate(template, {
+                            namespace: this.NAMESPACE_AAPT ? getXmlNs('aapt') : '',
+                            name: svg.name,
+                            width: $util$n.formatPX(svg.width),
+                            height: $util$n.formatPX(svg.height),
+                            viewportWidth: svg.viewBox.width > 0 ? svg.viewBox.width.toString() : false,
+                            viewportHeight: svg.viewBox.height > 0 ? svg.viewBox.height.toString() : false,
+                            alpha: parseFloat(svg.opacity) < 1 ? svg.opacity.toString() : false,
+                            A: [],
+                            B: [{ templateName: svg.name }]
+                        });
+                        const output = new Map();
+                        template['__ROOT__'] = template['A'];
+                        for (const [name, data] of this.VECTOR_DATA.entries()) {
+                            output.set(name, $xml$9.createTemplate(template, data));
                         }
-                        queueAnimations(animateMap, svg.name, svg, item => item.attributeName === 'opacity');
-                        let groups = [];
-                        let groupData;
-                        for (let i = 0; i < svg.children.length; i++) {
-                            const group = svg.children[i];
-                            if (i > 0) {
-                                group.synchronize(false);
-                                groupData = createGroup(animateMap, group, group instanceof $SvgGroupViewBox ? ['x', 'y'] : []);
-                            }
-                            if (group instanceof $SvgUse) {
-                                if (groupData && group.path) {
-                                    groupData['2'].push(createPath(group, group.path, ['x', 'y', 'width', 'height']));
+                        const entries = Array.from(output.entries()).reverse();
+                        for (let i = 0; i < entries.length; i++) {
+                            let partial = entries[i][1];
+                            for (let j = i; j < entries.length; j++) {
+                                const hash = `!!${entries[j][0]}!!`;
+                                if (partial.indexOf(hash) !== -1) {
+                                    partial = partial.replace(hash, entries[j][1]);
+                                    break;
                                 }
                             }
-                            else {
-                                for (const item of group.children) {
-                                    if (item instanceof $SvgImage) {
-                                        item.externalize();
-                                        images.push(item);
-                                    }
-                                    else if (item.visible && item.path) {
-                                        let newGroup = false;
-                                        item.synchronize(false);
-                                        if (i === 0) {
-                                            if (item.transform.numberOfItems > 0 && !item.path.transformed || item.animate.some(animate => animate instanceof $SvgAnimateTransform)) {
-                                                groupData = createGroup(animateMap, item);
-                                                groups.push(groupData);
-                                                newGroup = true;
-                                            }
-                                            if (groupData === undefined) {
-                                                groupData = createGroup(animateMap, group);
-                                                groups.push(groupData);
-                                            }
-                                        }
-                                        if (groupData) {
-                                            groupData['2'].push(createPath(item, item.path));
-                                        }
-                                        if (newGroup) {
-                                            groupData = undefined;
-                                        }
-                                    }
-                                }
-                            }
-                            if (i > 0 && groupData) {
-                                groups.push(groupData);
-                            }
+                            xml = xml.replace(`!!${entries[i][0]}!!`, partial);
                         }
-                        groups = groups.filter(group => group['2'].length > 0);
-                        if (groups.length) {
-                            let xml = $xml$9.createTemplate($xml$9.parseTemplate(VECTOR_TMPL), {
-                                namespace: namespace.size ? getXmlNs(...Array.from(namespace)) : '',
-                                name: svg.name,
-                                width: $util$n.formatPX(svg.width),
-                                height: $util$n.formatPX(svg.height),
-                                viewportWidth: svg.viewBoxWidth > 0 ? svg.viewBoxWidth.toString() : false,
-                                viewportHeight: svg.viewBoxHeight > 0 ? svg.viewBoxHeight.toString() : false,
-                                alpha: svg.opacity < 1 ? svg.opacity.toString() : false,
-                                '1': groups
-                            });
-                            vectorName = Resource.getStoredName('drawables', xml);
-                            if (vectorName === '') {
-                                vectorName = templateName + (images.length ? '_vector' : '');
-                                Resource.STORED.drawables.set(vectorName, xml);
+                        xml = $xml$9.formatTemplate(xml);
+                        vectorName = Resource.getStoredName('drawables', xml);
+                        if (vectorName === '') {
+                            vectorName = getFilename();
+                            STORED$5.drawables.set(vectorName, xml);
+                        }
+                    }
+                    if (this.ANIMATE_DATA.size) {
+                        const data = {
+                            vectorName,
+                            A: []
+                        };
+                        for (const [name, group] of this.ANIMATE_DATA.entries()) {
+                            const targetData = {
+                                name,
+                                animationName: getFilename('animation', name)
+                            };
+                            const targetSetData = { A: [] };
+                            const animatorMap = new Map();
+                            const sequentialMap = new Map();
+                            const together = [];
+                            const fillReplace = [];
+                            const transformMap = new Map();
+                            const togetherTargets = [];
+                            const fillReplaceTargets = [];
+                            const transformTargets = [];
+                            for (const item of group.animate) {
+                                if (item.sequential) {
+                                    if (item instanceof $SvgAnimateTransform) {
+                                        let values = transformMap.get(item.sequential.name);
+                                        if (values === undefined) {
+                                            values = [];
+                                            transformMap.set(item.sequential.name, values);
+                                        }
+                                        values.push(item);
+                                    }
+                                    else {
+                                        let values = sequentialMap.get(item.sequential.name);
+                                        if (values === undefined) {
+                                            values = [];
+                                            sequentialMap.set(item.sequential.name, values);
+                                        }
+                                        values.push(item);
+                                    }
+                                }
+                                else if (!item.fillFreeze) {
+                                    fillReplace.push(item);
+                                }
+                                else {
+                                    together.push(item);
+                                }
                             }
-                            if (animateMap.size) {
-                                const data = {
-                                    vectorName,
-                                    '1': []
+                            if (together.length) {
+                                togetherTargets.push(together);
+                            }
+                            for (const item of sequentialMap.values()) {
+                                togetherTargets.push(item.sort((a, b) => a.sequential && b.sequential && a.sequential.value >= b.sequential.value ? 1 : -1));
+                            }
+                            for (const item of transformMap.values()) {
+                                transformTargets.push(item.sort((a, b) => a.sequential && b.sequential && a.sequential.value >= b.sequential.value ? 1 : -1));
+                            }
+                            for (const item of fillReplace) {
+                                fillReplaceTargets.push([item]);
+                            }
+                            [togetherTargets, fillReplaceTargets, transformTargets].forEach((targets, index) => {
+                                const subData = {
+                                    ordering: index === 2 ? 'sequentially' : 'together',
+                                    AA: []
                                 };
-                                for (const [name, group] of animateMap.entries()) {
-                                    const animateData = {
-                                        targetSet: []
-                                    };
-                                    const animatorMap = new Map();
-                                    const together = [];
-                                    const fillReplace = [];
-                                    const sequentialMap = new Map();
-                                    const targets = [];
-                                    for (const item of group.animate) {
-                                        if (item.sequential) {
-                                            let values = sequentialMap.get(item.sequential.name);
-                                            if (values === undefined) {
-                                                values = [];
-                                                sequentialMap.set(item.sequential.name, values);
-                                            }
-                                            values.push(item);
-                                        }
-                                        else if (!item.fillFreeze) {
-                                            fillReplace.push(item);
-                                        }
-                                        else {
-                                            together.push(item);
-                                        }
-                                    }
-                                    if (together.length) {
-                                        targets.push(together);
-                                    }
-                                    for (const item of fillReplace) {
-                                        targets.push([item]);
-                                    }
-                                    for (const item of sequentialMap.values()) {
-                                        targets.push(item.sort((a, b) => a.sequential && b.sequential && a.sequential.index >= b.sequential.index ? 1 : -1));
-                                    }
-                                    for (const set of targets) {
-                                        let ordering;
-                                        if (set.some(animate => animate instanceof $SvgAnimateTransform && animate.sequential !== undefined)) {
+                                for (const items of targets) {
+                                    let ordering;
+                                    let sequential = false;
+                                    if (index === 1) {
+                                        if (items.some(item => item instanceof $SvgAnimateTransform)) {
+                                            subData.ordering = 'sequentially';
                                             ordering = 'together';
-                                        }
-                                        else if (set.some(animate => animate instanceof $SvgAnimate && animate.sequential !== undefined)) {
-                                            ordering = 'sequentially';
-                                        }
-                                        else if (set.some(animate => animate instanceof $SvgAnimate && !animate.fillFreeze)) {
-                                            ordering = 'sequentially';
+                                            sequential = true;
                                         }
                                         else {
-                                            ordering = $dom$b.getDataSet(group.element, 'android').ordering || this.options.vectorAnimateOrdering;
+                                            ordering = 'sequentially';
                                         }
-                                        const setData = {
-                                            name,
-                                            ordering,
-                                            objectAnimators: []
+                                    }
+                                    else if (items.some((item) => item.sequential !== undefined)) {
+                                        ordering = index === 2 ? 'together' : 'sequentially';
+                                        sequential = true;
+                                    }
+                                    else {
+                                        ordering = $dom$b.getDataSet(group.element, 'android').ordering || this.options.vectorAnimateOrdering;
+                                    }
+                                    const setData = {
+                                        ordering,
+                                        repeating: [],
+                                        indefinite: [],
+                                        fill: false
+                                    };
+                                    const indefiniteData = {
+                                        ordering: 'sequentially',
+                                        repeat: []
+                                    };
+                                    const fillData = {
+                                        ordering: 'together',
+                                        replace: []
+                                    };
+                                    const [indefinite, repeating] = sequential ? $util$n.partitionArray(items, (animate) => animate.repeatCount === -1) : [[], items];
+                                    if (indefinite.length === 1) {
+                                        repeating.push(indefinite[0]);
+                                        indefinite.length = 0;
+                                    }
+                                    for (const item of repeating) {
+                                        const options = {
+                                            startOffset: item.begin.length && item.begin[0] > 0 ? item.begin[0].toString() : '',
+                                            duration: item.duration !== -1 ? item.duration.toString() : ''
                                         };
-                                        for (const item of set) {
-                                            const options = {
-                                                startOffset: item.begin.length && item.begin[0] > 0 ? item.begin[0].toString() : '',
-                                                duration: item.duration !== -1 ? item.duration.toString() : '1'
-                                            };
-                                            if (item instanceof $SvgAnimate) {
-                                                options.repeatCount = item instanceof $SvgAnimate ? item.repeatCount !== -1 ? Math.ceil(item.repeatCount - 1).toString() : '-1' : '0';
-                                                const dataset = $dom$b.getDataSet(item.element, 'android');
-                                                let propertyName;
-                                                let values;
+                                        if (item instanceof $SvgAnimate) {
+                                            options.repeatCount = item instanceof $SvgAnimate ? item.repeatCount !== -1 ? Math.ceil(item.repeatCount - 1).toString() : '-1' : '0';
+                                            const dataset = $dom$b.getDataSet(item.element, 'android');
+                                            let propertyName;
+                                            let values;
+                                            switch (item.attributeName) {
+                                                case 'transform':
+                                                case 'stroke':
+                                                case 'fill':
+                                                    break;
+                                                case 'opacity':
+                                                case 'stroke-opacity':
+                                                case 'fill-opacity':
+                                                    options.valueType = 'floatType';
+                                                    break;
+                                                case 'stroke-width':
+                                                    options.valueType = 'intType';
+                                                    break;
+                                                case 'd':
+                                                case 'x':
+                                                case 'x1':
+                                                case 'x2':
+                                                case 'cx':
+                                                case 'y':
+                                                case 'y1':
+                                                case 'y2':
+                                                case 'cy':
+                                                case 'r':
+                                                case 'rx':
+                                                case 'ry':
+                                                case 'width':
+                                                case 'height':
+                                                case 'points':
+                                                    options.valueType = 'pathType';
+                                                    break;
+                                                default:
+                                                    continue;
+                                            }
+                                            if (item instanceof $SvgAnimateTransform) {
+                                                let fillBefore = dataset.fillbefore === 'true' || dataset.fillBefore === 'true';
+                                                let fillAfter = dataset.fillafter === 'true' || dataset.fillAfter === 'true';
+                                                if (fillBefore && fillAfter) {
+                                                    const fillEnabled = !(dataset.fillenabled === 'false' || dataset.fillEnabled === 'false');
+                                                    fillBefore = fillEnabled;
+                                                    fillAfter = !fillEnabled;
+                                                }
+                                                if (fillBefore) {
+                                                    options.fillBefore = 'true';
+                                                }
+                                                if (fillAfter) {
+                                                    options.fillAfter = 'true';
+                                                }
                                                 switch (item.attributeName) {
-                                                    case 'transform':
-                                                    case 'stroke':
-                                                    case 'fill':
-                                                        break;
-                                                    case 'opacity':
-                                                    case 'stroke-opacity':
-                                                    case 'fill-opacity':
+                                                    case 'transform': {
+                                                        switch (item.type) {
+                                                            case SVGTransform.SVG_TRANSFORM_ROTATE: {
+                                                                values = $SvgAnimateTransform.toRotateList(item.values);
+                                                                propertyName = ['rotation', 'pivotX', 'pivotY'];
+                                                                break;
+                                                            }
+                                                            case SVGTransform.SVG_TRANSFORM_SCALE: {
+                                                                values = $SvgAnimateTransform.toScaleList(item.values);
+                                                                propertyName = ['scaleX', 'scaleY'];
+                                                                break;
+                                                            }
+                                                            case SVGTransform.SVG_TRANSFORM_TRANSLATE: {
+                                                                values = $SvgAnimateTransform.toTranslateList(item.values);
+                                                                propertyName = ['translateX', 'translateY'];
+                                                                break;
+                                                            }
+                                                        }
                                                         options.valueType = 'floatType';
                                                         break;
-                                                    case 'stroke-width':
-                                                        options.valueType = 'intType';
-                                                        break;
-                                                    case 'd':
-                                                    case 'x':
-                                                    case 'x1':
-                                                    case 'x2':
-                                                    case 'cx':
-                                                    case 'y':
-                                                    case 'y1':
-                                                    case 'y2':
-                                                    case 'cy':
-                                                    case 'r':
-                                                    case 'rx':
-                                                    case 'ry':
-                                                    case 'width':
-                                                    case 'height':
-                                                    case 'points':
-                                                        options.valueType = 'pathType';
-                                                        break;
-                                                    default:
-                                                        continue;
-                                                }
-                                                if (item instanceof $SvgAnimateTransform) {
-                                                    let fillBefore = dataset.fillbefore === 'true' || dataset.fillBefore === 'true';
-                                                    let fillAfter = dataset.fillafter === 'true' || dataset.fillAfter === 'true';
-                                                    if (fillBefore && fillAfter) {
-                                                        const fillEnabled = !(dataset.fillenabled === 'false' || dataset.fillEnabled === 'false');
-                                                        fillBefore = fillEnabled;
-                                                        fillAfter = !fillEnabled;
-                                                    }
-                                                    if (fillBefore) {
-                                                        options.fillBefore = 'true';
-                                                    }
-                                                    if (fillAfter) {
-                                                        options.fillAfter = 'true';
-                                                    }
-                                                    switch (item.attributeName) {
-                                                        case 'transform': {
-                                                            switch (item.type) {
-                                                                case SVGTransform.SVG_TRANSFORM_ROTATE: {
-                                                                    values = $SvgAnimateTransform.toRotateList(item.values);
-                                                                    propertyName = ['rotation', 'pivotX', 'pivotY'];
-                                                                    break;
-                                                                }
-                                                                case SVGTransform.SVG_TRANSFORM_SCALE: {
-                                                                    values = $SvgAnimateTransform.toScaleList(item.values);
-                                                                    propertyName = ['scaleX', 'scaleY'];
-                                                                    break;
-                                                                }
-                                                                case SVGTransform.SVG_TRANSFORM_TRANSLATE: {
-                                                                    values = $SvgAnimateTransform.toTranslateList(item.values);
-                                                                    propertyName = ['translateX', 'translateY'];
-                                                                    break;
-                                                                }
-                                                            }
-                                                            options.valueType = 'floatType';
-                                                            break;
-                                                        }
                                                     }
                                                 }
-                                                else {
-                                                    const attribute = ATTRIBUTE_ANDROID[item.attributeName];
-                                                    switch (options.valueType) {
-                                                        case 'intType': {
-                                                            values = item.values.map(value => $util$n.convertInt(value).toString());
-                                                            if (attribute) {
-                                                                propertyName = [attribute];
-                                                            }
+                                            }
+                                            else {
+                                                const attribute = ATTRIBUTE_ANDROID[item.attributeName];
+                                                switch (options.valueType) {
+                                                    case 'intType': {
+                                                        values = item.values.map(value => $util$n.convertInt(value).toString());
+                                                        if (attribute) {
+                                                            propertyName = [attribute];
                                                         }
-                                                        case 'floatType': {
-                                                            values = item.values.map(value => $util$n.convertFloat(value).toString());
-                                                            if (attribute) {
-                                                                propertyName = [attribute];
-                                                            }
-                                                            break;
+                                                    }
+                                                    case 'floatType': {
+                                                        values = item.values.map(value => $util$n.convertFloat(value).toString());
+                                                        if (attribute) {
+                                                            propertyName = [attribute];
                                                         }
-                                                        case 'pathType': {
-                                                            if (group.pathData) {
-                                                                pathType: {
-                                                                    values = item.values.slice();
-                                                                    if (item.attributeName === 'points') {
-                                                                        for (let i = 0; i < values.length; i++) {
-                                                                            const value = values[i];
-                                                                            if (value !== '') {
-                                                                                const points = $SvgBuild.fromCoordinateList($SvgBuild.toCoordinateList(value));
-                                                                                if (points.length) {
-                                                                                    values[i] = item.parentElement.tagName === 'polygon' ? $SvgPath.getPolygon(points) : $SvgPath.getPolyline(points);
-                                                                                }
-                                                                                else {
-                                                                                    break pathType;
-                                                                                }
+                                                        break;
+                                                    }
+                                                    case 'pathType': {
+                                                        if (group.pathData) {
+                                                            pathType: {
+                                                                values = item.values.slice();
+                                                                if (item.attributeName === 'points') {
+                                                                    for (let i = 0; i < values.length; i++) {
+                                                                        const value = values[i];
+                                                                        if (value !== '') {
+                                                                            const points = $SvgBuild.fromNumberList($SvgBuild.toCoordinateList(value));
+                                                                            if (points.length) {
+                                                                                values[i] = item.element.parentElement && item.element.parentElement.tagName === 'polygon' ? $SvgPath.getPolygon(points) : $SvgPath.getPolyline(points);
+                                                                            }
+                                                                            else {
+                                                                                break pathType;
                                                                             }
                                                                         }
                                                                     }
-                                                                    else if (item.attributeName !== 'd') {
-                                                                        for (let i = 0; i < values.length; i++) {
-                                                                            const value = values[i];
-                                                                            if (value !== '') {
-                                                                                const pathPoints = $SvgBuild.toPathCommandList(group.pathData);
-                                                                                if (pathPoints.length <= 1) {
-                                                                                    break pathType;
-                                                                                }
-                                                                                let x;
-                                                                                let y;
-                                                                                let rx;
-                                                                                let ry;
-                                                                                let width;
-                                                                                let height;
-                                                                                switch (item.attributeName) {
-                                                                                    case 'x':
-                                                                                    case 'x1':
-                                                                                    case 'x2':
-                                                                                    case 'cx':
-                                                                                        x = parseFloat(value);
-                                                                                        if (isNaN(x)) {
-                                                                                            break pathType;
-                                                                                        }
-                                                                                        break;
-                                                                                    case 'y':
-                                                                                    case 'y1':
-                                                                                    case 'y2':
-                                                                                    case 'cy':
-                                                                                        y = parseFloat(value);
-                                                                                        if (isNaN(y)) {
-                                                                                            break pathType;
-                                                                                        }
-                                                                                        break;
-                                                                                    case 'r':
-                                                                                        rx = parseFloat(value);
-                                                                                        if (isNaN(rx)) {
-                                                                                            break pathType;
-                                                                                        }
-                                                                                        ry = rx;
-                                                                                        break;
-                                                                                    case 'rx':
-                                                                                        rx = parseFloat(value);
-                                                                                        if (isNaN(rx)) {
-                                                                                            break pathType;
-                                                                                        }
-                                                                                        break;
-                                                                                    case 'ry':
-                                                                                        ry = parseFloat(value);
-                                                                                        if (isNaN(ry)) {
-                                                                                            break pathType;
-                                                                                        }
-                                                                                    case 'width':
-                                                                                        width = parseFloat(value);
-                                                                                        if (isNaN(width) || width < 0) {
-                                                                                            break pathType;
-                                                                                        }
-                                                                                        break;
-                                                                                    case 'height':
-                                                                                        height = parseFloat(value);
-                                                                                        if (isNaN(height) || height < 0) {
-                                                                                            break pathType;
-                                                                                        }
-                                                                                        break;
-                                                                                }
-                                                                                if (x !== undefined || y !== undefined) {
-                                                                                    const commandStart = pathPoints[0];
-                                                                                    const commandEnd = pathPoints[pathPoints.length - 1];
-                                                                                    const [firstPoint, lastPoint] = [commandStart.points[0], commandEnd.points[commandEnd.points.length - 1]];
-                                                                                    let recalibrate = false;
-                                                                                    if (x !== undefined) {
-                                                                                        switch (item.attributeName) {
-                                                                                            case 'x':
-                                                                                                x -= firstPoint.x;
-                                                                                                recalibrate = true;
-                                                                                                break;
-                                                                                            case 'x1':
-                                                                                            case 'cx':
-                                                                                                firstPoint.x = x;
-                                                                                                commandStart.coordinates[0] = x;
-                                                                                                break;
-                                                                                            case 'x2':
-                                                                                                lastPoint.x = x;
-                                                                                                commandEnd.coordinates[0] = x;
-                                                                                                break;
-                                                                                        }
-                                                                                    }
-                                                                                    if (y !== undefined) {
-                                                                                        switch (item.attributeName) {
-                                                                                            case 'y':
-                                                                                                y -= firstPoint.y;
-                                                                                                recalibrate = true;
-                                                                                                break;
-                                                                                            case 'y1':
-                                                                                            case 'cy':
-                                                                                                firstPoint.y = y;
-                                                                                                commandStart.coordinates[1] = y;
-                                                                                                break;
-                                                                                            case 'y2':
-                                                                                                lastPoint.y = y;
-                                                                                                commandEnd.coordinates[1] = y;
-                                                                                                break;
-                                                                                        }
-                                                                                    }
-                                                                                    if (recalibrate) {
-                                                                                        for (const path of pathPoints) {
-                                                                                            if (!path.relative) {
-                                                                                                for (let j = 0, k = 0; j < path.coordinates.length; j += 2, k++) {
-                                                                                                    const pt = path.points[k];
-                                                                                                    if (x !== undefined) {
-                                                                                                        path.coordinates[j] += x;
-                                                                                                        pt.x += x;
-                                                                                                    }
-                                                                                                    if (y !== undefined) {
-                                                                                                        path.coordinates[j + 1] += y;
-                                                                                                        pt.y += y;
-                                                                                                    }
-                                                                                                }
-                                                                                            }
-                                                                                        }
-                                                                                    }
-                                                                                }
-                                                                                else if (rx !== undefined || ry !== undefined) {
-                                                                                    for (const path of pathPoints) {
-                                                                                        if (path.command.toUpperCase() === 'A') {
-                                                                                            if (rx !== undefined) {
-                                                                                                path.radiusX = rx;
-                                                                                                path.coordinates[0] = rx * 2 * (path.coordinates[0] < 0 ? -1 : 1);
-                                                                                            }
-                                                                                            if (ry !== undefined) {
-                                                                                                path.radiusY = ry;
-                                                                                            }
-                                                                                        }
-                                                                                    }
-                                                                                }
-                                                                                else if (width !== undefined || height !== undefined) {
-                                                                                    for (const path of pathPoints) {
-                                                                                        switch (path.command) {
-                                                                                            case 'h':
-                                                                                                if (width !== undefined) {
-                                                                                                    path.coordinates[0] = width * (path.coordinates[0] < 0 ? -1 : 1);
-                                                                                                }
-                                                                                                break;
-                                                                                            case 'v':
-                                                                                                if (height !== undefined) {
-                                                                                                    path.coordinates[1] = height;
-                                                                                                }
-                                                                                                break;
-                                                                                        }
-                                                                                    }
-                                                                                }
-                                                                                else {
-                                                                                    values[i] = values[i - 1] || group.pathData;
-                                                                                    continue;
-                                                                                }
-                                                                                values[i] = $SvgBuild.fromPathCommandList(pathPoints);
+                                                                }
+                                                                else if (item.attributeName !== 'd') {
+                                                                    for (let i = 0; i < values.length; i++) {
+                                                                        const value = values[i];
+                                                                        if (value !== '') {
+                                                                            const pathPoints = $SvgBuild.toPathCommandList(group.pathData);
+                                                                            if (pathPoints.length <= 1) {
+                                                                                break pathType;
                                                                             }
+                                                                            let x;
+                                                                            let y;
+                                                                            let rx;
+                                                                            let ry;
+                                                                            let width;
+                                                                            let height;
+                                                                            switch (item.attributeName) {
+                                                                                case 'x':
+                                                                                case 'x1':
+                                                                                case 'x2':
+                                                                                case 'cx':
+                                                                                    x = parseFloat(value);
+                                                                                    if (isNaN(x)) {
+                                                                                        break pathType;
+                                                                                    }
+                                                                                    break;
+                                                                                case 'y':
+                                                                                case 'y1':
+                                                                                case 'y2':
+                                                                                case 'cy':
+                                                                                    y = parseFloat(value);
+                                                                                    if (isNaN(y)) {
+                                                                                        break pathType;
+                                                                                    }
+                                                                                    break;
+                                                                                case 'r':
+                                                                                    rx = parseFloat(value);
+                                                                                    if (isNaN(rx)) {
+                                                                                        break pathType;
+                                                                                    }
+                                                                                    ry = rx;
+                                                                                    break;
+                                                                                case 'rx':
+                                                                                    rx = parseFloat(value);
+                                                                                    if (isNaN(rx)) {
+                                                                                        break pathType;
+                                                                                    }
+                                                                                    break;
+                                                                                case 'ry':
+                                                                                    ry = parseFloat(value);
+                                                                                    if (isNaN(ry)) {
+                                                                                        break pathType;
+                                                                                    }
+                                                                                case 'width':
+                                                                                    width = parseFloat(value);
+                                                                                    if (isNaN(width) || width < 0) {
+                                                                                        break pathType;
+                                                                                    }
+                                                                                    break;
+                                                                                case 'height':
+                                                                                    height = parseFloat(value);
+                                                                                    if (isNaN(height) || height < 0) {
+                                                                                        break pathType;
+                                                                                    }
+                                                                                    break;
+                                                                            }
+                                                                            if (x !== undefined || y !== undefined) {
+                                                                                const commandStart = pathPoints[0];
+                                                                                const commandEnd = pathPoints[pathPoints.length - 1];
+                                                                                const [firstPoint, lastPoint] = [commandStart.points[0], commandEnd.points[commandEnd.points.length - 1]];
+                                                                                let recalibrate = false;
+                                                                                if (x !== undefined) {
+                                                                                    switch (item.attributeName) {
+                                                                                        case 'x':
+                                                                                            x -= firstPoint.x;
+                                                                                            recalibrate = true;
+                                                                                            break;
+                                                                                        case 'x1':
+                                                                                        case 'cx':
+                                                                                            firstPoint.x = x;
+                                                                                            commandStart.coordinates[0] = x;
+                                                                                            break;
+                                                                                        case 'x2':
+                                                                                            lastPoint.x = x;
+                                                                                            commandEnd.coordinates[0] = x;
+                                                                                            break;
+                                                                                    }
+                                                                                }
+                                                                                if (y !== undefined) {
+                                                                                    switch (item.attributeName) {
+                                                                                        case 'y':
+                                                                                            y -= firstPoint.y;
+                                                                                            recalibrate = true;
+                                                                                            break;
+                                                                                        case 'y1':
+                                                                                        case 'cy':
+                                                                                            firstPoint.y = y;
+                                                                                            commandStart.coordinates[1] = y;
+                                                                                            break;
+                                                                                        case 'y2':
+                                                                                            lastPoint.y = y;
+                                                                                            commandEnd.coordinates[1] = y;
+                                                                                            break;
+                                                                                    }
+                                                                                }
+                                                                                if (recalibrate) {
+                                                                                    for (const path of pathPoints) {
+                                                                                        if (!path.relative) {
+                                                                                            for (let j = 0, k = 0; j < path.coordinates.length; j += 2, k++) {
+                                                                                                const pt = path.points[k];
+                                                                                                if (x !== undefined) {
+                                                                                                    path.coordinates[j] += x;
+                                                                                                    pt.x += x;
+                                                                                                }
+                                                                                                if (y !== undefined) {
+                                                                                                    path.coordinates[j + 1] += y;
+                                                                                                    pt.y += y;
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                            else if (rx !== undefined || ry !== undefined) {
+                                                                                for (const path of pathPoints) {
+                                                                                    if (path.command.toUpperCase() === 'A') {
+                                                                                        if (rx !== undefined) {
+                                                                                            path.radiusX = rx;
+                                                                                            path.coordinates[0] = rx * 2 * (path.coordinates[0] < 0 ? -1 : 1);
+                                                                                        }
+                                                                                        if (ry !== undefined) {
+                                                                                            path.radiusY = ry;
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                            else if (width !== undefined || height !== undefined) {
+                                                                                for (const path of pathPoints) {
+                                                                                    switch (path.command) {
+                                                                                        case 'h':
+                                                                                            if (width !== undefined) {
+                                                                                                path.coordinates[0] = width * (path.coordinates[0] < 0 ? -1 : 1);
+                                                                                            }
+                                                                                            break;
+                                                                                        case 'v':
+                                                                                            if (height !== undefined) {
+                                                                                                path.coordinates[1] = height;
+                                                                                            }
+                                                                                            break;
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                            else {
+                                                                                values[i] = values[i - 1] || group.pathData;
+                                                                                continue;
+                                                                            }
+                                                                            values[i] = $SvgBuild.fromPathCommandList(pathPoints);
                                                                         }
                                                                     }
-                                                                    propertyName = ['pathData'];
                                                                 }
+                                                                propertyName = ['pathData'];
                                                             }
-                                                            break;
                                                         }
-                                                        default: {
-                                                            values = item.values.slice();
-                                                            if (attribute) {
-                                                                propertyName = [attribute];
-                                                            }
-                                                            if (propertyName) {
-                                                                for (let i = 0; i < values.length; i++) {
-                                                                    const color = $color$3.parseRGBA(values[i]);
-                                                                    if (color) {
-                                                                        values[i] = `@color/${Resource.addColor(color)}`;
-                                                                    }
+                                                        break;
+                                                    }
+                                                    default: {
+                                                        values = item.values.slice();
+                                                        if (attribute) {
+                                                            propertyName = [attribute];
+                                                        }
+                                                        if (propertyName) {
+                                                            for (let i = 0; i < values.length; i++) {
+                                                                const color = $color$3.parseRGBA(values[i]);
+                                                                if (color) {
+                                                                    values[i] = `@color/${Resource.addColor(color)}`;
                                                                 }
                                                             }
                                                         }
                                                     }
                                                 }
-                                                if (values && propertyName) {
-                                                    if ($util$n.convertInt(options.repeatCount) !== 0) {
-                                                        switch (dataset.repeatmode || dataset.repeatMode) {
-                                                            case 'restart':
-                                                                options.repeatMode = 'restart';
-                                                                break;
-                                                            case 'reverse':
-                                                                options.repeatMode = 'reverse';
-                                                                break;
-                                                        }
+                                            }
+                                            if (values && propertyName) {
+                                                if ($util$n.convertInt(options.repeatCount) !== 0) {
+                                                    switch (dataset.repeatmode || dataset.repeatMode) {
+                                                        case 'restart':
+                                                            options.repeatMode = 'restart';
+                                                            break;
+                                                        case 'reverse':
+                                                            options.repeatMode = 'reverse';
+                                                            break;
                                                     }
-                                                    options.interpolator = dataset.interpolator ? INTERPOLATOR_ANDROID[dataset.interpolator] || dataset.interpolator : this.options.vectorAnimateInterpolator;
-                                                    const keyName = JSON.stringify(options);
-                                                    for (let i = 0; i < propertyName.length; i++) {
-                                                        const propertyOptions = Object.assign({}, options);
-                                                        let valueEnd = '';
-                                                        if (node.localSettings.targetAPI >= 23 /* MARSHMALLOW */ && propertyOptions.valueType !== 'pathType' && item.sequential === undefined && item.keyTimes.length > 1 && item.duration > 0 && (this.options.vectorAnimateAlwaysUseKeyframes || item.keyTimes.join('-') !== '0-1')) {
-                                                            const propertyValues = animatorMap.get(keyName) || [];
-                                                            const keyframes = [];
-                                                            for (let j = 0; j < item.keyTimes.length; j++) {
-                                                                let value;
-                                                                if (Array.isArray(values[j])) {
-                                                                    const fromTo = values[j][i];
-                                                                    if (fromTo !== undefined) {
-                                                                        value = fromTo !== null ? fromTo.toString() : '';
-                                                                    }
-                                                                }
-                                                                else {
-                                                                    value = values[j].toString();
-                                                                }
-                                                                if (value !== undefined) {
-                                                                    keyframes.push({
-                                                                        fraction: item.keyTimes[j].toString(),
-                                                                        value
-                                                                    });
+                                                }
+                                                options.interpolator = dataset.interpolator ? INTERPOLATOR_ANDROID[dataset.interpolator] || dataset.interpolator : this.options.vectorAnimateInterpolator;
+                                                const keyName = index !== 1 ? JSON.stringify(options) : '';
+                                                for (let i = 0; i < propertyName.length; i++) {
+                                                    const propertyOptions = Object.assign({}, options);
+                                                    let valueEnd = '';
+                                                    if (node.localSettings.targetAPI >= 23 /* MARSHMALLOW */ && propertyOptions.valueType !== 'pathType' && item.sequential === undefined && item.keyTimes.length > 1 && item.duration > 0 && (this.options.vectorAnimateAlwaysUseKeyframes || item.keyTimes.join('-') !== '0-1')) {
+                                                        const propertyValues = animatorMap.get(keyName) || [];
+                                                        const keyframes = [];
+                                                        for (let j = 0; j < item.keyTimes.length; j++) {
+                                                            let value;
+                                                            if (Array.isArray(values[j])) {
+                                                                const fromTo = values[j][i];
+                                                                if (fromTo !== undefined) {
+                                                                    value = fromTo !== null ? fromTo.toString() : '';
                                                                 }
                                                             }
+                                                            else {
+                                                                value = values[j].toString();
+                                                            }
+                                                            if (value !== undefined) {
+                                                                keyframes.push({
+                                                                    fraction: item.keyTimes[j].toString(),
+                                                                    value
+                                                                });
+                                                            }
+                                                        }
+                                                        if (keyframes.length) {
                                                             propertyValues.push({
                                                                 propertyName: propertyName[i],
                                                                 keyframes
                                                             });
                                                             if (!animatorMap.has(keyName)) {
-                                                                animatorMap.set(keyName, propertyValues);
+                                                                if (keyName !== '') {
+                                                                    animatorMap.set(keyName, propertyValues);
+                                                                }
                                                                 propertyOptions.propertyValues = propertyValues;
-                                                                setData.objectAnimators.push(propertyOptions);
+                                                                setData.repeating.push(propertyOptions);
                                                             }
                                                             valueEnd = keyframes[keyframes.length - 1].value;
                                                         }
-                                                        else {
-                                                            propertyOptions.propertyName = propertyName[i];
-                                                            if (Array.isArray(values[0])) {
-                                                                let to = null;
-                                                                if (item.duration > 0) {
-                                                                    if (values.length > 1) {
-                                                                        const from = values[0][i];
-                                                                        if (from !== null) {
-                                                                            propertyOptions.valueFrom = from.toString();
-                                                                            valueEnd = propertyOptions.valueFrom;
-                                                                        }
+                                                    }
+                                                    else {
+                                                        propertyOptions.propertyName = propertyName[i];
+                                                        if (Array.isArray(values[0])) {
+                                                            let to = null;
+                                                            if (item.duration > 0) {
+                                                                if (values.length > 1) {
+                                                                    const from = values[0][i];
+                                                                    if (from !== null) {
+                                                                        propertyOptions.valueFrom = from.toString();
+                                                                        valueEnd = propertyOptions.valueFrom;
                                                                     }
-                                                                    to = values[values.length - 1][i];
                                                                 }
-                                                                else if (item.duration === 0 && item.keyTimes[0] === 0) {
-                                                                    to = values[0][i];
-                                                                    propertyOptions.repeatCount = '0';
-                                                                }
-                                                                if (to !== null) {
-                                                                    propertyOptions.valueTo = to.toString();
-                                                                }
-                                                                else {
-                                                                    continue;
-                                                                }
+                                                                to = values[values.length - 1][i];
+                                                            }
+                                                            else if (item.duration === 0 && item.keyTimes[0] === 0) {
+                                                                to = values[0][i];
+                                                                propertyOptions.repeatCount = '0';
+                                                            }
+                                                            if (to !== null) {
+                                                                propertyOptions.valueTo = to.toString();
                                                             }
                                                             else {
-                                                                if (item.duration > 0) {
-                                                                    if (values.length > 1) {
-                                                                        propertyOptions.valueFrom = values[0].toString();
-                                                                    }
-                                                                    propertyOptions.valueTo = values[values.length - 1].toString();
-                                                                }
-                                                                else if (item.duration === 0 && item.keyTimes[0] === 0) {
-                                                                    propertyOptions.valueTo = values[0].toString();
-                                                                    propertyOptions.repeatCount = '0';
-                                                                }
-                                                                else {
-                                                                    continue;
-                                                                }
-                                                                valueEnd = propertyOptions.valueTo;
+                                                                continue;
                                                             }
-                                                            propertyOptions.propertyValues = false;
-                                                            setData.objectAnimators.push(propertyOptions);
                                                         }
-                                                        if (item instanceof $SvgAnimate && !item.fillFreeze && item.sequential === undefined) {
-                                                            let valueTo;
-                                                            if (item.parentPath) {
-                                                                let css = '';
-                                                                for (const attr in ATTRIBUTE_ANDROID) {
-                                                                    if (ATTRIBUTE_ANDROID[attr] === propertyName[i]) {
-                                                                        css = $util$n.convertCamelCase(attr);
-                                                                        break;
-                                                                    }
+                                                        else {
+                                                            if (item.duration > 0) {
+                                                                if (values.length > 1) {
+                                                                    propertyOptions.valueFrom = values[0].toString();
                                                                 }
-                                                                if (css !== '') {
-                                                                    valueTo = item.parentPath[css];
+                                                                propertyOptions.valueTo = values[values.length - 1].toString();
+                                                            }
+                                                            else if (item.duration === 0 && item.keyTimes[0] === 0) {
+                                                                propertyOptions.valueTo = values[0].toString();
+                                                                propertyOptions.repeatCount = '0';
+                                                            }
+                                                            else {
+                                                                continue;
+                                                            }
+                                                            valueEnd = propertyOptions.valueTo;
+                                                        }
+                                                        propertyOptions.propertyValues = false;
+                                                        setData.repeating.push(propertyOptions);
+                                                    }
+                                                    if (!item.fillFreeze && item.sequential === undefined && item.parent) {
+                                                        let valueTo;
+                                                        if (item instanceof $SvgAnimateTransform) {
+                                                            const transform = createTransformData(item.parent.baseValue.transformed);
+                                                            switch (propertyName[i]) {
+                                                                case 'rotation':
+                                                                    valueTo = transform.rotation || '0';
+                                                                    break;
+                                                                case 'pivotX':
+                                                                    valueTo = transform.pivotX || '0';
+                                                                    break;
+                                                                case 'pivotY':
+                                                                    valueTo = transform.pivotY || '0';
+                                                                    break;
+                                                                case 'scaleX':
+                                                                    valueTo = transform.scaleX || '1';
+                                                                    break;
+                                                                case 'scaleY':
+                                                                    valueTo = transform.scaleY || '1';
+                                                                    break;
+                                                                case 'translateX':
+                                                                    valueTo = transform.translateX || '0';
+                                                                    break;
+                                                                case 'translateY':
+                                                                    valueTo = transform.translateY || '0';
+                                                                    break;
+                                                            }
+                                                        }
+                                                        else if (item.parent instanceof $SvgShape && item.parent.path) {
+                                                            let css = '';
+                                                            for (const attr in ATTRIBUTE_ANDROID) {
+                                                                if (ATTRIBUTE_ANDROID[attr] === propertyName[i]) {
+                                                                    css = $util$n.convertCamelCase(attr);
+                                                                    break;
                                                                 }
                                                             }
-                                                            else if (item instanceof $SvgAnimateTransform) {
-                                                                const transform = $util_svg.createTransformData(item.parentElement);
-                                                                switch (item.type) {
-                                                                    case SVGTransform.SVG_TRANSFORM_ROTATE: {
-                                                                        switch (propertyName[i]) {
-                                                                            case 'rotation':
-                                                                                valueTo = transform.rotateAngle.toString();
-                                                                                break;
-                                                                            case 'pivotX':
-                                                                                valueTo = (transform.rotateOriginX || 0).toString();
-                                                                                break;
-                                                                            case 'pivotY':
-                                                                                valueTo = (transform.rotateOriginX || 0).toString();
-                                                                                break;
-                                                                        }
-                                                                        break;
-                                                                    }
-                                                                    case SVGTransform.SVG_TRANSFORM_SCALE: {
-                                                                        switch (propertyName[i]) {
-                                                                            case 'scaleX':
-                                                                                valueTo = transform.scaleX.toString();
-                                                                                break;
-                                                                            case 'scaleY':
-                                                                                valueTo = transform.scaleY.toString();
-                                                                                break;
-                                                                        }
-                                                                        break;
-                                                                    }
-                                                                    case SVGTransform.SVG_TRANSFORM_TRANSLATE: {
-                                                                        switch (propertyName[i]) {
-                                                                            case 'translateX':
-                                                                                valueTo = transform.translateX.toString();
-                                                                                break;
-                                                                            case 'translateY':
-                                                                                valueTo = transform.translateY.toString();
-                                                                                break;
-                                                                        }
-                                                                        break;
-                                                                    }
-                                                                }
+                                                            if (css !== '') {
+                                                                valueTo = item.parent.path[css];
                                                             }
-                                                            if (valueTo !== undefined) {
-                                                                setData.objectAnimators.push({
-                                                                    propertyName: propertyName[i],
-                                                                    valueType: options.valueType,
-                                                                    duration: '1',
-                                                                    repeatCount: '0',
-                                                                    valueFrom: options.valueType === 'pathType' ? valueEnd : '',
-                                                                    valueTo
-                                                                });
-                                                            }
+                                                        }
+                                                        if (valueTo !== undefined) {
+                                                            fillData.replace.push({
+                                                                propertyName: propertyName[i],
+                                                                repeatCount: '0',
+                                                                duration: '1',
+                                                                valueType: options.valueType || '',
+                                                                valueFrom: options.valueType === 'pathType' ? valueEnd : '',
+                                                                valueTo
+                                                            });
                                                         }
                                                     }
                                                 }
                                             }
-                                            else if (item.to) {
-                                                options.propertyName = ATTRIBUTE_ANDROID[item.attributeName];
-                                                if (options.propertyName) {
-                                                    options.repeatCount = '0';
-                                                    options.valueTo = item.to.toString();
-                                                    setData.objectAnimators.push(options);
+                                        }
+                                        else if (item.to) {
+                                            options.propertyName = ATTRIBUTE_ANDROID[item.attributeName];
+                                            if (options.propertyName) {
+                                                options.propertyValues = false;
+                                                if (item.duration === -1) {
+                                                    options.duration = '1';
                                                 }
+                                                options.repeatCount = '0';
+                                                options.valueTo = item.to.toString();
+                                                setData.repeating.push(options);
                                             }
                                         }
-                                        if (setData.objectAnimators.length) {
-                                            animateData.targetSet.push(setData);
+                                    }
+                                    if (indefinite.length) {
+                                        const pathArray = setData.repeating.length ? indefiniteData.repeat : setData.repeating;
+                                        for (const item of indefinite) {
+                                            pathArray.push({
+                                                propertyName: 'pathData',
+                                                repeatCount: '0',
+                                                duration: item.duration.toString(),
+                                                valueType: 'pathType',
+                                                valueFrom: item.from,
+                                                valueTo: item.to
+                                            });
                                         }
                                     }
-                                    if (animateData.targetSet.length) {
-                                        data['1'].push(animateData);
+                                    if (setData.repeating.length) {
+                                        if (subData.ordering === 'sequentially') {
+                                            setData.fill = [fillData];
+                                        }
+                                        else {
+                                            setData.repeating.push(...fillData.replace);
+                                        }
+                                        if ($util$n.isArray(indefiniteData.repeat)) {
+                                            setData.indefinite.push(indefiniteData);
+                                        }
+                                        if (subData.AA) {
+                                            subData.AA.push(setData);
+                                        }
                                     }
                                 }
-                                if (data['1'].length) {
-                                    xml = $xml$9.createTemplate($xml$9.parseTemplate(ANIMATEDVECTOR_TMPL), data);
-                                    vectorName = Resource.getStoredName('drawables', xml);
-                                    if (vectorName === '') {
-                                        vectorName = `${templateName}_animated${images.length ? '_vector' : ''}`;
-                                        Resource.STORED.drawables.set(vectorName, xml);
-                                    }
+                                if ($util$n.isArray(subData.AA)) {
+                                    targetSetData.A.push(subData);
                                 }
+                            });
+                            if (targetSetData.A.length) {
+                                STORED$5.animators.set(targetData.animationName, $xml$9.createTemplate(TEMPLATES$1.SET_OBJECTANIMATOR, targetSetData));
+                                data.A.push(targetData);
+                            }
+                        }
+                        if (data.A.length) {
+                            const xml = $xml$9.createTemplate(TEMPLATES$1.ANIMATED, data);
+                            vectorName = Resource.getStoredName('drawables', xml);
+                            if (vectorName === '') {
+                                vectorName = getFilename('animation');
+                                STORED$5.drawables.set(vectorName, xml);
                             }
                         }
                     }
-                    if (images.length) {
+                    if (this.IMAGE_DATA.length) {
                         const rotate = [];
                         const normal = [];
-                        for (const item of images) {
-                            const scaleX = svg.width / svg.viewBoxWidth;
-                            const scaleY = svg.height / svg.viewBoxHeight;
-                            let x = (item.x || 0) * scaleX;
-                            let y = (item.y || 0) * scaleY;
-                            item.width *= scaleX;
-                            item.height *= scaleY;
+                        for (const item of this.IMAGE_DATA) {
+                            const scaleX = svg.width / svg.viewBox.width;
+                            const scaleY = svg.height / svg.viewBox.height;
+                            let x = item.baseValue.x * scaleX;
+                            let y = item.baseValue.y * scaleY;
+                            let width = item.baseValue.width;
+                            let height = item.baseValue.height;
                             const offsetParent = getSvgOffset(item.element, svg.element);
                             x += offsetParent.x;
                             y += offsetParent.y;
+                            width *= scaleX;
+                            height *= scaleY;
                             const data = {
-                                width: item.width > 0 ? $util$n.formatPX(item.width) : '',
-                                height: item.height > 0 ? $util$n.formatPX(item.height) : '',
+                                width: $util$n.formatPX(width),
+                                height: $util$n.formatPX(height),
                                 left: x !== 0 ? $util$n.formatPX(x) : '',
                                 top: y !== 0 ? $util$n.formatPX(y) : '',
-                                src: Resource.addImage({ mdpi: item.uri })
+                                src: Resource.addImage({ mdpi: item.href })
                             };
-                            const transform = $util_svg.createTransformData(item.element);
-                            if (transform.rotateAngle !== 0) {
-                                data.fromDegrees = transform.rotateAngle.toString();
+                            if (item.rotateOrigin !== undefined && item.rotateOrigin.angle) {
+                                data.fromDegrees = item.rotateOrigin.angle.toString();
                                 data.visible = item.visible ? 'true' : 'false';
                                 rotate.push(data);
                             }
-                            else {
+                            else if (data.visible) {
                                 normal.push(data);
                             }
                         }
-                        const xml = $xml$9.createTemplate($xml$9.parseTemplate(LAYERLIST_TMPL), {
-                            '1': false,
-                            '2': false,
-                            '3': [{ vectorName }],
-                            '4': rotate,
-                            '5': normal,
-                            '6': false,
-                            '7': false
+                        const xml = $xml$9.createTemplate(TEMPLATES$1.LAYER_LIST, {
+                            A: [],
+                            B: false,
+                            C: [{ vectorName }],
+                            D: rotate,
+                            E: normal,
+                            F: false,
+                            G: false
                         });
                         drawable = Resource.getStoredName('drawables', xml);
                         if (drawable === '') {
                             drawable = templateName;
-                            Resource.STORED.drawables.set(drawable, xml);
+                            STORED$5.drawables.set(drawable, xml);
                         }
                     }
                     else {
@@ -8465,8 +8645,197 @@ var android = (function () {
         afterFinalize() {
             this.application.controllerHandler.localSettings.unsupported.tagName.add('svg');
         }
+        parseVectorData(node, svg, group) {
+            const groupData = this.createGroup(group, svg !== group);
+            for (let i = 0; i < group.children.length; i++) {
+                const item = group.children[i];
+                const CCC = [];
+                const DDD = [];
+                if (item instanceof $SvgContainer) {
+                    if (item.length) {
+                        this.parseVectorData(node, svg, item);
+                        DDD.push({ templateName: item.name });
+                    }
+                    else {
+                        continue;
+                    }
+                }
+                else {
+                    if (item instanceof $SvgImage) {
+                        item.extract(this.options.excludeFromTransform.image);
+                        if (item.visible || item.rotateOrigin) {
+                            this.IMAGE_DATA.push(item);
+                        }
+                        continue;
+                    }
+                    else if (item instanceof $SvgShape) {
+                        if (item.visible && item.path && item.path.value) {
+                            CCC.push(this.createPath(node, svg, item, item.path));
+                        }
+                        else {
+                            continue;
+                        }
+                    }
+                }
+                groupData.BB.push({ CCC, DDD });
+            }
+            this.VECTOR_DATA.set(group['name'], groupData);
+        }
+        createGroup(target, transformable = false) {
+            const group = [[]];
+            const result = {
+                group,
+                BB: []
+            };
+            if (transformable) {
+                const name = target.name;
+                const groupName = `group_${name}`;
+                const canTranslate = target instanceof $Svg || target instanceof $SvgUseSymbol;
+                const transform = $SvgBuild.partitionTransforms(target.element, target.transform)[0];
+                if (transform.length) {
+                    const transformed = [];
+                    for (let i = 0; i < transform.length; i++) {
+                        group[0].push(Object.assign({ groupName: `${name}_transform_${i + 1}` }, createTransformData(transform[i])));
+                        transformed.push(...transform[i]);
+                    }
+                    target.baseValue.transformed = transformed.reverse();
+                }
+                this.queueAnimations(target, groupName, item => item instanceof $SvgAnimateTransform || canTranslate && (item.attributeName === 'x' || item.attributeName === 'y'));
+                group[0].push({ groupName });
+                if ((target instanceof $Svg || target instanceof $SvgUseSymbol) && (target.x !== 0 || target.y !== 0)) {
+                    group[0].push({
+                        groupName: `${name}_translate`,
+                        translateX: target.x.toString(),
+                        translateY: target.y.toString()
+                    });
+                }
+            }
+            return result;
+        }
+        createPath(node, svg, target, path) {
+            const render = [[]];
+            const clipPaths = [];
+            const result = {
+                name: path.name,
+                render,
+                clipPaths,
+                fillPattern: false
+            };
+            const useTarget = target instanceof $SvgUse;
+            const exclusions = useTarget ? ['x', 'y'] : [];
+            if (path.transformResidual) {
+                for (let i = 0; i < path.transformResidual.length; i++) {
+                    render[0].push(Object.assign({ groupName: `${target.name}_transform_${i + 1}` }, createTransformData(path.transformResidual[i])));
+                }
+            }
+            if (path.rotateOrigin && (path.rotateOrigin.angle !== undefined || path.rotateOrigin.x !== 0 || path.rotateOrigin.y !== 0)) {
+                render[0].push({
+                    groupName: `${target.name}_rotate`,
+                    rotation: (path.rotateOrigin.angle || 0).toString(),
+                    pivotX: path.rotateOrigin.x.toString(),
+                    pivotY: path.rotateOrigin.y.toString()
+                });
+            }
+            const animateName = `${target.name}_animate`;
+            if (this.queueAnimations(target, animateName, item => item instanceof $SvgAnimateTransform || useTarget && (item.attributeName === 'x' || item.attributeName === 'y'))) {
+                render[0].push({ groupName: animateName });
+            }
+            if (target instanceof $SvgUse && (target.x !== 0 || target.y !== 0)) {
+                render[0].push({
+                    groupName: `${target.name}_translate`,
+                    translateX: target.x.toString(),
+                    translateY: target.y.toString()
+                });
+            }
+            for (const attr in path) {
+                if ($util$n.isString(path[attr])) {
+                    result[attr] = path[attr];
+                }
+            }
+            if (path.clipPath) {
+                const clipPath = svg.patterns.clipPath.get(path.clipPath);
+                if (clipPath) {
+                    const groupRect = new $SvgG(clipPath);
+                    groupRect.build(true, this.options.excludeFromTransform);
+                    groupRect.synchronize();
+                    groupRect.each((child) => {
+                        if (child.path) {
+                            child.build(true, this.options.excludeFromTransform);
+                            if (child.path.value) {
+                                clipPaths.push({ clipPathName: child.name, clipPathData: child.path.value });
+                            }
+                            this.queueAnimations(child, child.name, item => !(item instanceof $SvgAnimateTransform || item instanceof $SvgAnimateMotion), child.path.value);
+                        }
+                    });
+                }
+            }
+            ['fill', 'stroke'].forEach(attr => {
+                const pattern = `${attr}Pattern`;
+                const value = result[pattern];
+                if (value) {
+                    const gradient = svg.patterns.gradient.get(value);
+                    if (gradient) {
+                        switch (path.element.tagName) {
+                            case 'path':
+                                if (!/[zZ]\s*$/.test(path.value)) {
+                                    break;
+                                }
+                            case 'rect':
+                            case 'polygon':
+                            case 'polyline':
+                            case 'circle':
+                            case 'ellipse': {
+                                const gradients = Resource.createBackgroundGradient(node, [gradient], path);
+                                if (gradients.length) {
+                                    result[attr] = '';
+                                    result[pattern] = [{ gradients }];
+                                    this.NAMESPACE_AAPT = true;
+                                    return;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    if (!result[attr]) {
+                        result[attr] = result.color;
+                    }
+                }
+                const colorName = Resource.addColor(result[attr]);
+                if (colorName !== '') {
+                    result[attr] = `@color/${colorName}`;
+                }
+                result[pattern] = false;
+            });
+            switch (result.fillRule) {
+                case 'evenodd':
+                    result.fillRule = 'evenOdd';
+                    break;
+                case 'nonzero':
+                    result.fillRule = 'nonZero';
+                    break;
+            }
+            this.queueAnimations(target, path.name, item => !(item instanceof $SvgAnimateTransform || item instanceof $SvgAnimateMotion) && !exclusions.includes(item.attributeName), result.value);
+            return result;
+        }
+        queueAnimations(svg, name, predicate, pathData = '') {
+            const animate = svg.animate.filter(predicate).filter(item => item.begin.length > 0);
+            if (animate.length) {
+                this.ANIMATE_DATA.set(name, {
+                    element: svg.element,
+                    animate,
+                    pathData
+                });
+                return true;
+            }
+            return false;
+        }
     }
 
+    let initialized = false;
+    let application;
+    let fileHandler;
+    let userSettings;
+    const framework = 2 /* ANDROID */;
     function autoClose() {
         if (application && application.userSettings.autoCloseOnWrite && !application.initialized && !application.closed) {
             application.finalize();
@@ -8477,11 +8846,6 @@ var android = (function () {
     function checkApplication(main) {
         return initialized && !!main && (main.closed || autoClose());
     }
-    let initialized = false;
-    let application;
-    let fileHandler;
-    let userSettings;
-    const framework = 2 /* ANDROID */;
     const lib = {
         constant,
         enumeration,
@@ -8544,55 +8908,67 @@ var android = (function () {
                 if (fileHandler && checkApplication(application)) {
                     return fileHandler.layoutAllToXml(application.sessionData, saveToDisk);
                 }
-                return '';
+                return {};
             },
             writeResourceAllXml(saveToDisk = false) {
                 if (fileHandler && checkApplication(application)) {
                     return fileHandler.resourceAllToXml(saveToDisk);
                 }
-                return '';
+                return {};
             },
             writeResourceStringXml(saveToDisk = false) {
                 if (fileHandler && checkApplication(application)) {
                     return fileHandler.resourceStringToXml(saveToDisk);
                 }
-                return '';
+                return [];
             },
             writeResourceArrayXml(saveToDisk = false) {
                 if (fileHandler && checkApplication(application)) {
                     return fileHandler.resourceStringArrayToXml(saveToDisk);
                 }
-                return '';
+                return [];
             },
             writeResourceFontXml(saveToDisk = false) {
                 if (fileHandler && checkApplication(application)) {
                     return fileHandler.resourceFontToXml(saveToDisk);
                 }
-                return '';
+                return [];
             },
             writeResourceColorXml(saveToDisk = false) {
                 if (fileHandler && checkApplication(application)) {
                     return fileHandler.resourceColorToXml(saveToDisk);
                 }
-                return '';
+                return [];
             },
             writeResourceStyleXml(saveToDisk = false) {
                 if (fileHandler && checkApplication(application)) {
                     return fileHandler.resourceStyleToXml(saveToDisk);
                 }
-                return '';
+                return [];
             },
             writeResourceDimenXml(saveToDisk = false) {
                 if (fileHandler && checkApplication(application)) {
                     return fileHandler.resourceDimenToXml(saveToDisk);
                 }
-                return '';
+                return [];
             },
             writeResourceDrawableXml(saveToDisk = false) {
                 if (fileHandler && checkApplication(application)) {
                     return fileHandler.resourceDrawableToXml(saveToDisk);
                 }
-                return '';
+                return [];
+            },
+            writeResourceDrawableImageXml(saveToDisk = false) {
+                if (fileHandler && checkApplication(application)) {
+                    return fileHandler.resourceDrawableImageToXml(saveToDisk);
+                }
+                return [];
+            },
+            writeResourceAnimatorXml(saveToDisk = false) {
+                if (fileHandler && checkApplication(application)) {
+                    return fileHandler.resourceAnimatorToXml(saveToDisk);
+                }
+                return [];
             }
         },
         create() {
