@@ -30,7 +30,7 @@ declare global {
         }
 
         class Svg implements Svg {
-            constructor(element: SVGSVGElement, documentRoot?: boolean);
+            constructor(element: SVGSVGElement);
         }
 
         class SvgG implements SvgG {

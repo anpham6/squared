@@ -544,11 +544,12 @@ export default (Base: Constructor<squared.base.Node>) => {
                     else if ($util.isPercent(height)) {
                         if (height === '100%') {
                             this.android('layout_height', 'match_parent');
+                            hasHeight = true;
                         }
-                        else {
+                        else if (this.documentParent.has('height')) {
                             this.android('layout_height', $util.formatPX(Math.ceil(this.bounds.height) - this.contentBoxHeight));
+                            hasHeight = true;
                         }
-                        hasHeight = true;
                     }
                 }
             }

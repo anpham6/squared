@@ -1,6 +1,6 @@
 import { SvgPathCommand, SvgPoint, SvgTransform } from './@types/object';
 
-import { applyMatrixX, applyMatrixY, createTransform, getRadiusY, getRotateOrigin } from './lib/util';
+import { applyMatrixX, applyMatrixY, createTransform, getRadiusY } from './lib/util';
 
 const $color = squared.lib.color;
 const $dom = squared.lib.dom;
@@ -118,97 +118,6 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             }
         }
         return result;
-    }
-
-    public static partitionTransforms(element: SVGGraphicsElement, transform: SvgTransform[], fromPath = false): [SvgTransform[][], SvgTransform[]] {
-        const host: SvgTransform[][] = [];
-        const client: SvgTransform[] = [];
-        if (transform.length) {
-            const rotateOrigin = transform[0].css ? [] : getRotateOrigin(element);
-            rotateOrigin.reverse();
-            const partition = transform.slice().reverse();
-            const typeIndex = new Set<number>();
-            let rx = 1;
-            let ry = 1;
-            if (fromPath && element instanceof SVGEllipseElement) {
-                rx = element.rx.baseVal.value;
-                ry = element.ry.baseVal.value;
-            }
-            let current: SvgTransform[] = [];
-            for (let i = 0; i < partition.length; i++) {
-                const item = partition[i];
-                let prerotate = fromPath && host.length === 0 && current.length === 0;
-                if (!prerotate && typeIndex.has(item.type)) {
-                    current.reverse();
-                    host.push(current);
-                    current = [item];
-                    typeIndex.clear();
-                }
-                else {
-                    switch (item.type) {
-                        case SVGTransform.SVG_TRANSFORM_TRANSLATE:
-                            if (prerotate) {
-                                client.push(item);
-                            }
-                            else {
-                                current.push(item);
-                            }
-                            break;
-                        case SVGTransform.SVG_TRANSFORM_SCALE:
-                            if (prerotate) {
-                                client.push(item);
-                            }
-                            else {
-                                current.push(item);
-                            }
-                            break;
-                        case SVGTransform.SVG_TRANSFORM_MATRIX:
-                            if (prerotate && item.matrix.b === 0 && item.matrix.c === 0) {
-                                client.push(item);
-                            }
-                            else {
-                                current.push(item);
-                                prerotate = false;
-                            }
-                            break;
-                        case SVGTransform.SVG_TRANSFORM_ROTATE:
-                            if (rotateOrigin.length) {
-                                const origin = rotateOrigin.shift() as SvgPoint;
-                                if (origin.angle === item.angle) {
-                                    item.origin = origin;
-                                }
-                            }
-                            if (prerotate && rx === ry && (i === 0 || client[client.length - 1].type === SVGTransform.SVG_TRANSFORM_ROTATE)) {
-                                client.push(item);
-                            }
-                            else {
-                                if (!prerotate) {
-                                    current.reverse();
-                                    host.push(current);
-                                    current = [];
-                                    typeIndex.clear();
-                                }
-                                current.push(item);
-                                continue;
-                            }
-                            break;
-                        case SVGTransform.SVG_TRANSFORM_SKEWX:
-                        case SVGTransform.SVG_TRANSFORM_SKEWY:
-                            current.push(item);
-                            prerotate = false;
-                            break;
-                    }
-                }
-                if (!prerotate) {
-                    typeIndex.add(item.type);
-                }
-            }
-            if (current.length) {
-                current.reverse();
-                host.push(current);
-            }
-        }
-        return [host, client];
     }
 
     public static getCenterPoint(values: SvgPoint[]): SvgPoint {

@@ -1,4 +1,4 @@
-import { SvgPathBaseValue, SvgPoint, SvgTransform } from './@types/object';
+import { SvgPathBaseValue, SvgPoint, SvgTransform, SvgTransformResidual } from './@types/object';
 
 import SvgPaint$MX from './svgpaint-mx';
 import SvgBase from './svgbase';
@@ -61,16 +61,19 @@ export default class SvgPath extends SvgPaint$MX(SvgBase) implements squared.svg
 
     constructor(
         public readonly element: SVGGraphicsElement,
-        public readonly parentElement?: SVGGraphicsElement)
+        parentElement?: SVGGraphicsElement)
     {
         super(element);
-        if (parentElement === undefined && (element.parentElement instanceof SVGGElement || element.parentElement instanceof SVGUseElement)) {
+        if (parentElement) {
+            this.parentElement = parentElement;
+        }
+        else if (!parentElement && (element.parentElement instanceof SVGGElement || element.parentElement instanceof SVGUseElement)) {
             this.parentElement = element.parentElement;
         }
         this.init();
     }
 
-    public draw(transform?: SvgTransform[], residual = true, save = true) {
+    public draw(transform?: SvgTransform[], residual?: SvgTransformResidual, save = true) {
         const element = this.element;
         let d = '';
         if (save) {
@@ -79,14 +82,19 @@ export default class SvgPath extends SvgPaint$MX(SvgBase) implements squared.svg
         if (element instanceof SVGPathElement) {
             d = this.baseValue.d || $dom.cssAttribute(element, 'd');
             if (transform && transform.length) {
-                let commands = SvgBuild.toPathCommandList(d);
-                if (commands.length) {
-                    const result = this.transformPoints(transform, SvgBuild.toAbsolutePointList(commands));
-                    if (result.length) {
-                        commands = SvgBuild.fromAbsolutePointList(commands, result);
-                        if (commands.length) {
-                            d = SvgBuild.fromPathCommandList(commands);
-                            this.baseValue.transformed = transform;
+                if (typeof residual === 'function') {
+                    [this.transformResidual, transform] = residual.call(this, element, transform);
+                }
+                if (transform.length) {
+                    let commands = SvgBuild.toPathCommandList(d);
+                    if (commands.length) {
+                        const result = this.transformPoints(transform, SvgBuild.toAbsolutePointList(commands));
+                        if (result.length) {
+                            commands = SvgBuild.fromAbsolutePointList(commands, result);
+                            if (commands.length) {
+                                d = SvgBuild.fromPathCommandList(commands);
+                                this.baseValue.transformed = transform;
+                            }
                         }
                     }
                 }
@@ -98,14 +106,19 @@ export default class SvgPath extends SvgPaint$MX(SvgBase) implements squared.svg
             const x2 = this.baseValue.x2 !== null ? this.baseValue.x2 : element.x2.baseVal.value;
             const y2 = this.baseValue.y2 !== null ? this.baseValue.y2 : element.y2.baseVal.value;
             if (transform && transform.length) {
-                const points: SvgPoint[] = [
-                    { x: x1, y: y1 },
-                    { x: x2, y: y2 }
-                ];
-                const result = this.transformPoints(transform, points);
-                if (result.length) {
-                    d = SvgPath.getPolyline(result);
-                    this.baseValue.transformed = transform;
+                if (typeof residual === 'function') {
+                    [this.transformResidual, transform] = residual.call(this, element, transform);
+                }
+                if (transform.length) {
+                    const points: SvgPoint[] = [
+                        { x: x1, y: y1 },
+                        { x: x2, y: y2 }
+                    ];
+                    const result = this.transformPoints(transform, points);
+                    if (result.length) {
+                        d = SvgPath.getPolyline(result);
+                        this.baseValue.transformed = transform;
+                    }
                 }
             }
             if (d === '') {
@@ -115,8 +128,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBase) implements squared.svg
         else if (element instanceof SVGCircleElement || element instanceof SVGEllipseElement) {
             const cx = this.baseValue.cx !== null ? this.baseValue.cx : element.cx.baseVal.value;
             const cy = this.baseValue.cy !== null ? this.baseValue.cy : element.cy.baseVal.value;
-            let rx = 0;
-            let ry = 0;
+            let rx: number;
+            let ry: number;
             if (element instanceof SVGCircleElement) {
                 rx = this.baseValue.r !== null ? this.baseValue.r : element.r.baseVal.value;
                 ry = rx;
@@ -125,17 +138,17 @@ export default class SvgPath extends SvgPaint$MX(SvgBase) implements squared.svg
                 rx = this.baseValue.rx !== null ? this.baseValue.rx : element.rx.baseVal.value;
                 ry = this.baseValue.ry !== null ? this.baseValue.ry : element.ry.baseVal.value;
             }
+            else {
+                return '';
+            }
             if (transform && transform.length) {
-                const points: SvgPoint[] = [
-                    { x: cx, y: cy, rx, ry }
-                ];
-                if (residual) {
-                    const index = transform.findIndex(item => item.type === SVGTransform.SVG_TRANSFORM_ROTATE);
-                    if (index !== -1 && (rx !== ry || transform.length > 1 && transform.some(item => item.type === SVGTransform.SVG_TRANSFORM_SCALE && item.matrix.a !== item.matrix.d))) {
-                        [this.transformResidual, transform] = SvgBuild.partitionTransforms(this.element, transform, true);
-                    }
+                if (typeof residual === 'function') {
+                    [this.transformResidual, transform] = residual.call(this, element, transform, rx, ry);
                 }
                 if (transform.length) {
+                    const points: SvgPoint[] = [
+                        { x: cx, y: cy, rx, ry }
+                    ];
                     const result = this.transformPoints(transform, points);
                     if (result.length) {
                         const pt = <Required<SvgPoint>> result[0];
@@ -154,16 +167,21 @@ export default class SvgPath extends SvgPaint$MX(SvgBase) implements squared.svg
             const width = this.baseValue.width !== null ? this.baseValue.width : element.width.baseVal.value;
             const height = this.baseValue.height !== null ? this.baseValue.height : element.height.baseVal.value;
             if (transform && transform.length) {
-                const points: SvgPoint[] = [
-                    { x, y },
-                    { x: x + width, y },
-                    { x: x + width, y: y + height },
-                    { x, y: y + height }
-                ];
-                const result = this.transformPoints(transform, points);
-                if (result.length) {
-                    d = SvgPath.getPolygon(result);
-                    this.baseValue.transformed = transform;
+                if (typeof residual === 'function') {
+                    [this.transformResidual, transform] = residual.call(this, element, transform);
+                }
+                if (transform.length) {
+                    const points: SvgPoint[] = [
+                        { x, y },
+                        { x: x + width, y },
+                        { x: x + width, y: y + height },
+                        { x, y: y + height }
+                    ];
+                    const result = this.transformPoints(transform, points);
+                    if (result.length) {
+                        d = SvgPath.getPolygon(result);
+                        this.baseValue.transformed = transform;
+                    }
                 }
             }
             if (d === '') {
@@ -173,10 +191,15 @@ export default class SvgPath extends SvgPaint$MX(SvgBase) implements squared.svg
         else if (element instanceof SVGPolygonElement || element instanceof SVGPolylineElement) {
             let points = this.baseValue.points !== null ? this.baseValue.points : SvgBuild.toPointList(element.points);
             if (transform && transform.length) {
-                const result = this.transformPoints(transform, points);
-                if (result.length) {
-                    points = result;
-                    this.baseValue.transformed = transform;
+                if (typeof residual === 'function') {
+                    [this.transformResidual, transform] = residual.call(this, element, transform);
+                }
+                if (transform.length) {
+                    const result = this.transformPoints(transform, points);
+                    if (result.length) {
+                        points = result;
+                        this.baseValue.transformed = transform;
+                    }
                 }
             }
             d = element.tagName === 'polygon' ? SvgPath.getPolygon(points) : SvgPath.getPolyline(points);

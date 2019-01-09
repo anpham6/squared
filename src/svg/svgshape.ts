@@ -1,4 +1,4 @@
-import { SvgPoint, SvgTransformExclusions } from './@types/object';
+import { SvgPoint, SvgTransformExclusions, SvgTransformResidual } from './@types/object';
 
 import SvgView$MX from './svgview-mx';
 import SvgAnimate from './svganimate';
@@ -883,7 +883,7 @@ export default class SvgShape extends SvgView$MX(SvgElement) implements squared.
         this.type = SHAPES[(element || this.element).tagName] || 0;
     }
 
-    public build(residual = false, exclusions?: SvgTransformExclusions) {
+    public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
         if (this.path) {
             this.path.draw(SvgBuild.filterTransforms(this.transform, exclusions ? exclusions[this.path.element.tagName] : undefined), residual);
         }

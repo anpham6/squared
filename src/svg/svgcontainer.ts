@@ -1,4 +1,4 @@
-import { SvgTransformExclusions } from './@types/object';
+import { SvgTransformExclusions, SvgTransformResidual } from './@types/object';
 
 import { getHrefTargetElement, isSvgImage, isSvgShape } from './lib/util';
 
@@ -14,7 +14,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgViewable
         return super.append(item);
     }
 
-    public build(residual = false, exclusions?: SvgTransformExclusions) {
+    public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual ) {
         this.clear();
         for (let i = 0; i < this.element.children.length; i++) {
             const item = this.element.children[i];
@@ -47,7 +47,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgViewable
             }
             if (svg) {
                 this.append(svg);
-                svg.build(residual, exclusions);
+                svg.build(exclusions, residual);
             }
         }
     }

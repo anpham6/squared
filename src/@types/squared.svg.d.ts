@@ -1,4 +1,4 @@
-import { SvgBaseValue, SvgPathCommand, SvgPoint, SvgRect, SvgRectBaseValue, SvgTransform, SvgTransformExclusions } from '../svg/@types/object';
+import { SvgBaseValue, SvgPathCommand, SvgPoint, SvgRect, SvgRectBaseValue, SvgTransform, SvgTransformExclusions, SvgTransformResidual } from '../svg/@types/object';
 
 import Container = squared.lib.base.Container;
 
@@ -19,7 +19,7 @@ declare global {
         }
 
         interface SvgBuildable extends SvgBase {
-            build(residual?: boolean, exclusions?: SvgTransformExclusions): void;
+            build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual): void;
             synchronize(useKeyTime?: boolean): void;
         }
 
@@ -58,7 +58,7 @@ declare global {
             clipPath: string;
             clipRule: string;
             opacity: string;
-            readonly parentElement?: SVGGraphicsElement;
+            readonly parentElement: SVGGraphicsElement | null;
             setPaint(): void;
         }
 
@@ -66,7 +66,6 @@ declare global {
             public static setName(element?: SVGElement): string;
             public static filterTransforms(transform: SvgTransform[], exclude?: number[]): SvgTransform[];
             public static applyTransforms(transform: SvgTransform[], values: Point[], origin?: Point, center?: Point): Point[];
-            public static partitionTransforms(element: SVGGraphicsElement, transform: SvgTransform[], fromPath?: boolean): [SvgTransform[][], SvgTransform[]];
             public static getCenterPoint(values: Point[]): Point[];
             public static toColorStopList(element: SVGGradientElement): ColorStop[];
             public static toAnimateList(element: SVGElement): SvgAnimation[];

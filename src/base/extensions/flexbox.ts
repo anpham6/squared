@@ -10,15 +10,16 @@ import Node from '../node';
 import NodeList from '../nodelist';
 
 export default abstract class Flexbox<T extends Node> extends Extension<T> {
-    public static createDataAttribute<T extends Node>(children: T[]): FlexboxData<T> {
+    public static createDataAttribute<T extends Node>(node: T, children: T[]): FlexboxData<T> {
+        const flex = node.flexbox;
         return {
-            wrap: false,
-            wrapReverse: false,
-            directionReverse: false,
-            justifyContent: '',
-            rowDirection: false,
+            wrap: flex.wrap.startsWith('wrap'),
+            wrapReverse: flex.wrap === 'wrap-reverse',
+            directionReverse: flex.direction.endsWith('reverse'),
+            justifyContent: flex.justifyContent,
+            rowDirection: flex.direction.startsWith('row'),
             rowCount: 0,
-            columnDirection: false,
+            columnDirection: flex.direction.startsWith('column'),
             columnCount: 0,
             children
         };
@@ -31,15 +32,7 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
     public processNode(node: T): ExtensionResult<T> {
         const controller = this.application.controllerHandler;
         const pageFlow = node.children.filter(item => item.pageFlow) as T[];
-        const flex = node.flexbox;
-        const mainData = { ...Flexbox.createDataAttribute(pageFlow),
-            wrap: flex.wrap.startsWith('wrap'),
-            wrapReverse: flex.wrap === 'wrap-reverse',
-            directionReverse: flex.direction.endsWith('reverse'),
-            justifyContent: flex.justifyContent,
-            rowDirection: flex.direction.startsWith('row'),
-            columnDirection: flex.direction.startsWith('column')
-        };
+        const mainData = Flexbox.createDataAttribute(node, pageFlow);
         if (node.cssTry('display', 'block')) {
             for (const item of pageFlow) {
                 if (item.element) {
@@ -53,14 +46,7 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
         if (mainData.wrap) {
             function setDirection(align: string, sort: string, size: string) {
                 const map = new Map<number, T[]>();
-                pageFlow.sort((a, b) => {
-                    if (a.linear[align] < b.linear[align]) {
-                        return a.linear[align] < b.linear[align] ? -1 : 1;
-                    }
-                    else {
-                        return a.linear[sort] < b.linear[sort] ? -1 : 1;
-                    }
-                });
+                pageFlow.sort((a, b) => a.linear[align] < b.linear[align] || a.linear[sort] < b.linear[sort] ? -1 : 1);
                 for (const item of pageFlow) {
                     const xy = Math.round(item.linear[align]);
                     const items: T[] = map.get(xy) || [];

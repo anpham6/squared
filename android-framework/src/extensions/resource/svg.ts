@@ -1,5 +1,5 @@
 import { TemplateData, TemplateDataA, TemplateDataAA, TemplateDataAAA } from '../../../../src/base/@types/application';
-import { SvgTransform } from '../../../../src/svg/@types/object';
+import { SvgPoint, SvgTransform } from '../../../../src/svg/@types/object';
 import { ResourceStoredMapAndroid } from '../../@types/application';
 import { ResourceSvgOptions } from '../../@types/extension';
 
@@ -169,6 +169,114 @@ function getSvgOffset(element: SVGGraphicsElement, baseElement: SVGGraphicsEleme
     return { x, y };
 }
 
+function partitionTransforms(element: SVGGraphicsElement, transform: SvgTransform[], rx = 1, ry = 1): [SvgTransform[][], SvgTransform[]] {
+    if (element instanceof SVGCircleElement || element instanceof SVGEllipseElement) {
+        const index = transform.findIndex(item => item.type === SVGTransform.SVG_TRANSFORM_ROTATE);
+        if (index !== -1 && (rx !== ry || transform.length > 1 && transform.some(item => item.type === SVGTransform.SVG_TRANSFORM_SCALE && item.matrix.a !== item.matrix.d))) {
+            segmentTransforms(element, transform, rx, ry);
+        }
+    }
+    return [[], transform];
+}
+
+function segmentTransforms(element: SVGGraphicsElement, transform: SvgTransform[], rx = 1, ry = 1): [SvgTransform[][], SvgTransform[]] {
+    const host: SvgTransform[][] = [];
+    const client: SvgTransform[] = [];
+    const rotateOrigin = transform[0].css ? [] : $utilS.getRotateOrigin(element);
+    rotateOrigin.reverse();
+    const partition = transform.slice().reverse();
+    const typeIndex = new Set<number>();
+    let current: SvgTransform[] = [];
+    function restart(item?: SvgTransform) {
+        if (current.length) {
+            current.reverse();
+            host.push(current);
+            current = [];
+            if (item) {
+                current.push(item);
+            }
+            typeIndex.clear();
+        }
+    }
+    for (let i = 0; i < partition.length; i++) {
+        const item = partition[i];
+        let prerotate = host.length === 0 && current.length === 0;
+        if (!prerotate && typeIndex.has(item.type)) {
+            const previous = current[current.length - 1];
+            if (item.type === previous.type) {
+                switch (item.type) {
+                    case SVGTransform.SVG_TRANSFORM_TRANSLATE:
+                        previous.matrix.e += item.matrix.e;
+                        previous.matrix.f += item.matrix.f;
+                        continue;
+                    case SVGTransform.SVG_TRANSFORM_SCALE:
+                        previous.matrix.a *= item.matrix.a;
+                        previous.matrix.d *= item.matrix.d;
+                        continue;
+                }
+            }
+            restart(item);
+        }
+        else {
+            switch (item.type) {
+                case SVGTransform.SVG_TRANSFORM_TRANSLATE:
+                    if (prerotate) {
+                        client.push(item);
+                    }
+                    else {
+                        current.push(item);
+                    }
+                    break;
+                case SVGTransform.SVG_TRANSFORM_SCALE:
+                    if (prerotate) {
+                        client.push(item);
+                    }
+                    else {
+                        current.push(item);
+                    }
+                    break;
+                case SVGTransform.SVG_TRANSFORM_MATRIX:
+                    if (prerotate && item.matrix.b === 0 && item.matrix.c === 0) {
+                        client.push(item);
+                    }
+                    else {
+                        current.push(item);
+                        prerotate = false;
+                    }
+                    break;
+                case SVGTransform.SVG_TRANSFORM_ROTATE:
+                    if (rotateOrigin.length) {
+                        const origin = rotateOrigin.shift() as SvgPoint;
+                        if (origin.angle === item.angle) {
+                            item.origin = origin;
+                        }
+                    }
+                    if (prerotate && rx === ry && (i === 0 || client[client.length - 1].type === SVGTransform.SVG_TRANSFORM_ROTATE)) {
+                        client.push(item);
+                    }
+                    else {
+                        if (!prerotate) {
+                            restart();
+                        }
+                        current.push(item);
+                        continue;
+                    }
+                    break;
+                case SVGTransform.SVG_TRANSFORM_SKEWX:
+                case SVGTransform.SVG_TRANSFORM_SKEWY:
+                    current.push(item);
+                    prerotate = false;
+                    break;
+            }
+        }
+        if (!prerotate) {
+            typeIndex.add(item.type);
+        }
+    }
+    restart();
+    return [host, client];
+}
+
 export default class ResourceSvg<T extends View> extends squared.base.Extension<T> {
     public readonly options: ResourceSvgOptions = {
         excludeFromTransform: {
@@ -217,7 +325,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 this.ANIMATE_DATA.clear();
                 this.IMAGE_DATA.length = 0;
                 this.NAMESPACE_AAPT = false;
-                svg.build(true, this.options.excludeFromTransform);
+                svg.build(this.options.excludeFromTransform, partitionTransforms);
                 svg.synchronize();
                 this.parseVectorData(node, svg, svg);
                 this.queueAnimations(
@@ -987,7 +1095,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
             const name = target.name;
             const groupName = `group_${name}`;
             const canTranslate = target instanceof $Svg || target instanceof $SvgUseSymbol;
-            const transform = $SvgBuild.partitionTransforms(target.element, target.transform)[0];
+            const transform = segmentTransforms(target.element, target.transform)[0];
             if (transform.length) {
                 const transformed: SvgTransform[] = [];
                 for (let i = 0; i < transform.length; i++) {
@@ -1059,14 +1167,11 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
             const clipPath = svg.patterns.clipPath.get(path.clipPath);
             if (clipPath) {
                 const g = new $SvgG(clipPath);
-                g.build(true, this.options.excludeFromTransform);
+                g.build(this.options.excludeFromTransform, partitionTransforms);
                 g.synchronize();
                 g.each((child: $SvgShape) => {
-                    if (child.path) {
-                        child.build(true, this.options.excludeFromTransform);
-                        if (child.path.value) {
-                            clipPaths.push({ clipPathName: child.name, clipPathData: child.path.value });
-                        }
+                    if (child.path && child.path.value) {
+                        clipPaths.push({ clipPathName: child.name, clipPathData: child.path.value });
                         this.queueAnimations(
                             child,
                             child.name,

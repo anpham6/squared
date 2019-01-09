@@ -38,7 +38,7 @@ declare global {
             rotate: number;
             rotateAuto: boolean;
             rotateAutoReverse: boolean;
-            mpath?: SVGGraphicsElement;
+            mpath: SVGGraphicsElement | null;
             readonly element: SVGAnimateMotionElement;
         }
 

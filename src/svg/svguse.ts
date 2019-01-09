@@ -1,4 +1,4 @@
-import { SvgTransformExclusions } from './@types/object';
+import { SvgTransformExclusions, SvgTransformResidual } from './@types/object';
 
 import SvgPaint$MX from './svgpaint-mx';
 import SvgViewRect$MX from './svgviewrect-mx';
@@ -21,12 +21,12 @@ export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgShape)) implem
         this.path = undefined;
     }
 
-    public build(residual = false, exclusions?: SvgTransformExclusions) {
+    public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
         if (this.path === undefined) {
             const path = new SvgPath(this.shapeElement, this.element);
             super.path = path;
         }
-        super.build(residual, exclusions);
+        super.build(exclusions, residual);
     }
 
     set href(value) {

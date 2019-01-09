@@ -23,7 +23,7 @@ export default <T extends Constructor<squared.svg.SvgBase>>(Base: T) => {
         public clipPath = '';
         public clipRule = '';
 
-        public readonly parentElement?: SVGGraphicsElement;
+        public parentElement: SVGGraphicsElement | null = null;
 
         public setPaint() {
             const opacity = this.getAttribute('opacity');

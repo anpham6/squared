@@ -12,11 +12,14 @@ const $util = squared.lib.util;
 export default class SvgImage extends SvgViewRect$MX(SvgView$MX(SvgElement)) implements squared.svg.SvgImage {
     public rotateOrigin?: SvgPoint;
 
+    public readonly imageElement: SVGImageElement | null;
+
     constructor(
         public readonly element: SVGImageElement | SVGUseElement,
-        public readonly imageElement?: SVGImageElement)
+        imageElement?: SVGImageElement)
     {
         super(element);
+        this.imageElement = imageElement || null;
         this.setRect();
     }
 

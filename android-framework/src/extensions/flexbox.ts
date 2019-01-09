@@ -37,10 +37,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
         );
         layout.rowCount = mainData.rowCount;
         layout.columnCount = mainData.columnCount;
-        if (node.filter(item => !item.pageFlow).length > 0 ||
-            mainData.rowDirection && (mainData.rowCount === 1 || node.hasHeight) ||
-            mainData.columnDirection && mainData.columnCount === 1)
-        {
+        if (node.filter(item => !item.pageFlow).length > 0 || mainData.rowDirection && (mainData.rowCount === 1 || node.hasHeight) || mainData.columnDirection && mainData.columnCount === 1) {
             layout.containerType = CONTAINER_NODE.CONSTRAINT;
         }
         else {
