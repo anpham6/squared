@@ -47,7 +47,7 @@ function checkPositionStatic<T extends Node>(node: T, parent: T) {
     const previousSiblings = node.previousSiblings();
     const nextSiblings = node.nextSiblings();
     if (node.positionAuto &&
-        (previousSiblings.length === 0 || !previousSiblings.some(item => item.multiLine > 0 || item.excluded && !item.blockStatic)) &&
+        (previousSiblings.length === 0 || !previousSiblings.some(item => item.multiline > 0 || item.excluded && !item.blockStatic)) &&
         (nextSiblings.length === 0 || nextSiblings.every(item => item.blockStatic || item.lineBreak || item.excluded) || node.element === $dom.getLastChildElement(parent.element)))
     {
         node.css({

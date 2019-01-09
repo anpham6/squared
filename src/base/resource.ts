@@ -426,7 +426,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
     public setValueString() {
         function replaceWhiteSpace(node: T, value: string): [string, boolean] {
             const renderParent = node.renderParent;
-            if (node.multiLine && renderParent && !renderParent.layoutVertical) {
+            if (node.multiline && renderParent && !renderParent.layoutVertical) {
                 value = value.replace(/^\s*\n/, '');
             }
             switch (node.css('whiteSpace')) {
@@ -522,7 +522,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         const previousSibling = node.previousSiblings().pop();
                         const nextSibling = node.nextSiblings().shift();
                         let previousSpaceEnd = false;
-                        if (previousSibling === undefined || previousSibling.multiLine || previousSibling.lineBreak || previousSibling.plainText && /\s+$/.test(previousSibling.textContent)) {
+                        if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && /\s+$/.test(previousSibling.textContent)) {
                             value = value.replace(/^\s+/, '');
                         }
                         else if (previousSibling.element) {
@@ -545,7 +545,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                         previousSibling.block ||
                                         previousSibling.lineBreak ||
                                         previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
-                                        node.multiLine && $dom.hasLineBreak(element)
+                                        node.multiline && $dom.hasLineBreak(element)
                                     ) ? '' : '&#160;'
                                 );
                                 value = value.replace(/\s+$/, node.display === 'table-cell' || nextSibling && nextSibling.lineBreak || node.blockStatic ? '' : '&#160;');

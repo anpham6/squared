@@ -91,7 +91,7 @@
                     return -1;
                 }
                 if (!a.imageElement || !b.imageElement) {
-                    if (a.multiLine || b.multiLine) {
+                    if (a.multiline || b.multiline) {
                         if (a.lineHeight && b.lineHeight) {
                             return a.lineHeight <= b.lineHeight ? 1 : -1;
                         }
@@ -828,7 +828,7 @@
         setValueString() {
             function replaceWhiteSpace(node, value) {
                 const renderParent = node.renderParent;
-                if (node.multiLine && renderParent && !renderParent.layoutVertical) {
+                if (node.multiline && renderParent && !renderParent.layoutVertical) {
                     value = value.replace(/^\s*\n/, '');
                 }
                 switch (node.css('whiteSpace')) {
@@ -924,7 +924,7 @@
                             const previousSibling = node.previousSiblings().pop();
                             const nextSibling = node.nextSiblings().shift();
                             let previousSpaceEnd = false;
-                            if (previousSibling === undefined || previousSibling.multiLine || previousSibling.lineBreak || previousSibling.plainText && /\s+$/.test(previousSibling.textContent)) {
+                            if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && /\s+$/.test(previousSibling.textContent)) {
                                 value = value.replace(/^\s+/, '');
                             }
                             else if (previousSibling.element) {
@@ -945,7 +945,7 @@
                                     value = value.replace(/^\s+/, previousSibling && (previousSibling.block ||
                                         previousSibling.lineBreak ||
                                         previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
-                                        node.multiLine && $dom$1.hasLineBreak(element)) ? '' : '&#160;');
+                                        node.multiline && $dom$1.hasLineBreak(element)) ? '' : '&#160;');
                                     value = value.replace(/\s+$/, node.display === 'table-cell' || nextSibling && nextSibling.lineBreak || node.blockStatic ? '' : '&#160;');
                                 }
                                 else if (value.length) {
@@ -1011,7 +1011,7 @@
         const previousSiblings = node.previousSiblings();
         const nextSiblings = node.nextSiblings();
         if (node.positionAuto &&
-            (previousSiblings.length === 0 || !previousSiblings.some(item => item.multiLine > 0 || item.excluded && !item.blockStatic)) &&
+            (previousSiblings.length === 0 || !previousSiblings.some(item => item.multiline > 0 || item.excluded && !item.blockStatic)) &&
             (nextSiblings.length === 0 || nextSiblings.every(item => item.blockStatic || item.lineBreak || item.excluded) || node.element === $dom$2.getLastChildElement(parent.element))) {
             node.css({
                 'position': 'static',
@@ -4520,14 +4520,14 @@
         get verticalAlign() {
             return this.css('verticalAlign');
         }
-        set multiLine(value) {
-            this._cached.multiLine = value;
+        set multiline(value) {
+            this._cached.multiline = value;
         }
-        get multiLine() {
-            if (this._cached.multiLine === undefined) {
-                this._cached.multiLine = this.plainText || this.inlineFlow && this.inlineText ? $dom$4.getRangeClientRect(this._element).multiLine : 0;
+        get multiline() {
+            if (this._cached.multiline === undefined) {
+                this._cached.multiline = this.plainText || this.inlineFlow && this.inlineText ? $dom$4.getRangeClientRect(this._element).multiline : 0;
             }
-            return this._cached.multiLine;
+            return this._cached.multiline;
         }
         get visibleStyle() {
             if (this._cached.visibleStyle === undefined) {
@@ -4798,8 +4798,8 @@
             const value = this.cssInitial('verticalAlign', true);
             return value !== '' ? value === 'baseline' : this.every(node => node.baseline);
         }
-        get multiLine() {
-            return this.children.reduce((a, b) => a + b.multiLine, 0);
+        get multiline() {
+            return this.children.reduce((a, b) => a + b.multiline, 0);
         }
         get display() {
             return (this.css('display') ||
@@ -6180,7 +6180,7 @@
             const tableFilled = [];
             let columnIndex = new Array(table.length).fill(0);
             let mapWidth = [];
-            let multiLine = 0;
+            let multiline = 0;
             for (let i = 0; i < table.length; i++) {
                 const tr = table[i];
                 rowWidth[i] = horizontal;
@@ -6257,8 +6257,8 @@
                             }
                         }
                     }
-                    if (multiLine === 0) {
-                        multiLine = td.multiLine;
+                    if (multiline === 0) {
+                        multiline = td.multiline;
                     }
                     if (td.length || td.inlineText) {
                         rowWidth[i] += td.bounds.width + horizontal;
@@ -6312,7 +6312,7 @@
                     return 3 /* VARIABLE */;
                 }
                 if (mapWidth.every(value => value === mapWidth[0])) {
-                    if (multiLine) {
+                    if (multiline) {
                         return node.some(td => td.has('height')) ? 2 /* FIXED */ : 3 /* VARIABLE */;
                     }
                     if (mapWidth[0] === 'auto') {
@@ -6327,7 +6327,7 @@
                 }
                 return 0 /* NONE */;
             })();
-            if (multiLine || (mainData.layoutType === 1 /* STRETCH */ && !node.hasWidth)) {
+            if (multiline || (mainData.layoutType === 1 /* STRETCH */ && !node.hasWidth)) {
                 mainData.expand = true;
             }
             const columnCount = $util$f.maxArray(columnIndex);

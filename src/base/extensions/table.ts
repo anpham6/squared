@@ -83,7 +83,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
         const tableFilled: T[][] = [];
         let columnIndex: number[] = new Array(table.length).fill(0);
         let mapWidth: string[] = [];
-        let multiLine = 0;
+        let multiline = 0;
         for (let i = 0; i < table.length; i++) {
             const tr = table[i];
             rowWidth[i] = horizontal;
@@ -163,8 +163,8 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                         }
                     }
                 }
-                if (multiLine === 0) {
-                    multiLine = td.multiLine;
+                if (multiline === 0) {
+                    multiline = td.multiline;
                 }
                 if (td.length || td.inlineText) {
                     rowWidth[i] += td.bounds.width + horizontal;
@@ -218,7 +218,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                 return LAYOUT_TABLE.VARIABLE;
             }
             if (mapWidth.every(value => value === mapWidth[0])) {
-                if (multiLine) {
+                if (multiline) {
                     return node.some(td => td.has('height')) ? LAYOUT_TABLE.FIXED : LAYOUT_TABLE.VARIABLE;
                 }
                 if (mapWidth[0] === 'auto') {
@@ -233,7 +233,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
             }
             return LAYOUT_TABLE.NONE;
         })();
-        if (multiLine || (mainData.layoutType === LAYOUT_TABLE.STRETCH && !node.hasWidth)) {
+        if (multiline || (mainData.layoutType === LAYOUT_TABLE.STRETCH && !node.hasWidth)) {
             mainData.expand = true;
         }
         const columnCount = $util.maxArray(columnIndex);

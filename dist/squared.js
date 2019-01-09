@@ -1153,7 +1153,7 @@
         range.selectNodeContents(element);
         const domRect = Array.from(range.getClientRects()).filter(item => !(Math.round(item.width) === 0 && withinFraction(item.left, item.right)));
         let bounds = newRectDimensions();
-        let multiLine = 0;
+        let multiline = 0;
         if (domRect.length) {
             bounds = assignBounds(domRect[0]);
             const top = new Set([bounds.top]);
@@ -1170,11 +1170,11 @@
                 bounds.top = minArray(Array.from(top));
                 bounds.bottom = maxArray(Array.from(bottom));
                 if (domRect[domRect.length - 1].top >= domRect[0].bottom && element.textContent && (element.textContent.trim() !== '' || /^\s*\n/.test(element.textContent))) {
-                    multiLine = domRect.length - 1;
+                    multiline = domRect.length - 1;
                 }
             }
         }
-        return Object.assign({}, bounds, { multiLine });
+        return Object.assign({}, bounds, { multiline });
     }
     function assignBounds(bounds) {
         return {
@@ -1746,25 +1746,27 @@
             }
             else {
                 hash = '[&~]';
-                result = typeof result === 'boolean' ? false : unknown.toString();
+                result = typeof unknown === 'boolean' ? '' : unknown.toString();
             }
-            if (result === false) {
-                output = output.replace(new RegExp(`\\s*{${hash + attr}}\\n*`), '');
+            if (!result) {
+                if (new RegExp(`{&${attr}}`).test(output)) {
+                    return '';
+                }
+                else if (hash === '%') {
+                    output = output.replace(new RegExp(`[ \\t]*{%${attr}}\\n*`), '');
+                }
             }
-            else if (isString(result)) {
+            else if (result !== '') {
                 output = output.replace(new RegExp(`{${hash + attr}}`), result);
-            }
-            else if (new RegExp(`{&${attr}}`).test(output)) {
-                return '';
             }
         }
         if (index === undefined) {
-            output = output.replace(/\n{%\w+}\n/g, '\n').trim();
+            output = output.replace(/\n+\t*{%\w+}\n+/g, '\n').trim();
             if (format) {
                 output = formatTemplate(output);
             }
         }
-        return output.replace(/\s*([\w:]+="[^"]*)?{~\w+}"?/g, '');
+        return output.replace(/\s*((\w+:)?\w+="[^"]*)?{~\w+}"?/g, '');
     }
     function formatTemplate(value, closeEmpty = true, char = '\t') {
         const lines = [];

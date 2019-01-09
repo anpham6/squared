@@ -41,7 +41,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                 return -1;
             }
             if (!a.imageElement || !b.imageElement) {
-                if (a.multiLine || b.multiLine) {
+                if (a.multiline || b.multiline) {
                     if (a.lineHeight && b.lineHeight) {
                         return a.lineHeight <= b.lineHeight ? 1 : -1;
                     }

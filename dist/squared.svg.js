@@ -2655,6 +2655,7 @@
             if (!this.documentRoot && this.animate.length) {
                 SvgShape.synchronizeAnimate(this.element, this.animate, useKeyTime);
             }
+            super.synchronize(useKeyTime);
         }
         init() {
             [this.element, ...Array.from(this.element.querySelectorAll(':scope > defs'))].forEach(item => {
@@ -2917,6 +2918,7 @@
             if (this.animate.length) {
                 SvgShape.synchronizeAnimate(this.element, this.animate, useKeyTime);
             }
+            super.synchronize(useKeyTime);
         }
         get viewBox() {
             return this.symbolElement.viewBox.baseVal;

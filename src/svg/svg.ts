@@ -27,6 +27,7 @@ export default class Svg extends SvgViewRect$MX(SvgView$MX(SvgContainer)) implem
         if (!this.documentRoot && this.animate.length) {
             SvgShape.synchronizeAnimate(this.element, this.animate, useKeyTime);
         }
+        super.synchronize(useKeyTime);
     }
 
     private init() {

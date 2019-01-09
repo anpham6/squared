@@ -3,6 +3,7 @@ import { SvgPathBaseValue, SvgPoint, SvgTransform } from '../svg/@types/object';
 declare global {
     namespace squared.svg {
         interface SvgPath extends SvgBase, SvgTransformable, SvgPaint, NameValue {
+            value: string;
             baseValue: Nullable<SvgPathBaseValue>;
             draw(transform?: SvgTransform[], residual?: boolean): string;
             transformPoints(transform: SvgTransform[], points: SvgPoint[], center?: SvgPoint): SvgPoint[];

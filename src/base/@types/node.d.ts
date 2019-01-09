@@ -34,7 +34,7 @@ export interface CachedValue<T> {
     blockDimension?: boolean;
     floating?: boolean;
     baseline?: boolean;
-    multiLine?: number;
+    multiline?: number;
     hasWidth?: boolean;
     hasHeight?: boolean;
     rightAligned?: boolean;

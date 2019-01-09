@@ -12,11 +12,11 @@ interface RectPosition extends BoxRect {
     originalY: string;
 }
 
-interface RectDimensions extends Dimension, BoxRect {
+interface RectDimensions extends BoxRect, Dimension {
 }
 
 interface TextDimensions extends RectDimensions {
-    multiLine: number;
+    multiline: number;
 }
 
 interface BoxMargin {

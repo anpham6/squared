@@ -1,4 +1,4 @@
-import { isString, repeat, trimEnd } from './util';
+import { repeat, trimEnd } from './util';
 
 type XMLTagData = {
     tag: string;
@@ -146,25 +146,27 @@ export function createTemplate(value: StringMap | string, data: ExternalData, fo
         }
         else {
             hash = '[&~]';
-            result = typeof result === 'boolean' ? false : unknown.toString();
+            result = typeof unknown === 'boolean' ? '' : unknown.toString();
         }
-        if (result === false) {
-            output = output.replace(new RegExp(`\\s*{${hash + attr}}\\n*`), '');
+        if (!result) {
+            if (new RegExp(`{&${attr}}`).test(output)) {
+                return '';
+            }
+            else if (hash === '%') {
+                output = output.replace(new RegExp(`[ \\t]*{%${attr}}\\n*`), '');
+            }
         }
-        else if (isString(result)) {
+        else if (result !== '') {
             output = output.replace(new RegExp(`{${hash + attr}}`), result);
-        }
-        else if (new RegExp(`{&${attr}}`).test(output)) {
-            return '';
         }
     }
     if (index === undefined) {
-        output = output.replace(/\n{%\w+}\n/g, '\n').trim();
+        output = output.replace(/\n+\t*{%\w+}\n+/g, '\n').trim();
         if (format) {
             output = formatTemplate(output);
         }
     }
-    return output.replace(/\s*([\w:]+="[^"]*)?{~\w+}"?/g, '');
+    return output.replace(/\s*((\w+:)?\w+="[^"]*)?{~\w+}"?/g, '');
 }
 
 export function formatTemplate(value: string, closeEmpty = true, char = '\t') {

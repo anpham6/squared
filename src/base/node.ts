@@ -1561,14 +1561,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this.css('verticalAlign');
     }
 
-    set multiLine(value) {
-        this._cached.multiLine = value;
+    set multiline(value) {
+        this._cached.multiline = value;
     }
-    get multiLine() {
-        if (this._cached.multiLine === undefined) {
-            this._cached.multiLine = this.plainText || this.inlineFlow && this.inlineText ? $dom.getRangeClientRect(<Element> this._element).multiLine : 0;
+    get multiline() {
+        if (this._cached.multiline === undefined) {
+            this._cached.multiline = this.plainText || this.inlineFlow && this.inlineText ? $dom.getRangeClientRect(<Element> this._element).multiline : 0;
         }
-        return this._cached.multiLine;
+        return this._cached.multiline;
     }
 
     get visibleStyle() {

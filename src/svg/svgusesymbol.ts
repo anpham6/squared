@@ -18,6 +18,7 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgViewRect$MX(SvgView$MX(
         if (this.animate.length) {
             SvgShape.synchronizeAnimate(this.element, this.animate, useKeyTime);
         }
+        super.synchronize(useKeyTime);
     }
 
     get viewBox() {

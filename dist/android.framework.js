@@ -1760,7 +1760,7 @@ var android = (function () {
                 }
                 if (!hasWidth) {
                     if (this.plainText) {
-                        this.android('layout_width', renderParent && this.bounds.width > renderParent.box.width && this.multiLine && this.alignParent('left') ? 'match_parent' : 'wrap_content', false);
+                        this.android('layout_width', renderParent && this.bounds.width > renderParent.box.width && this.multiline && this.alignParent('left') ? 'match_parent' : 'wrap_content', false);
                     }
                     else if (children.filter(node => (node.inlineStatic || $util$2.isUnit(node.cssInitial('width'))) && !node.autoMargin.horizontal).some(node => Math.ceil(node.bounds.width) >= this.box.width)) {
                         this.android('layout_width', 'wrap_content', false);
@@ -1785,7 +1785,7 @@ var android = (function () {
                             this.htmlElement && this.blockStatic && (this.documentBody ||
                                 !!parent && (parent.documentBody ||
                                     parent.blockStatic && (this.singleChild || this.alignedVertically(this.previousSiblings())))) ||
-                            this.groupParent && children.some(item => !(item.plainText && item.multiLine) && item.linear.width >= this.documentParent.box.width))) {
+                            this.groupParent && children.some(item => !(item.plainText && item.multiline) && item.linear.width >= this.documentParent.box.width))) {
                             this.android('layout_width', 'match_parent', false);
                         }
                         else {
@@ -2365,7 +2365,7 @@ var android = (function () {
         })[0];
     }
     function checkSingleLine(node, nowrap = false) {
-        if (node.textElement && node.cssParent('textAlign', true) !== 'center' && !node.hasWidth && !node.multiLine && (nowrap || node.textContent.trim().split(String.fromCharCode(32)).length > 0)) {
+        if (node.textElement && node.cssParent('textAlign', true) !== 'center' && !node.hasWidth && !node.multiline && (nowrap || node.textContent.trim().split(String.fromCharCode(32)).length > 0)) {
             node.android('singleLine', 'true');
         }
     }
@@ -3537,12 +3537,12 @@ var android = (function () {
                     let dimension = item.bounds;
                     if (item.element && !item.hasWidth && item.inlineText) {
                         const bounds = $dom$2.getRangeClientRect(item.element);
-                        if (bounds.multiLine || bounds.width < item.box.width) {
+                        if (bounds.multiline || bounds.width < item.box.width) {
                             dimension = bounds;
-                            if (item.multiLine === 0) {
-                                item.multiLine = bounds.multiLine;
+                            if (item.multiline === 0) {
+                                item.multiline = bounds.multiline;
                             }
-                            if (firefoxEdge && bounds.multiLine && !/^\s*\n+/.test(item.textContent)) {
+                            if (firefoxEdge && bounds.multiline && !/^\s*\n+/.test(item.textContent)) {
                                 rangeMultiLine.add(item);
                             }
                         }
@@ -3570,12 +3570,12 @@ var android = (function () {
                                     if (i === 1 && item.plainText && !previous.rightAligned) {
                                         connected = siblings.length === 0 && !/\s+$/.test(previous.textContent) && !/^\s+/.test(item.textContent);
                                     }
-                                    if (checkLineWrap && !connected && (rangeMultiLine.has(previous) || previous.multiLine && $dom$2.hasLineBreak(previous.element, false, true))) {
+                                    if (checkLineWrap && !connected && (rangeMultiLine.has(previous) || previous.multiline && $dom$2.hasLineBreak(previous.element, false, true))) {
                                         return true;
                                     }
                                 }
                                 if (checkLineWrap && !connected && (checkWidthWrap() ||
-                                    item.multiLine && $dom$2.hasLineBreak(item.element) ||
+                                    item.multiline && $dom$2.hasLineBreak(item.element) ||
                                     item.preserveWhiteSpace && /^\n+/.test(item.textContent))) {
                                     return true;
                                 }
@@ -3606,10 +3606,10 @@ var android = (function () {
                                 item.anchor(alignParent, 'true');
                                 rowPreviousLeft = undefined;
                             }
-                            if (startNewRow && item.multiLine) {
+                            if (startNewRow && item.multiline) {
                                 checkSingleLine(previous, checkLineWrap);
                             }
-                            rowWidth = Math.min(0, startNewRow && !previous.multiLine && item.multiLine && !cleared.has(item) ? item.linear.right - node.box.right : 0);
+                            rowWidth = Math.min(0, startNewRow && !previous.multiline && item.multiline && !cleared.has(item) ? item.linear.right - node.box.right : 0);
                             rows.push([item]);
                         }
                         else {
@@ -3629,7 +3629,7 @@ var android = (function () {
                     if (siblings.length && !siblings.some(element => !!$dom$2.getElementAsNode(element) || $dom$2.isLineBreak(element))) {
                         const betweenStart = $dom$2.getRangeClientRect(siblings[0]);
                         const betweenEnd = siblings.length > 1 ? $dom$2.getRangeClientRect(siblings[siblings.length - 1]) : null;
-                        if (!betweenStart.multiLine && (betweenEnd === null || !betweenEnd.multiLine)) {
+                        if (!betweenStart.multiline && (betweenEnd === null || !betweenEnd.multiline)) {
                             previousOffset = betweenEnd ? betweenStart.left - betweenEnd.right : betweenStart.width;
                         }
                     }
@@ -6187,22 +6187,22 @@ var android = (function () {
 	</item>
 <<B>>
 <<C>>
-	<item android:drawable="@drawable/{&vectorName}" />
+	<item android:drawable="@drawable/{&src}" />
 <<C>>
 <<D>>
-	<item android:left="{~left}" android:top="{~top}" android:right="{~right}" android:bottom="{~bottom}" android:width="{~width}" android:height="{~height}">
+	<item android:left="{~left}" android:top="{~top}" android:right="{~right}" android:bottom="{~bottom}" android:drawable="@drawable/{~src}" android:width="{~width}" android:height="{~height}">
+	<<rotate>>
 		<rotate android:drawable="@drawable/{&src}" android:fromDegrees="{~fromDegrees}" android:toDegrees="{~toDegrees}" android:pivotX="{~pivotX}" android:pivotY="{~pivotY}" android:visible="{~visible}" />
+	<<rotate>>
+	<<bitmap>>
+		<bitmap android:src="@drawable/{&src}" android:gravity="{~gravity}" android:tileMode="{~tileMode}" android:tileModeX="{~tileModeX}" android:tileModeY="{~tileModeY}" />
+	<<bitmap>>
 	</item>
 <<D>>
 <<E>>
 	<item android:left="{~left}" android:top="{~top}" android:right="{~right}" android:bottom="{~bottom}" android:drawable="@drawable/{&src}" android:width="{~width}" android:height="{~height}" />
 <<E>>
 <<F>>
-	<item android:left="{~left}" android:top="{~top}" android:right="{~right}" android:bottom="{~bottom}" android:width="{~width}" android:height="{~height}">
-		<bitmap android:src="@drawable/{&src}" android:gravity="{~gravity}" android:tileMode="{~tileMode}" android:tileModeX="{~tileModeX}" android:tileModeY="{~tileModeY}" />
-	</item>
-<<F>>
-<<G>>
 	<item android:left="{~left}" android:top="{~top}" android:right="{~right}" android:bottom="{~bottom}">
 		<shape android:shape="rectangle">
 		<<stroke>>
@@ -6213,7 +6213,7 @@ var android = (function () {
 		<<corners>>
 		</shape>
 	</item>
-<<G>>
+<<F>>
 </layer-list>`;
 
     var SHAPE_TMPL = `
@@ -6407,7 +6407,7 @@ var android = (function () {
         const rightWidth = baseWidth + offset;
         let indentWidth = `${$util$h.formatPX(width - baseWidth)}`;
         let hideWidth = `-${indentWidth}`;
-        data.G.push({
+        data.F.push({
             top: top ? '' : hideWidth,
             right: right ? '' : hideWidth,
             bottom: bottom ? '' : hideWidth,
@@ -6419,7 +6419,7 @@ var android = (function () {
             indentWidth = `${$util$h.formatPX(width)}`;
             hideWidth = `-${indentWidth}`;
         }
-        data.G.push({
+        data.F.push({
             top: top ? indentWidth : hideWidth,
             right: right ? indentWidth : hideWidth,
             bottom: bottom ? indentWidth : hideWidth,
@@ -6518,8 +6518,8 @@ var android = (function () {
                                 borderFiltered.push(item);
                             }
                         });
-                        const images5 = [];
-                        const images6 = [];
+                        const imagesE = [];
+                        const imagesD = [];
                         let data;
                         let resourceName = '';
                         for (let i = 0; i < backgroundImage.length; i++) {
@@ -6661,13 +6661,9 @@ var android = (function () {
                                             right: boxPosition.right !== 0 ? $util$h.formatPX(boxPosition.right) : '',
                                             bottom: boxPosition.bottom !== 0 ? $util$h.formatPX(boxPosition.bottom) : '',
                                             left: boxPosition.left !== 0 ? $util$h.formatPX(boxPosition.left) : '',
-                                            gravity,
-                                            tileMode,
-                                            tileModeX,
-                                            tileModeY,
                                             width,
                                             height,
-                                            src: backgroundImage[i]
+                                            bitmap: []
                                         };
                                         if (!(backgroundSize[i] === 'auto' || backgroundSize[i] === 'auto auto' || backgroundSize[i] === 'initial')) {
                                             switch (backgroundSize[i]) {
@@ -6698,31 +6694,41 @@ var android = (function () {
                                             }
                                         }
                                         if (gravity !== '' || tileMode !== '' || tileModeX !== '' || tileModeY !== '') {
-                                            images6.push(imageData);
+                                            imageData.bitmap.push({
+                                                src: backgroundImage[i],
+                                                gravity,
+                                                tileMode,
+                                                tileModeX,
+                                                tileModeY,
+                                            });
+                                            imagesD.push(imageData);
                                         }
                                         else {
-                                            images5.push(imageData);
+                                            imageData.src = backgroundImage[i];
+                                            imagesE.push(imageData);
                                         }
                                     }
                                 }
                             }
                         }
-                        images6.sort((a, b) => {
-                            if (!(a.tileModeX === 'repeat' || a.tileModeY === 'repeat' || a.tileMode === 'repeat')) {
+                        imagesD.sort((a, b) => {
+                            const bitmapA = a.bitmap[0];
+                            const bitmapB = b.bitmap[0];
+                            if (!(bitmapA.tileModeX === 'repeat' || bitmapA.tileModeY === 'repeat' || bitmapA.tileMode === 'repeat')) {
                                 return 1;
                             }
-                            else if (!(b.tileModeX === 'repeat' || b.tileModeY === 'repeat' || b.tileMode === 'repeat')) {
+                            else if (!(bitmapB.tileModeX === 'repeat' || bitmapB.tileModeY === 'repeat' || bitmapB.tileMode === 'repeat')) {
                                 return -1;
                             }
                             else {
-                                if (a.tileMode === 'repeat') {
+                                if (bitmapA.tileMode === 'repeat') {
                                     return -1;
                                 }
-                                else if (b.tileMode === 'repeat') {
+                                else if (bitmapB.tileMode === 'repeat') {
                                     return 1;
                                 }
                                 else {
-                                    return b.tileModeX === 'repeat' || b.tileModeY === 'repeat' ? 1 : -1;
+                                    return bitmapB.tileModeX === 'repeat' || bitmapB.tileModeY === 'repeat' ? 1 : -1;
                                 }
                             }
                         });
@@ -6760,7 +6766,7 @@ var android = (function () {
                                 vectorName = `${node.tagName.toLowerCase()}_${node.controlId}_gradient`;
                                 STORED$1.drawables.set(vectorName, xml);
                             }
-                            backgroundVector.push({ vectorName });
+                            backgroundVector.push({ src: vectorName });
                         }
                         let template;
                         const border = stored.border;
@@ -6784,10 +6790,9 @@ var android = (function () {
                                     A: backgroundColor,
                                     B: !vectorGradient && backgroundGradient.length ? backgroundGradient : false,
                                     C: backgroundVector,
-                                    D: false,
-                                    E: images5.length ? images5 : false,
-                                    F: images6.length ? images6 : false,
-                                    G: Resource.isBorderVisible(border) || borderRadius ? [{ stroke, corners: borderRadius }] : false
+                                    D: imagesD.length ? imagesD : false,
+                                    E: imagesE.length ? imagesE : false,
+                                    F: Resource.isBorderVisible(border) || borderRadius ? [{ stroke, corners: borderRadius }] : false
                                 };
                             }
                         }
@@ -6797,10 +6802,9 @@ var android = (function () {
                                 A: backgroundColor,
                                 B: !vectorGradient && backgroundGradient.length ? backgroundGradient : false,
                                 C: backgroundVector,
-                                D: false,
-                                E: images5.length ? images5 : false,
-                                F: images6.length ? images6 : false,
-                                G: []
+                                D: imagesD.length ? imagesD : false,
+                                E: imagesE.length ? imagesE : false,
+                                F: []
                             };
                             const borderWidth = new Set(borderFiltered.map(item => item.width));
                             const borderStyle = new Set(borderFiltered.map(item => getBorderStyle(item)));
@@ -6822,12 +6826,12 @@ var android = (function () {
                                         borderRadius
                                     ]);
                                 }
-                                else if (data.G) {
+                                else if (data.F) {
                                     const hideWidth = `-${$util$h.formatPX(getHideWidth(width))}`;
                                     const leftTop = !borderVisible[0] && !borderVisible[3];
                                     const topOnly = !borderVisible[0] && borderVisible[1] && borderVisible[2] && borderVisible[3];
                                     const leftOnly = borderVisible[0] && borderVisible[1] && borderVisible[2] && !borderVisible[3];
-                                    data.G.push({
+                                    data.F.push({
                                         top: borderVisible[0] ? '' : hideWidth,
                                         right: borderVisible[1] ? (borderVisible[3] || leftTop || leftOnly ? '' : borderData.width) : hideWidth,
                                         bottom: borderVisible[2] ? (borderVisible[0] || leftTop || topOnly ? '' : borderData.width) : hideWidth,
@@ -6853,14 +6857,14 @@ var android = (function () {
                                                 borderRadius
                                             ]);
                                         }
-                                        else if (data.G) {
+                                        else if (data.F) {
                                             const hasInset = width > 1 && (item.style === 'groove' || item.style === 'ridge');
                                             const outsetWidth = hasInset ? Math.ceil(width / 2) : width;
                                             const baseWidth = getHideWidth(outsetWidth);
                                             const visible = !visibleAll && item.width === '1px';
                                             let hideWidth = `-${$util$h.formatPX(baseWidth)}`;
                                             let hideTopWidth = `-${$util$h.formatPX(baseWidth + (visibleAll ? 1 : 0))}`;
-                                            data.G.push({
+                                            data.F.push({
                                                 top: i === 0 ? '' : hideTopWidth,
                                                 right: i === 1 ? (visible ? item.width : '') : hideWidth,
                                                 bottom: i === 2 ? (visible ? item.width : '') : hideWidth,
@@ -6871,7 +6875,7 @@ var android = (function () {
                                             if (hasInset) {
                                                 hideWidth = `-${$util$h.formatPX(getHideWidth(width))}`;
                                                 hideTopWidth = `-${$util$h.formatPX(width + (visibleAll ? 1 : 0))}`;
-                                                data.G.unshift({
+                                                data.F.unshift({
                                                     top: i === 0 ? '' : hideTopWidth,
                                                     right: i === 1 ? (visible ? item.width : '') : hideWidth,
                                                     bottom: i === 2 ? (visible ? item.width : '') : hideWidth,
@@ -7845,7 +7849,7 @@ var android = (function () {
         'stroke-opacity': 'strokeAlpha',
         'fill-opacity': 'fillAlpha',
         'stroke-width': 'strokeWidth',
-        'd': 'pathData'
+        'value': 'pathData'
     };
     const TEMPLATES$1 = {};
     const STORED$5 = Resource.STORED;
@@ -8063,7 +8067,7 @@ var android = (function () {
                                         ordering,
                                         repeating: [],
                                         indefinite: [],
-                                        fill: false
+                                        fill: []
                                     };
                                     const indefiniteData = {
                                         ordering: 'sequentially',
@@ -8549,13 +8553,15 @@ var android = (function () {
                                         }
                                     }
                                     if (setData.repeating.length) {
-                                        if (subData.ordering === 'sequentially') {
-                                            setData.fill = [fillData];
+                                        if (fillData.replace.length) {
+                                            if (subData.ordering === 'sequentially') {
+                                                setData.fill.push(fillData);
+                                            }
+                                            else {
+                                                setData.repeating.push(...fillData.replace);
+                                            }
                                         }
-                                        else {
-                                            setData.repeating.push(...fillData.replace);
-                                        }
-                                        if ($util$n.isArray(indefiniteData.repeat)) {
+                                        if (indefiniteData.repeat.length) {
                                             setData.indefinite.push(indefiniteData);
                                         }
                                         if (subData.AA) {
@@ -8582,8 +8588,7 @@ var android = (function () {
                         }
                     }
                     if (this.IMAGE_DATA.length) {
-                        const rotate = [];
-                        const normal = [];
+                        const D = [];
                         for (const item of this.IMAGE_DATA) {
                             const scaleX = svg.width / svg.viewBox.width;
                             const scaleY = svg.height / svg.viewBox.height;
@@ -8601,26 +8606,31 @@ var android = (function () {
                                 height: $util$n.formatPX(height),
                                 left: x !== 0 ? $util$n.formatPX(x) : '',
                                 top: y !== 0 ? $util$n.formatPX(y) : '',
-                                src: Resource.addImage({ mdpi: item.href })
+                                src: Resource.addImage({ mdpi: item.href }),
+                                rotate: []
                             };
-                            if (item.rotateOrigin !== undefined && item.rotateOrigin.angle) {
-                                data.fromDegrees = item.rotateOrigin.angle.toString();
-                                data.visible = item.visible ? 'true' : 'false';
-                                rotate.push(data);
+                            if (item.rotateOrigin && item.rotateOrigin.angle) {
+                                data.rotate.push({
+                                    src: data.src,
+                                    fromDegrees: item.rotateOrigin.angle.toString(),
+                                    visible: item.visible ? 'true' : 'false'
+                                });
+                                data.src = '';
                             }
-                            else if (data.visible) {
-                                normal.push(data);
+                            else if (!item.visible) {
+                                continue;
                             }
+                            D.push(data);
                         }
-                        const xml = $xml$9.createTemplate(TEMPLATES$1.LAYER_LIST, {
+                        let xml = $xml$9.createTemplate(TEMPLATES$1.LAYER_LIST, {
                             A: [],
                             B: false,
-                            C: [{ vectorName }],
-                            D: rotate,
-                            E: normal,
-                            F: false,
-                            G: false
+                            C: [{ src: vectorName }],
+                            D,
+                            E: false,
+                            F: false
                         });
+                        xml = $xml$9.formatTemplate(xml);
                         drawable = Resource.getStoredName('drawables', xml);
                         if (drawable === '') {
                             drawable = templateName;
@@ -8755,10 +8765,10 @@ var android = (function () {
             if (path.clipPath) {
                 const clipPath = svg.patterns.clipPath.get(path.clipPath);
                 if (clipPath) {
-                    const groupRect = new $SvgG(clipPath);
-                    groupRect.build(true, this.options.excludeFromTransform);
-                    groupRect.synchronize();
-                    groupRect.each((child) => {
+                    const g = new $SvgG(clipPath);
+                    g.build(true, this.options.excludeFromTransform);
+                    g.synchronize();
+                    g.each((child) => {
                         if (child.path) {
                             child.build(true, this.options.excludeFromTransform);
                             if (child.path.value) {

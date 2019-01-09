@@ -75,7 +75,7 @@ function getTextBottom<T extends View>(nodes: T[]) {
 }
 
 function checkSingleLine<T extends View>(node: T, nowrap = false) {
-    if (node.textElement && node.cssParent('textAlign', true) !== 'center' && !node.hasWidth && !node.multiLine && (nowrap || node.textContent.trim().split(String.fromCharCode(32)).length > 0)) {
+    if (node.textElement && node.cssParent('textAlign', true) !== 'center' && !node.hasWidth && !node.multiline && (nowrap || node.textContent.trim().split(String.fromCharCode(32)).length > 0)) {
         node.android('singleLine', 'true');
     }
 }
@@ -1308,12 +1308,12 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 let dimension = item.bounds;
                 if (item.element && !item.hasWidth && item.inlineText) {
                     const bounds = $dom.getRangeClientRect(item.element);
-                    if (bounds.multiLine || bounds.width < item.box.width) {
+                    if (bounds.multiline || bounds.width < item.box.width) {
                         dimension = bounds;
-                        if (item.multiLine === 0) {
-                            item.multiLine = bounds.multiLine;
+                        if (item.multiline === 0) {
+                            item.multiline = bounds.multiline;
                         }
-                        if (firefoxEdge && bounds.multiLine && !/^\s*\n+/.test(item.textContent)) {
+                        if (firefoxEdge && bounds.multiline && !/^\s*\n+/.test(item.textContent)) {
                             rangeMultiLine.add(item);
                         }
                     }
@@ -1341,13 +1341,13 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                 if (i === 1 && item.plainText && !previous.rightAligned) {
                                     connected = siblings.length === 0 && !/\s+$/.test(previous.textContent) && !/^\s+/.test(item.textContent);
                                 }
-                                if (checkLineWrap && !connected && (rangeMultiLine.has(previous) || previous.multiLine && $dom.hasLineBreak(previous.element, false, true))) {
+                                if (checkLineWrap && !connected && (rangeMultiLine.has(previous) || previous.multiline && $dom.hasLineBreak(previous.element, false, true))) {
                                     return true;
                                 }
                             }
                             if (checkLineWrap && !connected && (
                                     checkWidthWrap() ||
-                                    item.multiLine && $dom.hasLineBreak(item.element) ||
+                                    item.multiline && $dom.hasLineBreak(item.element) ||
                                     item.preserveWhiteSpace && /^\n+/.test(item.textContent)
                                ))
                             {
@@ -1387,10 +1387,10 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             item.anchor(alignParent, 'true');
                             rowPreviousLeft = undefined;
                         }
-                        if (startNewRow && item.multiLine) {
+                        if (startNewRow && item.multiline) {
                             checkSingleLine(previous, checkLineWrap);
                         }
-                        rowWidth = Math.min(0, startNewRow && !previous.multiLine && item.multiLine && !cleared.has(item) ? item.linear.right - node.box.right : 0);
+                        rowWidth = Math.min(0, startNewRow && !previous.multiline && item.multiline && !cleared.has(item) ? item.linear.right - node.box.right : 0);
                         rows.push([item]);
                     }
                     else {
@@ -1410,7 +1410,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 if (siblings.length && !siblings.some(element => !!$dom.getElementAsNode(element) || $dom.isLineBreak(element))) {
                     const betweenStart = $dom.getRangeClientRect(siblings[0]);
                     const betweenEnd = siblings.length > 1 ? $dom.getRangeClientRect(siblings[siblings.length - 1]) : null;
-                    if (!betweenStart.multiLine && (betweenEnd === null || !betweenEnd.multiLine)) {
+                    if (!betweenStart.multiline && (betweenEnd === null || !betweenEnd.multiline)) {
                         previousOffset = betweenEnd ? betweenStart.left - betweenEnd.right : betweenStart.width;
                     }
                 }

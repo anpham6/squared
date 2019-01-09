@@ -130,7 +130,6 @@ export interface TemplateDataA {
     D?: TemplateDataAA[] | false;
     E?: TemplateDataAA[] | false;
     F?: TemplateDataAA[] | false;
-    G?: TemplateDataAA[] | false;
     [name: string]: Undefined<string | ExternalData[] | false>;
 }
 
@@ -141,7 +140,6 @@ export interface TemplateDataAA {
     DD?: TemplateDataAAA[] | false;
     EE?: TemplateDataAAA[] | false;
     FF?: TemplateDataAAA[] | false;
-    GG?: TemplateDataAAA[] | false;
     [name: string]: Undefined<string | ExternalData[] | false>;
 }
 
@@ -152,7 +150,6 @@ export interface TemplateDataAAA {
     DDD?: any[] | false;
     EEE?: any[] | false;
     FFF?: any[] | false;
-    GGG?: any[] | false;
     [name: string]: Undefined<string | ExternalData[] | false>;
 }
 

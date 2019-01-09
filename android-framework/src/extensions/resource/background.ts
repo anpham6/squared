@@ -14,17 +14,22 @@ import View from '../../view';
 import { getXmlNs } from '../../lib/util';
 
 type BackgroundImage = {
-    src: string;
+    src?: string;
     top: string;
     right: string;
     bottom: string;
     left: string;
+    width: string;
+    height: string;
+    bitmap: ImageBitmap[];
+};
+
+type ImageBitmap = {
+    src: string;
     gravity: string;
     tileMode: string;
     tileModeX: string;
     tileModeY: string;
-    width: string;
-    height: string;
 };
 
 const $enum = squared.base.lib.enumeration;
@@ -158,7 +163,7 @@ function insertDoubleBorder(data: ExternalData, border: BorderAttribute, top: bo
     const rightWidth = baseWidth + offset;
     let indentWidth = `${$util.formatPX(width - baseWidth)}`;
     let hideWidth = `-${indentWidth}`;
-    data.G.push({
+    data.F.push({
         top: top ? '' : hideWidth,
         right: right ? '' : hideWidth,
         bottom: bottom ? '' : hideWidth,
@@ -170,7 +175,7 @@ function insertDoubleBorder(data: ExternalData, border: BorderAttribute, top: bo
         indentWidth = `${$util.formatPX(width)}`;
         hideWidth = `-${indentWidth}`;
     }
-    data.G.push({
+    data.F.push({
         top: top ? indentWidth : hideWidth,
         right: right ? indentWidth : hideWidth,
         bottom: bottom ? indentWidth : hideWidth,
@@ -272,8 +277,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             borderFiltered.push(item);
                         }
                     });
-                    const images5: BackgroundImage[] = [];
-                    const images6: BackgroundImage[] = [];
+                    const imagesE: BackgroundImage[] = [];
+                    const imagesD: BackgroundImage[] = [];
                     let data: TemplateDataA;
                     let resourceName = '';
                     for (let i = 0; i < backgroundImage.length; i++) {
@@ -415,13 +420,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         right: boxPosition.right !== 0 ? $util.formatPX(boxPosition.right) : '',
                                         bottom: boxPosition.bottom !== 0 ? $util.formatPX(boxPosition.bottom) : '',
                                         left: boxPosition.left !== 0 ? $util.formatPX(boxPosition.left) : '',
-                                        gravity,
-                                        tileMode,
-                                        tileModeX,
-                                        tileModeY,
                                         width,
                                         height,
-                                        src: backgroundImage[i]
+                                        bitmap: []
                                     };
                                     if (!(backgroundSize[i] === 'auto' || backgroundSize[i] === 'auto auto' || backgroundSize[i] === 'initial')) {
                                         switch (backgroundSize[i]) {
@@ -452,31 +453,41 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         }
                                     }
                                     if (gravity !== '' || tileMode !== '' || tileModeX !== '' || tileModeY !== '') {
-                                        images6.push(imageData);
+                                        imageData.bitmap.push({
+                                            src: backgroundImage[i],
+                                            gravity,
+                                            tileMode,
+                                            tileModeX,
+                                            tileModeY,
+                                        });
+                                        imagesD.push(imageData);
                                     }
                                     else {
-                                        images5.push(imageData);
+                                        imageData.src = backgroundImage[i];
+                                        imagesE.push(imageData);
                                     }
                                 }
                             }
                         }
                     }
-                    images6.sort((a, b) => {
-                        if (!(a.tileModeX === 'repeat' || a.tileModeY === 'repeat' || a.tileMode === 'repeat')) {
+                    imagesD.sort((a, b) => {
+                        const bitmapA = a.bitmap[0];
+                        const bitmapB = b.bitmap[0];
+                        if (!(bitmapA.tileModeX === 'repeat' || bitmapA.tileModeY === 'repeat' || bitmapA.tileMode === 'repeat')) {
                             return 1;
                         }
-                        else if (!(b.tileModeX === 'repeat' || b.tileModeY === 'repeat' || b.tileMode === 'repeat')) {
+                        else if (!(bitmapB.tileModeX === 'repeat' || bitmapB.tileModeY === 'repeat' || bitmapB.tileMode === 'repeat')) {
                             return -1;
                         }
                         else {
-                            if (a.tileMode === 'repeat') {
+                            if (bitmapA.tileMode === 'repeat') {
                                 return -1;
                             }
-                            else if (b.tileMode === 'repeat') {
+                            else if (bitmapB.tileMode === 'repeat') {
                                 return 1;
                             }
                             else {
-                                return b.tileModeX === 'repeat' || b.tileModeY === 'repeat' ? 1 : -1;
+                                return bitmapB.tileModeX === 'repeat' || bitmapB.tileModeY === 'repeat' ? 1 : -1;
                             }
                         }
                     });
@@ -514,7 +525,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             vectorName = `${node.tagName.toLowerCase()}_${node.controlId}_gradient`;
                             STORED.drawables.set(vectorName, xml);
                         }
-                        backgroundVector.push({ vectorName });
+                        backgroundVector.push({ src: vectorName });
                     }
                     let template: StringMap;
                     const border = stored.border;
@@ -538,10 +549,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 A: backgroundColor,
                                 B: !vectorGradient && backgroundGradient.length ? backgroundGradient : false,
                                 C: backgroundVector,
-                                D: false,
-                                E: images5.length ? images5 : false,
-                                F: images6.length ? images6 : false,
-                                G: Resource.isBorderVisible(border) || borderRadius ? [{ stroke, corners: borderRadius }] : false
+                                D: imagesD.length ? imagesD : false,
+                                E: imagesE.length ? imagesE : false,
+                                F: Resource.isBorderVisible(border) || borderRadius ? [{ stroke, corners: borderRadius }] : false
                             };
                         }
                     }
@@ -551,10 +561,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             A: backgroundColor,
                             B: !vectorGradient && backgroundGradient.length ? backgroundGradient : false,
                             C: backgroundVector,
-                            D: false,
-                            E: images5.length ? images5 : false,
-                            F: images6.length ? images6 : false,
-                            G: []
+                            D: imagesD.length ? imagesD : false,
+                            E: imagesE.length ? imagesE : false,
+                            F: []
                         };
                         const borderWidth = new Set(borderFiltered.map(item => item.width));
                         const borderStyle = new Set(borderFiltered.map(item => getBorderStyle(item)));
@@ -576,12 +585,12 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     borderRadius
                                 ]);
                             }
-                            else if (data.G) {
+                            else if (data.F) {
                                 const hideWidth = `-${$util.formatPX(getHideWidth(width))}`;
                                 const leftTop = !borderVisible[0] && !borderVisible[3];
                                 const topOnly = !borderVisible[0] && borderVisible[1] && borderVisible[2] && borderVisible[3];
                                 const leftOnly = borderVisible[0] && borderVisible[1] && borderVisible[2] && !borderVisible[3];
-                                data.G.push({
+                                data.F.push({
                                     top: borderVisible[0] ? '' : hideWidth,
                                     right: borderVisible[1] ? (borderVisible[3] || leftTop || leftOnly ? '' : borderData.width) : hideWidth,
                                     bottom: borderVisible[2] ? (borderVisible[0] || leftTop || topOnly ? '' : borderData.width) : hideWidth,
@@ -607,14 +616,14 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                             borderRadius
                                         ]);
                                     }
-                                    else if (data.G) {
+                                    else if (data.F) {
                                         const hasInset = width > 1 && (item.style === 'groove' || item.style === 'ridge');
                                         const outsetWidth = hasInset ? Math.ceil(width / 2) : width;
                                         const baseWidth = getHideWidth(outsetWidth);
                                         const visible = !visibleAll && item.width === '1px';
                                         let hideWidth = `-${$util.formatPX(baseWidth)}`;
                                         let hideTopWidth = `-${$util.formatPX(baseWidth + (visibleAll ? 1 : 0))}`;
-                                        data.G.push({
+                                        data.F.push({
                                             top:  i === 0 ? '' : hideTopWidth,
                                             right: i === 1 ? (visible ? item.width : '') : hideWidth,
                                             bottom: i === 2 ? (visible ? item.width : '') : hideWidth,
@@ -625,7 +634,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         if (hasInset) {
                                             hideWidth = `-${$util.formatPX(getHideWidth(width))}`;
                                             hideTopWidth = `-${$util.formatPX(width + (visibleAll ? 1 : 0))}`;
-                                            data.G.unshift({
+                                            data.F.unshift({
                                                 top:  i === 0 ? '' : hideTopWidth,
                                                 right: i === 1 ? (visible ? item.width : '') : hideWidth,
                                                 bottom: i === 2 ? (visible ? item.width : '') : hideWidth,

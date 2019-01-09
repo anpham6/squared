@@ -25,7 +25,7 @@ declare global {
             controlName: string;
             renderDepth: number;
             renderPositionId: string;
-            multiLine: number;
+            multiline: number;
             overflow: number;
             documentParent: Node;
             parent?: Node;

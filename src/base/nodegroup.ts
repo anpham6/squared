@@ -137,8 +137,8 @@ export default abstract class NodeGroup extends Node {
         return value !== '' ? value === 'baseline' : this.every(node => node.baseline);
     }
 
-    get multiLine() {
-        return this.children.reduce((a, b) => a + b.multiLine, 0);
+    get multiline() {
+        return this.children.reduce((a, b) => a + b.multiline, 0);
     }
 
     get display() {

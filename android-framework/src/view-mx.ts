@@ -486,7 +486,7 @@ export default (Base: Constructor<squared.base.Node>) => {
             }
             if (!hasWidth) {
                 if (this.plainText) {
-                    this.android('layout_width', renderParent && this.bounds.width > renderParent.box.width && this.multiLine && this.alignParent('left') ? 'match_parent' : 'wrap_content', false);
+                    this.android('layout_width', renderParent && this.bounds.width > renderParent.box.width && this.multiline && this.alignParent('left') ? 'match_parent' : 'wrap_content', false);
                 }
                 else if (children.filter(node => (node.inlineStatic || $util.isUnit(node.cssInitial('width'))) && !node.autoMargin.horizontal).some(node => Math.ceil(node.bounds.width) >= this.box.width)) {
                     this.android('layout_width', 'wrap_content', false);
@@ -522,7 +522,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                                     parent.blockStatic && (this.singleChild || this.alignedVertically(this.previousSiblings()))
                                 )
                             ) ||
-                            this.groupParent && children.some(item => !(item.plainText && item.multiLine) && item.linear.width >= this.documentParent.box.width)
+                            this.groupParent && children.some(item => !(item.plainText && item.multiline) && item.linear.width >= this.documentParent.box.width)
                         ))
                     {
                         this.android('layout_width', 'match_parent', false);

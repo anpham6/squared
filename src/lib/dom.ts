@@ -195,7 +195,7 @@ export function getRangeClientRect(element: Element): TextDimensions {
     range.selectNodeContents(element);
     const domRect = Array.from(range.getClientRects()).filter(item => !(Math.round(item.width) === 0 && withinFraction(item.left, item.right)));
     let bounds: RectDimensions = newRectDimensions();
-    let multiLine = 0;
+    let multiline = 0;
     if (domRect.length) {
         bounds = assignBounds(domRect[0]);
         const top = new Set([bounds.top]);
@@ -212,11 +212,11 @@ export function getRangeClientRect(element: Element): TextDimensions {
             bounds.top = minArray(Array.from(top));
             bounds.bottom = maxArray(Array.from(bottom));
             if (domRect[domRect.length - 1].top >= domRect[0].bottom && element.textContent && (element.textContent.trim() !== '' || /^\s*\n/.test(element.textContent))) {
-                multiLine = domRect.length - 1;
+                multiline = domRect.length - 1;
             }
         }
     }
-    return { ...bounds, multiLine };
+    return { ...bounds, multiline };
 }
 
 export function assignBounds(bounds: RectDimensions | DOMRect): RectDimensions {
