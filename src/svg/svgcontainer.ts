@@ -14,7 +14,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgViewable
         return super.append(item);
     }
 
-    public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual ) {
+    public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
         this.clear();
         for (let i = 0; i < this.element.children.length; i++) {
             const item = this.element.children[i];

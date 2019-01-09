@@ -170,111 +170,114 @@ function getSvgOffset(element: SVGGraphicsElement, baseElement: SVGGraphicsEleme
 }
 
 function partitionTransforms(element: SVGGraphicsElement, transform: SvgTransform[], rx = 1, ry = 1): [SvgTransform[][], SvgTransform[]] {
-    if (element instanceof SVGCircleElement || element instanceof SVGEllipseElement) {
+    if (transform.length && (element instanceof SVGCircleElement || element instanceof SVGEllipseElement)) {
         const index = transform.findIndex(item => item.type === SVGTransform.SVG_TRANSFORM_ROTATE);
         if (index !== -1 && (rx !== ry || transform.length > 1 && transform.some(item => item.type === SVGTransform.SVG_TRANSFORM_SCALE && item.matrix.a !== item.matrix.d))) {
-            segmentTransforms(element, transform, rx, ry);
+            return segmentTransforms(element, transform, rx, ry);
         }
     }
     return [[], transform];
 }
 
 function segmentTransforms(element: SVGGraphicsElement, transform: SvgTransform[], rx = 1, ry = 1): [SvgTransform[][], SvgTransform[]] {
-    const host: SvgTransform[][] = [];
-    const client: SvgTransform[] = [];
-    const rotateOrigin = transform[0].css ? [] : $utilS.getRotateOrigin(element);
-    rotateOrigin.reverse();
-    const partition = transform.slice().reverse();
-    const typeIndex = new Set<number>();
-    let current: SvgTransform[] = [];
-    function restart(item?: SvgTransform) {
-        if (current.length) {
-            current.reverse();
-            host.push(current);
-            current = [];
-            if (item) {
-                current.push(item);
+    if (transform.length) {
+        const host: SvgTransform[][] = [];
+        const client: SvgTransform[] = [];
+        const rotateOrigin = transform[0].css ? [] : $utilS.getRotateOrigin(element);
+        rotateOrigin.reverse();
+        const partition = transform.slice().reverse();
+        const typeIndex = new Set<number>();
+        let current: SvgTransform[] = [];
+        function restart(item?: SvgTransform) {
+            if (current.length) {
+                current.reverse();
+                host.push(current);
+                current = [];
+                if (item) {
+                    current.push(item);
+                }
+                typeIndex.clear();
             }
-            typeIndex.clear();
         }
-    }
-    for (let i = 0; i < partition.length; i++) {
-        const item = partition[i];
-        let prerotate = host.length === 0 && current.length === 0;
-        if (!prerotate && typeIndex.has(item.type)) {
-            const previous = current[current.length - 1];
-            if (item.type === previous.type) {
+        for (let i = 0; i < partition.length; i++) {
+            const item = partition[i];
+            let prerotate = host.length === 0 && current.length === 0;
+            if (!prerotate && typeIndex.has(item.type)) {
+                const previous = current[current.length - 1];
+                if (item.type === previous.type) {
+                    switch (item.type) {
+                        case SVGTransform.SVG_TRANSFORM_TRANSLATE:
+                            previous.matrix.e += item.matrix.e;
+                            previous.matrix.f += item.matrix.f;
+                            continue;
+                        case SVGTransform.SVG_TRANSFORM_SCALE:
+                            previous.matrix.a *= item.matrix.a;
+                            previous.matrix.d *= item.matrix.d;
+                            continue;
+                    }
+                }
+                restart(item);
+            }
+            else {
                 switch (item.type) {
                     case SVGTransform.SVG_TRANSFORM_TRANSLATE:
-                        previous.matrix.e += item.matrix.e;
-                        previous.matrix.f += item.matrix.f;
-                        continue;
+                        if (prerotate) {
+                            client.push(item);
+                        }
+                        else {
+                            current.push(item);
+                        }
+                        break;
                     case SVGTransform.SVG_TRANSFORM_SCALE:
-                        previous.matrix.a *= item.matrix.a;
-                        previous.matrix.d *= item.matrix.d;
-                        continue;
-                }
-            }
-            restart(item);
-        }
-        else {
-            switch (item.type) {
-                case SVGTransform.SVG_TRANSFORM_TRANSLATE:
-                    if (prerotate) {
-                        client.push(item);
-                    }
-                    else {
-                        current.push(item);
-                    }
-                    break;
-                case SVGTransform.SVG_TRANSFORM_SCALE:
-                    if (prerotate) {
-                        client.push(item);
-                    }
-                    else {
-                        current.push(item);
-                    }
-                    break;
-                case SVGTransform.SVG_TRANSFORM_MATRIX:
-                    if (prerotate && item.matrix.b === 0 && item.matrix.c === 0) {
-                        client.push(item);
-                    }
-                    else {
+                        if (prerotate) {
+                            client.push(item);
+                        }
+                        else {
+                            current.push(item);
+                        }
+                        break;
+                    case SVGTransform.SVG_TRANSFORM_MATRIX:
+                        if (prerotate && item.matrix.b === 0 && item.matrix.c === 0) {
+                            client.push(item);
+                        }
+                        else {
+                            current.push(item);
+                            prerotate = false;
+                        }
+                        break;
+                    case SVGTransform.SVG_TRANSFORM_ROTATE:
+                        if (rotateOrigin.length) {
+                            const origin = rotateOrigin.shift() as SvgPoint;
+                            if (origin.angle === item.angle) {
+                                item.origin = origin;
+                            }
+                        }
+                        if (prerotate && rx === ry && (i === 0 || client[client.length - 1].type === SVGTransform.SVG_TRANSFORM_ROTATE)) {
+                            client.push(item);
+                        }
+                        else {
+                            if (!prerotate) {
+                                restart();
+                            }
+                            current.push(item);
+                            continue;
+                        }
+                        break;
+                    case SVGTransform.SVG_TRANSFORM_SKEWX:
+                    case SVGTransform.SVG_TRANSFORM_SKEWY:
                         current.push(item);
                         prerotate = false;
-                    }
-                    break;
-                case SVGTransform.SVG_TRANSFORM_ROTATE:
-                    if (rotateOrigin.length) {
-                        const origin = rotateOrigin.shift() as SvgPoint;
-                        if (origin.angle === item.angle) {
-                            item.origin = origin;
-                        }
-                    }
-                    if (prerotate && rx === ry && (i === 0 || client[client.length - 1].type === SVGTransform.SVG_TRANSFORM_ROTATE)) {
-                        client.push(item);
-                    }
-                    else {
-                        if (!prerotate) {
-                            restart();
-                        }
-                        current.push(item);
-                        continue;
-                    }
-                    break;
-                case SVGTransform.SVG_TRANSFORM_SKEWX:
-                case SVGTransform.SVG_TRANSFORM_SKEWY:
-                    current.push(item);
-                    prerotate = false;
-                    break;
+                        break;
+                }
+            }
+            if (!prerotate) {
+                typeIndex.add(item.type);
             }
         }
-        if (!prerotate) {
-            typeIndex.add(item.type);
-        }
+        restart();
+        return [host, client];
     }
-    restart();
-    return [host, client];
+    return [[], transform];
 }
 
 export default class ResourceSvg<T extends View> extends squared.base.Extension<T> {
@@ -1094,21 +1097,24 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
         if (transformable) {
             const name = target.name;
             const groupName = `group_${name}`;
-            const canTranslate = target instanceof $Svg || target instanceof $SvgUseSymbol;
-            const transform = segmentTransforms(target.element, target.transform)[0];
-            if (transform.length) {
+            const translatable = target instanceof $Svg || target instanceof $SvgUseSymbol;
+            const [transformHost, transformClient] = segmentTransforms(target.element, target.transform);
+            if (transformHost.length) {
                 const transformed: SvgTransform[] = [];
-                for (let i = 0; i < transform.length; i++) {
+                for (let i = 0; i < transformHost.length; i++) {
                     group[0].push({
                         groupName: `${name}_transform_${i + 1}`,
-                        ...createTransformData(transform[i])
+                        ...createTransformData(transformHost[i])
                     });
-                    transformed.push(...transform[i]);
+                    transformed.push(...transformHost[i]);
                 }
                 target.baseValue.transformed = transformed.reverse();
             }
-            this.queueAnimations(target, groupName, item => item instanceof $SvgAnimateTransform || canTranslate && (item.attributeName === 'x' || item.attributeName === 'y'));
-            group[0].push({ groupName });
+            this.queueAnimations(target, groupName, item => item instanceof $SvgAnimateTransform || translatable && (item.attributeName === 'x' || item.attributeName === 'y'));
+            group[0].push({
+                groupName,
+                ...createTransformData(transformClient)
+            });
             if ((target instanceof $Svg || target instanceof $SvgUseSymbol) && (target.x !== 0 || target.y !== 0)) {
                 group[0].push({
                     groupName: `${name}_translate`,
@@ -1161,6 +1167,13 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
         for (const attr in path) {
             if ($util.isString(path[attr])) {
                 result[attr] = path[attr];
+            }
+        }
+        if (target.parent instanceof $SvgG || target.parent instanceof $SvgUseSymbol) {
+            const opacity = parseFloat(target.parent.opacity);
+            if (opacity < 1) {
+                result.fillOpacity = (parseFloat(result.fillOpacity || '1') * opacity).toString();
+                result.strokeOpacity = (parseFloat(result.strokeOpacity || '1') * opacity).toString();
             }
         }
         if (path.clipPath) {

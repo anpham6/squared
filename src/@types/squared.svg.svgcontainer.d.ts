@@ -21,7 +21,7 @@ declare global {
         }
 
         interface SvgUseSymbol extends SvgContainer, SvgViewRect, SvgViewBox, SvgPaint {
-            readonly element: SVGUseElement;
+            element: SVGUseElement;
             readonly symbolElement: SVGSymbolElement;
         }
 

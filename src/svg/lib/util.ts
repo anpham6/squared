@@ -135,14 +135,14 @@ export function setOpacity(element: SVGGraphicsElement, value: string) {
     }
 }
 
-export function getHrefTargetElement(element: Element, parentElement?: SVGGraphicsElement | HTMLElement | null) {
+export function getHrefTargetElement(element: Element, parentElement?: SVGElement | HTMLElement | null) {
     const href = element.attributes.getNamedItem('href');
     if (href && href.value.charAt(0) === '#') {
         const id = href.value.substring(1);
         if (parentElement) {
             for (const target of Array.from(parentElement.querySelectorAll('*'))) {
                 if (target.id === id) {
-                    if (target instanceof SVGGraphicsElement) {
+                    if (target instanceof SVGElement) {
                         return target;
                     }
                     else {
@@ -153,7 +153,7 @@ export function getHrefTargetElement(element: Element, parentElement?: SVGGraphi
         }
         else {
             const target = document.getElementById(id);
-            if (target instanceof SVGGraphicsElement) {
+            if (target instanceof SVGElement) {
                 return target;
             }
         }
@@ -212,11 +212,11 @@ export function createTransform(type: number, matrix: SvgMatrix | DOMMatrix, ang
 
 export function getRotateOrigin(element: SVGGraphicsElement): SvgPoint[] {
     const result: SvgPoint[] = [];
-    const attr = element.attributes.getNamedItem('transform');
-    if (attr) {
-        const pattern = /rotate\((-?[\d.]+),\s*(-?[\d.]+),\s*(-?[\d.]+)\)/g;
+    const transform = element.attributes.getNamedItem('transform');
+    if (transform) {
+        const pattern = /rotate\((-?[\d.]+),?\s*(-?[\d.]+),?\s*(-?[\d.]+)\)/g;
         let match: RegExpExecArray | null = null;
-        while ((match = pattern.exec(attr.value)) !== null) {
+        while ((match = pattern.exec(transform.value)) !== null) {
             result.push({
                 angle: parseFloat(match[1]),
                 x: parseFloat(match[2]),

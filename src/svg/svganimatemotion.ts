@@ -40,7 +40,7 @@ export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.
             const item = element.children[i];
             if (item.tagName === 'mpath') {
                 const target = getHrefTargetElement(item);
-                if (target) {
+                if (target instanceof SVGGraphicsElement) {
                     this.mpath = target;
                     break;
                 }

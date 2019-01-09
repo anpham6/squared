@@ -26,10 +26,6 @@ export default <T extends Constructor<squared.svg.SvgBase>>(Base: T) => {
         public parentElement: SVGGraphicsElement | null = null;
 
         public setPaint() {
-            const opacity = this.getAttribute('opacity');
-            if (opacity !== '') {
-                this.opacity = Math.min(parseFloat(opacity), 1).toString();
-            }
             this.setAttribute('color');
             this.setColor('fill');
             this.setOpacity('fill');

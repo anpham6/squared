@@ -1,3 +1,5 @@
+import { SvgTransformExclusions, SvgTransformResidual } from './@types/object';
+
 import SvgPaint$MX from './svgpaint-mx';
 import SvgView$MX from './svgview-mx';
 import SvgViewRect$MX from './svgviewrect-mx';
@@ -6,7 +8,7 @@ import SvgShape from './svgshape';
 
 export default class SvgUseSymbol extends SvgPaint$MX(SvgViewRect$MX(SvgView$MX(SvgContainer))) implements squared.svg.SvgUseSymbol {
     constructor(
-        public readonly element: SVGUseElement,
+        public element: SVGUseElement,
         public readonly symbolElement: SVGSymbolElement)
     {
         super(element);
@@ -19,6 +21,19 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgViewRect$MX(SvgView$MX(
             SvgShape.synchronizeAnimate(this.element, this.animate, useKeyTime);
         }
         super.synchronize(useKeyTime);
+    }
+
+    public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
+        const element = this.element;
+        this.element = <SVGUseElement> (this.symbolElement as unknown);
+        super.build(exclusions, residual);
+        this.each(item => {
+            if (item instanceof SvgShape && item.path) {
+                item.path.parentElement = element;
+                item.path.setPaint();
+            }
+        });
+        this.element = element;
     }
 
     get viewBox() {

@@ -13,7 +13,7 @@ declare global {
             function isSvgImage(element: Element): element is SVGImageElement;
             function isVisible(element: Element): boolean;
             function setVisible(element: SVGGraphicsElement, value: boolean): void;
-            function getHrefTargetElement(element: Element, parentElement?: HTMLElement | null): SVGGraphicsElement | null;
+            function getHrefTargetElement(element: Element, parentElement?: HTMLElement | null): SVGElement | null;
             function sortNumber(values: number[], descending?: boolean): boolean;
             function getRotateOrigin(element: SVGGraphicsElement): SvgPoint[];
             function createTransform(type: number, matrix: SvgMatrix | DOMMatrix, angle?: number, x?: boolean, y?: boolean): SvgTransform;
