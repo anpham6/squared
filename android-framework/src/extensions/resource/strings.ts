@@ -1,3 +1,5 @@
+import { ResourceStringsOptions } from '../../@types/extension';
+
 import Resource from '../../resource';
 import View from '../../view';
 
@@ -7,7 +9,7 @@ const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
 export default class ResourceStrings<T extends View> extends squared.base.Extension<T> {
-    public readonly options = {
+    public readonly options: ResourceStringsOptions = {
         numberResourceValue: false
     };
 

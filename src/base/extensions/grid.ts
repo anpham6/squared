@@ -1,5 +1,5 @@
 import { ExtensionResult } from '../@types/application';
-import { GridCellData, GridData } from '../@types/extension';
+import { GridCellData, GridData, GridOptions } from '../@types/extension';
 
 import { EXT_NAME } from '../lib/constant';
 import { BOX_STANDARD } from '../lib/enumeration';
@@ -45,7 +45,7 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
         };
     }
 
-    public readonly options = {
+    public readonly options: GridOptions = {
         columnBalanceEqual: false
     };
 
@@ -219,8 +219,8 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                     }
                     return false;
                 });
-                const columnMax = columns.reduce((a, b) => Math.max(a, b.length), 0);
-                for (let l = 0; l < columnMax; l++) {
+                const maxColumn = columns.reduce((a, b) => Math.max(a, b.length), 0);
+                for (let l = 0; l < maxColumn; l++) {
                     for (let m = 0; m < columns.length; m++) {
                         if (columns[m][l] === undefined) {
                             columns[m][l] = { spacer: 1 } as any;
@@ -237,7 +237,7 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                 let spacer = 0;
                 for (let m = 0, start = 0; m < columns[l].length; m++) {
                     const item = columns[l][m];
-                    if (!(<any> item).spacer) {
+                    if (!(item as any).spacer) {
                         item.parent = node;
                         const data: GridCellData<T> = Object.assign(Grid.createDataCellAttribute(), item.data(EXT_NAME.GRID, 'cellData'));
                         if (columnBalance) {
@@ -295,7 +295,7 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                         }
                         item.data(EXT_NAME.GRID, 'cellData', data);
                     }
-                    else if ((<any> item).spacer === 1) {
+                    else if ((item as any).spacer === 1) {
                         spacer++;
                     }
                 }

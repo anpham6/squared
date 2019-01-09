@@ -230,7 +230,7 @@ export function getRotateOrigin(element: SVGGraphicsElement): SvgPoint[] {
 export function getTransform(element: SVGGraphicsElement): SvgTransform[] | undefined {
     const value = $dom.cssInline(element, 'transform');
     if (value !== '') {
-        let result: SvgTransform[] = [];
+        const result: SvgTransform[] = [];
         for (const name in REGEX_TRANSFORM) {
             const pattern = new RegExp(REGEX_TRANSFORM[name], 'g');
             let match: RegExpExecArray | null = null;
@@ -250,7 +250,7 @@ export function getTransform(element: SVGGraphicsElement): SvgTransform[] | unde
                         matrix.c = 0;
                         matrix.d = 1;
                     }
-                    result[match.index + 1] = createTransform(SVGTransform.SVG_TRANSFORM_ROTATE, matrix, angle, !isX, !isY);
+                    result[match.index] = createTransform(SVGTransform.SVG_TRANSFORM_ROTATE, matrix, angle, !isX, !isY);
                 }
                 else if (match[1].startsWith('skew')) {
                     const x = isY ? 0 : convertAngle(match[2], match[3]);
@@ -293,9 +293,13 @@ export function getTransform(element: SVGGraphicsElement): SvgTransform[] | unde
                 }
             }
         }
-        result = result.filter(item => item);
-        result.forEach(item => item.css = true);
-        return result;
+        return result.filter(item => {
+            if (item) {
+                item.css = true;
+                return true;
+            }
+            return false;
+        });
     }
     return undefined;
 }
@@ -322,7 +326,7 @@ export function getTransformOrigin(element: SVGGraphicsElement) {
             positions.push('center');
         }
         positions = positions.slice(0, 2);
-        const origin: Point = { x: null as any, y: null as any };
+        const origin: Nullable<Point> = { x: null, y: null };
         if (positions.includes('left')) {
             origin.x = 0;
         }
@@ -360,7 +364,7 @@ export function getTransformOrigin(element: SVGGraphicsElement) {
         if (origin.x || origin.y) {
             origin.x = origin.x || 0;
             origin.y = origin.y || 0;
-            return origin;
+            return <Point> origin;
         }
     }
     return undefined;

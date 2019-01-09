@@ -1,5 +1,6 @@
 import { ImageAsset, TemplateDataA, TemplateDataAA } from '../../../../src/base/@types/application';
 import { ResourceStoredMapAndroid } from '../../@types/application';
+import { ResourceBackgroundOptions } from '../../@types/extension';
 import { BackgroundGradient } from '../../@types/node';
 
 import { CONTAINER_NODE } from '../../lib/enumeration';
@@ -202,7 +203,7 @@ function checkBackgroundPosition(current: string, adjacent: string, defaultPosit
 }
 
 export default class ResourceBackground<T extends View> extends squared.base.Extension<T> {
-    public readonly options = {
+    public readonly options: ResourceBackgroundOptions = {
         autoSizeBackgroundImage: true
     };
 

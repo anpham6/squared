@@ -4,11 +4,12 @@ declare global {
     namespace squared.svg {
         interface SvgContainer extends Container<SvgView>, SvgBuildable {
             readonly element: SVGSVGElement | SVGGElement | SVGUseElement;
+            append(item: SvgViewable): this;
         }
 
         interface Svg extends SvgContainer, SvgViewRect, SvgViewBox {
-            readonly documentRoot: boolean;
             readonly element: SVGSVGElement;
+            readonly documentRoot: boolean;
             readonly patterns: {
                 clipPath: Map<string, SVGClipPathElement>;
                 gradient: Map<string, Gradient>;

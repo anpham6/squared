@@ -9,16 +9,16 @@ import SvgShape from './svgshape';
 import { getHrefTargetElement } from './lib/util';
 
 export default class Svg extends SvgViewRect$MX(SvgView$MX(SvgContainer)) implements squared.svg.Svg {
+    public readonly documentRoot: boolean;
+
     public readonly patterns = {
         clipPath: new Map<string, SVGClipPathElement>(),
         gradient: new Map<string, Gradient>()
     };
 
-    constructor(
-        public readonly element: SVGSVGElement,
-        public readonly documentRoot = true)
-    {
+    constructor(public readonly element: SVGSVGElement) {
         super(element);
+        this.documentRoot = element.parentElement instanceof HTMLElement;
         this.init();
         this.setRect();
     }

@@ -1,4 +1,5 @@
 import { ExtensionResult } from '../../../../src/base/@types/application';
+import { ConstraintGuidelineOptions } from '../../@types/extension';
 
 import { AXIS_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
@@ -11,7 +12,7 @@ const $enum = squared.base.lib.enumeration;
 const $util = squared.lib.util;
 
 export default class Guideline<T extends View> extends squared.base.Extension<T> {
-    public readonly options = {
+    public readonly options: ConstraintGuidelineOptions = {
         circlePosition: false
     };
 

@@ -1,6 +1,7 @@
 import { TemplateData, TemplateDataA, TemplateDataAA, TemplateDataAAA } from '../../../../src/base/@types/application';
-import { SvgTransform, SvgTransformExclusions } from '../../../../src/svg/@types/object';
+import { SvgTransform } from '../../../../src/svg/@types/object';
 import { ResourceStoredMapAndroid } from '../../@types/application';
+import { ResourceSvgOptions } from '../../@types/extension';
 
 import { BUILD_ANDROID } from '../../lib/enumeration';
 
@@ -33,13 +34,6 @@ import $SvgUse = squared.svg.SvgUse;
 import $SvgUseSymbol = squared.svg.SvgUseSymbol;
 import $SvgView = squared.svg.SvgView;
 import $utilS = squared.svg.lib.util;
-
-interface ResourceSvgOptions {
-    excludeFromTransform: SvgTransformExclusions;
-    vectorAnimateOrdering: string;
-    vectorAnimateInterpolator: string;
-    vectorAnimateAlwaysUseKeyframes: boolean;
-}
 
 interface AnimateGroup {
     element: SVGGraphicsElement;
@@ -88,9 +82,9 @@ interface GroupData extends TemplateDataAA {
 
 interface PathData extends Partial<$SvgPath> {
     name: string;
+    render: TransformData<string>[][];
     clipPaths: StringMap[];
     fillPattern: any;
-    shape: TransformData<string>[][];
 }
 
 interface PropertyValue {
@@ -102,6 +96,8 @@ interface KeyFrame {
     fraction: string;
     value: string;
 }
+
+type SvgGroup = $Svg | $SvgG | $SvgUseSymbol;
 
 const $color = squared.lib.color;
 const $dom = squared.lib.dom;
@@ -281,9 +277,9 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                         const targetSetData: TemplateDataA = { A: [] };
                         const animatorMap = new Map<string, PropertyValue[]>();
                         const sequentialMap = new Map<string, $SvgAnimate[]>();
+                        const transformMap = new Map<string, $SvgAnimateTransform[]>();
                         const together: $SvgAnimation[] = [];
                         const fillReplace: $SvgAnimation[] = [];
-                        const transformMap = new Map<string, $SvgAnimateTransform[]>();
                         const togetherTargets: $SvgAnimation[][] = [];
                         const fillReplaceTargets: $SvgAnimation[][] = [];
                         const transformTargets: $SvgAnimation[][] = [];
@@ -875,7 +871,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                     }
                 }
                 if (this.IMAGE_DATA.length) {
-                    const D: StringMap[] = [];
+                    const imageD: StringMap[] = [];
                     for (const item of this.IMAGE_DATA) {
                         const scaleX = svg.width / svg.viewBox.width;
                         const scaleY = svg.height / svg.viewBox.height;
@@ -907,13 +903,13 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                         else if (!item.visible) {
                             continue;
                         }
-                        D.push(data);
+                        imageD.push(data);
                     }
                     let xml = $xml.createTemplate(TEMPLATES.LAYER_LIST, <TemplateDataA> {
                         A: [],
                         B: false,
                         C: [{ src: vectorName }],
-                        D,
+                        D: imageD,
                         E: false,
                         F: false
                     });
@@ -944,15 +940,15 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
         this.application.controllerHandler.localSettings.unsupported.tagName.add('svg');
     }
 
-    private parseVectorData(node: T, svg: $Svg, group: $SvgContainer) {
-        const groupData = this.createGroup(group as any, svg !== group);
+    private parseVectorData(node: T, svg: $Svg, group: SvgGroup) {
+        const groupData = this.createGroup(group, svg !== group);
         for (let i = 0; i < group.children.length; i++) {
             const item = group.children[i];
             const CCC: ExternalData[] = [];
-            const DDD: ExternalData[] = [];
+            const DDD: TemplateData[] = [];
             if (item instanceof $SvgContainer) {
                 if (item.length) {
-                    this.parseVectorData(node, svg, item);
+                    this.parseVectorData(node, svg, <SvgGroup> item);
                     DDD.push({ templateName: item.name });
                 }
                 else {
@@ -978,7 +974,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
             }
             groupData.BB.push({ CCC, DDD });
         }
-        this.VECTOR_DATA.set(group['name'], groupData);
+        this.VECTOR_DATA.set(group.name, groupData);
     }
 
     private createGroup(target: $SvgView, transformable = false) {
@@ -1024,7 +1020,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
             render,
             clipPaths,
             fillPattern: false
-        } as any;
+        };
         const useTarget = target instanceof $SvgUse;
         const exclusions = useTarget ? ['x', 'y'] : [];
         if (path.transformResidual) {

@@ -141,7 +141,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
 
     public setBoxStyle() {
         for (const node of this.cache.elements) {
-            const boxStyle: BoxStyle = {
+            const boxStyle: Nullable<BoxStyle> = {
                 background: null,
                 borderTop: null,
                 borderRight: null,
@@ -154,7 +154,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                 backgroundRepeat: null,
                 backgroundPositionX: null,
                 backgroundPositionY: null
-            } as any;
+            };
             for (const attr in boxStyle) {
                 const value = node.css(attr);
                 switch (attr) {

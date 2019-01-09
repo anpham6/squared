@@ -14,6 +14,7 @@ declare global {
             transform: SvgTransform[];
             opacity: string;
             visible: boolean;
+            parent?: SvgContainer;
             readonly name: string;
         }
 

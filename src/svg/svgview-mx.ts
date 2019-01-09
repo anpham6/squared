@@ -3,6 +3,7 @@ import { SvgBaseValue, SvgTransform } from './@types/object';
 import SvgAnimate from './svganimate';
 import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
+import SvgContainber from './svgcontainer';
 
 import { getTransform, isVisible, setOpacity, setVisible } from './lib/util';
 
@@ -13,6 +14,7 @@ export default <T extends Constructor<squared.svg.SvgBase>>(Base: T) => {
         public baseValue: SvgBaseValue = {
             transformed: null
         };
+        public parent?: SvgContainber;
 
         private _name?: string;
         private _animate?: SvgAnimation[];

@@ -2,18 +2,25 @@ import { SvgTransformExclusions } from './@types/object';
 
 import { getHrefTargetElement, isSvgImage, isSvgShape } from './lib/util';
 
-export default class SvgContainer extends squared.lib.base.Container<squared.svg.SvgViewable> implements squared.svg.SvgContainer {
+type SvgViewable = squared.svg.SvgViewable;
+
+export default class SvgContainer extends squared.lib.base.Container<SvgViewable> implements squared.svg.SvgContainer {
     constructor(public readonly element: SVGGElement | SVGSVGElement | SVGUseElement) {
         super();
+    }
+
+    public append(item: SvgViewable) {
+        item.parent = this;
+        return super.append(item);
     }
 
     public build(residual = false, exclusions?: SvgTransformExclusions) {
         this.clear();
         for (let i = 0; i < this.element.children.length; i++) {
             const item = this.element.children[i];
-            let svg: squared.svg.SvgViewable | undefined;
+            let svg: SvgViewable | undefined;
             if (item instanceof SVGSVGElement) {
-                svg = new squared.svg.Svg(item, false);
+                svg = new squared.svg.Svg(item);
             }
             else if (item instanceof SVGGElement) {
                 svg = new squared.svg.SvgG(item);
@@ -39,8 +46,8 @@ export default class SvgContainer extends squared.lib.base.Container<squared.svg
                 svg = new squared.svg.SvgShape(item);
             }
             if (svg) {
-                svg.build(residual, exclusions);
                 this.append(svg);
+                svg.build(residual, exclusions);
             }
         }
     }
