@@ -144,13 +144,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static toPointList(values: SVGPointList | SvgPoint[]) {
         const result: SvgPoint[] = [];
-        if (values instanceof SVGPointList) {
-            for (let j = 0; j < values.numberOfItems; j++) {
-                const pt = values.getItem(j);
-                result.push({ x: pt.x, y: pt.y });
-            }
-        }
-        else {
+        if (Array.isArray(values)) {
             for (const pt of values as SvgPoint[]) {
                 const item: SvgPoint = { x: pt.x, y: pt.y };
                 if (pt.rx !== undefined && pt.ry !== undefined) {
@@ -158,6 +152,12 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     item.ry = pt.ry;
                 }
                 result.push(item);
+            }
+        }
+        else {
+            for (let j = 0; j < values.numberOfItems; j++) {
+                const pt = values.getItem(j);
+                result.push({ x: pt.x, y: pt.y });
             }
         }
         return result;
@@ -360,23 +360,21 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static toAnimateList(element: SVGElement) {
         const result: squared.svg.SvgAnimation[] = [];
-        if (element instanceof SVGGraphicsElement) {
-            for (let i = 0; i < element.children.length; i++) {
-                const item = element.children[i];
-                if (item instanceof SVGAnimationElement) {
-                    if (item instanceof SVGAnimateTransformElement) {
-                        result.push(new squared.svg.SvgAnimateTransform(item));
-                    }
-                    else if (item instanceof SVGAnimateMotionElement) {
-                        result.push(new squared.svg.SvgAnimateMotion(item));
-                    }
-                    else if (item instanceof SVGAnimateElement) {
-                        result.push(new squared.svg.SvgAnimate(item));
-                    }
-                    else {
-                        result.push(new squared.svg.SvgAnimation(item));
-                    }
-                }
+        for (let i = 0; i < element.children.length; i++) {
+            const item = element.children[i];
+            switch (item.tagName) {
+                case 'animateTransform':
+                    result.push(new squared.svg.SvgAnimateTransform(<SVGAnimateTransformElement> item));
+                    break;
+                case 'animateMotion':
+                    result.push(new squared.svg.SvgAnimateMotion(<SVGAnimateMotionElement> item));
+                    break;
+                case 'animate':
+                    result.push(new squared.svg.SvgAnimate(<SVGAnimateElement> item));
+                    break;
+                case 'set':
+                    result.push(new squared.svg.SvgAnimation(<SVGAnimationElement> item));
+                    break;
             }
         }
         return result;

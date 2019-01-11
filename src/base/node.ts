@@ -934,8 +934,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 if (this._element.nodeName === '#text') {
                     value = 'PLAINTEXT';
                 }
-                else if (this._element instanceof HTMLInputElement) {
-                    value = this._element.type;
+                else if (this._element.tagName === 'INPUT') {
+                    value = (<HTMLInputElement> this._element).type;
                 }
                 else {
                     value = this._element.tagName;
@@ -951,11 +951,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get htmlElement() {
-        return this._element instanceof HTMLElement;
+        if (this._cached.htmlElement === undefined) {
+            this._cached.htmlElement = this._element instanceof HTMLElement;
+        }
+        return this._cached.htmlElement;
     }
 
     get svgElement() {
-        return this._element instanceof SVGSVGElement;
+        return !!this._element && this._element.tagName === 'svg';
     }
 
     get styleElement() {
@@ -1065,7 +1068,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get dataset(): DOMStringMap {
-        return this._element instanceof HTMLElement ? this._element.dataset : {};
+        return this.htmlElement ? (<HTMLElement> this._element).dataset : {};
     }
 
     get excludeSection() {
@@ -1498,8 +1501,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             const element = this._element;
             let value = '';
             if (element) {
-                if (element instanceof HTMLElement) {
-                    value = element.textContent || element.innerText;
+                if (this.htmlElement) {
+                    value = element.textContent || (<HTMLElement> element).innerText;
                 }
                 else if (this.plainText) {
                     value = element.textContent || '';
@@ -1665,8 +1668,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get actualChildren() {
         if (this._cached.actualChildren === undefined) {
-            if (this._element instanceof HTMLElement) {
-                this._cached.actualChildren = $util.flatMap(Array.from(this._element.childNodes), (element: Element) => $dom.getElementAsNode(element) as T);
+            if (this.htmlElement) {
+                this._cached.actualChildren = $util.flatMap(Array.from((<HTMLElement> this._element).childNodes), (element: Element) => $dom.getElementAsNode(element) as T);
             }
             else if (this.groupParent) {
                 this._cached.actualChildren = this._initial.children.slice();
@@ -1683,9 +1686,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get firstChild() {
-        if (this._element instanceof HTMLElement) {
-            for (let i = 0; i < this._element.childNodes.length; i++) {
-                const node = $dom.getElementAsNode<T>(<Element> this._element.childNodes[i]);
+        if (this.htmlElement) {
+            const element = <HTMLElement> this._element;
+            for (let i = 0; i < element.childNodes.length; i++) {
+                const node = $dom.getElementAsNode<T>(<Element> element.childNodes[i]);
                 if (node) {
                     return node;
                 }
@@ -1695,9 +1699,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get lastChild() {
-        if (this._element instanceof HTMLElement) {
-            for (let i = this._element.childNodes.length - 1; i >= 0; i--) {
-                const node = $dom.getElementAsNode<T>(<Element> this._element.childNodes[i]);
+        if (this.htmlElement) {
+            const element = <HTMLElement> this._element;
+            for (let i = element.childNodes.length - 1; i >= 0; i--) {
+                const node = $dom.getElementAsNode<T>(<Element> element.childNodes[i]);
                 if (node && node.naturalElement) {
                     return node;
                 }

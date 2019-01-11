@@ -96,3 +96,5 @@ interface ColorStop {
     offset: string;
     opacity: number;
 }
+
+type SvgGroup = SVGGElement | SVGSVGElement | SVGUseElement;

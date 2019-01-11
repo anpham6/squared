@@ -1,8 +1,12 @@
+import { SvgAspectRatio } from '../svg/@types/object';
+
 import Container = squared.lib.base.Container;
+import { SvgAnimation } from '../svg/main';
 
 declare global {
     namespace squared.svg {
         interface SvgContainer extends Container<SvgView>, SvgBuildable {
+            aspectRatio: SvgAspectRatio;
             readonly element: SVGSVGElement | SVGGElement | SVGUseElement;
             append(item: SvgViewable): this;
         }
@@ -25,12 +29,26 @@ declare global {
             readonly symbolElement: SVGSymbolElement;
         }
 
+        type SvgGroup = Svg | SvgG | SvgUseSymbol;
+
         class SvgContainer implements SvgContainer {
-            constructor(element: SVGSVGElement | SVGGElement | SVGUseElement);
+            constructor(element: SvgGroup);
         }
 
         class Svg implements Svg {
-            constructor(element: SVGSVGElement);
+            public static instance(object: SvgBase): object is Svg;
+            public static instanceOfContainer(object: SvgBase): object is SvgContainer;
+            public static instanceOfElement(object: SvgBase): object is SvgElement;
+            public static instanceOfG(object: SvgBase): object is SvgG;
+            public static instanceOfUseSymbol(object: SvgBase): object is SvgUseSymbol;
+            public static instanceOfShape(object: SvgBase): object is SvgShape;
+            public static instanceOfImage(object: SvgBase): object is SvgImage;
+            public static instanceOfUse(object: SvgBase): object is SvgUse;
+            public static instanceOfSet(object: SvgAnimation): boolean;
+            public static instanceOfAnimate(object: SvgAnimation): object is SvgAnimate;
+            public static instanceOfAnimateTransform(object: SvgAnimation): object is SvgAnimateTransform;
+            public static instanceOfAnimateMotion(object: SvgAnimation): object is SvgAnimateMotion;
+            constructor(element: SVGSVGElement, documentRoot?: boolean);
         }
 
         class SvgG implements SvgG {

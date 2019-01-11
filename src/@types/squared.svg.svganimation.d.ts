@@ -5,6 +5,7 @@ declare global {
             begin: number[];
             to: string;
             duration: number;
+            parent?: SvgView | SvgPath;
             readonly element: SVGAnimationElement;
             setAttribute(attr: string, equality?: string): void;
             getAttribute(attr: string): string;
@@ -22,7 +23,6 @@ declare global {
             accumulateSum: boolean;
             fillFreeze: boolean;
             end?: number;
-            parent?: SvgView | SvgPath;
             sequential?: NameValue;
             readonly element: SVGAnimateElement;
         }

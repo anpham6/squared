@@ -1,12 +1,13 @@
 import { SvgTransformExclusions, SvgTransformResidual } from './@types/object';
 
+import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgPaint$MX from './svgpaint-mx';
 import SvgView$MX from './svgview-mx';
 import SvgViewRect$MX from './svgviewrect-mx';
 import SvgContainer from './svgcontainer';
 import SvgShape from './svgshape';
 
-export default class SvgUseSymbol extends SvgPaint$MX(SvgViewRect$MX(SvgView$MX(SvgContainer))) implements squared.svg.SvgUseSymbol {
+export default class SvgUseSymbol extends SvgPaint$MX(SvgViewRect$MX(SvgView$MX(SvgBaseVal$MX(SvgContainer)))) implements squared.svg.SvgUseSymbol {
     constructor(
         public element: SVGUseElement,
         public readonly symbolElement: SVGSymbolElement)
@@ -18,7 +19,7 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgViewRect$MX(SvgView$MX(
 
     public synchronize(useKeyTime = false) {
         if (this.animate.length) {
-            SvgShape.synchronizeAnimate(this.element, this.animate, useKeyTime);
+            SvgShape.synchronizeAnimate(this, this.animate, useKeyTime);
         }
         super.synchronize(useKeyTime);
     }
@@ -27,8 +28,8 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgViewRect$MX(SvgView$MX(
         const element = this.element;
         this.element = <SVGUseElement> (this.symbolElement as unknown);
         super.build(exclusions, residual);
-        this.each(item => {
-            if (item instanceof SvgShape && item.path) {
+        this.each((item: SvgShape) => {
+            if (item.path) {
                 item.path.parentElement = element;
                 item.path.setPaint();
             }

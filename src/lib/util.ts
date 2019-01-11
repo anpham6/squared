@@ -390,7 +390,7 @@ export function searchObject(obj: StringMap, value: string | StringMap) {
     return result;
 }
 
-export function hasValue(value: any) {
+export function hasValue<T>(value: T): value is T {
     return typeof value !== 'undefined' && value !== null && value.toString().trim() !== '';
 }
 

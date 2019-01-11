@@ -1,4 +1,4 @@
-import { SvgBaseValue, SvgPathCommand, SvgPoint, SvgRect, SvgRectBaseValue, SvgTransform, SvgTransformExclusions, SvgTransformResidual } from '../svg/@types/object';
+import { SvgPathCommand, SvgPoint, SvgRect, SvgTransform, SvgTransformExclusions, SvgTransformResidual } from '../svg/@types/object';
 
 import Container = squared.lib.base.Container;
 
@@ -8,12 +8,17 @@ declare global {
             readonly element: SVGGraphicsElement;
         }
 
-        interface SvgView extends SvgBase {
-            baseValue: SvgBaseValue;
+        interface SvgBaseVal extends SvgBase {
+            setBaseValue(attr: string, value?: any): boolean;
+            getBaseValue(attr: string): any;
+        }
+
+        interface SvgView extends SvgBaseVal {
             animate: SvgAnimation[];
             transform: SvgTransform[];
             opacity: string;
             visible: boolean;
+            transformed: SvgTransform[] | null;
             parent?: SvgContainer;
             readonly name: string;
         }
@@ -27,12 +32,12 @@ declare global {
         }
 
         interface SvgTransformable {
+            transformed: SvgTransform[] | null;
             rotateOrigin?: SvgPoint;
             transformResidual?: SvgTransform[][];
         }
 
         interface SvgViewRect extends SvgView, SvgRect {
-            baseValue: SvgRectBaseValue;
             setRect(): void;
         }
 

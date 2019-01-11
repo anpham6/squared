@@ -22,13 +22,12 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public by = '';
     public values: string[] = [];
     public keyTimes: number[] = [];
-    public repeatDuration: number;
     public calcMode = '';
     public additiveSum = false;
     public accumulateSum = false;
     public fillFreeze = false;
+    public repeatDuration: number;
     public end?: number;
-    public parent?: squared.svg.SvgView | squared.svg.SvgPath;
     public sequential?: NameValue;
 
     private _repeatCount: number;

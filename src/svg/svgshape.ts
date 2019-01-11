@@ -8,7 +8,7 @@ import SvgBuild from './svgbuild';
 import SvgElement from './svgelement';
 import SvgPath from './svgpath';
 
-import { SHAPES, getLeastCommonMultiple, getTransformOrigin, sortNumber } from './lib/util';
+import { SHAPES, SVG, getLeastCommonMultiple, getTransformOrigin, sortNumber } from './lib/util';
 
 type AnimateValue = number | Point[];
 type TimelineIndex = Map<number, AnimateValue>;
@@ -170,13 +170,16 @@ function getPathData(map: KeyTimeMap, path: SvgPath, freezeMap?: FreezeMap) {
             else if (freezeMap && freezeMap[attr]) {
                 values.push(freezeMap[attr].value);
             }
-            else if (path.baseValue[attr] !== null) {
-                values.push(path.baseValue[attr]);
+            else {
+                const value = path.getBaseValue(attr);
+                if (value !== undefined) {
+                    values.push(value);
+                }
             }
         });
         if (values.length === attrs.length) {
             let value: string | undefined;
-            const transform = path.baseValue.transformed;
+            const transform = path.transformed;
             if (transform && transform.length) {
                 switch (tagName) {
                     case 'line':
@@ -289,23 +292,23 @@ function getNumberValue(item: SvgAnimate, index: number, baseVal = 0, iteration 
 }
 
 export default class SvgShape extends SvgView$MX(SvgElement) implements squared.svg.SvgShape {
-    public static synchronizeAnimate(element: SVGGraphicsElement, animate: SvgAnimation[], useKeyTime = false, path?: SvgPath) {
+    public static synchronizeAnimate(instance: squared.svg.SvgViewable, animate: SvgAnimation[], useKeyTime = false, path?: SvgPath) {
+        const element = instance.element;
         const animations: SvgAnimate[] = [];
-        const tagName = element.tagName;
         let valuePoints = false;
-        for (const item of animate) {
-            if (item instanceof SvgAnimate && item.keyTimes.length > 1 && item.duration > 0 && item.begin.length) {
+        for (const item of animate as SvgAnimate[]) {
+            if (item.element.tagName === 'animate' && item.keyTimes.length > 1 && item.duration > 0 && item.begin.length) {
                 switch (item.attributeName) {
                     case 'r':
                     case 'cx':
                     case 'cy':
-                        if (tagName === 'circle') {
+                        if (SVG.circle(element)) {
                             animations.push(item);
                             break;
                         }
                     case 'rx':
                     case 'ry':
-                        if (tagName === 'ellipse') {
+                        if (SVG.ellipse(element)) {
                             animations.push(item);
                         }
                         break;
@@ -313,26 +316,26 @@ export default class SvgShape extends SvgView$MX(SvgElement) implements squared.
                     case 'x2':
                     case 'y1':
                     case 'y2':
-                        if (tagName === 'line') {
+                        if (SVG.line(element)) {
                             animations.push(item);
                         }
                         break;
                     case 'points':
-                        if (tagName === 'polyline' || tagName === 'polygon') {
+                        if (SVG.polyline(element) || SVG.polygon(element)) {
                             animations.push(item);
                             valuePoints = true;
                         }
                         break;
                     case 'x':
                     case 'y':
-                        if (element instanceof SVGSVGElement || element instanceof SVGUseElement) {
+                        if (SVG.svg(element) || SVG.use(element)) {
                             animations.push(item);
                             path = undefined;
                             break;
                         }
                     case 'width':
                     case 'height':
-                        if (tagName === 'rect') {
+                        if (SVG.rect(element)) {
                             animations.push(item);
                         }
                         break;
@@ -410,7 +413,10 @@ export default class SvgShape extends SvgView$MX(SvgElement) implements squared.
                 const groupBegin = Array.from(groupName[attr].keys());
                 const groupData = Array.from(groupName[attr].values());
                 let maxTime = -1;
-                let baseVal: AnimateValue = path && path.baseValue[attr] || (valuePoints ? [{ x: 0, y: 0 }] : 0);
+                let baseVal: AnimateValue = (path || instance).getBaseValue(attr);
+                if (baseVal === undefined) {
+                    baseVal = valuePoints ? [{ x: 0, y: 0 }] : 0;
+                }
                 animationEnd: {
                     for (let i = 0; i < groupBegin.length; i++) {
                         const begin = groupBegin[i];
@@ -639,30 +645,23 @@ export default class SvgShape extends SvgView$MX(SvgElement) implements squared.
                         indefiniteBeginMap[attr] = 0;
                     }
                     if (indefiniteMap[attr] === undefined && freezeMap[attr] === undefined) {
-                        let value: AnimateValue | undefined;
-                        let fillReplace: boolean;
-                        if (path && path.baseValue[attr] !== null) {
-                            value = path.baseValue[attr];
-                            fillReplace = insertMap.get(maxTime) !== value;
-                        }
-                        else {
-                            const optional = $util.optionalAsObject(element, `${attr}.baseVal.value`);
-                            if (typeof optional === 'number') {
-                                value = optional;
+                        const value = (path || instance).getBaseValue(attr);
+                        if (value !== undefined) {
+                            let fillReplace: boolean;
+                            if (typeof value === 'number') {
                                 fillReplace = insertMap.get(maxTime) !== value;
                             }
-                            else if (Array.isArray(optional)) {
-                                value = optional;
+                            else if (Array.isArray(value)) {
                                 fillReplace = JSON.stringify(insertMap.get(maxTime)) !== JSON.stringify(value);
                             }
                             else {
                                 fillReplace = false;
                             }
-                        }
-                        if (fillReplace) {
-                            maxTime++;
-                            insertMap.set(maxTime, value as AnimateValue);
-                            keyTimesRepeating.push(maxTime);
+                            if (fillReplace) {
+                                maxTime++;
+                                insertMap.set(maxTime, value as AnimateValue);
+                                keyTimesRepeating.push(maxTime);
+                            }
                         }
                     }
                 }
@@ -748,8 +747,8 @@ export default class SvgShape extends SvgView$MX(SvgElement) implements squared.
                 let x = 0;
                 let y = 0;
                 if (path === undefined) {
-                    x = $util.optionalAsNumber(element, `x.baseVal.value`);
-                    y = $util.optionalAsNumber(element, `y.baseVal.value`);
+                    x = instance.getBaseValue('x') || 0;
+                    y = instance.getBaseValue('y') || 0;
                 }
                 [repeatingResult, indefiniteResult].forEach(result => {
                     if (result) {
@@ -884,14 +883,17 @@ export default class SvgShape extends SvgView$MX(SvgElement) implements squared.
     }
 
     public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
-        if (this.path) {
-            this.path.draw(SvgBuild.filterTransforms(this.transform, exclusions ? exclusions[this.path.element.tagName] : undefined), residual);
+        if (this._path) {
+            if (this.parent) {
+                this._path.aspectRatio = this.parent.aspectRatio;
+            }
+            this._path.draw(SvgBuild.filterTransforms(this.transform, exclusions ? exclusions[this._path.element.tagName] : undefined), residual);
         }
     }
 
     public synchronize(useKeyTime = false) {
         if (this.path && this.animate.length) {
-            SvgShape.synchronizeAnimate(this.element, this.animate, useKeyTime, this.path);
+            SvgShape.synchronizeAnimate(this, this.animate, useKeyTime, this.path);
         }
     }
 
@@ -901,9 +903,7 @@ export default class SvgShape extends SvgView$MX(SvgElement) implements squared.
             this._path.name = this.name;
         }
         for (const item of this.animate) {
-            if (item instanceof SvgAnimate) {
-                item.parent = value;
-            }
+            item.parent = value;
         }
     }
     get path() {

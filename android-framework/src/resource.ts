@@ -13,6 +13,8 @@ const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
+const STORED = $Resource.STORED as ResourceStoredMapAndroid;
+
 function getHexARGB(value: ColorData | null) {
     return value ? (value.opaque ? value.valueARGB : value.valueRGB) : '';
 }
@@ -20,8 +22,6 @@ function getHexARGB(value: ColorData | null) {
 function getRadiusPercent(value: string) {
     return $util.isPercent(value) ? parseInt(value) / 100 : 0.5;
 }
-
-const STORED = $Resource.STORED as ResourceStoredMapAndroid;
 
 export default class Resource<T extends View> extends squared.base.Resource<T> implements android.base.Resource<T> {
     public static createBackgroundGradient<T extends View>(node: T, gradients: Gradient[], svgPath?: squared.svg.SvgPath) {

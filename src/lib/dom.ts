@@ -123,7 +123,7 @@ export function isUserAgent(value: string | number) {
 
 export function getDataSet(element: Element | null, prefix: string) {
     const result: StringMap = {};
-    if (hasComputedStyle(element) || element instanceof SVGElement) {
+    if (hasComputedStyle(element)) {
         prefix = convertCamelCase(prefix, '\\.');
         for (const attr in element.dataset) {
             if (attr.length > prefix.length && attr.startsWith(prefix)) {
@@ -171,7 +171,7 @@ export function createElement(parent: Element | null, block = false) {
     style.clear = 'none';
     style.display = 'none';
     element.className = '__css.placeholder';
-    if (parent instanceof HTMLElement) {
+    if (parent) {
         parent.appendChild(element);
     }
     return element;
@@ -458,7 +458,7 @@ export function getBackgroundPosition(value: string, dimension: RectDimensions, 
 }
 
 export function getFirstChildElement(element: Element | null, lineBreak = false) {
-    if (element instanceof HTMLElement) {
+    if (element) {
         for (let i = 0; i < element.childNodes.length; i++) {
             const node = getElementAsNode<T>(<Element> element.childNodes[i]);
             if (node && (!node.excluded || (lineBreak && node.lineBreak))) {
@@ -470,7 +470,7 @@ export function getFirstChildElement(element: Element | null, lineBreak = false)
 }
 
 export function getLastChildElement(element: Element | null, lineBreak = false) {
-    if (element instanceof HTMLElement) {
+    if (element) {
         for (let i = element.childNodes.length - 1; i >= 0; i--) {
             const node = getElementAsNode<T>(<Element> element.childNodes[i]);
             if (node && node.naturalElement && (!node.excluded || (lineBreak && node.lineBreak))) {
@@ -489,7 +489,7 @@ export function hasFreeFormText(element: Element, whiteSpace = true) {
                     return true;
                 }
             }
-            else if (child instanceof HTMLElement && withinViewportOrigin(child) && child.childNodes.length && findFreeForm(Array.from(child.childNodes))) {
+            else if (findFreeForm(Array.from(child.childNodes))) {
                 return true;
             }
             return false;
@@ -535,7 +535,7 @@ export function hasLineBreak(element: Element | null, lineBreak = false, trimStr
         if (trimString) {
             value = value.trim();
         }
-        if (element instanceof HTMLElement && element.children.length && Array.from(element.children).some(item => item.tagName === 'BR')) {
+        if (element.children.length && Array.from(element.children).some(item => item.tagName === 'BR')) {
             return true;
         }
         else if (!lineBreak && /\n/.test(value)) {
@@ -614,7 +614,7 @@ export function getNextElementSibling(element: Element | null) {
 }
 
 export function hasComputedStyle(element: UndefNull<Element>): element is HTMLElement {
-    return element instanceof HTMLElement || element instanceof SVGSVGElement;
+    return !!element && typeof element['style'] === 'object';
 }
 
 export function withinViewportOrigin(element: Element) {

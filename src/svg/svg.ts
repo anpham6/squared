@@ -1,31 +1,83 @@
 import { SvgLinearGradient, SvgRadialGradient } from './@types/object';
 
+import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgView$MX from './svgview-mx';
 import SvgViewRect$MX from './svgviewrect-mx';
+import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 import SvgContainer from './svgcontainer';
 import SvgShape from './svgshape';
 
-import { getHrefTargetElement } from './lib/util';
+import { SVG, getHrefTargetElement } from './lib/util';
 
-export default class Svg extends SvgViewRect$MX(SvgView$MX(SvgContainer)) implements squared.svg.Svg {
-    public readonly documentRoot: boolean;
+type SvgBase = squared.svg.SvgBase;
+
+export default class Svg extends SvgViewRect$MX(SvgView$MX(SvgBaseVal$MX(SvgContainer))) implements squared.svg.Svg {
+    public static instance(object: SvgBase): object is squared.svg.Svg {
+        return object.element.tagName === 'svg';
+    }
+
+    public static instanceOfContainer(object: SvgBase): object is squared.svg.SvgContainer {
+        return Svg.instance(object) || Svg.instanceOfG(object) || Svg.instanceOfUseSymbol(object);
+    }
+
+    public static instanceOfElement(object: SvgBase): object is squared.svg.SvgElement {
+        return Svg.instanceOfShape(object) || Svg.instanceOfImage(object) || Svg.instanceOfUse(object) && !Svg.instanceOfUseSymbol(object);
+    }
+
+    public static instanceOfG(object: SvgBase): object is squared.svg.SvgG {
+        return object.element.tagName === 'g';
+    }
+
+    public static instanceOfUseSymbol(object: SvgBase): object is squared.svg.SvgUseSymbol {
+        return Svg.instanceOfUse(object) && object['symbolElement'] !== undefined;
+    }
+
+    public static instanceOfShape(object: SvgBase): object is squared.svg.SvgShape {
+        return (Svg.instanceOfUse(object) || SVG.shape(object.element)) && object['path'] !== undefined;
+    }
+
+    public static instanceOfImage(object: SvgBase): object is squared.svg.SvgUseSymbol {
+        return Svg.instanceOfUse(object) && object['imageElement'] !== undefined || object.element.tagName === 'image';
+    }
+
+    public static instanceOfUse(object: SvgBase): object is squared.svg.SvgUse {
+        return object.element.tagName === 'use';
+    }
+
+    public static instanceOfSet(object: SvgAnimation) {
+        return object.element.tagName === 'set';
+    }
+
+    public static instanceOfAnimate(object: SvgAnimation): object is squared.svg.SvgAnimate {
+        return object.element.tagName === 'animate' && object.attributeName !== 'transform';
+    }
+
+    public static instanceOfAnimateTransform(object: SvgAnimation): object is squared.svg.SvgAnimateTransform {
+        return object.element.tagName === 'animateTransform' || object.element.tagName === 'animate' && object.attributeName === 'transform';
+    }
+
+    public static instanceOfAnimateMotion(object: SvgAnimation): object is squared.svg.SvgAnimateMotion {
+        return object.element.tagName === 'animateMotion';
+    }
 
     public readonly patterns = {
         clipPath: new Map<string, SVGClipPathElement>(),
         gradient: new Map<string, Gradient>()
     };
 
-    constructor(public readonly element: SVGSVGElement) {
+    constructor(
+        public readonly element: SVGSVGElement,
+        public readonly documentRoot = true)
+    {
         super(element);
-        this.documentRoot = element.parentElement instanceof HTMLElement;
         this.init();
         this.setRect();
     }
 
     public synchronize(useKeyTime = false) {
         if (!this.documentRoot && this.animate.length) {
-            SvgShape.synchronizeAnimate(this.element, this.animate, useKeyTime);
+            SvgShape.synchronizeAnimate(this, this.animate, useKeyTime);
         }
         super.synchronize(useKeyTime);
     }
@@ -41,13 +93,13 @@ export default class Svg extends SvgViewRect$MX(SvgView$MX(SvgContainer)) implem
                     target.appendChild(animation);
                 }
             });
-            item.querySelectorAll(':scope > clipPath, :scope > linearGradient, :scope > radialGradient').forEach((pattern: SVGElement) => {
+            item.querySelectorAll('clipPath, linearGradient, radialGradient').forEach((pattern: SVGElement) => {
                 if (pattern.id) {
                     const id = `#${pattern.id}`;
-                    if (pattern instanceof SVGClipPathElement) {
+                    if (SVG.clipPath(pattern)) {
                         this.patterns.clipPath.set(id, pattern);
                     }
-                    else if (pattern instanceof SVGLinearGradientElement) {
+                    else if (SVG.linearGradient(pattern)) {
                         this.patterns.gradient.set(id, <SvgLinearGradient> {
                             type: 'linear',
                             x1: pattern.x1.baseVal.value,
@@ -61,7 +113,7 @@ export default class Svg extends SvgViewRect$MX(SvgView$MX(SvgContainer)) implem
                             colorStop: SvgBuild.toColorStopList(pattern)
                         });
                     }
-                    else if (pattern instanceof SVGRadialGradientElement) {
+                    else if (SVG.radialGradient(pattern)) {
                         this.patterns.gradient.set(id, <SvgRadialGradient> {
                             type: 'radial',
                             cx: pattern.cx.baseVal.value,

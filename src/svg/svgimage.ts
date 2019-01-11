@@ -5,7 +5,7 @@ import SvgViewRect$MX from './svgviewrect-mx';
 import SvgBuild from './svgbuild';
 import SvgElement from './svgelement';
 
-import { applyMatrixX, applyMatrixY } from './lib/util';
+import { SVG, applyMatrixX, applyMatrixY } from './lib/util';
 
 const $util = squared.lib.util;
 
@@ -70,13 +70,11 @@ export default class SvgImage extends SvgViewRect$MX(SvgView$MX(SvgElement)) imp
                         break;
                 }
             }
-            Object.assign(this.baseValue, {
-                x,
-                y,
-                width,
-                height,
-                transform
-            });
+            this.setBaseValue('x', x);
+            this.setBaseValue('y', y);
+            this.setBaseValue('width', width);
+            this.setBaseValue('height', height);
+            this.transformed = transform;
         }
     }
 
@@ -114,13 +112,13 @@ export default class SvgImage extends SvgViewRect$MX(SvgView$MX(SvgElement)) imp
 
     set href(value) {
         const element = this.imageElement || this.element;
-        if (element instanceof SVGImageElement) {
+        if (SVG.image(element)) {
             element.href.baseVal = value;
         }
     }
     get href() {
         const element = this.imageElement || this.element;
-        if (element instanceof SVGImageElement) {
+        if (SVG.image(element)) {
             return $util.resolvePath(element.href.baseVal);
         }
         return '';

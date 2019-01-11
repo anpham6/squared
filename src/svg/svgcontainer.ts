@@ -1,11 +1,18 @@
-import { SvgTransformExclusions, SvgTransformResidual } from './@types/object';
+import { SvgAspectRatio, SvgTransformExclusions, SvgTransformResidual } from './@types/object';
 
-import { getHrefTargetElement, isSvgImage, isSvgShape } from './lib/util';
+import { SVG, getHrefTargetElement, getParentViewBox } from './lib/util';
 
+type Svg = squared.svg.Svg;
 type SvgViewable = squared.svg.SvgViewable;
 
 export default class SvgContainer extends squared.lib.base.Container<SvgViewable> implements squared.svg.SvgContainer {
-    constructor(public readonly element: SVGGElement | SVGSVGElement | SVGUseElement) {
+    public aspectRatio: SvgAspectRatio = {
+        x: 0,
+        y: 0,
+        unit: 1
+    };
+
+    constructor(public readonly element: SvgGroup) {
         super();
     }
 
@@ -16,33 +23,71 @@ export default class SvgContainer extends squared.lib.base.Container<SvgViewable
 
     public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
         this.clear();
+        const setMultiplier = (item: squared.svg.SvgGroup) => {
+            const svg = getParentViewBox(this.element);
+            if (svg) {
+                let current = <Svg> (this as unknown);
+                while (current) {
+                    if (current.element === svg) {
+                        break;
+                    }
+                    current = <Svg> current.parent;
+                }
+                if (current) {
+                    const aspectRatio = item.aspectRatio;
+                    if (!SVG.g(item.element)) {
+                        const viewBox = (<Svg> item).viewBox;
+                        if (viewBox.width > 0 && viewBox.height > 0) {
+                            const viewBoxParent = svg.viewBox.baseVal;
+                            const ratioParent = viewBoxParent.width / viewBoxParent.height;
+                            const ratioCurrent = viewBox.width / viewBox.height;
+                            if (ratioParent > ratioCurrent) {
+                                aspectRatio.x = (viewBoxParent.width - (viewBoxParent.height * viewBox.width / viewBox.height)) / 2;
+                            }
+                            else if (ratioParent < ratioCurrent) {
+                                aspectRatio.y = (viewBoxParent.height - (viewBoxParent.width * viewBox.height / viewBox.width)) / 2;
+                            }
+                            aspectRatio.unit = Math.min(viewBoxParent.width / viewBox.width, viewBoxParent.height / viewBox.height);
+                        }
+                    }
+                    aspectRatio.x *= current.aspectRatio.unit;
+                    aspectRatio.x += current.aspectRatio.x;
+                    aspectRatio.y *= current.aspectRatio.unit;
+                    aspectRatio.y += current.aspectRatio.y;
+                    aspectRatio.unit *= current.aspectRatio.unit;
+                }
+            }
+        };
         for (let i = 0; i < this.element.children.length; i++) {
             const item = this.element.children[i];
             let svg: SvgViewable | undefined;
-            if (item instanceof SVGSVGElement) {
-                svg = new squared.svg.Svg(item);
+            if (SVG.svg(item)) {
+                svg = new squared.svg.Svg(item, false);
+                setMultiplier(<Svg> svg);
             }
-            else if (item instanceof SVGGElement) {
+            else if (SVG.g(item)) {
                 svg = new squared.svg.SvgG(item);
+                setMultiplier(<squared.svg.SvgG> svg);
             }
-            else if (item instanceof SVGUseElement) {
+            else if (SVG.use(item)) {
                 const target = getHrefTargetElement(item, item.parentElement);
                 if (target) {
-                    if (target instanceof SVGSymbolElement) {
+                    if (SVG.symbol(target)) {
                         svg = new squared.svg.SvgUseSymbol(item, target);
+                        setMultiplier(<squared.svg.SvgUseSymbol> svg);
                     }
-                    else if (isSvgImage(target)) {
+                    else if (SVG.image(target)) {
                         svg = new squared.svg.SvgImage(item, target);
                     }
-                    else if (isSvgShape(target)) {
+                    else if (SVG.shape(target)) {
                         svg = new squared.svg.SvgUse(item, target);
                     }
                 }
             }
-            else if (isSvgImage(item)) {
+            else if (SVG.image(item)) {
                 svg = new squared.svg.SvgImage(item);
             }
-            else if (isSvgShape(item)) {
+            else if (SVG.shape(item)) {
                 svg = new squared.svg.SvgShape(item);
             }
             if (svg) {

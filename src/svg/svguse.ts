@@ -4,7 +4,8 @@ import SvgPaint$MX from './svgpaint-mx';
 import SvgViewRect$MX from './svgviewrect-mx';
 import SvgPath from './svgpath';
 import SvgShape from './svgshape';
-import { isSvgShape } from './lib/util';
+
+import { SVG } from './lib/util';
 
 export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgShape)) implements squared.svg.SvgUse {
     constructor(
@@ -33,7 +34,7 @@ export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgShape)) implem
         if (value.charAt(0) === '#') {
             const id = value.substring(1);
             const target = document.getElementById(id);
-            if (target && isSvgShape(target)) {
+            if (target && SVG.shape(target)) {
                 this.setShape(target);
                 this.element.href.baseVal = value;
             }

@@ -51,6 +51,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     public to = '';
     public begin = [0];
     public duration: number;
+    public parent?: squared.svg.SvgView | squared.svg.SvgPath;
 
     constructor(public element: SVGAnimationElement) {
         this.setAttribute('attributeName');

@@ -86,11 +86,24 @@ export const MATRIX = {
     }
 };
 
-export function ascendToViewport(element: SVGGraphicsElement) {
+export function getParentViewBox(element: SVGGraphicsElement): SVGSVGElement | SVGSymbolElement | null {
+    let current: SVGGraphicsElement | HTMLElement | null = element;
+    while (current) {
+        switch (current.tagName) {
+            case 'svg':
+            case 'symbol':
+                return <SVGSVGElement> current;
+        }
+        current = current.parentElement;
+    }
+    return null;
+}
+
+export function getSvgViewport(element: SVGGraphicsElement) {
     const result: SVGGraphicsElement[] = [];
     let parent = element.parentElement;
-    while (parent instanceof SVGGraphicsElement) {
-        result.push(parent);
+    while (parent) {
+        result.push(<SVGGraphicsElement> (parent as unknown));
         parent = parent.parentElement;
         if (parent instanceof HTMLElement) {
             break;
@@ -99,17 +112,56 @@ export function ascendToViewport(element: SVGGraphicsElement) {
     return result;
 }
 
-export function isSvgUse(element: Element): element is SVGUseElement {
-    return element.tagName === 'use';
-}
-
-export function isSvgShape(element: Element): element is SVGGraphicsElement {
-    return SHAPES[element.tagName] !== undefined;
-}
-
-export function isSvgImage(element: Element): element is SVGImageElement {
-    return element.tagName === 'image';
-}
+export const SVG = {
+    svg: (element: Element | null): element is SVGSVGElement => {
+        return !!element && element.tagName === 'svg';
+    },
+    g: (element: Element | null): element is SVGSVGElement => {
+        return !!element && element.tagName === 'g';
+    },
+    use: (element: Element | null): element is SVGUseElement => {
+        return !!element && element.tagName === 'use';
+    },
+    symbol: (element: Element): element is SVGSymbolElement => {
+        return element.tagName === 'symbol';
+    },
+    shape: (element: Element): element is SVGGraphicsElement => {
+        return SHAPES[element.tagName] !== undefined;
+    },
+    image: (element: Element): element is SVGImageElement => {
+        return element.tagName === 'image';
+    },
+    path: (element: Element): element is SVGPathElement => {
+        return element.tagName === 'path';
+    },
+    line: (element: Element): element is SVGLineElement => {
+        return element.tagName === 'line';
+    },
+    rect: (element: Element): element is SVGRectElement => {
+        return element.tagName === 'rect';
+    },
+    circle: (element: Element): element is SVGCircleElement => {
+        return element.tagName === 'circle';
+    },
+    ellipse: (element: Element): element is SVGEllipseElement => {
+        return element.tagName === 'ellipse';
+    },
+    polygon: (element: Element): element is SVGPolygonElement => {
+        return element.tagName === 'polygon';
+    },
+    polyline: (element: Element): element is SVGPolylineElement => {
+        return element.tagName === 'polyline';
+    },
+    clipPath: (element: Element): element is SVGClipPathElement => {
+        return element.tagName === 'clipPath';
+    },
+    linearGradient: (element: Element): element is SVGLinearGradientElement => {
+        return element.tagName === 'linearGradient';
+    },
+    radialGradient: (element: Element): element is SVGRadialGradientElement => {
+        return element.tagName === 'radialGradient';
+    }
+};
 
 export function isVisible(element: Element) {
     const value = $dom.cssAttribute(element, 'visibility', true);
@@ -153,7 +205,7 @@ export function getHrefTargetElement(element: Element, parentElement?: SVGElemen
         }
         else {
             const target = document.getElementById(id);
-            if (target instanceof SVGElement) {
+            if (target && target instanceof SVGElement) {
                 return target;
             }
         }
@@ -310,11 +362,11 @@ export function getTransformOrigin(element: SVGGraphicsElement) {
         const parent = element.parentElement;
         let width: number;
         let height: number;
-        if (parent instanceof SVGSVGElement) {
+        if (SVG.svg(parent)) {
             width = parent.viewBox.baseVal.width;
             height = parent.viewBox.baseVal.height;
         }
-        else if (parent instanceof SVGGElement && parent.viewportElement instanceof SVGSVGElement) {
+        else if (SVG.g(parent) && SVG.svg(parent.viewportElement)) {
             width = parent.viewportElement.viewBox.baseVal.width;
             height = parent.viewportElement.viewBox.baseVal.height;
         }

@@ -1,26 +1,20 @@
-import { SvgRectBaseValue } from './@types/object';
-
 const $dom = squared.lib.dom;
 
 export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
     return class extends Base implements squared.svg.SvgViewRect {
-        public baseValue!: SvgRectBaseValue;
-
         private _width: number | undefined;
         private _height: number | undefined;
 
         public setRect() {
-            this.baseValue = Object.assign(this.baseValue || {}, {
-                x: this.x,
-                y: this.y,
-                width: this.width,
-                height: this.height,
-                transformed: null
-            });
+            this.setBaseValue('x', this.x);
+            this.setBaseValue('y', this.y);
+            this.setBaseValue('width', this.width);
+            this.setBaseValue('height', this.height);
         }
 
         private getElement() {
-            return this.element instanceof SVGSVGElement || this.element instanceof SVGUseElement || this.element instanceof SVGImageElement ? this.element : null;
+            const tagName = this.element.tagName;
+            return tagName === 'svg' || tagName === 'use' || tagName === 'image' ? <SVGSVGElement> this.element : null;
         }
 
         set x(value) {
@@ -54,7 +48,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
         set width(value) {
             const element = this.getElement();
             if (element) {
-                if (element instanceof SVGSVGElement && $dom.isUserAgent($dom.USER_AGENT.FIREFOX)) {
+                if (element.tagName === 'svg' && $dom.isUserAgent($dom.USER_AGENT.FIREFOX)) {
                     this._width = value;
                 }
                 else {
@@ -65,7 +59,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
         get width() {
             const element = this.getElement();
             if (element) {
-                if (element instanceof SVGSVGElement && $dom.isUserAgent($dom.USER_AGENT.FIREFOX)) {
+                if (element.tagName === 'svg' && $dom.isUserAgent($dom.USER_AGENT.FIREFOX)) {
                     if (this._width !== undefined) {
                         return this._width;
                     }
@@ -84,7 +78,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
         set height(value) {
             const element = this.getElement();
             if (element) {
-                if (element instanceof SVGSVGElement && $dom.isUserAgent($dom.USER_AGENT.FIREFOX)) {
+                if (element.tagName === 'svg' && $dom.isUserAgent($dom.USER_AGENT.FIREFOX)) {
                     this._height = value;
                 }
                 else {
@@ -95,7 +89,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
         get height() {
             const element = this.getElement();
             if (element) {
-                if (element instanceof SVGSVGElement && $dom.isUserAgent($dom.USER_AGENT.FIREFOX)) {
+                if (element.tagName === 'svg' && $dom.isUserAgent($dom.USER_AGENT.FIREFOX)) {
                     if (this._height !== undefined) {
                         return this._height;
                     }

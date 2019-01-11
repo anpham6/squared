@@ -91,7 +91,7 @@ declare global {
             function lastIndexOf(value: string, char?: string): string;
             function hasSameValue(obj1: {}, obj2: {}, ...attrs: string[]): boolean;
             function searchObject(obj: StringMap, value: string | StringMap): any[][];
-            function hasValue(value: any): boolean;
+            function hasValue<T>(value: T): value is T;
             function withinRange(a: number, b: number, offset?: number): boolean;
             function withinFraction(lower: number, upper: number): boolean;
             function assignWhenNull(destination: {}, source: {}): void;

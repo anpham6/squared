@@ -1,6 +1,5 @@
-import { SvgBaseValue, SvgTransform } from './@types/object';
+import { SvgTransform } from './@types/object';
 
-import SvgAnimate from './svganimate';
 import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 import SvgContainber from './svgcontainer';
@@ -9,11 +8,9 @@ import { getTransform, isVisible, setOpacity, setVisible } from './lib/util';
 
 const $dom = squared.lib.dom;
 
-export default <T extends Constructor<squared.svg.SvgBase>>(Base: T) => {
+export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
     return class extends Base implements squared.svg.SvgView {
-        public baseValue: SvgBaseValue = {
-            transformed: null
-        };
+        public transformed: SvgTransform[] | null = null;
         public parent?: SvgContainber;
 
         private _name?: string;
@@ -37,9 +34,7 @@ export default <T extends Constructor<squared.svg.SvgBase>>(Base: T) => {
         get animate() {
             if (this._animate === undefined) {
                 this._animate = SvgBuild.toAnimateList(this.element);
-            }
-            for (const item of this._animate) {
-                if (item instanceof SvgAnimate) {
+                for (const item of this._animate) {
                     item.parent = this;
                 }
             }

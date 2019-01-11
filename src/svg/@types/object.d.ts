@@ -1,6 +1,10 @@
 export interface SvgRect extends Point, Dimension {
 }
 
+export interface SvgAspectRatio extends Point {
+    unit: number;
+}
+
 export interface SvgLinearGradient extends Gradient {
     x1: number;
     y1: number;
@@ -35,35 +39,6 @@ export interface SvgPathCommand {
     xAxisRotation?: number;
     largeArcFlag?: number;
     sweepFlag?: number;
-}
-
-export interface SvgBaseValue {
-    transformed: SvgTransform[] | null;
-}
-
-export interface SvgRectBaseValue extends SvgBaseValue, SvgRect {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-}
-
-export interface SvgPathBaseValue extends SvgBaseValue {
-    d: string;
-    cx: number;
-    cy: number;
-    r: number;
-    rx: number;
-    ry: number;
-    x1: number;
-    x2: number;
-    y1: number;
-    y2: number;
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    points: Point[];
 }
 
 export interface SvgTransform {

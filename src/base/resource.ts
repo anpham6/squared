@@ -460,13 +460,13 @@ export default abstract class Resource<T extends Node> implements squared.base.R
             return [value, true];
         }
         for (const node of this.cache.visible) {
-            const element = node.element;
+            const element = <HTMLInputElement> node.element;
             if (element) {
                 let name = '';
                 let value = '';
                 let inlineTrim = false;
                 let performTrim = true;
-                if (element instanceof HTMLInputElement) {
+                if (element.tagName === 'INPUT') {
                     switch (element.type) {
                         case 'text':
                         case 'number':
@@ -484,10 +484,10 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                             break;
                     }
                 }
-                else if (element instanceof HTMLTextAreaElement) {
+                else if (element.tagName === 'TEXTAREA') {
                     value = element.value.trim();
                 }
-                else if (element instanceof HTMLElement) {
+                else if (node.htmlElement) {
                     if (element.tagName === 'BUTTON') {
                         value = element.innerText;
                     }

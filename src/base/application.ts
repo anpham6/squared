@@ -270,7 +270,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         const images: HTMLImageElement[] = [];
         for (const element of this.parseElements) {
             Array.from(element.querySelectorAll('IMG')).forEach((image: HTMLImageElement) => {
-                if (!(image instanceof SVGImageElement)) {
+                if (element.tagName === 'IMG') {
                     if (image.complete) {
                         this.addImagePreload(image);
                     }
@@ -516,7 +516,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         for (const element of Array.from(elements) as HTMLElement[]) {
             if (!this.parseElements.has(element)) {
                 prioritizeExtensions(documentRoot, element, Array.from(this.extensions)).some(item => item.init(element));
-                if (!this.parseElements.has(element) && !(localSettings.unsupported.tagName.has(element.tagName) || element instanceof HTMLInputElement && localSettings.unsupported.tagName.has(`${element.tagName}:${element.type}`))) {
+                if (!this.parseElements.has(element) && !(localSettings.unsupported.tagName.has(element.tagName) || element.tagName === 'INPUT' && localSettings.unsupported.tagName.has(`${element.tagName}:${(<HTMLInputElement> element).type}`))) {
                     let valid = true;
                     let current = element.parentElement;
                     while (current && current !== documentRoot) {
@@ -1706,19 +1706,7 @@ export default class Application<T extends Node> implements squared.base.Applica
 
     protected insertNode(element: Element, parent?: T) {
         let node: T | null = null;
-        if ($dom.hasComputedStyle(element)) {
-            const nodeConstructor = new this.nodeConstructor(this.nextId, element, this.controllerHandler.afterInsertNode);
-            if (!this.controllerHandler.localSettings.unsupported.excluded.has(element.tagName) && this.conditionElement(element)) {
-                node = nodeConstructor;
-                node.setExclusions();
-            }
-            else {
-                nodeConstructor.visible = false;
-                nodeConstructor.excluded = true;
-                this.processing.excluded.append(nodeConstructor);
-            }
-        }
-        else if (element.nodeName.charAt(0) === '#' && element.nodeName === '#text') {
+        if (element.nodeName.charAt(0) === '#' && element.nodeName === '#text') {
             if ($dom.isPlainText(element, true) || $dom.cssParent(element, 'whiteSpace', 'pre', 'pre-wrap')) {
                 node = new this.nodeConstructor(this.nextId, element, this.controllerHandler.afterInsertNode);
                 if (parent) {
@@ -1736,6 +1724,18 @@ export default class Application<T extends Node> implements squared.base.Applica
                 });
             }
         }
+        else if (element.parentElement instanceof HTMLElement) {
+            const nodeConstructor = new this.nodeConstructor(this.nextId, element, this.controllerHandler.afterInsertNode);
+            if (!this.controllerHandler.localSettings.unsupported.excluded.has(element.tagName) && this.conditionElement(element)) {
+                node = nodeConstructor;
+                node.setExclusions();
+            }
+            else {
+                nodeConstructor.visible = false;
+                nodeConstructor.excluded = true;
+                this.processing.excluded.append(nodeConstructor);
+            }
+        }
         if (node) {
             this.processing.cache.append(node);
         }
@@ -1743,7 +1743,7 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     protected conditionElement(element: Element) {
-        if (element instanceof SVGGraphicsElement && !(element.parentElement instanceof HTMLElement)) {
+        if (element instanceof SVGGraphicsElement && element.tagName !== 'svg') {
             return false;
         }
         else if ($dom.hasComputedStyle(element)) {

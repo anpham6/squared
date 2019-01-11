@@ -1,8 +1,6 @@
-import { SvgRectBaseValue } from '../svg/@types/object';
-
 declare global {
     namespace squared.svg {
-        interface SvgElement extends SvgBuildable {
+        interface SvgElement extends SvgBuildable, SvgBaseVal {
             readonly element: SVGGraphicsElement;
         }
 
@@ -28,7 +26,7 @@ declare global {
         }
 
         class SvgShape implements SvgShape {
-            public static synchronizeAnimate(element: SVGGraphicsElement, animate: SvgAnimation[], useKeyTime?: boolean, path?: SvgPath): SvgAnimation[];
+            public static synchronizeAnimate(instance: SvgViewable, animate: SvgAnimation[], useKeyTime?: boolean, path?: SvgPath): SvgAnimation[];
             constructor(element: SVGGraphicsElement);
         }
 
