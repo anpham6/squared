@@ -1,4 +1,4 @@
-import { SvgPathCommand, SvgPoint, SvgRect, SvgTransform, SvgTransformExclusions, SvgTransformResidual } from '../svg/@types/object';
+import { SvgAspectRatio, SvgPathCommand, SvgPoint, SvgRect, SvgTransform, SvgTransformExclusions, SvgTransformResidual } from '../svg/@types/object';
 
 import Container = squared.lib.base.Container;
 
@@ -62,7 +62,6 @@ declare global {
             strokeDashOffset: string;
             clipPath: string;
             clipRule: string;
-            opacity: string;
             readonly parentElement: SVGGraphicsElement | null;
             setPaint(): void;
         }
@@ -70,7 +69,7 @@ declare global {
         class SvgBuild {
             public static setName(element?: SVGElement): string;
             public static filterTransforms(transform: SvgTransform[], exclude?: number[]): SvgTransform[];
-            public static applyTransforms(transform: SvgTransform[], values: Point[], origin?: Point, center?: Point): Point[];
+            public static applyTransforms(transform: SvgTransform[], values: Point[], aspectRatio?: SvgAspectRatio, origin?: Point, center?: Point): Point[];
             public static getCenterPoint(values: Point[]): Point[];
             public static toColorStopList(element: SVGGradientElement): ColorStop[];
             public static toAnimateList(element: SVGElement): SvgAnimation[];

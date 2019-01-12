@@ -53,7 +53,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal) implements squared.
         if (parentElement) {
             this.parentElement = parentElement;
         }
-        else if (!parentElement && (SVG.g(element.parentElement) || SVG.use(element.parentElement))) {
+        else if (SVG.g(element.parentElement) || SVG.use(element.parentElement)) {
             this.parentElement = element.parentElement;
         }
         this.init();
@@ -65,145 +65,126 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal) implements squared.
         if (save) {
             this.transformed = null;
         }
+        const aspectRatio = this.aspectRatio.x !== 0 || this.aspectRatio.y !== 0 || this.aspectRatio.unit !== 1;
         if (SVG.path(element)) {
-            const value = this.getBaseValue('d');
-            const aspectRatio = this.aspectRatio.x !== 0 || this.aspectRatio.y !== 0 || this.aspectRatio.unit !== 1;
-            if (transform && transform.length) {
-                if (typeof residual === 'function') {
-                    [this.transformResidual, transform] = residual.call(this, element, transform);
-                }
-                if (transform.length) {
-                    let commands = SvgBuild.toPathCommandList(value);
-                    if (commands.length) {
-                        const result = this.transformPoints(transform, aspectRatio ? this.applyAspectRatioPoints(SvgBuild.toAbsolutePointList(commands)) : SvgBuild.toAbsolutePointList(commands));
-                        if (result.length) {
-                            commands = SvgBuild.fromAbsolutePointList(commands, result);
-                            if (commands.length) {
-                                d = SvgBuild.fromPathCommandList(commands);
+            d = this.getBaseValue('d');
+            if (aspectRatio || transform && transform.length) {
+                const commands = SvgBuild.toPathCommandList(d);
+                if (commands.length) {
+                    let points = SvgBuild.toAbsolutePointList(commands);
+                    if (points.length) {
+                        if (transform && transform.length) {
+                            if (typeof residual === 'function') {
+                                [this.transformResidual, transform] = residual.call(this, element, transform);
+                            }
+                            if (transform.length) {
+                                points = this.transformPoints(transform, points);
                                 this.transformed = transform;
                             }
                         }
-                    }
-                }
-            }
-            if (aspectRatio && d === '') {
-                let commands = SvgBuild.toPathCommandList(value);
-                if (commands.length) {
-                    const result = this.applyAspectRatioPoints(SvgBuild.toAbsolutePointList(commands));
-                    if (result.length) {
-                        commands = SvgBuild.fromAbsolutePointList(commands, result);
-                        if (commands.length) {
-                            d = SvgBuild.fromPathCommandList(commands);
+                        if (aspectRatio) {
+                            this.applyAspectRatioPoints(points);
                         }
+                        d = SvgBuild.fromPathCommandList(SvgBuild.fromAbsolutePointList(commands, points));
                     }
                 }
-            }
-            if (d === '') {
-                d = value;
             }
         }
         else if (SVG.line(element)) {
-            const x1 = this.applyAspectRatio(this.getBaseValue('x1')) + this.aspectRatio.x;
-            const y1 = this.applyAspectRatio(this.getBaseValue('y1')) + this.aspectRatio.y;
-            const x2 = this.applyAspectRatio(this.getBaseValue('x2')) + this.aspectRatio.x;
-            const y2 = this.applyAspectRatio(this.getBaseValue('y2')) + this.aspectRatio.y;
+            let points: SvgPoint[] = [
+                { x: this.getBaseValue('x1'), y: this.getBaseValue('y1') },
+                { x: this.getBaseValue('x2'), y: this.getBaseValue('y2') }
+            ];
             if (transform && transform.length) {
                 if (typeof residual === 'function') {
                     [this.transformResidual, transform] = residual.call(this, element, transform);
                 }
                 if (transform.length) {
-                    const points: SvgPoint[] = [
-                        { x: x1, y: y1 },
-                        { x: x2, y: y2 }
-                    ];
-                    const result = this.transformPoints(transform, points);
-                    if (result.length) {
-                        d = SvgPath.getPolyline(result);
-                        this.transformed = transform;
-                    }
+                    points = this.transformPoints(transform, points);
+                    this.transformed = transform;
                 }
             }
-            if (d === '') {
-                d = SvgPath.getLine(x1, y1, x2, y2);
+            if (aspectRatio) {
+                this.applyAspectRatioPoints(points);
             }
+            d = SvgPath.getPolyline(points);
         }
         else if (SVG.circle(element) || SVG.ellipse(element)) {
             let rx: number;
             let ry: number;
-            if (SVG.circle(element)) {
-                rx = this.applyAspectRatio(this.getBaseValue('r'));
-                ry = rx;
-            }
-            else if (SVG.ellipse(element)) {
-                rx = this.applyAspectRatio(this.getBaseValue('rx'));
-                ry = this.applyAspectRatio(this.getBaseValue('ry'));
+            if (SVG.ellipse(element)) {
+                rx = this.getBaseValue('rx');
+                ry = this.getBaseValue('ry');
             }
             else {
-                return '';
+                rx = this.getBaseValue('r');
+                ry = rx;
             }
-            const cx = this.applyAspectRatio(this.getBaseValue('cx')) + this.aspectRatio.x;
-            const cy = this.applyAspectRatio(this.getBaseValue('cy')) + this.aspectRatio.y;
+            let points: SvgPoint[] = [
+                { x: this.getBaseValue('cx'), y: this.getBaseValue('cy'), rx, ry }
+            ];
             if (transform && transform.length) {
                 if (typeof residual === 'function') {
                     [this.transformResidual, transform] = residual.call(this, element, transform, rx, ry);
                 }
                 if (transform.length) {
-                    const points: SvgPoint[] = [
-                        { x: cx, y: cy, rx, ry }
-                    ];
-                    const result = this.transformPoints(transform, points);
-                    if (result.length) {
-                        const pt = <Required<SvgPoint>> result[0];
-                        d = SvgPath.getEllipse(pt.x, pt.y, pt.rx, pt.ry);
-                        this.transformed = transform;
-                    }
+                    points = this.transformPoints(transform, points);
+                    this.transformed = transform;
                 }
             }
-            if (d === '') {
-                d = SvgPath.getEllipse(cx, cy, rx, ry);
+            if (aspectRatio) {
+                this.applyAspectRatioPoints(points);
             }
+            const pt = <Required<SvgPoint>> points[0];
+            d = SvgPath.getEllipse(pt.x, pt.y, pt.rx, pt.ry);
         }
         else if (SVG.rect(element)) {
-            const x = this.applyAspectRatio(this.getBaseValue('x')) + this.aspectRatio.x;
-            const y = this.applyAspectRatio(this.getBaseValue('y')) + this.aspectRatio.y;
-            const width = this.applyAspectRatio(this.getBaseValue('width'));
-            const height = this.applyAspectRatio(this.getBaseValue('height'));
+            let x = this.getBaseValue('x');
+            let y = this.getBaseValue('y');
+            let width = this.getBaseValue('width');
+            let height = this.getBaseValue('height');
             if (transform && transform.length) {
+                let points: SvgPoint[] = [
+                    { x, y },
+                    { x: x + width, y },
+                    { x: x + width, y: y + height },
+                    { x, y: y + height }
+                ];
                 if (typeof residual === 'function') {
                     [this.transformResidual, transform] = residual.call(this, element, transform);
                 }
                 if (transform.length) {
-                    const points: SvgPoint[] = [
-                        { x, y },
-                        { x: x + width, y },
-                        { x: x + width, y: y + height },
-                        { x, y: y + height }
-                    ];
-                    const result = this.transformPoints(transform, points);
-                    if (result.length) {
-                        d = SvgPath.getPolygon(result);
-                        this.transformed = transform;
-                    }
+                    points = this.transformPoints(transform, points);
+                    this.transformed = transform;
                 }
+                if (aspectRatio) {
+                    this.applyAspectRatioPoints(points);
+                }
+                d = SvgPath.getPolygon(points);
             }
-            if (d === '') {
+            else {
+                if (aspectRatio) {
+                    x = this.applyAspectRatio(x) + this.aspectRatio.x;
+                    y = this.applyAspectRatio(y) + this.aspectRatio.y;
+                    width = this.applyAspectRatio(width);
+                    height = this.applyAspectRatio(height);
+                }
                 d = SvgPath.getRect(width, height, x, y);
             }
         }
         else if (SVG.polygon(element) || SVG.polyline(element)) {
             let points: SvgPoint[] = this.getBaseValue('points');
-            this.applyAspectRatioPoints(points);
             if (transform && transform.length) {
                 if (typeof residual === 'function') {
                     [this.transformResidual, transform] = residual.call(this, element, transform);
                 }
                 if (transform.length) {
-                    const result = this.transformPoints(transform, points);
-                    if (result.length) {
-                        points = result;
-                        this.transformed = transform;
-                    }
+                    points = this.transformPoints(transform, points);
+                    this.transformed = transform;
                 }
+            }
+            if (aspectRatio) {
+                this.applyAspectRatioPoints(points);
             }
             d = element.tagName === 'polygon' ? SvgPath.getPolygon(points) : SvgPath.getPolyline(points);
         }
@@ -214,7 +195,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal) implements squared.
     }
 
     public transformPoints(transform: SvgTransform[], points: Point[], center?: Point) {
-        return SvgBuild.applyTransforms(transform, points, getTransformOrigin(this.element), center);
+        return SvgBuild.applyTransforms(transform, points, this.aspectRatio, getTransformOrigin(this.element), center);
     }
 
     private init() {

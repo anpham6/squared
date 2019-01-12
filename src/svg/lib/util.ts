@@ -41,6 +41,16 @@ function setAttribute(element: SVGGraphicsElement, attr: string, value: string) 
 }
 
 export const MATRIX = {
+    clone(matrix: SvgMatrix | DOMMatrix) {
+        return {
+            a: matrix.a,
+            b: matrix.b,
+            c: matrix.c,
+            d: matrix.d,
+            e: matrix.e,
+            f: matrix.f
+        };
+    },
     rotate(angle: number): SvgMatrix {
         const r = convertRadian(angle);
         const a = Math.cos(r);

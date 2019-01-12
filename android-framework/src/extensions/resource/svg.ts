@@ -20,22 +20,22 @@ if (!squared.svg) {
 }
 
 import $Svg = squared.svg.Svg;
-import $SvgAnimate = squared.svg.SvgAnimate;
 import $SvgAnimateTransform = squared.svg.SvgAnimateTransform;
-import $SvgAnimation = squared.svg.SvgAnimation;
 import $SvgBuild = squared.svg.SvgBuild;
 import $SvgG = squared.svg.SvgG;
-import $SvgImage = squared.svg.SvgImage;
 import $SvgPath = squared.svg.SvgPath;
-import $SvgShape = squared.svg.SvgShape;
-import $SvgUse = squared.svg.SvgUse;
-import $SvgUseSymbol = squared.svg.SvgUseSymbol;
-import $SvgView = squared.svg.SvgView;
-import $utilS = squared.svg.lib.util;
+
+type SvgAnimate = squared.svg.SvgAnimate;
+type SvgAnimation = squared.svg.SvgAnimation;
+type SvgContainer = squared.svg.SvgContainer;
+type SvgGroup = squared.svg.SvgGroup;
+type SvgImage = squared.svg.SvgImage;
+type SvgShape = squared.svg.SvgShape;
+type SvgView = squared.svg.SvgView;
 
 interface AnimateGroup {
     element: SVGGraphicsElement;
-    animate: $SvgAnimation[];
+    animate: SvgAnimation[];
     pathData?: string;
 }
 
@@ -95,12 +95,11 @@ interface KeyFrame {
     value: string;
 }
 
-type SvgGroup = $Svg | $SvgG | $SvgUseSymbol;
-
 const $color = squared.lib.color;
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
+const $utilS = squared.svg.lib.util;
 
 const INTERPOLATOR_ANDROID = {
     ACCELERATE_DECELERATE: '@android:anim/accelerate_decelerate_interpolator',
@@ -127,7 +126,7 @@ const ATTRIBUTE_ANDROID = {
 const TEMPLATES: ObjectMap<StringMap> = {};
 const STORED = Resource.STORED as ResourceStoredMapAndroid;
 
-function getGroupName(svg: $SvgView, suffix: string) {
+function getGroupName(svg: SvgView, suffix: string) {
     return `${svg.name}_${suffix}`;
 }
 
@@ -303,7 +302,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
 
     private VECTOR_DATA = new Map<string, GroupData>();
     private ANIMATE_DATA = new Map<string, AnimateGroup>();
-    private IMAGE_DATA: $SvgImage[] = [];
+    private IMAGE_DATA: SvgImage[] = [];
     private NAMESPACE_AAPT = false;
 
     public beforeInit() {
@@ -389,14 +388,14 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                         };
                         const targetSetData: TemplateDataA = { A: [] };
                         const animatorMap = new Map<string, PropertyValue[]>();
-                        const sequentialMap = new Map<string, $SvgAnimate[]>();
+                        const sequentialMap = new Map<string, SvgAnimate[]>();
                         const transformMap = new Map<string, $SvgAnimateTransform[]>();
-                        const together: $SvgAnimate[] = [];
-                        const fillReplace: $SvgAnimate[] = [];
-                        const togetherTargets: $SvgAnimate[][] = [];
-                        const fillReplaceTargets: $SvgAnimate[][] = [];
-                        const transformTargets: $SvgAnimate[][] = [];
-                        for (const item of group.animate as $SvgAnimate[]) {
+                        const together: SvgAnimate[] = [];
+                        const fillReplace: SvgAnimate[] = [];
+                        const togetherTargets: SvgAnimate[][] = [];
+                        const fillReplaceTargets: SvgAnimate[][] = [];
+                        const transformTargets: SvgAnimate[][] = [];
+                        for (const item of group.animate as SvgAnimate[]) {
                             const sequential = item.sequential;
                             if (sequential) {
                                 if ($Svg.instanceOfAnimateTransform(item)) {
@@ -936,7 +935,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                 }
                                 if (indefinite.length) {
                                     const pathArray = setData.repeating.length ? indefiniteData.repeat as ExternalData[] : setData.repeating;
-                                    for (const item of indefinite as $SvgAnimate[]) {
+                                    for (const item of indefinite as SvgAnimate[]) {
                                         pathArray.push({
                                             propertyName: 'pathData',
                                             repeatCount: '0',
@@ -1124,7 +1123,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
         return result;
     }
 
-    private createPath(node: T, svg: $Svg, target: $SvgShape | $SvgUse, path: $SvgPath) {
+    private createPath(node: T, svg: $Svg, target: SvgShape, path: $SvgPath) {
         const render: TransformData[][] = [[]];
         const clipPaths: StringMap[] = [];
         const result: PathData = {
@@ -1167,14 +1166,14 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
         }
         let fillOpacity = parseFloat(result.fillOpacity || '1');
         let strokeOpacity = parseFloat(result.strokeOpacity || '1');
-        let current = target.parent;
+        let current: SvgView | SvgContainer | undefined = target;
         while (current) {
-            const opacity = parseFloat((<$SvgG> current).opacity);
+            const opacity = parseFloat((<SvgView> current).opacity);
             if (opacity < 1) {
                 fillOpacity *= opacity;
                 strokeOpacity *= opacity;
             }
-            current = (<$SvgG> current).parent;
+            current = (<SvgView> current).parent;
         }
         result.fillOpacity = fillOpacity.toString();
         result.strokeOpacity = strokeOpacity.toString();
@@ -1184,7 +1183,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 const g = new $SvgG(clipPath);
                 g.build(this.options.excludeFromTransform, partitionTransforms);
                 g.synchronize();
-                g.each((child: $SvgShape) => {
+                g.each((child: SvgShape) => {
                     if (child.path && child.path.value) {
                         clipPaths.push({ clipPathName: child.name, clipPathData: child.path.value });
                         this.queueAnimations(
@@ -1251,7 +1250,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
         return result;
     }
 
-    private queueAnimations(svg: $SvgView, name: string, predicate: IteratorPredicate<$SvgAnimation, void>, pathData = '') {
+    private queueAnimations(svg: SvgView, name: string, predicate: IteratorPredicate<SvgAnimation, void>, pathData = '') {
         const animate = svg.animate.filter(predicate).filter(item => item.begin.length > 0);
         if (animate.length) {
             this.ANIMATE_DATA.set(name, {

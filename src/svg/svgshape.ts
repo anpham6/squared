@@ -128,7 +128,7 @@ function convertKeyTimeFraction(map: KeyTimeMap, total: number) {
     return result;
 }
 
-function getPathData(map: KeyTimeMap, path: SvgPath, freezeMap?: FreezeMap) {
+function getPathData(map: KeyTimeMap, path: SvgPath, parent?: squared.svg.SvgContainer, freezeMap?: FreezeMap) {
     const result: KeyTimeValue<string>[] = [];
     const tagName = path.element.tagName;
     let methodName: string;
@@ -181,26 +181,27 @@ function getPathData(map: KeyTimeMap, path: SvgPath, freezeMap?: FreezeMap) {
             let value: string | undefined;
             const transform = path.transformed;
             if (transform && transform.length) {
+                const aspectRatio = parent ? parent.aspectRatio : undefined;
                 switch (tagName) {
                     case 'line':
-                        value = SvgPath.getPolyline(SvgBuild.applyTransforms(transform, getLinePoints(values as number[]), getTransformOrigin(path.element)));
+                        value = SvgPath.getPolyline(SvgBuild.applyTransforms(transform, getLinePoints(values as number[]), aspectRatio, getTransformOrigin(path.element)));
                         break;
                     case 'circle':
                     case 'ellipse':
-                        const points = SvgBuild.applyTransforms(transform, getEllipsePoints(values as number[]), getTransformOrigin(path.element));
+                        const points = SvgBuild.applyTransforms(transform, getEllipsePoints(values as number[]), aspectRatio, getTransformOrigin(path.element));
                         if (points.length) {
                             const pt = <Required<SvgPoint>> points[0];
                             value = SvgPath.getEllipse(pt.x, pt.y, pt.rx, pt.ry);
                         }
                         break;
                     case 'rect':
-                        value = SvgPath.getPolygon(SvgBuild.applyTransforms(transform, getRectPoints(values as number[]), getTransformOrigin(path.element)));
+                        value = SvgPath.getPolygon(SvgBuild.applyTransforms(transform, getRectPoints(values as number[]), aspectRatio, getTransformOrigin(path.element)));
                         break;
                     case 'polygon':
-                        value = SvgPath.getPolygon(SvgBuild.applyTransforms(transform, values[0] as Point[], getTransformOrigin(path.element)));
+                        value = SvgPath.getPolygon(SvgBuild.applyTransforms(transform, values[0] as Point[], aspectRatio, getTransformOrigin(path.element)));
                         break;
                     case 'polyline':
-                        value = SvgPath.getPolyline(SvgBuild.applyTransforms(transform, values[0] as Point[], getTransformOrigin(path.element)));
+                        value = SvgPath.getPolyline(SvgBuild.applyTransforms(transform, values[0] as Point[], aspectRatio, getTransformOrigin(path.element)));
                         break;
                 }
             }
@@ -786,7 +787,7 @@ export default class SvgShape extends SvgView$MX(SvgElement) implements squared.
                         if (useKeyTime) {
                             let object: SvgAnimate | undefined;
                             if (path) {
-                                const pathData = getPathData(result, path, freezeIndefinite);
+                                const pathData = getPathData(result, path, instance.parent, freezeIndefinite);
                                 if (pathData) {
                                     object = new SvgAnimate(animateElement);
                                     object.attributeName = 'd';
@@ -829,7 +830,7 @@ export default class SvgShape extends SvgView$MX(SvgElement) implements squared.
                                     const map = new Map<number, Map<string, AnimateValue>>();
                                     map.set(keyTimeFrom, dataFrom);
                                     map.set(keyTimeTo, dataTo);
-                                    const pathData = getPathData(map, path, freezeIndefinite);
+                                    const pathData = getPathData(map, path, instance.parent, freezeIndefinite);
                                     if (pathData) {
                                         object = new SvgAnimate(animateElement);
                                         object.attributeName = 'd';

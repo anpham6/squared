@@ -1,5 +1,3 @@
-import { setOpacity } from './lib/util';
-
 const $color = squared.lib.color;
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
@@ -28,10 +26,10 @@ export default <T extends Constructor<squared.svg.SvgBase>>(Base: T) => {
         public setPaint() {
             this.setAttribute('color');
             this.setColor('fill');
-            this.setOpacity('fill');
+            this.setAttribute('fill-opacity');
             this.setAttribute('fill-rule');
             this.setColor('stroke');
-            this.setOpacity('stroke');
+            this.setAttribute('stroke-opacity');
             this.setAttribute('stroke-width');
             this.setAttribute('stroke-linecap');
             this.setAttribute('stroke-linejoin');
@@ -39,8 +37,10 @@ export default <T extends Constructor<squared.svg.SvgBase>>(Base: T) => {
             this.setAttribute('stroke-dasharray');
             this.setAttribute('stroke-dashoffset');
             const match = $util.REGEX_PATTERN.CSS_URL.exec(this.getAttribute('clip-path'));
-            this.clipPath = match ? match[1] : '';
-            this.clipRule = this.getAttribute('clip-rule');
+            if (match) {
+                this.clipPath = match[1];
+            }
+            this.setAttribute('clip-rule');
         }
 
         private setColor(attr: string) {
@@ -80,18 +80,6 @@ export default <T extends Constructor<squared.svg.SvgBase>>(Base: T) => {
             if (value !== null) {
                 this[attr] = value;
             }
-        }
-
-        set opacity(value) {
-            setOpacity(this.element, value);
-        }
-        get opacity() {
-            return $dom.cssAttribute(this.element, 'opacity') || '1';
-        }
-
-        private setOpacity(attr: string) {
-            const opacity = this.getAttribute(`${attr}-opacity`);
-            this[`${attr}Opacity`] = opacity ? (parseFloat(opacity) * parseFloat(this.opacity)).toString() : this.opacity;
         }
 
         private getAttribute(attr: string) {

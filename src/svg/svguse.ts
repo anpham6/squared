@@ -2,6 +2,7 @@ import { SvgTransformExclusions, SvgTransformResidual } from './@types/object';
 
 import SvgPaint$MX from './svgpaint-mx';
 import SvgViewRect$MX from './svgviewrect-mx';
+import SvgBuild from './svgbuild';
 import SvgPath from './svgpath';
 import SvgShape from './svgshape';
 
@@ -26,8 +27,12 @@ export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgShape)) implem
         if (this.path === undefined) {
             const path = new SvgPath(this.shapeElement, this.element);
             super.path = path;
+            if (this.parent) {
+                path.aspectRatio = this.parent.aspectRatio;
+            }
+            const shape = new SvgShape(this.shapeElement);
+            path.draw(SvgBuild.filterTransforms([...this.transform, ...shape.transform], exclusions ? exclusions[path.element.tagName] : undefined), residual);
         }
-        super.build(exclusions, residual);
     }
 
     set href(value) {

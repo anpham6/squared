@@ -1,6 +1,6 @@
-import { SvgPathCommand, SvgPoint, SvgTransform } from './@types/object';
+import { SvgAspectRatio, SvgPathCommand, SvgPoint, SvgTransform } from './@types/object';
 
-import { applyMatrixX, applyMatrixY, createTransform, getRadiusY } from './lib/util';
+import { MATRIX, applyMatrixX, applyMatrixY, createTransform, getRadiusY } from './lib/util';
 
 const $color = squared.lib.color;
 const $dom = squared.lib.dom;
@@ -42,8 +42,24 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return (exclude ? transform.filter(item => !exclude.includes(item.type)) : transform).filter(item => !(item.type === SVGTransform.SVG_TRANSFORM_SCALE && item.matrix.a === 1 && item.matrix.d === 1));
     }
 
-    public static applyTransforms(transform: SvgTransform[], values: SvgPoint[], origin?: SvgPoint, center?: SvgPoint) {
+    public static applyTransforms(transform: SvgTransform[], values: SvgPoint[], aspectRatio?: SvgAspectRatio, origin?: SvgPoint, center?: SvgPoint) {
         const result = SvgBuild.toPointList(values);
+        if (aspectRatio && aspectRatio.unit !== 1) {
+            if (origin) {
+                origin.x *= aspectRatio.unit;
+                origin.y *= aspectRatio.unit;
+            }
+            if (center) {
+                center.x *= aspectRatio.unit;
+                center.y *= aspectRatio.unit;
+            }
+            for (let i = 0; i < transform.length; i++) {
+                const matrix = MATRIX.clone(transform[i].matrix);
+                matrix.e *= aspectRatio.unit;
+                matrix.f *= aspectRatio.unit;
+                transform[i].matrix = matrix;
+            }
+        }
         const items = transform.slice().reverse();
         for (const item of items) {
             let x1 = 0;
@@ -106,14 +122,10 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 const x = pt.x;
                 pt.x = applyMatrixX(m, x + x1, pt.y + y1) + x3;
                 pt.y = applyMatrixY(m, x + x2, pt.y + y2) + y3;
-                if (pt.rx !== undefined && pt.ry !== undefined) {
+                if (item.type === SVGTransform.SVG_TRANSFORM_SCALE && pt.rx !== undefined && pt.ry !== undefined) {
                     const rx = pt.rx;
-                    switch (item.type) {
-                        case SVGTransform.SVG_TRANSFORM_SCALE:
-                            pt.rx = applyMatrixX(m, rx + x1, pt.ry + y1);
-                            pt.ry = applyMatrixY(m, rx + x2, pt.ry + y2);
-                            break;
-                    }
+                    pt.rx = applyMatrixX(m, rx + x1, pt.ry + y1);
+                    pt.ry = applyMatrixY(m, rx + x2, pt.ry + y2);
                 }
             }
         }
