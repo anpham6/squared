@@ -11,10 +11,10 @@ export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
             let width = this.width;
             let height = this.height;
             if (this.parent) {
-                x = this.parent.recalibrateX(x);
-                y = this.parent.recalibrateX(y);
-                width = this.parent.recalibrateDimension(width);
-                height = this.parent.recalibrateDimension(height);
+                x = this.parent.refitX(x);
+                y = this.parent.refitY(y);
+                width = this.parent.refitSize(width);
+                height = this.parent.refitSize(height);
             }
             this.setBaseValue('x', x);
             this.setBaseValue('y', y);

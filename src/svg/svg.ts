@@ -1,23 +1,25 @@
 import { SvgLinearGradient, SvgRadialGradient, SvgTransformExclusions, SvgTransformResidual } from './@types/object';
 
 import SvgBaseVal$MX from './svgbaseval-mx';
+import SvgSynchronize$MX from './svgsynchronize-mx';
 import SvgView$MX from './svgview-mx';
 import SvgViewRect$MX from './svgviewrect-mx';
-import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 import SvgContainer from './svgcontainer';
-import SvgShape from './svgshape';
 
 import { SVG, getHrefTargetElement } from './lib/util';
 
 type SvgBase = squared.svg.SvgBase;
+type SvgG = squared.svg.SvgG;
+type SvgUseSymbol = squared.svg.SvgUseSymbol;
+type SvgAnimation = squared.svg.SvgAnimation;
 
-export default class Svg extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer))) implements squared.svg.Svg {
-    public static instance(object: SvgBase): object is squared.svg.Svg {
+export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer)))) implements squared.svg.Svg {
+    public static instance(object: SvgBase): object is Svg {
         return object.element.tagName === 'svg';
     }
 
-    public static instanceOfContainer(object: SvgBase): object is squared.svg.SvgContainer {
+    public static instanceOfContainer(object: SvgBase): object is Svg | SvgG | SvgUseSymbol {
         return Svg.instance(object) || Svg.instanceOfG(object) || Svg.instanceOfUseSymbol(object);
     }
 
@@ -25,11 +27,11 @@ export default class Svg extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgCont
         return Svg.instanceOfShape(object) || Svg.instanceOfImage(object) || Svg.instanceOfUse(object) && !Svg.instanceOfUseSymbol(object);
     }
 
-    public static instanceOfG(object: SvgBase): object is squared.svg.SvgG {
+    public static instanceOfG(object: SvgBase): object is SvgG {
         return object.element.tagName === 'g';
     }
 
-    public static instanceOfUseSymbol(object: SvgBase): object is squared.svg.SvgUseSymbol {
+    public static instanceOfUseSymbol(object: SvgBase): object is SvgUseSymbol {
         return Svg.instanceOfUse(object) && object['symbolElement'] !== undefined;
     }
 
@@ -37,7 +39,7 @@ export default class Svg extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgCont
         return (Svg.instanceOfUse(object) || SVG.shape(object.element)) && object['path'] !== undefined;
     }
 
-    public static instanceOfImage(object: SvgBase): object is squared.svg.SvgUseSymbol {
+    public static instanceOfImage(object: SvgBase): object is SvgUseSymbol {
         return Svg.instanceOfUse(object) && object['imageElement'] !== undefined || object.element.tagName === 'image';
     }
 
@@ -81,7 +83,7 @@ export default class Svg extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgCont
 
     public synchronize(useKeyTime = false) {
         if (!this.documentRoot && this.animate.length) {
-            SvgShape.synchronizeAnimate(this, this.animate, useKeyTime);
+            this.merge(this.getAnimateViewRect(), useKeyTime);
         }
         super.synchronize(useKeyTime);
     }

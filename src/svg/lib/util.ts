@@ -96,19 +96,6 @@ export const MATRIX = {
     }
 };
 
-export function getParentViewBox(element: SVGGraphicsElement): SVGSVGElement | SVGSymbolElement | null {
-    let current: SVGGraphicsElement | HTMLElement | null = element;
-    while (current) {
-        switch (current.tagName) {
-            case 'svg':
-            case 'symbol':
-                return <SVGSVGElement> current;
-        }
-        current = current.parentElement;
-    }
-    return null;
-}
-
 export function getSvgViewport(element: SVGGraphicsElement) {
     const result: SVGGraphicsElement[] = [];
     let parent = element.parentElement;

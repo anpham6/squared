@@ -79,7 +79,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgBase)) impleme
                             }
                         }
                         if (parent) {
-                            parent.recalibratePoints(points);
+                            parent.refitPoints(points);
                         }
                         d = SvgBuild.fromPathCommandList(SvgBuild.fromAbsolutePointList(commands, points));
                     }
@@ -101,7 +101,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgBase)) impleme
                 }
             }
             if (parent) {
-                parent.recalibratePoints(points);
+                parent.refitPoints(points);
             }
             d = SvgPath.getPolyline(points);
         }
@@ -129,7 +129,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgBase)) impleme
                 }
             }
             if (parent) {
-                parent.recalibratePoints(points);
+                parent.refitPoints(points);
             }
             const pt = <Required<SvgPoint>> points[0];
             d = SvgPath.getEllipse(pt.x, pt.y, pt.rx, pt.ry);
@@ -154,16 +154,16 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgBase)) impleme
                     this.transformed = transform;
                 }
                 if (parent) {
-                    parent.recalibratePoints(points);
+                    parent.refitPoints(points);
                 }
                 d = SvgPath.getPolygon(points);
             }
             else {
                 if (parent) {
-                    x = parent.recalibrateX(x);
-                    y = parent.recalibrateY(y);
-                    width = parent.recalibrateDimension(width);
-                    height = parent.recalibrateDimension(height);
+                    x = parent.refitX(x);
+                    y = parent.refitY(y);
+                    width = parent.refitSize(width);
+                    height = parent.refitSize(height);
                 }
                 d = SvgPath.getRect(width, height, x, y);
             }
@@ -180,7 +180,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgBase)) impleme
                 }
             }
             if (parent) {
-                parent.recalibratePoints(points);
+                parent.refitPoints(points);
             }
             d = element.tagName === 'polygon' ? SvgPath.getPolygon(points) : SvgPath.getPolyline(points);
         }

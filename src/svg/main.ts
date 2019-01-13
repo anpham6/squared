@@ -13,6 +13,7 @@ import SvgImage from './svgimage';
 import SvgPaint from './svgpaint-mx';
 import SvgPath from './svgpath';
 import SvgShape from './svgshape';
+import SvgSynchronize from './svgsynchronize-mx';
 import SvgUse from './svguse';
 import SvgUseSymbol from './svgusesymbol';
 import SvgView from './svgview-mx';
@@ -40,6 +41,7 @@ export {
     SvgPaint,
     SvgPath,
     SvgShape,
+    SvgSynchronize,
     SvgUse,
     SvgUseSymbol,
     SvgView,

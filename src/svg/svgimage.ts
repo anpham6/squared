@@ -75,10 +75,10 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
             this.transformed = transform;
         }
         if (this.parent) {
-            x = this.parent.recalibrateX(x);
-            y = this.parent.recalibrateY(y);
-            width = this.parent.recalibrateDimension(width);
-            height = this.parent.recalibrateDimension(height);
+            x = this.parent.refitX(x);
+            y = this.parent.refitY(y);
+            width = this.parent.refitSize(width);
+            height = this.parent.refitSize(height);
         }
         if (this.translationOffset) {
             x += this.translationOffset.x;

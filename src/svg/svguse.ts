@@ -31,6 +31,13 @@ export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(Svg
         super.build(exclusions, residual);
     }
 
+    public synchronize(useKeyTime = false) {
+        if (this.animate.length) {
+            this.merge(this.getAnimateViewRect(), useKeyTime);
+        }
+        super.synchronize(useKeyTime);
+    }
+
     set href(value) {
         if (value.charAt(0) === '#') {
             const id = value.substring(1);

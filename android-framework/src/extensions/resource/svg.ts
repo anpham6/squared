@@ -985,10 +985,10 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                     for (const item of this.IMAGE_DATA) {
                         const scaleX = svg.width / svg.viewBox.width;
                         const scaleY = svg.height / svg.viewBox.height;
-                        let x = item.getBaseValue('x') * scaleX;
-                        let y = item.getBaseValue('y') * scaleY;
-                        let width: number = item.getBaseValue('width');
-                        let height: number = item.getBaseValue('height');
+                        let x = item.getBaseValue('x', 0) * scaleX;
+                        let y = item.getBaseValue('y', 0) * scaleY;
+                        let width: number = item.getBaseValue('width', 0);
+                        let height: number = item.getBaseValue('height', 0);
                         const offsetParent = getSvgOffset(item.element, <SVGSVGElement> svg.element);
                         x += offsetParent.x;
                         y += offsetParent.y;

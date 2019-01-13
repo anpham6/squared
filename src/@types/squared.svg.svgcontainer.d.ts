@@ -5,17 +5,17 @@ import { SvgAnimation } from '../svg/main';
 
 declare global {
     namespace squared.svg {
-        interface SvgContainer extends Container<SvgViewable>, SvgBuildable {
+        interface SvgContainer extends Container<SvgView> {
             aspectRatio: SvgAspectRatio;
             readonly element: SVGSVGElement | SVGGElement | SVGUseElement;
-            append(item: SvgViewable): this;
-            recalibrateX(value: number): number;
-            recalibrateY(value: number): number;
-            recalibrateDimension(value: number): number;
-            recalibratePoints(values: SvgPoint[]): SvgPoint[];
+            append(item: SvgView): this;
+            refitX(value: number): number;
+            refitY(value: number): number;
+            refitSize(value: number): number;
+            refitPoints(values: SvgPoint[]): SvgPoint[];
         }
 
-        interface Svg extends SvgContainer, SvgView, SvgViewRect, SvgViewBox, SvgBaseVal {
+        interface Svg extends SvgContainer, SvgView, SvgViewRect, SvgViewBox, SvgSynchronize, SvgBaseVal {
             readonly element: SVGSVGElement;
             readonly documentRoot: boolean;
             readonly patterns: {
@@ -28,7 +28,7 @@ declare global {
             readonly element: SVGGElement;
         }
 
-        interface SvgUseSymbol extends SvgContainer, SvgView, SvgViewRect, SvgViewBox, SvgBaseVal, SvgPaint {
+        interface SvgUseSymbol extends SvgContainer, SvgView, SvgViewRect, SvgViewBox, SvgSynchronize, SvgBaseVal, SvgPaint {
             element: SVGUseElement;
             readonly symbolElement: SVGSymbolElement;
         }
@@ -41,7 +41,7 @@ declare global {
 
         class Svg implements Svg {
             public static instance(object: SvgBase): object is Svg;
-            public static instanceOfContainer(object: SvgBase): object is SvgContainer;
+            public static instanceOfContainer(object: SvgBase): object is Svg | SvgG | SvgUseSymbol;
             public static instanceOfElement(object: SvgBase): object is SvgElement;
             public static instanceOfG(object: SvgBase): object is SvgG;
             public static instanceOfUseSymbol(object: SvgBase): object is SvgUseSymbol;

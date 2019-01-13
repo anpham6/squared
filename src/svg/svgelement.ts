@@ -4,7 +4,4 @@ export default class SvgElement extends SvgBase implements squared.svg.SvgElemen
     constructor(element: SVGGraphicsElement) {
         super(element);
     }
-
-    public build() {}
-    public synchronize() {}
 }

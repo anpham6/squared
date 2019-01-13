@@ -2,25 +2,19 @@ import { SvgTransformExclusions, SvgTransformResidual } from './@types/object';
 
 import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgPaint$MX from './svgpaint-mx';
+import SvgSynchronize$MX from './svgsynchronize-mx';
 import SvgView$MX from './svgview-mx';
 import SvgViewRect$MX from './svgviewrect-mx';
 import SvgContainer from './svgcontainer';
 import SvgShape from './svgshape';
 
-export default class SvgUseSymbol extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer)))) implements squared.svg.SvgUseSymbol {
+export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer))))) implements squared.svg.SvgUseSymbol {
     constructor(
         public element: SVGUseElement,
         public readonly symbolElement: SVGSymbolElement)
     {
         super(element);
         this.setPaint();
-    }
-
-    public synchronize(useKeyTime = false) {
-        if (this.animate.length) {
-            SvgShape.synchronizeAnimate(this, this.animate, useKeyTime);
-        }
-        super.synchronize(useKeyTime);
     }
 
     public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
@@ -41,6 +35,13 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$
             const pt = { x, y };
             this.cascade().forEach(item => item.translationOffset = pt);
         }
+    }
+
+    public synchronize(useKeyTime = false) {
+        if (this.animate.length) {
+            this.merge(this.getAnimateViewRect(), useKeyTime);
+        }
+        super.synchronize(useKeyTime);
     }
 
     get viewBox() {

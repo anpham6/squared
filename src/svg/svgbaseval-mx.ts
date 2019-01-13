@@ -37,8 +37,8 @@ export default <T extends Constructor<squared.svg.SvgBase>>(Base: T) => {
             return false;
         }
 
-        public getBaseValue(attr: string): any {
-            return this._baseVal[attr] === undefined && !this.setBaseValue(attr) ? undefined : this._baseVal[attr];
+        public getBaseValue(attr: string, defaultValue?: any): any {
+            return this._baseVal[attr] === undefined && !this.setBaseValue(attr) ? defaultValue : this._baseVal[attr];
         }
 
         private validateType(attr: string, value: any) {

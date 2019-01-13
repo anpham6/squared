@@ -7,6 +7,8 @@ declare global {
         interface SvgBase {
             parent?: SvgContainer;
             readonly element: SVGGraphicsElement;
+            build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual): void;
+            synchronize(useKeyTime?: boolean): void;
         }
 
         interface SvgView extends SvgBase {
@@ -19,18 +21,16 @@ declare global {
             readonly name: string;
         }
 
-        interface SvgBuildable extends SvgBase {
-            build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual): void;
-            synchronize(useKeyTime?: boolean): void;
-        }
-
-        interface SvgViewable extends SvgBuildable, SvgView {
-        }
-
         interface SvgTransformable {
             transformed: SvgTransform[] | null;
             rotateOrigin?: SvgPoint;
             transformResidual?: SvgTransform[][];
+        }
+
+        interface SvgSynchronize {
+            getAnimateShape(): SvgAnimate[];
+            getAnimateViewRect(): SvgAnimate[];
+            merge(animations: SvgAnimate[], useKeyTime?: boolean, path?: SvgPath): void;
         }
 
         interface SvgViewRect extends SvgRect, SvgBaseVal {
@@ -39,7 +39,7 @@ declare global {
 
         interface SvgBaseVal extends SvgBase {
             setBaseValue(attr: string, value?: any): boolean;
-            getBaseValue(attr: string): any;
+            getBaseValue(attr: string, defaultValue?: any): any;
         }
 
         interface SvgViewBox {
@@ -69,20 +69,21 @@ declare global {
 
         class SvgBuild {
             public static setName(element?: SVGElement): string;
-            public static getContainerOpacity(target: SvgView): number;
+            public static getContainerOpacity(instance: SvgView): number;
+            public static getContainerViewBox(instance: SvgContainer): Svg | SvgUseSymbol | undefined;
             public static filterTransforms(transform: SvgTransform[], exclude?: number[]): SvgTransform[];
-            public static applyTransforms(transform: SvgTransform[], values: Point[], aspectRatio?: SvgAspectRatio, origin?: Point, center?: Point): Point[];
+            public static applyTransforms(transform: SvgTransform[], values: Point[], aspectRatio?: SvgAspectRatio, origin?: Point, center?: Point): SvgPoint[];
             public static getCenterPoint(values: Point[]): Point[];
             public static toColorStopList(element: SVGGradientElement): ColorStop[];
             public static toAnimateList(element: SVGElement): SvgAnimation[];
             public static toTransformList(transform: SVGTransformList): SvgTransform[];
-            public static toPointList(values: SVGPointList | Point[]): Point[];
+            public static toPointList(values: SvgPoint[] | SVGPointList): SvgPoint[];
             public static toCoordinateList(value: string): number[];
-            public static toAbsolutePointList(values: SvgPathCommand[]): Point[];
+            public static toAbsolutePointList(values: SvgPathCommand[]): SvgPoint[];
             public static toPathCommandList(value: string): SvgPathCommand[];
-            public static fromPointsValue(value: string): Point[];
-            public static fromNumberList(values: number[]): Point[];
-            public static fromAbsolutePointList(values: SvgPathCommand[], points: Point[]): SvgPathCommand[];
+            public static fromPointsValue(value: string): SvgPoint[];
+            public static fromNumberList(values: number[]): SvgPoint[];
+            public static fromAbsolutePointList(values: SvgPathCommand[], points: SvgPoint[]): SvgPathCommand[];
             public static fromPathCommandList(values: SvgPathCommand[]): string;
         }
     }

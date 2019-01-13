@@ -1,10 +1,10 @@
 declare global {
     namespace squared.svg {
-        interface SvgElement extends SvgBuildable, SvgBase {
+        interface SvgElement extends SvgBase {
             readonly element: SVGGraphicsElement;
         }
 
-        interface SvgShape extends SvgElement, SvgView {
+        interface SvgShape extends SvgElement, SvgView, SvgSynchronize {
             type: number;
             path?: SvgPath;
             setType(element?: SVGGraphicsElement): void;
@@ -16,7 +16,7 @@ declare global {
             extract(exclude?: number[]): void;
         }
 
-        interface SvgUse extends SvgElement, SvgView, SvgViewRect, SvgBaseVal {
+        interface SvgUse extends SvgShape, SvgViewRect, SvgBaseVal {
             shapeElement: SVGGraphicsElement;
             setShape(value: SVGGraphicsElement): void;
         }
@@ -26,7 +26,6 @@ declare global {
         }
 
         class SvgShape implements SvgShape {
-            public static synchronizeAnimate(instance: SvgView, animate: SvgAnimation[], useKeyTime?: boolean, path?: SvgPath): SvgAnimation[];
             constructor(element: SVGGraphicsElement);
         }
 

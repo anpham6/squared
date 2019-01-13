@@ -8,7 +8,6 @@ declare global {
             export import SVG = $util.SVG;
             export import SHAPES = $util.SHAPES;
             export import MATRIX = $util.MATRIX;
-            function getParentViewBox(element: SVGGraphicsElement): SVGSVGElement | SVGSymbolElement | null;
             function getSvgViewport(element: SVGGraphicsElement): SVGGraphicsElement[];
             function isVisible(element: Element): boolean;
             function setVisible(element: SVGGraphicsElement, value: boolean): void;
