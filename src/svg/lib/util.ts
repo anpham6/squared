@@ -40,6 +40,23 @@ function setAttribute(element: SVGGraphicsElement, attr: string, value: string) 
     element.setAttribute(attr, value);
 }
 
+function convertAngle(value: string, unit = 'deg') {
+    let angle = parseFloat(value);
+    switch (unit) {
+        case 'turn':
+            angle *= 360;
+            break;
+        case 'rad':
+            angle *= 180 / Math.PI;
+            break;
+    }
+    return angle;
+}
+
+function convertRadian(angle: number) {
+    return angle * Math.PI / 180;
+}
+
 export const MATRIX = {
     clone(matrix: SvgMatrix | DOMMatrix) {
         return {
@@ -184,7 +201,7 @@ export function setOpacity(element: SVGGraphicsElement, value: string) {
     }
 }
 
-export function getHrefTargetElement(element: Element, parentElement?: SVGElement | HTMLElement | null) {
+export function getTargetElement(element: Element, parentElement?: SVGElement | HTMLElement | null) {
     const href = element.attributes.getNamedItem('href');
     if (href && href.value.charAt(0) === '#') {
         const id = href.value.substring(1);
@@ -235,19 +252,6 @@ export function getTransformMatrix(element: SVGGraphicsElement): SvgMatrix | und
         }
     }
     return undefined;
-}
-
-export function convertAngle(value: string, unit = 'deg') {
-    let angle = parseFloat(value);
-    switch (unit) {
-        case 'turn':
-            angle *= 360;
-            break;
-        case 'rad':
-            angle *= 180 / Math.PI;
-            break;
-    }
-    return angle;
 }
 
 export function createTransform(type: number, matrix: SvgMatrix | DOMMatrix, angle = 0, x = true, y = true): SvgTransform {
@@ -460,8 +464,4 @@ export function getRadiusX(angle: number, radius: number) {
 
 export function getRadiusY(angle: number, radius: number) {
     return radius * Math.cos(convertRadian(angle)) * -1;
-}
-
-export function convertRadian(angle: number) {
-    return angle * Math.PI / 180;
 }

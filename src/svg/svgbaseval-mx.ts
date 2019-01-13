@@ -2,7 +2,7 @@ import SvgBuild from './svgbuild';
 
 const $dom = squared.lib.dom;
 
-export default <T extends Constructor<squared.svg.SvgBase>>(Base: T) => {
+export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
     return class extends Base implements squared.svg.SvgBaseVal {
         private _baseVal: ObjectMap<any> = {};
 

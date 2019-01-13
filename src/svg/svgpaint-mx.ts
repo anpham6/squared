@@ -2,7 +2,7 @@ const $color = squared.lib.color;
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
-export default <T extends Constructor<squared.svg.SvgBase>>(Base: T) => {
+export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
     return class extends Base implements squared.svg.SvgPaint {
         public fill = 'black';
         public fillPattern = '';

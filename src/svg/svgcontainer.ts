@@ -2,7 +2,7 @@ import { SvgAspectRatio, SvgPoint, SvgTransformExclusions, SvgTransformResidual 
 
 import SvgBuild from './svgbuild';
 
-import { SVG, getHrefTargetElement } from './lib/util';
+import { SVG, getTargetElement } from './lib/util';
 
 type SvgView = squared.svg.SvgView;
 
@@ -36,7 +36,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                 this.setAspectRatio(<squared.svg.SvgG> svg);
             }
             else if (SVG.use(item)) {
-                const target = getHrefTargetElement(item, item.parentElement);
+                const target = getTargetElement(item, item.parentElement);
                 if (target) {
                     if (SVG.symbol(target)) {
                         svg = new squared.svg.SvgUseSymbol(item, target);

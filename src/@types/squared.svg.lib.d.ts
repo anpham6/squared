@@ -11,7 +11,7 @@ declare global {
             function getSvgViewport(element: SVGGraphicsElement): SVGGraphicsElement[];
             function isVisible(element: Element): boolean;
             function setVisible(element: SVGGraphicsElement, value: boolean): void;
-            function getHrefTargetElement(element: Element, parentElement?: SVGElement | HTMLElement | null): SVGElement | null;
+            function getTargetElement(element: Element, parentElement?: SVGElement | HTMLElement | null): SVGElement | null;
             function sortNumber(values: number[], descending?: boolean): boolean;
             function getRotateOrigin(element: SVGGraphicsElement): SvgPoint[];
             function createTransform(type: number, matrix: SvgMatrix | DOMMatrix, angle?: number, x?: boolean, y?: boolean): SvgTransform;
@@ -23,8 +23,6 @@ declare global {
             function applyMatrixY(matrix: SvgMatrix | DOMMatrix, x: number, y: number): number;
             function getRadiusX(angle: number, radius: number): number;
             function getRadiusY(angle: number, radius: number): number;
-            function convertAngle(value: string, unit?: string): number;
-            function convertRadian(angle: number): number;
         }
     }
 }

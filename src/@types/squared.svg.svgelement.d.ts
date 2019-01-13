@@ -1,7 +1,12 @@
+import { SvgTransformExclusions, SvgTransformResidual } from '../svg/@types/object';
+
 declare global {
     namespace squared.svg {
-        interface SvgElement extends SvgBase {
+        interface SvgElement {
+            parent?: SvgContainer;
             readonly element: SVGGraphicsElement;
+            build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual): void;
+            synchronize(useKeyTime?: boolean): void;
         }
 
         interface SvgShape extends SvgElement, SvgView, SvgSynchronize {

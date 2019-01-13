@@ -23,8 +23,14 @@ export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
         }
 
         private getElement() {
-            const tagName = this.element.tagName;
-            return tagName === 'svg' || tagName === 'use' || tagName === 'image' ? <SVGSVGElement> this.element : null;
+            switch (this.element.tagName) {
+                case 'svg':
+                case 'use':
+                case 'image':
+                    return <SVGSVGElement> this.element;
+                default:
+                    return null;
+            }
         }
 
         set x(value) {

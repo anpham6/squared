@@ -1,7 +1,11 @@
-import SvgBase from './svgbase';
+import SvgContainer from './svgcontainer';
 
-export default class SvgElement extends SvgBase implements squared.svg.SvgElement {
-    constructor(element: SVGGraphicsElement) {
-        super(element);
+export default class SvgElement implements squared.svg.SvgElement {
+    public parent?: SvgContainer;
+
+    constructor(public readonly element: SVGGraphicsElement) {
     }
+
+    public build() {}
+    public synchronize(useKeyTime?: boolean) {}
 }

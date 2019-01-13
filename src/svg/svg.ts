@@ -7,43 +7,43 @@ import SvgViewRect$MX from './svgviewrect-mx';
 import SvgBuild from './svgbuild';
 import SvgContainer from './svgcontainer';
 
-import { SVG, getHrefTargetElement } from './lib/util';
+import { SVG, getTargetElement } from './lib/util';
 
-type SvgBase = squared.svg.SvgBase;
+type SvgElement = squared.svg.SvgElement;
 type SvgG = squared.svg.SvgG;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
 type SvgAnimation = squared.svg.SvgAnimation;
 
 export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer)))) implements squared.svg.Svg {
-    public static instance(object: SvgBase): object is Svg {
+    public static instance(object: SvgElement): object is Svg {
         return object.element.tagName === 'svg';
     }
 
-    public static instanceOfContainer(object: SvgBase): object is Svg | SvgG | SvgUseSymbol {
+    public static instanceOfContainer(object: SvgElement): object is Svg | SvgG | SvgUseSymbol {
         return Svg.instance(object) || Svg.instanceOfG(object) || Svg.instanceOfUseSymbol(object);
     }
 
-    public static instanceOfElement(object: SvgBase): object is squared.svg.SvgElement {
+    public static instanceOfElement(object: SvgElement): object is SvgElement {
         return Svg.instanceOfShape(object) || Svg.instanceOfImage(object) || Svg.instanceOfUse(object) && !Svg.instanceOfUseSymbol(object);
     }
 
-    public static instanceOfG(object: SvgBase): object is SvgG {
+    public static instanceOfG(object: SvgElement): object is SvgG {
         return object.element.tagName === 'g';
     }
 
-    public static instanceOfUseSymbol(object: SvgBase): object is SvgUseSymbol {
+    public static instanceOfUseSymbol(object: SvgElement): object is SvgUseSymbol {
         return Svg.instanceOfUse(object) && object['symbolElement'] !== undefined;
     }
 
-    public static instanceOfShape(object: SvgBase): object is squared.svg.SvgShape {
+    public static instanceOfShape(object: SvgElement): object is squared.svg.SvgShape {
         return (Svg.instanceOfUse(object) || SVG.shape(object.element)) && object['path'] !== undefined;
     }
 
-    public static instanceOfImage(object: SvgBase): object is SvgUseSymbol {
+    public static instanceOfImage(object: SvgElement): object is squared.svg.SvgImage {
         return Svg.instanceOfUse(object) && object['imageElement'] !== undefined || object.element.tagName === 'image';
     }
 
-    public static instanceOfUse(object: SvgBase): object is squared.svg.SvgUse {
+    public static instanceOfUse(object: SvgElement): object is squared.svg.SvgUse {
         return object.element.tagName === 'use';
     }
 
@@ -91,7 +91,7 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
     private init() {
         [this.element, ...Array.from(this.element.querySelectorAll('defs'))].forEach(item => {
             item.querySelectorAll(':scope > set, :scope > animate, :scope > animateTransform, :scope > animateMotion').forEach((animation: SVGAnimationElement) => {
-                const target = getHrefTargetElement(animation, this.element);
+                const target = getTargetElement(animation, this.element);
                 if (target) {
                     if (animation.parentElement) {
                         animation.parentElement.removeChild(animation);

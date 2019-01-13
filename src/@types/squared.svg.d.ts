@@ -1,17 +1,10 @@
-import { SvgAspectRatio, SvgPathCommand, SvgPoint, SvgRect, SvgTransform, SvgTransformExclusions, SvgTransformResidual } from '../svg/@types/object';
+import { SvgAspectRatio, SvgPathCommand, SvgPoint, SvgRect, SvgTransform } from '../svg/@types/object';
 
 import Container = squared.lib.base.Container;
 
 declare global {
     namespace squared.svg {
-        interface SvgBase {
-            parent?: SvgContainer;
-            readonly element: SVGGraphicsElement;
-            build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual): void;
-            synchronize(useKeyTime?: boolean): void;
-        }
-
-        interface SvgView extends SvgBase {
+        interface SvgView extends SvgElement {
             animate: SvgAnimation[];
             transform: SvgTransform[];
             opacity: string;
@@ -37,7 +30,7 @@ declare global {
             setRect(): void;
         }
 
-        interface SvgBaseVal extends SvgBase {
+        interface SvgBaseVal extends SvgElement {
             setBaseValue(attr: string, value?: any): boolean;
             getBaseValue(attr: string, defaultValue?: any): any;
         }

@@ -2,12 +2,12 @@ import { SvgPoint, SvgTransform, SvgTransformResidual } from './@types/object';
 
 import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgPaint$MX from './svgpaint-mx';
-import SvgBase from './svgbase';
+import SvgElement from './svgelement';
 import SvgBuild from './svgbuild';
 
 import { SVG, getTransformOrigin } from './lib/util';
 
-export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgBase)) implements squared.svg.SvgPath {
+export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) implements squared.svg.SvgPath {
     public static getLine(x1: number, y1: number, x2 = 0, y2 = 0) {
         return `M${x1},${y1} L${x2},${y2}`;
     }
