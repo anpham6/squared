@@ -82,15 +82,15 @@ export default <T extends Constructor<squared.svg.SvgBase>>(Base: T) => {
             }
         }
 
-        private getAttribute(attr: string) {
-            return $dom.cssAttribute(this.element, attr) || (this.parentElement ? $dom.cssAttribute(this.parentElement, attr) : '');
-        }
-
         private setAttribute(attr: string) {
             const value = this.getAttribute(attr);
             if (value !== '') {
                 this[$util.convertCamelCase(attr)] = value;
             }
+        }
+
+        private getAttribute(attr: string) {
+            return $dom.cssAttribute(this.element, attr) || (this.parentElement ? $dom.cssAttribute(this.parentElement, attr) : '');
         }
     };
 };

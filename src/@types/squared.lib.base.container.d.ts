@@ -19,6 +19,7 @@ declare global {
             partition(predicate: IteratorPredicate<T, boolean>): [T[], T[]];
             every(predicate: IteratorPredicate<T, boolean>): boolean;
             some(predicate: IteratorPredicate<T, boolean>): boolean;
+            cascade(): T[];
             sort(predicate: (a: T, b: T) => number): this;
         }
 

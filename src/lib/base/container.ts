@@ -115,6 +115,20 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return this._children.some(predicate);
     }
 
+    public cascade() {
+        function cascade(container: Container<T>) {
+            const current: T[] = [];
+            for (const item of container.children) {
+                current.push(item);
+                if (item instanceof Container && item.length) {
+                    current.push(...cascade(item));
+                }
+            }
+            return current;
+        }
+        return cascade(this);
+    }
+
     get children() {
         return this._children;
     }

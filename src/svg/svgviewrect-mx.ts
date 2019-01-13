@@ -1,15 +1,25 @@
 const $dom = squared.lib.dom;
 
-export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
+export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
     return class extends Base implements squared.svg.SvgViewRect {
         private _width: number | undefined;
         private _height: number | undefined;
 
         public setRect() {
-            this.setBaseValue('x', this.x);
-            this.setBaseValue('y', this.y);
-            this.setBaseValue('width', this.width);
-            this.setBaseValue('height', this.height);
+            let x = this.x;
+            let y = this.y;
+            let width = this.width;
+            let height = this.height;
+            if (this.parent) {
+                x = this.parent.recalibrateX(x);
+                y = this.parent.recalibrateX(y);
+                width = this.parent.recalibrateDimension(width);
+                height = this.parent.recalibrateDimension(height);
+            }
+            this.setBaseValue('x', x);
+            this.setBaseValue('y', y);
+            this.setBaseValue('width', width);
+            this.setBaseValue('height', height);
         }
 
         private getElement() {

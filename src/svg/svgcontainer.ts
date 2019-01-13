@@ -1,4 +1,4 @@
-import { SvgAspectRatio, SvgTransformExclusions, SvgTransformResidual } from './@types/object';
+import { SvgAspectRatio, SvgPoint, SvgTransformExclusions, SvgTransformResidual } from './@types/object';
 
 import { SVG, getHrefTargetElement, getParentViewBox } from './lib/util';
 
@@ -28,7 +28,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgViewable
             let svg: SvgViewable | undefined;
             if (SVG.svg(item)) {
                 svg = new squared.svg.Svg(item, false);
-                this.setAspectRatio(<Svg> svg);
+                this.setAspectRatio(<squared.svg.Svg> svg, item);
             }
             else if (SVG.g(item)) {
                 svg = new squared.svg.SvgG(item);
@@ -39,7 +39,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgViewable
                 if (target) {
                     if (SVG.symbol(target)) {
                         svg = new squared.svg.SvgUseSymbol(item, target);
-                        this.setAspectRatio(<squared.svg.SvgUseSymbol> svg);
+                        this.setAspectRatio(<squared.svg.SvgUseSymbol> svg, target);
                     }
                     else if (SVG.image(target)) {
                         svg = new squared.svg.SvgImage(item, target);
@@ -66,22 +66,47 @@ export default class SvgContainer extends squared.lib.base.Container<SvgViewable
         this.each(item => item.synchronize(useKeyTime));
     }
 
-    private setAspectRatio(item: squared.svg.SvgGroup) {
-        const svg = getParentViewBox(this.element);
-        if (svg) {
+    public recalibrateX(value: number) {
+        return value * this.aspectRatio.unit + this.aspectRatio.x;
+    }
+
+    public recalibrateY(value: number) {
+        return value * this.aspectRatio.unit + this.aspectRatio.y;
+    }
+
+    public recalibrateDimension(value: number) {
+        return value * this.aspectRatio.unit;
+    }
+
+    public recalibratePoints(values: SvgPoint[]) {
+        const aspectRatio = this.aspectRatio;
+        for (const pt of values) {
+            pt.x = pt.x * aspectRatio.unit + aspectRatio.x;
+            pt.y = pt.y * aspectRatio.unit + aspectRatio.y;
+            if (pt.rx !== undefined && pt.ry !== undefined) {
+                pt.rx *= aspectRatio.unit;
+                pt.ry *= aspectRatio.unit;
+            }
+        }
+        return values;
+    }
+
+    private setAspectRatio(svg: squared.svg.SvgGroup, element?: SVGSVGElement | SVGSymbolElement) {
+        const parent = getParentViewBox(this.element);
+        if (parent) {
             let current = <Svg> (this as unknown);
             while (current) {
-                if (current.element === svg) {
+                if (parent === current.element) {
                     break;
                 }
                 current = <Svg> current.parent;
             }
             if (current) {
-                const aspectRatio = item.aspectRatio;
-                if (!SVG.g(item.element)) {
-                    const viewBox = (<Svg> item).viewBox;
+                const aspectRatio = svg.aspectRatio;
+                if (element) {
+                    const viewBox = element.viewBox.baseVal;
                     if (viewBox.width > 0 && viewBox.height > 0) {
-                        const viewBoxParent = svg.viewBox.baseVal;
+                        const viewBoxParent = parent.viewBox.baseVal;
                         const ratioParent = viewBoxParent.width / viewBoxParent.height;
                         const ratioCurrent = viewBox.width / viewBox.height;
                         if (ratioParent > ratioCurrent) {

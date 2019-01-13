@@ -7,13 +7,12 @@ import SvgViewRect$MX from './svgviewrect-mx';
 import SvgContainer from './svgcontainer';
 import SvgShape from './svgshape';
 
-export default class SvgUseSymbol extends SvgPaint$MX(SvgViewRect$MX(SvgView$MX(SvgBaseVal$MX(SvgContainer)))) implements squared.svg.SvgUseSymbol {
+export default class SvgUseSymbol extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer)))) implements squared.svg.SvgUseSymbol {
     constructor(
         public element: SVGUseElement,
         public readonly symbolElement: SVGSymbolElement)
     {
         super(element);
-        this.setRect();
         this.setPaint();
     }
 
@@ -25,6 +24,7 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgViewRect$MX(SvgView$MX(
     }
 
     public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
+        this.setRect();
         const element = this.element;
         this.element = <SVGUseElement> (this.symbolElement as unknown);
         super.build(exclusions, residual);
@@ -35,6 +35,12 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgViewRect$MX(SvgView$MX(
             }
         });
         this.element = element;
+        const x = this.getBaseValue('x');
+        const y = this.getBaseValue('y');
+        if (x !== 0 || y !== 0) {
+            const pt = { x, y };
+            this.cascade().forEach(item => item.translationOffset = pt);
+        }
     }
 
     get viewBox() {

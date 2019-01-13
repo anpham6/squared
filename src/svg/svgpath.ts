@@ -1,12 +1,13 @@
-import { SvgAspectRatio, SvgPoint, SvgTransform, SvgTransformResidual } from './@types/object';
+import { SvgPoint, SvgTransform, SvgTransformResidual } from './@types/object';
 
+import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgPaint$MX from './svgpaint-mx';
-import SvgBaseVal from './svgbaseval';
+import SvgBase from './svgbase';
 import SvgBuild from './svgbuild';
 
 import { SVG, getTransformOrigin } from './lib/util';
 
-export default class SvgPath extends SvgPaint$MX(SvgBaseVal) implements squared.svg.SvgPath {
+export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgBase)) implements squared.svg.SvgPath {
     public static getLine(x1: number, y1: number, x2 = 0, y2 = 0) {
         return `M${x1},${y1} L${x2},${y2}`;
     }
@@ -37,11 +38,6 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal) implements squared.
 
     public name = '';
     public value = '';
-    public aspectRatio: SvgAspectRatio = {
-        x: 0,
-        y: 0,
-        unit: 1
-    };
     public transformed: SvgTransform[] | null = null;
     public transformResidual?: SvgTransform[][];
 
@@ -65,10 +61,10 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal) implements squared.
         if (save) {
             this.transformed = null;
         }
-        const aspectRatio = this.aspectRatio.x !== 0 || this.aspectRatio.y !== 0 || this.aspectRatio.unit !== 1;
+        const parent = this.parent;
         if (SVG.path(element)) {
             d = this.getBaseValue('d');
-            if (aspectRatio || transform && transform.length) {
+            if (parent && parent.aspectRatio.unit !== 1 || transform && transform.length) {
                 const commands = SvgBuild.toPathCommandList(d);
                 if (commands.length) {
                     let points = SvgBuild.toAbsolutePointList(commands);
@@ -82,8 +78,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal) implements squared.
                                 this.transformed = transform;
                             }
                         }
-                        if (aspectRatio) {
-                            this.applyAspectRatioPoints(points);
+                        if (parent) {
+                            parent.recalibratePoints(points);
                         }
                         d = SvgBuild.fromPathCommandList(SvgBuild.fromAbsolutePointList(commands, points));
                     }
@@ -104,8 +100,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal) implements squared.
                     this.transformed = transform;
                 }
             }
-            if (aspectRatio) {
-                this.applyAspectRatioPoints(points);
+            if (parent) {
+                parent.recalibratePoints(points);
             }
             d = SvgPath.getPolyline(points);
         }
@@ -132,8 +128,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal) implements squared.
                     this.transformed = transform;
                 }
             }
-            if (aspectRatio) {
-                this.applyAspectRatioPoints(points);
+            if (parent) {
+                parent.recalibratePoints(points);
             }
             const pt = <Required<SvgPoint>> points[0];
             d = SvgPath.getEllipse(pt.x, pt.y, pt.rx, pt.ry);
@@ -157,17 +153,17 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal) implements squared.
                     points = this.transformPoints(transform, points);
                     this.transformed = transform;
                 }
-                if (aspectRatio) {
-                    this.applyAspectRatioPoints(points);
+                if (parent) {
+                    parent.recalibratePoints(points);
                 }
                 d = SvgPath.getPolygon(points);
             }
             else {
-                if (aspectRatio) {
-                    x = this.applyAspectRatio(x) + this.aspectRatio.x;
-                    y = this.applyAspectRatio(y) + this.aspectRatio.y;
-                    width = this.applyAspectRatio(width);
-                    height = this.applyAspectRatio(height);
+                if (parent) {
+                    x = parent.recalibrateX(x);
+                    y = parent.recalibrateY(y);
+                    width = parent.recalibrateDimension(width);
+                    height = parent.recalibrateDimension(height);
                 }
                 d = SvgPath.getRect(width, height, x, y);
             }
@@ -183,8 +179,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal) implements squared.
                     this.transformed = transform;
                 }
             }
-            if (aspectRatio) {
-                this.applyAspectRatioPoints(points);
+            if (parent) {
+                parent.recalibratePoints(points);
             }
             d = element.tagName === 'polygon' ? SvgPath.getPolygon(points) : SvgPath.getPolyline(points);
         }
@@ -195,7 +191,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal) implements squared.
     }
 
     public transformPoints(transform: SvgTransform[], points: Point[], center?: Point) {
-        return SvgBuild.applyTransforms(transform, points, this.aspectRatio, getTransformOrigin(this.element), center);
+        return SvgBuild.applyTransforms(transform, points, getTransformOrigin(this.element), center);
     }
 
     private init() {
@@ -230,21 +226,5 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal) implements squared.
             this.setBaseValue('points', SvgBuild.toPointList(element.points));
         }
         this.setPaint();
-    }
-
-    private applyAspectRatio(value = 0) {
-        return value * this.aspectRatio.unit;
-    }
-
-    private applyAspectRatioPoints(values: SvgPoint[]) {
-        for (const pt of values) {
-            pt.x = this.applyAspectRatio(pt.x) + this.aspectRatio.x;
-            pt.y = this.applyAspectRatio(pt.y) + this.aspectRatio.y;
-            if (pt.rx !== undefined && pt.ry !== undefined) {
-                pt.rx = this.applyAspectRatio(pt.rx);
-                pt.ry = this.applyAspectRatio(pt.ry);
-            }
-        }
-        return values;
     }
 }

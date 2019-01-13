@@ -1,17 +1,21 @@
-import { SvgAspectRatio } from '../svg/@types/object';
+import { SvgAspectRatio, SvgPoint } from '../svg/@types/object';
 
 import Container = squared.lib.base.Container;
 import { SvgAnimation } from '../svg/main';
 
 declare global {
     namespace squared.svg {
-        interface SvgContainer extends Container<SvgView>, SvgBuildable {
+        interface SvgContainer extends Container<SvgViewable>, SvgBuildable {
             aspectRatio: SvgAspectRatio;
             readonly element: SVGSVGElement | SVGGElement | SVGUseElement;
             append(item: SvgViewable): this;
+            recalibrateX(value: number): number;
+            recalibrateY(value: number): number;
+            recalibrateDimension(value: number): number;
+            recalibratePoints(values: SvgPoint[]): SvgPoint[];
         }
 
-        interface Svg extends SvgContainer, SvgViewRect, SvgViewBox {
+        interface Svg extends SvgContainer, SvgView, SvgViewRect, SvgViewBox, SvgBaseVal {
             readonly element: SVGSVGElement;
             readonly documentRoot: boolean;
             readonly patterns: {
@@ -24,7 +28,7 @@ declare global {
             readonly element: SVGGElement;
         }
 
-        interface SvgUseSymbol extends SvgContainer, SvgViewRect, SvgViewBox, SvgPaint {
+        interface SvgUseSymbol extends SvgContainer, SvgView, SvgViewRect, SvgViewBox, SvgBaseVal, SvgPaint {
             element: SVGUseElement;
             readonly symbolElement: SVGSymbolElement;
         }

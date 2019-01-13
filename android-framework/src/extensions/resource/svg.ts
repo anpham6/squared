@@ -27,7 +27,6 @@ import $SvgPath = squared.svg.SvgPath;
 
 type SvgAnimate = squared.svg.SvgAnimate;
 type SvgAnimation = squared.svg.SvgAnimation;
-type SvgContainer = squared.svg.SvgContainer;
 type SvgGroup = squared.svg.SvgGroup;
 type SvgImage = squared.svg.SvgImage;
 type SvgShape = squared.svg.SvgShape;
@@ -1164,19 +1163,9 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 result[attr] = path[attr];
             }
         }
-        let fillOpacity = parseFloat(result.fillOpacity || '1');
-        let strokeOpacity = parseFloat(result.strokeOpacity || '1');
-        let current: SvgView | SvgContainer | undefined = target;
-        while (current) {
-            const opacity = parseFloat((<SvgView> current).opacity);
-            if (opacity < 1) {
-                fillOpacity *= opacity;
-                strokeOpacity *= opacity;
-            }
-            current = (<SvgView> current).parent;
-        }
-        result.fillOpacity = fillOpacity.toString();
-        result.strokeOpacity = strokeOpacity.toString();
+        const opacity = $SvgBuild.getContainerOpacity(target);
+        result.fillOpacity = (parseFloat(result.fillOpacity || '1') * opacity).toString();
+        result.strokeOpacity = (parseFloat(result.strokeOpacity || '1') * opacity).toString();
         if (path.clipPath) {
             const clipPath = svg.patterns.clipPath.get(path.clipPath);
             if (clipPath) {
@@ -1243,7 +1232,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
         }
         this.queueAnimations(
             target,
-            path.name,
+            target.name,
             item => $Svg.instanceOfAnimate(item),
             result.value
         );

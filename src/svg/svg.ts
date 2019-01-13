@@ -1,4 +1,4 @@
-import { SvgLinearGradient, SvgRadialGradient } from './@types/object';
+import { SvgLinearGradient, SvgRadialGradient, SvgTransformExclusions, SvgTransformResidual } from './@types/object';
 
 import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgView$MX from './svgview-mx';
@@ -12,7 +12,7 @@ import { SVG, getHrefTargetElement } from './lib/util';
 
 type SvgBase = squared.svg.SvgBase;
 
-export default class Svg extends SvgViewRect$MX(SvgView$MX(SvgBaseVal$MX(SvgContainer))) implements squared.svg.Svg {
+export default class Svg extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer))) implements squared.svg.Svg {
     public static instance(object: SvgBase): object is squared.svg.Svg {
         return object.element.tagName === 'svg';
     }
@@ -72,7 +72,11 @@ export default class Svg extends SvgViewRect$MX(SvgView$MX(SvgBaseVal$MX(SvgCont
     {
         super(element);
         this.init();
+    }
+
+    public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
         this.setRect();
+        super.build(exclusions, residual);
     }
 
     public synchronize(useKeyTime = false) {
@@ -83,7 +87,7 @@ export default class Svg extends SvgViewRect$MX(SvgView$MX(SvgBaseVal$MX(SvgCont
     }
 
     private init() {
-        [this.element, ...Array.from(this.element.querySelectorAll(':scope > defs'))].forEach(item => {
+        [this.element, ...Array.from(this.element.querySelectorAll('defs'))].forEach(item => {
             item.querySelectorAll(':scope > set, :scope > animate, :scope > animateTransform, :scope > animateMotion').forEach((animation: SVGAnimationElement) => {
                 const target = getHrefTargetElement(animation, this.element);
                 if (target) {

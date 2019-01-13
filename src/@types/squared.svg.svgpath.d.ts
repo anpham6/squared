@@ -2,7 +2,7 @@ import { SvgPoint, SvgTransform, SvgTransformResidual } from '../svg/@types/obje
 
 declare global {
     namespace squared.svg {
-        interface SvgPath extends SvgBaseVal, SvgTransformable, SvgPaint, NameValue {
+        interface SvgPath extends SvgBaseVal, SvgPaint, SvgTransformable, NameValue {
             value: string;
             draw(transform?: SvgTransform[], residual?: SvgTransformResidual, save?: boolean): string;
             transformPoints(transform: SvgTransform[], points: SvgPoint[], center?: SvgPoint): SvgPoint[];

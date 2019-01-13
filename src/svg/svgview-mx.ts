@@ -2,16 +2,15 @@ import { SvgTransform } from './@types/object';
 
 import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
-import SvgContainber from './svgcontainer';
 
 import { getTransform, isVisible, setOpacity, setVisible } from './lib/util';
 
 const $dom = squared.lib.dom;
 
-export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
+export default <T extends Constructor<squared.svg.SvgBase>>(Base: T) => {
     return class extends Base implements squared.svg.SvgView {
         public transformed: SvgTransform[] | null = null;
-        public parent?: SvgContainber;
+        public translationOffset?: Point;
 
         private _name?: string;
         private _animate?: SvgAnimation[];

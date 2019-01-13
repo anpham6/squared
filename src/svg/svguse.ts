@@ -1,20 +1,21 @@
 import { SvgTransformExclusions, SvgTransformResidual } from './@types/object';
 
+import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgPaint$MX from './svgpaint-mx';
 import SvgViewRect$MX from './svgviewrect-mx';
-import SvgBuild from './svgbuild';
 import SvgPath from './svgpath';
 import SvgShape from './svgshape';
 
 import { SVG } from './lib/util';
 
-export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgShape)) implements squared.svg.SvgUse {
+export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgShape))) implements squared.svg.SvgUse {
     constructor(
         public readonly element: SVGUseElement,
         public shapeElement: SVGGraphicsElement)
     {
         super(element);
         this.setPaint();
+        this.setShape(shapeElement);
     }
 
     public setShape(value: SVGGraphicsElement) {
@@ -25,14 +26,9 @@ export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgShape)) implem
 
     public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
         if (this.path === undefined) {
-            const path = new SvgPath(this.shapeElement, this.element);
-            super.path = path;
-            if (this.parent) {
-                path.aspectRatio = this.parent.aspectRatio;
-            }
-            const shape = new SvgShape(this.shapeElement);
-            path.draw(SvgBuild.filterTransforms([...this.transform, ...shape.transform], exclusions ? exclusions[path.element.tagName] : undefined), residual);
+            this.path = new SvgPath(this.shapeElement, this.element);
         }
+        super.build(exclusions, residual);
     }
 
     set href(value) {

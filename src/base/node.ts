@@ -276,19 +276,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public cascade(element = false) {
-        function cascade(node: T) {
-            const current: T[] = [];
-            for (const item of node.children) {
-                if (!element || item.element) {
-                    current.push(item);
-                }
-                if (item.length) {
-                    current.push(...cascade(item));
-                }
-            }
-            return current;
+        const result = super.cascade();
+        if (element) {
+            return result.filter(node => node.element);
         }
-        return cascade(this);
+        return result;
     }
 
     public inherit(node: T, ...props: string[]) {

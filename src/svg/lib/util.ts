@@ -126,7 +126,7 @@ export const SVG = {
     svg: (element: Element | null): element is SVGSVGElement => {
         return !!element && element.tagName === 'svg';
     },
-    g: (element: Element | null): element is SVGSVGElement => {
+    g: (element: Element | null): element is SVGGElement => {
         return !!element && element.tagName === 'g';
     },
     use: (element: Element | null): element is SVGUseElement => {

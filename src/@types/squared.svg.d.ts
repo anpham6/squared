@@ -5,21 +5,17 @@ import Container = squared.lib.base.Container;
 declare global {
     namespace squared.svg {
         interface SvgBase {
+            parent?: SvgContainer;
             readonly element: SVGGraphicsElement;
         }
 
-        interface SvgBaseVal extends SvgBase {
-            setBaseValue(attr: string, value?: any): boolean;
-            getBaseValue(attr: string): any;
-        }
-
-        interface SvgView extends SvgBaseVal {
+        interface SvgView extends SvgBase {
             animate: SvgAnimation[];
             transform: SvgTransform[];
             opacity: string;
             visible: boolean;
             transformed: SvgTransform[] | null;
-            parent?: SvgContainer;
+            translationOffset?: Point;
             readonly name: string;
         }
 
@@ -37,8 +33,13 @@ declare global {
             transformResidual?: SvgTransform[][];
         }
 
-        interface SvgViewRect extends SvgView, SvgRect {
+        interface SvgViewRect extends SvgRect, SvgBaseVal {
             setRect(): void;
+        }
+
+        interface SvgBaseVal extends SvgBase {
+            setBaseValue(attr: string, value?: any): boolean;
+            getBaseValue(attr: string): any;
         }
 
         interface SvgViewBox {
@@ -68,6 +69,7 @@ declare global {
 
         class SvgBuild {
             public static setName(element?: SVGElement): string;
+            public static getContainerOpacity(target: SvgView): number;
             public static filterTransforms(transform: SvgTransform[], exclude?: number[]): SvgTransform[];
             public static applyTransforms(transform: SvgTransform[], values: Point[], aspectRatio?: SvgAspectRatio, origin?: Point, center?: Point): Point[];
             public static getCenterPoint(values: Point[]): Point[];

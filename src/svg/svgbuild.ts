@@ -1,6 +1,9 @@
-import { SvgAspectRatio, SvgPathCommand, SvgPoint, SvgTransform } from './@types/object';
+import { SvgPathCommand, SvgPoint, SvgTransform } from './@types/object';
 
-import { MATRIX, applyMatrixX, applyMatrixY, createTransform, getRadiusY } from './lib/util';
+import { applyMatrixX, applyMatrixY, createTransform, getRadiusY } from './lib/util';
+
+type SvgContainer = squared.svg.SvgContainer;
+type SvgView = squared.svg.SvgView;
 
 const $color = squared.lib.color;
 const $dom = squared.lib.dom;
@@ -38,28 +41,25 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         }
     }
 
+    public static getContainerOpacity(target: SvgView) {
+        let result = parseFloat(target.opacity);
+        let current: SvgContainer | undefined = target.parent;
+        while (current) {
+            const opacity = parseFloat(current['opacity'] || '1');
+            if (opacity < 1) {
+                result *= opacity;
+            }
+            current = current['parent'];
+        }
+        return result;
+    }
+
     public static filterTransforms(transform: SvgTransform[], exclude?: number[]) {
         return (exclude ? transform.filter(item => !exclude.includes(item.type)) : transform).filter(item => !(item.type === SVGTransform.SVG_TRANSFORM_SCALE && item.matrix.a === 1 && item.matrix.d === 1));
     }
 
-    public static applyTransforms(transform: SvgTransform[], values: SvgPoint[], aspectRatio?: SvgAspectRatio, origin?: SvgPoint, center?: SvgPoint) {
+    public static applyTransforms(transform: SvgTransform[], values: SvgPoint[], origin?: SvgPoint, center?: SvgPoint) {
         const result = SvgBuild.toPointList(values);
-        if (aspectRatio && aspectRatio.unit !== 1) {
-            if (origin) {
-                origin.x *= aspectRatio.unit;
-                origin.y *= aspectRatio.unit;
-            }
-            if (center) {
-                center.x *= aspectRatio.unit;
-                center.y *= aspectRatio.unit;
-            }
-            for (let i = 0; i < transform.length; i++) {
-                const matrix = MATRIX.clone(transform[i].matrix);
-                matrix.e *= aspectRatio.unit;
-                matrix.f *= aspectRatio.unit;
-                transform[i].matrix = matrix;
-            }
-        }
         const items = transform.slice().reverse();
         for (const item of items) {
             let x1 = 0;

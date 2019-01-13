@@ -258,14 +258,12 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
             const stored = themes.get(filename) || new Map<string, StyleAttribute>();
             let appTheme = '';
             if (theme.name === '' || theme.name.charAt(0) === '.') {
-                if (themes.size) {
-                    foundTheme: {
-                        for (const themeData of themes.values()) {
-                            for (const name in themeData) {
-                                for (const parentName in themeData[name]) {
-                                    appTheme = themeData[name][parentName].appTheme;
-                                    break foundTheme;
-                                }
+                foundTheme: {
+                    for (const data of themes.values()) {
+                        for (const style of data.values()) {
+                            if (style.name) {
+                                appTheme = style.name;
+                                break foundTheme;
                             }
                         }
                     }

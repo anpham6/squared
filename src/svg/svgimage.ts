@@ -1,5 +1,6 @@
 import { SvgPoint } from './@types/object';
 
+import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgView$MX from './svgview-mx';
 import SvgViewRect$MX from './svgviewrect-mx';
 import SvgBuild from './svgbuild';
@@ -9,27 +10,32 @@ import { SVG, applyMatrixX, applyMatrixY } from './lib/util';
 
 const $util = squared.lib.util;
 
-export default class SvgImage extends SvgViewRect$MX(SvgView$MX(SvgElement)) implements squared.svg.SvgImage {
+export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgElement))) implements squared.svg.SvgImage {
     public rotateOrigin?: SvgPoint;
 
-    public readonly imageElement: SVGImageElement | null;
+    public readonly imageElement: SVGImageElement | null = null;
 
     constructor(
         public readonly element: SVGImageElement | SVGUseElement,
         imageElement?: SVGImageElement)
     {
         super(element);
-        this.imageElement = imageElement || null;
+        if (imageElement) {
+            this.imageElement = imageElement;
+        }
+    }
+
+    public build() {
         this.setRect();
     }
 
     public extract(exclude?: number[]) {
         const transform = SvgBuild.filterTransforms(this.transform, exclude);
+        let x = this.x;
+        let y = this.y;
+        let width = this.width;
+        let height = this.height;
         if (transform.length) {
-            let x = this.x;
-            let y = this.y;
-            let width = this.width;
-            let height = this.height;
             transform.reverse();
             for (let i = 0; i < transform.length; i++) {
                 const item = transform[i];
@@ -56,26 +62,32 @@ export default class SvgImage extends SvgViewRect$MX(SvgView$MX(SvgElement)) imp
                             if (m.d < 0) {
                                 y += m.d * height;
                             }
-                            if (this.rotateOrigin === undefined) {
-                                this.rotateOrigin = {
-                                    angle: item.angle,
-                                    x: 0,
-                                    y: 0
-                                };
+                            if (this.rotateOrigin) {
+                                this.rotateOrigin.angle = (this.rotateOrigin.angle || 0) + item.angle;
                             }
                             else {
-                                this.rotateOrigin.angle = (this.rotateOrigin.angle || 0) + item.angle;
+                                this.rotateOrigin = { angle: item.angle, x: 0, y: 0 };
                             }
                         }
                         break;
                 }
             }
-            this.setBaseValue('x', x);
-            this.setBaseValue('y', y);
-            this.setBaseValue('width', width);
-            this.setBaseValue('height', height);
             this.transformed = transform;
         }
+        if (this.parent) {
+            x = this.parent.recalibrateX(x);
+            y = this.parent.recalibrateY(y);
+            width = this.parent.recalibrateDimension(width);
+            height = this.parent.recalibrateDimension(height);
+        }
+        if (this.translationOffset) {
+            x += this.translationOffset.x;
+            y += this.translationOffset.y;
+        }
+        this.setBaseValue('x', x);
+        this.setBaseValue('y', y);
+        this.setBaseValue('width', width);
+        this.setBaseValue('height', height);
     }
 
     get x() {
