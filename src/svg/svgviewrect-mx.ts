@@ -64,7 +64,7 @@ export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
         set width(value) {
             const element = this.getElement();
             if (element) {
-                if (element.tagName === 'svg' && $dom.isUserAgent($dom.USER_AGENT.FIREFOX)) {
+                if (element.tagName === 'svg' && $dom.isUserAgent($dom.USER_AGENT.FIREFOX) && element.parentElement instanceof HTMLElement) {
                     this._width = value;
                 }
                 else {
@@ -75,7 +75,7 @@ export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
         get width() {
             const element = this.getElement();
             if (element) {
-                if (element.tagName === 'svg' && $dom.isUserAgent($dom.USER_AGENT.FIREFOX)) {
+                if (element.tagName === 'svg' && $dom.isUserAgent($dom.USER_AGENT.FIREFOX) && element.parentElement instanceof HTMLElement) {
                     if (this._width !== undefined) {
                         return this._width;
                     }
@@ -94,7 +94,7 @@ export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
         set height(value) {
             const element = this.getElement();
             if (element) {
-                if (element.tagName === 'svg' && $dom.isUserAgent($dom.USER_AGENT.FIREFOX)) {
+                if (element.tagName === 'svg' && $dom.isUserAgent($dom.USER_AGENT.FIREFOX) && element.parentElement instanceof HTMLElement) {
                     this._height = value;
                 }
                 else {
@@ -105,7 +105,7 @@ export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
         get height() {
             const element = this.getElement();
             if (element) {
-                if (element.tagName === 'svg' && $dom.isUserAgent($dom.USER_AGENT.FIREFOX)) {
+                if (element.tagName === 'svg' && $dom.isUserAgent($dom.USER_AGENT.FIREFOX) && element.parentElement instanceof HTMLElement) {
                     if (this._height !== undefined) {
                         return this._height;
                     }

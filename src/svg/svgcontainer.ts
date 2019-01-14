@@ -98,7 +98,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
             const aspectRatio = svg.aspectRatio;
             if (element) {
                 const viewBox = element.viewBox.baseVal;
-                if (viewBox.width > 0 && viewBox.height > 0) {
+                if (viewBox && viewBox.width > 0 && viewBox.height > 0) {
                     const ratio = viewBox.width / viewBox.height;
                     const outerViewBox = parent.viewBox;
                     const outerRatio = outerViewBox.width / outerViewBox.height;
