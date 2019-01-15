@@ -43,7 +43,6 @@ declare global {
         }
 
         class SvgAnimation implements SvgAnimation {
-            public static convertClockTime(value: string): number;
             constructor(element: SVGAnimationElement);
         }
 

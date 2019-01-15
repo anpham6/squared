@@ -5,7 +5,7 @@ import SvgPaint$MX from './svgpaint-mx';
 import SvgElement from './svgelement';
 import SvgBuild from './svgbuild';
 
-import { SVG, getTransformOrigin } from './lib/util';
+import { SVG, getTransform, getTransformOrigin } from './lib/util';
 
 export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) implements squared.svg.SvgPath {
     public static getLine(x1: number, y1: number, x2 = 0, y2 = 0) {
@@ -41,6 +41,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     public transformed: SvgTransform[] | null = null;
     public transformResidual?: SvgTransform[][];
 
+    private _transform?: SvgTransform[];
+
     constructor(
         public readonly element: SVGGraphicsElement,
         parentElement?: SVGGraphicsElement)
@@ -67,7 +69,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             if (parent && parent.aspectRatio.unit !== 1 || transform && transform.length) {
                 const commands = SvgBuild.toPathCommandList(d);
                 if (commands.length) {
-                    let points = SvgBuild.toAbsolutePointList(commands);
+                    let points = SvgBuild.getAbsolutePoints(commands);
                     if (points.length) {
                         if (transform && transform.length) {
                             if (typeof residual === 'function') {
@@ -81,7 +83,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                         if (parent) {
                             parent.refitPoints(points);
                         }
-                        d = SvgBuild.fromPathCommandList(SvgBuild.fromAbsolutePointList(commands, points));
+                        d = SvgBuild.fromPathCommandList(SvgBuild.mergeAbsolutePoints(commands, points));
                     }
                 }
             }
@@ -223,8 +225,15 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             this.setBaseValue('ry');
         }
         else if (SVG.polygon(element) || SVG.polyline(element)) {
-            this.setBaseValue('points', SvgBuild.toPointList(element.points));
+            this.setBaseValue('points', SvgBuild.clonePoints(element.points));
         }
         this.setPaint();
+    }
+
+    get transform() {
+        if (this._transform === undefined) {
+            this._transform = getTransform(this.element) || SvgBuild.convertTransformList(this.element.transform.baseVal);
+        }
+        return this._transform;
     }
 }

@@ -17,6 +17,7 @@ declare global {
             export import ELEMENT_BLOCK = $dom.ELEMENT_BLOCK;
             export import ELEMENT_INLINE = $dom.ELEMENT_INLINE;
             function isUserAgent(value: string | number): boolean;
+            function getKeyframeRules(): CSSRuleData;
             function getDataSet(element: Element | null, prefix: string): StringMap;
             function newBoxRect(): BoxRect;
             function newRectDimensions(): RectDimensions;

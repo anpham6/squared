@@ -98,3 +98,4 @@ interface ColorStop {
 }
 
 type SvgGroup = SVGGElement | SVGSVGElement | SVGUseElement;
+type CSSRuleData = Map<string, ObjectMap<StringMap>>;

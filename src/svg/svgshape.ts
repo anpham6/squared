@@ -6,7 +6,7 @@ import SvgBuild from './svgbuild';
 import SvgElement from './svgelement';
 import SvgPath from './svgpath';
 
-import { SHAPES, getTransform } from './lib/util';
+import { SHAPES } from './lib/util';
 
 export default class SvgShape extends SvgSynchronize$MX(SvgView$MX(SvgElement)) implements squared.svg.SvgShape {
     public type!: number;
@@ -33,13 +33,13 @@ export default class SvgShape extends SvgSynchronize$MX(SvgView$MX(SvgElement)) 
         }
         const transform = this.transform.slice();
         if (this.element !== path.element) {
-            transform.push(...(getTransform(path.element) || SvgBuild.toTransformList(path.element.transform.baseVal)));
+            transform.push(...path.transform);
         }
         path.draw(SvgBuild.filterTransforms(transform, exclusions ? exclusions[path.element.tagName] : undefined), residual);
     }
 
     public synchronize(useKeyTime = false) {
-        if (this.path && this.animate.length) {
+        if (this.path && this.animation.length) {
             this.merge(this.getAnimateShape(), useKeyTime, this.path);
         }
     }

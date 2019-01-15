@@ -8,7 +8,8 @@ declare global {
             export import SVG = $util.SVG;
             export import SHAPES = $util.SHAPES;
             export import MATRIX = $util.MATRIX;
-            function getSvgViewport(element: SVGGraphicsElement): SVGGraphicsElement[];
+            function createElement<K extends keyof SvgElementTagNameMap>(qualifiedName: K): SvgElementTagNameMap[K];
+            function convertClockTime(value: string): number;
             function isVisible(element: Element): boolean;
             function setVisible(element: SVGGraphicsElement, value: boolean): void;
             function getTargetElement(element: Element, parentElement?: SVGElement | HTMLElement | null): SVGElement | null;

@@ -4,6 +4,7 @@ declare global {
     namespace squared.svg {
         interface SvgPath extends SvgBaseVal, SvgPaint, SvgTransformable, NameValue {
             value: string;
+            transform: SvgTransform[];
             draw(transform?: SvgTransform[], residual?: SvgTransformResidual, save?: boolean): string;
             transformPoints(transform: SvgTransform[], points: SvgPoint[], center?: SvgPoint): SvgPoint[];
         }

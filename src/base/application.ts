@@ -1787,12 +1787,12 @@ export default class Application<T extends Node> implements squared.base.Applica
             const styleSheet = <CSSStyleSheet> document.styleSheets[i];
             if (styleSheet.cssRules) {
                 for (let j = 0; j < styleSheet.cssRules.length; j++) {
+                    const item = styleSheet.cssRules[j];
                     try {
-                        if (styleSheet.cssRules[j] instanceof CSSStyleRule) {
-                            const cssRule = <CSSStyleRule> styleSheet.cssRules[j];
+                        if (item instanceof CSSStyleRule) {
                             const attrRule = new Set<string>();
-                            Array.from(cssRule.style).forEach(value => attrRule.add($util.convertCamelCase(value)));
-                            Array.from(document.querySelectorAll(cssRule.selectorText)).forEach((element: HTMLElement) => {
+                            Array.from(item.style).forEach(value => attrRule.add($util.convertCamelCase(value)));
+                            Array.from(document.querySelectorAll(item.selectorText)).forEach((element: HTMLElement) => {
                                 const attrs = new Set(attrRule);
                                 Array.from(element.style).forEach(value => attrs.add($util.convertCamelCase(value)));
                                 const style = $dom.getStyle(element);
@@ -1803,7 +1803,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                         styleMap[attr] = element.style[attr];
                                     }
                                     else {
-                                        const value: string = cssRule.style[attr];
+                                        const value: string = item.style[attr];
                                         if (value !== 'initial') {
                                             const computedValue = style[attr] || '';
                                             if (value === computedValue) {

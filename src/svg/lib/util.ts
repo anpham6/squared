@@ -17,16 +17,6 @@ const REGEX_TRANSFORM = {
     TRANSLATE: `(translate[XY]?)\\(${REGEX_UNIT.LENGTH}(?:, ${REGEX_UNIT.LENGTH})?\\)`
 };
 
-export const SHAPES = {
-    path: 1,
-    line: 2,
-    rect: 3,
-    ellipse: 4,
-    circle: 5,
-    polyline: 6,
-    polygon: 7
-};
-
 function getHostDPI() {
     return $util.optionalAsNumber(squared, 'settings.resolutionDPI') || 96;
 }
@@ -56,6 +46,16 @@ function convertAngle(value: string, unit = 'deg') {
 function convertRadian(angle: number) {
     return angle * Math.PI / 180;
 }
+
+export const SHAPES = {
+    path: 1,
+    line: 2,
+    rect: 3,
+    ellipse: 4,
+    circle: 5,
+    polyline: 6,
+    polygon: 7
+};
 
 export const MATRIX = {
     clone(matrix: SvgMatrix | DOMMatrix) {
@@ -113,17 +113,52 @@ export const MATRIX = {
     }
 };
 
-export function getSvgViewport(element: SVGGraphicsElement) {
-    const result: SVGGraphicsElement[] = [];
-    let parent = element.parentElement;
-    while (parent) {
-        result.push(<SVGGraphicsElement> (parent as unknown));
-        parent = parent.parentElement;
-        if (parent instanceof HTMLElement) {
-            break;
+export function createElement<K extends keyof squared.svg.SvgElementTagNameMap>(qualifiedName: K): squared.svg.SvgElementTagNameMap[K] {
+    return document.createElementNS('http://www.w3.org/2000/svg', qualifiedName);
+}
+
+export function convertClockTime(value: string) {
+    let s = 0;
+    let ms = 0;
+    if ($util.isNumber(value)) {
+        s = parseInt(value);
+    }
+    else {
+        if (/-?\d+ms$/.test(value)) {
+            ms = parseInt(value);
+        }
+        else if (/-?\d+s$/.test(value)) {
+            s = parseInt(value);
+        }
+        else if (/-?\d+min$/.test(value)) {
+            s = parseInt(value) * 60;
+        }
+        else if (/-?\d+(.\d+)?h$/.test(value)) {
+            s = parseFloat(value) * 60 * 60;
+        }
+        else {
+            const match = /^(?:(-?)(\d?\d):)?(?:(\d?\d):)?(\d?\d)\.?(\d?\d?\d)?$/.exec(value);
+            if (match) {
+                if (match[2]) {
+                    s += parseInt(match[2]) * 60 * 60;
+                }
+                if (match[3]) {
+                    s += parseInt(match[3]) * 60;
+                }
+                if (match[4]) {
+                    s += parseInt(match[4]);
+                }
+                if (match[5]) {
+                    ms = parseInt(match[5]) * (match[5].length < 3 ? Math.pow(10, 3 - match[5].length) : 1);
+                }
+                if (match[1]) {
+                    s *= -1;
+                    ms *= -1;
+                }
+            }
         }
     }
-    return result;
+    return s < 0 || ms < 0 ? 0 : s * 1000 + ms;
 }
 
 export const SVG = {

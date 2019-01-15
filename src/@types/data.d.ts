@@ -3,6 +3,11 @@ interface NameValue {
     value: any;
 }
 
+type NumberValue<T> = {
+    ordinal: number;
+    value: T;
+};
+
 interface RGBA {
     r: number;
     g: number;

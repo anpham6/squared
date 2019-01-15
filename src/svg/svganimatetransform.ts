@@ -8,7 +8,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                 return [null, null, null];
             }
             else {
-                const segment = SvgBuild.toCoordinateList(value);
+                const segment = SvgBuild.toNumberList(value);
                 if (segment.length === 1 || segment.length === 3) {
                     return segment;
                 }
@@ -24,7 +24,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                 return [null, null];
             }
             else {
-                const segment = SvgBuild.toCoordinateList(value);
+                const segment = SvgBuild.toNumberList(value);
                 if (segment.length === 1) {
                     return [segment[0], segment[0]];
                 }
@@ -44,7 +44,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                 return [null, null];
             }
             else {
-                const segment = SvgBuild.toCoordinateList(value);
+                const segment = SvgBuild.toNumberList(value);
                 if (segment.length === 1) {
                     return [segment[0], y];
                 }

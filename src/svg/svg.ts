@@ -4,7 +4,6 @@ import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgSynchronize$MX from './svgsynchronize-mx';
 import SvgView$MX from './svgview-mx';
 import SvgViewRect$MX from './svgviewrect-mx';
-import SvgBuild from './svgbuild';
 import SvgContainer from './svgcontainer';
 
 import { SVG, getTargetElement } from './lib/util';
@@ -13,6 +12,24 @@ type SvgElement = squared.svg.SvgElement;
 type SvgG = squared.svg.SvgG;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
 type SvgAnimation = squared.svg.SvgAnimation;
+
+const $color = squared.lib.color;
+const $dom = squared.lib.dom;
+
+function getColorStop(element: SVGGradientElement) {
+    const result: ColorStop[] = [];
+    Array.from(element.getElementsByTagName('stop')).forEach(item => {
+        const color = $color.parseRGBA($dom.cssAttribute(item, 'stop-color'), $dom.cssAttribute(item, 'stop-opacity'));
+        if (color) {
+            result.push({
+                color: color.valueRGBA,
+                offset: $dom.cssAttribute(item, 'offset'),
+                opacity: color.alpha
+            });
+        }
+    });
+    return result;
+}
 
 export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer)))) implements squared.svg.Svg {
     public static instance(object: SvgElement): object is Svg {
@@ -52,11 +69,11 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
     }
 
     public static instanceOfAnimate(object: SvgAnimation): object is squared.svg.SvgAnimate {
-        return object.element.tagName === 'animate' && object.attributeName !== 'transform';
+        return object.element.tagName === 'animate';
     }
 
     public static instanceOfAnimateTransform(object: SvgAnimation): object is squared.svg.SvgAnimateTransform {
-        return object.element.tagName === 'animateTransform' || object.element.tagName === 'animate' && object.attributeName === 'transform';
+        return object.element.tagName === 'animateTransform';
     }
 
     public static instanceOfAnimateMotion(object: SvgAnimation): object is squared.svg.SvgAnimateMotion {
@@ -82,7 +99,7 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
     }
 
     public synchronize(useKeyTime = false) {
-        if (!this.documentRoot && this.animate.length) {
+        if (!this.documentRoot && this.animation.length) {
             this.merge(this.getAnimateViewRect(), useKeyTime);
         }
         super.synchronize(useKeyTime);
@@ -116,7 +133,7 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
                             x2AsString: pattern.x2.baseVal.valueAsString,
                             y1AsString: pattern.y1.baseVal.valueAsString,
                             y2AsString: pattern.y2.baseVal.valueAsString,
-                            colorStop: SvgBuild.toColorStopList(pattern)
+                            colorStop: getColorStop(pattern)
                         });
                     }
                     else if (SVG.radialGradient(pattern)) {
@@ -132,7 +149,7 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
                             fy: pattern.fy.baseVal.value,
                             fxAsString: pattern.fx.baseVal.valueAsString,
                             fyAsString: pattern.fy.baseVal.valueAsString,
-                            colorStop: SvgBuild.toColorStopList(pattern)
+                            colorStop: getColorStop(pattern)
                         });
                     }
                 }

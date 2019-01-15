@@ -157,10 +157,23 @@ function createTransformData(transform: SvgTransform[] | null) {
     return result;
 }
 
-function getSvgOffset(element: SVGGraphicsElement, baseElement: SVGGraphicsElement) {
+function getViewport(element: SVGGraphicsElement) {
+    const result: SVGGraphicsElement[] = [];
+    let parent = element.parentElement;
+    while (parent) {
+        result.push(<SVGGraphicsElement> (parent as unknown));
+        parent = parent.parentElement;
+        if (parent instanceof HTMLElement) {
+            break;
+        }
+    }
+    return result;
+}
+
+function getParentOffset(element: SVGGraphicsElement, baseElement: SVGGraphicsElement) {
     let x = 0;
     let y = 0;
-    $utilS.getSvgViewport(element).forEach(parent => {
+    getViewport(element).forEach(parent => {
         if (($utilS.SVG.svg(parent) || $utilS.SVG.use(parent)) && parent !== baseElement) {
             x += parent.x.baseVal.value;
             y += parent.y.baseVal.value;
@@ -591,7 +604,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                 for (let i = 0; i < values.length; i++) {
                                                                     const value = values[i];
                                                                     if (value !== '') {
-                                                                        const points = $SvgBuild.fromNumberList($SvgBuild.toCoordinateList(value));
+                                                                        const points = $SvgBuild.fromNumberList($SvgBuild.toNumberList(value));
                                                                         if (points.length) {
                                                                             values[i] = item.element.parentElement && item.element.parentElement.tagName === 'polygon' ? $SvgPath.getPolygon(points) : $SvgPath.getPolyline(points);
                                                                         }
@@ -989,9 +1002,9 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                         let y = item.getBaseValue('y', 0) * scaleY;
                         let width: number = item.getBaseValue('width', 0);
                         let height: number = item.getBaseValue('height', 0);
-                        const offsetParent = getSvgOffset(item.element, <SVGSVGElement> svg.element);
-                        x += offsetParent.x;
-                        y += offsetParent.y;
+                        const offset = getParentOffset(item.element, <SVGSVGElement> svg.element);
+                        x += offset.x;
+                        y += offset.y;
                         width *= scaleX;
                         height *= scaleY;
                         const data: ExternalData = {
@@ -1240,7 +1253,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
     }
 
     private queueAnimations(svg: SvgView, name: string, predicate: IteratorPredicate<SvgAnimation, void>, pathData = '') {
-        const animate = svg.animate.filter(predicate).filter(item => item.begin.length > 0);
+        const animate = svg.animation.filter(predicate).filter(item => item.begin.length > 0);
         if (animate.length) {
             this.ANIMATE_DATA.set(name, {
                 element: svg.element,

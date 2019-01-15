@@ -1,6 +1,6 @@
 import SvgAnimation from './svganimation';
 
-import { sortNumber } from './lib/util';
+import { convertClockTime, sortNumber } from './lib/util';
 
 const $util = squared.lib.util;
 
@@ -79,18 +79,18 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             this.repeatDuration = -1;
         }
         else {
-            this.repeatDuration = SvgAnimate.convertClockTime(repeatDur);
+            this.repeatDuration = convertClockTime(repeatDur);
         }
         if (repeatCount === 'indefinite') {
             this._repeatCount = -1;
         }
         else {
-            this._repeatCount = Math.max(1, $util.convertInt(repeatCount));
+            this._repeatCount = Math.max(1, $util.convertFloat(repeatCount));
         }
         if (this.begin.length) {
             const end = this.getAttribute('end');
             if (end !== '') {
-                const times = sortNumber(end.split(';').map(value => SvgAnimation.convertClockTime(value)));
+                const times = sortNumber(end.split(';').map(value => convertClockTime(value)));
                 if (times.length && (this.begin.length === 1 || this.begin[this.begin.length - 1] !== this.end || times[0] === 0)) {
                     this.end = times[0];
                     this.begin = this.begin.filter(value => value < times[0]);

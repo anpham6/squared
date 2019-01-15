@@ -21,7 +21,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                     case 'points':
                         const points: SVGPointList = this.element[attr];
                         if (Array.isArray(points)) {
-                            this._baseVal[attr] = SvgBuild.toPointList(points);
+                            this._baseVal[attr] = SvgBuild.clonePoints(points);
                             return true;
                         }
                         break;

@@ -5,8 +5,6 @@ import { applyMatrixX, applyMatrixY, createTransform, getRadiusY } from './lib/u
 type SvgContainer = squared.svg.SvgContainer;
 type SvgView = squared.svg.SvgView;
 
-const $color = squared.lib.color;
-const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 const NAME_GRAPHICS = new Map<string, number>();
@@ -68,12 +66,21 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return undefined;
     }
 
+    public static convertTransformList(transform: SVGTransformList) {
+        const result: SvgTransform[] = [];
+        for (let i = 0; i < transform.numberOfItems; i++) {
+            const item = transform.getItem(i);
+            result.push(createTransform(item.type, item.matrix, item.angle));
+        }
+        return result;
+    }
+
     public static filterTransforms(transform: SvgTransform[], exclude?: number[]) {
         return (exclude ? transform.filter(item => !exclude.includes(item.type)) : transform).filter(item => !(item.type === SVGTransform.SVG_TRANSFORM_SCALE && item.matrix.a === 1 && item.matrix.d === 1));
     }
 
     public static applyTransforms(transform: SvgTransform[], values: SvgPoint[], origin?: SvgPoint, center?: SvgPoint) {
-        const result = SvgBuild.toPointList(values);
+        const result = SvgBuild.clonePoints(values);
         const items = transform.slice().reverse();
         for (const item of items) {
             let x1 = 0;
@@ -155,20 +162,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         };
     }
 
-    public static toCoordinateList(value: string) {
-        const result: number[] = [];
-        const pattern = /-?[\d.]+/g;
-        let digit: RegExpExecArray | null;
-        while ((digit = pattern.exec(value)) !== null) {
-            const digitValue = parseFloat(digit[0]);
-            if (!isNaN(digitValue)) {
-                result.push(digitValue);
-            }
-        }
-        return result;
-    }
-
-    public static toPointList(values: SvgPoint[] | SVGPointList) {
+    public static clonePoints(values: SvgPoint[] | SVGPointList) {
         const result: SvgPoint[] = [];
         if (Array.isArray(values)) {
             for (const pt of values) {
@@ -189,7 +183,28 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
-    public static toAbsolutePointList(values: SvgPathCommand[]) {
+    public static fromNumberList(values: number[]) {
+        const result: SvgPoint[] = [];
+        for (let i = 0; i < values.length; i += 2) {
+            result.push({ x: values[i], y: values[i + 1] });
+        }
+        return result.length % 2 === 0 ? result : [];
+    }
+
+    public static toNumberList(value: string) {
+        const result: number[] = [];
+        const pattern = /-?[\d.]+/g;
+        let digit: RegExpExecArray | null;
+        while ((digit = pattern.exec(value)) !== null) {
+            const digitValue = parseFloat(digit[0]);
+            if (!isNaN(digitValue)) {
+                result.push(digitValue);
+            }
+        }
+        return result;
+    }
+
+    public static getAbsolutePoints(values: SvgPathCommand[]) {
         const result: SvgPoint[] = [];
         let x = 0;
         let y = 0;
@@ -233,6 +248,79 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
+    public static mergeAbsolutePoints(values: SvgPathCommand[], points: SvgPoint[]) {
+        const absolute = points.slice();
+        invalidPoint: {
+            for (const item of values) {
+                switch (item.command.toUpperCase()) {
+                    case 'M':
+                    case 'L':
+                    case 'H':
+                    case 'V':
+                    case 'C':
+                    case 'S':
+                    case 'Q':
+                    case 'T': {
+                        for (let i = 0; i < item.coordinates.length; i += 2) {
+                            const pt = absolute.shift();
+                            if (pt) {
+                                item.coordinates[i] = pt.x;
+                                item.coordinates[i + 1] = pt.y;
+                            }
+                            else {
+                                values = [];
+                                break invalidPoint;
+                            }
+                        }
+                        break;
+                    }
+                    case 'A': {
+                        const pt = <SvgPoint> absolute.shift();
+                        if (pt && pt.rx !== undefined && pt.ry !== undefined) {
+                            item.coordinates[0] = pt.x;
+                            item.coordinates[1] = pt.y;
+                            item.radiusX = pt.rx;
+                            item.radiusY = pt.ry;
+                        }
+                        else {
+                            values = [];
+                            break invalidPoint;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        return values;
+    }
+
+    public static fromPathCommandList(values: SvgPathCommand[]) {
+        let result = '';
+        for (const item of values) {
+            result += (result !== '' ? ' ' : '') + item.command;
+            switch (item.command.toUpperCase()) {
+                case 'M':
+                case 'L':
+                case 'C':
+                case 'S':
+                case 'Q':
+                case 'T':
+                    result += item.coordinates.join(',');
+                    break;
+                case 'H':
+                    result += item.coordinates[0];
+                    break;
+                case 'V':
+                    result += item.coordinates[1];
+                    break;
+                case 'A':
+                    result += `${item.radiusX},${item.radiusY},${item.xAxisRotation},${item.largeArcFlag},${item.sweepFlag},${item.coordinates.join(',')}`;
+                    break;
+            }
+        }
+        return result;
+    }
+
     public static toPathCommandList(value: string) {
         const result: SvgPathCommand[] = [];
         const pattern = /([A-Za-z])([^A-Za-z]+)?/g;
@@ -243,7 +331,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 break;
             }
             match[2] = (match[2] || '').trim();
-            const coordinates = SvgBuild.toCoordinateList(match[2]);
+            const coordinates = SvgBuild.toNumberList(match[2]);
             const previous = result[result.length - 1] as SvgPathCommand | undefined;
             const previousCommand = previous ? previous.command.toUpperCase() : '';
             let previousPoint = previous ? previous.points[previous.points.length - 1] : undefined;
@@ -364,142 +452,6 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     largeArcFlag,
                     sweepFlag
                 });
-            }
-        }
-        return result;
-    }
-
-    public static toColorStopList(element: SVGGradientElement) {
-        const result: ColorStop[] = [];
-        for (const stop of Array.from(element.getElementsByTagName('stop'))) {
-            const color = $color.parseRGBA($dom.cssAttribute(stop, 'stop-color'), $dom.cssAttribute(stop, 'stop-opacity'));
-            if (color && color.visible) {
-                result.push({
-                    color: color.valueRGBA,
-                    offset: $dom.cssAttribute(stop, 'offset'),
-                    opacity: color.alpha
-                });
-            }
-        }
-        return result;
-    }
-
-    public static toAnimateList(element: SVGElement) {
-        const result: squared.svg.SvgAnimation[] = [];
-        for (let i = 0; i < element.children.length; i++) {
-            const item = element.children[i];
-            switch (item.tagName) {
-                case 'animateTransform':
-                    result.push(new squared.svg.SvgAnimateTransform(<SVGAnimateTransformElement> item));
-                    break;
-                case 'animateMotion':
-                    result.push(new squared.svg.SvgAnimateMotion(<SVGAnimateMotionElement> item));
-                    break;
-                case 'animate':
-                    result.push(new squared.svg.SvgAnimate(<SVGAnimateElement> item));
-                    break;
-                case 'set':
-                    result.push(new squared.svg.SvgAnimation(<SVGAnimationElement> item));
-                    break;
-            }
-        }
-        return result;
-    }
-
-    public static toTransformList(transform: SVGTransformList) {
-        const result: SvgTransform[] = [];
-        for (let i = 0; i < transform.numberOfItems; i++) {
-            const item = transform.getItem(i);
-            result.push(createTransform(item.type, item.matrix, item.angle));
-        }
-        return result;
-    }
-
-    public static fromPointsValue(value: string) {
-        const result: SvgPoint[] = [];
-        value.trim().split(/\s+/).forEach(point => {
-            const [x, y] = point.split(',').map(pt => parseFloat(pt));
-            result.push({ x, y });
-        });
-        return result;
-    }
-
-    public static fromNumberList(values: number[]) {
-        const result: SvgPoint[] = [];
-        for (let i = 0; i < values.length; i += 2) {
-            result.push({ x: values[i], y: values[i + 1] });
-        }
-        return result.length % 2 === 0 ? result : [];
-    }
-
-    public static fromAbsolutePointList(values: SvgPathCommand[], points: SvgPoint[]) {
-        const absolute = points.slice();
-        invalidPoint: {
-            for (const item of values) {
-                switch (item.command.toUpperCase()) {
-                    case 'M':
-                    case 'L':
-                    case 'H':
-                    case 'V':
-                    case 'C':
-                    case 'S':
-                    case 'Q':
-                    case 'T': {
-                        for (let i = 0; i < item.coordinates.length; i += 2) {
-                            const pt = absolute.shift();
-                            if (pt) {
-                                item.coordinates[i] = pt.x;
-                                item.coordinates[i + 1] = pt.y;
-                            }
-                            else {
-                                values = [];
-                                break invalidPoint;
-                            }
-                        }
-                        break;
-                    }
-                    case 'A': {
-                        const pt = <SvgPoint> absolute.shift();
-                        if (pt && pt.rx !== undefined && pt.ry !== undefined) {
-                            item.coordinates[0] = pt.x;
-                            item.coordinates[1] = pt.y;
-                            item.radiusX = pt.rx;
-                            item.radiusY = pt.ry;
-                        }
-                        else {
-                            values = [];
-                            break invalidPoint;
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-        return values;
-    }
-
-    public static fromPathCommandList(values: SvgPathCommand[]) {
-        let result = '';
-        for (const item of values) {
-            result += (result !== '' ? ' ' : '') + item.command;
-            switch (item.command.toUpperCase()) {
-                case 'M':
-                case 'L':
-                case 'C':
-                case 'S':
-                case 'Q':
-                case 'T':
-                    result += item.coordinates.join(',');
-                    break;
-                case 'H':
-                    result += item.coordinates[0];
-                    break;
-                case 'V':
-                    result += item.coordinates[1];
-                    break;
-                case 'A':
-                    result += `${item.radiusX},${item.radiusY},${item.xAxisRotation},${item.largeArcFlag},${item.sweepFlag},${item.coordinates.join(',')}`;
-                    break;
             }
         }
         return result;

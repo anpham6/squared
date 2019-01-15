@@ -5,7 +5,7 @@ import Container = squared.lib.base.Container;
 declare global {
     namespace squared.svg {
         interface SvgView extends SvgElement {
-            animate: SvgAnimation[];
+            animation: SvgAnimation[];
             transform: SvgTransform[];
             opacity: string;
             visible: boolean;
@@ -60,24 +60,28 @@ declare global {
             setPaint(): void;
         }
 
+        interface SvgElementTagNameMap extends SVGElementTagNameMap {
+            'animation': SVGAnimationElement;
+            'animate': SVGAnimateElement;
+            'animateTransform': SVGAnimateTransformElement;
+            'animateMotion': SVGAnimateMotionElement;
+        }
+
         class SvgBuild {
             public static setName(element?: SVGElement): string;
             public static getContainerOpacity(instance: SvgView): number;
             public static getContainerViewBox(instance: SvgContainer): Svg | SvgUseSymbol | undefined;
+            public static convertTransformList(transform: SVGTransformList): SvgTransform[];
             public static filterTransforms(transform: SvgTransform[], exclude?: number[]): SvgTransform[];
             public static applyTransforms(transform: SvgTransform[], values: Point[], aspectRatio?: SvgAspectRatio, origin?: Point, center?: Point): SvgPoint[];
             public static getCenterPoint(values: Point[]): Point[];
-            public static toColorStopList(element: SVGGradientElement): ColorStop[];
-            public static toAnimateList(element: SVGElement): SvgAnimation[];
-            public static toTransformList(transform: SVGTransformList): SvgTransform[];
-            public static toPointList(values: SvgPoint[] | SVGPointList): SvgPoint[];
-            public static toCoordinateList(value: string): number[];
-            public static toAbsolutePointList(values: SvgPathCommand[]): SvgPoint[];
-            public static toPathCommandList(value: string): SvgPathCommand[];
-            public static fromPointsValue(value: string): SvgPoint[];
+            public static clonePoints(values: SvgPoint[] | SVGPointList): SvgPoint[];
             public static fromNumberList(values: number[]): SvgPoint[];
-            public static fromAbsolutePointList(values: SvgPathCommand[], points: SvgPoint[]): SvgPathCommand[];
+            public static toNumberList(value: string): number[];
+            public static getAbsolutePoints(values: SvgPathCommand[]): SvgPoint[];
+            public static mergeAbsolutePoints(values: SvgPathCommand[], points: SvgPoint[]): SvgPathCommand[];
             public static fromPathCommandList(values: SvgPathCommand[]): string;
+            public static toPathCommandList(value: string): SvgPathCommand[];
         }
     }
 }

@@ -1,4 +1,4 @@
-import { REGEX_PATTERN, capitalize, convertCamelCase, convertInt, convertPX, formatPercent, formatPX, hasBit, isPercent, isString, maxArray, minArray, resolvePath, withinFraction } from './util';
+import { REGEX_PATTERN, capitalize, convertCamelCase, convertInt, convertPX, flatMap, formatPercent, formatPX, hasBit, isPercent, isString, maxArray, minArray, resolvePath, withinFraction } from './util';
 
 type T = squared.base.Node;
 
@@ -119,6 +119,51 @@ export function isUserAgent(value: string | number) {
         client = USER_AGENT.CHROME;
     }
     return hasBit(value, client);
+}
+
+export function getKeyframeRules(): CSSRuleData {
+    const result = new Map<string, ObjectMap<StringMap>>();
+    for (let i = 0; i < document.styleSheets.length; i++) {
+        const styleSheet = <CSSStyleSheet> document.styleSheets[i];
+        if (styleSheet.cssRules) {
+            for (let j = 0; j < styleSheet.cssRules.length; j++) {
+                const item = styleSheet.cssRules[j];
+                try {
+                    if (item instanceof CSSKeyframesRule) {
+                        const map: ObjectMap<StringMap> = {};
+                        Array.from(item.cssRules).forEach(keyframe => {
+                            const match = /((?:\d+%\s*,?\s*)+|from|to)\s*\{\s*(.*?)\s*\}/.exec(keyframe.cssText);
+                            if (match) {
+                                const keyText = (keyframe['keyText'] as string || match[1].trim()).split(',').map(percent => percent.trim());
+                                const properties = flatMap(match[2].split(';'), percent => percent.trim());
+                                for (let percent of keyText) {
+                                    switch (percent) {
+                                        case 'from':
+                                            percent = '0%';
+                                            break;
+                                        case 'to':
+                                            percent = '100%';
+                                            break;
+                                    }
+                                    map[percent] = {};
+                                    for (const property of properties) {
+                                        const [name, value] = property.split(':').map(values => values.trim());
+                                        if (name !== '' && value !== '') {
+                                            map[percent][name] = value;
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                        result.set(item.name, map);
+                    }
+                }
+                catch {
+                }
+            }
+        }
+    }
+    return result;
 }
 
 export function getDataSet(element: Element | null, prefix: string) {
@@ -310,22 +355,16 @@ export function cssFromParent(element: Element | null, attr: string) {
 }
 
 export function cssAttribute(element: Element, attr: string, computed = false) {
-    const attribute = element.attributes.getNamedItem(attr);
-    if (attribute) {
-        return attribute.value.trim();
-    }
-    else {
-        attr = convertCamelCase(attr);
-        const node = getElementAsNode<T>(element);
-        let value = '';
-        if (node) {
-            value = node.cssInitial(attr);
+    const name = convertCamelCase(attr);
+    const node = getElementAsNode<T>(element);
+    let value = node && node.cssInitial(name) || cssInline(element, name);
+    if (!value) {
+        const attribute = element.attributes.getNamedItem(attr);
+        if (attribute) {
+            value = attribute.value.trim();
         }
-        else {
-            value = cssInline(element, attr);
-        }
-        return value || computed && getStyle(element)[attr] as string || '';
     }
+    return value || computed && getStyle(element)[name] as string || '';
 }
 
 export function cssInline(element: Element, attr: string) {
@@ -339,7 +378,7 @@ export function cssInline(element: Element, attr: string) {
             value = styleMap[attr];
         }
     }
-    return value;
+    return value || '';
 }
 
 export function getBackgroundPosition(value: string, dimension: RectDimensions, dpi: number, fontSize: number, leftPerspective = false, percent = false) {
