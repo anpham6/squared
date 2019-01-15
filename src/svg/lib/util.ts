@@ -158,7 +158,7 @@ export function convertClockTime(value: string) {
             }
         }
     }
-    return s < 0 || ms < 0 ? 0 : s * 1000 + ms;
+    return s * 1000 + ms;
 }
 
 export const SVG = {

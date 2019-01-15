@@ -89,9 +89,9 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                     const times = sortNumber(end.split(';').map(value => convertClockTime(value)));
                     if (times.length && (this.begin.length === 1 || this.begin[this.begin.length - 1] !== this.end || times[0] === 0)) {
                         this.end = times[0];
-                        this.begin = this.begin.filter(value => value < times[0]);
+                        this.begin = this.begin.filter(value => value >= 0 && value < times[0]);
                         if (this.begin.length && this._repeatCount === -1) {
-                            this._repeatCount = Math.max(1, this.end / this.duration);
+                            this._repeatCount = this.end / this.duration;
                         }
                     }
                 }

@@ -142,7 +142,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 if (paused) {
                                     animate.begin.length = 0;
                                 }
-                                else if (delay > 0) {
+                                else if (delay !== 0) {
                                     animate.begin[0] = delay;
                                 }
                                 animate.duration = duration;
