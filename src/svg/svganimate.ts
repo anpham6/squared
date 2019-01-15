@@ -26,6 +26,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public additiveSum = false;
     public accumulateSum = false;
     public fillFreeze = false;
+    public alternate = false;
     public repeatDuration = -1;
     public end?: number;
     public keySplines?: string[];

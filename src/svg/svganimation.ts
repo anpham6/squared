@@ -7,6 +7,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     public to = '';
     public begin = [0];
     public duration = -1;
+    public paused = false;
     public element?: SVGAnimationElement;
     public parent?: squared.svg.SvgView | squared.svg.SvgPath;
 
@@ -17,8 +18,11 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
             this.setAttribute('to');
             const begin = this.getAttribute('begin');
             const dur = this.getAttribute('dur');
-            if (/^[a-zA-Z]+$/.test(begin)) {
+            if (begin === 'indefinite') {
                 this.begin.length = 0;
+            }
+            else if (/^[a-zA-Z]+$/.test(begin)) {
+                this.paused = true;
             }
             else if (begin !== '') {
                 this.begin = sortNumber(begin.split(';').map(value => convertClockTime(value)));

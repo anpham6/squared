@@ -263,16 +263,17 @@ function getKeyTimeMap(map: TimelineMap, keyTimes: number[], freezeMap?: FreezeM
 }
 
 function getItemValue(item: SvgAnimate, index: number, baseVal: AnimateValue, iteration = 0) {
+    const values = item.alternate && iteration % 2 !== 0 ? item.values.slice().reverse() : item.values;
     if (typeof baseVal === 'number') {
-        let result = parseFloat(item.values[index]);
+        let result = parseFloat(values[index]);
         if (item.additiveSum) {
             result += baseVal;
             if (!item.accumulateSum) {
                 iteration = 0;
             }
             for (let i = 0; i < iteration; i++) {
-                for (let j = 0; j < item.values.length; j++) {
-                    result += parseFloat(item.values[j]);
+                for (let j = 0; j < values.length; j++) {
+                    result += parseFloat(values[j]);
                 }
             }
         }
@@ -280,8 +281,8 @@ function getItemValue(item: SvgAnimate, index: number, baseVal: AnimateValue, it
     }
     else {
         const result: SvgPoint[] = [];
-        item.values[index].trim().split(/\s+/).forEach(point => {
-            const [x, y] = point.split(',').map(pt => parseFloat(pt));
+        values[index].trim().split(/\s+/).forEach(points => {
+            const [x, y] = points.split(',').map(point => parseFloat(point));
             result.push({ x, y });
         });
         return result;
@@ -289,7 +290,7 @@ function getItemValue(item: SvgAnimate, index: number, baseVal: AnimateValue, it
 }
 
 function playableAnimation(item: SvgAnimate) {
-    return item.begin.length > 0 && item.keyTimes.length > 1 && item.duration > 0;
+    return !item.paused && item.begin.length > 0 && item.keyTimes.length > 1 && item.duration > 0;
 }
 
 export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
@@ -555,11 +556,9 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                     }
                                     baseVal = lastVal;
                                     const value = repeatingMap[attr].get(maxTime);
-                                    if (value !== undefined) {
-                                        if (complete && item.fillFreeze) {
-                                            freezeMap[attr] = { ordinal: maxTime, value };
-                                            break animationEnd;
-                                        }
+                                    if (value !== undefined && complete && item.fillFreeze) {
+                                        freezeMap[attr] = { ordinal: maxTime, value };
+                                        break animationEnd;
                                     }
                                 }
                                 if (indefinite) {

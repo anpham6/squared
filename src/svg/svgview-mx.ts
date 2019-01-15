@@ -82,9 +82,11 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 animation.sort((a, b) => a.ordinal >= b.ordinal ? 1 : -1);
                                 const animate = new SvgAnimate();
                                 animate.attributeName = name;
-                                const paused = animationMap['animation-play-state'][index] === 'paused';
+                                animate.paused = animationMap['animation-play-state'][index] === 'paused';
                                 const iterationCount = animationMap['animation-iteration-count'][index];
                                 const timingFunction = animationMap['animation-timing-function'][index];
+                                const direction = animationMap['animation-direction'][index];
+                                const fillMode = animationMap['animation-fill-mode'][index];
                                 let delay = convertClockTime(animationMap['animation-delay'][index]);
                                 let duration = convertClockTime(animationMap['animation-duration'][index]);
                                 const keySplines: string[] = [];
@@ -137,15 +139,16 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                         }
                                     }
                                     animate.calcMode = 'spline';
-                                    animate.keySplines = keySplines;
                                 }
-                                if (paused) {
-                                    animate.begin.length = 0;
-                                }
-                                else if (delay !== 0) {
-                                    animate.begin[0] = delay;
-                                }
+                                animate.keySplines = keySplines;
+                                animate.begin[0] = delay;
                                 animate.duration = duration;
+                                animate.fillFreeze = fillMode === 'forwards' || fillMode === 'both';
+                                if (direction.endsWith('reverse')) {
+                                    animate.values.reverse();
+                                    animate.keySplines.reverse();
+                                }
+                                animate.alternate = direction.startsWith('alternate');
                                 result.push(animate);
                             }
                         }

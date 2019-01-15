@@ -10,7 +10,7 @@
             padding: 10px;
         }
         rect {
-            animation: zorro 3s linear 0s 6;
+            animation: zorro 3s linear 0s 3 alternate-reverse;
             animation-delay: -1s;
         }
         @keyframes zorro {
@@ -63,7 +63,7 @@
     <div id="squared_ui" style="width: 300px;">
         <svg viewBox="0 0 200 200">
              <rect x="10" y="10" width="30" height="20" fill="green">
-                <animate attributeName="x" from="0" to="100" begin="3s" dur="5s" repeatCount="3" />
+                <animate attributeName="x" from="0" to="100" begin="3s" dur="5s" repeatCount="2" />
              </rect>
         </svg>
     </div>
