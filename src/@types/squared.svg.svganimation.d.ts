@@ -5,8 +5,8 @@ declare global {
             begin: number[];
             to: string;
             duration: number;
+            element?: SVGAnimationElement;
             parent?: SvgView | SvgPath;
-            readonly element: SVGAnimationElement;
             setAttribute(attr: string, equality?: string): void;
             getAttribute(attr: string): string;
         }
@@ -22,14 +22,15 @@ declare global {
             additiveSum: boolean;
             accumulateSum: boolean;
             fillFreeze: boolean;
+            element?: SVGAnimateElement;
             end?: number;
+            keySplines?: string[];
             sequential?: NameValue;
-            readonly element: SVGAnimateElement;
         }
 
         interface SvgAnimateTransform extends SvgAnimate {
             type: number;
-            readonly element: SVGAnimateTransformElement;
+            element?: SVGAnimateTransformElement;
         }
 
         interface SvgAnimateMotion extends SvgAnimate {
@@ -39,27 +40,27 @@ declare global {
             rotateAuto: boolean;
             rotateAutoReverse: boolean;
             mpath: SVGGraphicsElement | null;
-            readonly element: SVGAnimateMotionElement;
+            element?: SVGAnimateMotionElement;
         }
 
         class SvgAnimation implements SvgAnimation {
-            constructor(element: SVGAnimationElement);
+            constructor(element?: SVGAnimationElement);
         }
 
         class SvgAnimate implements SvgAnimate {
             public static toFractionList(value: string, delimiter?: string): number[];
-            constructor(element: SVGAnimateElement);
+            constructor(element?: SVGAnimateElement);
         }
 
         class SvgAnimateTransform implements SvgAnimateTransform {
             public static toRotateList(values: string[]): (null[] | number[])[] | undefined;
             public static toScaleList(values: string[]): (null[] | number[])[] | undefined;
             public static toTranslateList(values: string[]): (null[] | number[])[] | undefined;
-            constructor(element: SVGAnimateTransformElement);
+            constructor(element?: SVGAnimateTransformElement);
         }
 
         class SvgAnimateMotion implements SvgAnimateMotion {
-            constructor(element: SVGAnimateMotionElement);
+            constructor(element?: SVGAnimateMotionElement);
         }
     }
 }

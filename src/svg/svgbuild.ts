@@ -1,8 +1,19 @@
 import { SvgPathCommand, SvgPoint, SvgTransform } from './@types/object';
 
-import { applyMatrixX, applyMatrixY, createTransform, getRadiusY } from './lib/util';
+import { SVG, applyMatrixX, applyMatrixY, createTransform, getRadiusY } from './lib/util';
 
+type Svg = squared.svg.Svg;
+type SvgAnimation = squared.svg.SvgAnimation;
+type SvgAnimate = squared.svg.SvgAnimate;
+type SvgAnimateMotion = squared.svg.SvgAnimateMotion;
+type SvgAnimateTransform = squared.svg.SvgAnimateTransform;
 type SvgContainer = squared.svg.SvgContainer;
+type SvgElement = squared.svg.SvgElement;
+type SvgG = squared.svg.SvgG;
+type SvgImage = squared.svg.SvgImage;
+type SvgShape = squared.svg.SvgShape;
+type SvgUse = squared.svg.SvgUse;
+type SvgUseSymbol = squared.svg.SvgUseSymbol;
 type SvgView = squared.svg.SvgView;
 
 const $util = squared.lib.util;
@@ -39,6 +50,54 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         }
     }
 
+    public static instance(object: SvgElement): object is Svg {
+        return object.element.tagName === 'svg';
+    }
+
+    public static instanceOfContainer(object: SvgElement): object is Svg | SvgG | SvgUseSymbol {
+        return SvgBuild.instance(object) || SvgBuild.instanceOfG(object) || SvgBuild.instanceOfUseSymbol(object);
+    }
+
+    public static instanceOfElement(object: SvgElement): object is SvgElement {
+        return SvgBuild.instanceOfShape(object) || SvgBuild.instanceOfImage(object) || SvgBuild.instanceOfUse(object) && !SvgBuild.instanceOfUseSymbol(object);
+    }
+
+    public static instanceOfG(object: SvgElement): object is SvgG {
+        return object.element.tagName === 'g';
+    }
+
+    public static instanceOfUseSymbol(object: SvgElement): object is SvgUseSymbol {
+        return SvgBuild.instanceOfUse(object) && object['symbolElement'] !== undefined;
+    }
+
+    public static instanceOfShape(object: SvgElement): object is SvgShape {
+        return (SvgBuild.instanceOfUse(object) || SVG.shape(object.element)) && object['path'] !== undefined;
+    }
+
+    public static instanceOfImage(object: SvgElement): object is SvgImage {
+        return SvgBuild.instanceOfUse(object) && object['imageElement'] !== undefined || object.element.tagName === 'image';
+    }
+
+    public static instanceOfUse(object: SvgElement): object is SvgUse {
+        return object.element.tagName === 'use';
+    }
+
+    public static instanceOfSet(object: SvgAnimation) {
+        return !!object.element && object.element.tagName === 'set';
+    }
+
+    public static instanceOfAnimate(object: SvgAnimation): object is SvgAnimate {
+        return !!object.element && object.element.tagName === 'animate' || object instanceof squared.svg.SvgAnimate && !SvgBuild.instanceOfAnimateTransform(object) && !SvgBuild.instanceOfAnimateTransform(object);
+    }
+
+    public static instanceOfAnimateTransform(object: SvgAnimation): object is SvgAnimateTransform {
+        return !!object.element && object.element.tagName === 'animateTransform' || object instanceof squared.svg.SvgAnimateTransform;
+    }
+
+    public static instanceOfAnimateMotion(object: SvgAnimation): object is SvgAnimateMotion {
+        return !!object.element && object.element.tagName === 'animateMotion' || object instanceof squared.svg.SvgAnimateMotion;
+    }
+
     public static getContainerOpacity(instance: SvgView) {
         let result = parseFloat(instance.opacity);
         let current: SvgContainer | undefined = instance.parent;
@@ -52,13 +111,14 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
-    public static getContainerViewBox(instance: SvgContainer): squared.svg.Svg | squared.svg.SvgUseSymbol | undefined {
+    public static getContainerViewBox(instance: SvgContainer): Svg | SvgUseSymbol | undefined {
         let current: SvgContainer | undefined = instance;
         while (current) {
             switch (current.element.tagName) {
                 case 'svg':
+                    return <Svg> current;
                 case 'symbol':
-                    return <squared.svg.Svg> current;
+                    return <SvgUseSymbol> current;
                 default:
                     current = current['parent'];
             }

@@ -410,7 +410,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                         for (const item of group.animate as SvgAnimate[]) {
                             const sequential = item.sequential;
                             if (sequential) {
-                                if ($Svg.instanceOfAnimateTransform(item)) {
+                                if ($SvgBuild.instanceOfAnimateTransform(item)) {
                                     let values = transformMap.get(sequential.name);
                                     if (values === undefined) {
                                         values = [];
@@ -455,7 +455,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                 let ordering: string;
                                 let sequential = false;
                                 if (index === 1) {
-                                    if (items.some(item => $Svg.instanceOfAnimateTransform(item))) {
+                                    if (items.some(item => $SvgBuild.instanceOfAnimateTransform(item))) {
                                         subData.ordering = 'sequentially';
                                         ordering = 'together';
                                         sequential = true;
@@ -495,7 +495,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                         startOffset: item.begin.length && item.begin[0] > 0 ? item.begin[0].toString() : '',
                                         duration: item.duration !== -1 ? item.duration.toString() : ''
                                     };
-                                    if ($Svg.instanceOfSet(item)) {
+                                    if ($SvgBuild.instanceOfSet(item)) {
                                         if (item.to) {
                                             options.propertyName = ATTRIBUTE_ANDROID[item.attributeName];
                                             if (options.propertyName) {
@@ -511,7 +511,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                     }
                                     else {
                                         options.repeatCount = item.repeatCount !== -1 ? Math.ceil(item.repeatCount - 1).toString() : '-1';
-                                        const dataset = $dom.getDataSet(item.element, 'android');
+                                        const dataset = item.element ? $dom.getDataSet(item.element, 'android') : {};
                                         let propertyName: string[] | undefined;
                                         let values: string[] | (null[] | number[])[] | undefined;
                                         switch (item.attributeName) {
@@ -547,7 +547,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                             default:
                                                 continue;
                                         }
-                                        if ($Svg.instanceOfAnimateTransform(item)) {
+                                        if ($SvgBuild.instanceOfAnimateTransform(item)) {
                                             let fillBefore = dataset.fillbefore === 'true' || dataset.fillBefore === 'true';
                                             let fillAfter = dataset.fillafter === 'true' || dataset.fillAfter === 'true';
                                             if (fillBefore && fillAfter) {
@@ -606,7 +606,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                     if (value !== '') {
                                                                         const points = $SvgBuild.fromNumberList($SvgBuild.toNumberList(value));
                                                                         if (points.length) {
-                                                                            values[i] = item.element.parentElement && item.element.parentElement.tagName === 'polygon' ? $SvgPath.getPolygon(points) : $SvgPath.getPolyline(points);
+                                                                            values[i] = item.parent && item.parent.element.tagName === 'polygon' ? $SvgPath.getPolygon(points) : $SvgPath.getPolyline(points);
                                                                         }
                                                                         else {
                                                                             break pathType;
@@ -892,7 +892,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                 const parent = item.parent;
                                                 if (!item.fillFreeze && parent && item.sequential === undefined) {
                                                     let valueTo: string | undefined;
-                                                    if ($Svg.instanceOfAnimateTransform(item)) {
+                                                    if ($SvgBuild.instanceOfAnimateTransform(item)) {
                                                         const transform = createTransformData(parent.transformed);
                                                         switch (propertyName[i]) {
                                                             case 'rotation':
@@ -918,7 +918,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                 break;
                                                         }
                                                     }
-                                                    else if ($Svg.instanceOfShape(parent) && parent.path) {
+                                                    else if ($SvgBuild.instanceOfShape(parent) && parent.path) {
                                                         let css = '';
                                                         for (const attr in ATTRIBUTE_ANDROID) {
                                                             if (ATTRIBUTE_ANDROID[attr] === propertyName[i]) {
@@ -1069,7 +1069,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
             const item = group.children[i];
             const CCC: ExternalData[] = [];
             const DDD: TemplateData[] = [];
-            if ($Svg.instanceOfShape(item)) {
+            if ($SvgBuild.instanceOfShape(item)) {
                 if (item.visible && item.path && item.path.value) {
                     CCC.push(this.createPath(node, svg, item, item.path));
                 }
@@ -1077,14 +1077,14 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                     continue;
                 }
             }
-            else if ($Svg.instanceOfImage(item)) {
+            else if ($SvgBuild.instanceOfImage(item)) {
                 item.extract(this.options.excludeFromTransform.image);
                 if (item.visible || item.rotateOrigin) {
                     this.IMAGE_DATA.push(item);
                 }
                 continue;
             }
-            else if ($Svg.instanceOfContainer(item)) {
+            else if ($SvgBuild.instanceOfContainer(item)) {
                 if (item.length) {
                     this.parseVectorData(node, svg, <SvgGroup> item);
                     DDD.push({ templateName: item.name });
@@ -1119,12 +1119,12 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 target.transformed = transformed.reverse();
             }
             const groupName = `group_${name}`;
-            this.queueAnimations(target, groupName, item => $Svg.instanceOfAnimateTransform(item));
+            this.queueAnimations(target, groupName, item => $SvgBuild.instanceOfAnimateTransform(item));
             group[0].push({
                 groupName,
                 ...createTransformData(transformClient)
             });
-            if (($Svg.instance(target) || $Svg.instanceOfUse(target)) && (target.x !== 0 || target.y !== 0)) {
+            if (($SvgBuild.instance(target) || $SvgBuild.instanceOfUse(target)) && (target.x !== 0 || target.y !== 0)) {
                 group[0].push({
                     groupName: getGroupName(target, 'translate'),
                     translateX: target.x.toString(),
@@ -1161,10 +1161,10 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
             });
         }
         const groupName = `group_${target.name}`;
-        if (this.queueAnimations(target, groupName, item => $Svg.instanceOfAnimateTransform(item))) {
+        if (this.queueAnimations(target, groupName, item => $SvgBuild.instanceOfAnimateTransform(item))) {
             render[0].push({ groupName });
         }
-        if ($Svg.instanceOfUse(target) && (target.x !== 0 || target.y !== 0)) {
+        if ($SvgBuild.instanceOfUse(target) && (target.x !== 0 || target.y !== 0)) {
             render[0].push({
                 groupName: getGroupName(target, 'translate'),
                 translateX: target.x.toString(),
@@ -1191,7 +1191,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                         this.queueAnimations(
                             child,
                             child.name,
-                            item => $Svg.instanceOfAnimate(item),
+                            item => $SvgBuild.instanceOfAnimate(item),
                             child.path.value
                         );
                     }
@@ -1246,7 +1246,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
         this.queueAnimations(
             target,
             target.name,
-            item => $Svg.instanceOfAnimate(item),
+            item => $SvgBuild.instanceOfAnimate(item),
             result.value
         );
         return result;

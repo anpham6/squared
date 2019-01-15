@@ -8,11 +8,6 @@ import SvgContainer from './svgcontainer';
 
 import { SVG, getTargetElement } from './lib/util';
 
-type SvgElement = squared.svg.SvgElement;
-type SvgG = squared.svg.SvgG;
-type SvgUseSymbol = squared.svg.SvgUseSymbol;
-type SvgAnimation = squared.svg.SvgAnimation;
-
 const $color = squared.lib.color;
 const $dom = squared.lib.dom;
 
@@ -32,54 +27,6 @@ function getColorStop(element: SVGGradientElement) {
 }
 
 export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer)))) implements squared.svg.Svg {
-    public static instance(object: SvgElement): object is Svg {
-        return object.element.tagName === 'svg';
-    }
-
-    public static instanceOfContainer(object: SvgElement): object is Svg | SvgG | SvgUseSymbol {
-        return Svg.instance(object) || Svg.instanceOfG(object) || Svg.instanceOfUseSymbol(object);
-    }
-
-    public static instanceOfElement(object: SvgElement): object is SvgElement {
-        return Svg.instanceOfShape(object) || Svg.instanceOfImage(object) || Svg.instanceOfUse(object) && !Svg.instanceOfUseSymbol(object);
-    }
-
-    public static instanceOfG(object: SvgElement): object is SvgG {
-        return object.element.tagName === 'g';
-    }
-
-    public static instanceOfUseSymbol(object: SvgElement): object is SvgUseSymbol {
-        return Svg.instanceOfUse(object) && object['symbolElement'] !== undefined;
-    }
-
-    public static instanceOfShape(object: SvgElement): object is squared.svg.SvgShape {
-        return (Svg.instanceOfUse(object) || SVG.shape(object.element)) && object['path'] !== undefined;
-    }
-
-    public static instanceOfImage(object: SvgElement): object is squared.svg.SvgImage {
-        return Svg.instanceOfUse(object) && object['imageElement'] !== undefined || object.element.tagName === 'image';
-    }
-
-    public static instanceOfUse(object: SvgElement): object is squared.svg.SvgUse {
-        return object.element.tagName === 'use';
-    }
-
-    public static instanceOfSet(object: SvgAnimation) {
-        return object.element.tagName === 'set';
-    }
-
-    public static instanceOfAnimate(object: SvgAnimation): object is squared.svg.SvgAnimate {
-        return object.element.tagName === 'animate';
-    }
-
-    public static instanceOfAnimateTransform(object: SvgAnimation): object is squared.svg.SvgAnimateTransform {
-        return object.element.tagName === 'animateTransform';
-    }
-
-    public static instanceOfAnimateMotion(object: SvgAnimation): object is squared.svg.SvgAnimateMotion {
-        return object.element.tagName === 'animateMotion';
-    }
-
     public readonly patterns = {
         clipPath: new Map<string, SVGClipPathElement>(),
         gradient: new Map<string, Gradient>()

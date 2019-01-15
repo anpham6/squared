@@ -5,7 +5,7 @@ import SvgAnimateTransform from './svganimatetransform';
 import SvgBuild from './svgbuild';
 import SvgPath from './svgpath';
 
-import { SVG, createElement, getLeastCommonMultiple, getTransformOrigin, sortNumber } from './lib/util';
+import { SVG, getLeastCommonMultiple, getTransformOrigin, sortNumber } from './lib/util';
 
 type SvgContainer = squared.svg.SvgContainer;
 
@@ -289,14 +289,14 @@ function getItemValue(item: SvgAnimate, index: number, baseVal: AnimateValue, it
 }
 
 function playableAnimation(item: SvgAnimate) {
-    return item.element.tagName === 'animate' && item.keyTimes.length > 1 && item.duration > 0 && item.begin.length;
+    return item.begin.length > 0 && item.keyTimes.length > 1 && item.duration > 0;
 }
 
 export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
     return class extends Base implements squared.svg.SvgSynchronize {
         public getAnimateShape() {
-            const result: SvgAnimate[] = [];
             const element = this.element;
+            const result: SvgAnimate[] = [];
             for (const item of this.animation as SvgAnimate[]) {
                 if (playableAnimation(item)) {
                     switch (item.attributeName) {
@@ -465,7 +465,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                     repeatTotal = Math.ceil(repeatCount);
                                     repeatFraction = repeatCount - Math.floor(repeatCount);
                                 }
-                                const maxThreadTime = Math.min(groupBegin[i + 1] || Number.MAX_VALUE, item.end || Number.MAX_VALUE);
+                                const maxThreadTime = item.element ? Math.min(groupBegin[i + 1] || Number.MAX_VALUE, item.end || Number.MAX_VALUE) : Number.MAX_VALUE;
                                 let complete = true;
                                 let parallel = maxTime !== -1;
                                 let lastVal: AnimateValue | undefined;
@@ -797,7 +797,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                             const freezeIndefinite = repeating ? undefined : freezeMap;
                             const insertAnimate = (item: SvgAnimate) => {
                                 if (repeating) {
-                                    item.repeatCount = 0;
+                                    item.repeatCount = 1;
                                 }
                                 else {
                                     item.begin = [0];
@@ -814,7 +814,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                 if (path) {
                                     const pathData = getPathData(result, path, this.parent, freezeIndefinite);
                                     if (pathData) {
-                                        object = new SvgAnimate(createElement('animate'));
+                                        object = new SvgAnimate();
                                         object.attributeName = 'd';
                                         object.keyTimes = pathData.map(item => item.ordinal);
                                         object.values = pathData.map(item => item.value.toString());
@@ -824,7 +824,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                     }
                                 }
                                 else {
-                                    object = new SvgAnimateTransform(createElement('animate'));
+                                    object = new SvgAnimateTransform();
                                     object.attributeName = 'transform';
                                     (object as SvgAnimateTransform).type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
                                     object.keyTimes.length = 0;
@@ -857,7 +857,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         map.set(keyTimeTo, dataTo);
                                         const pathData = getPathData(map, path, this.parent, freezeIndefinite);
                                         if (pathData) {
-                                            object = new SvgAnimate(createElement('animate'));
+                                            object = new SvgAnimate();
                                             object.attributeName = 'd';
                                             object.values = pathData.map(item => item.value.toString());
                                         }
@@ -867,7 +867,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         name = sequentialName;
                                     }
                                     else {
-                                        object = new SvgAnimateTransform(createElement('animate'));
+                                        object = new SvgAnimateTransform();
                                         object.attributeName = 'transform';
                                         (object as SvgAnimateTransform).type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
                                         object.values = [dataFrom, dataTo].map(data => {

@@ -58,29 +58,28 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
         return result.some(item => item.length === 0) ? undefined : result;
     }
 
-    public type: number;
+    public type = 0;
 
-    constructor(element: SVGAnimateTransformElement) {
+    constructor(public element?: SVGAnimateTransformElement) {
         super(element);
-        switch (this.getAttribute('type')) {
-            case 'translate':
-                this.type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
-                break;
-            case 'scale':
-                this.type = SVGTransform.SVG_TRANSFORM_SCALE;
-                break;
-            case 'rotate':
-                this.type = SVGTransform.SVG_TRANSFORM_ROTATE;
-                break;
-            case 'skewX':
-                this.type = SVGTransform.SVG_TRANSFORM_SKEWX;
-                break;
-            case 'skewY':
-                this.type = SVGTransform.SVG_TRANSFORM_SKEWY;
-                break;
-            default:
-                this.type = 0;
-                break;
+        if (element) {
+            switch (this.getAttribute('type')) {
+                case 'translate':
+                    this.type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
+                    break;
+                case 'scale':
+                    this.type = SVGTransform.SVG_TRANSFORM_SCALE;
+                    break;
+                case 'rotate':
+                    this.type = SVGTransform.SVG_TRANSFORM_ROTATE;
+                    break;
+                case 'skewX':
+                    this.type = SVGTransform.SVG_TRANSFORM_SKEWX;
+                    break;
+                case 'skewY':
+                    this.type = SVGTransform.SVG_TRANSFORM_SKEWY;
+                    break;
+            }
         }
     }
 }

@@ -1,12 +1,12 @@
 import { SvgTransform } from './@types/object';
 
-import SvgAnimation from './svganimation';
 import SvgAnimate from './svganimate';
 import SvgAnimateMotion from './svganimation';
 import SvgAnimateTransform from './svganimatetransform';
+import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 
-import { convertClockTime, createElement, getTransform, isVisible, setOpacity, setVisible } from './lib/util';
+import { convertClockTime, getTransform, isVisible, setOpacity, setVisible } from './lib/util';
 
 type AttributeMap = ObjectMap<NumberValue<string>[]>;
 
@@ -77,10 +77,11 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             }
                         }
                         for (const name in attrMap) {
-                            const data = attrMap[name];
-                            if (attrMap[name].length > 1) {
-                                attrMap[name].sort((a, b) => a.ordinal >= b.ordinal ? 1 : -1);
-                                const animate = createElement('animate');
+                            const animation = attrMap[name];
+                            if (animation.length > 1) {
+                                animation.sort((a, b) => a.ordinal >= b.ordinal ? 1 : -1);
+                                const animate = new SvgAnimate();
+                                animate.attributeName = name;
                                 const paused = animationMap['animation-play-state'][index] === 'paused';
                                 const iterationCount = animationMap['animation-iteration-count'][index];
                                 const timingFunction = animationMap['animation-timing-function'][index];
@@ -88,8 +89,8 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 let duration = convertClockTime(animationMap['animation-duration'][index]);
                                 const keySplines: string[] = [];
                                 if (keyframeMap['animation-timing-function']) {
-                                    for (let i = 0; i < attrMap[name].length - 1; i++) {
-                                        const spline = keyframeMap[name].find(item => item.ordinal === attrMap[name][i].ordinal);
+                                    for (let i = 0; i < animation.length - 1; i++) {
+                                        const spline = keyframeMap[name].find(item => item.ordinal === animation[i].ordinal);
                                         if (spline) {
                                             keySplines.push(spline.value);
                                         }
@@ -99,34 +100,29 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     }
                                 }
                                 else {
-                                    for (let i = 0; i < attrMap[name].length - 1; i++) {
+                                    for (let i = 0; i < animation.length - 1; i++) {
                                         keySplines.push(timingFunction);
                                     }
                                 }
-                                animate.setAttribute('attributeName', name);
-                                if (data.length === 2 && data[0].ordinal === 0 && data[1].ordinal === 1) {
-                                    animate.setAttribute('from', data[0].value);
-                                    animate.setAttribute('to', data[1].value);
+                                if (animation.length === 2 && animation[0].ordinal === 0 && animation[1].ordinal === 1) {
+                                    animate.from = animation[0].value;
+                                    animate.to = animation[1].value;
                                 }
                                 else {
-                                    animate.setAttribute('keyTimes', attrMap[name].map(item => item.ordinal.toString()).join(';'));
-                                    animate.setAttribute('values', attrMap[name].map(item => item.value).join(';'));
+                                    animate.keyTimes = animation.map(item => item.ordinal);
+                                    animate.values = animation.map(item => item.value);
                                 }
-                                if (iterationCount === 'infinite') {
-                                    animate.setAttribute('repeatCount', 'indefinite');
-                                }
-                                else {
-                                    const repeatCount = parseFloat(iterationCount);
-                                    animate.setAttribute('repeatCount', !isNaN(repeatCount) ? repeatCount.toString() : '1');
+                                if (iterationCount !== 'infinite') {
+                                    animate.repeatCount = parseFloat(iterationCount);
                                 }
                                 if (keySplines.every(spline => spline === 'linear')) {
-                                    animate.setAttribute('calcMode', 'linear');
+                                    animate.calcMode = 'linear';
                                 }
                                 else if (keySplines.length === 1 && (keySplines[0] === 'step-start' || keySplines[0] === 'steps(1, start)')) {
-                                    animate.setAttribute('calcMode', 'discrete');
+                                    animate.calcMode = 'discrete';
                                 }
                                 else if (keySplines.length === 1 && (keySplines[0] === 'step-end' || keySplines[0] === 'steps(1, end)')) {
-                                    animate.setAttribute('calcMode', 'discrete');
+                                    animate.calcMode = 'discrete';
                                     delay += duration - 1;
                                     duration = 1;
                                 }
@@ -140,12 +136,17 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                             keySplines[i] = match ? `${match[1]} ${match[2]} ${match[3]} ${match[4]}` : KEYSPLINE_DATA.ease;
                                         }
                                     }
-                                    animate.setAttribute('calcMode', 'spline');
-                                    animate.setAttribute('keySplines', keySplines.join(';'));
+                                    animate.calcMode = 'spline';
+                                    animate.keySplines = keySplines;
                                 }
-                                animate.setAttribute('begin', paused ? 'indefinite' : `${delay}ms`);
-                                animate.setAttribute('dur', `${duration}ms`);
-                                result.push(new SvgAnimate(animate));
+                                if (paused) {
+                                    animate.begin.length = 0;
+                                }
+                                else if (delay > 0) {
+                                    animate.begin[0] = delay;
+                                }
+                                animate.duration = duration;
+                                result.push(animate);
                             }
                         }
                     }
