@@ -21,11 +21,11 @@ function getHostDPI() {
     return $util.optionalAsNumber(squared, 'settings.resolutionDPI') || 96;
 }
 
-function getFontSize(element: SVGGraphicsElement) {
+function getFontSize(element: SVGElement) {
     return parseInt($dom.getStyle(element).fontSize || '16');
 }
 
-function setAttribute(element: SVGGraphicsElement, attr: string, value: string) {
+function setAttribute(element: SVGElement, attr: string, value: string) {
     element.style[attr] = value;
     element.setAttribute(attr, value);
 }
@@ -171,8 +171,8 @@ export const SVG = {
     use: (element: Element | null): element is SVGUseElement => {
         return !!element && element.tagName === 'use';
     },
-    symbol: (element: Element): element is SVGSymbolElement => {
-        return element.tagName === 'symbol';
+    symbol: (element: Element | null): element is SVGSymbolElement => {
+        return !!element && element.tagName === 'symbol';
     },
     shape: (element: Element): element is SVGGraphicsElement => {
         return SHAPES[element.tagName] !== undefined;
@@ -262,33 +262,6 @@ export function getTargetElement(element: Element, parentElement?: SVGElement | 
     return null;
 }
 
-export function getTransformMatrix(element: SVGGraphicsElement): SvgMatrix | undefined {
-    const match = new RegExp(REGEX_TRANSFORM.MATRIX).exec($dom.getStyle(element, true).transform || '');
-    if (match) {
-        switch (match[1]) {
-            case 'matrix':
-                return {
-                    a: parseFloat(match[2]),
-                    b: parseFloat(match[3]),
-                    c: parseFloat(match[4]),
-                    d: parseFloat(match[5]),
-                    e: parseFloat(match[6]),
-                    f: parseFloat(match[7])
-                };
-            case 'matrix3d':
-                return {
-                    a: parseFloat(match[2]),
-                    b: parseFloat(match[3]),
-                    c: parseFloat(match[6]),
-                    d: parseFloat(match[7]),
-                    e: parseFloat(match[14]),
-                    f: parseFloat(match[15])
-                };
-        }
-    }
-    return undefined;
-}
-
 export function createTransform(type: number, matrix: SvgMatrix | DOMMatrix, angle = 0, x = true, y = true): SvgTransform {
     return {
         type,
@@ -298,31 +271,14 @@ export function createTransform(type: number, matrix: SvgMatrix | DOMMatrix, ang
     };
 }
 
-export function getRotateOrigin(element: SVGGraphicsElement): SvgPoint[] {
-    const result: SvgPoint[] = [];
-    const transform = element.attributes.getNamedItem('transform');
-    if (transform) {
-        const pattern = /rotate\((-?[\d.]+),?\s*(-?[\d.]+),?\s*(-?[\d.]+)\)/g;
-        let match: RegExpExecArray | null = null;
-        while ((match = pattern.exec(transform.value)) !== null) {
-            result.push({
-                angle: parseFloat(match[1]),
-                x: parseFloat(match[2]),
-                y: parseFloat(match[3])
-            });
-        }
-    }
-    return result.length ? result : [{ angle: 0, x: 0, y: 0 }];
-}
-
-export function getTransform(element: SVGGraphicsElement): SvgTransform[] | undefined {
-    const value = $dom.cssInline(element, 'transform');
-    if (value !== '') {
+export function getTransform(element: SVGElement, value?: string): SvgTransform[] | undefined {
+    const transform = value === undefined ? $dom.cssInline(element, 'transform') : value;
+    if (transform !== '') {
         const result: SvgTransform[] = [];
         for (const name in REGEX_TRANSFORM) {
             const pattern = new RegExp(REGEX_TRANSFORM[name], 'g');
             let match: RegExpExecArray | null = null;
-            while ((match = pattern.exec(value)) !== null) {
+            while ((match = pattern.exec(transform)) !== null) {
                 const isX = match[1].endsWith('X');
                 const isY = match[1].endsWith('Y');
                 if (match[1].startsWith('rotate')) {
@@ -374,7 +330,7 @@ export function getTransform(element: SVGGraphicsElement): SvgTransform[] | unde
                     result[match.index] = createTransform(SVGTransform.SVG_TRANSFORM_TRANSLATE, matrix, 0);
                 }
                 else if (match[1].startsWith('matrix')) {
-                    const matrix = getTransformMatrix(element);
+                    const matrix = getTransformMatrix(element, value);
                     if (matrix) {
                         result[match.index] = createTransform(SVGTransform.SVG_TRANSFORM_MATRIX, matrix);
                     }
@@ -392,43 +348,73 @@ export function getTransform(element: SVGGraphicsElement): SvgTransform[] | unde
     return undefined;
 }
 
-export function getTransformOrigin(element: SVGGraphicsElement) {
-    const value = $dom.cssAttribute(element, 'transform-origin', true);
+export function getTransformMatrix(element: SVGElement, value?: string): SvgMatrix | undefined {
+    const match = new RegExp(REGEX_TRANSFORM.MATRIX).exec(value || $dom.getStyle(element, true).transform || '');
+    if (match) {
+        switch (match[1]) {
+            case 'matrix':
+                return {
+                    a: parseFloat(match[2]),
+                    b: parseFloat(match[3]),
+                    c: parseFloat(match[4]),
+                    d: parseFloat(match[5]),
+                    e: parseFloat(match[6]),
+                    f: parseFloat(match[7])
+                };
+            case 'matrix3d':
+                return {
+                    a: parseFloat(match[2]),
+                    b: parseFloat(match[3]),
+                    c: parseFloat(match[6]),
+                    d: parseFloat(match[7]),
+                    e: parseFloat(match[14]),
+                    f: parseFloat(match[15])
+                };
+        }
+    }
+    return undefined;
+}
+
+export function getTransformOrigin(element: SVGElement, value?: string) {
+    const result: Nullable<Point> = {
+        x: null,
+        y: null
+    };
+    value = value || $dom.cssAttribute(element, 'transform-origin');
     if (value !== '') {
         const parent = element.parentElement;
-        let width: number;
-        let height: number;
-        if (SVG.svg(parent)) {
-            width = parent.viewBox.baseVal.width;
-            height = parent.viewBox.baseVal.height;
+        let width = 0;
+        let height = 0;
+        let baseVal: DOMRect | undefined;
+        if (SVG.svg(parent) && parent.viewBox) {
+            baseVal = parent.viewBox.baseVal;
         }
-        else if (SVG.g(parent) && SVG.svg(parent.viewportElement)) {
-            width = parent.viewportElement.viewBox.baseVal.width;
-            height = parent.viewportElement.viewBox.baseVal.height;
+        else if (parent instanceof SVGGraphicsElement && SVG.svg(parent.viewportElement) && parent.viewportElement.viewBox) {
+            baseVal = parent.viewportElement.viewBox.baseVal;
         }
-        else {
-            return undefined;
+        if (baseVal) {
+            width = baseVal.width;
+            height = baseVal.height;
         }
         let positions = value.split(' ');
         if (positions.length === 1) {
             positions.push('center');
         }
         positions = positions.slice(0, 2);
-        const origin: Nullable<Point> = { x: null, y: null };
         if (positions.includes('left')) {
-            origin.x = 0;
+            result.x = 0;
         }
         else if (positions.includes('right')) {
-            origin.x = width;
+            result.x = width;
         }
         if (positions.includes('top')) {
-            origin.y = 0;
+            result.y = 0;
         }
         else if (positions.includes('bottom')) {
-            origin.y = height;
+            result.y = height;
         }
         ['x', 'y'].forEach(attr => {
-            if (origin[attr] === null) {
+            if (result[attr] === null) {
                 for (let i = 0; i < positions.length; i++) {
                     let position = positions[i];
                     if (position !== '') {
@@ -436,12 +422,12 @@ export function getTransformOrigin(element: SVGGraphicsElement) {
                             position = '50%';
                         }
                         if ($util.isUnit(position)) {
-                            origin[attr] = parseInt(position.endsWith('px') ? position : $util.convertPX(position, getHostDPI(), getFontSize(element)));
+                            result[attr] = parseInt(position.endsWith('px') ? position : $util.convertPX(position, getHostDPI(), getFontSize(element)));
                         }
                         else if ($util.isPercent(position)) {
-                            origin[attr] = (attr === 'x' ? width : height) * (parseInt(position) / 100);
+                            result[attr] = (attr === 'x' ? width : height) * (parseInt(position) / 100);
                         }
-                        if (origin[attr] !== null) {
+                        if (result[attr] !== null) {
                             positions[i] = '';
                             break;
                         }
@@ -449,13 +435,27 @@ export function getTransformOrigin(element: SVGGraphicsElement) {
                 }
             }
         });
-        if (origin.x || origin.y) {
-            origin.x = origin.x || 0;
-            origin.y = origin.y || 0;
-            return <Point> origin;
+    }
+    result.x = result.x || 0;
+    result.y = result.y || 0;
+    return <Point> result;
+}
+
+export function getTransformRotate(element: SVGElement): SvgPoint[] {
+    const result: SvgPoint[] = [];
+    const transform = element.attributes.getNamedItem('transform');
+    if (transform) {
+        const pattern = /rotate\((-?[\d.]+),?\s*(-?[\d.]+),?\s*(-?[\d.]+)\)/g;
+        let match: RegExpExecArray | null = null;
+        while ((match = pattern.exec(transform.value)) !== null) {
+            result.push({
+                angle: parseFloat(match[1]),
+                x: parseFloat(match[2]),
+                y: parseFloat(match[3])
+            });
         }
     }
-    return undefined;
+    return result.length ? result : [{ angle: 0, x: 0, y: 0 }];
 }
 
 export function sortNumber(values: number[], descending = false) {

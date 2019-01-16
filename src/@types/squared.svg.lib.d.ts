@@ -14,11 +14,11 @@ declare global {
             function setVisible(element: SVGGraphicsElement, value: boolean): void;
             function getTargetElement(element: Element, parentElement?: SVGElement | HTMLElement | null): SVGElement | null;
             function sortNumber(values: number[], descending?: boolean): boolean;
-            function getRotateOrigin(element: SVGGraphicsElement): SvgPoint[];
             function createTransform(type: number, matrix: SvgMatrix | DOMMatrix, angle?: number, x?: boolean, y?: boolean): SvgTransform;
-            function getTransform(element: SVGGraphicsElement): SvgTransform[] | undefined;
-            function getTransformOrigin(element: SVGGraphicsElement): Point | undefined;
-            function getTransformMatrix(element: SVGGraphicsElement): SvgMatrix | undefined;
+            function getTransform(element: SVGElement, value?: string): SvgTransform[] | undefined;
+            function getTransformMatrix(element: SVGElement, value?: string): SvgMatrix | undefined;
+            function getTransformOrigin(element: SVGElement, value?: string): Point;
+            function getTransformRotate(element: SVGElement): SvgPoint[];
             function getLeastCommonMultiple(values: number[]): number;
             function applyMatrixX(matrix: SvgMatrix | DOMMatrix, x: number, y: number): number;
             function applyMatrixY(matrix: SvgMatrix | DOMMatrix, x: number, y: number): number;

@@ -9,9 +9,12 @@
         #squared_ui {
             padding: 10px;
         }
-        rect {
+        #animate {
             animation: zorro 3s linear 0s 3 alternate-reverse;
             animation-delay: -1s;
+        }
+        #transform {
+            animation: rotate 3s linear 0s 3;
         }
         @keyframes zorro {
             from {
@@ -29,6 +32,21 @@
             to {
                 x: 150;
                 y: 120;
+            }
+        }
+        @keyframes rotate {
+            from {
+                transform: rotate(10deg);
+            }
+            33% {
+                transform: rotate(20deg);
+            }
+            66% {
+                transform: translate(50px, 50px) rotate(30deg);
+                transform-origin: 10px 10px;
+            }
+            to {
+                transform: rotate(40deg);
             }
         }
     </style>
@@ -62,9 +80,10 @@
     <!-- START: DEMO -->
     <div id="squared_ui" style="width: 300px;">
         <svg viewBox="0 0 200 200">
-             <rect x="10" y="10" width="30" height="20" fill="green">
+             <rect id="animate" x="10" y="10" width="30" height="20" fill="green">
                 <animate attributeName="x" from="0" to="100" begin="3s" dur="5s" repeatCount="2" />
              </rect>
+             <rect id="transform" x="50" y="50" width="30" height="20" fill="red" />
         </svg>
     </div>
     <!-- END: DEMO -->

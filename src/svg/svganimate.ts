@@ -27,18 +27,17 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public accumulateSum = false;
     public fillFreeze = false;
     public alternate = false;
-    public repeatDuration = -1;
     public end?: number;
     public keySplines?: string[];
     public sequential?: NameValue;
 
     private _repeatCount = 1;
+    private _repeatDuration = -1;
 
     constructor(public element?: SVGAnimateElement) {
         super(element);
         if (element) {
             const values = this.getAttribute('values');
-            const from = this.getAttribute('from');
             if (values !== '') {
                 this.values.push(...$util.flatMap(values.split(';'), value => value.trim()));
                 if (this.values.length > 1) {
@@ -56,6 +55,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                     this.values.length = 0;
                 }
             }
+            const from = this.getAttribute('from');
             if (this.values.length === 0 && this.to !== '') {
                 if (from !== '') {
                     this.from = from;
@@ -76,12 +76,23 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 this.keyTimes.push(0, 1);
                 this.setAttribute('by');
             }
+            this.setAttribute('fill', 'freeze');
+            this.setAttribute('calcMode');
+            if (values === '' && from !== '' && this.to !== '') {
+                this.setAttribute('additive', 'sum');
+                if (this.additiveSum) {
+                    this.setAttribute('accumulate', 'sum');
+                }
+            }
             const repeatDur = this.getAttribute('repeatDur');
-            const repeatCount = this.getAttribute('repeatCount');
             if (repeatDur && repeatDur !== 'indefinite') {
                 this.repeatDuration = convertClockTime(repeatDur) || -1;
             }
-            if (repeatCount !== 'indefinite') {
+            const repeatCount = this.getAttribute('repeatCount');
+            if (repeatCount === 'indefinite') {
+                this.repeatCount = -1;
+            }
+            else if (repeatCount !== '') {
                 this.repeatCount = parseFloat(repeatCount);
             }
             if (this.begin.length) {
@@ -91,20 +102,12 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                     if (times.length && (this.begin.length === 1 || this.begin[this.begin.length - 1] !== this.end || times[0] === 0)) {
                         this.end = times[0];
                         this.begin = this.begin.filter(value => value >= 0 && value < times[0]);
-                        if (this.begin.length && this._repeatCount === -1) {
-                            this._repeatCount = this.end / this.duration;
+                        if (this.begin.length && this.repeatCount === -1) {
+                            this.repeatCount = this.end / this.duration;
                         }
                     }
                 }
             }
-            this.setAttribute('calcMode');
-            if (values === '' && from !== '' && this.to !== '') {
-                this.setAttribute('additive', 'sum');
-                if (this.additiveSum) {
-                    this.setAttribute('accumulate', 'sum');
-                }
-            }
-            this.setAttribute('fill', 'freeze');
         }
     }
 
@@ -117,6 +120,9 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         }
         else {
             this._repeatCount = 1;
+        }
+        if (this.repeatCount === -1) {
+            this.fillFreeze = false;
         }
     }
     get repeatCount() {
@@ -141,5 +147,15 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             }
         }
         return 1;
+    }
+
+    set repeatDuration(value) {
+        this._repeatDuration = value;
+        if (this.repeatCount === -1) {
+            this.fillFreeze = false;
+        }
+    }
+    get repeatDuration() {
+        return this._repeatDuration;
     }
 }

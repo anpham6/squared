@@ -196,8 +196,8 @@ function segmentTransforms(element: SVGGraphicsElement, transform: SvgTransform[
     if (transform.length) {
         const host: SvgTransform[][] = [];
         const client: SvgTransform[] = [];
-        const rotateOrigin = transform[0].css ? [] : $utilS.getRotateOrigin(element);
-        rotateOrigin.reverse();
+        const rotations = transform[0].css ? [] : $utilS.getTransformRotate(element);
+        rotations.reverse();
         const partition = transform.slice().reverse();
         const typeIndex = new Set<number>();
         let current: SvgTransform[] = [];
@@ -259,8 +259,8 @@ function segmentTransforms(element: SVGGraphicsElement, transform: SvgTransform[
                         }
                         break;
                     case SVGTransform.SVG_TRANSFORM_ROTATE:
-                        if (rotateOrigin.length) {
-                            const origin = rotateOrigin.shift() as SvgPoint;
+                        if (rotations.length) {
+                            const origin = rotations.shift() as SvgPoint;
                             if (origin.angle === item.angle) {
                                 item.origin = origin;
                             }
@@ -403,9 +403,9 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                         const sequentialMap = new Map<string, SvgAnimate[]>();
                         const transformMap = new Map<string, $SvgAnimateTransform[]>();
                         const together: SvgAnimate[] = [];
-                        const fillReplace: SvgAnimate[] = [];
+                        const isolated: SvgAnimate[] = [];
                         const togetherTargets: SvgAnimate[][] = [];
-                        const fillReplaceTargets: SvgAnimate[][] = [];
+                        const isolatedTargets: SvgAnimate[][][] = [];
                         const transformTargets: SvgAnimate[][] = [];
                         for (const item of group.animate as SvgAnimate[]) {
                             const sequential = item.sequential;
@@ -427,8 +427,8 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                     values.push(item);
                                 }
                             }
-                            else if (!item.fillFreeze) {
-                                fillReplace.push(item);
+                            else if (item.repeatCount === -1 || !item.fillFreeze) {
+                                isolated.push(item);
                             }
                             else {
                                 together.push(item);
@@ -443,33 +443,27 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                         for (const item of transformMap.values()) {
                             transformTargets.push(item.sort((a, b) => a.sequential && b.sequential && a.sequential.value >= b.sequential.value ? 1 : -1));
                         }
-                        for (const item of fillReplace) {
-                            fillReplaceTargets.push([item]);
+                        for (const item of isolated) {
+                            isolatedTargets.push([[item]]);
                         }
-                        [togetherTargets, fillReplaceTargets, transformTargets].forEach((targets, index) => {
+                        [togetherTargets, transformTargets, ...isolatedTargets].forEach((targets, index) => {
                             const subData: TemplateDataAA = {
-                                ordering: index === 2 ? 'sequentially' : 'together',
+                                ordering: index === 0 ? 'together' : 'sequentially',
                                 AA: []
                             };
+                            animatorMap.clear();
                             for (const items of targets) {
                                 let ordering: string;
                                 let sequential = false;
-                                if (index === 1) {
-                                    if (items.some(item => $SvgBuild.instanceOfAnimateTransform(item))) {
-                                        subData.ordering = 'sequentially';
-                                        ordering = 'together';
-                                        sequential = true;
-                                    }
-                                    else {
-                                        ordering = 'sequentially';
-                                    }
+                                if (index > 1) {
+                                    ordering = 'together';
                                 }
                                 else if (items.some(item => item.sequential !== undefined)) {
-                                    ordering = index === 2 ? 'together' : 'sequentially';
+                                    ordering = index === 0 ? 'sequentially' : 'together';
                                     sequential = true;
                                 }
                                 else {
-                                    ordering = $dom.getDataSet(group.element, 'android').ordering || this.options.vectorAnimateOrdering;
+                                    ordering = $dom.getDataSet(group.element, 'android').ordering || this.options.vectorAnimateOrdering || 'together';
                                 }
                                 const setData: AnimatedSetData = {
                                     ordering,
@@ -824,17 +818,16 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                             value = values[j].toString();
                                                         }
                                                         if (value !== undefined) {
-                                                            keyframes.push({
-                                                                fraction: item.keyTimes[j].toString(),
-                                                                value
-                                                            });
+                                                            if (item.keyTimes[j] === 0 && value === '') {
+                                                                keyframes.push({ fraction: '', value: '' });
+                                                            }
+                                                            else {
+                                                                keyframes.push({ fraction: item.keyTimes[j].toString(), value });
+                                                            }
                                                         }
                                                     }
                                                     if (keyframes.length) {
-                                                        propertyValues.push({
-                                                            propertyName: propertyName[i],
-                                                            keyframes
-                                                        });
+                                                        propertyValues.push({ propertyName: propertyName[i], keyframes });
                                                         if (!animatorMap.has(keyName)) {
                                                             if (keyName !== '') {
                                                                 animatorMap.set(keyName, propertyValues);

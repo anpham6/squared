@@ -33,6 +33,7 @@ declare global {
         interface SvgAnimateTransform extends SvgAnimate {
             type: number;
             element?: SVGAnimateTransformElement;
+            setType(value: string): void;
         }
 
         interface SvgAnimateMotion extends SvgAnimate {
