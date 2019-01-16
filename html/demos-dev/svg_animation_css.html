@@ -10,8 +10,13 @@
             padding: 10px;
         }
         #animate {
-            animation: zorro 3s linear 0s 3 alternate-reverse;
-            animation-delay: -1s;
+            animation-name: zorro, zorro;
+            animation-delay: 1s, 3s;
+            animation-duration: 3s, 5s;
+            animation-iteration-count: 5, 1;
+            animation-direction: alternate-reverse, reverse;
+            animation-timing-function: linear;
+            animation-fill-mode: none;
         }
         #transform {
             animation: rotate 3s linear 0s 3;
@@ -81,7 +86,7 @@
     <div id="squared_ui" style="width: 300px;">
         <svg viewBox="0 0 200 200">
              <rect id="animate" x="10" y="10" width="30" height="20" fill="green">
-                <animate attributeName="x" from="0" to="100" begin="3s" dur="5s" repeatCount="2" />
+                <animate attributeName="x" from="0" to="100" begin="3s" dur="5s" repeatCount="5" />
              </rect>
              <rect id="transform" x="50" y="50" width="30" height="20" fill="red" />
         </svg>

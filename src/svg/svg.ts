@@ -47,7 +47,7 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
 
     public synchronize(useKeyTime = false) {
         if (!this.documentRoot && this.animation.length) {
-            this.merge(this.getAnimateViewRect(), useKeyTime);
+            this.mergeAnimate(this.getAnimateViewRect(), useKeyTime);
         }
         super.synchronize(useKeyTime);
     }

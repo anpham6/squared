@@ -40,7 +40,7 @@ export default class SvgShape extends SvgSynchronize$MX(SvgView$MX(SvgElement)) 
 
     public synchronize(useKeyTime = false) {
         if (this.path && this.animation.length) {
-            this.merge(this.getAnimateShape(), useKeyTime, this.path);
+            this.mergeAnimate(this.getAnimateShape(), useKeyTime, this.path);
         }
     }
 

@@ -22,15 +22,8 @@ const KEYSPLINE_DATA = {
     'ease-out': '0.0 0.0 0.58 1.0'
 };
 
-function parseAttribute(element: SVGElement, attr: string, length = 0) {
-    const values = $util.flatMap($dom.cssAttribute(element, attr).split(','), value => value.trim());
-    if (length) {
-        while (values.length < length) {
-            values.push(...values.slice());
-        }
-        values.length = length;
-    }
-    return values;
+function parseAttribute(element: SVGElement, attr: string) {
+    return $util.flatMap($dom.cssAttribute(element, attr).split(','), value => value.trim());
 }
 
 function sortAttribute(value: NumberValue<string>[]) {
@@ -51,16 +44,26 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             const animationName = parseAttribute(element, 'animation-name');
             if (animationName.length) {
                 const animationMap: ObjectMap<string[]> = {
-                    'animation-delay': null,
-                    'animation-duration': null,
-                    'animation-iteration-count': null,
-                    'animation-play-state': null,
-                    'animation-direction': null,
-                    'animation-fill-mode': null,
-                    'animation-timing-function': null
-                } as any;
+                    'animation-delay': ['0s'],
+                    'animation-duration': ['0s'],
+                    'animation-iteration-count': ['1'],
+                    'animation-play-state': ['running'],
+                    'animation-direction': ['normal'],
+                    'animation-fill-mode': ['none'],
+                    'animation-timing-function': ['ease']
+                };
                 for (const name in animationMap) {
-                    animationMap[name] = parseAttribute(element, name, animationName.length);
+                    let values = parseAttribute(element, name);
+                    if (values.length) {
+                        animationMap[name] = values;
+                    }
+                    else {
+                        values = animationMap[name];
+                    }
+                    while (values.length < animationName.length) {
+                        values.push(...values.slice());
+                    }
+                    values.length = animationName.length;
                 }
                 animationName.forEach((className, index) => {
                     const keyframes = KEYFRAME_NAME.get(className);
@@ -190,9 +193,6 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 animate.keyTimes = animation.map(item => item.ordinal);
                                 animate.values = animation.map(item => item.value);
                             }
-                            if (iterationCount !== 'infinite') {
-                                animate.repeatCount = parseFloat(iterationCount);
-                            }
                             if (keySplines.every(spline => spline === 'linear')) {
                                 animate.calcMode = 'linear';
                             }
@@ -219,7 +219,13 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             animate.keySplines = keySplines;
                             animate.begin[0] = delay;
                             animate.duration = duration;
-                            animate.fillFreeze = fillMode === 'forwards' || fillMode === 'both';
+                            if (iterationCount !== 'infinite') {
+                                animate.repeatCount = parseFloat(iterationCount);
+                                animate.fillFreeze = fillMode === 'forwards' || fillMode === 'both';
+                            }
+                            else {
+                                animate.repeatCount = -1;
+                            }
                             if (direction.endsWith('reverse')) {
                                 animate.values.reverse();
                                 animate.keySplines.reverse();
