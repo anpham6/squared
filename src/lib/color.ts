@@ -257,9 +257,9 @@ export function getColorByShade(value: string) {
     }
 }
 
-export function convertHex(value: string, opacity = 1) {
+export function convertHex(value: string | number, opacity = 1) {
     const hex = '0123456789ABCDEF';
-    let rgb = parseInt(value) * opacity;
+    let rgb = (typeof value === 'string' ? parseInt(value) : value) * opacity;
     if (isNaN(rgb)) {
         return '00';
     }

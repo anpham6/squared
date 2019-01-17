@@ -18,8 +18,14 @@
             animation-timing-function: linear;
             animation-fill-mode: none;
         }
-        #transform {
+        #rotate {
             animation: rotate 3s linear 0s 3;
+        }
+        #opacity-step {
+            animation: opacity 5s steps(5, start) forwards;
+        }
+        #translate-step {
+            animation: translate 5s steps(5, end);
         }
         @keyframes zorro {
             from {
@@ -54,6 +60,17 @@
                 transform: rotate(40deg);
             }
         }
+        @keyframes opacity {
+            to {
+                fill: yellow;
+                fill-opacity: 1;
+            }
+        }
+        @keyframes translate {
+            to {
+                transform: translate(100px, 100px);
+            }
+        }
     </style>
     <script src="/node_modules/systemjs/dist/system.js"></script>
     <script src="common/dev.js"></script>
@@ -85,10 +102,12 @@
     <!-- START: DEMO -->
     <div id="squared_ui" style="width: 300px;">
         <svg viewBox="0 0 200 200">
-             <rect id="animate" x="10" y="10" width="30" height="20" fill="green">
+             <rect id="animate" x="10" y="10" width="30" height="20" fill="purple">
                 <animate attributeName="x" from="0" to="100" begin="3s" dur="5s" repeatCount="5" />
              </rect>
-             <rect id="transform" x="50" y="50" width="30" height="20" fill="red" />
+             <rect id="rotate" x="50" y="50" width="30" height="20" fill="red" />
+             <rect id="opacity-step" x="25" y="25" width="30" height="20" fill="blue" style="fill-opacity: 0;" />
+             <rect id="translate-step" x="50" y="50" width="30" height="20" fill="green" />
         </svg>
     </div>
     <!-- END: DEMO -->

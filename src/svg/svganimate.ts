@@ -158,4 +158,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     get repeatDuration() {
         return this._repeatDuration;
     }
+
+    get instanceType() {
+        return 1;
+    }
 }

@@ -3,28 +3,6 @@ import { SvgMatrix, SvgPoint, SvgTransform } from '../@types/object';
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
-const REGEX_UNIT = {
-    DECIMAL: '(-?[\\d.]+)',
-    LENGTH: '([\\d.]+(?:[a-z]{2,}|%)?)',
-    DEGREE: '(?:(-?[\\d.]+)(deg|rad|turn))'
-};
-
-const REGEX_TRANSFORM = {
-    MATRIX: `(matrix(?:3d)?)\\(${REGEX_UNIT.DECIMAL}, ${REGEX_UNIT.DECIMAL}, ${REGEX_UNIT.DECIMAL}, ${REGEX_UNIT.DECIMAL}, ${REGEX_UNIT.DECIMAL}, ${REGEX_UNIT.DECIMAL}(?:, ${REGEX_UNIT.DECIMAL})?(?:, ${REGEX_UNIT.DECIMAL})?(?:, ${REGEX_UNIT.DECIMAL})?(?:, ${REGEX_UNIT.DECIMAL})?(?:, ${REGEX_UNIT.DECIMAL})?(?:, ${REGEX_UNIT.DECIMAL})?(?:, ${REGEX_UNIT.DECIMAL})?(?:, ${REGEX_UNIT.DECIMAL})?(?:, ${REGEX_UNIT.DECIMAL})?(?:, ${REGEX_UNIT.DECIMAL})?\\)`,
-    ROTATE: `(rotate[XY]?)\\(${REGEX_UNIT.DEGREE}\\)`,
-    SKEW: `(skew[XY]?)\\(${REGEX_UNIT.DEGREE}(?:, ${REGEX_UNIT.DEGREE})?\\)`,
-    SCALE: `(scale[XY]?)\\(${REGEX_UNIT.DECIMAL}(?:, ${REGEX_UNIT.DECIMAL})?\\)`,
-    TRANSLATE: `(translate[XY]?)\\(${REGEX_UNIT.LENGTH}(?:, ${REGEX_UNIT.LENGTH})?\\)`
-};
-
-function getHostDPI() {
-    return $util.optionalAsNumber(squared, 'settings.resolutionDPI') || 96;
-}
-
-function getFontSize(element: SVGElement) {
-    return parseInt($dom.getStyle(element).fontSize || '16');
-}
-
 function setAttribute(element: SVGElement, attr: string, value: string) {
     element.style[attr] = value;
     element.setAttribute(attr, value);
@@ -112,6 +90,28 @@ export const MATRIX = {
         };
     }
 };
+
+export const REGEX_UNIT = {
+    DECIMAL: '(-?[\\d.]+)',
+    LENGTH: '([\\d.]+(?:[a-z]{2,}|%)?)',
+    DEGREE: '(?:(-?[\\d.]+)(deg|rad|turn))'
+};
+
+const REGEX_TRANSFORM = {
+    MATRIX: `(matrix(?:3d)?)\\(${REGEX_UNIT.DECIMAL}, ${REGEX_UNIT.DECIMAL}, ${REGEX_UNIT.DECIMAL}, ${REGEX_UNIT.DECIMAL}, ${REGEX_UNIT.DECIMAL}, ${REGEX_UNIT.DECIMAL}(?:, ${REGEX_UNIT.DECIMAL})?(?:, ${REGEX_UNIT.DECIMAL})?(?:, ${REGEX_UNIT.DECIMAL})?(?:, ${REGEX_UNIT.DECIMAL})?(?:, ${REGEX_UNIT.DECIMAL})?(?:, ${REGEX_UNIT.DECIMAL})?(?:, ${REGEX_UNIT.DECIMAL})?(?:, ${REGEX_UNIT.DECIMAL})?(?:, ${REGEX_UNIT.DECIMAL})?(?:, ${REGEX_UNIT.DECIMAL})?\\)`,
+    ROTATE: `(rotate[XY]?)\\(${REGEX_UNIT.DEGREE}\\)`,
+    SKEW: `(skew[XY]?)\\(${REGEX_UNIT.DEGREE}(?:, ${REGEX_UNIT.DEGREE})?\\)`,
+    SCALE: `(scale[XY]?)\\(${REGEX_UNIT.DECIMAL}(?:, ${REGEX_UNIT.DECIMAL})?\\)`,
+    TRANSLATE: `(translate[XY]?)\\(${REGEX_UNIT.LENGTH}(?:, ${REGEX_UNIT.LENGTH})?\\)`
+};
+
+export function getHostDPI() {
+    return $util.optionalAsNumber(squared, 'settings.resolutionDPI') || 96;
+}
+
+export function getFontSize(element: SVGElement) {
+    return parseInt($dom.getStyle(element).fontSize || '16');
+}
 
 export function createElement<K extends keyof squared.svg.SvgElementTagNameMap>(qualifiedName: K): squared.svg.SvgElementTagNameMap[K] {
     return document.createElementNS('http://www.w3.org/2000/svg', qualifiedName);

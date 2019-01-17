@@ -61,18 +61,15 @@ export default (Base: Constructor<squared.base.Node>) => {
         protected _fontSize = 0;
         protected _renderParent?: View;
         protected _documentParent?: View;
-
         protected readonly _boxAdjustment: BoxModel = $dom.newBoxModel();
         protected readonly _boxReset: BoxModel = $dom.newBoxModel();
 
         private _containerType = 0;
-
         private _localSettings: LocalSettings = {
             targetAPI: BUILD_ANDROID.LATEST,
             resolutionDPI: DENSITY_ANDROID.MDPI,
             supportRTL: false
         };
-
         private __android: StringMap = {};
         private __app: StringMap = {};
 

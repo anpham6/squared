@@ -6,7 +6,7 @@ declare global {
         namespace color {
             function getColorByName(value: string): Color | null;
             function getColorByShade(value: string): Color | null;
-            function convertHex(value: string, opacity?: number): string;
+            function convertHex(value: string | number, opacity?: number): string;
             function convertRGBA(value: string): RGBA | null;
             function parseRGBA(value: string, opacity?: string): ColorData | null;
             function reduceRGBA(value: string, percent: number): ColorData | null;
@@ -59,7 +59,7 @@ declare global {
             function capitalize(value: string, upper?: boolean): string;
             function convertUnderscore(value: string): string;
             function convertCamelCase(value: string, char?: string): string;
-            function convertWord(value: string): string;
+            function convertWord(value: string, replaceDash?: boolean): string;
             function convertInt(value: string): number;
             function convertFloat(value: string): number;
             function convertPX(value: string, dpi: number, fontSize: number): string;

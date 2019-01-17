@@ -484,13 +484,22 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                 if (item.element) {
                                     nextBeginTime = groupBegin[i + 1];
                                     if (incomplete.length) {
-                                        alteredIndex = j + 1;
-                                        alteredBegin = begin;
-                                        const next = <NumberValue<SvgAnimate>> incomplete.pop();
-                                        begin = next.ordinal;
-                                        data.items.splice(j, 0, next.value);
-                                        j--;
-                                        continue;
+                                        let next: NumberValue<SvgAnimate> | undefined;
+                                        for (let k = incomplete.length - 1; k >= 0; k--) {
+                                            if (incomplete[k].value.element === undefined) {
+                                                next = incomplete[k];
+                                                incomplete.splice(k, 1);
+                                                break;
+                                            }
+                                        }
+                                        if (next) {
+                                            alteredIndex = j + 1;
+                                            alteredBegin = begin;
+                                            begin = next.ordinal;
+                                            data.items.splice(j, 0, next.value);
+                                            j--;
+                                            continue;
+                                        }
                                     }
                                     for (let k = i + 1; k < groupBegin.length; k++) {
                                         minRestartTime = Math.max(minRestartTime, groupBegin[k] + groupData[k].duration);

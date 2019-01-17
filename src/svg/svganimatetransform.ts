@@ -86,4 +86,8 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                 break;
         }
     }
+
+    get instanceType() {
+        return 2;
+    }
 }

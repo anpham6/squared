@@ -7,10 +7,10 @@ const $util = squared.lib.util;
 export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.SvgAnimateMotion {
     public path = '';
     public mpath: SVGGraphicsElement | null = null;
-    public keyPoints: number[] = [];
     public rotate = 0;
     public rotateAuto = false;
     public rotateAutoReverse = false;
+    public keyPoints?: number[] = [];
 
     constructor(public element?: SVGAnimateMotionElement) {
         super(element);
@@ -48,5 +48,9 @@ export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.
                 }
             }
         }
+    }
+
+    get instanceType() {
+        return 3;
     }
 }

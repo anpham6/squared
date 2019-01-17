@@ -30,8 +30,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public abstract readonly localSettings: EnvironmentSettings;
     public abstract readonly renderChildren: T[];
 
-    protected abstract _namespaces: Set<string>;
-
     protected _cached: CachedValue<T> = {};
     protected _styleMap: StringMap = {};
     protected _box?: RectDimensions;
@@ -40,15 +38,15 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     protected _controlName?: string;
     protected _renderParent?: T;
     protected _documentParent?: T;
-
-    protected abstract readonly _boxAdjustment: BoxModel;
-    protected abstract readonly _boxReset: BoxModel;
-
     protected readonly _initial: InitialData<T> = {
         iteration: -1,
         children: [],
         styleMap: {}
     };
+
+    protected abstract _namespaces: Set<string>;
+    protected abstract readonly _boxAdjustment: BoxModel;
+    protected abstract readonly _boxReset: BoxModel;
 
     private _initialized = false;
     private _parent?: T;
@@ -59,7 +57,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     private _excludeSection = 0;
     private _excludeProcedure = 0;
     private _excludeResource = 0;
-
     private readonly _element: Element | null = null;
 
     protected constructor(

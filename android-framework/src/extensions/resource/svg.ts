@@ -333,7 +333,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
         for (const node of this.application.processing.cache) {
             if (node.svgElement) {
                 const svg = new $Svg(<SVGSVGElement> node.element);
-                const templateName = `${node.tagName.toLowerCase()}_${node.controlId}_viewbox`;
+                const templateName = $util.convertWord(`${node.tagName.toLowerCase()}_${node.controlId}_viewbox`, true);
                 const getFilename = (prefix = '', suffix = '') => {
                     return templateName + (prefix !== '' ? `_${prefix}` : '') + (this.IMAGE_DATA.length ? '_vector' : '') + (suffix !== '' ? `_${suffix}` : '');
                 };
@@ -487,14 +487,14 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                 for (const item of repeating) {
                                     const options: TemplateData = {
                                         startOffset: item.begin.length && item.begin[0] > 0 ? item.begin[0].toString() : '',
-                                        duration: item.duration !== -1 ? item.duration.toString() : ''
+                                        duration: item.duration.toString()
                                     };
                                     if ($SvgBuild.instanceOfSet(item)) {
                                         if (item.to) {
                                             options.propertyName = ATTRIBUTE_ANDROID[item.attributeName];
                                             if (options.propertyName) {
                                                 options.propertyValues = false;
-                                                if (item.duration === -1) {
+                                                if (item.duration === 0) {
                                                     options.duration = '1';
                                                 }
                                                 options.repeatCount = '0';
@@ -1246,7 +1246,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
     }
 
     private queueAnimations(svg: SvgView, name: string, predicate: IteratorPredicate<SvgAnimation, void>, pathData = '') {
-        const animate = svg.animation.filter(predicate).filter(item => !item.paused && item.begin.length > 0);
+        const animate = svg.animation.filter(predicate).filter(item => !item.paused && item.begin.length > 0 && item.duration >= 0);
         if (animate.length) {
             this.ANIMATE_DATA.set(name, {
                 element: svg.element,

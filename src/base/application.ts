@@ -66,7 +66,6 @@ export default class Application<T extends Node> implements squared.base.Applica
     public extensionManager: ExtensionManager<T>;
     public initialized = false;
     public closed = false;
-
     public readonly builtInExtensions: ObjectMap<Extension<T>> = {};
     public readonly extensions = new Set<Extension<T>>();
     public readonly parseElements = new Set<HTMLElement>();
@@ -86,7 +85,6 @@ export default class Application<T extends Node> implements squared.base.Applica
 
     private _renderPosition = new Map<number, { parent: T; children: T[] }>();
     private _userSettings?: UserSettings;
-
     private readonly _views: FileAsset[] = [];
     private readonly _includes: FileAsset[] = [];
 
@@ -221,7 +219,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 }
                 const iteration = parseInt(element.dataset.iteration || '0') + 1;
                 element.dataset.iteration = iteration.toString();
-                element.dataset.layoutName = $util.convertWord(iteration > 1 ? `${filename}_${iteration}` : filename);
+                element.dataset.layoutName = $util.convertWord(iteration > 1 ? `${filename}_${iteration}` : filename, true);
                 if (this.createCache(element)) {
                     this.setBaseLayout();
                     this.setConstraints();

@@ -3,10 +3,10 @@ import { SvgPathCommand, SvgPoint, SvgTransform } from './@types/object';
 import { SVG, applyMatrixX, applyMatrixY, createTransform, getRadiusY } from './lib/util';
 
 type Svg = squared.svg.Svg;
-type SvgAnimation = squared.svg.SvgAnimation;
 type SvgAnimate = squared.svg.SvgAnimate;
 type SvgAnimateMotion = squared.svg.SvgAnimateMotion;
 type SvgAnimateTransform = squared.svg.SvgAnimateTransform;
+type SvgAnimation = squared.svg.SvgAnimation;
 type SvgContainer = squared.svg.SvgContainer;
 type SvgElement = squared.svg.SvgElement;
 type SvgG = squared.svg.SvgG;
@@ -26,17 +26,18 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             let result = '';
             let tagName: string | undefined;
             if ($util.isString(element.id)) {
-                if (!NAME_GRAPHICS.has(element.id)) {
-                    result = element.id;
+                const id = $util.convertWord(element.id, true);
+                if (!NAME_GRAPHICS.has(id)) {
+                    result = id;
                 }
-                tagName = element.id;
+                tagName = id;
             }
             else {
                 tagName = element.tagName;
             }
             let index = NAME_GRAPHICS.get(tagName) || 0;
             if (result !== '') {
-                NAME_GRAPHICS.set(tagName, index);
+                NAME_GRAPHICS.set(result, index);
                 return result;
             }
             else {
@@ -51,7 +52,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static instance(object: SvgElement): object is Svg {
-        return object.element.tagName === 'svg';
+        return SVG.svg(object.element);
     }
 
     public static instanceOfContainer(object: SvgElement): object is Svg | SvgG | SvgUseSymbol {
@@ -63,7 +64,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static instanceOfG(object: SvgElement): object is SvgG {
-        return object.element.tagName === 'g';
+        return SVG.g(object.element);
     }
 
     public static instanceOfUseSymbol(object: SvgElement): object is SvgUseSymbol {
@@ -71,31 +72,31 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static instanceOfShape(object: SvgElement): object is SvgShape {
-        return (SvgBuild.instanceOfUse(object) || SVG.shape(object.element)) && object['path'] !== undefined;
+        return SVG.shape(object.element) || SvgBuild.instanceOfUse(object) && object['path'] !== undefined;
     }
 
     public static instanceOfImage(object: SvgElement): object is SvgImage {
-        return SvgBuild.instanceOfUse(object) && object['imageElement'] !== undefined || object.element.tagName === 'image';
+        return SVG.image(object.element) || SvgBuild.instanceOfUse(object) && object['imageElement'] !== undefined;
     }
 
     public static instanceOfUse(object: SvgElement): object is SvgUse {
-        return object.element.tagName === 'use';
+        return SVG.use(object.element);
     }
 
     public static instanceOfSet(object: SvgAnimation) {
-        return !!object.element && object.element.tagName === 'set';
+        return object.instanceType === 0;
     }
 
     public static instanceOfAnimate(object: SvgAnimation): object is SvgAnimate {
-        return !!object.element && object.element.tagName === 'animate' || object instanceof squared.svg.SvgAnimate && !SvgBuild.instanceOfAnimateTransform(object) && !SvgBuild.instanceOfAnimateTransform(object);
+        return object.instanceType === 1;
     }
 
     public static instanceOfAnimateTransform(object: SvgAnimation): object is SvgAnimateTransform {
-        return !!object.element && object.element.tagName === 'animateTransform' || object instanceof squared.svg.SvgAnimateTransform;
+        return object.instanceType === 2;
     }
 
     public static instanceOfAnimateMotion(object: SvgAnimation): object is SvgAnimateMotion {
-        return !!object.element && object.element.tagName === 'animateMotion' || object instanceof squared.svg.SvgAnimateMotion;
+        return object.instanceType === 3;
     }
 
     public static getContainerOpacity(instance: SvgView) {
@@ -103,7 +104,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         let current: SvgContainer | undefined = instance.parent;
         while (current) {
             const opacity = parseFloat(current['opacity'] || '1');
-            if (opacity < 1) {
+            if (!isNaN(opacity) && opacity < 1) {
                 result *= opacity;
             }
             current = current['parent'];
@@ -244,7 +245,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static fromNumberList(values: number[]) {
-        const result: SvgPoint[] = [];
+        const result: Point[] = [];
         for (let i = 0; i < values.length; i += 2) {
             result.push({ x: values[i], y: values[i + 1] });
         }

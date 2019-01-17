@@ -30,7 +30,6 @@ export default abstract class File<T extends Node> implements squared.base.File<
     }
 
     public appName = '';
-
     public readonly assets: FileAsset[] = [];
 
     protected constructor(public resource: Resource<T>) {

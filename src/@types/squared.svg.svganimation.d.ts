@@ -8,6 +8,7 @@ declare global {
             paused: boolean;
             element?: SVGAnimationElement;
             parent?: SvgView | SvgPath;
+            readonly instanceType: number;
             setAttribute(attr: string, equality?: string): void;
             getAttribute(attr: string): string;
         }
@@ -38,12 +39,12 @@ declare global {
 
         interface SvgAnimateMotion extends SvgAnimate {
             path: string;
-            keyPoints: number[];
             rotate: number;
             rotateAuto: boolean;
             rotateAutoReverse: boolean;
             mpath: SVGGraphicsElement | null;
             element?: SVGAnimateMotionElement;
+            keyPoints?: number[];
         }
 
         class SvgAnimation implements SvgAnimation {

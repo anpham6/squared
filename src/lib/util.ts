@@ -75,8 +75,15 @@ export function convertCamelCase(value: string, char = '-') {
     return value;
 }
 
-export function convertWord(value: string) {
-    return value && value.replace(/[^\w]/g, '_').trim() || '';
+export function convertWord(value: string, replaceDash = false) {
+    if (value) {
+        value = value.replace(/[^\w]/g, '_').trim();
+        if (replaceDash) {
+            value = value.replace(/-/g, '_');
+        }
+        return value;
+    }
+    return '';
 }
 
 export function convertInt(value: string) {
