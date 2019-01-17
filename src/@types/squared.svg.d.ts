@@ -90,8 +90,8 @@ declare global {
             public static clonePoints(values: SvgPoint[] | SVGPointList): SvgPoint[];
             public static fromNumberList(values: number[]): Point[];
             public static toNumberList(value: string): number[];
-            public static getAbsolutePoints(values: SvgPathCommand[]): SvgPoint[];
-            public static mergeAbsolutePoints(values: SvgPathCommand[], points: SvgPoint[]): SvgPathCommand[];
+            public static getPathPoints(values: SvgPathCommand[]): SvgPoint[];
+            public static rebindPathPoints(values: SvgPathCommand[], points: SvgPoint[]): SvgPathCommand[];
             public static fromPathCommandList(values: SvgPathCommand[]): string;
             public static toPathCommandList(value: string): SvgPathCommand[];
         }

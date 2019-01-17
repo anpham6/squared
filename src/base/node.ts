@@ -468,7 +468,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public cssSort(attr: string, desc = false, duplicate = false) {
-        const children = (duplicate ? this.duplicate() :  this.children);
+        const children = duplicate ? this.duplicate() : this.children;
         children.sort((a, b) => {
             const valueA = a.toInt(attr);
             const valueB = b.toInt(attr);

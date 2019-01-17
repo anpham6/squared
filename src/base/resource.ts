@@ -346,14 +346,11 @@ export default abstract class Resource<T extends Node> implements squared.base.R
             {
                 const opacity = node.css('opacity');
                 const color = $color.parseRGBA(node.css('color'), opacity);
-                let backgroundColor: ColorData | null;
-                if (backgroundImage ||
-                    node.cssParent('backgroundColor', false, true) === node.css('backgroundColor') && (node.plainText || node.style.backgroundColor !== node.cssInitial('backgroundColor')) ||
-                    !node.has('backgroundColor') && node.documentParent.visible && $dom.cssFromParent(node.element, 'backgroundColor'))
+                let backgroundColor: ColorData | undefined;
+                if (!(backgroundImage ||
+                    node.css('backgroundColor') === node.cssParent('backgroundColor', false, true) && (node.plainText || node.style.backgroundColor !== node.cssInitial('backgroundColor')) ||
+                    node.documentParent.visible && !node.has('backgroundColor') && $dom.cssFromParent(node.element, 'backgroundColor')))
                 {
-                    backgroundColor = null;
-                }
-                else {
                     backgroundColor = $color.parseRGBA(node.css('backgroundColor'), opacity);
                 }
                 let fontFamily = node.css('fontFamily');

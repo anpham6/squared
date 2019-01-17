@@ -68,13 +68,11 @@ function getSplitValue(fraction: number, previousFraction: number, nextFraction:
         return previousValue + percentage * (nextValue - previousValue);
     }
     else if (Array.isArray(previousValue) && Array.isArray(nextValue)) {
-        const previousPoints = previousValue as Point[];
-        const nextPoints = nextValue as Point[];
         const result: Point[] = [];
-        for (let i = 0; i < Math.min(previousPoints.length, nextPoints.length); i++) {
+        for (let i = 0; i < Math.min(previousValue.length, nextValue.length); i++) {
             result.push({
-                x: getSplitValue(fraction, previousFraction, nextFraction, previousPoints[i].x, nextPoints[i].x) as number,
-                y: getSplitValue(fraction, previousFraction, nextFraction, previousPoints[i].y, nextPoints[i].y) as number
+                x: getSplitValue(fraction, previousFraction, nextFraction, previousValue[i].x, nextValue[i].x) as number,
+                y: getSplitValue(fraction, previousFraction, nextFraction, previousValue[i].y, nextValue[i].y) as number
             });
         }
         return result;
@@ -183,9 +181,8 @@ function getPathData(map: KeyTimeMap, path: SvgPath, parent?: SvgContainer, free
             }
             if (points) {
                 let value: string | undefined;
-                const transform = path.transformed;
-                if (transform && transform.length) {
-                    points = SvgBuild.applyTransforms(transform, points, getTransformOrigin(path.element));
+                if (path.transformed && path.transformed.length) {
+                    points = SvgBuild.applyTransforms(path.transformed, points, getTransformOrigin(path.element));
                 }
                 if (parent) {
                     parent.refitPoints(points);
@@ -769,13 +766,9 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                         result[attr] = insertMap;
                     }
                     repeatingDurationTotal = keyTimes[keyTimes.length - 1];
-                    let keyTimeResult: KeyTimeMap;
-                    if (useKeyTime) {
-                        keyTimeResult = convertKeyTimeFraction(getKeyTimeMap(result, keyTimes, freezeMap), repeatingDurationTotal);
-                    }
-                    else {
-                        keyTimeResult = getKeyTimeMap(result, keyTimes, freezeMap);
-                    }
+                    const keyTimeResult = useKeyTime
+                        ? convertKeyTimeFraction(getKeyTimeMap(result, keyTimes, freezeMap), repeatingDurationTotal)
+                        : getKeyTimeMap(result, keyTimes, freezeMap);
                     if (repeatingAnimations.size || indefiniteAnimations.size === 0 || indefiniteBegin) {
                         repeatingResult = keyTimeResult;
                     }
@@ -817,12 +810,9 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                             }
                         }
                     }
-                    if (useKeyTime) {
-                        indefiniteResult = convertKeyTimeFraction(getKeyTimeMap(result, keyTimes), keyTimes[keyTimes.length - 1]);
-                    }
-                    else {
-                        indefiniteResult = getKeyTimeMap(result, keyTimes);
-                    }
+                    indefiniteResult = useKeyTime
+                        ? convertKeyTimeFraction(getKeyTimeMap(result, keyTimes), keyTimes[keyTimes.length - 1])
+                        : getKeyTimeMap(result, keyTimes);
                 }
                 if (repeatingResult || indefiniteResult) {
                     $util.retainArray(this.animation, (item: SvgAnimate) => !animations.includes(item));

@@ -15,7 +15,7 @@ const $xml = squared.lib.xml;
 
 const STORED = $Resource.STORED as ResourceStoredMapAndroid;
 
-function getHexARGB(value: ColorData | null) {
+function getHexARGB(value?: ColorData) {
     return value ? (value.opaque ? value.valueARGB : value.valueRGB) : '';
 }
 
@@ -397,7 +397,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
         return '';
     }
 
-    public static addColor(value: ColorData | string | null) {
+    public static addColor(value?: ColorData | string) {
         if (typeof value === 'string') {
             value = $color.parseRGBA(value);
         }

@@ -63,7 +63,9 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
     constructor(public element?: SVGAnimateTransformElement) {
         super(element);
         if (element) {
-            this.setType(this.getAttribute('type'));
+            const type = this.getAttribute('type');
+            this.setType(type);
+            this.setCalcMode(type);
         }
     }
 

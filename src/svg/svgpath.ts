@@ -69,7 +69,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             if (parent && parent.aspectRatio.unit !== 1 || transform && transform.length) {
                 const commands = SvgBuild.toPathCommandList(d);
                 if (commands.length) {
-                    let points = SvgBuild.getAbsolutePoints(commands);
+                    let points = SvgBuild.getPathPoints(commands);
                     if (points.length) {
                         if (transform && transform.length) {
                             if (typeof residual === 'function') {
@@ -83,7 +83,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                         if (parent) {
                             parent.refitPoints(points);
                         }
-                        d = SvgBuild.fromPathCommandList(SvgBuild.mergeAbsolutePoints(commands, points));
+                        d = SvgBuild.fromPathCommandList(SvgBuild.rebindPathPoints(commands, points));
                     }
                 }
             }

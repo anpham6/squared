@@ -510,8 +510,8 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                         let values: string[] | (null[] | number[])[] | undefined;
                                         switch (item.attributeName) {
                                             case 'transform':
-                                            case 'stroke':
                                             case 'fill':
+                                            case 'stroke':
                                                 break;
                                             case 'opacity':
                                             case 'stroke-opacity':
@@ -886,28 +886,17 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                 if (!item.fillFreeze && parent && item.sequential === undefined) {
                                                     let valueTo: string | undefined;
                                                     if ($SvgBuild.instanceOfAnimateTransform(item)) {
-                                                        const transform = createTransformData(parent.transformed);
                                                         switch (propertyName[i]) {
                                                             case 'rotation':
-                                                                valueTo = transform.rotation || '0';
-                                                                break;
                                                             case 'pivotX':
-                                                                valueTo = transform.pivotX || '0';
-                                                                break;
                                                             case 'pivotY':
-                                                                valueTo = transform.pivotY || '0';
+                                                            case 'translateX':
+                                                            case 'translateY':
+                                                                valueTo = '0';
                                                                 break;
                                                             case 'scaleX':
-                                                                valueTo = transform.scaleX || '1';
-                                                                break;
                                                             case 'scaleY':
-                                                                valueTo = transform.scaleY || '1';
-                                                                break;
-                                                            case 'translateX':
-                                                                valueTo = transform.translateX || '0';
-                                                                break;
-                                                            case 'translateY':
-                                                                valueTo = transform.translateY || '0';
+                                                                valueTo = '1';
                                                                 break;
                                                         }
                                                     }

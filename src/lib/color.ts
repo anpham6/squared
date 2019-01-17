@@ -228,7 +228,7 @@ export function getColorByName(value: string) {
             return <Color> X11_CSS3[color];
         }
     }
-    return null;
+    return undefined;
 }
 
 export function getColorByShade(value: string) {
@@ -253,7 +253,7 @@ export function getColorByShade(value: string) {
                 return result[Math.min(index + 1, result.length - 1)];
             }
         }
-        return null;
+        return undefined;
     }
 }
 
@@ -296,7 +296,7 @@ export function convertRGBA(value: string) {
             };
         }
     }
-    return null;
+    return undefined;
 }
 
 export function parseRGBA(value: string, opacity = '1') {
@@ -337,7 +337,7 @@ export function parseRGBA(value: string, opacity = '1') {
             };
         }
     }
-    return null;
+    return undefined;
 }
 
 export function reduceRGBA(value: string, percent: number) {
@@ -350,5 +350,5 @@ export function reduceRGBA(value: string, percent: number) {
         rgba.b = Math.round((base - rgba.b) * percent) + rgba.b;
         return parseRGBA(formatRGBA(rgba));
     }
-    return null;
+    return undefined;
 }

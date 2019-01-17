@@ -458,6 +458,26 @@ export function getTransformRotate(element: SVGElement): SvgPoint[] {
     return result.length ? result : [{ angle: 0, x: 0, y: 0 }];
 }
 
+export function getTransformInitialValue(nameType: string | number) {
+    switch (nameType) {
+        case 'rotate':
+        case SVGTransform.SVG_TRANSFORM_ROTATE:
+            return '0 0 0';
+        case 'scale':
+        case SVGTransform.SVG_TRANSFORM_SCALE:
+            return '1 1';
+        case 'skewX':
+        case 'skewY':
+        case SVGTransform.SVG_TRANSFORM_SKEWX:
+        case SVGTransform.SVG_TRANSFORM_SKEWY:
+            return '0';
+        case 'translate':
+        case SVGTransform.SVG_TRANSFORM_TRANSLATE:
+            return '0 0';
+    }
+    return '';
+}
+
 export function sortNumber(values: number[], descending = false) {
     return descending ? values.sort((a, b) => a > b ? -1 : 1) : values.sort((a, b) => a < b ? -1 : 1);
 }

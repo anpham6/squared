@@ -29,6 +29,7 @@ declare global {
             end?: number;
             keySplines?: string[];
             sequential?: NameValue;
+            setCalcMode(name: string): void;
         }
 
         interface SvgAnimateTransform extends SvgAnimate {
@@ -52,6 +53,7 @@ declare global {
         }
 
         class SvgAnimate implements SvgAnimate {
+            public static toStepFractionList(name: string, keySpline: string, index: number, keyTimes: number[], values: string[], dpi?: number, fontSize?: number): [number[], string[]] | undefined;
             public static toFractionList(value: string, delimiter?: string): number[];
             constructor(element?: SVGAnimateElement);
         }

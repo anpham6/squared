@@ -265,7 +265,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
-    public static getAbsolutePoints(values: SvgPathCommand[]) {
+    public static getPathPoints(values: SvgPathCommand[]) {
         const result: SvgPoint[] = [];
         let x = 0;
         let y = 0;
@@ -309,7 +309,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
-    public static mergeAbsolutePoints(values: SvgPathCommand[], points: SvgPoint[]) {
+    public static rebindPathPoints(values: SvgPathCommand[], points: SvgPoint[]) {
         const absolute = points.slice();
         invalidPoint: {
             for (const item of values) {

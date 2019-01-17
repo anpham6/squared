@@ -6,17 +6,15 @@ import SvgAnimateTransform from './svganimatetransform';
 import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 
-import { REGEX_UNIT, convertClockTime, getFontSize, getHostDPI, getTransform, getTransformOrigin, isVisible, setOpacity, setVisible } from './lib/util';
+import { REGEX_UNIT, convertClockTime, getFontSize, getHostDPI, getTransform, getTransformInitialValue, getTransformOrigin, isVisible, setOpacity, setVisible } from './lib/util';
 
 type AttributeMap = ObjectMap<NumberValue<string>[]>;
 
-const $color = squared.lib.color;
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 const KEYFRAME_NAME = $dom.getKeyframeRules();
 const KEYSPLINE_DATA = {
-    'linear': '0.0 0.0 1.0 1.0',
     'ease': '0.25 0.1 0.25 1.0',
     'ease-in': '0.42 0.0 1.0 1.0',
     'ease-in-out': '0.42 0.0 0.58 1.0',
@@ -24,13 +22,7 @@ const KEYSPLINE_DATA = {
 };
 
 function parseAttribute(element: SVGElement, attr: string) {
-    if (attr === 'animation-timing-function') {
-        const value = $dom.cssAttribute(element, attr);
-        return value !== '' ? [value] : [];
-    }
-    else {
-        return $util.flatMap($dom.cssAttribute(element, attr).split(','), value => value.trim());
-    }
+    return $util.flatMap($dom.cssAttribute(element, attr).split(/(?<!\(\d+),/), value => value.trim());
 }
 
 function sortAttribute(value: NumberValue<string>[]) {
@@ -47,7 +39,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
         private _transform?: SvgTransform[];
 
         private getAnimations(element: SVGElement) {
-            const result: squared.svg.SvgAnimation[] = [];
+            const result: SvgAnimation[] = [];
             const animationName = parseAttribute(element, 'animation-name');
             if (animationName.length) {
                 const animationMap: ObjectMap<string[]> = {
@@ -159,47 +151,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     animateTransform.setType(name);
                                     animate = animateTransform;
                                     if (animation[0].ordinal !== 0) {
-                                        const transforms = getTransform(element);
-                                        let initialValue = '';
-                                        if (transforms) {
-                                            const transform = transforms.reverse().find(item => item.type === animateTransform.type);
-                                            if (transform) {
-                                                switch (name) {
-                                                    case 'rotate':
-                                                        const origin = getTransformOrigin(element);
-                                                        initialValue = `${transform.angle} ${origin.x} ${origin.y}`;
-                                                        break;
-                                                    case 'scale':
-                                                        initialValue = `${transform.matrix.a} ${transform.matrix.d}`;
-                                                        break;
-                                                    case 'skewX':
-                                                    case 'skewY':
-                                                        initialValue = transform.angle.toString();
-                                                        break;
-                                                    case 'translate':
-                                                        initialValue = `${transform.matrix.e} ${transform.matrix.f}`;
-                                                        break;
-                                                }
-                                            }
-                                        }
-                                        if (initialValue === '') {
-                                            switch (name) {
-                                                case 'rotate':
-                                                    initialValue = '0 0 0';
-                                                    break;
-                                                case 'scale':
-                                                    initialValue = '1 1';
-                                                    break;
-                                                case 'skewX':
-                                                case 'skewY':
-                                                    initialValue = '0';
-                                                    break;
-                                                case 'translate':
-                                                    initialValue = '0 0';
-                                                    break;
-                                            }
-                                        }
-                                        animation.unshift({ ordinal: 0, value: initialValue });
+                                        animation.unshift({ ordinal: 0, value: getTransformInitialValue(name) });
                                     }
                                     break;
                                 default:
@@ -241,113 +193,15 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 const valuesData: string[] = [];
                                 const keySplinesData: string[] = [];
                                 for (let i = 0; i < keySplines.length; i++) {
-                                    let modified = false;
                                     if (keySplines[i].startsWith('steps')) {
-                                        let currentValue: any[] | undefined;
-                                        let nextValue: any[] | undefined;
-                                        switch (name) {
-                                            case 'fill':
-                                            case 'stroke':
-                                                const colorStart = $color.parseRGBA(values[i]);
-                                                const colorEnd = $color.parseRGBA(values[i + 1]);
-                                                if (colorStart && colorEnd) {
-                                                    currentValue = [colorStart];
-                                                    nextValue = [colorEnd];
-                                                }
-                                                break;
-                                            case 'points':
-                                                currentValue = SvgBuild.fromNumberList(SvgBuild.toNumberList(values[i]));
-                                                nextValue = SvgBuild.fromNumberList(SvgBuild.toNumberList(values[i + 1]));
-                                                break;
-                                            case 'rotate':
-                                            case 'scale':
-                                            case 'translate':
-                                                currentValue = values[i].split(' ').map(value => parseFloat(value));
-                                                nextValue = values[i + 1].split(' ').map(value => parseFloat(value));
-                                                break;
-                                            default:
-                                                if ($util.isNumber(values[i])) {
-                                                    currentValue = [parseFloat(values[i])];
-                                                }
-                                                else if ($util.isUnit(values[i])) {
-                                                    currentValue = [parseFloat($util.convertPX(values[i], getHostDPI(), getFontSize(element)))];
-                                                }
-                                                if ($util.isNumber(values[i + 1])) {
-                                                    nextValue = [parseFloat(values[i + 1])];
-                                                }
-                                                else if ($util.isUnit(values[i + 1])) {
-                                                    currentValue = [parseFloat($util.convertPX(values[i + 1], getHostDPI(), getFontSize(element)))];
-                                                }
-                                                break;
+                                        const steps = SvgAnimate.toStepFractionList(name, keySplines[i], i, keyTimes, values, getHostDPI(), getFontSize(element));
+                                        if (steps) {
+                                            keyTimesData.push(...steps[0]);
+                                            valuesData.push(...steps[1]);
+                                            steps[0].forEach(() => keySplinesData.push('linear'));
+                                            continue;
                                         }
-                                        if (currentValue && nextValue && currentValue.length > 0 && currentValue.length === nextValue.length) {
-                                            switch (keySplines[i])  {
-                                                case 'steps-start':
-                                                    keySplines[i] = 'steps(1, start)';
-                                                    break;
-                                                case 'steps-end':
-                                                    keySplines[i] = 'steps(1, end)';
-                                                    break;
-                                            }
-                                            const match = /steps\((\d+)(?:, (start|end))?\)/.exec(keySplines[i]);
-                                            if (match) {
-                                                modified = true;
-                                                const keyTimeTotal = keyTimes[i + 1] - keyTimes[i];
-                                                const step = parseInt(match[1]);
-                                                const interval = 100 / step;
-                                                const splitTimes: number[] = [];
-                                                const splitValues: string[] = [];
-                                                for (let j = 0, k = match[2] === 'start' ? 1 : 0; j < step; j++) {
-                                                    const percent = (k > 0 && j === step - 1 ? 100 : interval * (j + k)) / 100;
-                                                    const time = keyTimes[i] + keyTimeTotal * (j / step);
-                                                    const value: string[] = [];
-                                                    switch (name) {
-                                                        case 'fill':
-                                                        case 'stroke': {
-                                                            const current = <ColorData> currentValue[0];
-                                                            const next = <ColorData> nextValue[0];
-                                                            const r = $color.convertHex(current.rgba.r + (next.rgba.r - current.rgba.r) * percent);
-                                                            const g = $color.convertHex(current.rgba.g + (next.rgba.g - current.rgba.g) * percent);
-                                                            const b = $color.convertHex(current.rgba.b + (next.rgba.b - current.rgba.b) * percent);
-                                                            const a = $color.convertHex(current.rgba.a + (next.rgba.a - current.rgba.a) * percent);
-                                                            value.push(`#${r + g + b + (a !== 'FF' ? a : '')}`);
-                                                            break;
-                                                        }
-                                                        case 'points': {
-                                                            for (let l = 0; l < currentValue.length; l++) {
-                                                                const current = <Point> currentValue[l];
-                                                                const next = <Point> nextValue[l];
-                                                                const x = current.x + (next.x - current.x) * percent;
-                                                                const y = current.y + (next.y - current.y) * percent;
-                                                                value.push(`${x},${y}`);
-                                                            }
-                                                            break;
-                                                        }
-                                                        default: {
-                                                            for (let l = 0; l < currentValue.length; l++) {
-                                                                const current = currentValue[l] as number;
-                                                                const next = nextValue[l] as number;
-                                                                value.push((current + (next - current) * percent).toString());
-                                                            }
-                                                            break;
-                                                        }
-                                                    }
-                                                    if (value.length) {
-                                                        splitTimes.push(time);
-                                                        splitValues.push(value.join(' '));
-                                                    }
-                                                    else {
-                                                        modified = false;
-                                                        break;
-                                                    }
-                                                }
-                                                if (modified) {
-                                                    keyTimesData.push(...splitTimes);
-                                                    valuesData.push(...splitValues);
-                                                    splitTimes.forEach(() => keySplinesData.push('linear'));
-                                                }
-                                            }
-                                        }
+                                        keySplines[i] = 'linear';
                                     }
                                     else if (KEYSPLINE_DATA[keySplines[i]]) {
                                         keySplines[i] = KEYSPLINE_DATA[keySplines[i]];
@@ -356,14 +210,12 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                         const match = new RegExp(`cubic-bezier\\(${REGEX_UNIT.DECIMAL}, ${REGEX_UNIT.DECIMAL}, ${REGEX_UNIT.DECIMAL}, ${REGEX_UNIT.DECIMAL}\\)`).exec(keySplines[i]);
                                         keySplines[i] = match ? `${match[1]} ${match[2]} ${match[3]} ${match[4]}` : 'linear';
                                     }
-                                    if (!modified) {
-                                        keyTimesData.push(keyTimes[i]);
-                                        valuesData.push(values[i]);
-                                        keySplinesData.push(keySplines[i]);
-                                    }
+                                    keyTimesData.push(keyTimes[i]);
+                                    valuesData.push(values[i]);
+                                    keySplinesData.push(keySplines[i]);
                                 }
-                                keyTimesData.push(keyTimes[keyTimes.length - 1]);
-                                valuesData.push(values[values.length - 1]);
+                                keyTimesData.push(keyTimes.pop() as number);
+                                valuesData.push(values.pop() as string);
                                 animate.keyTimes = keyTimesData;
                                 animate.values = valuesData;
                                 animate.keySplines = keySplinesData;

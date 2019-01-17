@@ -332,11 +332,11 @@ export default class Application<T extends Node> implements squared.base.Applica
 
     public renderLayout(layout: Layout<T>) {
         let output = '';
-        const renderFloat = $util.hasBit(layout.renderType, NODE_ALIGNMENT.FLOAT);
-        if (renderFloat && $util.hasBit(layout.renderType, NODE_ALIGNMENT.HORIZONTAL)) {
+        const floating = $util.hasBit(layout.renderType, NODE_ALIGNMENT.FLOAT);
+        if (floating && $util.hasBit(layout.renderType, NODE_ALIGNMENT.HORIZONTAL)) {
             output = this.processFloatHorizontal(layout);
         }
-        else if (renderFloat && $util.hasBit(layout.renderType, NODE_ALIGNMENT.VERTICAL)) {
+        else if (floating && $util.hasBit(layout.renderType, NODE_ALIGNMENT.VERTICAL)) {
             output = this.processFloatVertical(layout);
         }
         else if (layout.containerType !== 0) {
@@ -1448,20 +1448,14 @@ export default class Application<T extends Node> implements squared.base.Applica
                 }
                 layerIndex = layerIndex.filter(item => item.length > 0);
                 layout.itemCount = layerIndex.length;
-                let vertical: LayoutType;
-                if (inlineAbove.length === 0 && (leftSub.length === 0 || rightSub.length === 0)) {
-                    vertical = this.controllerHandler.containerTypeVertical;
-                }
-                else {
-                    vertical = this.controllerHandler.containerTypeVerticalMargin;
-                }
+                const vertical = inlineAbove.length === 0 && (leftSub.length === 0 || rightSub.length === 0) ? this.controllerHandler.containerTypeVertical : this.controllerHandler.containerTypeVerticalMargin;
                 layout.setType(vertical.containerType, vertical.alignmentType);
                 output = this.renderNode(layout);
             }
         }
         if (layerIndex.length) {
             const floating = [inlineAbove, leftAbove, leftBelow, rightAbove, rightBelow];
-            let floatgroup: T | null;
+            let floatgroup: T | undefined;
             layerIndex.forEach((item, index) => {
                 if (Array.isArray(item[0])) {
                     const grouping: T[] = [];
@@ -1491,9 +1485,6 @@ export default class Application<T extends Node> implements squared.base.Applica
                         layout.setType(vertical.containerType, vertical.alignmentType);
                         output = $xml.replacePlaceholder(output, data.node.id, this.renderNode(layout));
                     }
-                }
-                else {
-                    floatgroup = null;
                 }
                 ((Array.isArray(item[0]) ? item : [item]) as T[][]).forEach(segment => {
                     let basegroup = data.node;
