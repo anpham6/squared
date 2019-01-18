@@ -40,8 +40,7 @@ export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(Svg
 
     set href(value) {
         if (value.charAt(0) === '#') {
-            const id = value.substring(1);
-            const target = document.getElementById(id);
+            const target = document.getElementById(value.substring(1));
             if (target && SVG.shape(target)) {
                 this.setShape(target);
                 this.element.href.baseVal = value;

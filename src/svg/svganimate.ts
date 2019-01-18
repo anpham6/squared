@@ -1,7 +1,7 @@
 import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 
-import { FILL_MODE } from './lib/enumeration';
+import { FILL_MODE, KEYSPLINE_NAME } from './lib/constant';
 import { convertClockTime, getFontSize, getHostDPI, getTransformInitialValue, sortNumber } from './lib/util';
 
 const $color = squared.lib.color;
@@ -138,10 +138,10 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public fillMode = 0;
     public alternate = false;
     public end?: number;
-    public keySplines?: string[];
     public sequential?: NameValue;
 
     private _repeatCount = 1;
+    private _keySplines?: string[];
 
     constructor(public element?: SVGAnimateElement) {
         super(element);
@@ -247,10 +247,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                     }
                     break;
                 case 'spline':
-                    const keySplines = this.getAttribute('keySplines').split(';').map(value => value.trim());
-                    if (keySplines.length && keySplines.length === this.keyTimes.length - 1 && keySplines.every(value => /^[\d.]+\s+[\d.]+\s+[\d.]+\s+[\d.]+$/.test(value))) {
-                        this.keySplines = keySplines;
-                    }
+                    this.keySplines = this.getAttribute('keySplines').split(';').map(value => value.trim());
                     break;
             }
         }
@@ -298,6 +295,26 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             }
         }
         return 1;
+    }
+
+    set keySplines(value) {
+        const requiredTotal = this.keyTimes.length - 1;
+        if (value && requiredTotal > 0 && value.length >= requiredTotal && !value.every(spline => spline === '')) {
+            const result: string[] = [];
+            for (let i = 0; i < requiredTotal; i++) {
+                const points = value[i].split(' ').map(pt => parseFloat(pt));
+                if (points.length === 4 && !points.some(pt => isNaN(pt)) && points[0] >= 0 && points[0] <= 1 && points[2] >= 0 && points[2] <= 1) {
+                    result.push(points.join(' '));
+                }
+                else {
+                    result.push(KEYSPLINE_NAME.linear);
+                }
+            }
+            this._keySplines = result;
+        }
+    }
+    get keySplines() {
+        return this._keySplines;
     }
 
     get instanceType() {

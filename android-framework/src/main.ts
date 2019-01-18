@@ -186,9 +186,9 @@ const appBase: AppFramework<T> = {
             }
             return [];
         },
-        writeResourceAnimatorXml(saveToDisk = false) {
+        writeResourceAnimXml(saveToDisk = false) {
             if (fileHandler && checkApplication(application)) {
-                return fileHandler.resourceAnimatorToXml(saveToDisk);
+                return fileHandler.resourceAnimToXml(saveToDisk);
             }
             return [];
         }

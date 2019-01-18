@@ -1,12 +1,13 @@
 import { SvgMatrix, SvgPoint, SvgTransform } from '../svg/@types/object';
 
-import * as $enumeration from '../svg/lib/enumeration';
+import * as $const from '../svg/lib/constant';
 import * as $util from '../svg/lib/util';
 
 declare global {
     namespace squared.svg.lib {
-        namespace enumeration {
-            export import FILL_MODE = $enumeration.FILL_MODE;
+        namespace constant {
+            export import KEYSPLINE_NAME = $const.KEYSPLINE_NAME;
+            export import FILL_MODE = $const.FILL_MODE;
         }
 
         namespace util {

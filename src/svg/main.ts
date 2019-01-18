@@ -18,9 +18,11 @@ import SvgUseSymbol from './svgusesymbol';
 import SvgView from './svgview-mx';
 import SvgViewRect from './svgviewrect-mx';
 
+import * as constant from './lib/constant';
 import * as util from './lib/util';
 
 const lib = {
+    constant,
     util
 };
 

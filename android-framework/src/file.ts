@@ -81,7 +81,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         files.push(...parseFileDetails(this.resourceDimenToXml()));
         files.push(...parseFileDetails(this.resourceDrawableToXml()));
         files.push(...parseImageDetails(this.resourceDrawableImageToXml()));
-        files.push(...parseFileDetails(this.resourceAnimatorToXml()));
+        files.push(...parseFileDetails(this.resourceAnimToXml()));
         this.saveToDisk(files);
     }
 
@@ -111,8 +111,8 @@ export default class File<T extends View> extends squared.base.File<T> implement
             style: this.resourceStyleToXml(),
             dimen: this.resourceDimenToXml(),
             drawable: this.resourceDrawableToXml(),
-            image: this.resourceDrawableImageToXml(),
-            animator: this.resourceAnimatorToXml()
+            drawableImage: this.resourceDrawableImageToXml(),
+            anim: this.resourceAnimToXml()
         };
         for (const resource in result) {
             if (result[resource].length === 0) {
@@ -370,13 +370,13 @@ export default class File<T extends View> extends squared.base.File<T> implement
         return result;
     }
 
-    public resourceAnimatorToXml(saveToDisk = false) {
+    public resourceAnimToXml(saveToDisk = false) {
         const result: string[] = [];
         if (this.stored.animators.size) {
             const template = $xml.parseTemplate(DRAWABLE_TMPL);
             for (const [name, value] of this.stored.animators.entries()) {
                 let xml = $xml.createTemplate(template, {
-                    name: `res/animator/${name}.xml`,
+                    name: `res/anim/${name}.xml`,
                     value
                 });
                 xml = replaceTab(xml, this.userSettings.insertSpaces);

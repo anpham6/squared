@@ -22,7 +22,7 @@ export default `
 			<<propertyValues>>
 				<propertyValuesHolder android:propertyName="{&propertyName}">
 				<<keyframes>>
-					<keyframe android:fraction="{~fraction}" android:value="{~value}" />
+					<keyframe android:interpolator="{~interpolator}" android:fraction="{~fraction}" android:value="{~value}" />
 				<<keyframes>>
 				</propertyValuesHolder>
 			<<propertyValues>>
@@ -34,6 +34,7 @@ export default `
 				<objectAnimator
 					android:propertyName="{&propertyName}"
 					android:valueType="{~valueType}"
+					android:interpolator="{~interpolator}"
 					android:valueFrom="{~valueFrom}"
 					android:valueTo="{&valueTo}"
 					android:startOffset="{~startOffset}"
@@ -49,6 +50,7 @@ export default `
 			<objectAnimator
 				android:propertyName="{&propertyName}"
 				android:valueType="{~valueType}"
+				android:interpolator="{~interpolator}"
 				android:valueFrom="{~valueFrom}"
 				android:valueTo="{&valueTo}"
 				android:startOffset="{~startOffset}"

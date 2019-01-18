@@ -280,7 +280,7 @@ system.customize(build: number, widget: string, options: {}) // global attribute
 system.addXmlNs(name: string, uri: string) // add global namespaces for third-party controls
 system.writeLayoutAllXml(saveToDisk: boolean) // output generated xml
 system.writeResourceAllXml(saveToDisk: boolean)
-system.writeResourceAnimatorXml(saveToDisk: boolean)
+system.writeResourceAnimXml(saveToDisk: boolean)
 system.writeResourceArrayXml(saveToDisk: boolean)
 system.writeResourceColorXml(saveToDisk: boolean)
 system.writeResourceDimenXml(saveToDisk: boolean)

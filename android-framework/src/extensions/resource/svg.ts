@@ -90,6 +90,7 @@ interface PropertyValue {
 }
 
 interface KeyFrame {
+    interpolator: string;
     fraction: string;
     value: string;
 }
@@ -98,7 +99,7 @@ const $color = squared.lib.color;
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
-const $enumS = squared.svg.lib.enumeration;
+const $constS = squared.svg.lib.constant;
 const $utilS = squared.svg.lib.util;
 
 const INTERPOLATOR_ANDROID = {
@@ -112,6 +113,22 @@ const INTERPOLATOR_ANDROID = {
     LINEAR: '@android:anim/linear_interpolator',
     OVERSHOOT: '@android:anim/overshoot_interpolator'
 };
+
+if ($constS) {
+    Object.assign(INTERPOLATOR_ANDROID, {
+        [$constS.KEYSPLINE_NAME['ease-in']]: INTERPOLATOR_ANDROID.ACCELERATE,
+        [$constS.KEYSPLINE_NAME['ease-out']]: INTERPOLATOR_ANDROID.DECELERATE,
+        [$constS.KEYSPLINE_NAME['ease-in-out']]: INTERPOLATOR_ANDROID.ACCELERATE_DECELERATE,
+        [$constS.KEYSPLINE_NAME['linear']]: INTERPOLATOR_ANDROID.LINEAR
+    });
+}
+
+const INTERPOLATOR_XML = `
+<pathInterpolator xmlns:android="http://schemas.android.com/apk/res/android"
+	android:controlX1="{0}"
+	android:controlY1="{1}"
+	android:controlX2="{2}"
+	android:controlY2="{3}" />`;
 
 const ATTRIBUTE_ANDROID = {
     'stroke': 'strokeColor',
@@ -128,6 +145,23 @@ const STORED = Resource.STORED as ResourceStoredMapAndroid;
 
 function getGroupName(svg: SvgView, suffix: string) {
     return `${svg.name}_${suffix}`;
+}
+
+function createPathInterpolator(keySplines: string[] | undefined, index: number) {
+    if (keySplines && keySplines[index]) {
+        if (INTERPOLATOR_ANDROID[keySplines[index]]) {
+            return INTERPOLATOR_ANDROID[keySplines[index]];
+        }
+        else {
+            const interpolatorName = `path_interpolator_${$util.convertWord(keySplines[index])}`;
+            if (!STORED.animators.has(interpolatorName)) {
+                const xml = $util.formatString(INTERPOLATOR_XML, ...keySplines[index].split(' '));
+                STORED.animators.set(interpolatorName, xml);
+            }
+            return `@anim/${interpolatorName}`;
+        }
+    }
+    return '';
 }
 
 function createTransformData(transform: SvgTransform[] | null) {
@@ -428,7 +462,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                     values.push(item);
                                 }
                             }
-                            else if (item.repeatCount === -1 || item.fillMode < $enumS.FILL_MODE.FORWARDS) {
+                            else if (item.repeatCount === -1 || item.fillMode < $constS.FILL_MODE.FORWARDS) {
                                 isolated.push(item);
                             }
                             else {
@@ -543,19 +577,6 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                 continue;
                                         }
                                         if ($SvgBuild.instanceOfAnimateTransform(item)) {
-                                            let fillBefore = dataset.fillbefore === 'true' || dataset.fillBefore === 'true';
-                                            let fillAfter = dataset.fillafter === 'true' || dataset.fillAfter === 'true';
-                                            if (fillBefore && fillAfter) {
-                                                const fillEnabled = !(dataset.fillenabled === 'false' || dataset.fillEnabled === 'false');
-                                                fillBefore = fillEnabled;
-                                                fillAfter = !fillEnabled;
-                                            }
-                                            if (fillBefore) {
-                                                options.fillBefore = 'true';
-                                            }
-                                            if (fillAfter) {
-                                                options.fillAfter = 'true';
-                                            }
                                             switch (item.type) {
                                                 case SVGTransform.SVG_TRANSFORM_ROTATE: {
                                                     values = $SvgAnimateTransform.toRotateList(item.values);
@@ -789,17 +810,9 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                             }
                                         }
                                         if (values && propertyName) {
-                                            if ($util.convertInt(options.repeatCount) !== 0) {
-                                                switch (dataset.repeatmode || dataset.repeatMode) {
-                                                    case 'restart':
-                                                        options.repeatMode = 'restart';
-                                                        break;
-                                                    case 'reverse':
-                                                        options.repeatMode = 'reverse';
-                                                        break;
-                                                }
+                                            if (item.keySplines === undefined) {
+                                                options.interpolator = dataset.interpolator ? INTERPOLATOR_ANDROID[dataset.interpolator] || dataset.interpolator : this.options.vectorAnimateInterpolator;
                                             }
-                                            options.interpolator = dataset.interpolator ? INTERPOLATOR_ANDROID[dataset.interpolator] || dataset.interpolator : this.options.vectorAnimateInterpolator;
                                             const keyName = index !== 1 ? JSON.stringify(options) : '';
                                             for (let i = 0; i < propertyName.length; i++) {
                                                 const propertyOptions = { ...options };
@@ -819,11 +832,12 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                             value = values[j].toString();
                                                         }
                                                         if (value !== undefined) {
+                                                            const interpolator = createPathInterpolator(item.keySplines, j - 1);
                                                             if (item.keyTimes[j] === 0 && value === '') {
-                                                                keyframes.push({ fraction: '', value: '' });
+                                                                keyframes.push({ interpolator, fraction: '', value: '' });
                                                             }
                                                             else {
-                                                                keyframes.push({ fraction: item.keyTimes[j].toString(), value });
+                                                                keyframes.push({ interpolator, fraction: item.keyTimes[j].toString(), value });
                                                             }
                                                         }
                                                     }
@@ -841,6 +855,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                 }
                                                 else {
                                                     propertyOptions.propertyName = propertyName[i];
+                                                    propertyOptions.interpolator = createPathInterpolator(item.keySplines, 0);
                                                     if (Array.isArray(values[0])) {
                                                         let to: string | number | null = null;
                                                         if (item.duration > 0) {
@@ -883,7 +898,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                     propertyOptions.propertyValues = false;
                                                     setData.repeating.push(propertyOptions);
                                                 }
-                                                if (item.fillMode < $enumS.FILL_MODE.FORWARDS && item.sequential === undefined) {
+                                                if (item.fillMode < $constS.FILL_MODE.FORWARDS && item.sequential === undefined) {
                                                     const parent = item.parent;
                                                     if (parent) {
                                                         let valueTo: string | undefined;
@@ -931,10 +946,11 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                     }
                                 }
                                 if (indefinite.length) {
-                                    const pathArray = setData.repeating.length ? indefiniteData.repeat as ExternalData[] : setData.repeating;
-                                    for (const item of indefinite as SvgAnimate[]) {
+                                    const pathArray = setData.repeating.length ? indefiniteData.repeat : setData.repeating;
+                                    for (const item of indefinite) {
                                         pathArray.push({
                                             propertyName: 'pathData',
+                                            interpolator: createPathInterpolator(item.keySplines, 0),
                                             repeatCount: '0',
                                             duration: item.duration.toString(),
                                             valueType: 'pathType',

@@ -250,16 +250,15 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
     }
 
     public static addTheme(...values: Required<StyleAttribute>[]) {
-        const themes = STORED.themes;
         for (const theme of values) {
             const path = $util.isString(theme.output.path) ? theme.output.path : '';
             const file = $util.isString(theme.output.file) ? theme.output.file : 'themes.xml';
             const filename = `${$util.trimString(path.trim(), '/')}/${$util.trimString(file.trim(), '/')}`;
-            const stored = themes.get(filename) || new Map<string, StyleAttribute>();
+            const stored = STORED.themes.get(filename) || new Map<string, StyleAttribute>();
             let appTheme = '';
             if (theme.name === '' || theme.name.charAt(0) === '.') {
                 foundTheme: {
-                    for (const data of themes.values()) {
+                    for (const data of STORED.themes.values()) {
                         for (const style of data.values()) {
                             if (style.name) {
                                 appTheme = style.name;
@@ -286,7 +285,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                     data.items[attr] = theme.items[attr];
                 }
             }
-            themes.set(filename, stored);
+            STORED.themes.set(filename, stored);
         }
     }
 

@@ -6,7 +6,7 @@ import SvgAnimateTransform from './svganimatetransform';
 import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 
-import { FILL_MODE } from './lib/enumeration';
+import { FILL_MODE, KEYSPLINE_NAME } from './lib/constant';
 import { REGEX_UNIT, convertClockTime, getFontSize, getHostDPI, getTransform, getTransformInitialValue, getTransformOrigin, isVisible, setOpacity, setVisible } from './lib/util';
 
 type AttributeMap = ObjectMap<NumberValue<string>[]>;
@@ -15,17 +15,10 @@ const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 const KEYFRAME_NAME = $dom.getKeyframeRules();
-const KEYSPLINE_DATA = {
-    'step': '1.0 1.0 1.0 1.0',
-    'linear': '0.0 0.0 1.0 1.0',
-    'ease': '0.25 0.1 0.25 1.0',
-    'ease-in': '0.42 0.0 1.0 1.0',
-    'ease-in-out': '0.42 0.0 0.58 1.0',
-    'ease-out': '0.0 0.0 0.58 1.0'
-};
+const REGEX_CUBICBEZIER = new RegExp(`cubic-bezier\\(${REGEX_UNIT.DECIMAL}, ${REGEX_UNIT.DECIMAL}, ${REGEX_UNIT.DECIMAL}, ${REGEX_UNIT.DECIMAL}\\)`);
 
 function parseAttribute(element: SVGElement, attr: string) {
-    return $util.flatMap($dom.cssAttribute(element, attr).split(/(?<!\(\d+),/), value => value.trim());
+    return $util.flatMap($dom.cssAttribute(element, attr).split(/(?<!\w+\([\-\d., ]+),/), value => value.trim());
 }
 
 function sortAttribute(value: NumberValue<string>[]) {
@@ -191,22 +184,22 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 const valuesData: string[] = [];
                                 const keySplinesData: string[] = [];
                                 for (let i = 0; i < keySplines.length; i++) {
-                                    if (KEYSPLINE_DATA[keySplines[i]]) {
-                                        keySplines[i] = KEYSPLINE_DATA[keySplines[i]];
+                                    if (KEYSPLINE_NAME[keySplines[i]]) {
+                                        keySplines[i] = KEYSPLINE_NAME[keySplines[i]];
                                     }
                                     else if (keySplines[i].startsWith('steps')) {
                                         const steps = SvgAnimate.toStepFractionList(name, keySplines[i], i, keyTimes, values, getHostDPI(), getFontSize(element));
                                         if (steps) {
                                             keyTimesData.push(...steps[0]);
                                             valuesData.push(...steps[1]);
-                                            steps[0].forEach(() => keySplinesData.push(KEYSPLINE_DATA.step));
+                                            steps[0].forEach(() => keySplinesData.push(KEYSPLINE_NAME.step));
                                             continue;
                                         }
-                                        keySplines[i] = KEYSPLINE_DATA.step;
+                                        keySplines[i] = KEYSPLINE_NAME.linear;
                                     }
                                     else {
-                                        const match = new RegExp(`cubic-bezier\\(${REGEX_UNIT.DECIMAL}, ${REGEX_UNIT.DECIMAL}, ${REGEX_UNIT.DECIMAL}, ${REGEX_UNIT.DECIMAL}\\)`).exec(keySplines[i]);
-                                        keySplines[i] = match ? `${match[1]} ${match[2]} ${match[3]} ${match[4]}` : KEYSPLINE_DATA.linear;
+                                        const match = REGEX_CUBICBEZIER.exec(keySplines[i]);
+                                        keySplines[i] = match ? `${match[1]} ${match[2]} ${match[3]} ${match[4]}` : KEYSPLINE_NAME.ease;
                                     }
                                     keyTimesData.push(keyTimes[i]);
                                     valuesData.push(values[i]);
@@ -214,11 +207,13 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 }
                                 keyTimesData.push(keyTimes.pop() as number);
                                 valuesData.push(values.pop() as string);
+                                animate.calcMode = 'spline';
                                 animate.keyTimes = keyTimesData;
                                 animate.values = valuesData;
                                 animate.keySplines = keySplinesData;
                             }
                             else {
+                                animate.calcMode = 'linear';
                                 animate.keyTimes = keyTimes;
                                 animate.values = values;
                             }
@@ -242,7 +237,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     animate.fillMode |= FILL_MODE.BACKWARDS;
                                 }
                             }
-                            animate.alternate = direction.startsWith('alternate');
+                            animate.alternate = animate.repeatCount > 1 && direction.startsWith('alternate');
                             result.push(animate);
                         }
                     }

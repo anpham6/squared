@@ -15,7 +15,7 @@ declare global {
             resourceDimenToXml(saveToDisk?: boolean): string[];
             resourceDrawableToXml(saveToDisk?: boolean): string[];
             resourceDrawableImageToXml(saveToDisk?: boolean): string[];
-            resourceAnimatorToXml(saveToDisk?: boolean): string[];
+            resourceAnimToXml(saveToDisk?: boolean): string[];
         }
 
         class File<T extends View> implements File<T> {}
