@@ -5,7 +5,11 @@ export interface SvgAspectRatio extends Point {
     unit: number;
 }
 
-export interface SvgLinearGradient extends Gradient {
+export interface SvgGradient extends Gradient {
+    element: SVGGradientElement;
+}
+
+export interface SvgLinearGradient extends SvgGradient {
     x1: number;
     y1: number;
     x2: number;
@@ -16,15 +20,15 @@ export interface SvgLinearGradient extends Gradient {
     y2AsString: string;
 }
 
-export interface SvgRadialGradient extends Gradient {
+export interface SvgRadialGradient extends SvgGradient {
     cx: number;
     cy: number;
     r: number;
+    fx: number;
+    fy: number;
     cxAsString: string;
     cyAsString: string;
     rAsString: string;
-    fx: number;
-    fy: number;
     fxAsString: string;
     fyAsString: string;
 }

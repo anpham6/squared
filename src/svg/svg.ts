@@ -1,4 +1,4 @@
-import { SvgLinearGradient, SvgRadialGradient, SvgTransformExclusions, SvgTransformResidual } from './@types/object';
+import { SvgGradient, SvgTransformExclusions, SvgTransformResidual } from './@types/object';
 
 import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgSynchronize$MX from './svgsynchronize-mx';
@@ -26,10 +26,21 @@ function getColorStop(element: SVGGradientElement) {
     return result;
 }
 
+function getBaseValue(element: SVGGradientElement, ...attrs: string[]) {
+    const result: ObjectMap<string | number> = {};
+    for (const attr of attrs) {
+        if (element[attr]) {
+            result[attr] = element[attr].baseVal.value;
+            result[`${attr}AsString`] = element[attr].baseVal.valueAsString;
+        }
+    }
+    return result;
+}
+
 export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer)))) implements squared.svg.Svg {
     public readonly patterns = {
         clipPath: new Map<string, SVGClipPathElement>(),
-        gradient: new Map<string, Gradient>()
+        gradient: new Map<string, SvgGradient>()
     };
 
     constructor(
@@ -70,33 +81,19 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
                         this.patterns.clipPath.set(id, pattern);
                     }
                     else if (SVG.linearGradient(pattern)) {
-                        this.patterns.gradient.set(id, <SvgLinearGradient> {
+                        this.patterns.gradient.set(id, {
+                            element: pattern,
                             type: 'linear',
-                            x1: pattern.x1.baseVal.value,
-                            x2: pattern.x2.baseVal.value,
-                            y1: pattern.y1.baseVal.value,
-                            y2: pattern.y2.baseVal.value,
-                            x1AsString: pattern.x1.baseVal.valueAsString,
-                            x2AsString: pattern.x2.baseVal.valueAsString,
-                            y1AsString: pattern.y1.baseVal.valueAsString,
-                            y2AsString: pattern.y2.baseVal.valueAsString,
-                            colorStop: getColorStop(pattern)
+                            colorStop: getColorStop(pattern),
+                            ...getBaseValue(pattern, 'x1', 'x2', 'y1', 'y2')
                         });
                     }
                     else if (SVG.radialGradient(pattern)) {
-                        this.patterns.gradient.set(id, <SvgRadialGradient> {
+                        this.patterns.gradient.set(id, {
+                            element: pattern,
                             type: 'radial',
-                            cx: pattern.cx.baseVal.value,
-                            cy: pattern.cy.baseVal.value,
-                            r: pattern.r.baseVal.value,
-                            cxAsString: pattern.cx.baseVal.valueAsString,
-                            cyAsString: pattern.cy.baseVal.valueAsString,
-                            rAsString: pattern.r.baseVal.valueAsString,
-                            fx: pattern.fx.baseVal.value,
-                            fy: pattern.fy.baseVal.value,
-                            fxAsString: pattern.fx.baseVal.valueAsString,
-                            fyAsString: pattern.fy.baseVal.valueAsString,
-                            colorStop: getColorStop(pattern)
+                            colorStop: getColorStop(pattern),
+                            ...getBaseValue(pattern, 'cx', 'cy', 'r', 'fx', 'fy')
                         });
                     }
                 }

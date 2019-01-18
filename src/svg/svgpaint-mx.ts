@@ -36,7 +36,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             this.setAttribute('stroke-miterlimit');
             this.setAttribute('stroke-dasharray');
             this.setAttribute('stroke-dashoffset');
-            const match = $util.REGEX_PATTERN.CSS_URL.exec(this.getAttribute('clip-path'));
+            const match = $util.REGEXP_PATTERN.CSS_URL.exec(this.getAttribute('clip-path'));
             if (match) {
                 this.clipPath = match[1];
             }
@@ -46,7 +46,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
         private setColor(attr: string) {
             const element = this.element;
             let value: string | null = this.getAttribute(attr);
-            const match = $util.REGEX_PATTERN.CSS_URL.exec(value);
+            const match = $util.REGEXP_PATTERN.CSS_URL.exec(value);
             if (match) {
                 this[`${attr}Pattern`] = match[1];
                 value = '';

@@ -91,18 +91,19 @@ export const MATRIX = {
     }
 };
 
-export const REGEX_UNIT = {
+export const REGEXP_UNIT = {
+    ZERO_ONE: '(0(?:\\.\\d+)?|1(?:.0+)?)',
     DECIMAL: '(-?[\\d.]+)',
     LENGTH: '([\\d.]+(?:[a-z]{2,}|%)?)',
     DEGREE: '(?:(-?[\\d.]+)(deg|rad|turn))'
 };
 
-const REGEX_TRANSFORM = {
-    MATRIX: `(matrix(?:3d)?)\\(${REGEX_UNIT.DECIMAL}, ${REGEX_UNIT.DECIMAL}, ${REGEX_UNIT.DECIMAL}, ${REGEX_UNIT.DECIMAL}, ${REGEX_UNIT.DECIMAL}, ${REGEX_UNIT.DECIMAL}(?:, ${REGEX_UNIT.DECIMAL})?(?:, ${REGEX_UNIT.DECIMAL})?(?:, ${REGEX_UNIT.DECIMAL})?(?:, ${REGEX_UNIT.DECIMAL})?(?:, ${REGEX_UNIT.DECIMAL})?(?:, ${REGEX_UNIT.DECIMAL})?(?:, ${REGEX_UNIT.DECIMAL})?(?:, ${REGEX_UNIT.DECIMAL})?(?:, ${REGEX_UNIT.DECIMAL})?(?:, ${REGEX_UNIT.DECIMAL})?\\)`,
-    ROTATE: `(rotate[XY]?)\\(${REGEX_UNIT.DEGREE}\\)`,
-    SKEW: `(skew[XY]?)\\(${REGEX_UNIT.DEGREE}(?:, ${REGEX_UNIT.DEGREE})?\\)`,
-    SCALE: `(scale[XY]?)\\(${REGEX_UNIT.DECIMAL}(?:, ${REGEX_UNIT.DECIMAL})?\\)`,
-    TRANSLATE: `(translate[XY]?)\\(${REGEX_UNIT.LENGTH}(?:, ${REGEX_UNIT.LENGTH})?\\)`
+const REGEXP_TRANSFORM = {
+    MATRIX: `(matrix(?:3d)?)\\(${REGEXP_UNIT.DECIMAL}, ${REGEXP_UNIT.DECIMAL}, ${REGEXP_UNIT.DECIMAL}, ${REGEXP_UNIT.DECIMAL}, ${REGEXP_UNIT.DECIMAL}, ${REGEXP_UNIT.DECIMAL}(?:, ${REGEXP_UNIT.DECIMAL})?(?:, ${REGEXP_UNIT.DECIMAL})?(?:, ${REGEXP_UNIT.DECIMAL})?(?:, ${REGEXP_UNIT.DECIMAL})?(?:, ${REGEXP_UNIT.DECIMAL})?(?:, ${REGEXP_UNIT.DECIMAL})?(?:, ${REGEXP_UNIT.DECIMAL})?(?:, ${REGEXP_UNIT.DECIMAL})?(?:, ${REGEXP_UNIT.DECIMAL})?(?:, ${REGEXP_UNIT.DECIMAL})?\\)`,
+    ROTATE: `(rotate[XY]?)\\(${REGEXP_UNIT.DEGREE}\\)`,
+    SKEW: `(skew[XY]?)\\(${REGEXP_UNIT.DEGREE}(?:, ${REGEXP_UNIT.DEGREE})?\\)`,
+    SCALE: `(scale[XY]?)\\(${REGEXP_UNIT.DECIMAL}(?:, ${REGEXP_UNIT.DECIMAL})?\\)`,
+    TRANSLATE: `(translate[XY]?)\\(${REGEXP_UNIT.LENGTH}(?:, ${REGEXP_UNIT.LENGTH})?\\)`
 };
 
 export function getHostDPI() {
@@ -275,8 +276,8 @@ export function getTransform(element: SVGElement, value?: string): SvgTransform[
     const transform = value === undefined ? $dom.cssInline(element, 'transform') : value;
     if (transform !== '') {
         const result: SvgTransform[] = [];
-        for (const name in REGEX_TRANSFORM) {
-            const pattern = new RegExp(REGEX_TRANSFORM[name], 'g');
+        for (const name in REGEXP_TRANSFORM) {
+            const pattern = new RegExp(REGEXP_TRANSFORM[name], 'g');
             let match: RegExpExecArray | null = null;
             while ((match = pattern.exec(transform)) !== null) {
                 const isX = match[1].endsWith('X');
@@ -349,7 +350,7 @@ export function getTransform(element: SVGElement, value?: string): SvgTransform[
 }
 
 export function getTransformMatrix(element: SVGElement, value?: string): SvgMatrix | undefined {
-    const match = new RegExp(REGEX_TRANSFORM.MATRIX).exec(value || $dom.getStyle(element, true).transform || '');
+    const match = new RegExp(REGEXP_TRANSFORM.MATRIX).exec(value || $dom.getStyle(element, true).transform || '');
     if (match) {
         switch (match[1]) {
             case 'matrix':
@@ -482,27 +483,40 @@ export function sortNumber(values: number[], descending = false) {
     return descending ? values.sort((a, b) => a > b ? -1 : 1) : values.sort((a, b) => a < b ? -1 : 1);
 }
 
-export function getLeastCommonMultiple(values: number[]) {
-    const sorted = sortNumber(values.slice());
-    if (sorted.length > 1) {
-        const smallest = sorted.splice(0, 1)[0];
-        let result = smallest;
+export function getLeastCommonMultiple(values: number[], minimum = 0, offset?: number[]) {
+    if (values.length > 1) {
+        const increment = sortNumber(values.slice(0))[0];
+        if (offset) {
+            if (offset.length === values.length) {
+                for (let i = 0; i < offset.length; i++) {
+                    minimum = Math.max(minimum, offset[i] + increment);
+                }
+            }
+            else {
+                offset = undefined;
+            }
+        }
+        if (offset === undefined) {
+            minimum = Math.max(minimum, increment);
+        }
+        let result = minimum;
         let valid = false;
         while (!valid) {
-            for (const value of sorted) {
-                if (result >= value && result % value === 0) {
+            for (let i = 0; i < values.length; i++) {
+                const total = result - (offset ? offset[i] : 0);
+                if (total % values[i] === 0) {
                     valid = true;
                 }
                 else {
                     valid = false;
-                    result += smallest;
+                    result += increment;
                     break;
                 }
             }
         }
         return result;
     }
-    return sorted[0];
+    return values[0];
 }
 
 export function applyMatrixX(matrix: SvgMatrix | DOMMatrix, x: number, y: number) {

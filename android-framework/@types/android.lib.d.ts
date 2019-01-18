@@ -24,7 +24,7 @@ declare global {
             export import XMLNS_ANDROID = $const.XMLNS_ANDROID;
             export import RESERVED_JAVA = $const.RESERVED_JAVA;
             export import PREFIX_ANDROID = $const.PREFIX_ANDROID;
-            export import REGEX_ANDROID = $const.REGEX_ANDROID;
+            export import REGEXP_ANDROID = $const.REGEXP_ANDROID;
         }
 
         namespace util {

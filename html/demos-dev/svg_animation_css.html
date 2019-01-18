@@ -10,13 +10,13 @@
             padding: 10px;
         }
         #animate {
-            animation-name: zorro1, zorro2, zorro1;
+            animation-name: zorro1, zorro2, zorro2;
             animation-delay: 2s, 5s, 3s;
             animation-duration: 3s, 5s, 3s;
-            animation-iteration-count: 8, 3, 2;
-            animation-direction: alternate-reverse, normal;
-            animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1), ease-in, ease-in-out;
-            animation-fill-mode: forwards, backwards, none;
+            animation-iteration-count: infinite, 3, 2;
+            animation-direction: reverse, alternate-reverse, reverse;
+            animation-timing-function: linear, cubic-bezier(0.19, 1, 0.22, 1), ease-in-out;
+            animation-fill-mode: forwards, none, none;
         }
         #rotate {
             animation: rotate 3s ease-in 0s 3;
@@ -31,14 +31,6 @@
             from {
                 x: 0;
                 y: 0;
-            }
-            33% {
-                x: 150;
-                y: 0;
-            }
-            66% {
-                x: 0;
-                y: 120;
             }
             to {
                 x: 150;

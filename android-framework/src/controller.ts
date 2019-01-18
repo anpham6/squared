@@ -24,7 +24,7 @@ const $xml = squared.lib.xml;
 
 function sortHorizontalFloat<T extends View>(list: T[]) {
     if (list.some(node => node.floating)) {
-        const result = list.slice().sort((a, b) => {
+        const result = list.slice(0).sort((a, b) => {
             if (a.floating && !b.floating) {
                 return a.float === 'left' ? -1 : 1;
             }

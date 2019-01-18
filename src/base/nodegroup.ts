@@ -153,7 +153,7 @@ export default abstract class NodeGroup extends Node {
     }
 
     private get outerRegion(): BoxRect {
-        const nodes = this.children.slice();
+        const nodes = this.children.slice(0);
         let top = nodes[0];
         let right = top;
         let bottom = top;

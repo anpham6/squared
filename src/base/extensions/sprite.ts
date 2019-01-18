@@ -15,7 +15,7 @@ export default abstract class Sprite<T extends Node> extends Extension<T> {
             let url = node.css('backgroundImage');
             if (!$util.hasValue(url) || url === 'none') {
                 url = '';
-                const match = $util.REGEX_PATTERN.CSS_URL.exec(node.css('background'));
+                const match = $util.REGEXP_PATTERN.CSS_URL.exec(node.css('background'));
                 if (match) {
                     url = match[0];
                 }

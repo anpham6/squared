@@ -142,7 +142,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static applyTransforms(transform: SvgTransform[], values: SvgPoint[], origin?: SvgPoint, center?: SvgPoint) {
         const result = SvgBuild.clonePoints(values);
-        const items = transform.slice().reverse();
+        const items = transform.slice(0).reverse();
         for (const item of items) {
             let x1 = 0;
             let y1 = 0;
@@ -310,7 +310,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static rebindPathPoints(values: SvgPathCommand[], points: SvgPoint[]) {
-        const absolute = points.slice();
+        const absolute = points.slice(0);
         invalidPoint: {
             for (const item of values) {
                 switch (item.command.toUpperCase()) {

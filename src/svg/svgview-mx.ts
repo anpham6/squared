@@ -7,7 +7,7 @@ import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 
 import { FILL_MODE, KEYSPLINE_NAME } from './lib/constant';
-import { REGEX_UNIT, convertClockTime, getFontSize, getHostDPI, getTransform, getTransformInitialValue, getTransformOrigin, isVisible, setOpacity, setVisible } from './lib/util';
+import { REGEXP_UNIT, convertClockTime, getFontSize, getHostDPI, getTransform, getTransformInitialValue, getTransformOrigin, isVisible, setOpacity, setVisible } from './lib/util';
 
 type AttributeMap = ObjectMap<NumberValue<string>[]>;
 
@@ -15,7 +15,16 @@ const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 const KEYFRAME_NAME = $dom.getKeyframeRules();
-const REGEX_CUBICBEZIER = new RegExp(`cubic-bezier\\(${REGEX_UNIT.DECIMAL}, ${REGEX_UNIT.DECIMAL}, ${REGEX_UNIT.DECIMAL}, ${REGEX_UNIT.DECIMAL}\\)`);
+const ANIMATION_MAP: ObjectMap<string[]> = {
+    'animation-delay': ['0s'],
+    'animation-duration': ['0s'],
+    'animation-iteration-count': ['1'],
+    'animation-play-state': ['running'],
+    'animation-direction': ['normal'],
+    'animation-fill-mode': ['none'],
+    'animation-timing-function': ['ease']
+};
+const REGEXP_CUBICBEZIER = new RegExp(`cubic-bezier\\(${REGEXP_UNIT.ZERO_ONE}, ${REGEXP_UNIT.DECIMAL}, ${REGEXP_UNIT.ZERO_ONE}, ${REGEXP_UNIT.DECIMAL}\\)`);
 
 function parseAttribute(element: SVGElement, attr: string) {
     return $util.flatMap($dom.cssAttribute(element, attr).split(/(?<!\w+\([\-\d., ]+),/), value => value.trim());
@@ -38,27 +47,17 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             const result: SvgAnimation[] = [];
             const animationName = parseAttribute(element, 'animation-name');
             if (animationName.length) {
-                const animationMap: ObjectMap<string[]> = {
-                    'animation-delay': ['0s'],
-                    'animation-duration': ['0s'],
-                    'animation-iteration-count': ['1'],
-                    'animation-play-state': ['running'],
-                    'animation-direction': ['normal'],
-                    'animation-fill-mode': ['none'],
-                    'animation-timing-function': ['ease']
-                };
-                for (const name in animationMap) {
-                    let values = parseAttribute(element, name);
-                    if (values.length) {
-                        animationMap[name] = values;
-                    }
-                    else {
-                        values = animationMap[name];
+                const cssData: ObjectMap<string[]> = {};
+                for (const name in ANIMATION_MAP) {
+                    const values = parseAttribute(element, name);
+                    if (values.length === 0) {
+                        values.push(...ANIMATION_MAP[name].slice(0));
                     }
                     while (values.length < animationName.length) {
-                        values.push(...values.slice());
+                        values.push(...values.slice(0));
                     }
                     values.length = animationName.length;
+                    cssData[name] = values;
                 }
                 animationName.forEach((className, index) => {
                     const keyframes = KEYFRAME_NAME.get(className);
@@ -68,11 +67,11 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         for (const percent in keyframes) {
                             const ordinal = parseInt(percent) / 100;
                             for (const name in keyframes[percent]) {
-                                const targetMap = animationMap[name] ? keyframeMap : attrMap;
-                                if (targetMap[name] === undefined) {
-                                    targetMap[name] = [];
+                                const map = ANIMATION_MAP[name] ? keyframeMap : attrMap;
+                                if (map[name] === undefined) {
+                                    map[name] = [];
                                 }
-                                targetMap[name].push({ ordinal, value: keyframes[percent][name] });
+                                map[name].push({ ordinal, value: keyframes[percent][name] });
                             }
                         }
                         if (attrMap['transform']) {
@@ -158,27 +157,24 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     }
                                     break;
                             }
-                            animate.paused = animationMap['animation-play-state'][index] === 'paused';
-                            const iterationCount = animationMap['animation-iteration-count'][index];
-                            const timingFunction = animationMap['animation-timing-function'][index];
-                            const direction = animationMap['animation-direction'][index];
-                            const fillMode = animationMap['animation-fill-mode'][index];
-                            const delay = convertClockTime(animationMap['animation-delay'][index]);
-                            const duration = convertClockTime(animationMap['animation-duration'][index]);
+                            animate.paused = cssData['animation-play-state'][index] === 'paused';
+                            const iterationCount = cssData['animation-iteration-count'][index];
+                            const timingFunction = cssData['animation-timing-function'][index];
+                            const direction = cssData['animation-direction'][index];
+                            const fillMode = cssData['animation-fill-mode'][index];
+                            const delay = convertClockTime(cssData['animation-delay'][index]);
+                            const duration = convertClockTime(cssData['animation-duration'][index]);
+                            const keyTimes: number[] = [];
+                            const values: string[] = [];
                             const keySplines: string[] = [];
-                            if (keyframeMap['animation-timing-function']) {
-                                for (let i = 0; i < animation.length - 1; i++) {
-                                    const spline = keyframeMap[name].find(item => item.ordinal === animation[i].ordinal);
+                            for (let i = 0; i < animation.length; i++) {
+                                keyTimes.push(animation[i].ordinal);
+                                values.push(animation[i].value);
+                                if (i < animation.length - 1) {
+                                    const spline = keyframeMap['animation-timing-function'] ? keyframeMap['animation-timing-function'].find(item => item.ordinal === animation[i].ordinal) : undefined;
                                     keySplines.push(spline ? spline.value : timingFunction);
                                 }
                             }
-                            else {
-                                for (let i = 0; i < animation.length - 1; i++) {
-                                    keySplines.push(timingFunction);
-                                }
-                            }
-                            const keyTimes = animation.map(item => item.ordinal);
-                            const values = animation.map(item => item.value);
                             if (!keySplines.every(spline => spline === 'linear')) {
                                 const keyTimesData: number[] = [];
                                 const valuesData: string[] = [];
@@ -198,7 +194,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                         keySplines[i] = KEYSPLINE_NAME.linear;
                                     }
                                     else {
-                                        const match = REGEX_CUBICBEZIER.exec(keySplines[i]);
+                                        const match = REGEXP_CUBICBEZIER.exec(keySplines[i]);
                                         keySplines[i] = match ? `${match[1]} ${match[2]} ${match[3]} ${match[4]}` : KEYSPLINE_NAME.ease;
                                     }
                                     keyTimesData.push(keyTimes[i]);
@@ -219,25 +215,21 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             }
                             animate.begin[0] = delay;
                             animate.duration = duration;
-                            if (iterationCount !== 'infinite') {
-                                animate.repeatCount = parseFloat(iterationCount);
-                                if (fillMode === 'forwards' || fillMode === 'both') {
-                                    animate.fillMode |= FILL_MODE.FORWARDS;
-                                }
+                            animate.repeatCount = iterationCount !== 'infinite' ? parseFloat(iterationCount) : -1;
+                            if (fillMode === 'forwards' || fillMode === 'both') {
+                                animate.fillMode |= FILL_MODE.FORWARDS;
                             }
-                            else {
-                                animate.repeatCount = -1;
+                            if (fillMode === 'backwards' || fillMode === 'both') {
+                                animate.fillMode |= FILL_MODE.BACKWARDS;
                             }
                             if (direction.endsWith('reverse')) {
+                                animate.reverse = true;
                                 animate.values.reverse();
                                 if (animate.keySplines) {
                                     animate.keySplines.reverse();
                                 }
-                                if (fillMode === 'backwards' || fillMode === 'both') {
-                                    animate.fillMode |= FILL_MODE.BACKWARDS;
-                                }
                             }
-                            animate.alternate = animate.repeatCount > 1 && direction.startsWith('alternate');
+                            animate.alternate = (animate.repeatCount === -1 || animate.repeatCount > 1) && direction.startsWith('alternate');
                             result.push(animate);
                         }
                     }

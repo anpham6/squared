@@ -1248,11 +1248,15 @@ export default class Application<T extends Node> implements squared.base.Applica
                     if ($util.hasBit(pendingFloat, clear === 'right' ? 4 : 2) || pendingFloat !== 0 && clear === 'both') {
                         switch (clear) {
                             case 'left':
-                                pendingFloat ^= 2;
+                                if ($util.hasBit(pendingFloat, 2)) {
+                                    pendingFloat ^= 2;
+                                }
                                 current = 'left';
                                 break;
                             case 'right':
-                                pendingFloat ^= 4;
+                                if ($util.hasBit(pendingFloat, 4)) {
+                                    pendingFloat ^= 4;
+                                }
                                 current = 'right';
                                 break;
                             case 'both':
@@ -1566,9 +1570,9 @@ export default class Application<T extends Node> implements squared.base.Applica
                 if (data.cleared.has(node)) {
                     if (!node.floating) {
                         node.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
-                        staticRows.push(current.slice());
+                        staticRows.push(current.slice(0));
                         current.length = 0;
-                        floatedRows.push(floated.slice());
+                        floatedRows.push(floated.slice(0));
                         floated.length = 0;
                     }
                     else {
@@ -1577,7 +1581,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 }
                 if (node.floating) {
                     if (blockArea) {
-                        staticRows.push(current.slice());
+                        staticRows.push(current.slice(0));
                         floatedRows.push(null);
                         current.length = 0;
                         floated.length = 0;

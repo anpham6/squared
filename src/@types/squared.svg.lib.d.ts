@@ -12,7 +12,7 @@ declare global {
 
         namespace util {
             export import MATRIX = $util.MATRIX;
-            export import REGEX_UNIT = $util.REGEX_UNIT;
+            export import REGEXP_UNIT = $util.REGEXP_UNIT;
             export import SHAPES = $util.SHAPES;
             export import SVG = $util.SVG;
             function getHostDPI(): number;
@@ -29,7 +29,7 @@ declare global {
             function getTransformOrigin(element: SVGElement, value?: string): Point;
             function getTransformRotate(element: SVGElement): SvgPoint[];
             function getTransformInitialValue(nameType: string | number): string;
-            function getLeastCommonMultiple(values: number[]): number;
+            function getLeastCommonMultiple(values: number[], minimum?: number, offset?: number[]): number;
             function applyMatrixX(matrix: SvgMatrix | DOMMatrix, x: number, y: number): number;
             function applyMatrixY(matrix: SvgMatrix | DOMMatrix, x: number, y: number): number;
             function getRadiusX(angle: number, radius: number): number;

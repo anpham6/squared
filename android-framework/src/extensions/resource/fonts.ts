@@ -5,7 +5,7 @@ import { BUILD_ANDROID } from '../../lib/enumeration';
 import Resource from '../../resource';
 import View from '../../view';
 
-import { REGEX_ANDROID } from '../../lib/constant';
+import { REGEXP_ANDROID } from '../../lib/constant';
 import { replaceUnit } from '../../lib/util';
 
 type StyleList = ObjectMap<number[]>;
@@ -253,12 +253,12 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                 continue;
                             }
                             else if (ids.length === count) {
-                                styleKey[attr1] = ids.slice();
+                                styleKey[attr1] = ids.slice(0);
                                 sorted[i] = {};
                                 revalidate = true;
                             }
                             else if (ids.length === 1) {
-                                layoutKey[attr1] = ids.slice();
+                                layoutKey[attr1] = ids.slice(0);
                                 sorted[i][attr1] = [];
                                 revalidate = true;
                             }
@@ -359,7 +359,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             for (const attrs in tagData) {
                 const items: NameValue[] = [];
                 attrs.split(';').forEach(value => {
-                    const match = REGEX_ANDROID.ATTRIBUTE.exec(value);
+                    const match = REGEXP_ANDROID.ATTRIBUTE.exec(value);
                     if (match) {
                         items.push({ name: match[1], value: match[2] });
                     }

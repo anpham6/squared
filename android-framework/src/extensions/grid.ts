@@ -74,7 +74,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
             if (node.display === 'table-cell') {
                 node.mergeGravity('layout_gravity', 'fill');
             }
-            const siblings = cellData.siblings ? cellData.siblings.slice() : [];
+            const siblings = cellData.siblings ? cellData.siblings.slice(0) : [];
             if (siblings.length) {
                 const controller = <android.base.Controller<T>> this.application.controllerHandler;
                 siblings.unshift(node);

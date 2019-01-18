@@ -40,7 +40,7 @@ function compareObject(obj1: {}, obj2: {}, attr: string, numeric: boolean) {
     return [current1, current2];
 }
 
-export const REGEX_PATTERN = {
+export const REGEXP_PATTERN = {
     CSS_URL: /url\("?(#?.*?)"?\)/,
     URI: /^[A-Za-z]+:\/\//,
     UNIT: /^(?:\s*(-?[\d.]+)(px|em|ch|pc|pt|vw|vh|vmin|vmax|mm|cm|in))+$/
@@ -105,7 +105,7 @@ export function convertPX(value: string, dpi: number, fontSize: number): string 
                 return value;
             }
         }
-        const match = value.match(REGEX_PATTERN.UNIT);
+        const match = value.match(REGEXP_PATTERN.UNIT);
         if (match) {
             let result = parseFloat(match[1]);
             switch (match[2]) {
@@ -218,7 +218,7 @@ export function isArray<T>(value: any): value is Array<T> {
 }
 
 export function isUnit(value: string) {
-    return REGEX_PATTERN.UNIT.test(value);
+    return REGEXP_PATTERN.UNIT.test(value);
 }
 
 export function isPercent(value: string) {
@@ -293,7 +293,7 @@ export function optionalAsBoolean(obj: UndefNull<object>, value: string) {
 }
 
 export function resolvePath(value: string) {
-    if (!REGEX_PATTERN.URI.test(value)) {
+    if (!REGEXP_PATTERN.URI.test(value)) {
         let pathname = location.pathname.split('/');
         pathname.pop();
         if (value.charAt(0) === '/') {

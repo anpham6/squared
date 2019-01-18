@@ -24,11 +24,13 @@ declare global {
             additiveSum: boolean;
             accumulateSum: boolean;
             fillMode: number;
+            reverse: boolean;
             alternate: boolean;
             element?: SVGAnimateElement;
             end?: number;
             keySplines?: string[];
-            sequential?: NameValue;
+            sequential?: NumberValue<string>;
+            readonly fromToType: boolean;
             setCalcMode(name: string): void;
         }
 

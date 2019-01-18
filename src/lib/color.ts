@@ -232,7 +232,7 @@ export function getColorByName(value: string) {
 }
 
 export function getColorByShade(value: string) {
-    const result = HSL_SORTED.slice();
+    const result = HSL_SORTED.slice(0);
     let index = result.findIndex(item => item.value === value);
     if (index !== -1) {
         return result[index];

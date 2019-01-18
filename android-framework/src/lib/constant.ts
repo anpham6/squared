@@ -192,6 +192,6 @@ export const RESERVED_JAVA = [
     'while'
 ];
 
-export const REGEX_ANDROID = {
+export const REGEXP_ANDROID = {
     ATTRIBUTE: /(.*?)="(.*?)"/
 };

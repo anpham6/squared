@@ -15,7 +15,7 @@ type GridPosition = {
 
 const $util = squared.lib.util;
 
-const REGEX_PARTIAL = {
+const REGEXP_PARTIAL = {
     UNIT: '[\\d.]+[a-z%]+|auto|max-content|min-content',
     MINMAX: 'minmax\\((.*?), (.*?)\\)',
     FIT_CONTENT: 'fit-content\\(([\\d.]+[a-z%]+)\\)',
@@ -24,8 +24,8 @@ const REGEX_PARTIAL = {
 };
 
 const PATTERN_GRID = {
-    UNIT: new RegExp(`^(${REGEX_PARTIAL.UNIT})$`),
-    NAMED: new RegExp(`\\s*(${REGEX_PARTIAL.NAMED}|${REGEX_PARTIAL.REPEAT}|${REGEX_PARTIAL.MINMAX}|${REGEX_PARTIAL.FIT_CONTENT}|${REGEX_PARTIAL.UNIT})\\s*`, 'g')
+    UNIT: new RegExp(`^(${REGEXP_PARTIAL.UNIT})$`),
+    NAMED: new RegExp(`\\s*(${REGEXP_PARTIAL.NAMED}|${REGEXP_PARTIAL.REPEAT}|${REGEXP_PARTIAL.MINMAX}|${REGEXP_PARTIAL.FIT_CONTENT}|${REGEXP_PARTIAL.UNIT})\\s*`, 'g')
 };
 
 function repeatUnit(data: CssGridDirectionData, dimension: string[]) {
@@ -167,7 +167,7 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                                     break;
                             }
                             if (match[4].startsWith('minmax')) {
-                                const minmax = new RegExp(REGEX_PARTIAL.MINMAX, 'g');
+                                const minmax = new RegExp(REGEXP_PARTIAL.MINMAX, 'g');
                                 let matchMM: RegExpMatchArray | null;
                                 while ((matchMM = minmax.exec(match[4])) !== null) {
                                     data.unit.push(convertUnit(node, matchMM[2]));
@@ -462,7 +462,7 @@ export default class CssGrid<T extends Node> extends Extension<T> {
             const rowB = horizontal ? 2 : 3;
             const colB = horizontal ? 3 : 2;
             while (!placement[0] || !placement[1]) {
-                const PLACEMENT = placement.slice();
+                const PLACEMENT = placement.slice(0);
                 if (!PLACEMENT[rowA]) {
                     let l = rowData.length;
                     for (let i = 0, j = 0, k = -1; i < l; i++) {

@@ -54,7 +54,7 @@ declare global {
         }
 
         namespace util {
-            export import REGEX_PATTERN = $util.REGEX_PATTERN;
+            export import REGEXP_PATTERN = $util.REGEXP_PATTERN;
             function formatString(value: string, ...params: string[]): string;
             function capitalize(value: string, upper?: boolean): string;
             function convertUnderscore(value: string): string;

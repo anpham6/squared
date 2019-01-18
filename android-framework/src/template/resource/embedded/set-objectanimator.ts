@@ -2,9 +2,9 @@ export default `
 <?xml version="1.0" encoding="utf-8"?>
 <set xmlns:android="http://schemas.android.com/apk/res/android">
 <<A>>
-	<set android:ordering="{~ordering}">
+	<set android:name="{~name}" android:ordering="{~ordering}">
 	<<AA>>
-		<set android:ordering="{~ordering}">
+		<set android:name="{~name}" android:ordering="{~ordering}">
 		<<repeating>>
 			<objectAnimator
 				android:propertyName="{~propertyName}"
@@ -29,7 +29,7 @@ export default `
 			</objectAnimator>
 		<<repeating>>
 		<<indefinite>>
-			<set android:ordering="{~ordering}">
+			<set android:name="{~name}" android:ordering="{~ordering}">
 			<<repeat>>
 				<objectAnimator
 					android:propertyName="{&propertyName}"

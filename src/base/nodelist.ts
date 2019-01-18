@@ -91,7 +91,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
 
     public static cleared<T extends Node>(list: T[], parent = true) {
         if (parent && list.length > 1) {
-            list.slice().sort(this.siblingIndex);
+            list.slice(0).sort(this.siblingIndex);
             const actualParent = this.actualParent(list);
             if (actualParent && actualParent.element) {
                 const nodes: T[] = [];

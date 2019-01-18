@@ -1566,7 +1566,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get visibleStyle() {
         if (this._cached.visibleStyle === undefined) {
             const borderWidth = this.borderTopWidth > 0 || this.borderRightWidth > 0 || this.borderBottomWidth > 0 || this.borderLeftWidth > 0;
-            const backgroundImage = $util.REGEX_PATTERN.CSS_URL.test(this.css('backgroundImage')) || $util.REGEX_PATTERN.CSS_URL.test(this.css('background'));
+            const backgroundImage = $util.REGEXP_PATTERN.CSS_URL.test(this.css('backgroundImage')) || $util.REGEXP_PATTERN.CSS_URL.test(this.css('background'));
             const backgroundColor = this.has('backgroundColor');
             const backgroundRepeat = this.css('backgroundRepeat');
             const paddingHorizontal = this.paddingLeft + this.paddingRight > 0;
@@ -1661,7 +1661,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 this._cached.actualChildren = $util.flatMap(Array.from((<HTMLElement> this._element).childNodes), (element: Element) => $dom.getElementAsNode(element) as T);
             }
             else if (this.groupParent) {
-                this._cached.actualChildren = this._initial.children.slice();
+                this._cached.actualChildren = this._initial.children.slice(0);
             }
             else {
                 this._cached.actualChildren = [];

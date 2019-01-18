@@ -136,9 +136,10 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public additiveSum = false;
     public accumulateSum = false;
     public fillMode = 0;
+    public reverse = false;
     public alternate = false;
     public end?: number;
-    public sequential?: NameValue;
+    public sequential?: NumberValue<string>;
 
     private _repeatCount = 1;
     private _keySplines?: string[];
@@ -147,21 +148,19 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         super(element);
         if (element) {
             const values = this.getAttribute('values');
-            if (values !== '') {
+            const keyTimes = this.getAttribute('keyTimes');
+            if (values !== '' && keyTimes !== '') {
                 this.values.push(...$util.flatMap(values.split(';'), value => value.trim()));
-                if (this.values.length > 1) {
-                    this.from = this.values[0];
-                    this.to = this.values[this.values.length - 1];
-                    const keyTimes = this.getAttribute('keyTimes');
-                    if (keyTimes) {
-                        const times = SvgAnimate.toFractionList(keyTimes);
-                        if (times.length === this.values.length) {
-                            this.keyTimes.push(...times);
-                        }
+                this.keyTimes.push(...SvgAnimate.toFractionList(keyTimes));
+                if (this.values.length > 1 && this.keyTimes.length === this.values.length) {
+                    if (this.keyTimes[0] === 0) {
+                        this.from = this.values[0];
                     }
+                    this.to = this.values[this.values.length - 1];
                 }
                 else {
                     this.values.length = 0;
+                    this.keyTimes.length = 0;
                 }
             }
             const from = this.getAttribute('from');
@@ -227,14 +226,16 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         if (element) {
             switch (this.calcMode) {
                 case 'discrete':
-                    if (this.values.length === this.keyTimes.length) {
+                    if (!this.fromToType) {
                         const keyTimes: number[] = [];
                         const values: string[] = [];
+                        const keySplines: string[] = [];
                         for (let i = 0; i < this.keyTimes.length - 1; i++) {
                             const result = SvgAnimate.toStepFractionList(name, 'steps-start', i, this.keyTimes, this.values, getHostDPI(), getFontSize(element));
                             if (result) {
                                 keyTimes.push(...result[0]);
                                 values.push(...result[1]);
+                                result[0].forEach(() => keySplines.push(KEYSPLINE_NAME.step));
                             }
                             else {
                                 return;
@@ -244,6 +245,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                         values.push(this.values.pop() as string);
                         this.keyTimes = keyTimes;
                         this.values = values;
+                        this.keySplines = keySplines;
+                        this.calcMode = 'spline';
                     }
                     break;
                 case 'spline':
@@ -268,7 +271,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             if (fill === 'freeze' && this.repeatCount !== -1) {
                 this.fillMode |= FILL_MODE.FREEZE;
             }
-            else {
+            else if ($util.hasBit(this.fillMode, FILL_MODE.FREEZE)) {
                 this.fillMode ^= FILL_MODE.FREEZE;
             }
         }
@@ -298,10 +301,10 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
 
     set keySplines(value) {
-        const requiredTotal = this.keyTimes.length - 1;
-        if (value && requiredTotal > 0 && value.length >= requiredTotal && !value.every(spline => spline === '')) {
+        const minSegment = this.keyTimes.length - 1;
+        if (value && minSegment > 0 && value.length >= minSegment && !value.every(spline => spline === '')) {
             const result: string[] = [];
-            for (let i = 0; i < requiredTotal; i++) {
+            for (let i = 0; i < minSegment; i++) {
                 const points = value[i].split(' ').map(pt => parseFloat(pt));
                 if (points.length === 4 && !points.some(pt => isNaN(pt)) && points[0] >= 0 && points[0] <= 1 && points[2] >= 0 && points[2] <= 1) {
                     result.push(points.join(' '));
@@ -315,6 +318,10 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
     get keySplines() {
         return this._keySplines;
+    }
+
+    get fromToType() {
+        return this.keyTimes.join('-') === '0-1';
     }
 
     get instanceType() {

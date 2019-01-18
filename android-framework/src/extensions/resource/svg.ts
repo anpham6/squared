@@ -48,6 +48,7 @@ interface SetOrdering {
 }
 
 interface AnimatedSetData extends SetOrdering, TemplateDataAAA {
+    name: string;
     repeating: TemplateData[];
     indefinite: TemplateData[];
     fill: TemplateData[];
@@ -58,6 +59,7 @@ interface FillReplaceData extends SetOrdering, TemplateData {
 }
 
 interface IndefiniteData extends SetOrdering, TemplateData {
+    name: string;
     repeat: TemplateData[];
 }
 
@@ -233,7 +235,7 @@ function segmentTransforms(element: SVGGraphicsElement, transform: SvgTransform[
         const client: SvgTransform[] = [];
         const rotations = transform[0].css ? [] : $utilS.getTransformRotate(element);
         rotations.reverse();
-        const partition = transform.slice().reverse();
+        const partition = transform.slice(0).reverse();
         const typeIndex = new Set<number>();
         let current: SvgTransform[] = [];
         function restart(item?: SvgTransform) {
@@ -446,18 +448,18 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                             const sequential = item.sequential;
                             if (sequential) {
                                 if ($SvgBuild.instanceOfAnimateTransform(item)) {
-                                    let values = transformMap.get(sequential.name);
+                                    let values = transformMap.get(sequential.value);
                                     if (values === undefined) {
                                         values = [];
-                                        transformMap.set(sequential.name, values);
+                                        transformMap.set(sequential.value, values);
                                     }
                                     values.push(item);
                                 }
                                 else {
-                                    let values = sequentialMap.get(sequential.name);
+                                    let values = sequentialMap.get(sequential.value);
                                     if (values === undefined) {
                                         values = [];
-                                        sequentialMap.set(sequential.name, values);
+                                        sequentialMap.set(sequential.value, values);
                                     }
                                     values.push(item);
                                 }
@@ -473,16 +475,17 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                             togetherTargets.push(together);
                         }
                         for (const item of sequentialMap.values()) {
-                            togetherTargets.push(item.sort((a, b) => a.sequential && b.sequential && a.sequential.value >= b.sequential.value ? 1 : -1));
+                            togetherTargets.push(item.sort((a, b) => a.sequential && b.sequential && a.sequential.ordinal >= b.sequential.ordinal ? 1 : -1));
                         }
                         for (const item of transformMap.values()) {
-                            transformTargets.push(item.sort((a, b) => a.sequential && b.sequential && a.sequential.value >= b.sequential.value ? 1 : -1));
+                            transformTargets.push(item.sort((a, b) => a.sequential && b.sequential && a.sequential.ordinal >= b.sequential.ordinal ? 1 : -1));
                         }
                         for (const item of isolated) {
                             isolatedTargets.push([[item]]);
                         }
                         [togetherTargets, transformTargets, ...isolatedTargets].forEach((targets, index) => {
                             const subData: TemplateDataAA = {
+                                name: `${name}_${index + 1}`,
                                 ordering: index === 0 ? 'together' : 'sequentially',
                                 AA: []
                             };
@@ -501,12 +504,14 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                     ordering = $dom.getDataSet(group.element, 'android').ordering || this.options.vectorAnimateOrdering || 'together';
                                 }
                                 const setData: AnimatedSetData = {
+                                    name: `${subData.name}_repeat`,
                                     ordering,
                                     repeating: [],
                                     indefinite: [],
                                     fill: []
                                 };
                                 const indefiniteData: IndefiniteData = {
+                                    name: `${subData.name}_infinite`,
                                     ordering: 'sequentially',
                                     repeat: []
                                 };
@@ -540,6 +545,9 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                     }
                                     else {
                                         options.repeatCount = item.repeatCount !== -1 ? Math.ceil(item.repeatCount - 1).toString() : '-1';
+                                        if (item.alternate) {
+                                            options.repeatMode = 'reverse';
+                                        }
                                         const dataset = item.element ? $dom.getDataSet(item.element, 'android') : {};
                                         let propertyName: string[] | undefined;
                                         let values: string[] | (null[] | number[])[] | undefined;
@@ -615,7 +623,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                 case 'pathType': {
                                                     if (group.pathData) {
                                                         pathType: {
-                                                            values = item.values.slice();
+                                                            values = item.values.slice(0);
                                                             if (item.attributeName === 'points') {
                                                                 for (let i = 0; i < values.length; i++) {
                                                                     const value = values[i];
@@ -794,7 +802,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                     break;
                                                 }
                                                 default: {
-                                                    values = item.values.slice();
+                                                    values = item.values.slice(0);
                                                     if (attribute) {
                                                         propertyName = [attribute];
                                                     }
@@ -817,7 +825,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                             for (let i = 0; i < propertyName.length; i++) {
                                                 const propertyOptions = { ...options };
                                                 let valueEnd = '';
-                                                if (node.localSettings.targetAPI >= BUILD_ANDROID.MARSHMALLOW && propertyOptions.valueType !== 'pathType' && item.sequential === undefined && item.keyTimes.length > 1 && item.duration > 0 && (this.options.vectorAnimateAlwaysUseKeyframes || item.keyTimes.join('-') !== '0-1')) {
+                                                if (node.localSettings.targetAPI >= BUILD_ANDROID.MARSHMALLOW && propertyOptions.valueType !== 'pathType' && item.sequential === undefined && item.keyTimes.length > 1 && (this.options.vectorAnimateAlwaysUseKeyframes || !item.fromToType)) {
                                                     const propertyValues = animatorMap.get(keyName) || [];
                                                     const keyframes: KeyFrame[] = [];
                                                     for (let j = 0; j < item.keyTimes.length; j++) {
@@ -951,8 +959,9 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                         pathArray.push({
                                             propertyName: 'pathData',
                                             interpolator: createPathInterpolator(item.keySplines, 0),
-                                            repeatCount: '0',
+                                            startOffset: item.begin.length && item.begin[0] > 0 ? item.begin[0].toString() : '',
                                             duration: item.duration.toString(),
+                                            repeatCount: '0',
                                             valueType: 'pathType',
                                             valueFrom: item.from,
                                             valueTo: item.to

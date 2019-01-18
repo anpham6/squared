@@ -1,4 +1,4 @@
-import { REGEX_PATTERN, capitalize, convertCamelCase, convertInt, convertPX, flatMap, formatPercent, formatPX, hasBit, isPercent, isString, maxArray, minArray, resolvePath, withinFraction } from './util';
+import { REGEXP_PATTERN, capitalize, convertCamelCase, convertInt, convertPX, flatMap, formatPercent, formatPX, hasBit, isPercent, isString, maxArray, minArray, resolvePath, withinFraction } from './util';
 
 type T = squared.base.Node;
 
@@ -304,7 +304,7 @@ export function getStyle(element: Element | null, cache = true): CSSStyleDeclara
 }
 
 export function cssResolveUrl(value: string) {
-    const match = value.match(REGEX_PATTERN.CSS_URL);
+    const match = value.match(REGEXP_PATTERN.CSS_URL);
     if (match) {
         return resolvePath(match[1]);
     }

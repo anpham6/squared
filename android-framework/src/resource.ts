@@ -199,7 +199,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                                     break;
                                 case 'src':
                                 case 'srcCompat':
-                                    if ($util.REGEX_PATTERN.URI.test(value)) {
+                                    if ($util.REGEXP_PATTERN.URI.test(value)) {
                                         value = this.addImage({ mdpi: value });
                                         if (value !== '') {
                                             obj[attr] = `@drawable/${value}`;

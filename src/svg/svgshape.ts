@@ -31,7 +31,7 @@ export default class SvgShape extends SvgSynchronize$MX(SvgView$MX(SvgElement)) 
         else {
             path = this._path;
         }
-        const transform = this.transform.slice();
+        const transform = this.transform.slice(0);
         if (this.element !== path.element) {
             transform.push(...path.transform);
         }
