@@ -98,6 +98,7 @@ const $color = squared.lib.color;
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
+const $enumS = squared.svg.lib.enumeration;
 const $utilS = squared.svg.lib.util;
 
 const INTERPOLATOR_ANDROID = {
@@ -427,7 +428,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                     values.push(item);
                                 }
                             }
-                            else if (item.repeatCount === -1 || !item.fillFreeze) {
+                            else if (item.repeatCount === -1 || item.fillMode < $enumS.FILL_MODE.FORWARDS) {
                                 isolated.push(item);
                             }
                             else {
@@ -882,45 +883,47 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                     propertyOptions.propertyValues = false;
                                                     setData.repeating.push(propertyOptions);
                                                 }
-                                                const parent = item.parent;
-                                                if (!item.fillFreeze && parent && item.sequential === undefined) {
-                                                    let valueTo: string | undefined;
-                                                    if ($SvgBuild.instanceOfAnimateTransform(item)) {
-                                                        switch (propertyName[i]) {
-                                                            case 'rotation':
-                                                            case 'pivotX':
-                                                            case 'pivotY':
-                                                            case 'translateX':
-                                                            case 'translateY':
-                                                                valueTo = '0';
-                                                                break;
-                                                            case 'scaleX':
-                                                            case 'scaleY':
-                                                                valueTo = '1';
-                                                                break;
-                                                        }
-                                                    }
-                                                    else if ($SvgBuild.instanceOfShape(parent) && parent.path) {
-                                                        let css = '';
-                                                        for (const attr in ATTRIBUTE_ANDROID) {
-                                                            if (ATTRIBUTE_ANDROID[attr] === propertyName[i]) {
-                                                                css = $util.convertCamelCase(attr);
-                                                                break;
+                                                if (item.fillMode < $enumS.FILL_MODE.FORWARDS && item.sequential === undefined) {
+                                                    const parent = item.parent;
+                                                    if (parent) {
+                                                        let valueTo: string | undefined;
+                                                        if ($SvgBuild.instanceOfAnimateTransform(item)) {
+                                                            switch (propertyName[i]) {
+                                                                case 'rotation':
+                                                                case 'pivotX':
+                                                                case 'pivotY':
+                                                                case 'translateX':
+                                                                case 'translateY':
+                                                                    valueTo = '0';
+                                                                    break;
+                                                                case 'scaleX':
+                                                                case 'scaleY':
+                                                                    valueTo = '1';
+                                                                    break;
                                                             }
                                                         }
-                                                        if (css !== '') {
-                                                            valueTo = parent.path[css];
+                                                        else if ($SvgBuild.instanceOfShape(parent) && parent.path) {
+                                                            let css = '';
+                                                            for (const attr in ATTRIBUTE_ANDROID) {
+                                                                if (ATTRIBUTE_ANDROID[attr] === propertyName[i]) {
+                                                                    css = $util.convertCamelCase(attr);
+                                                                    break;
+                                                                }
+                                                            }
+                                                            if (css !== '') {
+                                                                valueTo = parent.path[css];
+                                                            }
                                                         }
-                                                    }
-                                                    if ($util.hasValue(valueTo)) {
-                                                        fillData.replace.push({
-                                                            propertyName: propertyName[i],
-                                                            repeatCount: '0',
-                                                            duration: '1',
-                                                            valueType: options.valueType || '',
-                                                            valueFrom: options.valueType === 'pathType' ? valueEnd : '',
-                                                            valueTo: (valueTo as string).toString()
-                                                        });
+                                                        if ($util.hasValue(valueTo)) {
+                                                            fillData.replace.push({
+                                                                propertyName: propertyName[i],
+                                                                repeatCount: '0',
+                                                                duration: '1',
+                                                                valueType: options.valueType || '',
+                                                                valueFrom: options.valueType === 'pathType' ? valueEnd : '',
+                                                                valueTo: (valueTo as string).toString()
+                                                            });
+                                                        }
                                                     }
                                                 }
                                             }

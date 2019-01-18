@@ -6,6 +6,7 @@ import SvgAnimateTransform from './svganimatetransform';
 import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 
+import { FILL_MODE } from './lib/enumeration';
 import { REGEX_UNIT, convertClockTime, getFontSize, getHostDPI, getTransform, getTransformInitialValue, getTransformOrigin, isVisible, setOpacity, setVisible } from './lib/util';
 
 type AttributeMap = ObjectMap<NumberValue<string>[]>;
@@ -15,6 +16,8 @@ const $util = squared.lib.util;
 
 const KEYFRAME_NAME = $dom.getKeyframeRules();
 const KEYSPLINE_DATA = {
+    'step': '1.0 1.0 1.0 1.0',
+    'linear': '0.0 0.0 1.0 1.0',
     'ease': '0.25 0.1 0.25 1.0',
     'ease-in': '0.42 0.0 1.0 1.0',
     'ease-in-out': '0.42 0.0 0.58 1.0',
@@ -173,12 +176,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             if (keyframeMap['animation-timing-function']) {
                                 for (let i = 0; i < animation.length - 1; i++) {
                                     const spline = keyframeMap[name].find(item => item.ordinal === animation[i].ordinal);
-                                    if (spline) {
-                                        keySplines.push(spline.value);
-                                    }
-                                    else {
-                                        keySplines.push(timingFunction);
-                                    }
+                                    keySplines.push(spline ? spline.value : timingFunction);
                                 }
                             }
                             else {
@@ -193,22 +191,22 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 const valuesData: string[] = [];
                                 const keySplinesData: string[] = [];
                                 for (let i = 0; i < keySplines.length; i++) {
-                                    if (keySplines[i].startsWith('steps')) {
+                                    if (KEYSPLINE_DATA[keySplines[i]]) {
+                                        keySplines[i] = KEYSPLINE_DATA[keySplines[i]];
+                                    }
+                                    else if (keySplines[i].startsWith('steps')) {
                                         const steps = SvgAnimate.toStepFractionList(name, keySplines[i], i, keyTimes, values, getHostDPI(), getFontSize(element));
                                         if (steps) {
                                             keyTimesData.push(...steps[0]);
                                             valuesData.push(...steps[1]);
-                                            steps[0].forEach(() => keySplinesData.push('linear'));
+                                            steps[0].forEach(() => keySplinesData.push(KEYSPLINE_DATA.step));
                                             continue;
                                         }
-                                        keySplines[i] = 'linear';
-                                    }
-                                    else if (KEYSPLINE_DATA[keySplines[i]]) {
-                                        keySplines[i] = KEYSPLINE_DATA[keySplines[i]];
+                                        keySplines[i] = KEYSPLINE_DATA.step;
                                     }
                                     else {
                                         const match = new RegExp(`cubic-bezier\\(${REGEX_UNIT.DECIMAL}, ${REGEX_UNIT.DECIMAL}, ${REGEX_UNIT.DECIMAL}, ${REGEX_UNIT.DECIMAL}\\)`).exec(keySplines[i]);
-                                        keySplines[i] = match ? `${match[1]} ${match[2]} ${match[3]} ${match[4]}` : 'linear';
+                                        keySplines[i] = match ? `${match[1]} ${match[2]} ${match[3]} ${match[4]}` : KEYSPLINE_DATA.linear;
                                     }
                                     keyTimesData.push(keyTimes[i]);
                                     valuesData.push(values[i]);
@@ -228,7 +226,9 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             animate.duration = duration;
                             if (iterationCount !== 'infinite') {
                                 animate.repeatCount = parseFloat(iterationCount);
-                                animate.fillFreeze = fillMode === 'forwards' || fillMode === 'both';
+                                if (fillMode === 'forwards' || fillMode === 'both') {
+                                    animate.fillMode |= FILL_MODE.FORWARDS;
+                                }
                             }
                             else {
                                 animate.repeatCount = -1;
@@ -237,6 +237,9 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 animate.values.reverse();
                                 if (animate.keySplines) {
                                     animate.keySplines.reverse();
+                                }
+                                if (fillMode === 'backwards' || fillMode === 'both') {
+                                    animate.fillMode |= FILL_MODE.BACKWARDS;
                                 }
                             }
                             animate.alternate = direction.startsWith('alternate');

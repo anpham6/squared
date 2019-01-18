@@ -1,6 +1,7 @@
 import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 
+import { FILL_MODE } from './lib/enumeration';
 import { convertClockTime, getFontSize, getHostDPI, getTransformInitialValue, sortNumber } from './lib/util';
 
 const $color = squared.lib.color;
@@ -46,7 +47,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                     nextValue = [parseFloat(values[index + 1])];
                 }
                 else if ($util.isUnit(values[index + 1])) {
-                    currentValue = [parseFloat($util.convertPX(values[index + 1], dpi, fontSize))];
+                    nextValue = [parseFloat($util.convertPX(values[index + 1], dpi, fontSize))];
                 }
                 break;
         }
@@ -130,17 +131,17 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public by = '';
     public values: string[] = [];
     public keyTimes: number[] = [];
+    public repeatDuration = -1;
     public calcMode = '';
     public additiveSum = false;
     public accumulateSum = false;
-    public fillFreeze = false;
+    public fillMode = 0;
     public alternate = false;
     public end?: number;
     public keySplines?: string[];
     public sequential?: NameValue;
 
     private _repeatCount = 1;
-    private _repeatDuration = -1;
 
     constructor(public element?: SVGAnimateElement) {
         super(element);
@@ -184,7 +185,6 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 this.keyTimes.push(0, 1);
                 this.setAttribute('by');
             }
-            this.setAttribute('fill', 'freeze');
             if (values === '' && from !== '' && this.to !== '') {
                 this.setAttribute('additive', 'sum');
                 if (this.additiveSum) {
@@ -193,13 +193,13 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             }
             const repeatDur = this.getAttribute('repeatDur');
             if (repeatDur && repeatDur !== 'indefinite') {
-                this.repeatDuration = convertClockTime(repeatDur) || -1;
+                this.repeatDuration = convertClockTime(repeatDur);
             }
             const repeatCount = this.getAttribute('repeatCount');
             if (repeatCount === 'indefinite') {
                 this.repeatCount = -1;
             }
-            else if (repeatCount !== '') {
+            else {
                 this.repeatCount = parseFloat(repeatCount);
             }
             if (this.begin.length) {
@@ -266,8 +266,14 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         else {
             this._repeatCount = 1;
         }
-        if (this.repeatCount === -1) {
-            this.fillFreeze = false;
+        if (this.element) {
+            const fill = this.getAttribute('fill');
+            if (fill === 'freeze' && this.repeatCount !== -1) {
+                this.fillMode |= FILL_MODE.FREEZE;
+            }
+            else {
+                this.fillMode ^= FILL_MODE.FREEZE;
+            }
         }
     }
     get repeatCount() {
@@ -292,16 +298,6 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             }
         }
         return 1;
-    }
-
-    set repeatDuration(value) {
-        this._repeatDuration = value;
-        if (this.repeatCount === -1) {
-            this.fillFreeze = false;
-        }
-    }
-    get repeatDuration() {
-        return this._repeatDuration;
     }
 
     get instanceType() {

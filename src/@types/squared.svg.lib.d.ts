@@ -1,14 +1,19 @@
 import { SvgMatrix, SvgPoint, SvgTransform } from '../svg/@types/object';
 
+import * as $enumeration from '../svg/lib/enumeration';
 import * as $util from '../svg/lib/util';
 
 declare global {
     namespace squared.svg.lib {
+        namespace enumeration {
+            export import FILL_MODE = $enumeration.FILL_MODE;
+        }
+
         namespace util {
-            export import SVG = $util.SVG;
-            export import SHAPES = $util.SHAPES;
             export import MATRIX = $util.MATRIX;
             export import REGEX_UNIT = $util.REGEX_UNIT;
+            export import SHAPES = $util.SHAPES;
+            export import SVG = $util.SVG;
             function getHostDPI(): number;
             function getFontSize(element: SVGElement): number;
             function createElement<K extends keyof SvgElementTagNameMap>(qualifiedName: K): SvgElementTagNameMap[K];

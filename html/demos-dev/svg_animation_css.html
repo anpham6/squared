@@ -10,13 +10,13 @@
             padding: 10px;
         }
         #animate {
-            animation-name: zorro, zorro;
-            animation-delay: 1s, 3s;
-            animation-duration: 3s, 5s;
-            animation-iteration-count: 5, 1;
-            animation-direction: alternate-reverse, reverse;
+            animation-name: zorro1, zorro2, zorro1;
+            animation-delay: 2s, 5s, 3s;
+            animation-duration: 3s, 5s, 3s;
+            animation-iteration-count: 8, 3, 2;
+            animation-direction: alternate-reverse, normal;
             animation-timing-function: linear;
-            animation-fill-mode: none;
+            animation-fill-mode: forwards, backwards, none;
         }
         #rotate {
             animation: rotate 3s linear 0s 3;
@@ -27,7 +27,25 @@
         #translate-step {
             animation: translate 5s steps(5, end);
         }
-        @keyframes zorro {
+        @keyframes zorro1 {
+            from {
+                x: 0;
+                y: 0;
+            }
+            33% {
+                x: 150;
+                y: 0;
+            }
+            66% {
+                x: 0;
+                y: 120;
+            }
+            to {
+                x: 150;
+                y: 120;
+            }
+        }
+        @keyframes zorro2 {
             from {
                 x: 0;
                 y: 0;
@@ -103,7 +121,8 @@
     <div id="squared_ui" style="width: 300px;">
         <svg viewBox="0 0 200 200">
              <rect id="animate" x="10" y="10" width="30" height="20" fill="purple">
-                <animate attributeName="x" from="0" to="100" begin="3s" dur="5s" repeatCount="5" />
+                <animate attributeName="x" from="0" to="100" begin="0s" dur="5s" repeatCount="5" />
+                <animate attributeName="y" from="0" to="100" begin="0s" dur="5s" repeatCount="5" />
              </rect>
              <rect id="rotate" x="50" y="50" width="30" height="20" fill="red" />
              <rect id="opacity-step" x="25" y="25" width="30" height="20" fill="blue" style="fill-opacity: 0;" />

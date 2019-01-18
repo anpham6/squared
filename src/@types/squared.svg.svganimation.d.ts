@@ -23,7 +23,7 @@ declare global {
             calcMode: string;
             additiveSum: boolean;
             accumulateSum: boolean;
-            fillFreeze: boolean;
+            fillMode: number;
             alternate: boolean;
             element?: SVGAnimateElement;
             end?: number;
