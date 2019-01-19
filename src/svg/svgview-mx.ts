@@ -71,7 +71,10 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 if (map[name] === undefined) {
                                     map[name] = [];
                                 }
-                                map[name].push({ ordinal, value: keyframes[percent][name] });
+                                map[name].push({
+                                    ordinal,
+                                    value: keyframes[percent][name]
+                                });
                             }
                         }
                         if (attrMap['transform']) {
@@ -123,7 +126,10 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                             attrMap[name][previousIndex].value = value;
                                         }
                                         else {
-                                            attrMap[name].push({ ordinal: item.ordinal, value });
+                                            attrMap[name].push({
+                                                ordinal: item.ordinal,
+                                                value
+                                            });
                                         }
                                     });
                                 }
@@ -146,14 +152,20 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     animateTransform.setType(name);
                                     animate = animateTransform;
                                     if (animation[0].ordinal !== 0) {
-                                        animation.unshift({ ordinal: 0, value: getTransformInitialValue(name) });
+                                        animation.unshift({
+                                            ordinal: 0,
+                                            value: getTransformInitialValue(name)
+                                        });
                                     }
                                     break;
                                 default:
                                     animate = new SvgAnimate();
                                     animate.attributeName = name;
                                     if (animation[0].ordinal !== 0) {
-                                        animation.unshift({ ordinal: 0, value: $dom.cssAttribute(element, name) });
+                                        animation.unshift({
+                                            ordinal: 0,
+                                            value: $dom.cssAttribute(element, name)
+                                        });
                                     }
                                     break;
                             }

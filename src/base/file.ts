@@ -77,7 +77,10 @@ export default abstract class File<T extends Node> implements squared.base.File<
                 {
                     method: 'POST',
                     body: JSON.stringify(files),
-                    headers: new Headers({ 'Accept': 'application/json, text/plain, */*', 'Content-Type': 'application/json' })
+                    headers: new Headers({
+                        'Accept': 'application/json, text/plain, */*',
+                        'Content-Type': 'application/json'
+                    })
                 }
             )
             .then((response: Response) => response.json())

@@ -248,11 +248,13 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 for (const style of styles) {
                     if (Array.isArray(style.items)) {
                         style.items.sort((a, b) => a.name >= b.name ? 1 : -1);
-                        const itemA = Object.assign({}, style);
-                        data.A.push(itemA as ExternalData);
+                        data.A.push(<ExternalData> style);
                     }
                 }
-                files.push({ filename: 'res/values/styles.xml', data });
+                files.push({
+                    filename: 'res/values/styles.xml',
+                    data
+                });
             }
             const appTheme: ObjectMap<boolean> = {};
             for (const [filename, theme] of this.stored.themes.entries()) {

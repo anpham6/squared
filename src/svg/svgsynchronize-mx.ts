@@ -262,6 +262,10 @@ function getDuration(item: SvgAnimate) {
     return item.repeatCount !== -1 ? item.duration * item.repeatCount : Number.MAX_VALUE;
 }
 
+function getGroupDuration(item: SvgAnimate) {
+    return item.duration * (item.repeatCount !== -1 ? item.repeatCount : 1);
+}
+
 export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
     return class extends Base implements squared.svg.SvgSynchronize {
         public getAnimateShape() {
@@ -330,7 +334,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                 let animationsCSS = animations.filter(item => item.element === undefined);
                 const minDelay = $util.minArray(animationsCSS.map(item => item.begin[0]));
                 const maxDuration = $util.maxArray(animationsCSS.map(item => getDuration(item)));
-                const hasBackwards = animationsCSS.some(item => $util.hasBit(item.fillMode, FILL_MODE.BACKWARDS));
+                const fillBackwards = animationsCSS.filter(item => $util.hasBit(item.fillMode, FILL_MODE.BACKWARDS));
                 const groupName: ObjectMap<Map<number, GroupData>> = {};
                 let repeatingDurationTotal = 0;
                 for (const item of animations) {
@@ -339,7 +343,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                         groupName[attr] = new Map<number, GroupData>();
                     }
                     for (const begin of item.begin) {
-                        if (item.element === undefined || (!hasBackwards && (begin < minDelay || getDuration(item) > maxDuration))) {
+                        if (item.element === undefined || (fillBackwards.length === 0 && begin < minDelay || getDuration(item) > maxDuration)) {
                             const group = groupName[attr].get(begin) || { duration: 0, items: [] };
                             group.items.push(item);
                             groupName[attr].set(begin, group);
@@ -379,11 +383,14 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                         for (const time of sortNumber(Array.from(groupBegin.keys()))) {
                             const group = groupBegin.get(time);
                             if (group) {
-                                const duration = $util.maxArray(group.items.map(item => item.duration * (item.repeatCount === -1 ? 1 : item.repeatCount)));
+                                const duration = $util.maxArray(group.items.map(item => getGroupDuration(item)));
                                 repeatingDurationTotal = Math.max(repeatingDurationTotal, time + duration);
-                                group.duration = duration;
-                                group.items.reverse();
-                                groupSorted.set(time, group);
+                                group.items = group.items.filter(item => !fillBackwards.includes(item));
+                                if (group.items.length) {
+                                    group.duration = duration;
+                                    group.items.reverse();
+                                    groupSorted.set(time, group);
+                                }
                             }
                         }
                         groupName[attr] = groupSorted;
@@ -466,30 +473,50 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                 animationEnd: {
                     for (const attr in groupName) {
                         repeatingMap[attr] = new Map<number, AnimateValue>();
-                        const incomplete: NumberValue<SvgAnimate>[] = [];
                         const groupBegin = Array.from(groupName[attr].keys());
                         const groupData = Array.from(groupName[attr].values());
                         const resetValue = getBaseValue(attr);
+                        let incomplete: NumberValue<SvgAnimate>[] = [];
                         let baseValue = resetValue;
+                        let groupBackwards: SvgAnimate[] | undefined;
                         let maxTime = -1;
-                        function setComplete(item: SvgAnimate, nextBeginTime: boolean) {
-                            if ($util.hasBit(item.fillMode, FILL_MODE.FORWARDS)) {
+                        function setComplete(animate: SvgAnimate, delayed: boolean) {
+                            incomplete = incomplete.filter(item => item.value !== animate);
+                            if ($util.hasBit(animate.fillMode, FILL_MODE.FORWARDS)) {
                                 forwardMap[attr] = true;
-                                animationsCSS = animationsCSS.filter(animate => animate.attributeName !== attr);
+                                animationsCSS = animationsCSS.filter(item => item.attributeName !== attr);
                                 return animationsCSS.length === 0 ? 2 : 1;
                             }
-                            else if ($util.hasBit(item.fillMode, FILL_MODE.FREEZE)) {
+                            else if ($util.hasBit(animate.fillMode, FILL_MODE.FREEZE)) {
                                 freezeMap[attr] = { ordinal: maxTime, value: baseValue };
                                 return 1;
                             }
-                            else if (nextBeginTime && (item.fillMode === 0 || !item.reverse && $util.hasBit(item.fillMode, FILL_MODE.BACKWARDS))) {
+                            else if (delayed) {
                                 repeatingMap[attr].set(++maxTime, resetValue);
                             }
                             return 0;
                         }
+                        if (fillBackwards.length) {
+                            groupBackwards = fillBackwards.filter(item => item.attributeName === attr);
+                            if (groupBackwards.length) {
+                                for (const item of groupBackwards) {
+                                    groupBegin.unshift(item.begin[0]);
+                                    groupData.unshift({
+                                        duration: getGroupDuration(item),
+                                        items: [item]
+                                    });
+                                }
+                                const firstAnimate = groupData[0].items[0];
+                                baseValue = getItemValue(firstAnimate, firstAnimate.reverse ? 0 : firstAnimate.values.length - 1, baseValue, 0);
+                                repeatingMap[attr].set(0, baseValue);
+                            }
+                        }
                         attributeEnd: {
                             for (let i = 0; i < groupBegin.length; i++) {
                                 const groupItems = groupData[i].items;
+                                if (groupItems.length === 0) {
+                                    continue;
+                                }
                                 let begin = groupBegin[i];
                                 let previousMaxTime = -1;
                                 if (begin < 0) {
@@ -554,17 +581,16 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                     }
                                     else {
                                         const itemIndex = animationsCSS.findIndex(animate => animate === item);
-                                        nextBegin: {
-                                            for (let k = i + 1; k < groupBegin.length; k++) {
-                                                const groupCSS = groupData[k].items.filter(animate => animate.element === undefined);
-                                                for (const css of groupCSS) {
-                                                    const cssIndex = animationsCSS.findIndex(animate => animate === css);
-                                                    if (cssIndex > itemIndex) {
-                                                        nextBeginTime = groupBegin[k];
-                                                        break nextBegin;
-                                                    }
-                                                    else {
-                                                        incomplete.push({ ordinal: groupBegin[k], value: css });
+                                        if (groupBackwards === undefined || !groupBackwards.includes(item)) {
+                                            nextBegin: {
+                                                for (let k = i + 1; k < groupBegin.length; k++) {
+                                                    const groupCSS = groupData[k].items.filter(animate => animate.element === undefined);
+                                                    for (const css of groupCSS) {
+                                                        const cssIndex = animationsCSS.findIndex(animate => animate === css);
+                                                        if (cssIndex > itemIndex) {
+                                                            nextBeginTime = groupBegin[k];
+                                                            break nextBegin;
+                                                        }
                                                     }
                                                 }
                                             }
@@ -572,117 +598,128 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         for (let k = i + 1; k < groupBegin.length; k++) {
                                             const groupCSS = groupData[k].items.filter(subitem => subitem.element === undefined && animationsCSS.findIndex(animate => animate === subitem) > itemIndex);
                                             if (groupCSS.length) {
-                                                const groupDuration = $util.maxArray(groupCSS.map(animate => animate.duration * (animate.repeatCount === -1 ? 1 : animate.repeatCount)));
+                                                const groupDuration = $util.maxArray(groupCSS.map(animate => getGroupDuration(animate)));
                                                 minRestartTime = Math.max(minRestartTime, groupBegin[j] + groupDuration);
                                             }
                                         }
                                     }
                                     const maxThreadTime = Math.min(nextBeginTime || Number.MAX_VALUE, item.end || Number.MAX_VALUE);
-                                    let complete = true;
-                                    let parallel = maxTime !== -1;
                                     let lastValue: AnimateValue | undefined;
-                                    threadTimeExceeded: {
-                                        for (let k = Math.floor(Math.max(0, maxTime - begin) / duration); k < repeatTotal; k++) {
-                                            for (let l = 0; l < item.keyTimes.length; l++) {
-                                                const keyTime = item.keyTimes[l];
-                                                let time: number | undefined;
-                                                let value = getItemValue(item, l, baseValue, k);
-                                                if (k === repeatTotal - 1 && repeatFraction > 0) {
-                                                    if (repeatFraction > keyTime) {
-                                                        for (let m = l + 1; m < item.keyTimes.length; m++) {
-                                                            if (repeatFraction <= item.keyTimes[m]) {
-                                                                time = begin + durationTotal;
-                                                                value = getSplitValue(repeatFraction, keyTime, item.keyTimes[m], value, getItemValue(item, m, baseValue, k));
-                                                                repeatFraction = -1;
-                                                                break;
+                                    let complete = false;
+                                    if (maxThreadTime > maxTime) {
+                                        complete = true;
+                                        let parallel = maxTime !== -1;
+                                        threadTimeExceeded: {
+                                            for (let k = Math.floor(Math.max(0, maxTime - begin) / duration); k < repeatTotal; k++) {
+                                                for (let l = 0; l < item.keyTimes.length; l++) {
+                                                    const keyTime = item.keyTimes[l];
+                                                    let time: number | undefined;
+                                                    let value = getItemValue(item, l, baseValue, k);
+                                                    if (k === repeatTotal - 1 && repeatFraction > 0) {
+                                                        if (repeatFraction > keyTime) {
+                                                            for (let m = l + 1; m < item.keyTimes.length; m++) {
+                                                                if (repeatFraction <= item.keyTimes[m]) {
+                                                                    time = begin + durationTotal;
+                                                                    value = getSplitValue(repeatFraction, keyTime, item.keyTimes[m], value, getItemValue(item, m, baseValue, k));
+                                                                    repeatFraction = -1;
+                                                                    break;
+                                                                }
                                                             }
                                                         }
+                                                        else if (repeatFraction === keyTime) {
+                                                            repeatFraction = -1;
+                                                        }
                                                     }
-                                                    else if (repeatFraction === keyTime) {
-                                                        repeatFraction = -1;
-                                                    }
-                                                }
-                                                if (time === undefined) {
-                                                    time = getItemTime(begin, duration, item.keyTimes, k, l);
-                                                    if (time === maxThreadTime) {
-                                                        complete = k === repeatTotal - 1 && l === item.keyTimes.length - 1;
-                                                    }
-                                                    else {
-                                                        const adjustNumberValue = (splitTime: number, maxThread: boolean) => {
-                                                            [maxTime, lastValue] = insertSplitKeyTimeValue(repeatingMap[attr], repeatingInterpolatorMap, item, baseValue, begin, k, splitTime, maxThread && splitTime === groupBegin[i + 1] && !repeatingMap[attr].has(splitTime - 1) ? -1 : 0);
-                                                        };
-                                                        if (time > maxThreadTime) {
-                                                            adjustNumberValue(maxThreadTime, true);
-                                                            complete = false;
-                                                            break threadTimeExceeded;
+                                                    if (time === undefined) {
+                                                        time = getItemTime(begin, duration, item.keyTimes, k, l);
+                                                        if (time === maxThreadTime) {
+                                                            complete = k === repeatTotal - 1 && l === item.keyTimes.length - 1;
                                                         }
                                                         else {
-                                                            if (parallel) {
-                                                                if (begin >= maxTime) {
-                                                                    time = Math.max(begin, maxTime + 1);
-                                                                }
-                                                                else {
-                                                                    if (time < maxTime) {
-                                                                        continue;
-                                                                    }
-                                                                    else if (time === maxTime) {
-                                                                        time = maxTime + 1;
+                                                            const adjustNumberValue = (splitTime: number, maxThread: boolean) => {
+                                                                [maxTime, lastValue] = insertSplitKeyTimeValue(repeatingMap[attr], repeatingInterpolatorMap, item, baseValue, begin, k, splitTime, maxThread && splitTime === groupBegin[i + 1] && !repeatingMap[attr].has(splitTime - 1) ? -1 : 0);
+                                                            };
+                                                            if (time > maxThreadTime) {
+                                                                adjustNumberValue(maxThreadTime, true);
+                                                                complete = false;
+                                                                break threadTimeExceeded;
+                                                            }
+                                                            else {
+                                                                if (parallel) {
+                                                                    if (begin >= maxTime) {
+                                                                        time = Math.max(begin, maxTime + 1);
                                                                     }
                                                                     else {
-                                                                        adjustNumberValue(maxTime, false);
+                                                                        if (time < maxTime) {
+                                                                            continue;
+                                                                        }
+                                                                        else if (time === maxTime) {
+                                                                            time = maxTime + 1;
+                                                                        }
+                                                                        else {
+                                                                            adjustNumberValue(maxTime, false);
+                                                                        }
                                                                     }
+                                                                    parallel = false;
                                                                 }
-                                                                parallel = false;
-                                                            }
-                                                            else if (k > 0 && l === 0) {
-                                                                if (item.additiveSum && item.accumulateSum) {
-                                                                    insertInterpolator(repeatingInterpolatorMap, time, item.keySplines, l);
-                                                                    maxTime = time;
-                                                                    continue;
-                                                                }
-                                                                if (time === maxTime && repeatingMap[attr].get(time) === value) {
-                                                                    insertInterpolator(repeatingInterpolatorMap, time, item.keySplines, l);
-                                                                    continue;
-                                                                }
-                                                                else {
-                                                                    time = Math.max(time, maxTime + 1);
+                                                                else if (k > 0 && l === 0) {
+                                                                    if (item.additiveSum && item.accumulateSum) {
+                                                                        insertInterpolator(repeatingInterpolatorMap, time, item.keySplines, l);
+                                                                        maxTime = time;
+                                                                        continue;
+                                                                    }
+                                                                    if (time === maxTime && repeatingMap[attr].get(time) === value) {
+                                                                        insertInterpolator(repeatingInterpolatorMap, time, item.keySplines, l);
+                                                                        continue;
+                                                                    }
+                                                                    else {
+                                                                        time = Math.max(time, maxTime + 1);
+                                                                    }
                                                                 }
                                                             }
                                                         }
                                                     }
-                                                }
-                                                if (time > maxTime) {
-                                                    insertInterpolator(repeatingInterpolatorMap, time, item.keySplines, l);
-                                                    repeatingMap[attr].set(time, value);
-                                                    maxTime = time;
-                                                    lastValue = value;
-                                                }
-                                                if (!complete || repeatFraction === -1) {
-                                                    break threadTimeExceeded;
+                                                    if (time > maxTime) {
+                                                        insertInterpolator(repeatingInterpolatorMap, time, item.keySplines, l);
+                                                        repeatingMap[attr].set(time, value);
+                                                        maxTime = time;
+                                                        lastValue = value;
+                                                    }
+                                                    if (!complete || repeatFraction === -1) {
+                                                        break threadTimeExceeded;
+                                                    }
                                                 }
                                             }
                                         }
-                                    }
-                                    if (indefinite) {
-                                        incomplete.length = 0;
-                                        incomplete.push({ ordinal: begin, value: item });
                                     }
                                     if (lastValue !== undefined) {
                                         baseValue = lastValue;
                                         if (!indefinite) {
                                             repeatingAnimations.add(item);
-                                            if (complete) {
-                                                const label = setComplete(item, groupBegin[i + 1] > maxTime + 1);
-                                                if (label === 2) {
-                                                    break animationEnd;
-                                                }
-                                                else if (label === 1) {
-                                                    break attributeEnd;
-                                                }
+                                        }
+                                    }
+                                    if (indefinite) {
+                                        incomplete.length = 0;
+                                        incomplete.push({
+                                            ordinal: begin,
+                                            value: item
+                                        });
+                                    }
+                                    else {
+                                        if (complete) {
+                                            const label = setComplete(item, groupBegin[i + 1] > maxTime + 1);
+                                            if (label === 2) {
+                                                break animationEnd;
                                             }
-                                            else if (groupBegin[i] + durationTotal > minRestartTime) {
-                                                incomplete.push({ ordinal: begin, value: item });
+                                            else if (label === 1) {
+                                                break attributeEnd;
                                             }
+                                        }
+                                        else if (groupBegin[i] + durationTotal > minRestartTime) {
+                                            incomplete.push({
+                                                ordinal: begin,
+                                                value: item
+                                            });
                                         }
                                     }
                                 }
@@ -757,6 +794,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         maxThreadTime = begin + item.duration * item.repeatCount;
                                         if (maxThreadTime > maxTime) {
                                             insertKeyTimes();
+                                            repeatingAnimations.add(item);
                                             const label = setComplete(item, false);
                                             if (label === 2) {
                                                 break animationEnd;

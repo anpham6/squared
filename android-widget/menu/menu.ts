@@ -127,7 +127,10 @@ export default class Menu<T extends $View> extends squared.base.Extension<T> {
         node.documentRoot = true;
         node.alignmentType |= $enum.NODE_ALIGNMENT.AUTO_LAYOUT;
         node.setControlType(VIEW_NAVIGATION.MENU, $enumA.CONTAINER_NODE.INLINE);
-        node.exclude({ procedure: $enum.NODE_PROCEDURE.ALL, resource: $enum.NODE_RESOURCE.ALL });
+        node.exclude({
+            procedure: $enum.NODE_PROCEDURE.ALL,
+            resource: $enum.NODE_RESOURCE.ALL
+        });
         const output = this.application.controllerHandler.renderNodeStatic(VIEW_NAVIGATION.MENU, 0, {}, '', '', node, true);
         node.cascade().forEach(item => this.subscribersChild.add(item as T));
         return { output, complete: true };
@@ -205,7 +208,10 @@ export default class Menu<T extends $View> extends squared.base.Extension<T> {
             options.android.title = name !== '' ? `@string/${name}` : title;
         }
         node.setControlType(controlName, $enumA.CONTAINER_NODE.INLINE);
-        node.exclude({ procedure: $enum.NODE_PROCEDURE.ALL, resource: $enum.NODE_RESOURCE.ALL });
+        node.exclude({
+            procedure: $enum.NODE_PROCEDURE.ALL,
+            resource: $enum.NODE_RESOURCE.ALL
+        });
         node.render(parent);
         const output = this.application.controllerHandler.renderNodeStatic(controlName, node.renderDepth, options, '', '', node, layout);
         return { output, complete: true, next: controlName === VIEW_NAVIGATION.MENU };

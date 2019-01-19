@@ -361,7 +361,10 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 attrs.split(';').forEach(value => {
                     const match = REGEXP_ANDROID.ATTRIBUTE.exec(value);
                     if (match) {
-                        items.push({ name: match[1], value: match[2] });
+                        items.push({
+                            name: match[1],
+                            value: match[2]
+                        });
                     }
                 });
                 styleData.push({

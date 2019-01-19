@@ -238,7 +238,10 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         else {
             for (let j = 0; j < values.numberOfItems; j++) {
                 const pt = values.getItem(j);
-                result.push({ x: pt.x, y: pt.y });
+                result.push({
+                    x: pt.x,
+                    y: pt.y
+                });
             }
         }
         return result;
@@ -247,7 +250,10 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     public static fromNumberList(values: number[]) {
         const result: Point[] = [];
         for (let i = 0; i < values.length; i += 2) {
-            result.push({ x: values[i], y: values[i + 1] });
+            result.push({
+                x: values[i],
+                y: values[i + 1]
+            });
         }
         return result.length % 2 === 0 ? result : [];
     }

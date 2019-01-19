@@ -86,7 +86,10 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
             for (const attr in styles[name]) {
                 const match = REGEXP_ANDROID.ATTRIBUTE.exec(styles[name][attr]);
                 if (match) {
-                    items.push({ name: match[1], value: match[2] });
+                    items.push({
+                        name: match[1],
+                        value: match[2]
+                    });
                 }
             }
             STORED.styles.set(name, { ...createStyleAttribute(), name, items, ids: [] });

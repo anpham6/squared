@@ -120,7 +120,6 @@ export default class Toolbar<T extends $View> extends squared.base.Extension<T> 
             if (backgroundImage) {
                 $util.defaultWhenNull(appBarChildren.length ? appBarOptions : toolbarOptions, 'android', 'background', `@drawable/${$Resource.addImageUrl(node.css('backgroundImage'))}`);
                 node.exclude({ resource: $enum.NODE_RESOURCE.IMAGE_SOURCE });
-
             }
             else {
                 $util.defaultWhenNull(toolbarOptions, 'app', 'layout_scrollFlags', 'scroll|enterAlways');

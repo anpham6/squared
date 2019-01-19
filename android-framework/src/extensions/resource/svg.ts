@@ -842,15 +842,26 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                         if (value !== undefined) {
                                                             const interpolator = createPathInterpolator(item.keySplines, j - 1);
                                                             if (item.keyTimes[j] === 0 && value === '') {
-                                                                keyframes.push({ interpolator, fraction: '', value: '' });
+                                                                keyframes.push({
+                                                                    interpolator,
+                                                                    fraction: '',
+                                                                    value: ''
+                                                                });
                                                             }
                                                             else {
-                                                                keyframes.push({ interpolator, fraction: item.keyTimes[j].toString(), value });
+                                                                keyframes.push({
+                                                                    interpolator,
+                                                                    fraction: item.keyTimes[j].toString(),
+                                                                    value
+                                                                });
                                                             }
                                                         }
                                                     }
                                                     if (keyframes.length) {
-                                                        propertyValues.push({ propertyName: propertyName[i], keyframes });
+                                                        propertyValues.push({
+                                                            propertyName: propertyName[i],
+                                                            keyframes
+                                                        });
                                                         if (!animatorMap.has(keyName)) {
                                                             if (keyName !== '') {
                                                                 animatorMap.set(keyName, propertyValues);
@@ -1197,7 +1208,10 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 g.synchronize();
                 g.each((child: SvgShape) => {
                     if (child.path && child.path.value) {
-                        clipPaths.push({ clipPathName: child.name, clipPathData: child.path.value });
+                        clipPaths.push({
+                            clipPathName: child.name,
+                            clipPathData: child.path.value
+                        });
                         this.queueAnimations(
                             child,
                             child.name,
