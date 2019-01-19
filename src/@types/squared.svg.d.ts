@@ -69,18 +69,18 @@ declare global {
 
         class SvgBuild {
             public static setName(element?: SVGElement): string;
-            public static instance(object: SvgElement): object is Svg;
-            public static instanceOfContainer(object: SvgElement): object is Svg | SvgG | SvgUseSymbol;
-            public static instanceOfElement(object: SvgElement): object is SvgElement;
-            public static instanceOfG(object: SvgElement): object is SvgG;
-            public static instanceOfUseSymbol(object: SvgElement): object is SvgUseSymbol;
-            public static instanceOfShape(object: SvgElement): object is SvgShape;
-            public static instanceOfImage(object: SvgElement): object is SvgImage;
-            public static instanceOfUse(object: SvgElement): object is SvgUse;
-            public static instanceOfSet(object: SvgAnimation): boolean;
-            public static instanceOfAnimate(object: SvgAnimation): object is SvgAnimate;
-            public static instanceOfAnimateTransform(object: SvgAnimation): object is SvgAnimateTransform;
-            public static instanceOfAnimateMotion(object: SvgAnimation): object is SvgAnimateMotion;
+            public static instance(object?: SvgElement): object is Svg;
+            public static instanceOfContainer(object?: SvgElement): object is Svg | SvgG | SvgUseSymbol;
+            public static instanceOfElement(object?: SvgElement): object is SvgElement;
+            public static instanceOfG(object?: SvgElement): object is SvgG;
+            public static instanceOfUseSymbol(object?: SvgElement): object is SvgUseSymbol;
+            public static instanceOfShape(object?: SvgElement): object is SvgShape;
+            public static instanceOfImage(object?: SvgElement): object is SvgImage;
+            public static instanceOfUse(object?: SvgElement): object is SvgUse;
+            public static instanceOfSet(object?: SvgAnimation): boolean;
+            public static instanceOfAnimate(object?: SvgAnimation): object is SvgAnimate;
+            public static instanceOfAnimateTransform(object?: SvgAnimation): object is SvgAnimateTransform;
+            public static instanceOfAnimateMotion(object?: SvgAnimation): object is SvgAnimateMotion;
             public static getContainerOpacity(instance: SvgView): number;
             public static getContainerViewBox(instance: SvgContainer): Svg | SvgUseSymbol | undefined;
             public static convertTransformList(transform: SVGTransformList): SvgTransform[];

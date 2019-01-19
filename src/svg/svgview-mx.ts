@@ -215,13 +215,11 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 }
                                 keyTimesData.push(keyTimes.pop() as number);
                                 valuesData.push(values.pop() as string);
-                                animate.calcMode = 'spline';
                                 animate.keyTimes = keyTimesData;
                                 animate.values = valuesData;
                                 animate.keySplines = keySplinesData;
                             }
                             else {
-                                animate.calcMode = 'linear';
                                 animate.keyTimes = keyTimes;
                                 animate.values = values;
                             }
@@ -234,13 +232,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             if (fillMode === 'backwards' || fillMode === 'both') {
                                 animate.fillMode |= FILL_MODE.BACKWARDS;
                             }
-                            if (direction.endsWith('reverse')) {
-                                animate.reverse = true;
-                                animate.values.reverse();
-                                if (animate.keySplines) {
-                                    animate.keySplines.reverse();
-                                }
-                            }
+                            animate.reverse = direction.endsWith('reverse');
                             animate.alternate = (animate.repeatCount === -1 || animate.repeatCount > 1) && direction.startsWith('alternate');
                             result.push(animate);
                         }

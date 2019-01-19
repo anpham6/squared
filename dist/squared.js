@@ -47,7 +47,7 @@
         }
         return [current1, current2];
     }
-    const REGEX_PATTERN = {
+    const REGEXP_PATTERN = {
         CSS_URL: /url\("?(#?.*?)"?\)/,
         URI: /^[A-Za-z]+:\/\//,
         UNIT: /^(?:\s*(-?[\d.]+)(px|em|ch|pc|pt|vw|vh|vmin|vmax|mm|cm|in))+$/
@@ -77,8 +77,15 @@
         }
         return value;
     }
-    function convertWord(value) {
-        return value && value.replace(/[^\w]/g, '_').trim() || '';
+    function convertWord(value, replaceDash = false) {
+        if (value) {
+            value = value.replace(/[^\w]/g, '_').trim();
+            if (replaceDash) {
+                value = value.replace(/-/g, '_');
+            }
+            return value;
+        }
+        return '';
     }
     function convertInt(value) {
         return value && parseInt(value) || 0;
@@ -97,7 +104,7 @@
                     return value;
                 }
             }
-            const match = value.match(REGEX_PATTERN.UNIT);
+            const match = value.match(REGEXP_PATTERN.UNIT);
             if (match) {
                 let result = parseFloat(match[1]);
                 switch (match[2]) {
@@ -199,7 +206,7 @@
         return Array.isArray(value) && value.length > 0;
     }
     function isUnit(value) {
-        return REGEX_PATTERN.UNIT.test(value);
+        return REGEXP_PATTERN.UNIT.test(value);
     }
     function isPercent(value) {
         return /^\d+(\.\d+)?%$/.test(value);
@@ -262,7 +269,7 @@
         return optional(obj, value, 'boolean');
     }
     function resolvePath(value) {
-        if (!REGEX_PATTERN.URI.test(value)) {
+        if (!REGEXP_PATTERN.URI.test(value)) {
             let pathname = location.pathname.split('/');
             pathname.pop();
             if (value.charAt(0) === '/') {
@@ -470,7 +477,7 @@
     }
 
     var util = /*#__PURE__*/Object.freeze({
-        REGEX_PATTERN: REGEX_PATTERN,
+        REGEXP_PATTERN: REGEXP_PATTERN,
         formatString: formatString,
         capitalize: capitalize,
         convertUnderscore: convertUnderscore,
@@ -579,7 +586,7 @@
             return this;
         }
         duplicate() {
-            return this._children.slice();
+            return this._children.slice(0);
         }
         clear() {
             this._children.length = 0;
@@ -618,6 +625,19 @@
         }
         some(predicate) {
             return this._children.some(predicate);
+        }
+        cascade() {
+            function cascade(container) {
+                const current = [];
+                for (const item of container.children) {
+                    current.push(item);
+                    if (item instanceof Container && item.length) {
+                        current.push(...cascade(item));
+                    }
+                }
+                return current;
+            }
+            return cascade(this);
         }
         get children() {
             return this._children;
@@ -849,10 +869,10 @@
                 return X11_CSS3[color];
             }
         }
-        return null;
+        return undefined;
     }
     function getColorByShade(value) {
-        const result = HSL_SORTED.slice();
+        const result = HSL_SORTED.slice(0);
         let index = result.findIndex(item => item.value === value);
         if (index !== -1) {
             return result[index];
@@ -873,12 +893,12 @@
                     return result[Math.min(index + 1, result.length - 1)];
                 }
             }
-            return null;
+            return undefined;
         }
     }
     function convertHex(value, opacity = 1) {
         const hex = '0123456789ABCDEF';
-        let rgb = parseInt(value) * opacity;
+        let rgb = (typeof value === 'string' ? parseInt(value) : value) * opacity;
         if (isNaN(rgb)) {
             return '00';
         }
@@ -914,7 +934,7 @@
                 };
             }
         }
-        return null;
+        return undefined;
     }
     function parseRGBA(value, opacity = '1') {
         if (value && value !== 'initial' && value !== 'transparent') {
@@ -954,7 +974,7 @@
                 };
             }
         }
-        return null;
+        return undefined;
     }
     function reduceRGBA(value, percent) {
         const rgba = convertRGBA(value);
@@ -966,7 +986,7 @@
             rgba.b = Math.round((base - rgba.b) * percent) + rgba.b;
             return parseRGBA(formatRGBA(rgba));
         }
-        return null;
+        return undefined;
     }
 
     var color = /*#__PURE__*/Object.freeze({
@@ -1086,9 +1106,53 @@
         }
         return hasBit(value, client);
     }
+    function getKeyframeRules() {
+        const result = new Map();
+        for (let i = 0; i < document.styleSheets.length; i++) {
+            const styleSheet = document.styleSheets[i];
+            if (styleSheet.cssRules) {
+                for (let j = 0; j < styleSheet.cssRules.length; j++) {
+                    const item = styleSheet.cssRules[j];
+                    try {
+                        if (item instanceof CSSKeyframesRule) {
+                            const map = {};
+                            Array.from(item.cssRules).forEach(keyframe => {
+                                const match = /((?:\d+%\s*,?\s*)+|from|to)\s*\{\s*(.*?)\s*\}/.exec(keyframe.cssText);
+                                if (match) {
+                                    const keyText = (keyframe['keyText'] || match[1].trim()).split(',').map(percent => percent.trim());
+                                    const properties = flatMap(match[2].split(';'), percent => percent.trim());
+                                    for (let percent of keyText) {
+                                        switch (percent) {
+                                            case 'from':
+                                                percent = '0%';
+                                                break;
+                                            case 'to':
+                                                percent = '100%';
+                                                break;
+                                        }
+                                        map[percent] = {};
+                                        for (const property of properties) {
+                                            const [name, value] = property.split(':').map(values => values.trim());
+                                            if (name !== '' && value !== '') {
+                                                map[percent][name] = value;
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                            result.set(item.name, map);
+                        }
+                    }
+                    catch (_a) {
+                    }
+                }
+            }
+        }
+        return result;
+    }
     function getDataSet(element, prefix) {
         const result = {};
-        if (hasComputedStyle(element) || element instanceof SVGElement) {
+        if (hasComputedStyle(element)) {
             prefix = convertCamelCase(prefix, '\\.');
             for (const attr in element.dataset) {
                 if (attr.length > prefix.length && attr.startsWith(prefix)) {
@@ -1132,7 +1196,7 @@
         style.clear = 'none';
         style.display = 'none';
         element.className = '__css.placeholder';
-        if (parent instanceof HTMLElement) {
+        if (parent) {
             parent.appendChild(element);
         }
         return element;
@@ -1214,7 +1278,7 @@
         return { display: 'none' };
     }
     function cssResolveUrl(value) {
-        const match = value.match(REGEX_PATTERN.CSS_URL);
+        const match = value.match(REGEXP_PATTERN.CSS_URL);
         if (match) {
             return resolvePath(match[1]);
         }
@@ -1261,22 +1325,16 @@
         return false;
     }
     function cssAttribute(element, attr, computed = false) {
-        const attribute = element.attributes.getNamedItem(attr);
-        if (attribute) {
-            return attribute.value.trim();
-        }
-        else {
-            attr = convertCamelCase(attr);
-            const node = getElementAsNode(element);
-            let value = '';
-            if (node) {
-                value = node.cssInitial(attr);
+        const name = convertCamelCase(attr);
+        const node = getElementAsNode(element);
+        let value = node && node.cssInitial(name) || cssInline(element, name);
+        if (!value) {
+            const attribute = element.attributes.getNamedItem(attr);
+            if (attribute) {
+                value = attribute.value.trim();
             }
-            else {
-                value = cssInline(element, attr);
-            }
-            return value || computed && getStyle(element)[attr] || '';
         }
+        return value || computed && getStyle(element)[name] || '';
     }
     function cssInline(element, attr) {
         let value = '';
@@ -1289,7 +1347,7 @@
                 value = styleMap[attr];
             }
         }
-        return value;
+        return value || '';
     }
     function getBackgroundPosition(value, dimension, dpi, fontSize, leftPerspective = false, percent = false) {
         const result = {
@@ -1406,7 +1464,7 @@
         return result;
     }
     function getFirstChildElement(element, lineBreak = false) {
-        if (element instanceof HTMLElement) {
+        if (element) {
             for (let i = 0; i < element.childNodes.length; i++) {
                 const node = getElementAsNode(element.childNodes[i]);
                 if (node && (!node.excluded || (lineBreak && node.lineBreak))) {
@@ -1417,7 +1475,7 @@
         return null;
     }
     function getLastChildElement(element, lineBreak = false) {
-        if (element instanceof HTMLElement) {
+        if (element) {
             for (let i = element.childNodes.length - 1; i >= 0; i--) {
                 const node = getElementAsNode(element.childNodes[i]);
                 if (node && node.naturalElement && (!node.excluded || (lineBreak && node.lineBreak))) {
@@ -1435,7 +1493,7 @@
                         return true;
                     }
                 }
-                else if (child instanceof HTMLElement && withinViewportOrigin(child) && child.childNodes.length && findFreeForm(Array.from(child.childNodes))) {
+                else if (findFreeForm(Array.from(child.childNodes))) {
                     return true;
                 }
                 return false;
@@ -1479,7 +1537,7 @@
             if (trimString$$1) {
                 value = value.trim();
             }
-            if (element instanceof HTMLElement && element.children.length && Array.from(element.children).some(item => item.tagName === 'BR')) {
+            if (element.children.length && Array.from(element.children).some(item => item.tagName === 'BR')) {
                 return true;
             }
             else if (!lineBreak && /\n/.test(value)) {
@@ -1553,7 +1611,7 @@
         return null;
     }
     function hasComputedStyle(element) {
-        return element instanceof HTMLElement || element instanceof SVGSVGElement;
+        return !!element && typeof element['style'] === 'object';
     }
     function withinViewportOrigin(element) {
         const bounds = element.getBoundingClientRect();
@@ -1581,6 +1639,7 @@
         ELEMENT_BLOCK: ELEMENT_BLOCK,
         ELEMENT_INLINE: ELEMENT_INLINE,
         isUserAgent: isUserAgent,
+        getKeyframeRules: getKeyframeRules,
         getDataSet: getDataSet,
         newBoxRect: newBoxRect,
         newRectDimensions: newRectDimensions,

@@ -92,7 +92,7 @@ export const MATRIX = {
 };
 
 export const REGEXP_UNIT = {
-    ZERO_ONE: '(0(?:\\.\\d+)?|1(?:.0+)?)',
+    ZERO_ONE: '(0(?:\\.\\d+)?|1(?:\\.0+)?)',
     DECIMAL: '(-?[\\d.]+)',
     LENGTH: '([\\d.]+(?:[a-z]{2,}|%)?)',
     DEGREE: '(?:(-?[\\d.]+)(deg|rad|turn))'

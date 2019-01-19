@@ -20,7 +20,6 @@ declare global {
             keyTimes: number[];
             repeatCount: number;
             repeatDuration: number;
-            calcMode: string;
             additiveSum: boolean;
             accumulateSum: boolean;
             fillMode: number;

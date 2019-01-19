@@ -51,36 +51,36 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         }
     }
 
-    public static instance(object: SvgElement): object is Svg {
-        return SVG.svg(object.element);
+    public static instance(object?: SvgElement): object is Svg {
+        return !!object && SVG.svg(object.element);
     }
 
-    public static instanceOfContainer(object: SvgElement): object is Svg | SvgG | SvgUseSymbol {
+    public static instanceOfContainer(object?: SvgElement): object is Svg | SvgG | SvgUseSymbol {
         return SvgBuild.instance(object) || SvgBuild.instanceOfG(object) || SvgBuild.instanceOfUseSymbol(object);
     }
 
-    public static instanceOfElement(object: SvgElement): object is SvgElement {
+    public static instanceOfElement(object?: SvgElement): object is SvgElement {
         return SvgBuild.instanceOfShape(object) || SvgBuild.instanceOfImage(object) || SvgBuild.instanceOfUse(object) && !SvgBuild.instanceOfUseSymbol(object);
     }
 
-    public static instanceOfG(object: SvgElement): object is SvgG {
-        return SVG.g(object.element);
+    public static instanceOfG(object?: SvgElement): object is SvgG {
+        return !!object && SVG.g(object.element);
     }
 
-    public static instanceOfUseSymbol(object: SvgElement): object is SvgUseSymbol {
+    public static instanceOfUseSymbol(object?: SvgElement): object is SvgUseSymbol {
         return SvgBuild.instanceOfUse(object) && object['symbolElement'] !== undefined;
     }
 
-    public static instanceOfShape(object: SvgElement): object is SvgShape {
-        return SVG.shape(object.element) || SvgBuild.instanceOfUse(object) && object['path'] !== undefined;
+    public static instanceOfShape(object?: SvgElement): object is SvgShape {
+        return !!object && SVG.shape(object.element) || SvgBuild.instanceOfUse(object) && object['path'] !== undefined;
     }
 
-    public static instanceOfImage(object: SvgElement): object is SvgImage {
-        return SVG.image(object.element) || SvgBuild.instanceOfUse(object) && object['imageElement'] !== undefined;
+    public static instanceOfImage(object?: SvgElement): object is SvgImage {
+        return !!object && SVG.image(object.element) || SvgBuild.instanceOfUse(object) && object['imageElement'] !== undefined;
     }
 
-    public static instanceOfUse(object: SvgElement): object is SvgUse {
-        return SVG.use(object.element);
+    public static instanceOfUse(object?: SvgElement): object is SvgUse {
+        return !!object && SVG.use(object.element);
     }
 
     public static instanceOfSet(object: SvgAnimation) {

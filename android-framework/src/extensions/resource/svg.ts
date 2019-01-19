@@ -98,7 +98,6 @@ interface KeyFrame {
 }
 
 const $color = squared.lib.color;
-const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 const $constS = squared.svg.lib.constant;
@@ -343,8 +342,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
             image: [SVGTransform.SVG_TRANSFORM_SKEWX, SVGTransform.SVG_TRANSFORM_SKEWY]
         },
         vectorAnimateOrdering: 'together',
-        vectorAnimateInterpolator: INTERPOLATOR_ANDROID.LINEAR,
-        vectorAnimateAlwaysUseKeyframes: true
+        vectorAnimateInterpolator: INTERPOLATOR_ANDROID.LINEAR
     };
 
     public readonly eventOnly = true;
@@ -501,7 +499,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                     sequential = true;
                                 }
                                 else {
-                                    ordering = $dom.getDataSet(group.element, 'android').ordering || this.options.vectorAnimateOrdering || 'together';
+                                    ordering = this.options.vectorAnimateOrdering || 'together';
                                 }
                                 const setData: AnimatedSetData = {
                                     name: `${subData.name}_repeat`,
@@ -545,10 +543,15 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                     }
                                     else {
                                         options.repeatCount = item.repeatCount !== -1 ? Math.ceil(item.repeatCount - 1).toString() : '-1';
-                                        if (item.alternate) {
-                                            options.repeatMode = 'reverse';
+                                        if (!sequential) {
+                                            if ($util.hasBit(item.fillMode, $constS.FILL_MODE.BACKWARDS)) {
+                                                options.fillEnabled = 'true';
+                                                options.fillBefore = 'true';
+                                            }
+                                            if (item.alternate) {
+                                                options.repeatMode = 'reverse';
+                                            }
                                         }
-                                        const dataset = item.element ? $dom.getDataSet(item.element, 'android') : {};
                                         let propertyName: string[] | undefined;
                                         let values: string[] | (null[] | number[])[] | undefined;
                                         switch (item.attributeName) {
@@ -819,13 +822,13 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                         }
                                         if (values && propertyName) {
                                             if (item.keySplines === undefined) {
-                                                options.interpolator = dataset.interpolator ? INTERPOLATOR_ANDROID[dataset.interpolator] || dataset.interpolator : this.options.vectorAnimateInterpolator;
+                                                options.interpolator = this.options.vectorAnimateInterpolator;
                                             }
                                             const keyName = index !== 1 ? JSON.stringify(options) : '';
                                             for (let i = 0; i < propertyName.length; i++) {
                                                 const propertyOptions = { ...options };
-                                                let valueEnd = '';
-                                                if (node.localSettings.targetAPI >= BUILD_ANDROID.MARSHMALLOW && propertyOptions.valueType !== 'pathType' && item.sequential === undefined && item.keyTimes.length > 1 && (this.options.vectorAnimateAlwaysUseKeyframes || !item.fromToType)) {
+                                                let valueFrom = '';
+                                                if (node.localSettings.targetAPI >= BUILD_ANDROID.MARSHMALLOW && !sequential && propertyOptions.valueType !== 'pathType' && item.keyTimes.length > 1 && !item.fromToType) {
                                                     const propertyValues = animatorMap.get(keyName) || [];
                                                     const keyframes: KeyFrame[] = [];
                                                     for (let j = 0; j < item.keyTimes.length; j++) {
@@ -841,20 +844,12 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                         }
                                                         if (value !== undefined) {
                                                             const interpolator = createPathInterpolator(item.keySplines, j - 1);
-                                                            if (item.keyTimes[j] === 0 && value === '') {
-                                                                keyframes.push({
-                                                                    interpolator,
-                                                                    fraction: '',
-                                                                    value: ''
-                                                                });
-                                                            }
-                                                            else {
-                                                                keyframes.push({
-                                                                    interpolator,
-                                                                    fraction: item.keyTimes[j].toString(),
-                                                                    value
-                                                                });
-                                                            }
+                                                            const fraction = item.keyTimes[j] === 0 && value === '' ? '' : item.keyTimes[j].toString();
+                                                            keyframes.push({
+                                                                interpolator,
+                                                                fraction,
+                                                                value
+                                                            });
                                                         }
                                                     }
                                                     if (keyframes.length) {
@@ -869,7 +864,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                             propertyOptions.propertyValues = propertyValues;
                                                             setData.repeating.push(propertyOptions);
                                                         }
-                                                        valueEnd = keyframes[keyframes.length - 1].value;
+                                                        valueFrom = keyframes[keyframes.length - 1].value;
                                                     }
                                                 }
                                                 else {
@@ -882,7 +877,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                 const from = values[0][i];
                                                                 if (from !== null) {
                                                                     propertyOptions.valueFrom = from.toString();
-                                                                    valueEnd = propertyOptions.valueFrom;
+                                                                    valueFrom = propertyOptions.valueFrom;
                                                                 }
                                                             }
                                                             to = values[values.length - 1][i];
@@ -899,65 +894,59 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                         }
                                                     }
                                                     else {
-                                                        if (item.duration > 0) {
-                                                            if (values.length > 1) {
-                                                                propertyOptions.valueFrom = values[0].toString();
-                                                            }
+                                                        if (values.length > 1) {
+                                                            propertyOptions.valueFrom = values[0].toString();
                                                             propertyOptions.valueTo = values[values.length - 1].toString();
                                                         }
-                                                        else if (item.duration === 0 && item.keyTimes[0] === 0) {
-                                                            propertyOptions.valueTo = values[0].toString();
-                                                            propertyOptions.repeatCount = '0';
-                                                        }
                                                         else {
-                                                            continue;
+                                                            propertyOptions.valueFrom = item.from;
+                                                            propertyOptions.valueTo = item.to;
                                                         }
-                                                        valueEnd = propertyOptions.valueTo;
+                                                        valueFrom = propertyOptions.valueTo;
                                                     }
-                                                    propertyOptions.propertyValues = false;
-                                                    setData.repeating.push(propertyOptions);
+                                                    if (propertyOptions.valueTo) {
+                                                        propertyOptions.propertyValues = false;
+                                                        setData.repeating.push(propertyOptions);
+                                                    }
                                                 }
-                                                if (item.fillMode < $constS.FILL_MODE.FORWARDS && item.sequential === undefined) {
-                                                    const parent = item.parent;
-                                                    if (parent) {
-                                                        let valueTo: string | undefined;
-                                                        if ($SvgBuild.instanceOfAnimateTransform(item)) {
-                                                            switch (propertyName[i]) {
-                                                                case 'rotation':
-                                                                case 'pivotX':
-                                                                case 'pivotY':
-                                                                case 'translateX':
-                                                                case 'translateY':
-                                                                    valueTo = '0';
-                                                                    break;
-                                                                case 'scaleX':
-                                                                case 'scaleY':
-                                                                    valueTo = '1';
-                                                                    break;
+                                                if (!sequential && item.fillMode < $constS.FILL_MODE.FORWARDS) {
+                                                    let valueTo: string | undefined;
+                                                    if ($SvgBuild.instanceOfAnimateTransform(item)) {
+                                                        switch (propertyName[i]) {
+                                                            case 'rotation':
+                                                            case 'pivotX':
+                                                            case 'pivotY':
+                                                            case 'translateX':
+                                                            case 'translateY':
+                                                                valueTo = '0';
+                                                                break;
+                                                            case 'scaleX':
+                                                            case 'scaleY':
+                                                                valueTo = '1';
+                                                                break;
+                                                        }
+                                                    }
+                                                    else if ($SvgBuild.instanceOfShape(item.parent) && item.parent.path) {
+                                                        let css = '';
+                                                        for (const attr in ATTRIBUTE_ANDROID) {
+                                                            if (ATTRIBUTE_ANDROID[attr] === propertyName[i]) {
+                                                                css = $util.convertCamelCase(attr);
+                                                                break;
                                                             }
                                                         }
-                                                        else if ($SvgBuild.instanceOfShape(parent) && parent.path) {
-                                                            let css = '';
-                                                            for (const attr in ATTRIBUTE_ANDROID) {
-                                                                if (ATTRIBUTE_ANDROID[attr] === propertyName[i]) {
-                                                                    css = $util.convertCamelCase(attr);
-                                                                    break;
-                                                                }
-                                                            }
-                                                            if (css !== '') {
-                                                                valueTo = parent.path[css];
-                                                            }
+                                                        if (css !== '') {
+                                                            valueTo = item.parent.path[css];
                                                         }
-                                                        if ($util.hasValue(valueTo)) {
-                                                            fillData.replace.push({
-                                                                propertyName: propertyName[i],
-                                                                repeatCount: '0',
-                                                                duration: '1',
-                                                                valueType: options.valueType || '',
-                                                                valueFrom: options.valueType === 'pathType' ? valueEnd : '',
-                                                                valueTo: (valueTo as string).toString()
-                                                            });
-                                                        }
+                                                    }
+                                                    if ($util.hasValue(valueTo)) {
+                                                        fillData.replace.push({
+                                                            propertyName: propertyName[i],
+                                                            duration: '1',
+                                                            repeatCount: '0',
+                                                            valueType: options.valueType || '',
+                                                            valueFrom: options.valueType === 'pathType' ? valueFrom : '',
+                                                            valueTo: (valueTo as string).toString()
+                                                        });
                                                     }
                                                 }
                                             }

@@ -8,7 +8,6 @@ export interface ResourceSvgOptions {
     excludeFromTransform: SvgTransformExclusions;
     vectorAnimateOrdering: string;
     vectorAnimateInterpolator: string;
-    vectorAnimateAlwaysUseKeyframes: boolean;
 }
 
 export interface ResourceBackgroundOptions {

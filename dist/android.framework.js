@@ -213,7 +213,7 @@ var android = (function () {
         'volatile',
         'while'
     ];
-    const REGEX_ANDROID = {
+    const REGEXP_ANDROID = {
         ATTRIBUTE: /(.*?)="(.*?)"/
     };
 
@@ -228,7 +228,7 @@ var android = (function () {
         XMLNS_ANDROID: XMLNS_ANDROID,
         PREFIX_ANDROID: PREFIX_ANDROID,
         RESERVED_JAVA: RESERVED_JAVA,
-        REGEX_ANDROID: REGEX_ANDROID
+        REGEXP_ANDROID: REGEXP_ANDROID
     });
 
     function substitute(result, value, api, minApi = 0) {
@@ -812,13 +812,13 @@ var android = (function () {
     const $dom = squared.lib.dom;
     const $util = squared.lib.util;
     const $xml = squared.lib.xml;
+    const STORED = $Resource.STORED;
     function getHexARGB(value) {
         return value ? (value.opaque ? value.valueARGB : value.valueRGB) : '';
     }
     function getRadiusPercent(value) {
         return $util.isPercent(value) ? parseInt(value) / 100 : 0.5;
     }
-    const STORED = $Resource.STORED;
     class Resource extends squared.base.Resource {
         constructor(application, cache) {
             super(application, cache);
@@ -828,7 +828,7 @@ var android = (function () {
             STORED.drawables = new Map();
             STORED.animators = new Map();
         }
-        static createBackgroundGradient(node, gradients, svgPath) {
+        static createBackgroundGradient(node, gradients, path) {
             const result = [];
             const hasStop = node.svgElement || gradients.some(item => item.colorStop.filter(stop => parseInt(stop.offset) > 0).length > 0);
             for (const item of gradients) {
@@ -842,23 +842,23 @@ var android = (function () {
                 switch (item.type) {
                     case 'radial':
                         if (node.svgElement) {
-                            if (svgPath && squared.svg.SvgBuild) {
+                            if (path && squared.svg && squared.svg.SvgBuild) {
                                 const radial = item;
                                 const mapPoint = [];
                                 let cx;
                                 let cy;
                                 let cxDiameter;
                                 let cyDiameter;
-                                switch (svgPath.element.tagName) {
+                                switch (path.element.tagName) {
                                     case 'path': {
-                                        squared.svg.SvgBuild.toPathCommandList(svgPath.value).forEach(path => mapPoint.push(...path.points));
+                                        squared.svg.SvgBuild.toPathCommandList(path.value).forEach(command => mapPoint.push(...command.points));
                                         if (!mapPoint.length) {
                                             break;
                                         }
                                     }
                                     case 'polygon': {
-                                        if (svgPath.element instanceof SVGPolygonElement) {
-                                            mapPoint.push(...squared.svg.SvgBuild.toPointList(svgPath.element.points));
+                                        if (path.element instanceof SVGPolygonElement) {
+                                            mapPoint.push(...squared.svg.SvgBuild.clonePoints(path.element.points));
                                         }
                                         cx = $util.minArray(mapPoint.map(pt => pt.x));
                                         cy = $util.minArray(mapPoint.map(pt => pt.y));
@@ -867,7 +867,7 @@ var android = (function () {
                                         break;
                                     }
                                     case 'rect': {
-                                        const rect = svgPath.element;
+                                        const rect = path.element;
                                         cx = rect.x.baseVal.value;
                                         cy = rect.y.baseVal.value;
                                         cxDiameter = rect.width.baseVal.value;
@@ -875,7 +875,7 @@ var android = (function () {
                                         break;
                                     }
                                     case 'circle': {
-                                        const circle = svgPath.element;
+                                        const circle = path.element;
                                         cx = circle.cx.baseVal.value - circle.r.baseVal.value;
                                         cy = circle.cy.baseVal.value - circle.r.baseVal.value;
                                         cxDiameter = circle.r.baseVal.value * 2;
@@ -883,7 +883,7 @@ var android = (function () {
                                         break;
                                     }
                                     case 'ellipse': {
-                                        const ellipse = svgPath.element;
+                                        const ellipse = path.element;
                                         cx = ellipse.cx.baseVal.value - ellipse.rx.baseVal.value;
                                         cy = ellipse.cy.baseVal.value - ellipse.ry.baseVal.value;
                                         cxDiameter = ellipse.rx.baseVal.value * 2;
@@ -1002,7 +1002,7 @@ var android = (function () {
                                         break;
                                     case 'src':
                                     case 'srcCompat':
-                                        if ($util.REGEX_PATTERN.URI.test(value)) {
+                                        if ($util.REGEXP_PATTERN.URI.test(value)) {
                                             value = this.addImage({ mdpi: value });
                                             if (value !== '') {
                                                 obj[attr] = `@drawable/${value}`;
@@ -1051,22 +1051,19 @@ var android = (function () {
             return [stringArray.length ? stringArray : null, numberArray && numberArray.length ? numberArray : null];
         }
         static addTheme(...values) {
-            const themes = STORED.themes;
             for (const theme of values) {
                 const path = $util.isString(theme.output.path) ? theme.output.path : '';
                 const file = $util.isString(theme.output.file) ? theme.output.file : 'themes.xml';
                 const filename = `${$util.trimString(path.trim(), '/')}/${$util.trimString(file.trim(), '/')}`;
-                const stored = themes.get(filename) || new Map();
+                const stored = STORED.themes.get(filename) || new Map();
                 let appTheme = '';
                 if (theme.name === '' || theme.name.charAt(0) === '.') {
-                    if (themes.size) {
-                        foundTheme: {
-                            for (const themeData of themes.values()) {
-                                for (const name in themeData) {
-                                    for (const parentName in themeData[name]) {
-                                        appTheme = themeData[name][parentName].appTheme;
-                                        break foundTheme;
-                                    }
+                    foundTheme: {
+                        for (const data of STORED.themes.values()) {
+                            for (const style of data.values()) {
+                                if (style.name) {
+                                    appTheme = style.name;
+                                    break foundTheme;
                                 }
                             }
                         }
@@ -1089,7 +1086,7 @@ var android = (function () {
                         data.items[attr] = theme.items[attr];
                     }
                 }
-                themes.set(filename, stored);
+                STORED.themes.set(filename, stored);
             }
         }
         static addString(value, name = '', numberAlias = false) {
@@ -1805,11 +1802,12 @@ var android = (function () {
                         else if ($util$2.isPercent(height)) {
                             if (height === '100%') {
                                 this.android('layout_height', 'match_parent');
+                                hasHeight = true;
                             }
-                            else {
+                            else if (this.documentParent.has('height')) {
                                 this.android('layout_height', $util$2.formatPX(Math.ceil(this.bounds.height) - this.contentBoxHeight));
+                                hasHeight = true;
                             }
-                            hasHeight = true;
                         }
                     }
                 }
@@ -2317,7 +2315,7 @@ var android = (function () {
     const $xml$2 = squared.lib.xml;
     function sortHorizontalFloat(list) {
         if (list.some(node => node.floating)) {
-            const result = list.slice().sort((a, b) => {
+            const result = list.slice(0).sort((a, b) => {
                 if (a.floating && !b.floating) {
                     return a.float === 'left' ? -1 : 1;
                 }
@@ -4199,7 +4197,7 @@ var android = (function () {
             files.push(...parseFileDetails(this.resourceDimenToXml()));
             files.push(...parseFileDetails(this.resourceDrawableToXml()));
             files.push(...parseImageDetails(this.resourceDrawableImageToXml()));
-            files.push(...parseFileDetails(this.resourceAnimatorToXml()));
+            files.push(...parseFileDetails(this.resourceAnimToXml()));
             this.saveToDisk(files);
         }
         layoutAllToXml(data, saveToDisk = false) {
@@ -4227,8 +4225,8 @@ var android = (function () {
                 style: this.resourceStyleToXml(),
                 dimen: this.resourceDimenToXml(),
                 drawable: this.resourceDrawableToXml(),
-                image: this.resourceDrawableImageToXml(),
-                animator: this.resourceAnimatorToXml()
+                drawableImage: this.resourceDrawableImageToXml(),
+                anim: this.resourceAnimToXml()
             };
             for (const resource in result) {
                 if (result[resource].length === 0) {
@@ -4359,11 +4357,13 @@ var android = (function () {
                     for (const style of styles) {
                         if (Array.isArray(style.items)) {
                             style.items.sort((a, b) => a.name >= b.name ? 1 : -1);
-                            const itemA = Object.assign({}, style);
-                            data.A.push(itemA);
+                            data.A.push(style);
                         }
                     }
-                    files.push({ filename: 'res/values/styles.xml', data });
+                    files.push({
+                        filename: 'res/values/styles.xml',
+                        data
+                    });
                 }
                 const appTheme = {};
                 for (const [filename, theme] of this.stored.themes.entries()) {
@@ -4477,13 +4477,13 @@ var android = (function () {
             }
             return result;
         }
-        resourceAnimatorToXml(saveToDisk = false) {
+        resourceAnimToXml(saveToDisk = false) {
             const result = [];
             if (this.stored.animators.size) {
                 const template = $xml$3.parseTemplate(DRAWABLE_TMPL);
                 for (const [name, value] of this.stored.animators.entries()) {
                     let xml = $xml$3.createTemplate(template, {
-                        name: `res/animator/${name}.xml`,
+                        name: `res/anim/${name}.xml`,
                         value
                     });
                     xml = replaceTab(xml, this.userSettings.insertSpaces);
@@ -4957,9 +4957,7 @@ var android = (function () {
             const layout = new $Layout$1(parent, node, 0, 4 /* AUTO_LAYOUT */, node.length);
             layout.rowCount = mainData.rowCount;
             layout.columnCount = mainData.columnCount;
-            if (node.filter(item => !item.pageFlow).length > 0 ||
-                mainData.rowDirection && (mainData.rowCount === 1 || node.hasHeight) ||
-                mainData.columnDirection && mainData.columnCount === 1) {
+            if (node.filter(item => !item.pageFlow).length > 0 || mainData.rowDirection && (mainData.rowCount === 1 || node.hasHeight) || mainData.columnDirection && mainData.columnCount === 1) {
                 layout.containerType = CONTAINER_NODE.CONSTRAINT;
             }
             else {
@@ -5235,7 +5233,7 @@ var android = (function () {
                 if (node.display === 'table-cell') {
                     node.mergeGravity('layout_gravity', 'fill');
                 }
-                const siblings = cellData.siblings ? cellData.siblings.slice() : [];
+                const siblings = cellData.siblings ? cellData.siblings.slice(0) : [];
                 if (siblings.length) {
                     const controller = this.application.controllerHandler;
                     siblings.unshift(node);
@@ -7257,12 +7255,12 @@ var android = (function () {
                                     continue;
                                 }
                                 else if (ids.length === count) {
-                                    styleKey[attr1] = ids.slice();
+                                    styleKey[attr1] = ids.slice(0);
                                     sorted[i] = {};
                                     revalidate = true;
                                 }
                                 else if (ids.length === 1) {
-                                    layoutKey[attr1] = ids.slice();
+                                    layoutKey[attr1] = ids.slice(0);
                                     sorted[i][attr1] = [];
                                     revalidate = true;
                                 }
@@ -7362,9 +7360,12 @@ var android = (function () {
                 for (const attrs in tagData) {
                     const items = [];
                     attrs.split(';').forEach(value => {
-                        const match = REGEX_ANDROID.ATTRIBUTE.exec(value);
+                        const match = REGEXP_ANDROID.ATTRIBUTE.exec(value);
                         if (match) {
-                            items.push({ name: match[1], value: match[2] });
+                            items.push({
+                                name: match[1],
+                                value: match[2]
+                            });
                         }
                     });
                     styleData.push({
@@ -7568,8 +7569,9 @@ var android = (function () {
         afterResources() {
             for (const node of this.application.processing.cache) {
                 if (!node.hasBit('excludeResource', $enum$i.NODE_RESOURCE.VALUE_STRING)) {
-                    if (node.element instanceof HTMLSelectElement) {
-                        const [stringArray, numberArray] = Resource.getOptionArray(node.element);
+                    const element = node.element;
+                    if (element && element.tagName === 'SELECT') {
+                        const [stringArray, numberArray] = Resource.getOptionArray(element);
                         const result = [];
                         if (!this.options.numberResourceValue && numberArray && numberArray.length) {
                             result.push(...numberArray);
@@ -7729,9 +7731,12 @@ var android = (function () {
             for (const name in styles) {
                 const items = [];
                 for (const attr in styles[name]) {
-                    const match = REGEX_ANDROID.ATTRIBUTE.exec(styles[name][attr]);
+                    const match = REGEXP_ANDROID.ATTRIBUTE.exec(styles[name][attr]);
                     if (match) {
-                        items.push({ name: match[1], value: match[2] });
+                        items.push({
+                            name: match[1],
+                            value: match[2]
+                        });
                     }
                 }
                 STORED$4.styles.set(name, Object.assign({}, createStyleAttribute(), { name, items, ids: [] }));
@@ -7743,7 +7748,7 @@ var android = (function () {
 <?xml version="1.0" encoding="utf-8"?>
 <animated-vector xmlns:android="http://schemas.android.com/apk/res/android" android:drawable="@drawable/{&vectorName}">
 <<A>>
-	<target android:name="{&name}" android:animation="@animator/{&animationName}" />
+	<target android:name="{&name}" android:animation="@anim/{&animationName}" />
 <<A>>
 </animated-vector>`;
 
@@ -7751,9 +7756,9 @@ var android = (function () {
 <?xml version="1.0" encoding="utf-8"?>
 <set xmlns:android="http://schemas.android.com/apk/res/android">
 <<A>>
-	<set android:ordering="{~ordering}">
+	<set android:name="{~name}" android:ordering="{~ordering}">
 	<<AA>>
-		<set android:ordering="{~ordering}">
+		<set android:name="{~name}" android:ordering="{~ordering}">
 		<<repeating>>
 			<objectAnimator
 				android:propertyName="{~propertyName}"
@@ -7771,18 +7776,19 @@ var android = (function () {
 			<<propertyValues>>
 				<propertyValuesHolder android:propertyName="{&propertyName}">
 				<<keyframes>>
-					<keyframe android:fraction="{~fraction}" android:value="{~value}" />
+					<keyframe android:interpolator="{~interpolator}" android:fraction="{~fraction}" android:value="{~value}" />
 				<<keyframes>>
 				</propertyValuesHolder>
 			<<propertyValues>>
 			</objectAnimator>
 		<<repeating>>
 		<<indefinite>>
-			<set android:ordering="{~ordering}">
+			<set android:name="{~name}" android:ordering="{~ordering}">
 			<<repeat>>
 				<objectAnimator
 					android:propertyName="{&propertyName}"
 					android:valueType="{~valueType}"
+					android:interpolator="{~interpolator}"
 					android:valueFrom="{~valueFrom}"
 					android:valueTo="{&valueTo}"
 					android:startOffset="{~startOffset}"
@@ -7798,6 +7804,7 @@ var android = (function () {
 			<objectAnimator
 				android:propertyName="{&propertyName}"
 				android:valueType="{~valueType}"
+				android:interpolator="{~interpolator}"
 				android:valueFrom="{~valueFrom}"
 				android:valueTo="{&valueTo}"
 				android:startOffset="{~startOffset}"
@@ -7815,22 +7822,15 @@ var android = (function () {
         squared.svg = { lib: {} };
     }
     var $Svg = squared.svg.Svg;
-    var $SvgAnimate = squared.svg.SvgAnimate;
-    var $SvgAnimateMotion = squared.svg.SvgAnimateMotion;
     var $SvgAnimateTransform = squared.svg.SvgAnimateTransform;
     var $SvgBuild = squared.svg.SvgBuild;
-    var $SvgContainer = squared.svg.SvgContainer;
     var $SvgG = squared.svg.SvgG;
-    var $SvgImage = squared.svg.SvgImage;
     var $SvgPath = squared.svg.SvgPath;
-    var $SvgShape = squared.svg.SvgShape;
-    var $SvgUse = squared.svg.SvgUse;
-    var $SvgUseSymbol = squared.svg.SvgUseSymbol;
-    var $utilS = squared.svg.lib.util;
     const $color$3 = squared.lib.color;
-    const $dom$b = squared.lib.dom;
     const $util$n = squared.lib.util;
     const $xml$9 = squared.lib.xml;
+    const $constS = squared.svg.lib.constant;
+    const $utilS = squared.svg.lib.util;
     const INTERPOLATOR_ANDROID = {
         ACCELERATE_DECELERATE: '@android:anim/accelerate_decelerate_interpolator',
         ACCELERATE: '@android:anim/accelerate_interpolator',
@@ -7842,6 +7842,20 @@ var android = (function () {
         LINEAR: '@android:anim/linear_interpolator',
         OVERSHOOT: '@android:anim/overshoot_interpolator'
     };
+    if ($constS) {
+        Object.assign(INTERPOLATOR_ANDROID, {
+            [$constS.KEYSPLINE_NAME['ease-in']]: INTERPOLATOR_ANDROID.ACCELERATE,
+            [$constS.KEYSPLINE_NAME['ease-out']]: INTERPOLATOR_ANDROID.DECELERATE,
+            [$constS.KEYSPLINE_NAME['ease-in-out']]: INTERPOLATOR_ANDROID.ACCELERATE_DECELERATE,
+            [$constS.KEYSPLINE_NAME['linear']]: INTERPOLATOR_ANDROID.LINEAR
+        });
+    }
+    const INTERPOLATOR_XML = `
+<pathInterpolator xmlns:android="http://schemas.android.com/apk/res/android"
+	android:controlX1="{0}"
+	android:controlY1="{1}"
+	android:controlX2="{2}"
+	android:controlY2="{3}" />`;
     const ATTRIBUTE_ANDROID = {
         'stroke': 'strokeColor',
         'fill': 'fillColor',
@@ -7853,6 +7867,25 @@ var android = (function () {
     };
     const TEMPLATES$1 = {};
     const STORED$5 = Resource.STORED;
+    function getGroupName(svg, suffix) {
+        return `${svg.name}_${suffix}`;
+    }
+    function createPathInterpolator(keySplines, index) {
+        if (keySplines && keySplines[index]) {
+            if (INTERPOLATOR_ANDROID[keySplines[index]]) {
+                return INTERPOLATOR_ANDROID[keySplines[index]];
+            }
+            else {
+                const interpolatorName = `path_interpolator_${$util$n.convertWord(keySplines[index])}`;
+                if (!STORED$5.animators.has(interpolatorName)) {
+                    const xml = $util$n.formatString(INTERPOLATOR_XML, ...keySplines[index].split(' '));
+                    STORED$5.animators.set(interpolatorName, xml);
+                }
+                return `@anim/${interpolatorName}`;
+            }
+        }
+        return '';
+    }
     function createTransformData(transform) {
         const result = {};
         if (transform) {
@@ -7880,16 +7913,137 @@ var android = (function () {
         }
         return result;
     }
-    function getSvgOffset(element, baseElement) {
+    function getViewport(element) {
+        const result = [];
+        let parent = element.parentElement;
+        while (parent) {
+            result.push(parent);
+            parent = parent.parentElement;
+            if (parent instanceof HTMLElement) {
+                break;
+            }
+        }
+        return result;
+    }
+    function getParentOffset(element, baseElement) {
         let x = 0;
         let y = 0;
-        $utilS.ascendToViewport(element).forEach(parent => {
-            if ((parent instanceof SVGSVGElement || parent instanceof SVGUseElement) && parent !== baseElement) {
+        getViewport(element).forEach(parent => {
+            if (($utilS.SVG.svg(parent) || $utilS.SVG.use(parent)) && parent !== baseElement) {
                 x += parent.x.baseVal.value;
                 y += parent.y.baseVal.value;
             }
         });
         return { x, y };
+    }
+    function partitionTransforms(element, transform, rx = 1, ry = 1) {
+        if (transform.length && ($utilS.SVG.circle(element) || $utilS.SVG.ellipse(element))) {
+            const index = transform.findIndex(item => item.type === SVGTransform.SVG_TRANSFORM_ROTATE);
+            if (index !== -1 && (rx !== ry || transform.length > 1 && transform.some(item => item.type === SVGTransform.SVG_TRANSFORM_SCALE && item.matrix.a !== item.matrix.d))) {
+                return segmentTransforms(element, transform, rx, ry);
+            }
+        }
+        return [[], transform];
+    }
+    function segmentTransforms(element, transform, rx = 1, ry = 1) {
+        if (transform.length) {
+            const host = [];
+            const client = [];
+            const rotations = transform[0].css ? [] : $utilS.getTransformRotate(element);
+            rotations.reverse();
+            const partition = transform.slice(0).reverse();
+            const typeIndex = new Set();
+            let current = [];
+            function restart(item) {
+                if (current.length) {
+                    current.reverse();
+                    host.push(current);
+                    current = [];
+                    if (item) {
+                        current.push(item);
+                    }
+                    typeIndex.clear();
+                }
+            }
+            for (let i = 0; i < partition.length; i++) {
+                const item = partition[i];
+                let prerotate = host.length === 0 && current.length === 0;
+                if (!prerotate && typeIndex.has(item.type)) {
+                    const previous = current[current.length - 1];
+                    if (item.type === previous.type) {
+                        switch (item.type) {
+                            case SVGTransform.SVG_TRANSFORM_TRANSLATE:
+                                previous.matrix.e += item.matrix.e;
+                                previous.matrix.f += item.matrix.f;
+                                continue;
+                            case SVGTransform.SVG_TRANSFORM_SCALE:
+                                previous.matrix.a *= item.matrix.a;
+                                previous.matrix.d *= item.matrix.d;
+                                continue;
+                        }
+                    }
+                    restart(item);
+                }
+                else {
+                    switch (item.type) {
+                        case SVGTransform.SVG_TRANSFORM_TRANSLATE:
+                            if (prerotate) {
+                                client.push(item);
+                            }
+                            else {
+                                current.push(item);
+                            }
+                            break;
+                        case SVGTransform.SVG_TRANSFORM_SCALE:
+                            if (prerotate) {
+                                client.push(item);
+                            }
+                            else {
+                                current.push(item);
+                            }
+                            break;
+                        case SVGTransform.SVG_TRANSFORM_MATRIX:
+                            if (prerotate && item.matrix.b === 0 && item.matrix.c === 0) {
+                                client.push(item);
+                            }
+                            else {
+                                current.push(item);
+                                prerotate = false;
+                            }
+                            break;
+                        case SVGTransform.SVG_TRANSFORM_ROTATE:
+                            if (rotations.length) {
+                                const origin = rotations.shift();
+                                if (origin.angle === item.angle) {
+                                    item.origin = origin;
+                                }
+                            }
+                            if (prerotate && rx === ry && (i === 0 || client[client.length - 1].type === SVGTransform.SVG_TRANSFORM_ROTATE)) {
+                                client.push(item);
+                            }
+                            else {
+                                if (!prerotate) {
+                                    restart();
+                                }
+                                current.push(item);
+                                continue;
+                            }
+                            break;
+                        case SVGTransform.SVG_TRANSFORM_SKEWX:
+                        case SVGTransform.SVG_TRANSFORM_SKEWY:
+                            current.push(item);
+                            prerotate = false;
+                            break;
+                    }
+                }
+                if (!prerotate) {
+                    typeIndex.add(item.type);
+                }
+            }
+            restart();
+            return [host, client];
+        }
+        return [[], transform];
     }
     class ResourceSvg extends squared.base.Extension {
         constructor() {
@@ -7906,8 +8060,7 @@ var android = (function () {
                     image: [SVGTransform.SVG_TRANSFORM_SKEWX, SVGTransform.SVG_TRANSFORM_SKEWY]
                 },
                 vectorAnimateOrdering: 'together',
-                vectorAnimateInterpolator: INTERPOLATOR_ANDROID.LINEAR,
-                vectorAnimateAlwaysUseKeyframes: true
+                vectorAnimateInterpolator: INTERPOLATOR_ANDROID.LINEAR
             };
             this.eventOnly = true;
             this.VECTOR_DATA = new Map();
@@ -7930,7 +8083,7 @@ var android = (function () {
             for (const node of this.application.processing.cache) {
                 if (node.svgElement) {
                     const svg = new $Svg(node.element);
-                    const templateName = `${node.tagName.toLowerCase()}_${node.controlId}_viewbox`;
+                    const templateName = $util$n.convertWord(`${node.tagName.toLowerCase()}_${node.controlId}_viewbox`, true);
                     const getFilename = (prefix = '', suffix = '') => {
                         return templateName + (prefix !== '' ? `_${prefix}` : '') + (this.IMAGE_DATA.length ? '_vector' : '') + (suffix !== '' ? `_${suffix}` : '');
                     };
@@ -7938,7 +8091,7 @@ var android = (function () {
                     this.ANIMATE_DATA.clear();
                     this.IMAGE_DATA.length = 0;
                     this.NAMESPACE_AAPT = false;
-                    svg.build(true, this.options.excludeFromTransform);
+                    svg.build(this.options.excludeFromTransform, partitionTransforms);
                     svg.synchronize();
                     this.parseVectorData(node, svg, svg);
                     this.queueAnimations(svg, svg.name, item => item.attributeName === 'opacity');
@@ -7994,33 +8147,34 @@ var android = (function () {
                             const targetSetData = { A: [] };
                             const animatorMap = new Map();
                             const sequentialMap = new Map();
-                            const together = [];
-                            const fillReplace = [];
                             const transformMap = new Map();
+                            const together = [];
+                            const isolated = [];
                             const togetherTargets = [];
-                            const fillReplaceTargets = [];
+                            const isolatedTargets = [];
                             const transformTargets = [];
                             for (const item of group.animate) {
-                                if (item.sequential) {
-                                    if (item instanceof $SvgAnimateTransform) {
-                                        let values = transformMap.get(item.sequential.name);
+                                const sequential = item.sequential;
+                                if (sequential) {
+                                    if ($SvgBuild.instanceOfAnimateTransform(item)) {
+                                        let values = transformMap.get(sequential.value);
                                         if (values === undefined) {
                                             values = [];
-                                            transformMap.set(item.sequential.name, values);
+                                            transformMap.set(sequential.value, values);
                                         }
                                         values.push(item);
                                     }
                                     else {
-                                        let values = sequentialMap.get(item.sequential.name);
+                                        let values = sequentialMap.get(sequential.value);
                                         if (values === undefined) {
                                             values = [];
-                                            sequentialMap.set(item.sequential.name, values);
+                                            sequentialMap.set(sequential.value, values);
                                         }
                                         values.push(item);
                                     }
                                 }
-                                else if (!item.fillFreeze) {
-                                    fillReplace.push(item);
+                                else if (item.repeatCount === -1 || item.fillMode < 4 /* FORWARDS */) {
+                                    isolated.push(item);
                                 }
                                 else {
                                     together.push(item);
@@ -8030,46 +8184,43 @@ var android = (function () {
                                 togetherTargets.push(together);
                             }
                             for (const item of sequentialMap.values()) {
-                                togetherTargets.push(item.sort((a, b) => a.sequential && b.sequential && a.sequential.value >= b.sequential.value ? 1 : -1));
+                                togetherTargets.push(item.sort((a, b) => a.sequential && b.sequential && a.sequential.ordinal >= b.sequential.ordinal ? 1 : -1));
                             }
                             for (const item of transformMap.values()) {
-                                transformTargets.push(item.sort((a, b) => a.sequential && b.sequential && a.sequential.value >= b.sequential.value ? 1 : -1));
+                                transformTargets.push(item.sort((a, b) => a.sequential && b.sequential && a.sequential.ordinal >= b.sequential.ordinal ? 1 : -1));
                             }
-                            for (const item of fillReplace) {
-                                fillReplaceTargets.push([item]);
+                            for (const item of isolated) {
+                                isolatedTargets.push([[item]]);
                             }
-                            [togetherTargets, fillReplaceTargets, transformTargets].forEach((targets, index) => {
+                            [togetherTargets, transformTargets, ...isolatedTargets].forEach((targets, index) => {
                                 const subData = {
-                                    ordering: index === 2 ? 'sequentially' : 'together',
+                                    name: `${name}_${index + 1}`,
+                                    ordering: index === 0 ? 'together' : 'sequentially',
                                     AA: []
                                 };
+                                animatorMap.clear();
                                 for (const items of targets) {
                                     let ordering;
                                     let sequential = false;
-                                    if (index === 1) {
-                                        if (items.some(item => item instanceof $SvgAnimateTransform)) {
-                                            subData.ordering = 'sequentially';
-                                            ordering = 'together';
-                                            sequential = true;
-                                        }
-                                        else {
-                                            ordering = 'sequentially';
-                                        }
+                                    if (index > 1) {
+                                        ordering = 'together';
                                     }
-                                    else if (items.some((item) => item.sequential !== undefined)) {
-                                        ordering = index === 2 ? 'together' : 'sequentially';
+                                    else if (items.some(item => item.sequential !== undefined)) {
+                                        ordering = index === 0 ? 'sequentially' : 'together';
                                         sequential = true;
                                     }
                                     else {
-                                        ordering = $dom$b.getDataSet(group.element, 'android').ordering || this.options.vectorAnimateOrdering;
+                                        ordering = this.options.vectorAnimateOrdering || 'together';
                                     }
                                     const setData = {
+                                        name: `${subData.name}_repeat`,
                                         ordering,
                                         repeating: [],
                                         indefinite: [],
                                         fill: []
                                     };
                                     const indefiniteData = {
+                                        name: `${subData.name}_infinite`,
                                         ordering: 'sequentially',
                                         repeat: []
                                     };
@@ -8077,7 +8228,7 @@ var android = (function () {
                                         ordering: 'together',
                                         replace: []
                                     };
-                                    const [indefinite, repeating] = sequential ? $util$n.partitionArray(items, (animate) => animate.repeatCount === -1) : [[], items];
+                                    const [indefinite, repeating] = sequential ? $util$n.partitionArray(items, animate => animate.repeatCount === -1) : [[], items];
                                     if (indefinite.length === 1) {
                                         repeating.push(indefinite[0]);
                                         indefinite.length = 0;
@@ -8085,17 +8236,39 @@ var android = (function () {
                                     for (const item of repeating) {
                                         const options = {
                                             startOffset: item.begin.length && item.begin[0] > 0 ? item.begin[0].toString() : '',
-                                            duration: item.duration !== -1 ? item.duration.toString() : ''
+                                            duration: item.duration.toString()
                                         };
-                                        if (item instanceof $SvgAnimate) {
-                                            options.repeatCount = item instanceof $SvgAnimate ? item.repeatCount !== -1 ? Math.ceil(item.repeatCount - 1).toString() : '-1' : '0';
-                                            const dataset = $dom$b.getDataSet(item.element, 'android');
+                                        if ($SvgBuild.instanceOfSet(item)) {
+                                            if (item.to) {
+                                                options.propertyName = ATTRIBUTE_ANDROID[item.attributeName];
+                                                if (options.propertyName) {
+                                                    options.propertyValues = false;
+                                                    if (item.duration === 0) {
+                                                        options.duration = '1';
+                                                    }
+                                                    options.repeatCount = '0';
+                                                    options.valueTo = item.to.toString();
+                                                    setData.repeating.push(options);
+                                                }
+                                            }
+                                        }
+                                        else {
+                                            options.repeatCount = item.repeatCount !== -1 ? Math.ceil(item.repeatCount - 1).toString() : '-1';
+                                            if (!sequential) {
+                                                if ($util$n.hasBit(item.fillMode, 2 /* BACKWARDS */)) {
+                                                    options.fillEnabled = 'true';
+                                                    options.fillBefore = 'true';
+                                                }
+                                                if (item.alternate) {
+                                                    options.repeatMode = 'reverse';
+                                                }
+                                            }
                                             let propertyName;
                                             let values;
                                             switch (item.attributeName) {
                                                 case 'transform':
-                                                case 'stroke':
                                                 case 'fill':
+                                                case 'stroke':
                                                     break;
                                                 case 'opacity':
                                                 case 'stroke-opacity':
@@ -8125,43 +8298,25 @@ var android = (function () {
                                                 default:
                                                     continue;
                                             }
-                                            if (item instanceof $SvgAnimateTransform) {
-                                                let fillBefore = dataset.fillbefore === 'true' || dataset.fillBefore === 'true';
-                                                let fillAfter = dataset.fillafter === 'true' || dataset.fillAfter === 'true';
-                                                if (fillBefore && fillAfter) {
-                                                    const fillEnabled = !(dataset.fillenabled === 'false' || dataset.fillEnabled === 'false');
-                                                    fillBefore = fillEnabled;
-                                                    fillAfter = !fillEnabled;
-                                                }
-                                                if (fillBefore) {
-                                                    options.fillBefore = 'true';
-                                                }
-                                                if (fillAfter) {
-                                                    options.fillAfter = 'true';
-                                                }
-                                                switch (item.attributeName) {
-                                                    case 'transform': {
-                                                        switch (item.type) {
-                                                            case SVGTransform.SVG_TRANSFORM_ROTATE: {
-                                                                values = $SvgAnimateTransform.toRotateList(item.values);
-                                                                propertyName = ['rotation', 'pivotX', 'pivotY'];
-                                                                break;
-                                                            }
-                                                            case SVGTransform.SVG_TRANSFORM_SCALE: {
-                                                                values = $SvgAnimateTransform.toScaleList(item.values);
-                                                                propertyName = ['scaleX', 'scaleY'];
-                                                                break;
-                                                            }
-                                                            case SVGTransform.SVG_TRANSFORM_TRANSLATE: {
-                                                                values = $SvgAnimateTransform.toTranslateList(item.values);
-                                                                propertyName = ['translateX', 'translateY'];
-                                                                break;
-                                                            }
-                                                        }
-                                                        options.valueType = 'floatType';
+                                            if ($SvgBuild.instanceOfAnimateTransform(item)) {
+                                                switch (item.type) {
+                                                    case SVGTransform.SVG_TRANSFORM_ROTATE: {
+                                                        values = $SvgAnimateTransform.toRotateList(item.values);
+                                                        propertyName = ['rotation', 'pivotX', 'pivotY'];
+                                                        break;
+                                                    }
+                                                    case SVGTransform.SVG_TRANSFORM_SCALE: {
+                                                        values = $SvgAnimateTransform.toScaleList(item.values);
+                                                        propertyName = ['scaleX', 'scaleY'];
+                                                        break;
+                                                    }
+                                                    case SVGTransform.SVG_TRANSFORM_TRANSLATE: {
+                                                        values = $SvgAnimateTransform.toTranslateList(item.values);
+                                                        propertyName = ['translateX', 'translateY'];
                                                         break;
                                                     }
                                                 }
+                                                options.valueType = 'floatType';
                                             }
                                             else {
                                                 const attribute = ATTRIBUTE_ANDROID[item.attributeName];
@@ -8182,14 +8337,14 @@ var android = (function () {
                                                     case 'pathType': {
                                                         if (group.pathData) {
                                                             pathType: {
-                                                                values = item.values.slice();
+                                                                values = item.values.slice(0);
                                                                 if (item.attributeName === 'points') {
                                                                     for (let i = 0; i < values.length; i++) {
                                                                         const value = values[i];
                                                                         if (value !== '') {
-                                                                            const points = $SvgBuild.fromNumberList($SvgBuild.toCoordinateList(value));
+                                                                            const points = $SvgBuild.fromNumberList($SvgBuild.toNumberList(value));
                                                                             if (points.length) {
-                                                                                values[i] = item.element.parentElement && item.element.parentElement.tagName === 'polygon' ? $SvgPath.getPolygon(points) : $SvgPath.getPolyline(points);
+                                                                                values[i] = item.parent && item.parent.element.tagName === 'polygon' ? $SvgPath.getPolygon(points) : $SvgPath.getPolyline(points);
                                                                             }
                                                                             else {
                                                                                 break pathType;
@@ -8361,7 +8516,7 @@ var android = (function () {
                                                         break;
                                                     }
                                                     default: {
-                                                        values = item.values.slice();
+                                                        values = item.values.slice(0);
                                                         if (attribute) {
                                                             propertyName = [attribute];
                                                         }
@@ -8377,22 +8532,14 @@ var android = (function () {
                                                 }
                                             }
                                             if (values && propertyName) {
-                                                if ($util$n.convertInt(options.repeatCount) !== 0) {
-                                                    switch (dataset.repeatmode || dataset.repeatMode) {
-                                                        case 'restart':
-                                                            options.repeatMode = 'restart';
-                                                            break;
-                                                        case 'reverse':
-                                                            options.repeatMode = 'reverse';
-                                                            break;
-                                                    }
+                                                if (item.keySplines === undefined) {
+                                                    options.interpolator = this.options.vectorAnimateInterpolator;
                                                 }
-                                                options.interpolator = dataset.interpolator ? INTERPOLATOR_ANDROID[dataset.interpolator] || dataset.interpolator : this.options.vectorAnimateInterpolator;
                                                 const keyName = index !== 1 ? JSON.stringify(options) : '';
                                                 for (let i = 0; i < propertyName.length; i++) {
                                                     const propertyOptions = Object.assign({}, options);
-                                                    let valueEnd = '';
-                                                    if (node.localSettings.targetAPI >= 23 /* MARSHMALLOW */ && propertyOptions.valueType !== 'pathType' && item.sequential === undefined && item.keyTimes.length > 1 && item.duration > 0 && (this.options.vectorAnimateAlwaysUseKeyframes || item.keyTimes.join('-') !== '0-1')) {
+                                                    let valueFrom = '';
+                                                    if (node.localSettings.targetAPI >= 23 /* MARSHMALLOW */ && !sequential && propertyOptions.valueType !== 'pathType' && item.keyTimes.length > 1 && !item.fromToType) {
                                                         const propertyValues = animatorMap.get(keyName) || [];
                                                         const keyframes = [];
                                                         for (let j = 0; j < item.keyTimes.length; j++) {
@@ -8407,8 +8554,11 @@ var android = (function () {
                                                                 value = values[j].toString();
                                                             }
                                                             if (value !== undefined) {
+                                                                const interpolator = createPathInterpolator(item.keySplines, j - 1);
+                                                                const fraction = item.keyTimes[j] === 0 && value === '' ? '' : item.keyTimes[j].toString();
                                                                 keyframes.push({
-                                                                    fraction: item.keyTimes[j].toString(),
+                                                                    interpolator,
+                                                                    fraction,
                                                                     value
                                                                 });
                                                             }
@@ -8425,11 +8575,12 @@ var android = (function () {
                                                                 propertyOptions.propertyValues = propertyValues;
                                                                 setData.repeating.push(propertyOptions);
                                                             }
-                                                            valueEnd = keyframes[keyframes.length - 1].value;
+                                                            valueFrom = keyframes[keyframes.length - 1].value;
                                                         }
                                                     }
                                                     else {
                                                         propertyOptions.propertyName = propertyName[i];
+                                                        propertyOptions.interpolator = createPathInterpolator(item.keySplines, 0);
                                                         if (Array.isArray(values[0])) {
                                                             let to = null;
                                                             if (item.duration > 0) {
@@ -8437,7 +8588,7 @@ var android = (function () {
                                                                     const from = values[0][i];
                                                                     if (from !== null) {
                                                                         propertyOptions.valueFrom = from.toString();
-                                                                        valueEnd = propertyOptions.valueFrom;
+                                                                        valueFrom = propertyOptions.valueFrom;
                                                                     }
                                                                 }
                                                                 to = values[values.length - 1][i];
@@ -8454,53 +8605,39 @@ var android = (function () {
                                                             }
                                                         }
                                                         else {
-                                                            if (item.duration > 0) {
-                                                                if (values.length > 1) {
-                                                                    propertyOptions.valueFrom = values[0].toString();
-                                                                }
+                                                            if (values.length > 1) {
+                                                                propertyOptions.valueFrom = values[0].toString();
                                                                 propertyOptions.valueTo = values[values.length - 1].toString();
                                                             }
-                                                            else if (item.duration === 0 && item.keyTimes[0] === 0) {
-                                                                propertyOptions.valueTo = values[0].toString();
-                                                                propertyOptions.repeatCount = '0';
-                                                            }
                                                             else {
-                                                                continue;
+                                                                propertyOptions.valueFrom = item.from;
+                                                                propertyOptions.valueTo = item.to;
                                                             }
-                                                            valueEnd = propertyOptions.valueTo;
+                                                            valueFrom = propertyOptions.valueTo;
                                                         }
-                                                        propertyOptions.propertyValues = false;
-                                                        setData.repeating.push(propertyOptions);
+                                                        if (propertyOptions.valueTo) {
+                                                            propertyOptions.propertyValues = false;
+                                                            setData.repeating.push(propertyOptions);
+                                                        }
                                                     }
-                                                    if (!item.fillFreeze && item.sequential === undefined && item.parent) {
+                                                    if (!sequential && item.fillMode < 4 /* FORWARDS */) {
                                                         let valueTo;
-                                                        if (item instanceof $SvgAnimateTransform) {
-                                                            const transform = createTransformData(item.parent.baseValue.transformed);
+                                                        if ($SvgBuild.instanceOfAnimateTransform(item)) {
                                                             switch (propertyName[i]) {
                                                                 case 'rotation':
-                                                                    valueTo = transform.rotation || '0';
-                                                                    break;
                                                                 case 'pivotX':
-                                                                    valueTo = transform.pivotX || '0';
-                                                                    break;
                                                                 case 'pivotY':
-                                                                    valueTo = transform.pivotY || '0';
+                                                                case 'translateX':
+                                                                case 'translateY':
+                                                                    valueTo = '0';
                                                                     break;
                                                                 case 'scaleX':
-                                                                    valueTo = transform.scaleX || '1';
-                                                                    break;
                                                                 case 'scaleY':
-                                                                    valueTo = transform.scaleY || '1';
-                                                                    break;
-                                                                case 'translateX':
-                                                                    valueTo = transform.translateX || '0';
-                                                                    break;
-                                                                case 'translateY':
-                                                                    valueTo = transform.translateY || '0';
+                                                                    valueTo = '1';
                                                                     break;
                                                             }
                                                         }
-                                                        else if (item.parent instanceof $SvgShape && item.parent.path) {
+                                                        else if ($SvgBuild.instanceOfShape(item.parent) && item.parent.path) {
                                                             let css = '';
                                                             for (const attr in ATTRIBUTE_ANDROID) {
                                                                 if (ATTRIBUTE_ANDROID[attr] === propertyName[i]) {
@@ -8512,30 +8649,18 @@ var android = (function () {
                                                                 valueTo = item.parent.path[css];
                                                             }
                                                         }
-                                                        if (valueTo !== undefined) {
+                                                        if ($util$n.hasValue(valueTo)) {
                                                             fillData.replace.push({
                                                                 propertyName: propertyName[i],
-                                                                repeatCount: '0',
                                                                 duration: '1',
+                                                                repeatCount: '0',
                                                                 valueType: options.valueType || '',
-                                                                valueFrom: options.valueType === 'pathType' ? valueEnd : '',
-                                                                valueTo
+                                                                valueFrom: options.valueType === 'pathType' ? valueFrom : '',
+                                                                valueTo: valueTo.toString()
                                                             });
                                                         }
                                                     }
                                                 }
-                                            }
-                                        }
-                                        else if (item.to) {
-                                            options.propertyName = ATTRIBUTE_ANDROID[item.attributeName];
-                                            if (options.propertyName) {
-                                                options.propertyValues = false;
-                                                if (item.duration === -1) {
-                                                    options.duration = '1';
-                                                }
-                                                options.repeatCount = '0';
-                                                options.valueTo = item.to.toString();
-                                                setData.repeating.push(options);
                                             }
                                         }
                                     }
@@ -8544,8 +8669,10 @@ var android = (function () {
                                         for (const item of indefinite) {
                                             pathArray.push({
                                                 propertyName: 'pathData',
-                                                repeatCount: '0',
+                                                interpolator: createPathInterpolator(item.keySplines, 0),
+                                                startOffset: item.begin.length && item.begin[0] > 0 ? item.begin[0].toString() : '',
                                                 duration: item.duration.toString(),
+                                                repeatCount: '0',
                                                 valueType: 'pathType',
                                                 valueFrom: item.from,
                                                 valueTo: item.to
@@ -8588,17 +8715,17 @@ var android = (function () {
                         }
                     }
                     if (this.IMAGE_DATA.length) {
-                        const D = [];
+                        const imageD = [];
                         for (const item of this.IMAGE_DATA) {
                             const scaleX = svg.width / svg.viewBox.width;
                             const scaleY = svg.height / svg.viewBox.height;
-                            let x = item.baseValue.x * scaleX;
-                            let y = item.baseValue.y * scaleY;
-                            let width = item.baseValue.width;
-                            let height = item.baseValue.height;
-                            const offsetParent = getSvgOffset(item.element, svg.element);
-                            x += offsetParent.x;
-                            y += offsetParent.y;
+                            let x = item.getBaseValue('x', 0) * scaleX;
+                            let y = item.getBaseValue('y', 0) * scaleY;
+                            let width = item.getBaseValue('width', 0);
+                            let height = item.getBaseValue('height', 0);
+                            const offset = getParentOffset(item.element, svg.element);
+                            x += offset.x;
+                            y += offset.y;
                             width *= scaleX;
                             height *= scaleY;
                             const data = {
@@ -8620,13 +8747,13 @@ var android = (function () {
                             else if (!item.visible) {
                                 continue;
                             }
-                            D.push(data);
+                            imageD.push(data);
                         }
                         let xml = $xml$9.createTemplate(TEMPLATES$1.LAYER_LIST, {
                             A: [],
                             B: false,
                             C: [{ src: vectorName }],
-                            D,
+                            D: imageD,
                             E: false,
                             F: false
                         });
@@ -8661,7 +8788,22 @@ var android = (function () {
                 const item = group.children[i];
                 const CCC = [];
                 const DDD = [];
-                if (item instanceof $SvgContainer) {
+                if ($SvgBuild.instanceOfShape(item)) {
+                    if (item.visible && item.path && item.path.value) {
+                        CCC.push(this.createPath(node, svg, item, item.path));
+                    }
+                    else {
+                        continue;
+                    }
+                }
+                else if ($SvgBuild.instanceOfImage(item)) {
+                    item.extract(this.options.excludeFromTransform.image);
+                    if (item.visible || item.rotateOrigin) {
+                        this.IMAGE_DATA.push(item);
+                    }
+                    continue;
+                }
+                else if ($SvgBuild.instanceOfContainer(item)) {
                     if (item.length) {
                         this.parseVectorData(node, svg, item);
                         DDD.push({ templateName: item.name });
@@ -8670,26 +8812,9 @@ var android = (function () {
                         continue;
                     }
                 }
-                else {
-                    if (item instanceof $SvgImage) {
-                        item.extract(this.options.excludeFromTransform.image);
-                        if (item.visible || item.rotateOrigin) {
-                            this.IMAGE_DATA.push(item);
-                        }
-                        continue;
-                    }
-                    else if (item instanceof $SvgShape) {
-                        if (item.visible && item.path && item.path.value) {
-                            CCC.push(this.createPath(node, svg, item, item.path));
-                        }
-                        else {
-                            continue;
-                        }
-                    }
-                }
                 groupData.BB.push({ CCC, DDD });
             }
-            this.VECTOR_DATA.set(group['name'], groupData);
+            this.VECTOR_DATA.set(group.name, groupData);
         }
         createGroup(target, transformable = false) {
             const group = [[]];
@@ -8699,22 +8824,21 @@ var android = (function () {
             };
             if (transformable) {
                 const name = target.name;
-                const groupName = `group_${name}`;
-                const canTranslate = target instanceof $Svg || target instanceof $SvgUseSymbol;
-                const transform = $SvgBuild.partitionTransforms(target.element, target.transform)[0];
-                if (transform.length) {
+                const [transformHost, transformClient] = segmentTransforms(target.element, target.transform);
+                if (transformHost.length) {
                     const transformed = [];
-                    for (let i = 0; i < transform.length; i++) {
-                        group[0].push(Object.assign({ groupName: `${name}_transform_${i + 1}` }, createTransformData(transform[i])));
-                        transformed.push(...transform[i]);
+                    for (let i = 0; i < transformHost.length; i++) {
+                        group[0].push(Object.assign({ groupName: getGroupName(target, `transform_${i + 1}`) }, createTransformData(transformHost[i])));
+                        transformed.push(...transformHost[i]);
                     }
-                    target.baseValue.transformed = transformed.reverse();
+                    target.transformed = transformed.reverse();
                 }
-                this.queueAnimations(target, groupName, item => item instanceof $SvgAnimateTransform || canTranslate && (item.attributeName === 'x' || item.attributeName === 'y'));
-                group[0].push({ groupName });
-                if ((target instanceof $Svg || target instanceof $SvgUseSymbol) && (target.x !== 0 || target.y !== 0)) {
+                const groupName = `group_${name}`;
+                this.queueAnimations(target, groupName, item => $SvgBuild.instanceOfAnimateTransform(item));
+                group[0].push(Object.assign({ groupName }, createTransformData(transformClient)));
+                if (($SvgBuild.instance(target) || $SvgBuild.instanceOfUse(target)) && (target.x !== 0 || target.y !== 0)) {
                     group[0].push({
-                        groupName: `${name}_translate`,
+                        groupName: getGroupName(target, 'translate'),
                         translateX: target.x.toString(),
                         translateY: target.y.toString()
                     });
@@ -8731,28 +8855,26 @@ var android = (function () {
                 clipPaths,
                 fillPattern: false
             };
-            const useTarget = target instanceof $SvgUse;
-            const exclusions = useTarget ? ['x', 'y'] : [];
             if (path.transformResidual) {
                 for (let i = 0; i < path.transformResidual.length; i++) {
-                    render[0].push(Object.assign({ groupName: `${target.name}_transform_${i + 1}` }, createTransformData(path.transformResidual[i])));
+                    render[0].push(Object.assign({ groupName: getGroupName(target, `transform_${i + 1}`) }, createTransformData(path.transformResidual[i])));
                 }
             }
             if (path.rotateOrigin && (path.rotateOrigin.angle !== undefined || path.rotateOrigin.x !== 0 || path.rotateOrigin.y !== 0)) {
                 render[0].push({
-                    groupName: `${target.name}_rotate`,
+                    groupName: getGroupName(target, 'rotate'),
                     rotation: (path.rotateOrigin.angle || 0).toString(),
                     pivotX: path.rotateOrigin.x.toString(),
                     pivotY: path.rotateOrigin.y.toString()
                 });
             }
-            const animateName = `${target.name}_animate`;
-            if (this.queueAnimations(target, animateName, item => item instanceof $SvgAnimateTransform || useTarget && (item.attributeName === 'x' || item.attributeName === 'y'))) {
-                render[0].push({ groupName: animateName });
+            const groupName = `group_${target.name}`;
+            if (this.queueAnimations(target, groupName, item => $SvgBuild.instanceOfAnimateTransform(item))) {
+                render[0].push({ groupName });
             }
-            if (target instanceof $SvgUse && (target.x !== 0 || target.y !== 0)) {
+            if ($SvgBuild.instanceOfUse(target) && (target.x !== 0 || target.y !== 0)) {
                 render[0].push({
-                    groupName: `${target.name}_translate`,
+                    groupName: getGroupName(target, 'translate'),
                     translateX: target.x.toString(),
                     translateY: target.y.toString()
                 });
@@ -8762,19 +8884,22 @@ var android = (function () {
                     result[attr] = path[attr];
                 }
             }
+            const opacity = $SvgBuild.getContainerOpacity(target);
+            result.fillOpacity = (parseFloat(result.fillOpacity || '1') * opacity).toString();
+            result.strokeOpacity = (parseFloat(result.strokeOpacity || '1') * opacity).toString();
             if (path.clipPath) {
                 const clipPath = svg.patterns.clipPath.get(path.clipPath);
                 if (clipPath) {
                     const g = new $SvgG(clipPath);
-                    g.build(true, this.options.excludeFromTransform);
+                    g.build(this.options.excludeFromTransform, partitionTransforms);
                     g.synchronize();
                     g.each((child) => {
-                        if (child.path) {
-                            child.build(true, this.options.excludeFromTransform);
-                            if (child.path.value) {
-                                clipPaths.push({ clipPathName: child.name, clipPathData: child.path.value });
-                            }
-                            this.queueAnimations(child, child.name, item => !(item instanceof $SvgAnimateTransform || item instanceof $SvgAnimateMotion), child.path.value);
+                        if (child.path && child.path.value) {
+                            clipPaths.push({
+                                clipPathName: child.name,
+                                clipPathData: child.path.value
+                            });
+                            this.queueAnimations(child, child.name, item => $SvgBuild.instanceOfAnimate(item), child.path.value);
                         }
                     });
                 }
@@ -8824,11 +8949,11 @@ var android = (function () {
                     result.fillRule = 'nonZero';
                     break;
             }
-            this.queueAnimations(target, path.name, item => !(item instanceof $SvgAnimateTransform || item instanceof $SvgAnimateMotion) && !exclusions.includes(item.attributeName), result.value);
+            this.queueAnimations(target, target.name, item => $SvgBuild.instanceOfAnimate(item), result.value);
             return result;
         }
         queueAnimations(svg, name, predicate, pathData = '') {
-            const animate = svg.animate.filter(predicate).filter(item => item.begin.length > 0);
+            const animate = svg.animation.filter(predicate).filter(item => !item.paused && item.begin.length > 0 && item.duration >= 0);
             if (animate.length) {
                 this.ANIMATE_DATA.set(name, {
                     element: svg.element,
@@ -8974,9 +9099,9 @@ var android = (function () {
                 }
                 return [];
             },
-            writeResourceAnimatorXml(saveToDisk = false) {
+            writeResourceAnimXml(saveToDisk = false) {
                 if (fileHandler && checkApplication(application)) {
-                    return fileHandler.resourceAnimatorToXml(saveToDisk);
+                    return fileHandler.resourceAnimToXml(saveToDisk);
                 }
                 return [];
             }
