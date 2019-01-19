@@ -10,7 +10,6 @@ type IteratorPredicate<T, U> = (value: T, index: number) => U;
 type BindGeneric<T, U> = (target: T, ...args: any[]) => U;
 
 type FunctionType<T> = (...args: any[]) => T;
-type FunctionVoid = FunctionType<void>;
 type FunctionMap<T> = ObjectMap<FunctionType<T>>;
 
 type ObjectMap<T> = { [key: string]: T; };

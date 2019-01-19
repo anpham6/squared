@@ -447,7 +447,7 @@ export function getTransformRotate(element: SVGElement): SvgPoint[] {
     const transform = element.attributes.getNamedItem('transform');
     if (transform) {
         const pattern = /rotate\((-?[\d.]+),?\s*(-?[\d.]+),?\s*(-?[\d.]+)\)/g;
-        let match: RegExpExecArray | null = null;
+        let match: RegExpExecArray | null;
         while ((match = pattern.exec(transform.value)) !== null) {
             result.push({
                 angle: parseFloat(match[1]),

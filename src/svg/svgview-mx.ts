@@ -27,7 +27,31 @@ const ANIMATION_MAP: ObjectMap<string[]> = {
 const REGEXP_CUBICBEZIER = new RegExp(`cubic-bezier\\(${REGEXP_UNIT.ZERO_ONE}, ${REGEXP_UNIT.DECIMAL}, ${REGEXP_UNIT.ZERO_ONE}, ${REGEXP_UNIT.DECIMAL}\\)`);
 
 function parseAttribute(element: SVGElement, attr: string) {
-    return $util.flatMap($dom.cssAttribute(element, attr).split(/(?<!\w+\([\-\d., ]+),/), value => value.trim());
+    let value = $dom.cssAttribute(element, attr);
+    if (attr === 'animation-timing-function') {
+        const result: string[] = [];
+        while (value !== '') {
+            let index = value.indexOf(',');
+            if (index !== -1) {
+                let segment = value.substring(0, index);
+                if (segment.startsWith('steps') || segment.startsWith('cubic-bezier')) {
+                    const nextIndex = value.indexOf(')', index) + 1;
+                    segment += value.substring(index, nextIndex);
+                    index = nextIndex;
+                }
+                result.push(segment);
+                value = value.substring(index + 1).trim();
+            }
+            else {
+                result.push(value);
+                break;
+            }
+        }
+        return result;
+    }
+    else {
+        return $util.flatMap(value.split(/,/), item => item.trim());
+    }
 }
 
 function sortAttribute(value: NumberValue<string>[]) {

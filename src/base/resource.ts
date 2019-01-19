@@ -214,7 +214,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                     case 'backgroundImage': {
                         if (value !== 'none' && !node.hasBit('excludeResource', NODE_RESOURCE.IMAGE_SOURCE)) {
                             const gradients: Gradient[] = [];
-                            let pattern = new RegExp(`([a-z\-]+)-gradient\\(([\\w\\s%]+)?(${colorStop(false)}+)\\)`, 'g');
+                            let pattern = new RegExp(`(linear|radial)-gradient\\(([\\w\\s%]+)?(${colorStop(false)}+)\\)`, 'g');
                             let match: RegExpExecArray | null;
                             while ((match = pattern.exec(value)) !== null) {
                                 let gradient: Gradient;

@@ -23,7 +23,7 @@ export function createViewAttribute(options?: ExternalData): ViewAttribute {
 export function createStyleAttribute(options?: ExternalData) {
     const result: StyleAttribute = {
         output: {
-            path: '',
+            path: 'res/values',
             file: ''
         },
         name: '',

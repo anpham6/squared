@@ -4,7 +4,7 @@
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
     typeof define === 'function' && define.amd ? define(['exports'], factory) :
-    (global = global || self, factory(global.umd = {}));
+    (global = global || self, factory(global.squared = {}));
 }(this, function (exports) { 'use strict';
 
     const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -1117,7 +1117,7 @@
                         if (item instanceof CSSKeyframesRule) {
                             const map = {};
                             Array.from(item.cssRules).forEach(keyframe => {
-                                const match = /((?:\d+%\s*,?\s*)+|from|to)\s*\{\s*(.*?)\s*\}/.exec(keyframe.cssText);
+                                const match = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.*?)\s*}/.exec(keyframe.cssText);
                                 if (match) {
                                     const keyText = (keyframe['keyText'] || match[1].trim()).split(',').map(percent => percent.trim());
                                     const properties = flatMap(match[2].split(';'), percent => percent.trim());
@@ -1829,8 +1829,8 @@
     }
     function formatTemplate(value, closeEmpty = true, char = '\t') {
         const lines = [];
-        const pattern = /\s*(<(\/)?([?\w]+)[^>]*>)\n{0,1}([^<]*)/g;
-        let match = null;
+        const pattern = /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g;
+        let match;
         while ((match = pattern.exec(value)) !== null) {
             lines.push({
                 tag: match[1],

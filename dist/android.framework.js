@@ -842,23 +842,26 @@ var android = (function () {
                 switch (item.type) {
                     case 'radial':
                         if (node.svgElement) {
-                            if (path && squared.svg && squared.svg.SvgBuild) {
+                            if (path) {
                                 const radial = item;
                                 const mapPoint = [];
+                                const SvgBuild = squared.svg && squared.svg.SvgBuild;
                                 let cx;
                                 let cy;
                                 let cxDiameter;
                                 let cyDiameter;
                                 switch (path.element.tagName) {
                                     case 'path': {
-                                        squared.svg.SvgBuild.toPathCommandList(path.value).forEach(command => mapPoint.push(...command.points));
-                                        if (!mapPoint.length) {
-                                            break;
+                                        if (SvgBuild) {
+                                            SvgBuild.toPathCommandList(path.value).forEach(command => mapPoint.push(...command.points));
                                         }
                                     }
                                     case 'polygon': {
-                                        if (path.element instanceof SVGPolygonElement) {
-                                            mapPoint.push(...squared.svg.SvgBuild.clonePoints(path.element.points));
+                                        if (SvgBuild && path.element instanceof SVGPolygonElement) {
+                                            mapPoint.push(...SvgBuild.clonePoints(path.element.points));
+                                        }
+                                        if (!mapPoint.length) {
+                                            break;
                                         }
                                         cx = $util.minArray(mapPoint.map(pt => pt.x));
                                         cy = $util.minArray(mapPoint.map(pt => pt.y));
@@ -1232,7 +1235,7 @@ var android = (function () {
     function createStyleAttribute(options) {
         const result = {
             output: {
-                path: '',
+                path: 'res/values',
                 file: ''
             },
             name: '',
@@ -4368,7 +4371,6 @@ var android = (function () {
                 const appTheme = {};
                 for (const [filename, theme] of this.stored.themes.entries()) {
                     const data = { A: [] };
-                    const filepath = filename.substring(0, filename.lastIndexOf('/'));
                     for (const [themeName, themeData] of theme.entries()) {
                         const items = [];
                         for (const name in themeData.items) {
@@ -4377,7 +4379,7 @@ var android = (function () {
                                 value: themeData.items[name]
                             });
                         }
-                        if (!appTheme[filepath] || themeName !== 'AppTheme' || items.length > 0) {
+                        if (!appTheme[filename] || themeName !== 'AppTheme' || items.length > 0) {
                             data.A.push({
                                 name: themeName,
                                 parent: themeData.parent,
@@ -4385,7 +4387,7 @@ var android = (function () {
                             });
                         }
                         if (themeName === 'AppTheme') {
-                            appTheme[filepath] = true;
+                            appTheme[filename] = true;
                         }
                     }
                     files.push({ filename, data });

@@ -259,7 +259,6 @@ export default class File<T extends View> extends squared.base.File<T> implement
             const appTheme: ObjectMap<boolean> = {};
             for (const [filename, theme] of this.stored.themes.entries()) {
                 const data: TemplateDataA = { A: [] };
-                const filepath = filename.substring(0, filename.lastIndexOf('/'));
                 for (const [themeName, themeData] of theme.entries()) {
                     const items: StringMap[] = [];
                     for (const name in themeData.items) {
@@ -268,7 +267,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                             value: themeData.items[name]
                         });
                     }
-                    if (!appTheme[filepath] || themeName !== 'AppTheme' || items.length > 0) {
+                    if (!appTheme[filename] || themeName !== 'AppTheme' || items.length > 0) {
                         data.A.push({
                             name: themeName,
                             parent: themeData.parent,
@@ -276,7 +275,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                         });
                     }
                     if (themeName === 'AppTheme') {
-                        appTheme[filepath] = true;
+                        appTheme[filename] = true;
                     }
                 }
                 files.push({ filename, data });

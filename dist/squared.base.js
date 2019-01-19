@@ -620,7 +620,7 @@
                         case 'backgroundImage': {
                             if (value !== 'none' && !node.hasBit('excludeResource', NODE_RESOURCE.IMAGE_SOURCE)) {
                                 const gradients = [];
-                                let pattern = new RegExp(`([a-z\-]+)-gradient\\(([\\w\\s%]+)?(${colorStop(false)}+)\\)`, 'g');
+                                let pattern = new RegExp(`(linear|radial)-gradient\\(([\\w\\s%]+)?(${colorStop(false)}+)\\)`, 'g');
                                 let match;
                                 while ((match = pattern.exec(value)) !== null) {
                                     let gradient;
@@ -4169,7 +4169,13 @@
         }
         get lineHeight() {
             if (this._cached.lineHeight === undefined) {
-                this._cached.lineHeight = this.textElement || this.length === 0 ? this.toInt('lineHeight') : $util$8.convertInt(this.cssParent('lineHeight', true));
+                if (this.length === 0 || this.textElement) {
+                    this._cached.lineHeight = this.toInt('lineHeight');
+                }
+                else {
+                    const lineHeight = $util$8.convertInt(this.cssParent('lineHeight', true));
+                    this._cached.lineHeight = lineHeight > this.bounds.height ? lineHeight : 0;
+                }
             }
             return this._cached.lineHeight;
         }
@@ -5511,34 +5517,38 @@
             if (mainData.wrap) {
                 function setDirection(align, sort, size) {
                     const map = new Map();
-                    pageFlow.sort((a, b) => a.linear[align] < b.linear[align] || a.linear[sort] < b.linear[sort] ? -1 : 1);
+                    pageFlow.sort((a, b) => {
+                        if (a.linear[align] !== b.linear[align]) {
+                            return a.linear[align] < b.linear[align] ? -1 : 1;
+                        }
+                        return a.linear[sort] >= b.linear[sort] ? 1 : -1;
+                    });
                     for (const item of pageFlow) {
-                        const xy = Math.round(item.linear[align]);
-                        const items = map.get(xy) || [];
+                        const point = Math.round(item.linear[align]);
+                        const items = map.get(point) || [];
                         items.push(item);
-                        map.set(xy, items);
+                        map.set(point, items);
                     }
-                    if (map.size) {
-                        let maxCount = 0;
-                        Array.from(map.values()).forEach((segment, index) => {
-                            const group = controller.createNodeGroup(segment[0], segment, node);
-                            group.siblingIndex = index;
-                            const box = group.unsafe('box');
-                            if (box) {
-                                box[size] = node.box[size];
-                            }
-                            group.alignmentType |= 128 /* SEGMENTED */;
-                            maxCount = Math.max(segment.length, maxCount);
-                        });
-                        node.sort(NodeList.siblingIndex);
-                        if (mainData.rowDirection) {
-                            mainData.rowCount = map.size;
-                            mainData.columnCount = maxCount;
+                    let maxCount = 0;
+                    let i = 0;
+                    for (const segment of map.values()) {
+                        const group = controller.createNodeGroup(segment[0], segment, node);
+                        group.siblingIndex = i++;
+                        const box = group.unsafe('box');
+                        if (box) {
+                            box[size] = node.box[size];
                         }
-                        else {
-                            mainData.rowCount = maxCount;
-                            mainData.columnCount = map.size;
-                        }
+                        group.alignmentType |= 128 /* SEGMENTED */;
+                        maxCount = Math.max(segment.length, maxCount);
+                    }
+                    node.sort(NodeList.siblingIndex);
+                    if (mainData.rowDirection) {
+                        mainData.rowCount = map.size;
+                        mainData.columnCount = maxCount;
+                    }
+                    else {
+                        mainData.rowCount = maxCount;
+                        mainData.columnCount = map.size;
                     }
                 }
                 if (mainData.rowDirection) {

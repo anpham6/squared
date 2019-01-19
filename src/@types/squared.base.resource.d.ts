@@ -23,7 +23,6 @@ declare global {
             public static getStoredName(asset: string, value: any): string;
             public static insertStoredAsset(asset: string, name: string, value: any): string;
             public static isBorderVisible(border: BorderAttribute | undefined): boolean;
-            public static isBackgroundVisible<T extends Node>(node: T): boolean;
             public static hasDrawableBackground(object: BoxStyle | undefined): boolean;
             constructor(application: Application<T>, cache: NodeList<T>);
         }

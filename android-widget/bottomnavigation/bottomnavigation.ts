@@ -66,7 +66,7 @@ export default class BottomNavigation<T extends $View> extends squared.base.Exte
 
     private setStyleTheme() {
         const options = $utilA.createStyleAttribute(Object.assign({}, this.options.resource));
-        $util.defaultWhenNull(options, 'parentTheme', 'Theme.AppCompat.Light.DarkActionBar');
+        $util.defaultWhenNull(options, 'parent', 'Theme.AppCompat.Light.DarkActionBar');
         $Resource.addTheme(options);
     }
 }

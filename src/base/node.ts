@@ -1166,7 +1166,13 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get lineHeight() {
         if (this._cached.lineHeight === undefined) {
-            this._cached.lineHeight = this.textElement || this.length === 0 ? this.toInt('lineHeight') : $util.convertInt(this.cssParent('lineHeight', true));
+            if (this.length === 0 || this.textElement) {
+                this._cached.lineHeight = this.toInt('lineHeight');
+            }
+            else {
+                const lineHeight = $util.convertInt(this.cssParent('lineHeight', true));
+                this._cached.lineHeight = lineHeight > this.bounds.height ? lineHeight : 0;
+            }
         }
         return this._cached.lineHeight;
     }

@@ -9,19 +9,9 @@ export default [
         treeshake: false,
         output: {
             file: './dist/squared.js',
-            name: 'umd',
+            name: 'squared',
             format: 'umd',
             banner: `/* squared ${version}\n   https://github.com/anpham6/squared */\n`
-        }
-    },
-    {
-        input: './build/src/svg/main.js',
-        treeshake: false,
-        output: {
-            file: './dist/squared.svg.js',
-            name: 'squared.svg',
-            format: 'umd',
-            banner: `/* squared.svg ${version}\n   https://github.com/anpham6/squared */\n`
         }
     },
     {
@@ -35,29 +25,21 @@ export default [
         }
     },
     {
+        input: './build/src/svg/main.js',
+        treeshake: false,
+        output: {
+            file: './dist/squared.svg.js',
+            name: 'squared.svg',
+            format: 'umd',
+            banner: `/* squared.svg ${version}\n   https://github.com/anpham6/squared */\n`
+        }
+    },
+    {
         input: './build/src/main.js',
         treeshake: false,
         output: {
             file: './dist/squared.min.js',
             name: 'squared',
-            format: 'umd'
-        },
-        plugins: [
-            babel(),
-            terser({
-                compress: {
-                    pure_getters: true,
-                    unsafe: true
-                }
-            })
-        ]
-    },
-    {
-        input: './build/src/svg/main.js',
-        treeshake: false,
-        output: {
-            file: './dist/squared.svg.min.js',
-            name: 'squared.svg',
             format: 'umd'
         },
         plugins: [
@@ -88,4 +70,22 @@ export default [
             })
         ]
     },
+    {
+        input: './build/src/svg/main.js',
+        treeshake: false,
+        output: {
+            file: './dist/squared.svg.min.js',
+            name: 'squared.svg',
+            format: 'umd'
+        },
+        plugins: [
+            babel(),
+            terser({
+                compress: {
+                    pure_getters: true,
+                    unsafe: true
+                }
+            })
+        ]
+    }
 ];

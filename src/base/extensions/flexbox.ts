@@ -46,34 +46,38 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
         if (mainData.wrap) {
             function setDirection(align: string, sort: string, size: string) {
                 const map = new Map<number, T[]>();
-                pageFlow.sort((a, b) => a.linear[align] < b.linear[align] || a.linear[sort] < b.linear[sort] ? -1 : 1);
+                pageFlow.sort((a, b) => {
+                    if (a.linear[align] !== b.linear[align]) {
+                        return a.linear[align] < b.linear[align] ? -1 : 1;
+                    }
+                    return a.linear[sort] >= b.linear[sort] ? 1 : -1;
+                });
                 for (const item of pageFlow) {
-                    const xy = Math.round(item.linear[align]);
-                    const items: T[] = map.get(xy) || [];
+                    const point = Math.round(item.linear[align]);
+                    const items: T[] = map.get(point) || [];
                     items.push(item);
-                    map.set(xy, items);
+                    map.set(point, items);
                 }
-                if (map.size) {
-                    let maxCount = 0;
-                    Array.from(map.values()).forEach((segment, index) => {
-                        const group = controller.createNodeGroup(segment[0], segment, node);
-                        group.siblingIndex = index;
-                        const box = group.unsafe('box');
-                        if (box) {
-                            box[size] = node.box[size];
-                        }
-                        group.alignmentType |= NODE_ALIGNMENT.SEGMENTED;
-                        maxCount = Math.max(segment.length, maxCount);
-                    });
-                    node.sort(NodeList.siblingIndex);
-                    if (mainData.rowDirection) {
-                        mainData.rowCount = map.size;
-                        mainData.columnCount = maxCount;
+                let maxCount = 0;
+                let i = 0;
+                for (const segment of map.values()) {
+                    const group = controller.createNodeGroup(segment[0], segment, node);
+                    group.siblingIndex = i++;
+                    const box = group.unsafe('box');
+                    if (box) {
+                        box[size] = node.box[size];
                     }
-                    else {
-                        mainData.rowCount = maxCount;
-                        mainData.columnCount = map.size;
-                    }
+                    group.alignmentType |= NODE_ALIGNMENT.SEGMENTED;
+                    maxCount = Math.max(segment.length, maxCount);
+                }
+                node.sort(NodeList.siblingIndex);
+                if (mainData.rowDirection) {
+                    mainData.rowCount = map.size;
+                    mainData.columnCount = maxCount;
+                }
+                else {
+                    mainData.rowCount = maxCount;
+                    mainData.columnCount = map.size;
                 }
             }
             if (mainData.rowDirection) {

@@ -433,7 +433,7 @@
         const transform = element.attributes.getNamedItem('transform');
         if (transform) {
             const pattern = /rotate\((-?[\d.]+),?\s*(-?[\d.]+),?\s*(-?[\d.]+)\)/g;
-            let match = null;
+            let match;
             while ((match = pattern.exec(transform.value)) !== null) {
                 result.push({
                     angle: parseFloat(match[1]),
@@ -3010,7 +3010,31 @@
     };
     const REGEXP_CUBICBEZIER = new RegExp(`cubic-bezier\\(${REGEXP_UNIT.ZERO_ONE}, ${REGEXP_UNIT.DECIMAL}, ${REGEXP_UNIT.ZERO_ONE}, ${REGEXP_UNIT.DECIMAL}\\)`);
     function parseAttribute(element, attr) {
-        return $util$7.flatMap($dom$4.cssAttribute(element, attr).split(/(?<!\w+\([\-\d., ]+),/), value => value.trim());
+        let value = $dom$4.cssAttribute(element, attr);
+        if (attr === 'animation-timing-function') {
+            const result = [];
+            while (value !== '') {
+                let index = value.indexOf(',');
+                if (index !== -1) {
+                    let segment = value.substring(0, index);
+                    if (segment.startsWith('steps') || segment.startsWith('cubic-bezier')) {
+                        const nextIndex = value.indexOf(')', index) + 1;
+                        segment += value.substring(index, nextIndex);
+                        index = nextIndex;
+                    }
+                    result.push(segment);
+                    value = value.substring(index + 1).trim();
+                }
+                else {
+                    result.push(value);
+                    break;
+                }
+            }
+            return result;
+        }
+        else {
+            return $util$7.flatMap(value.split(/,/), item => item.trim());
+        }
     }
     function sortAttribute(value) {
         return value.sort((a, b) => a.ordinal >= b.ordinal ? 1 : -1);

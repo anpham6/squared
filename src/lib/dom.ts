@@ -132,7 +132,7 @@ export function getKeyframeRules(): CSSRuleData {
                     if (item instanceof CSSKeyframesRule) {
                         const map: ObjectMap<StringMap> = {};
                         Array.from(item.cssRules).forEach(keyframe => {
-                            const match = /((?:\d+%\s*,?\s*)+|from|to)\s*\{\s*(.*?)\s*\}/.exec(keyframe.cssText);
+                            const match = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.*?)\s*}/.exec(keyframe.cssText);
                             if (match) {
                                 const keyText = (keyframe['keyText'] as string || match[1].trim()).split(',').map(percent => percent.trim());
                                 const properties = flatMap(match[2].split(';'), percent => percent.trim());

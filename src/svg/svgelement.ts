@@ -1,4 +1,4 @@
-import { SvgTransformExclusions, SvgTransformResidual } from '../svg/@types/object';
+import { SvgTransformExclusions, SvgTransformResidual } from './@types/object';
 
 import SvgContainer from './svgcontainer';
 

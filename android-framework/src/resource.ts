@@ -38,23 +38,26 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
             switch (item.type) {
                 case 'radial':
                     if (node.svgElement) {
-                        if (path && squared.svg && squared.svg.SvgBuild) {
+                        if (path) {
                             const radial = <SvgRadialGradient> item;
                             const mapPoint: Point[] = [];
+                            const SvgBuild = squared.svg && squared.svg.SvgBuild;
                             let cx: number | undefined;
                             let cy: number | undefined;
                             let cxDiameter: number | undefined;
                             let cyDiameter: number | undefined;
                             switch (path.element.tagName) {
                                 case 'path': {
-                                    squared.svg.SvgBuild.toPathCommandList(path.value).forEach(command => mapPoint.push(...command.points));
-                                    if (!mapPoint.length) {
-                                        break;
+                                    if (SvgBuild) {
+                                        SvgBuild.toPathCommandList(path.value).forEach(command => mapPoint.push(...command.points));
                                     }
                                 }
                                 case 'polygon': {
-                                    if (path.element instanceof SVGPolygonElement) {
-                                        mapPoint.push(...squared.svg.SvgBuild.clonePoints(path.element.points));
+                                    if (SvgBuild && path.element instanceof SVGPolygonElement) {
+                                        mapPoint.push(...SvgBuild.clonePoints(path.element.points));
+                                    }
+                                    if (!mapPoint.length) {
+                                        break;
                                     }
                                     cx = $util.minArray(mapPoint.map(pt => pt.x));
                                     cy = $util.minArray(mapPoint.map(pt => pt.y));

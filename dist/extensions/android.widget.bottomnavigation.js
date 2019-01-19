@@ -52,7 +52,7 @@ this.android.widget.bottomnavigation = (function () {
         }
         setStyleTheme() {
             const options = $utilA.createStyleAttribute(Object.assign({}, this.options.resource));
-            $util.defaultWhenNull(options, 'parentTheme', 'Theme.AppCompat.Light.DarkActionBar');
+            $util.defaultWhenNull(options, 'parent', 'Theme.AppCompat.Light.DarkActionBar');
             $Resource.addTheme(options);
         }
     }

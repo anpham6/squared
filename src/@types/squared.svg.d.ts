@@ -1,7 +1,5 @@
 import { SvgAspectRatio, SvgPathCommand, SvgPoint, SvgRect, SvgTransform } from '../svg/@types/object';
 
-import Container = squared.lib.base.Container;
-
 declare global {
     namespace squared.svg {
         interface SvgView extends SvgElement {

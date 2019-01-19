@@ -84,7 +84,7 @@ this.android.widget.drawer = (function () {
         }
         setStyleTheme(api) {
             const options = $utilA.createStyleAttribute(Object.assign({}, this.options.resource));
-            $util.defaultWhenNull(options, 'parentTheme', 'Theme.AppCompat.Light.NoActionBar');
+            $util.defaultWhenNull(options, 'parent', 'Theme.AppCompat.Light.NoActionBar');
             $util.defaultWhenNull(options.items, 'android:windowTranslucentStatus', 'true');
             $Resource.addTheme(options);
             if (api >= 21) {

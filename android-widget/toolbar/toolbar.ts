@@ -300,14 +300,14 @@ export default class Toolbar<T extends $View> extends squared.base.Extension<T> 
 
     private setStyleTheme(themeData: ToolbarThemeData) {
         const options = $utilA.createStyleAttribute(Object.assign({}, this.options.resource));
-        const optionsActionBar = $utilA.createStyleAttribute({ appTheme: '.NoActionBar', output: options.output });
-        const optionsAppBar = $utilA.createStyleAttribute({ appTheme: '.AppBarOverlay', output: options.output });
-        const optionsPopup = $utilA.createStyleAttribute({ appTheme: '.PopupOverlay', output: options.output });
-        $util.defaultWhenNull(options, 'parentTheme', 'Theme.AppCompat.Light.DarkActionBar');
+        const optionsActionBar = $utilA.createStyleAttribute({ name: '.NoActionBar', output: options.output });
+        const optionsAppBar = $utilA.createStyleAttribute({ name: '.AppBarOverlay', output: options.output });
+        const optionsPopup = $utilA.createStyleAttribute({ name: '.PopupOverlay', output: options.output });
+        $util.defaultWhenNull(options, 'parent', 'Theme.AppCompat.Light.DarkActionBar');
         $util.defaultWhenNull(optionsActionBar.items, 'windowActionBar', 'false');
         $util.defaultWhenNull(optionsActionBar.items, 'windowNoTitle', 'true');
-        $util.defaultWhenNull(optionsAppBar, 'parentTheme', themeData.appBarOverlay || 'ThemeOverlay.AppCompat.Dark.ActionBar');
-        $util.defaultWhenNull(optionsPopup, 'parentTheme', themeData.popupOverlay || 'ThemeOverlay.AppCompat.Light');
+        $util.defaultWhenNull(optionsAppBar, 'parent', themeData.appBarOverlay || 'ThemeOverlay.AppCompat.Dark.ActionBar');
+        $util.defaultWhenNull(optionsPopup, 'parent', themeData.popupOverlay || 'ThemeOverlay.AppCompat.Light');
         $Resource.addTheme(options, optionsActionBar, optionsAppBar, optionsPopup);
     }
 

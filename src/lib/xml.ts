@@ -171,8 +171,8 @@ export function createTemplate(value: StringMap | string, data: ExternalData, fo
 
 export function formatTemplate(value: string, closeEmpty = true, char = '\t') {
     const lines: XMLTagData[] = [];
-    const pattern = /\s*(<(\/)?([?\w]+)[^>]*>)\n{0,1}([^<]*)/g;
-    let match: RegExpExecArray | null = null;
+    const pattern = /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g;
+    let match: RegExpExecArray | null;
     while ((match = pattern.exec(value)) !== null) {
         lines.push({
             tag: match[1],
