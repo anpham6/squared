@@ -1,21 +1,17 @@
 # squared
 
-This program can convert moderately complex HTML pages into the standard XML layouts for Android. HTML is the most popular and versatile way to design user interfaces and can be used to generate the UI for any platform based on XML.
+This program can convert moderately complex HTML pages into the standard XML layouts for Android. HTML is the most popular and versatile way to design user interfaces and can be used to generate the UI for any platform.
 
-Multiple views per page are supported with their resources and styles merged into one package to simplify maintenance. Conceptually creating a snapshot history in XML of what is displayed in the browser.
+The ratio is about 1 line of HTML for every 10 lines of Android XML when using squared to generate the UI for your mobile application. It will also auto-generate the XML resources for the entire project. Using HTML best practices and techniques will output the fastest possible layout structure which is close to 95% efficient and better than most hand-written code.
 
-Layout rendering can also be customized using extensions as the program was built to be nearly completely modular. Some of the common layouts already have built-in extensions which you can load or unload based on your preference.
-
-The ratio is about 1 line of HTML to every 10 lines of Android XML when using Squared to generate the UI for your mobile application. Another time saver is having the XML resources auto-generated for the entire project. Using HTML best practices and techniques will also generate the fastest possible layout structure in Android which is close to 95% efficient and better than most hand-written code.
+There is also nearly full SVG support including transformations and CSS/SMIL animations.
 
 ## Installation (global js variable: squared)
-
-*** External CSS files cannot be parsed when loading HTML pages using the file:// protocol (hard drive) with Chrome 64 or higher. Loading the HTML page from a web server (http://localhost) or embedding the CSS files into a &lt;style&gt; tag can get you past this security restriction. You can also use your preferred browser Safari/Edge/Firefox. The latest version of Chrome is ideally what you should use to generate the production version of your program. ***
 
 Express server through Node.js is available with a provided default configuration. It is sufficient to load this program locally and can also be used for development. Using Express is highly recommended as you can create a ZIP archive of the generated resources from inside your browser which can be conveniently extracted into your project folder. Installing these dependencies are only required if you plan on using Express as your local web server. 
 
 * Install Node.js: http://www.nodejs.org
-* Install Squared: (choose one)
+* Install squared: (choose one)
 
 NPM  
 &nbsp;&nbsp;&nbsp;&gt; npm install squared  
@@ -57,8 +53,9 @@ GitHub
     });
 </script>
 ```
+The primary function "parseDocument" can be called on multiple elements and multiple times per session. The application will continuously and progressively build into a single entity with combined shared resources.
 
-Library files are in the /dist folder. A minimum of *three* files are required to run Squared.
+Library files are in the /dist folder. A minimum of *three* files are required to run squared.
 
 1. squared
 2. squared-base
@@ -66,7 +63,7 @@ Library files are in the /dist folder. A minimum of *three* files are required t
 4. framework (e.g. android)
 5. extensions (e.g. android.widget) - *optional*
 
-There are babel minified versions for production (ES5) and non-babel versions for development (ES6). The primary function "parseDocument" can be called on multiple elements and multiple times per session. The application will continuously and progressively build into a single entity with combined shared resources.
+There are ES5 minified versions (*.min.js) and ES6 non-minified versions (*.js). ES5 is more compatible with older browsers. ES6 performd better in newer browsers.
 
 NOTE: Calling "save" or "write" methods before the images have completely loaded can sometimes cause them to be excluded from the generated layout. In these cases you should use the "parseDocument" promise method "then" to set a callback for your commands.
 
@@ -81,6 +78,8 @@ NOTE: Calling "save" or "write" methods before the images have completely loaded
     });
 </script>
 ```
+
+*** External CSS files cannot be parsed when loading HTML pages using the file:// protocol (hard drive) with Chrome 64 or higher. Loading the HTML page from a web server (http://localhost) or embedding the CSS files into a &lt;style&gt; tag can get you past this security restriction. You can also use your preferred browser Safari/Edge/Firefox. The latest version of Chrome is ideally what you should use to generate the production version of your program. ***
 
 ### ALL: User Settings (example: android)
 
@@ -137,6 +136,8 @@ squared.settings = {
 ```
 
 ### ALL: Extension Standard
+
+Layout rendering can also be customized using extensions as the program was built to be nearly completely modular. Some of the common layouts already have built-in extensions which you can load or unload based on your preference.
 
 CSS Grid and Flexbox layouts are mostly supported. There is also support for SVG and most of the common floating techniques.
 

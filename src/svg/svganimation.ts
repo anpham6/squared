@@ -50,6 +50,13 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
         return item ? item.value.trim() : '';
     }
 
+    set delay(value) {
+        this.begin[0] = value;
+    }
+    get delay() {
+        return this.begin[0] || 0;
+    }
+
     get instanceType() {
         return 0;
     }

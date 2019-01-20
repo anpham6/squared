@@ -524,7 +524,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                 }
                                 for (const item of repeating) {
                                     const options: TemplateData = {
-                                        startOffset: item.begin.length && item.begin[0] > 0 ? item.begin[0].toString() : '',
+                                        startOffset: item.delay > 0 ? item.delay.toString() : '',
                                         duration: item.duration.toString()
                                     };
                                     if ($SvgBuild.instanceOfSet(item)) {
@@ -706,41 +706,42 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                                 break;
                                                                         }
                                                                         if (x !== undefined || y !== undefined) {
-                                                                            const commandStart = pathPoints[0];
-                                                                            const commandEnd = pathPoints[pathPoints.length - 1];
-                                                                            const [firstPoint, lastPoint] = [commandStart.points[0], commandEnd.points[commandEnd.points.length - 1]];
+                                                                            const commandA = pathPoints[0];
+                                                                            const commandB = pathPoints[pathPoints.length - 1];
+                                                                            const pointA = commandA.points[0];
+                                                                            const pointB = commandB.points[commandB.points.length - 1];
                                                                             let recalibrate = false;
                                                                             if (x !== undefined) {
                                                                                 switch (item.attributeName) {
                                                                                     case 'x':
-                                                                                        x -= firstPoint.x;
+                                                                                        x -= pointA.x;
                                                                                         recalibrate = true;
                                                                                         break;
                                                                                     case 'x1':
                                                                                     case 'cx':
-                                                                                        firstPoint.x = x;
-                                                                                        commandStart.coordinates[0] = x;
+                                                                                        pointA.x = x;
+                                                                                        commandA.coordinates[0] = x;
                                                                                         break;
                                                                                     case 'x2':
-                                                                                        lastPoint.x = x;
-                                                                                        commandEnd.coordinates[0] = x;
+                                                                                        pointB.x = x;
+                                                                                        commandB.coordinates[0] = x;
                                                                                         break;
                                                                                 }
                                                                             }
                                                                             if (y !== undefined) {
                                                                                 switch (item.attributeName) {
                                                                                     case 'y':
-                                                                                        y -= firstPoint.y;
+                                                                                        y -= pointA.y;
                                                                                         recalibrate = true;
                                                                                         break;
                                                                                     case 'y1':
                                                                                     case 'cy':
-                                                                                        firstPoint.y = y;
-                                                                                        commandStart.coordinates[1] = y;
+                                                                                        pointA.y = y;
+                                                                                        commandA.coordinates[1] = y;
                                                                                         break;
                                                                                     case 'y2':
-                                                                                        lastPoint.y = y;
-                                                                                        commandEnd.coordinates[1] = y;
+                                                                                        pointB.y = y;
+                                                                                        commandB.coordinates[1] = y;
                                                                                         break;
                                                                                 }
                                                                             }
@@ -959,7 +960,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                         pathArray.push({
                                             propertyName: 'pathData',
                                             interpolator: createPathInterpolator(item.keySplines, 0),
-                                            startOffset: item.begin.length && item.begin[0] > 0 ? item.begin[0].toString() : '',
+                                            startOffset: item.delay > 0 ? item.delay.toString() : '',
                                             duration: item.duration.toString(),
                                             repeatCount: '0',
                                             valueType: 'pathType',

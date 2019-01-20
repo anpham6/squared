@@ -326,7 +326,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     public processUnknownParent(layout: $Layout<T>) {
-        const [node, parent] = [layout.node, layout.parent];
+        const node = layout.node;
         let next = false;
         let renderAs: T | undefined;
         if (node.has('columnCount')) {
@@ -364,7 +364,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 {
                     child.documentRoot = node.documentRoot;
                     child.siblingIndex = node.siblingIndex;
-                    child.parent = parent;
+                    child.parent = layout.parent;
                     node.renderAs = child;
                     node.resetBox($enum.BOX_STANDARD.MARGIN | $enum.BOX_STANDARD.PADDING, child, true);
                     node.hide();
@@ -698,7 +698,10 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     public renderNodeGroup(layout: $Layout<T>) {
-        const [node, parent, containerType, alignmentType] = [layout.node, layout.parent, layout.containerType, layout.alignmentType];
+        const node = layout.node;
+        const parent = layout.parent;
+        const containerType = layout.containerType;
+        const alignmentType = layout.alignmentType;
         const options = createViewAttribute();
         let valid = false;
         switch (containerType) {
@@ -739,7 +742,8 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     public renderNode(layout: $Layout<T>) {
-        const [node, parent] = [layout.node, layout.parent];
+        const node = layout.node;
+        const parent = layout.parent;
         node.alignmentType |= layout.alignmentType;
         const controlName = View.getControlName(layout.containerType);
         node.setControlType(controlName, layout.containerType);
@@ -1043,12 +1047,6 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     public addGuideline(node: T, parent: T, orientation = '', percent = false, opposite = false) {
-        if (node.dataset.constraintPercent === 'true') {
-            percent = true;
-        }
-        if (node.dataset.constraintOpposite === 'true') {
-            opposite = true;
-        }
         const documentParent = parent.groupParent ? parent : node.documentParent as T;
         [AXIS_ANDROID.HORIZONTAL, AXIS_ANDROID.VERTICAL].forEach((value, index) => {
             if (!node.constraint[value] && (orientation === '' || value === orientation)) {
@@ -1345,12 +1343,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                     return true;
                                 }
                             }
-                            if (checkLineWrap && !connected && (
-                                    checkWidthWrap() ||
-                                    item.multiline && $dom.hasLineBreak(item.element) ||
-                                    item.preserveWhiteSpace && /^\n+/.test(item.textContent)
-                               ))
-                            {
+                            if (checkLineWrap && !connected && (checkWidthWrap() || item.multiline && $dom.hasLineBreak(item.element) || item.preserveWhiteSpace && /^\n+/.test(item.textContent))) {
                                 return true;
                             }
                         }
@@ -1437,7 +1430,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 textBottom = undefined;
             }
             const baselineAlign: T[] = [];
-            let documentId = i === 0 ? 'true' : baseline ? baseline.documentId : '';
+            let documentId = i === 0 ? 'true' : (baseline ? baseline.documentId : '');
             const tryHeight = (child: T) => {
                 if (!alignmentMultiLine) {
                     if (baselineItems.includes(child) || child.actualParent && child.actualHeight >= child.actualParent.box.height) {
@@ -1761,7 +1754,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 if (index > 0) {
                     const previousRow = chainHorizontal[index - 1];
                     const aboveEnd = previousRow[previousRow.length - 1];
-                    const previousEnd = reverse ? rowEnd as T : rowStart;
+                    const previousEnd = reverse ? rowEnd : rowStart;
                     const nodes: T[] = [];
                     if (aboveEnd) {
                         nodes.push(aboveEnd);

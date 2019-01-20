@@ -304,7 +304,6 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                             else {
                                 const images: string[] = [];
                                 pattern = new RegExp($util.REGEXP_PATTERN.CSS_URL, 'g');
-                                match = null;
                                 while ((match = pattern.exec(value)) !== null) {
                                     if (match) {
                                         images.push(match[0]);

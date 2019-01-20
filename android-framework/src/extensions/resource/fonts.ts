@@ -5,7 +5,6 @@ import { BUILD_ANDROID } from '../../lib/enumeration';
 import Resource from '../../resource';
 import View from '../../view';
 
-import { REGEXP_ANDROID } from '../../lib/constant';
 import { replaceUnit } from '../../lib/util';
 
 type StyleList = ObjectMap<number[]>;
@@ -359,7 +358,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             for (const attrs in tagData) {
                 const items: NameValue[] = [];
                 attrs.split(';').forEach(value => {
-                    const match = REGEXP_ANDROID.ATTRIBUTE.exec(value);
+                    const match = $util.REGEXP_PATTERN.ATTRIBUTE.exec(value);
                     if (match) {
                         items.push({
                             name: match[1],
@@ -375,12 +374,23 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 });
             }
             styleData.sort((a, b) => {
-                let [c, d] = [a.items.length, b.items.length];
-                if (c === d) {
-                    [c, d] = [a.items[0].name, b.items[0].name];
+                let c = 0;
+                let d = 0;
+                if (a.ids && b.ids) {
+                    c = a.ids.length;
+                    d = b.ids.length;
                 }
                 if (c === d) {
-                    [c, d] = [a.items[0].value, b.items[0].value];
+                    c = (a.items as any[]).length;
+                    d = (b.items as any[]).length;
+                }
+                if (c === d) {
+                    c = a.items[0].name;
+                    d = b.items[0].name;
+                }
+                if (c === d) {
+                    c = a.items[0].value;
+                    d = b.items[0].value;
                 }
                 return c <= d ? 1 : -1;
             });

@@ -1171,7 +1171,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             }
             else {
                 const lineHeight = $util.convertInt(this.cssParent('lineHeight', true));
-                this._cached.lineHeight = lineHeight > this.bounds.height ? lineHeight : 0;
+                this._cached.lineHeight = lineHeight > this.bounds.height || this.some(node => node.plainText) ? lineHeight : 0;
             }
         }
         return this._cached.lineHeight;
@@ -1346,9 +1346,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get inlineText() {
         if (this._cached.inlineText === undefined) {
-            const element = this._element;
             let value = false;
-            if (element) {
+            const element = this._element;
+            if (element && this.htmlElement) {
                 switch (element.tagName) {
                     case 'INPUT':
                     case 'BUTTON':
@@ -1357,16 +1357,18 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     case 'TEXTAREA':
                         break;
                     default:
-                        value = (
-                            this.htmlElement &&
-                            $dom.hasFreeFormText(element) && (
-                                element.children.length === 0 ||
-                                Array.from(element.children).every(item => {
-                                    const node = $dom.getElementAsNode<T>(item);
-                                    return !(node && !node.excluded || $dom.hasComputedStyle(item) && $util.hasValue(item.dataset.use));
-                                })
-                            )
-                        );
+                        if ($dom.hasFreeFormText(element)) {
+                            value = Array.from(element.children).every(item => {
+                                const excluded = $dom.getElementAsNodeAttribute<boolean>(item, 'excluded');
+                                if (excluded) {
+                                    const position = $dom.getStyle(item).position;
+                                    return position !== 'absolute' && position !== 'fixed';
+                                }
+                                else {
+                                    return !(!excluded || $dom.hasComputedStyle(item) && $util.hasValue(item.dataset.target));
+                                }
+                            });
+                        }
                         break;
                 }
             }
@@ -1436,10 +1438,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (this._cached.autoMargin === undefined) {
             if (!this.pageFlow || this.blockStatic || this.display === 'table') {
                 const styleMap = this._initial.iteration === -1 ? this._styleMap : this._initial.styleMap;
-                const left = styleMap.marginLeft === 'auto' && (this.pageFlow ? true : this.has('right'));
-                const right = styleMap.marginRight === 'auto' && (this.pageFlow ? true : this.has('left'));
-                const top = styleMap.marginTop === 'auto' && (this.pageFlow ? true : this.has('bottom'));
-                const bottom = styleMap.marginBottom === 'auto' && (this.pageFlow ? true : this.has('top'));
+                const left = styleMap.marginLeft === 'auto' && (this.pageFlow || this.has('right'));
+                const right = styleMap.marginRight === 'auto' && (this.pageFlow || this.has('left'));
+                const top = styleMap.marginTop === 'auto' && (this.pageFlow || this.has('bottom'));
+                const bottom = styleMap.marginBottom === 'auto' && (this.pageFlow || this.has('top'));
                 this._cached.autoMargin = {
                     horizontal: left || right,
                     left: left && !right,
@@ -1515,23 +1517,15 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
     get overflow() {
         if (this._cached.overflow === undefined) {
-            const [overflow, overflowX, overflowY] = [this.css('overflow'), this.css('overflowX'), this.css('overflowY')];
             const element = this._element;
+            const overflow = this.css('overflow');
+            const overflowX = this.css('overflowX');
+            const overflowY = this.css('overflowY');
             let value = 0;
-            if (this.hasWidth && (
-                    overflow === 'scroll' ||
-                    overflowX === 'scroll' ||
-                    overflowX === 'auto' && element && element.clientWidth !== element.scrollWidth
-               ))
-            {
+            if (this.hasWidth && (overflow === 'scroll' || overflowX === 'scroll' || overflowX === 'auto' && element && element.clientWidth !== element.scrollWidth)) {
                 value |= NODE_ALIGNMENT.HORIZONTAL;
             }
-            if (this.hasHeight && (
-                    overflow === 'scroll' ||
-                    overflowY === 'scroll' ||
-                    overflowY === 'auto' && element && element.clientHeight !== element.scrollHeight
-               ))
-            {
+            if (this.hasHeight && (overflow === 'scroll' || overflowY === 'scroll' || overflowY === 'auto' && element && element.clientHeight !== element.scrollHeight)) {
                 value |= NODE_ALIGNMENT.VERTICAL;
             }
             this._cached.overflow = value;

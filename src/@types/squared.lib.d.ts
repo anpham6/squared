@@ -51,6 +51,7 @@ declare global {
             function getElementCache(element: Element, attr: string): any;
             function deleteElementCache(element: Element, ...attrs: string[]): void;
             function getElementAsNode<T>(element: Element): T | undefined;
+            function getElementAsNodeAttribute<T>(element: Element, attr: string): T | undefined;
         }
 
         namespace util {

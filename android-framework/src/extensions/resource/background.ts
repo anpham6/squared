@@ -284,8 +284,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     let resourceName = '';
                     for (let i = 0; i < backgroundImage.length; i++) {
                         if (backgroundImage[i] !== '') {
-                            const boxPosition = $dom.getBackgroundPosition(backgroundPosition[i], node.bounds, node.dpi, node.fontSize);
                             const image = backgroundDimensions[i];
+                            const boxPosition = $dom.getBackgroundPosition(backgroundPosition[i], node.bounds, node.dpi, node.fontSize);
                             let gravity = (() => {
                                 if (boxPosition.horizontal === 'center' && boxPosition.vertical === 'center') {
                                     return 'center';
@@ -425,6 +425,14 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         height,
                                         bitmap: []
                                     };
+                                    if (node.imageElement) {
+                                        gravity.split('|').forEach(attr => {
+                                            const value = node[`padding${$util.capitalize(attr)}`];
+                                            if (value > 0) {
+                                                imageData[attr] = $util.formatPX($util.convertInt(imageData[attr]) - value);
+                                            }
+                                        });
+                                    }
                                     if (!(backgroundSize[i] === 'auto' || backgroundSize[i] === 'auto auto' || backgroundSize[i] === 'initial')) {
                                         switch (backgroundSize[i]) {
                                             case 'cover':

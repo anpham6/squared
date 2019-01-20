@@ -10,6 +10,7 @@
     "strictBindCallApply": true,
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
+    "noEmitHelpers": true,
     "noImplicitAny": true,
     "noImplicitThis": true,
     "noImplicitReturns": true,

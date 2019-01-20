@@ -485,7 +485,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                 if (this.plainText) {
                     this.android('layout_width', renderParent && this.bounds.width > renderParent.box.width && this.multiline && this.alignParent('left') ? 'match_parent' : 'wrap_content', false);
                 }
-                else if (children.filter(node => (node.inlineStatic || $util.isUnit(node.cssInitial('width'))) && !node.autoMargin.horizontal).some(node => Math.ceil(node.bounds.width) >= this.box.width)) {
+                else if (children.some(node => (node.inlineStatic && !node.plainText || $util.isUnit(node.cssInitial('width'))) && !node.autoMargin.horizontal && Math.ceil(node.bounds.width) >= this.box.width)) {
                     this.android('layout_width', 'wrap_content', false);
                 }
                 else if (
@@ -713,7 +713,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                                 break;
                         }
                     }
-                    const gravity = [x, y].filter(value => value).join('|');
+                    const gravity = x !== '' && y !== '' ? `${x}|${y}` : x || y;
                     result = gravity + (z !== '' ? (gravity !== '' ? '|' : '') + z : '');
             }
             if (result !== '') {

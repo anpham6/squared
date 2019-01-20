@@ -17,7 +17,7 @@ function invertControlPoint(value: number) {
 }
 
 export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgAnimate {
-    public static toStepFractionList(name: string, keySpline: string, index: number, keyTimes: number[], values: string[], dpi = 96, fontSize = 16): [number[], string[]] | undefined {
+    public static toStepFractionList(name: string, spline: string, index: number, keyTimes: number[], values: string[], dpi = 96, fontSize = 16): [number[], string[]] | undefined {
         let currentValue: any[] | undefined;
         let nextValue: any[] | undefined;
         switch (name) {
@@ -37,8 +37,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             case 'rotate':
             case 'scale':
             case 'translate':
-                currentValue = values[index].split(' ').map(value => parseFloat(value));
-                nextValue = values[index + 1].split(' ').map(value => parseFloat(value));
+                currentValue = values[index].trim().split(/\s+/).map(value => parseFloat(value));
+                nextValue = values[index + 1].trim().split(/\s+/).map(value => parseFloat(value));
                 break;
             default:
                 if ($util.isNumber(values[index])) {
@@ -56,15 +56,15 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 break;
         }
         if (currentValue && nextValue && currentValue.length && currentValue.length === nextValue.length) {
-            switch (keySpline)  {
+            switch (spline)  {
                 case 'steps-start':
-                    keySpline = 'steps(1, start)';
+                    spline = 'steps(1, start)';
                     break;
                 case 'steps-end':
-                    keySpline = 'steps(1, end)';
+                    spline = 'steps(1, end)';
                     break;
             }
-            const match = /steps\((\d+)(?:, (start|end))?\)/.exec(keySpline);
+            const match = /steps\((\d+)(?:, (start|end))?\)/.exec(spline);
             if (match) {
                 const keyTimeTotal = keyTimes[index + 1] - keyTimes[index];
                 const stepSize = parseInt(match[1]);
@@ -347,7 +347,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
 
     get fromToType() {
-        return this.keyTimes.length > 0 && this.keyTimes[0] === 0 && this.keyTimes[1] === 1;
+        return this.keyTimes.length === 2 && this.keyTimes[0] === 0 && this.keyTimes[1] === 1;
     }
 
     get instanceType() {

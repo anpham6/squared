@@ -574,7 +574,7 @@ export function hasLineBreak(element: Element | null, lineBreak = false, trimStr
         if (trimString) {
             value = value.trim();
         }
-        if (element.children.length && Array.from(element.children).some(item => item.tagName === 'BR')) {
+        if (element.children && Array.from(element.children).some((item: Element) => item.tagName === 'BR')) {
             return true;
         }
         else if (!lineBreak && /\n/.test(value)) {
@@ -680,4 +680,9 @@ export function deleteElementCache(element: Element, ...attrs: string[]) {
 
 export function getElementAsNode<T>(element: Element): T | undefined {
     return isString(element.className) && element.className.startsWith('squared') ? undefined : getElementCache(element, 'node');
+}
+
+export function getElementAsNodeAttribute<T>(element: Element, attr: string): T | undefined {
+    const node = getElementAsNode(element);
+    return node && node[attr] !== undefined ? node[attr] as T : undefined;
 }

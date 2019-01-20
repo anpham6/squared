@@ -632,10 +632,12 @@ export default class Application<T extends Node> implements squared.base.Applica
                                                 break;
                                             }
                                             else {
-                                                if (node.left < 0 && node.outsideX(parent.box) ||
-                                                    !node.has('left') && node.right < 0 && node.outsideX(parent.box) ||
-                                                    node.top < 0 && node.outsideY(parent.box) ||
-                                                    !node.has('top') && node.bottom < 0 && node.outsideX(parent.box))
+                                                if ((!node.has('right') || node.right < 0) && (!node.has('bottom') || node.bottom < 0) && (
+                                                        node.left < 0 && node.outsideX(parent.box) ||
+                                                        !node.has('left') && node.right < 0 && node.outsideX(parent.box) ||
+                                                        node.top < 0 && node.outsideY(parent.box) ||
+                                                        !node.has('top') && node.bottom < 0 && node.outsideX(parent.box)
+                                                   ))
                                                 {
                                                     outside = true;
                                                 }

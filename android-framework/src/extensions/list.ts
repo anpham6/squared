@@ -90,7 +90,8 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             else {
                 const columnWeight = columnCount > 0 ? '0' : '';
                 const positionInside = node.css('listStylePosition') === 'inside';
-                let [left, top] = [0, 0];
+                let left = 0;
+                let top = 0;
                 let image = '';
                 if (mainData.imageSrc !== '') {
                     const boxPosition = $dom.getBackgroundPosition(mainData.imagePosition, node.bounds, node.dpi, node.fontSize);
@@ -196,8 +197,8 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 node.android('layout_width', '0px');
                 node.android('layout_columnWeight', '1');
             }
-            const [linearX, linearY] = [$NodeList.linearX(node.children), $NodeList.linearY(node.children)];
-            if (linearX || linearY) {
+            const linearX = $NodeList.linearX(node.children);
+            if (linearX || $NodeList.linearY(node.children)) {
                 const layout = new $Layout(
                     parent,
                     node,

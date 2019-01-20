@@ -105,7 +105,10 @@ export function createTemplate(value: StringMap | string, data: ExternalData, fo
         const unknown = data[attr];
         let result: string | false = '';
         let hash = '';
-        if (Array.isArray(unknown)) {
+        if (unknown === undefined || unknown === null) {
+            continue;
+        }
+        else if (Array.isArray(unknown)) {
             hash = '%';
             if (Array.isArray(unknown[0])) {
                 const match = new RegExp(partial(attr, 'start') + `([\\w\\W]*?)` + partial(attr, 'end')).exec(output);

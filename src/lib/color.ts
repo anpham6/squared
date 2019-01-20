@@ -202,11 +202,14 @@ function convertHSL({ r = 0, g = 0, b = 0 }) {
 
 function sortHSL(a: Color, b: Color) {
     if (a.hsl && b.hsl) {
-        let [c, d] = [a.hsl.h, b.hsl.h];
+        let c = a.hsl.h;
+        let d = b.hsl.h;
         if (c === d) {
-            [c, d] = [a.hsl.s, b.hsl.s];
+            c = a.hsl.s;
+            d = b.hsl.s;
             if (c === d) {
-                [c, d] = [a.hsl.l, b.hsl.l];
+                c = a.hsl.l;
+                d = b.hsl.l;
             }
         }
         return c >= d ? 1 : -1;

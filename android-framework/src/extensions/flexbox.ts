@@ -144,8 +144,10 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 partition.forEach(segment => {
                     const HW = CHAIN_MAP.widthHeight[inverse];
                     const HWL = HW.toLowerCase();
-                    const [LT, TL] = [CHAIN_MAP.leftTop[index], CHAIN_MAP.leftTop[inverse]];
-                    const [RB, BR] = [CHAIN_MAP.rightBottom[index], CHAIN_MAP.rightBottom[inverse]];
+                    const LT = CHAIN_MAP.leftTop[index];
+                    const TL = CHAIN_MAP.leftTop[inverse];
+                    const RB = CHAIN_MAP.rightBottom[index];
+                    const BR = CHAIN_MAP.rightBottom[inverse];
                     const maxSize = $util.maxArray(segment.map(item => item.flexElement ? 0 : item.bounds[HW.toLowerCase()]));
                     let baseline: T | undefined;
                     for (let i = 0; i < segment.length; i++) {

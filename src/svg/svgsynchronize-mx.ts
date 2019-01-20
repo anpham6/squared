@@ -332,7 +332,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
         public mergeAnimate(animations: SvgAnimate[], useKeyTime = false, path?: SvgPath) {
             if (animations.length > 1 || animations.some(item => item.begin.length > 1 || !item.fromToType || item.alternate || item.end !== undefined || item.additiveSum)) {
                 let animationsCSS = animations.filter(item => item.element === undefined);
-                const minDelay = $util.minArray(animationsCSS.map(item => item.begin[0]));
+                const minDelay = $util.minArray(animationsCSS.map(item => item.delay));
                 const maxDuration = $util.maxArray(animationsCSS.map(item => getDuration(item)));
                 const fillBackwards = animationsCSS.filter(item => $util.hasBit(item.fillMode, FILL_MODE.BACKWARDS));
                 const groupName: ObjectMap<Map<number, GroupData>> = {};
@@ -500,7 +500,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                             groupBackwards = fillBackwards.filter(item => item.attributeName === attr);
                             if (groupBackwards.length) {
                                 for (const item of groupBackwards) {
-                                    groupBegin.unshift(item.begin[0]);
+                                    groupBegin.unshift(item.delay);
                                     groupData.unshift({
                                         duration: getGroupDuration(item),
                                         items: [item]

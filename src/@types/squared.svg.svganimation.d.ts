@@ -3,6 +3,7 @@ declare global {
         interface SvgAnimation {
             attributeName: string;
             begin: number[];
+            delay: number;
             to: string;
             duration: number;
             paused: boolean;
