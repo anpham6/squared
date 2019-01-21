@@ -425,14 +425,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         height,
                                         bitmap: []
                                     };
-                                    if (node.imageElement) {
-                                        gravity.split('|').forEach(attr => {
-                                            const value = node[`padding${$util.capitalize(attr)}`];
-                                            if (value > 0) {
-                                                imageData[attr] = $util.formatPX($util.convertInt(imageData[attr]) - value);
-                                            }
-                                        });
-                                    }
                                     if (!(backgroundSize[i] === 'auto' || backgroundSize[i] === 'auto auto' || backgroundSize[i] === 'initial')) {
                                         switch (backgroundSize[i]) {
                                             case 'cover':

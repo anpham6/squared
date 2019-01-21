@@ -817,43 +817,46 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                     }
                     let repeatingEndTime = $util.maxArray(keyTimesRepeating);
                     if (Object.keys(indefiniteMap).length) {
-                        const duration: number[] = [];
                         const begin: number[] = [];
+                        const duration: number[] = [];
                         for (const attr in indefiniteMap) {
                             begin.push(indefiniteMap[attr].ordinal);
                             duration.push(indefiniteMap[attr].value.duration);
                         }
-                        repeatingEndTime = getLeastCommonMultiple(duration, repeatingEndTime, begin);
+                        if (duration.length > 1) {
+                            repeatingEndTime = getLeastCommonMultiple(duration, repeatingEndTime, begin);
+                        }
+                        else if (repeatingEndTime - begin[0] % duration[0] !== 0) {
+                            repeatingEndTime = duration[0] * Math.ceil(repeatingEndTime / duration[0]);
+                        }
                     }
                     for (const attr in repeatingMap) {
                         const insertMap = repeatingMap[attr];
                         let maxTime = $util.maxArray(Array.from(insertMap.keys()));
-                        if (indefiniteMap[attr]) {
-                            if (maxTime < repeatingEndTime) {
-                                const begin = indefiniteMap[attr].ordinal;
-                                const item = indefiniteMap[attr].value;
-                                let baseValue = <AnimateValue> Array.from(insertMap.values()).pop();
-                                let i = Math.floor((maxTime - begin) / item.duration);
-                                do {
-                                    let joined = false;
-                                    for (let j = 0; j < item.keyTimes.length; j++) {
-                                        const time = getItemTime(begin, item.duration, item.keyTimes, i, j);
-                                        if (!joined && time >= maxTime) {
-                                            [maxTime, baseValue] = insertSplitKeyTimeValue(insertMap, repeatingInterpolatorMap, item, baseValue, begin, j, maxTime);
-                                            keyTimesRepeating.push(maxTime);
-                                            joined = true;
-                                        }
-                                        if (joined && time > maxTime) {
-                                            baseValue = getItemValue(item, j, baseValue, i);
-                                            insertInterpolator(repeatingInterpolatorMap, time, item.keySplines, j);
-                                            insertMap.set(time, baseValue);
-                                            maxTime = time;
-                                            keyTimesRepeating.push(maxTime);
-                                        }
+                        if (indefiniteMap[attr] && maxTime < repeatingEndTime) {
+                            const begin = indefiniteMap[attr].ordinal;
+                            const item = indefiniteMap[attr].value;
+                            let baseValue = <AnimateValue> Array.from(insertMap.values()).pop();
+                            let i = Math.floor((maxTime - begin) / item.duration);
+                            do {
+                                let joined = false;
+                                for (let j = 0; j < item.keyTimes.length; j++) {
+                                    const time = getItemTime(begin, item.duration, item.keyTimes, i, j);
+                                    if (!joined && time >= maxTime) {
+                                        [maxTime, baseValue] = insertSplitKeyTimeValue(insertMap, repeatingInterpolatorMap, item, baseValue, begin, i, maxTime);
+                                        keyTimesRepeating.push(maxTime);
+                                        joined = true;
+                                    }
+                                    if (joined && time > maxTime) {
+                                        baseValue = getItemValue(item, j, baseValue, i);
+                                        insertInterpolator(repeatingInterpolatorMap, time, item.keySplines, j);
+                                        insertMap.set(time, baseValue);
+                                        maxTime = time;
+                                        keyTimesRepeating.push(maxTime);
                                     }
                                 }
-                                while (maxTime < repeatingEndTime && ++i);
                             }
+                            while (maxTime < repeatingEndTime && ++i);
                         }
                         if (indefiniteMap[attr] === undefined && freezeMap[attr] === undefined && !forwardMap[attr]) {
                             let value: AnimateValue | undefined;

@@ -22,7 +22,8 @@ declare global {
             function newBoxRect(): BoxRect;
             function newRectDimensions(): RectDimensions;
             function newBoxModel(): BoxModel;
-            function withinViewportOrigin(element: Element): boolean;
+            function hasVisibleRect(element: Element, checkViewport?: boolean): boolean;
+            function withinViewportOrigin(bounds: ClientRect | DOMRect): boolean;
             function createElement(parent: Element | null, block?: boolean): HTMLElement;
             function removeElementsByClassName(className: string): void;
             function convertClientUnit(value: string, dimension: number, dpi: number, fontSize: number, percent?: boolean): number;

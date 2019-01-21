@@ -25,6 +25,7 @@ declare global {
             controlName: string;
             renderDepth: number;
             renderPositionId: string;
+            inlineText: boolean;
             multiline: number;
             overflow: number;
             documentParent: Node;
@@ -89,7 +90,6 @@ declare global {
             readonly inline: boolean;
             readonly inlineStatic: boolean;
             readonly inlineVertical: boolean;
-            readonly inlineText: boolean;
             readonly plainText: boolean;
             readonly lineBreak: boolean;
             readonly block: boolean;

@@ -27,13 +27,13 @@ function prioritizeExtensions<T extends Node>(documentRoot: HTMLElement, element
     if (tagged.length) {
         const result: Extension<T>[] = [];
         const untagged: Extension<T>[] = [];
-        for (const item of extensions) {
-            const index = tagged.indexOf(item.name);
+        for (const ext of extensions) {
+            const index = tagged.indexOf(ext.name);
             if (index !== -1) {
-                result[index] = item;
+                result[index] = ext;
             }
             else {
-                untagged.push(item);
+                untagged.push(ext);
             }
         }
         return [...result.filter(item => item), ...untagged];
@@ -259,7 +259,6 @@ export default class Application<T extends Node> implements squared.base.Applica
                     }
                     else {
                         imageElement.className = '__css.preload';
-                        imageElement.style.display = 'none';
                         documentRoot.appendChild(imageElement);
                     }
                 }
@@ -268,7 +267,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         const images: HTMLImageElement[] = [];
         for (const element of this.parseElements) {
             Array.from(element.querySelectorAll('IMG')).forEach((image: HTMLImageElement) => {
-                if (element.tagName === 'IMG') {
+                if (image.tagName === 'IMG') {
                     if (image.complete) {
                         this.addImagePreload(image);
                     }
@@ -292,11 +291,7 @@ export default class Application<T extends Node> implements squared.base.Applica
             .then((result: Event[]) => {
                 if (Array.isArray(result)) {
                     for (const item of result) {
-                        try {
-                            this.addImagePreload(<HTMLImageElement> item.target);
-                        }
-                        catch {
-                        }
+                        this.addImagePreload(<HTMLImageElement> item.target);
                     }
                 }
                 parseResume();
@@ -421,7 +416,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         this.session.renderQueue.set(id, items);
      }
 
-    public addImagePreload(element: HTMLImageElement) {
+    public addImagePreload(element: HTMLImageElement | null) {
         if (element && element.complete && $util.hasValue(element.src)) {
             this.session.image.set(element.src, {
                 width: element.naturalWidth,
@@ -792,17 +787,25 @@ export default class Application<T extends Node> implements squared.base.Applica
                 let k = -1;
                 while (++k < axisY.length) {
                     let nodeY = axisY[k];
-                    if (nodeY.rendered || !nodeY.visible || this.parseElements.has(<HTMLElement> nodeY.element) && !nodeY.documentRoot && !nodeY.documentBody) {
+                    if (nodeY.rendered || !nodeY.visible) {
                         continue;
                     }
+                    else if (nodeY.htmlElement) {
+                        const element = <HTMLElement> nodeY.element;
+                        if (this.parseElements.has(element) && !nodeY.documentRoot && !nodeY.documentBody) {
+                            continue;
+                        }
+                        else if (nodeY.length === 0 && element.children.length && Array.from(element.children).every(item => this.parseElements.has(<HTMLElement> item))) {
+                            nodeY.inlineText = false;
+                        }
+                    }
+                    const extendable = nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE);
                     let parentY = nodeY.parent as T;
                     let unknownParent = parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN);
-                    const extendable = nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE);
-                    if (nodeY.pageFlow &&
-                        axisY.length > 1 &&
-                        k < axisY.length - 1 &&
+                    if (axisY.length > 1 && k < axisY.length - 1 &&
+                        nodeY.pageFlow &&
+                        (parentY.alignmentType === 0 || extendable || unknownParent) &&
                         !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) &&
-                        (parentY.alignmentType === 0 || unknownParent || extendable) &&
                         !nodeY.hasBit('excludeSection', APP_SECTION.DOM_TRAVERSE))
                     {
                         const horizontal: T[] = [];
@@ -821,11 +824,10 @@ export default class Application<T extends Node> implements squared.base.Applica
                                 const previousAbove = vertical[vertical.length - 1];
                                 if (previousAbove.layoutVertical) {
                                     node.parent = previousAbove;
-                                    return true;
+                                    return;
                                 }
                             }
                             vertical.push(node);
-                            return true;
                         }
                         let l = k;
                         let m = 0;
@@ -954,11 +956,11 @@ export default class Application<T extends Node> implements squared.base.Applica
                             }
                         }
                     }
-                    if (unknownParent && k === axisY.length - 1) {
-                        parentY.alignmentType ^= NODE_ALIGNMENT.UNKNOWN;
-                    }
                     if (extendable) {
                         nodeY.alignmentType ^= NODE_ALIGNMENT.EXTENDABLE;
+                    }
+                    if (unknownParent && k === axisY.length - 1) {
+                        parentY.alignmentType ^= NODE_ALIGNMENT.UNKNOWN;
                     }
                     if (nodeY.renderAs && parentY.appendTry(nodeY, nodeY.renderAs, false)) {
                         nodeY.hide();
@@ -1738,14 +1740,11 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     protected conditionElement(element: Element) {
-        if (element instanceof SVGGraphicsElement && element.tagName !== 'svg') {
-            return false;
-        }
-        else if ($dom.hasComputedStyle(element)) {
-            if ($util.hasValue(element.dataset.use)) {
-                return true;
+        if ($dom.hasComputedStyle(element)) {
+            if (element instanceof SVGGraphicsElement && element.tagName !== 'svg') {
+                return false;
             }
-            else if ($dom.withinViewportOrigin(element)) {
+            else if ($dom.hasVisibleRect(element, true) || $util.hasValue(element.dataset.use)) {
                 return true;
             }
             else {
@@ -1758,16 +1757,8 @@ export default class Application<T extends Node> implements squared.base.Applica
                     }
                     current = current.parentElement;
                 }
-                if (valid && element.children.length) {
-                    return Array.from(element.children).some((item: Element) => {
-                        const style = $dom.getStyle(item);
-                        const float = style.cssFloat;
-                        const position = style.position;
-                        return position === 'absolute' || position === 'fixed' || float === 'left' || float === 'right';
-                    });
-                }
+                return valid && Array.from(element.children).some((item: Element) => $dom.hasVisibleRect(item, true));
             }
-            return false;
         }
         else {
             return $dom.isPlainText(element);

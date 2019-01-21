@@ -1344,11 +1344,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this._cached.inlineVertical;
     }
 
+    set inlineText(value) {
+        this._cached.inlineText = value;
+    }
     get inlineText() {
         if (this._cached.inlineText === undefined) {
             let value = false;
             const element = this._element;
-            if (element && this.htmlElement) {
+            if (element && this.htmlElement && !this.svgElement) {
                 switch (element.tagName) {
                     case 'INPUT':
                     case 'BUTTON':
@@ -1359,14 +1362,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     default:
                         if ($dom.hasFreeFormText(element)) {
                             value = Array.from(element.children).every(item => {
-                                const excluded = $dom.getElementAsNodeAttribute<boolean>(item, 'excluded');
-                                if (excluded) {
-                                    const position = $dom.getStyle(item).position;
-                                    return position !== 'absolute' && position !== 'fixed';
-                                }
-                                else {
-                                    return !(!excluded || $dom.hasComputedStyle(item) && $util.hasValue(item.dataset.target));
-                                }
+                                const node = $dom.getElementAsNode<T>(item);
+                                return node === undefined || node.excluded || $util.hasValue(node.dataset.target);
                             });
                         }
                         break;

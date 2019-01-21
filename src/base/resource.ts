@@ -17,6 +17,17 @@ function colorStop(parse: boolean) {
     return `${parse ? '' : '(?:'},?\\s*(${parse ? '' : '?:'}rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|[a-z]+)\\s*(${parse ? '' : '?:'}\\d+%)?${parse ? '' : ')'}`;
 }
 
+function replaceExcluded<T extends Node>(element: HTMLElement, attr: string) {
+    let result = element[attr];
+    Array.from(element.children).forEach((item: Element) => {
+        const child = $dom.getElementAsNode<T>(item);
+        if (child && (child.excluded || $util.hasValue(child.dataset.target)) && child[attr] && child[attr].trim() !== '') {
+            result = result.replace(child[attr], '');
+        }
+    });
+    return result;
+}
+
 export default abstract class Resource<T extends Node> implements squared.base.Resource<T> {
     public static KEY_NAME = 'squared.resource';
 
@@ -490,15 +501,15 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                     else if (node.inlineText) {
                         name = node.textContent.trim();
                         if (element.tagName === 'CODE') {
-                            value = $xml.replaceEntity(element.innerHTML);
+                            value = $xml.replaceEntity(replaceExcluded(element, 'innerHTML'));
                         }
                         else if ($dom.hasLineBreak(element, true)) {
-                            value = $xml.replaceEntity(element.innerHTML);
+                            value = $xml.replaceEntity(replaceExcluded(element, 'innerHTML'));
                             value = value.replace(/\s*<br[^>]*>\s*/g, '\\n');
                             value = value.replace(/(<([^>]+)>)/ig, '');
                         }
                         else {
-                            value = $xml.replaceEntity(node.textContent);
+                            value = $xml.replaceEntity(replaceExcluded(element, 'textContent'));
                         }
                         [value, inlineTrim] = replaceWhiteSpace(node, value);
                     }

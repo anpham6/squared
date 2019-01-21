@@ -1,5 +1,13 @@
 const $dom = squared.lib.dom;
 
+function hasUnsupportedAccess(element: SVGElement) {
+    const domElement = element.parentElement instanceof HTMLElement;
+    return element.tagName === 'svg' && (
+        $dom.isUserAgent($dom.USER_AGENT.SAFARI) && !domElement ||
+        $dom.isUserAgent($dom.USER_AGENT.FIREFOX) && domElement
+    );
+}
+
 export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
     return class extends Base implements squared.svg.SvgViewRect {
         private _width: number | undefined;
@@ -64,7 +72,7 @@ export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
         set width(value) {
             const element = this.getElement();
             if (element) {
-                if (element.tagName === 'svg' && $dom.isUserAgent($dom.USER_AGENT.FIREFOX) && element.parentElement instanceof HTMLElement) {
+                if (hasUnsupportedAccess(element)) {
                     this._width = value;
                 }
                 else {
@@ -75,7 +83,7 @@ export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
         get width() {
             const element = this.getElement();
             if (element) {
-                if (element.tagName === 'svg' && $dom.isUserAgent($dom.USER_AGENT.FIREFOX) && element.parentElement instanceof HTMLElement) {
+                if (hasUnsupportedAccess(element)) {
                     if (this._width !== undefined) {
                         return this._width;
                     }
@@ -94,7 +102,7 @@ export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
         set height(value) {
             const element = this.getElement();
             if (element) {
-                if (element.tagName === 'svg' && $dom.isUserAgent($dom.USER_AGENT.FIREFOX) && element.parentElement instanceof HTMLElement) {
+                if (hasUnsupportedAccess(element)) {
                     this._height = value;
                 }
                 else {
@@ -105,7 +113,7 @@ export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
         get height() {
             const element = this.getElement();
             if (element) {
-                if (element.tagName === 'svg' && $dom.isUserAgent($dom.USER_AGENT.FIREFOX) && element.parentElement instanceof HTMLElement) {
+                if (hasUnsupportedAccess(element)) {
                     if (this._height !== undefined) {
                         return this._height;
                     }

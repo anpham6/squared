@@ -32,12 +32,6 @@ type SvgImage = squared.svg.SvgImage;
 type SvgShape = squared.svg.SvgShape;
 type SvgView = squared.svg.SvgView;
 
-interface AnimateGroup {
-    element: SVGGraphicsElement;
-    animate: SvgAnimation[];
-    pathData?: string;
-}
-
 interface AnimatedTargetData extends TemplateDataAA {
     name: string;
     animationName: string;
@@ -97,6 +91,12 @@ interface KeyFrame {
     value: string;
 }
 
+interface AnimateGroup {
+    element: SVGGraphicsElement;
+    animate: SvgAnimation[];
+    pathData?: string;
+}
+
 const $color = squared.lib.color;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
@@ -138,7 +138,7 @@ const ATTRIBUTE_ANDROID = {
     'stroke-opacity': 'strokeAlpha',
     'fill-opacity': 'fillAlpha',
     'stroke-width': 'strokeWidth',
-    'value': 'pathData'
+    'd': 'pathData'
 };
 
 const TEMPLATES: ObjectMap<StringMap> = {};
@@ -250,7 +250,7 @@ function segmentTransforms(element: SVGGraphicsElement, transform: SvgTransform[
         }
         for (let i = 0; i < partition.length; i++) {
             const item = partition[i];
-            let prerotate = host.length === 0 && current.length === 0;
+            const prerotate = host.length === 0 && current.length === 0;
             if (!prerotate && typeIndex.has(item.type)) {
                 const previous = current[current.length - 1];
                 if (item.type === previous.type) {
@@ -269,29 +269,16 @@ function segmentTransforms(element: SVGGraphicsElement, transform: SvgTransform[
             }
             else {
                 switch (item.type) {
-                    case SVGTransform.SVG_TRANSFORM_TRANSLATE:
-                        if (prerotate) {
-                            client.push(item);
-                        }
-                        else {
-                            current.push(item);
-                        }
-                        break;
                     case SVGTransform.SVG_TRANSFORM_SCALE:
-                        if (prerotate) {
-                            client.push(item);
-                        }
-                        else {
-                            current.push(item);
-                        }
-                        break;
+                    case SVGTransform.SVG_TRANSFORM_SKEWX:
+                    case SVGTransform.SVG_TRANSFORM_SKEWY:
                     case SVGTransform.SVG_TRANSFORM_MATRIX:
+                    case SVGTransform.SVG_TRANSFORM_TRANSLATE:
                         if (prerotate && item.matrix.b === 0 && item.matrix.c === 0) {
                             client.push(item);
                         }
                         else {
                             current.push(item);
-                            prerotate = false;
                         }
                         break;
                     case SVGTransform.SVG_TRANSFORM_ROTATE:
@@ -311,11 +298,6 @@ function segmentTransforms(element: SVGGraphicsElement, transform: SvgTransform[
                             current.push(item);
                             continue;
                         }
-                        break;
-                    case SVGTransform.SVG_TRANSFORM_SKEWX:
-                    case SVGTransform.SVG_TRANSFORM_SKEWY:
-                        current.push(item);
-                        prerotate = false;
                         break;
                 }
             }
@@ -524,17 +506,14 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                 }
                                 for (const item of repeating) {
                                     const options: TemplateData = {
-                                        startOffset: item.delay > 0 ? item.delay.toString() : '',
-                                        duration: item.duration.toString()
+                                        startOffset: item.delay > 0 ? item.delay.toString() : ''
                                     };
                                     if ($SvgBuild.instanceOfSet(item)) {
-                                        if (item.to) {
+                                        if (item.to !== '') {
                                             options.propertyName = ATTRIBUTE_ANDROID[item.attributeName];
                                             if (options.propertyName) {
                                                 options.propertyValues = false;
-                                                if (item.duration === 0) {
-                                                    options.duration = '1';
-                                                }
+                                                options.duration = Math.max(item.duration, 1).toString();
                                                 options.repeatCount = '0';
                                                 options.valueTo = item.to.toString();
                                                 setData.repeating.push(options);
@@ -542,6 +521,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                         }
                                     }
                                     else {
+                                        options.duration = item.duration.toString();
                                         options.repeatCount = item.repeatCount !== -1 ? Math.ceil(item.repeatCount - 1).toString() : '-1';
                                         if (!sequential) {
                                             if ($util.hasBit(item.fillMode, $constS.FILL_MODE.BACKWARDS)) {
@@ -928,14 +908,19 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                         }
                                                     }
                                                     else if ($SvgBuild.instanceOfShape(item.parent) && item.parent.path) {
-                                                        let css = '';
-                                                        for (const attr in ATTRIBUTE_ANDROID) {
-                                                            if (ATTRIBUTE_ANDROID[attr] === propertyName[i]) {
-                                                                css = $util.convertCamelCase(attr);
-                                                                break;
+                                                        let css: string | undefined;
+                                                        if (propertyName[i] === 'pathData') {
+                                                            css = 'value';
+                                                        }
+                                                        else {
+                                                            for (const attr in ATTRIBUTE_ANDROID) {
+                                                                if (ATTRIBUTE_ANDROID[attr] === propertyName[i]) {
+                                                                    css = $util.convertCamelCase(attr);
+                                                                    break;
+                                                                }
                                                             }
                                                         }
-                                                        if (css !== '') {
+                                                        if (css) {
                                                             valueTo = item.parent.path[css];
                                                         }
                                                     }
@@ -1079,7 +1064,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
         for (let i = 0; i < group.children.length; i++) {
             const item = group.children[i];
             const CCC: ExternalData[] = [];
-            const DDD: TemplateData[] = [];
+            const DDD: StringMap[] = [];
             if ($SvgBuild.instanceOfShape(item)) {
                 if (item.visible && item.path && item.path.value) {
                     CCC.push(this.createPath(node, svg, item, item.path));
@@ -1096,7 +1081,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 continue;
             }
             else if ($SvgBuild.instanceOfContainer(item)) {
-                if (item.length) {
+                if (item.visible && item.length) {
                     this.parseVectorData(node, svg, <SvgGroup> item);
                     DDD.push({ templateName: item.name });
                 }
@@ -1267,7 +1252,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
     }
 
     private queueAnimations(svg: SvgView, name: string, predicate: IteratorPredicate<SvgAnimation, void>, pathData = '') {
-        const animate = svg.animation.filter(predicate).filter(item => !item.paused && item.begin.length > 0 && item.duration >= 0);
+        const animate = svg.animation.filter(predicate).filter(item => !item.paused && item.begin.length > 0 && (item.duration > 0 || $SvgBuild.instanceOfSet(item) && item.duration === 0));
         if (animate.length) {
             this.ANIMATE_DATA.set(name, {
                 element: svg.element,
