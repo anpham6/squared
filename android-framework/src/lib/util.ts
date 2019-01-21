@@ -1,4 +1,3 @@
-import { FileAsset } from '../../../src/base/@types/application';
 import { StyleAttribute } from '../@types/application';
 import { ViewAttribute } from '../@types/node';
 
@@ -86,16 +85,6 @@ export function replaceRTL(value: string, rtl = true, api = BUILD_ANDROID.OREO) 
         value = value.replace(/Left/g, 'Start').replace(/Right/g, 'End');
     }
     return value;
-}
-
-export function getAppTheme(assets: FileAsset[]) {
-    for (const theme of assets) {
-        const match = /<style\s+name="([\w$]+)"\s+parent="Theme\.[\w$.]+"/.exec(theme.content);
-        if (match) {
-            return match[1];
-        }
-    }
-    return '';
 }
 
 export function getXmlNs(...values: string[]) {

@@ -15,14 +15,14 @@ const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 const KEYFRAME_NAME = $dom.getKeyframeRules();
-const ANIMATION_MAP: ObjectMap<string[]> = {
-    'animation-delay': ['0s'],
-    'animation-duration': ['0s'],
-    'animation-iteration-count': ['1'],
-    'animation-play-state': ['running'],
-    'animation-direction': ['normal'],
-    'animation-fill-mode': ['none'],
-    'animation-timing-function': ['ease']
+const ANIMATION_DEFAULT: StringMap = {
+    'animation-delay': '0s',
+    'animation-duration': '0s',
+    'animation-iteration-count': '1',
+    'animation-play-state': 'running',
+    'animation-direction': 'normal',
+    'animation-fill-mode': 'none',
+    'animation-timing-function': 'ease'
 };
 const REGEXP_CUBICBEZIER = new RegExp(`cubic-bezier\\(${REGEXP_UNIT.ZERO_ONE}, ${REGEXP_UNIT.DECIMAL}, ${REGEXP_UNIT.ZERO_ONE}, ${REGEXP_UNIT.DECIMAL}\\)`);
 
@@ -72,10 +72,10 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             const animationName = parseAttribute(element, 'animation-name');
             if (animationName.length) {
                 const cssData: ObjectMap<string[]> = {};
-                for (const name in ANIMATION_MAP) {
+                for (const name in ANIMATION_DEFAULT) {
                     const values = parseAttribute(element, name);
                     if (values.length === 0) {
-                        values.push(...ANIMATION_MAP[name].slice(0));
+                        values.push(ANIMATION_DEFAULT[name]);
                     }
                     while (values.length < animationName.length) {
                         values.push(...values.slice(0));
@@ -91,7 +91,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         for (const percent in keyframes) {
                             const ordinal = parseInt(percent) / 100;
                             for (const name in keyframes[percent]) {
-                                const map = ANIMATION_MAP[name] ? keyframeMap : attrMap;
+                                const map = ANIMATION_DEFAULT[name] ? keyframeMap : attrMap;
                                 if (map[name] === undefined) {
                                     map[name] = [];
                                 }

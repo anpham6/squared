@@ -63,7 +63,7 @@ Library files are in the /dist folder. A minimum of *three* files are required t
 4. framework (e.g. android)
 5. extensions (e.g. android.widget) - *optional*
 
-There are ES5 minified versions (*.min.js) and ES6 non-minified versions (*.js). ES5 is more compatible with older browsers. ES6 performd better in newer browsers.
+There are ES5 minified versions (*.min.js) and ES6 non-minified versions (*.js). ES5 is more compatible with older browsers. ES6 performs better in newer browsers and recommended for development environments.
 
 NOTE: Calling "save" or "write" methods before the images have completely loaded can sometimes cause them to be excluded from the generated layout. In these cases you should use the "parseDocument" promise method "then" to set a callback for your commands.
 
@@ -796,7 +796,7 @@ The attributes "android-include" and "android-include-end" can only be applied t
                     android:paddingVertical="@dimen/button_padding_vertical"
                     android:text="@string/open"
                     android:textAllCaps="false"
-                    style="@style/Button_1" />
+                    style="@style/Button_2" />
                 <Button
                     android:id="@+id/button_2"
                     android:background="@drawable/button_button_1"
@@ -810,7 +810,7 @@ The attributes "android-include" and "android-include-end" can only be applied t
                     android:paddingVertical="@dimen/button_padding_vertical"
                     android:text="@string/all"
                     android:textAllCaps="false"
-                    style="@style/Button_1" />
+                    style="@style/Button_2" />
             </LinearLayout>
             <Space
                 android:id="@+id/space_10"
@@ -933,7 +933,7 @@ The attributes "android-include" and "android-include-end" can only be applied t
                     android:paddingVertical="@dimen/button_padding_vertical"
                     android:text="@string/update"
                     android:textAllCaps="false"
-                    style="@style/Button_2" />
+                    style="@style/Button_1" />
             </LinearLayout>
             <Space
                 android:id="@+id/space_14"
@@ -987,7 +987,7 @@ The attributes "android-include" and "android-include-end" can only be applied t
                     android:paddingVertical="@dimen/button_padding_vertical"
                     android:text="@string/update"
                     android:textAllCaps="false"
-                    style="@style/Button_2" />
+                    style="@style/Button_1" />
                 <Button
                     android:id="@+id/button_5"
                     android:background="@drawable/button_button_1"
@@ -1000,7 +1000,7 @@ The attributes "android-include" and "android-include-end" can only be applied t
                     android:paddingVertical="@dimen/button_padding_vertical"
                     android:text="@string/clone"
                     android:textAllCaps="false"
-                    style="@style/Button_2" />
+                    style="@style/Button_1" />
             </LinearLayout>
             <Space
                 android:id="@+id/space_15"
@@ -1152,7 +1152,7 @@ The attributes "android-include" and "android-include-end" can only be applied t
                     android:paddingVertical="@dimen/button_padding_vertical"
                     android:text="@string/update"
                     android:textAllCaps="false"
-                    style="@style/Button_2" />
+                    style="@style/Button_1" />
             </LinearLayout>
         </GridLayout>
     </LinearLayout>
@@ -1378,10 +1378,10 @@ The attributes "android-include" and "android-include-end" can only be applied t
         <item name="android:textSize">10sp</item>
     </style>
     <style name="Button_1" parent="Button">
-        <item name="android:textColor">@color/gray</item>
+        <item name="android:textColor">@color/black</item>
     </style>
     <style name="Button_2" parent="Button">
-        <item name="android:textColor">@color/black</item>
+        <item name="android:textColor">@color/gray</item>
     </style>
     <style name="Checkbox">
         <item name="android:fontFamily">sans-serif</item>

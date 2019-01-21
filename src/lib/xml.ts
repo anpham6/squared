@@ -78,19 +78,15 @@ export function parseTemplate(value: string) {
     const result: StringMap = { '__ROOT__': value };
     function parseSection(section: string) {
         const pattern = /(\t*<<(\w+)>>)\n[\w\W]*\n*\1/g;
-        let match: RegExpExecArray | null = null;
-        do {
-            match = pattern.exec(section);
-            if (match) {
-                const segment = match[0].replace(new RegExp(`^${match[1]}\\n`), '').replace(new RegExp(`${match[1]}$`), '');
-                for (const index in result) {
-                    result[index] = result[index].replace(match[0], `{%${match[2]}}`);
-                }
-                result[match[2]] = segment;
-                parseSection(segment);
+        let match: RegExpExecArray | null;
+        while ((match = pattern.exec(section)) !== null) {
+            const segment = match[0].replace(new RegExp(`^${match[1]}\\n`), '').replace(new RegExp(`${match[1]}$`), '');
+            for (const index in result) {
+                result[index] = result[index].replace(match[0], `{%${match[2]}}`);
             }
+            result[match[2]] = segment;
+            parseSection(segment);
         }
-        while (match);
     }
     parseSection(value);
     return result;

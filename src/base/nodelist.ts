@@ -127,8 +127,8 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                 const clear = node.css('clear');
                 if (floated.size) {
                     const previousFloat = clear === 'both' ? [previous.left, previous.right]
-                                        : clear === 'left' ? [previous.left, null]
-                                        : clear === 'right' ? [null, previous.right] : [];
+                        : clear === 'left' ? [previous.left, null]
+                        : clear === 'right' ? [null, previous.right] : [];
                     previousFloat.forEach(item => {
                         if (item && !node.floating && node.linear.top > item.linear.bottom && floated.has(item.float)) {
                             floated.delete(item.float);

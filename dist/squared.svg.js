@@ -1,4 +1,4 @@
-/* squared.svg 0.1.0
+/* squared.svg 0.5.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -763,11 +763,11 @@
         static toNumberList(value) {
             const result = [];
             const pattern = /-?[\d.]+/g;
-            let digit;
-            while ((digit = pattern.exec(value)) !== null) {
-                const digitValue = parseFloat(digit[0]);
-                if (!isNaN(digitValue)) {
-                    result.push(digitValue);
+            let match;
+            while ((match = pattern.exec(value)) !== null) {
+                const digit = parseFloat(match[0]);
+                if (!isNaN(digit)) {
+                    result.push(digit);
                 }
             }
             return result;
@@ -1132,6 +1132,12 @@
             const item = this.element && this.element.attributes.getNamedItem(attr);
             return item ? item.value.trim() : '';
         }
+        set delay(value) {
+            this.begin[0] = value;
+        }
+        get delay() {
+            return this.begin[0] || 0;
+        }
         get instanceType() {
             return 0;
         }
@@ -1247,7 +1253,7 @@
                 }
             }
         }
-        static toStepFractionList(name, keySpline, index, keyTimes, values, dpi = 96, fontSize = 16) {
+        static toStepFractionList(name, spline, index, keyTimes, values, dpi = 96, fontSize = 16) {
             let currentValue;
             let nextValue;
             switch (name) {
@@ -1267,8 +1273,8 @@
                 case 'rotate':
                 case 'scale':
                 case 'translate':
-                    currentValue = values[index].split(' ').map(value => parseFloat(value));
-                    nextValue = values[index + 1].split(' ').map(value => parseFloat(value));
+                    currentValue = values[index].trim().split(/\s+/).map(value => parseFloat(value));
+                    nextValue = values[index + 1].trim().split(/\s+/).map(value => parseFloat(value));
                     break;
                 default:
                     if ($util$3.isNumber(values[index])) {
@@ -1286,15 +1292,15 @@
                     break;
             }
             if (currentValue && nextValue && currentValue.length && currentValue.length === nextValue.length) {
-                switch (keySpline) {
+                switch (spline) {
                     case 'steps-start':
-                        keySpline = 'steps(1, start)';
+                        spline = 'steps(1, start)';
                         break;
                     case 'steps-end':
-                        keySpline = 'steps(1, end)';
+                        spline = 'steps(1, end)';
                         break;
                 }
-                const match = /steps\((\d+)(?:, (start|end))?\)/.exec(keySpline);
+                const match = /steps\((\d+)(?:, (start|end))?\)/.exec(spline);
                 if (match) {
                     const keyTimeTotal = keyTimes[index + 1] - keyTimes[index];
                     const stepSize = parseInt(match[1]);
@@ -1479,7 +1485,7 @@
             return this._reverse;
         }
         get fromToType() {
-            return this.keyTimes.length > 0 && this.keyTimes[0] === 0 && this.keyTimes[1] === 1;
+            return this.keyTimes.length === 2 && this.keyTimes[0] === 0 && this.keyTimes[1] === 1;
         }
         get instanceType() {
             return 1;
@@ -1892,24 +1898,24 @@
     }
 
     const $util$5 = squared.lib.util;
-    function insertSplitTimeValue(map, insertMap, splitTime) {
+    function insertSplitTimeValue(map, insertMap, time) {
         let previous;
         let next;
         for (const [ordinal, value] of map.entries()) {
-            if (previous && splitTime <= ordinal) {
+            if (previous && time <= ordinal) {
                 next = { ordinal, value };
                 break;
             }
-            if (splitTime >= ordinal) {
+            if (time >= ordinal) {
                 previous = { ordinal, value };
             }
         }
         if (previous && next) {
-            const value = getSplitValue$1(splitTime, previous.ordinal, next.ordinal, previous.value, next.value);
-            insertMap.set(splitTime, value);
+            const value = getSplitValue$1(time, previous.ordinal, next.ordinal, previous.value, next.value);
+            insertMap.set(time, value);
         }
         else if (previous) {
-            insertMap.set(splitTime, previous.value);
+            insertMap.set(time, previous.value);
         }
     }
     function convertKeyTimeFraction(map, total) {
@@ -1956,14 +1962,15 @@
         for (const [ordinal, data] of map.entries()) {
             const values = [];
             baseVal.forEach(attr => {
-                if (data.has(attr)) {
-                    values.push(data.get(attr));
+                let value = data.get(attr);
+                if (value !== undefined) {
+                    values.push(value);
                 }
                 else if (freezeMap && freezeMap[attr]) {
                     values.push(freezeMap[attr].value);
                 }
                 else {
-                    const value = path.getBaseValue(attr);
+                    value = path.getBaseValue(attr);
                     if (value !== undefined) {
                         values.push(value);
                     }
@@ -2184,7 +2191,7 @@
             mergeAnimate(animations, useKeyTime = false, path) {
                 if (animations.length > 1 || animations.some(item => item.begin.length > 1 || !item.fromToType || item.alternate || item.end !== undefined || item.additiveSum)) {
                     let animationsCSS = animations.filter(item => item.element === undefined);
-                    const minDelay = $util$5.minArray(animationsCSS.map(item => item.begin[0]));
+                    const minDelay = $util$5.minArray(animationsCSS.map(item => item.delay));
                     const maxDuration = $util$5.maxArray(animationsCSS.map(item => getDuration(item)));
                     const fillBackwards = animationsCSS.filter(item => $util$5.hasBit(item.fillMode, 2 /* BACKWARDS */));
                     const groupName = {};
@@ -2345,7 +2352,7 @@
                                 groupBackwards = fillBackwards.filter(item => item.attributeName === attr);
                                 if (groupBackwards.length) {
                                     for (const item of groupBackwards) {
-                                        groupBegin.unshift(item.begin[0]);
+                                        groupBegin.unshift(item.delay);
                                         groupData.unshift({
                                             duration: getGroupDuration(item),
                                             items: [item]
@@ -2661,42 +2668,45 @@
                         }
                         let repeatingEndTime = $util$5.maxArray(keyTimesRepeating);
                         if (Object.keys(indefiniteMap).length) {
-                            const duration = [];
                             const begin = [];
+                            const duration = [];
                             for (const attr in indefiniteMap) {
                                 begin.push(indefiniteMap[attr].ordinal);
                                 duration.push(indefiniteMap[attr].value.duration);
                             }
-                            repeatingEndTime = getLeastCommonMultiple(duration, repeatingEndTime, begin);
+                            if (duration.length > 1) {
+                                repeatingEndTime = getLeastCommonMultiple(duration, repeatingEndTime, begin);
+                            }
+                            else if (repeatingEndTime - begin[0] % duration[0] !== 0) {
+                                repeatingEndTime = duration[0] * Math.ceil(repeatingEndTime / duration[0]);
+                            }
                         }
                         for (const attr in repeatingMap) {
                             const insertMap = repeatingMap[attr];
                             let maxTime = $util$5.maxArray(Array.from(insertMap.keys()));
-                            if (indefiniteMap[attr]) {
-                                if (maxTime < repeatingEndTime) {
-                                    const begin = indefiniteMap[attr].ordinal;
-                                    const item = indefiniteMap[attr].value;
-                                    let baseValue = Array.from(insertMap.values()).pop();
-                                    let i = Math.floor((maxTime - begin) / item.duration);
-                                    do {
-                                        let joined = false;
-                                        for (let j = 0; j < item.keyTimes.length; j++) {
-                                            const time = getItemTime(begin, item.duration, item.keyTimes, i, j);
-                                            if (!joined && time >= maxTime) {
-                                                [maxTime, baseValue] = insertSplitKeyTimeValue(insertMap, repeatingInterpolatorMap, item, baseValue, begin, j, maxTime);
-                                                keyTimesRepeating.push(maxTime);
-                                                joined = true;
-                                            }
-                                            if (joined && time > maxTime) {
-                                                baseValue = getItemValue(item, j, baseValue, i);
-                                                insertInterpolator(repeatingInterpolatorMap, time, item.keySplines, j);
-                                                insertMap.set(time, baseValue);
-                                                maxTime = time;
-                                                keyTimesRepeating.push(maxTime);
-                                            }
+                            if (indefiniteMap[attr] && maxTime < repeatingEndTime) {
+                                const begin = indefiniteMap[attr].ordinal;
+                                const item = indefiniteMap[attr].value;
+                                let baseValue = Array.from(insertMap.values()).pop();
+                                let i = Math.floor((maxTime - begin) / item.duration);
+                                do {
+                                    let joined = false;
+                                    for (let j = 0; j < item.keyTimes.length; j++) {
+                                        const time = getItemTime(begin, item.duration, item.keyTimes, i, j);
+                                        if (!joined && time >= maxTime) {
+                                            [maxTime, baseValue] = insertSplitKeyTimeValue(insertMap, repeatingInterpolatorMap, item, baseValue, begin, i, maxTime);
+                                            keyTimesRepeating.push(maxTime);
+                                            joined = true;
                                         }
-                                    } while (maxTime < repeatingEndTime && ++i);
-                                }
+                                        if (joined && time > maxTime) {
+                                            baseValue = getItemValue(item, j, baseValue, i);
+                                            insertInterpolator(repeatingInterpolatorMap, time, item.keySplines, j);
+                                            insertMap.set(time, baseValue);
+                                            maxTime = time;
+                                            keyTimesRepeating.push(maxTime);
+                                        }
+                                    }
+                                } while (maxTime < repeatingEndTime && ++i);
                             }
                             if (indefiniteMap[attr] === undefined && freezeMap[attr] === undefined && !forwardMap[attr]) {
                                 let value;
@@ -2999,14 +3009,14 @@
     const $dom$4 = squared.lib.dom;
     const $util$7 = squared.lib.util;
     const KEYFRAME_NAME = $dom$4.getKeyframeRules();
-    const ANIMATION_MAP = {
-        'animation-delay': ['0s'],
-        'animation-duration': ['0s'],
-        'animation-iteration-count': ['1'],
-        'animation-play-state': ['running'],
-        'animation-direction': ['normal'],
-        'animation-fill-mode': ['none'],
-        'animation-timing-function': ['ease']
+    const ANIMATION_DEFAULT = {
+        'animation-delay': '0s',
+        'animation-duration': '0s',
+        'animation-iteration-count': '1',
+        'animation-play-state': 'running',
+        'animation-direction': 'normal',
+        'animation-fill-mode': 'none',
+        'animation-timing-function': 'ease'
     };
     const REGEXP_CUBICBEZIER = new RegExp(`cubic-bezier\\(${REGEXP_UNIT.ZERO_ONE}, ${REGEXP_UNIT.DECIMAL}, ${REGEXP_UNIT.ZERO_ONE}, ${REGEXP_UNIT.DECIMAL}\\)`);
     function parseAttribute(element, attr) {
@@ -3050,10 +3060,10 @@
                 const animationName = parseAttribute(element, 'animation-name');
                 if (animationName.length) {
                     const cssData = {};
-                    for (const name in ANIMATION_MAP) {
+                    for (const name in ANIMATION_DEFAULT) {
                         const values = parseAttribute(element, name);
                         if (values.length === 0) {
-                            values.push(...ANIMATION_MAP[name].slice(0));
+                            values.push(ANIMATION_DEFAULT[name]);
                         }
                         while (values.length < animationName.length) {
                             values.push(...values.slice(0));
@@ -3069,7 +3079,7 @@
                             for (const percent in keyframes) {
                                 const ordinal = parseInt(percent) / 100;
                                 for (const name in keyframes[percent]) {
-                                    const map = ANIMATION_MAP[name] ? keyframeMap : attrMap;
+                                    const map = ANIMATION_DEFAULT[name] ? keyframeMap : attrMap;
                                     if (map[name] === undefined) {
                                         map[name] = [];
                                     }
@@ -3172,12 +3182,12 @@
                                         break;
                                 }
                                 animate.paused = cssData['animation-play-state'][index] === 'paused';
+                                animate.delay = convertClockTime(cssData['animation-delay'][index]);
+                                animate.duration = convertClockTime(cssData['animation-duration'][index]);
                                 const iterationCount = cssData['animation-iteration-count'][index];
                                 const timingFunction = cssData['animation-timing-function'][index];
                                 const direction = cssData['animation-direction'][index];
                                 const fillMode = cssData['animation-fill-mode'][index];
-                                const delay = convertClockTime(cssData['animation-delay'][index]);
-                                const duration = convertClockTime(cssData['animation-duration'][index]);
                                 const keyTimes = [];
                                 const values = [];
                                 const keySplines = [];
@@ -3225,8 +3235,6 @@
                                     animate.keyTimes = keyTimes;
                                     animate.values = values;
                                 }
-                                animate.begin[0] = delay;
-                                animate.duration = duration;
                                 animate.repeatCount = iterationCount !== 'infinite' ? parseFloat(iterationCount) : -1;
                                 if (fillMode === 'forwards' || fillMode === 'both') {
                                     animate.fillMode |= 4 /* FORWARDS */;
@@ -3295,6 +3303,11 @@
     };
 
     const $dom$5 = squared.lib.dom;
+    function hasUnsupportedAccess(element) {
+        const domElement = element.parentElement instanceof HTMLElement;
+        return element.tagName === 'svg' && ($dom$5.isUserAgent(4 /* SAFARI */) && !domElement ||
+            $dom$5.isUserAgent(16 /* FIREFOX */) && domElement);
+    }
     var SvgViewRect$MX = (Base) => {
         return class extends Base {
             setRect() {
@@ -3302,11 +3315,12 @@
                 let y = this.y;
                 let width = this.width;
                 let height = this.height;
-                if (this.parent) {
-                    x = this.parent.refitX(x);
-                    y = this.parent.refitY(y);
-                    width = this.parent.refitSize(width);
-                    height = this.parent.refitSize(height);
+                const parent = this.parent;
+                if (parent) {
+                    x = parent.refitX(x);
+                    y = parent.refitY(y);
+                    width = parent.refitSize(width);
+                    height = parent.refitSize(height);
                 }
                 this.setBaseValue('x', x);
                 this.setBaseValue('y', y);
@@ -3324,88 +3338,74 @@
                 }
             }
             set x(value) {
-                const element = this.getElement();
-                if (element) {
-                    element.x.baseVal.value = value;
-                }
+                this._x = value;
             }
             get x() {
-                const element = this.getElement();
-                if (element) {
-                    return element.x.baseVal.value;
+                if (this._x !== undefined) {
+                    return this._x;
                 }
-                return 0;
+                else {
+                    const element = this.getElement();
+                    if (element) {
+                        return element.x.baseVal.value;
+                    }
+                    return 0;
+                }
             }
             set y(value) {
-                const element = this.getElement();
-                if (element) {
-                    element.y.baseVal.value = value;
-                }
+                this._y = value;
             }
             get y() {
-                const element = this.getElement();
-                if (element) {
-                    return element.y.baseVal.value;
+                if (this._y !== undefined) {
+                    return this._y;
                 }
-                return 0;
+                else {
+                    const element = this.getElement();
+                    if (element) {
+                        return element.y.baseVal.value;
+                    }
+                    return 0;
+                }
             }
             set width(value) {
-                const element = this.getElement();
-                if (element) {
-                    if (element.tagName === 'svg' && $dom$5.isUserAgent(16 /* FIREFOX */) && element.parentElement instanceof HTMLElement) {
-                        this._width = value;
-                    }
-                    else {
-                        element.width.baseVal.value = value;
-                    }
-                }
+                this._width = value;
             }
             get width() {
-                const element = this.getElement();
-                if (element) {
-                    if (element.tagName === 'svg' && $dom$5.isUserAgent(16 /* FIREFOX */) && element.parentElement instanceof HTMLElement) {
-                        if (this._width !== undefined) {
-                            return this._width;
+                if (this._width !== undefined) {
+                    return this._width;
+                }
+                else {
+                    const element = this.getElement();
+                    if (element) {
+                        if (hasUnsupportedAccess(element)) {
+                            return element.getBoundingClientRect().width;
                         }
                         else {
-                            const bounds = element.getBoundingClientRect();
-                            return bounds.width;
+                            return element.width.baseVal.value;
                         }
                     }
-                    else {
-                        return element.width.baseVal.value;
-                    }
+                    return 0;
                 }
-                return 0;
             }
             set height(value) {
-                const element = this.getElement();
-                if (element) {
-                    if (element.tagName === 'svg' && $dom$5.isUserAgent(16 /* FIREFOX */) && element.parentElement instanceof HTMLElement) {
-                        this._height = value;
-                    }
-                    else {
-                        element.height.baseVal.value = value;
-                    }
-                }
+                this._height = value;
             }
             get height() {
-                const element = this.getElement();
-                if (element) {
-                    if (element.tagName === 'svg' && $dom$5.isUserAgent(16 /* FIREFOX */) && element.parentElement instanceof HTMLElement) {
-                        if (this._height !== undefined) {
-                            return this._height;
+                if (this._height !== undefined) {
+                    return this._height;
+                }
+                else {
+                    const element = this.getElement();
+                    if (element) {
+                        if (hasUnsupportedAccess(element)) {
+                            return element.getBoundingClientRect().height;
                         }
                         else {
-                            const bounds = element.getBoundingClientRect();
-                            return bounds.height;
+                            return element.height.baseVal.value;
                         }
                     }
-                    else {
-                        return element.height.baseVal.value;
-                    }
+                    return 0;
                 }
-                return 0;
             }
         };
     };
@@ -3676,12 +3676,18 @@
             this.setBaseValue('width', width);
             this.setBaseValue('height', height);
         }
+        set x(value) {
+            super.x = value;
+        }
         get x() {
             const value = super.x;
             if (value === 0 && this.imageElement) {
                 return this.imageElement.x.baseVal.value;
             }
             return value;
+        }
+        set y(value) {
+            super.y = value;
         }
         get y() {
             const value = super.y;
@@ -3690,12 +3696,18 @@
             }
             return value;
         }
+        set width(value) {
+            super.width = value;
+        }
         get width() {
             const value = super.width;
             if (value === 0 && this.imageElement) {
                 return this.imageElement.width.baseVal.value;
             }
             return value;
+        }
+        set height(value) {
+            super.height = value;
         }
         get height() {
             const value = super.height;
@@ -3738,14 +3750,14 @@
                 path = this._path;
             }
             const transform = this.transform.slice(0);
-            if (this.element !== path.element) {
+            if (path.element !== this.element) {
                 transform.push(...path.transform);
             }
             path.draw(SvgBuild.filterTransforms(transform, exclusions ? exclusions[path.element.tagName] : undefined), residual);
         }
         synchronize(useKeyTime = false) {
-            if (this.path && this.animation.length) {
-                this.mergeAnimate(this.getAnimateShape(), useKeyTime, this.path);
+            if (this._path && this.animation.length) {
+                this.mergeAnimate(this.getAnimateShape(), useKeyTime, this._path);
             }
         }
         set path(value) {

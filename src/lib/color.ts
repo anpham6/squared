@@ -1,3 +1,4 @@
+const HEX_CHAR = '0123456789ABCDEF';
 const X11_CSS3 = {
     'Pink':                 { value: '#FFC0CB' },
     'LightPink':            { value: '#FFB6C1' },
@@ -149,6 +150,9 @@ const X11_CSS3 = {
     'Black':                { value: '#000000' }
 };
 
+const REGEXP_HEX = /[A-Za-z\d]{3,}/;
+const REGEXP_RGBA = /rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/;
+
 const HSL_SORTED: Color[] = [];
 
 for (const name in X11_CSS3) {
@@ -261,18 +265,17 @@ export function getColorByShade(value: string) {
 }
 
 export function convertHex(value: string | number, opacity = 1) {
-    const hex = '0123456789ABCDEF';
     let rgb = (typeof value === 'string' ? parseInt(value) : value) * opacity;
     if (isNaN(rgb)) {
         return '00';
     }
     rgb = Math.max(0, Math.min(rgb, 255));
-    return hex.charAt((rgb - (rgb % 16)) / 16) + hex.charAt(rgb % 16);
+    return HEX_CHAR.charAt((rgb - (rgb % 16)) / 16) + HEX_CHAR.charAt(rgb % 16);
 }
 
 export function convertRGBA(value: string) {
     value = value.replace(/#/g, '').trim();
-    if (/[A-Za-z\d]{3,}/.test(value)) {
+    if (REGEXP_HEX.test(value)) {
         let a = 255;
         switch (value.length) {
             case 4:
@@ -320,7 +323,7 @@ export function parseRGBA(value: string, opacity = '1') {
                 value = formatRGBA(color.rgba);
             }
         }
-        const match = value.match(/rgba?\((\d+), (\d+), (\d+),?\s*([\d.]+)?\)/);
+        const match = value.match(REGEXP_RGBA);
         if (match && match.length >= 4 && (match[4] === undefined || parseFloat(match[4]) > 0)) {
             if (match[4] === undefined) {
                 match[4] = parseFloat(opacity).toFixed(2);
@@ -334,7 +337,7 @@ export function parseRGBA(value: string, opacity = '1') {
                 valueRGBA,
                 valueARGB: `#${valueA + valueHex}`,
                 alpha,
-                rgba: convertRGBA(valueRGBA) as RGBA,
+                rgba: convertRGBA(valueRGBA),
                 opaque: alpha < 1,
                 visible: alpha > 0
             };

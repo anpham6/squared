@@ -57,7 +57,6 @@ declare global {
 
         namespace util {
             export import REGEXP_PATTERN = $util.REGEXP_PATTERN;
-            function formatString(value: string, ...params: string[]): string;
             function capitalize(value: string, upper?: boolean): string;
             function convertUnderscore(value: string): string;
             function convertCamelCase(value: string, char?: string): string;
@@ -71,6 +70,7 @@ declare global {
             function convertEnum(value: number, base: {}, derived: {}): string;
             function formatPX(value: string | number): string;
             function formatPercent(value: string | number): string;
+            function formatString(value: string, ...params: string[]): string;
             function hasBit(value: number, type: number): boolean;
             function isNumber(value: string | number): value is number;
             function isString(value: any): value is string;
@@ -92,7 +92,6 @@ declare global {
             function repeat(many: number, value?: string): string;
             function indexOf(value: string, ...terms: string[]): number;
             function lastIndexOf(value: string, char?: string): string;
-            function hasSameValue(obj1: {}, obj2: {}, ...attrs: string[]): boolean;
             function searchObject(obj: StringMap, value: string | StringMap): any[][];
             function hasValue<T>(value: T): value is T;
             function withinRange(a: number, b: number, offset?: number): boolean;
@@ -104,9 +103,9 @@ declare global {
             function partitionArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): [T[], T[]];
             function retainArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): void;
             function spliceArray<T>(list: T[], item: T): boolean;
+            function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]): T[];
             function flatArray<T>(list: any[]): T[];
             function flatMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[];
-            function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]): T[];
         }
 
         namespace xml {

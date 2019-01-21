@@ -1,4 +1,4 @@
-/* android-framework 0.1.0
+/* android-framework 0.5.0
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -6,7 +6,6 @@ var android = (function () {
 
     var CONTAINER_NODE;
     (function (CONTAINER_NODE) {
-        CONTAINER_NODE[CONTAINER_NODE["NONE"] = 0] = "NONE";
         CONTAINER_NODE[CONTAINER_NODE["CHECKBOX"] = 1] = "CHECKBOX";
         CONTAINER_NODE[CONTAINER_NODE["RADIO"] = 2] = "RADIO";
         CONTAINER_NODE[CONTAINER_NODE["EDIT"] = 3] = "EDIT";
@@ -213,9 +212,6 @@ var android = (function () {
         'volatile',
         'while'
     ];
-    const REGEXP_ANDROID = {
-        ATTRIBUTE: /(.*?)="(.*?)"/
-    };
 
     var constant = /*#__PURE__*/Object.freeze({
         EXT_ANDROID: EXT_ANDROID,
@@ -227,8 +223,7 @@ var android = (function () {
         LAYOUT_ANDROID: LAYOUT_ANDROID,
         XMLNS_ANDROID: XMLNS_ANDROID,
         PREFIX_ANDROID: PREFIX_ANDROID,
-        RESERVED_JAVA: RESERVED_JAVA,
-        REGEXP_ANDROID: REGEXP_ANDROID
+        RESERVED_JAVA: RESERVED_JAVA
     });
 
     function substitute(result, value, api, minApi = 0) {
@@ -1293,15 +1288,6 @@ var android = (function () {
         }
         return value;
     }
-    function getAppTheme(assets) {
-        for (const theme of assets) {
-            const match = /<style\s+name="([\w$]+)"\s+parent="Theme\.[\w$.]+"/.exec(theme.content);
-            if (match) {
-                return match[1];
-            }
-        }
-        return '';
-    }
     function getXmlNs(...values) {
         return $util$1.flatMap(values, namespace => XMLNS_ANDROID[namespace] ? `xmlns:${namespace}="${XMLNS_ANDROID[namespace]}"` : '').join(' ');
     }
@@ -1316,7 +1302,6 @@ var android = (function () {
         replaceTab: replaceTab,
         calculateBias: calculateBias,
         replaceRTL: replaceRTL,
-        getAppTheme: getAppTheme,
         getXmlNs: getXmlNs
     });
 
@@ -1762,7 +1747,7 @@ var android = (function () {
                     if (this.plainText) {
                         this.android('layout_width', renderParent && this.bounds.width > renderParent.box.width && this.multiline && this.alignParent('left') ? 'match_parent' : 'wrap_content', false);
                     }
-                    else if (children.filter(node => (node.inlineStatic || $util$2.isUnit(node.cssInitial('width'))) && !node.autoMargin.horizontal).some(node => Math.ceil(node.bounds.width) >= this.box.width)) {
+                    else if (children.some(node => (node.inlineStatic && !node.plainText || $util$2.isUnit(node.cssInitial('width'))) && !node.autoMargin.horizontal && Math.ceil(node.bounds.width) >= this.box.width)) {
                         this.android('layout_width', 'wrap_content', false);
                     }
                     else if (this.flexElement && renderParent && renderParent.hasWidth ||
@@ -1975,7 +1960,7 @@ var android = (function () {
                                     break;
                             }
                         }
-                        const gravity = [x, y].filter(value => value).join('|');
+                        const gravity = x !== '' && y !== '' ? `${x}|${y}` : x || y;
                         result = gravity + (z !== '' ? (gravity !== '' ? '|' : '') + z : '');
                 }
                 if (result !== '') {
@@ -2605,7 +2590,7 @@ var android = (function () {
             }
         }
         processUnknownParent(layout) {
-            const [node, parent] = [layout.node, layout.parent];
+            const node = layout.node;
             let next = false;
             let renderAs;
             if (node.has('columnCount')) {
@@ -2641,7 +2626,7 @@ var android = (function () {
                         !this.hasAppendProcessing(node.id)) {
                         child.documentRoot = node.documentRoot;
                         child.siblingIndex = node.siblingIndex;
-                        child.parent = parent;
+                        child.parent = layout.parent;
                         node.renderAs = child;
                         node.resetBox(30 /* MARGIN */ | 480 /* PADDING */, child, true);
                         node.hide();
@@ -2959,7 +2944,10 @@ var android = (function () {
             }
         }
         renderNodeGroup(layout) {
-            const [node, parent, containerType, alignmentType] = [layout.node, layout.parent, layout.containerType, layout.alignmentType];
+            const node = layout.node;
+            const parent = layout.parent;
+            const containerType = layout.containerType;
+            const alignmentType = layout.alignmentType;
             const options = createViewAttribute();
             let valid = false;
             switch (containerType) {
@@ -2999,7 +2987,8 @@ var android = (function () {
             return '';
         }
         renderNode(layout) {
-            const [node, parent] = [layout.node, layout.parent];
+            const node = layout.node;
+            const parent = layout.parent;
             node.alignmentType |= layout.alignmentType;
             const controlName = View.getControlName(layout.containerType);
             node.setControlType(controlName, layout.containerType);
@@ -3291,12 +3280,6 @@ var android = (function () {
             return this.renderNodeStatic(CONTAINER_ANDROID.SPACE, depth, options, width, $util$3.hasValue(height) ? height : 'wrap_content');
         }
         addGuideline(node, parent, orientation = '', percent = false, opposite = false) {
-            if (node.dataset.constraintPercent === 'true') {
-                percent = true;
-            }
-            if (node.dataset.constraintOpposite === 'true') {
-                opposite = true;
-            }
             const documentParent = parent.groupParent ? parent : node.documentParent;
             [AXIS_ANDROID.HORIZONTAL, AXIS_ANDROID.VERTICAL].forEach((value, index) => {
                 if (!node.constraint[value] && (orientation === '' || value === orientation)) {
@@ -3575,9 +3558,7 @@ var android = (function () {
                                         return true;
                                     }
                                 }
-                                if (checkLineWrap && !connected && (checkWidthWrap() ||
-                                    item.multiline && $dom$2.hasLineBreak(item.element) ||
-                                    item.preserveWhiteSpace && /^\n+/.test(item.textContent))) {
+                                if (checkLineWrap && !connected && (checkWidthWrap() || item.multiline && $dom$2.hasLineBreak(item.element) || item.preserveWhiteSpace && /^\n+/.test(item.textContent))) {
                                     return true;
                                 }
                             }
@@ -3657,7 +3638,7 @@ var android = (function () {
                     textBottom = undefined;
                 }
                 const baselineAlign = [];
-                let documentId = i === 0 ? 'true' : baseline ? baseline.documentId : '';
+                let documentId = i === 0 ? 'true' : (baseline ? baseline.documentId : '');
                 const tryHeight = (child) => {
                     if (!alignmentMultiLine) {
                         if (baselineItems.includes(child) || child.actualParent && child.actualHeight >= child.actualParent.box.height) {
@@ -4266,9 +4247,7 @@ var android = (function () {
                     value
                 });
             }
-            let xml = $xml$3.createTemplate($xml$3.parseTemplate(STRING_TMPL), data);
-            xml = replaceTab(xml, this.userSettings.insertSpaces, true);
-            result.push(xml);
+            result.push(replaceTab($xml$3.createTemplate($xml$3.parseTemplate(STRING_TMPL), data), this.userSettings.insertSpaces, true));
             if (saveToDisk) {
                 this.saveToDisk(parseFileDetails(result));
             }
@@ -4285,9 +4264,7 @@ var android = (function () {
                         AA: values.map(value => ({ value }))
                     });
                 }
-                let xml = $xml$3.createTemplate($xml$3.parseTemplate(STRINGARRAY_TMPL), data);
-                xml = replaceTab(xml, this.userSettings.insertSpaces, true);
-                result.push(xml);
+                result.push(replaceTab($xml$3.createTemplate($xml$3.parseTemplate(STRINGARRAY_TMPL), data), this.userSettings.insertSpaces, true));
                 if (saveToDisk) {
                     this.saveToDisk(parseFileDetails(result));
                 }
@@ -4319,8 +4296,7 @@ var android = (function () {
                     if (settings.targetAPI < 26 /* OREO */) {
                         xml = xml.replace(/android/g, 'app');
                     }
-                    xml = replaceTab(xml, settings.insertSpaces);
-                    result.push(xml);
+                    result.push(replaceTab(xml, settings.insertSpaces));
                 }
                 if (saveToDisk) {
                     this.saveToDisk(parseFileDetails(result));
@@ -4339,9 +4315,7 @@ var android = (function () {
                         value
                     });
                 }
-                let xml = $xml$3.createTemplate($xml$3.parseTemplate(COLOR_TMPL), data);
-                xml = replaceTab(xml, this.userSettings.insertSpaces);
-                result.push(xml);
+                result.push(replaceTab($xml$3.createTemplate($xml$3.parseTemplate(COLOR_TMPL), data), this.userSettings.insertSpaces));
                 if (saveToDisk) {
                     this.saveToDisk(parseFileDetails(result));
                 }
@@ -4393,11 +4367,7 @@ var android = (function () {
                     files.push({ filename, data });
                 }
                 for (const style of files) {
-                    let xml = $xml$3.createTemplate(template, style.data);
-                    xml = replaceUnit(xml.trim(), settings.resolutionDPI, settings.convertPixels, true);
-                    xml = replaceTab(xml, settings.insertSpaces);
-                    xml = xml.replace('filename: {0}', `filename: ${style.filename}`);
-                    result.push(xml);
+                    result.push(replaceTab(replaceUnit($xml$3.createTemplate(template, style.data).replace('filename: {0}', `filename: ${style.filename}`), settings.resolutionDPI, settings.convertPixels, true), settings.insertSpaces));
                 }
                 if (saveToDisk) {
                     this.saveToDisk(parseFileDetails(result));
@@ -4417,10 +4387,7 @@ var android = (function () {
                         value
                     });
                 }
-                let xml = $xml$3.createTemplate($xml$3.parseTemplate(DIMEN_TMPL), data);
-                xml = replaceUnit(xml.trim(), settings.resolutionDPI, settings.convertPixels);
-                xml = replaceTab(xml, settings.insertSpaces);
-                result.push(xml);
+                result.push(replaceTab(replaceUnit($xml$3.createTemplate($xml$3.parseTemplate(DIMEN_TMPL), data), settings.resolutionDPI, settings.convertPixels), settings.insertSpaces));
                 if (saveToDisk) {
                     this.saveToDisk(parseFileDetails(result));
                 }
@@ -4433,13 +4400,10 @@ var android = (function () {
                 const settings = this.userSettings;
                 const template = $xml$3.parseTemplate(DRAWABLE_TMPL);
                 for (const [name, value] of this.stored.drawables.entries()) {
-                    let xml = $xml$3.createTemplate(template, {
+                    result.push(replaceTab(replaceUnit($xml$3.createTemplate(template, {
                         name: `res/drawable/${name}.xml`,
                         value
-                    });
-                    xml = replaceUnit(xml, settings.resolutionDPI, settings.convertPixels);
-                    xml = replaceTab(xml, settings.insertSpaces);
-                    result.push(xml);
+                    }), settings.resolutionDPI, settings.convertPixels), settings.insertSpaces));
                 }
                 if (saveToDisk) {
                     this.saveToDisk(parseFileDetails(result));
@@ -4453,24 +4417,19 @@ var android = (function () {
                 const settings = this.userSettings;
                 const template = $xml$3.parseTemplate(DRAWABLE_TMPL);
                 for (const [name, images] of this.stored.images.entries()) {
-                    let xml = '';
                     if (Object.keys(images).length > 1) {
                         for (const dpi in images) {
-                            xml = $xml$3.createTemplate(template, {
+                            result.push(replaceTab($xml$3.createTemplate(template, {
                                 name: `res/drawable-${dpi}/${name}.${$util$4.lastIndexOf(images[dpi], '.')}`,
                                 value: `<!-- image: ${images[dpi]} -->`
-                            });
+                            }), settings.insertSpaces));
                         }
                     }
                     else if (images.mdpi) {
-                        xml = $xml$3.createTemplate(template, {
+                        result.push(replaceTab($xml$3.createTemplate(template, {
                             name: `res/drawable/${name}.${$util$4.lastIndexOf(images.mdpi, '.')}`,
                             value: `<!-- image: ${images.mdpi} -->`
-                        });
-                    }
-                    if (xml !== '') {
-                        xml = replaceTab(xml, settings.insertSpaces);
-                        result.push(xml);
+                        }), settings.insertSpaces));
                     }
                 }
                 if (saveToDisk) {
@@ -4484,12 +4443,7 @@ var android = (function () {
             if (this.stored.animators.size) {
                 const template = $xml$3.parseTemplate(DRAWABLE_TMPL);
                 for (const [name, value] of this.stored.animators.entries()) {
-                    let xml = $xml$3.createTemplate(template, {
-                        name: `res/anim/${name}.xml`,
-                        value
-                    });
-                    xml = replaceTab(xml, this.userSettings.insertSpaces);
-                    result.push(xml);
+                    result.push(replaceTab($xml$3.createTemplate(template, { name: `res/anim/${name}.xml`, value }), this.userSettings.insertSpaces));
                 }
                 if (saveToDisk) {
                     this.saveToDisk(parseFileDetails(result));
@@ -4515,10 +4469,10 @@ var android = (function () {
         }
         afterBaseLayout() {
             for (const node of this.application.processing.cache.elements) {
-                if (!node.hasBit('excludeProcedure', $enum$2.NODE_PROCEDURE.ACCESSIBILITY)) {
+                const element = node.element;
+                if (element && !node.hasBit('excludeProcedure', $enum$2.NODE_PROCEDURE.ACCESSIBILITY)) {
                     switch (node.controlName) {
                         case CONTAINER_ANDROID.EDIT:
-                            const element = node.element;
                             if (!node.companion) {
                                 [$dom$3.getPreviousElementSibling(element), $dom$3.getNextElementSibling(element)].some((sibling) => {
                                     if (sibling) {
@@ -4542,7 +4496,7 @@ var android = (function () {
                         case CONTAINER_ANDROID.CHECKBOX:
                         case CONTAINER_ANDROID.RADIO:
                         case CONTAINER_ANDROID.BUTTON:
-                            if (node.element.disabled) {
+                            if (element.disabled) {
                                 node.android('focusable', 'false');
                             }
                             break;
@@ -4578,13 +4532,8 @@ var android = (function () {
         const dimension = direction === 'column' ? 'width' : 'height';
         let result = 0;
         for (let i = 0; i < mainData[direction].count; i++) {
-            const unitPX = mainData[direction].unit[i];
-            if (unitPX.endsWith('px')) {
-                result += parseInt(unitPX);
-            }
-            else {
-                result += $util$6.minArray(mainData.rowData[i].map(item => item && item.length ? item[0].bounds[dimension] : 0));
-            }
+            const value = mainData[direction].unit[i];
+            result += value.endsWith('px') ? parseInt(value) : $util$6.minArray(mainData.rowData[i].map(item => item && item.length ? item[0].bounds[dimension] : 0));
         }
         result += (mainData[direction].count - 1) * mainData[direction].gap;
         result = node[dimension] - result;
@@ -5057,8 +5006,10 @@ var android = (function () {
                     partition.forEach(segment => {
                         const HW = CHAIN_MAP.widthHeight[inverse];
                         const HWL = HW.toLowerCase();
-                        const [LT, TL] = [CHAIN_MAP.leftTop[index], CHAIN_MAP.leftTop[inverse]];
-                        const [RB, BR] = [CHAIN_MAP.rightBottom[index], CHAIN_MAP.rightBottom[inverse]];
+                        const LT = CHAIN_MAP.leftTop[index];
+                        const TL = CHAIN_MAP.leftTop[inverse];
+                        const RB = CHAIN_MAP.rightBottom[index];
+                        const BR = CHAIN_MAP.rightBottom[inverse];
                         const maxSize = $util$7.maxArray(segment.map(item => item.flexElement ? 0 : item.bounds[HW.toLowerCase()]));
                         let baseline;
                         for (let i = 0; i < segment.length; i++) {
@@ -5371,7 +5322,8 @@ var android = (function () {
                 else {
                     const columnWeight = columnCount > 0 ? '0' : '';
                     const positionInside = node.css('listStylePosition') === 'inside';
-                    let [left, top] = [0, 0];
+                    let left = 0;
+                    let top = 0;
                     let image = '';
                     if (mainData.imageSrc !== '') {
                         const boxPosition = $dom$5.getBackgroundPosition(mainData.imagePosition, node.bounds, node.dpi, node.fontSize);
@@ -5460,8 +5412,8 @@ var android = (function () {
                     node.android('layout_width', '0px');
                     node.android('layout_columnWeight', '1');
                 }
-                const [linearX, linearY] = [$NodeList$3.linearX(node.children), $NodeList$3.linearY(node.children)];
-                if (linearX || linearY) {
+                const linearX = $NodeList$3.linearX(node.children);
+                if (linearX || $NodeList$3.linearY(node.children)) {
                     const layout = new $Layout$3(parent, node, CONTAINER_NODE.LINEAR, linearX ? 8 /* HORIZONTAL */ : 16 /* VERTICAL */, node.length, node.children);
                     output = this.application.renderNode(layout);
                 }
@@ -5516,9 +5468,9 @@ var android = (function () {
     const $util$a = squared.lib.util;
     class Sprite extends squared.base.extensions.Sprite {
         processNode(node, parent) {
-            let output = '';
-            let container;
             const mainData = node.data($const$4.EXT_NAME.SPRITE, 'mainData');
+            let container;
+            let output = '';
             if (mainData && mainData.uri && mainData.position) {
                 container = new View(this.application.nextId, node.element, this.application.controllerHandler.afterInsertNode);
                 container.inherit(node, 'initial', 'base', 'styleMap');
@@ -6462,9 +6414,9 @@ var android = (function () {
                     const backgroundDimensions = [];
                     const backgroundGradient = [];
                     const backgroundSize = stored.backgroundSize.split(',').map(value => value.trim());
+                    const backgroundPosition = [];
                     const backgroundPositionX = stored.backgroundPositionX.split(',').map(value => value.trim());
                     const backgroundPositionY = stored.backgroundPositionY.split(',').map(value => value.trim());
-                    const backgroundPosition = [];
                     if ($util$h.isArray(stored.backgroundImage) && !node.hasBit('excludeResource', $enum$g.NODE_RESOURCE.IMAGE_SOURCE)) {
                         backgroundImage.push(...stored.backgroundImage);
                         for (let i = 0; i < backgroundImage.length; i++) {
@@ -6524,8 +6476,8 @@ var android = (function () {
                         let resourceName = '';
                         for (let i = 0; i < backgroundImage.length; i++) {
                             if (backgroundImage[i] !== '') {
-                                const boxPosition = $dom$8.getBackgroundPosition(backgroundPosition[i], node.bounds, node.dpi, node.fontSize);
                                 const image = backgroundDimensions[i];
+                                const boxPosition = $dom$8.getBackgroundPosition(backgroundPosition[i], node.bounds, node.dpi, node.fontSize);
                                 let gravity = (() => {
                                     if (boxPosition.horizontal === 'center' && boxPosition.vertical === 'center') {
                                         return 'center';
@@ -7362,7 +7314,7 @@ var android = (function () {
                 for (const attrs in tagData) {
                     const items = [];
                     attrs.split(';').forEach(value => {
-                        const match = REGEXP_ANDROID.ATTRIBUTE.exec(value);
+                        const match = $util$j.REGEXP_PATTERN.ATTRIBUTE.exec(value);
                         if (match) {
                             items.push({
                                 name: match[1],
@@ -7378,12 +7330,23 @@ var android = (function () {
                     });
                 }
                 styleData.sort((a, b) => {
-                    let [c, d] = [a.items.length, b.items.length];
-                    if (c === d) {
-                        [c, d] = [a.items[0].name, b.items[0].name];
+                    let c = 0;
+                    let d = 0;
+                    if (a.ids && b.ids) {
+                        c = a.ids.length;
+                        d = b.ids.length;
                     }
                     if (c === d) {
-                        [c, d] = [a.items[0].value, b.items[0].value];
+                        c = a.items.length;
+                        d = b.items.length;
+                    }
+                    if (c === d) {
+                        c = a.items[0].name;
+                        d = b.items[0].name;
+                    }
+                    if (c === d) {
+                        c = a.items[0].value;
+                        d = b.items[0].value;
                     }
                     return c <= d ? 1 : -1;
                 });
@@ -7733,7 +7696,7 @@ var android = (function () {
             for (const name in styles) {
                 const items = [];
                 for (const attr in styles[name]) {
-                    const match = REGEXP_ANDROID.ATTRIBUTE.exec(styles[name][attr]);
+                    const match = $util$m.REGEXP_PATTERN.ATTRIBUTE.exec(styles[name][attr]);
                     if (match) {
                         items.push({
                             name: match[1],
@@ -7865,7 +7828,7 @@ var android = (function () {
         'stroke-opacity': 'strokeAlpha',
         'fill-opacity': 'fillAlpha',
         'stroke-width': 'strokeWidth',
-        'value': 'pathData'
+        'd': 'pathData'
     };
     const TEMPLATES$1 = {};
     const STORED$5 = Resource.STORED;
@@ -7969,7 +7932,7 @@ var android = (function () {
             }
             for (let i = 0; i < partition.length; i++) {
                 const item = partition[i];
-                let prerotate = host.length === 0 && current.length === 0;
+                const prerotate = host.length === 0 && current.length === 0;
                 if (!prerotate && typeIndex.has(item.type)) {
                     const previous = current[current.length - 1];
                     if (item.type === previous.type) {
@@ -7988,29 +7951,16 @@ var android = (function () {
                 }
                 else {
                     switch (item.type) {
-                        case SVGTransform.SVG_TRANSFORM_TRANSLATE:
-                            if (prerotate) {
-                                client.push(item);
-                            }
-                            else {
-                                current.push(item);
-                            }
-                            break;
                         case SVGTransform.SVG_TRANSFORM_SCALE:
-                            if (prerotate) {
-                                client.push(item);
-                            }
-                            else {
-                                current.push(item);
-                            }
-                            break;
+                        case SVGTransform.SVG_TRANSFORM_SKEWX:
+                        case SVGTransform.SVG_TRANSFORM_SKEWY:
                         case SVGTransform.SVG_TRANSFORM_MATRIX:
+                        case SVGTransform.SVG_TRANSFORM_TRANSLATE:
                             if (prerotate && item.matrix.b === 0 && item.matrix.c === 0) {
                                 client.push(item);
                             }
                             else {
                                 current.push(item);
-                                prerotate = false;
                             }
                             break;
                         case SVGTransform.SVG_TRANSFORM_ROTATE:
@@ -8030,11 +7980,6 @@ var android = (function () {
                                 current.push(item);
                                 continue;
                             }
-                            break;
-                        case SVGTransform.SVG_TRANSFORM_SKEWX:
-                        case SVGTransform.SVG_TRANSFORM_SKEWY:
-                            current.push(item);
-                            prerotate = false;
                             break;
                     }
                 }
@@ -8106,9 +8051,9 @@ var android = (function () {
                             name: svg.name,
                             width: $util$n.formatPX(svg.width),
                             height: $util$n.formatPX(svg.height),
-                            viewportWidth: svg.viewBox.width > 0 ? svg.viewBox.width.toString() : false,
-                            viewportHeight: svg.viewBox.height > 0 ? svg.viewBox.height.toString() : false,
-                            alpha: parseFloat(svg.opacity) < 1 ? svg.opacity.toString() : false,
+                            viewportWidth: svg.viewBox.width > 0 ? svg.viewBox.width.toString() : '',
+                            viewportHeight: svg.viewBox.height > 0 ? svg.viewBox.height.toString() : '',
+                            alpha: parseFloat(svg.opacity) < 1 ? svg.opacity.toString() : '',
                             A: [],
                             B: [{ templateName: svg.name }]
                         });
@@ -8159,20 +8104,14 @@ var android = (function () {
                                 const sequential = item.sequential;
                                 if (sequential) {
                                     if ($SvgBuild.instanceOfAnimateTransform(item)) {
-                                        let values = transformMap.get(sequential.value);
-                                        if (values === undefined) {
-                                            values = [];
-                                            transformMap.set(sequential.value, values);
-                                        }
+                                        const values = transformMap.get(sequential.value) || [];
                                         values.push(item);
+                                        transformMap.set(sequential.value, values);
                                     }
                                     else {
-                                        let values = sequentialMap.get(sequential.value);
-                                        if (values === undefined) {
-                                            values = [];
-                                            sequentialMap.set(sequential.value, values);
-                                        }
+                                        const values = sequentialMap.get(sequential.value) || [];
                                         values.push(item);
+                                        sequentialMap.set(sequential.value, values);
                                     }
                                 }
                                 else if (item.repeatCount === -1 || item.fillMode < 4 /* FORWARDS */) {
@@ -8237,17 +8176,14 @@ var android = (function () {
                                     }
                                     for (const item of repeating) {
                                         const options = {
-                                            startOffset: item.begin.length && item.begin[0] > 0 ? item.begin[0].toString() : '',
-                                            duration: item.duration.toString()
+                                            startOffset: item.delay > 0 ? item.delay.toString() : ''
                                         };
                                         if ($SvgBuild.instanceOfSet(item)) {
-                                            if (item.to) {
+                                            if ($util$n.hasValue(item.to)) {
                                                 options.propertyName = ATTRIBUTE_ANDROID[item.attributeName];
                                                 if (options.propertyName) {
                                                     options.propertyValues = false;
-                                                    if (item.duration === 0) {
-                                                        options.duration = '1';
-                                                    }
+                                                    options.duration = Math.max(item.duration, 1).toString();
                                                     options.repeatCount = '0';
                                                     options.valueTo = item.to.toString();
                                                     setData.repeating.push(options);
@@ -8255,6 +8191,7 @@ var android = (function () {
                                             }
                                         }
                                         else {
+                                            options.duration = item.duration.toString();
                                             options.repeatCount = item.repeatCount !== -1 ? Math.ceil(item.repeatCount - 1).toString() : '-1';
                                             if (!sequential) {
                                                 if ($util$n.hasBit(item.fillMode, 2 /* BACKWARDS */)) {
@@ -8302,41 +8239,37 @@ var android = (function () {
                                             }
                                             if ($SvgBuild.instanceOfAnimateTransform(item)) {
                                                 switch (item.type) {
-                                                    case SVGTransform.SVG_TRANSFORM_ROTATE: {
+                                                    case SVGTransform.SVG_TRANSFORM_ROTATE:
                                                         values = $SvgAnimateTransform.toRotateList(item.values);
                                                         propertyName = ['rotation', 'pivotX', 'pivotY'];
                                                         break;
-                                                    }
-                                                    case SVGTransform.SVG_TRANSFORM_SCALE: {
+                                                    case SVGTransform.SVG_TRANSFORM_SCALE:
                                                         values = $SvgAnimateTransform.toScaleList(item.values);
                                                         propertyName = ['scaleX', 'scaleY'];
                                                         break;
-                                                    }
-                                                    case SVGTransform.SVG_TRANSFORM_TRANSLATE: {
+                                                    case SVGTransform.SVG_TRANSFORM_TRANSLATE:
                                                         values = $SvgAnimateTransform.toTranslateList(item.values);
                                                         propertyName = ['translateX', 'translateY'];
                                                         break;
-                                                    }
                                                 }
                                                 options.valueType = 'floatType';
                                             }
                                             else {
                                                 const attribute = ATTRIBUTE_ANDROID[item.attributeName];
                                                 switch (options.valueType) {
-                                                    case 'intType': {
+                                                    case 'intType':
                                                         values = item.values.map(value => $util$n.convertInt(value).toString());
                                                         if (attribute) {
                                                             propertyName = [attribute];
                                                         }
-                                                    }
-                                                    case 'floatType': {
+                                                        break;
+                                                    case 'floatType':
                                                         values = item.values.map(value => $util$n.convertFloat(value).toString());
                                                         if (attribute) {
                                                             propertyName = [attribute];
                                                         }
                                                         break;
-                                                    }
-                                                    case 'pathType': {
+                                                    case 'pathType':
                                                         if (group.pathData) {
                                                             pathType: {
                                                                 values = item.values.slice(0);
@@ -8419,41 +8352,42 @@ var android = (function () {
                                                                                     break;
                                                                             }
                                                                             if (x !== undefined || y !== undefined) {
-                                                                                const commandStart = pathPoints[0];
-                                                                                const commandEnd = pathPoints[pathPoints.length - 1];
-                                                                                const [firstPoint, lastPoint] = [commandStart.points[0], commandEnd.points[commandEnd.points.length - 1]];
+                                                                                const commandA = pathPoints[0];
+                                                                                const commandB = pathPoints[pathPoints.length - 1];
+                                                                                const pointA = commandA.points[0];
+                                                                                const pointB = commandB.points[commandB.points.length - 1];
                                                                                 let recalibrate = false;
                                                                                 if (x !== undefined) {
                                                                                     switch (item.attributeName) {
                                                                                         case 'x':
-                                                                                            x -= firstPoint.x;
+                                                                                            x -= pointA.x;
                                                                                             recalibrate = true;
                                                                                             break;
                                                                                         case 'x1':
                                                                                         case 'cx':
-                                                                                            firstPoint.x = x;
-                                                                                            commandStart.coordinates[0] = x;
+                                                                                            pointA.x = x;
+                                                                                            commandA.coordinates[0] = x;
                                                                                             break;
                                                                                         case 'x2':
-                                                                                            lastPoint.x = x;
-                                                                                            commandEnd.coordinates[0] = x;
+                                                                                            pointB.x = x;
+                                                                                            commandB.coordinates[0] = x;
                                                                                             break;
                                                                                     }
                                                                                 }
                                                                                 if (y !== undefined) {
                                                                                     switch (item.attributeName) {
                                                                                         case 'y':
-                                                                                            y -= firstPoint.y;
+                                                                                            y -= pointA.y;
                                                                                             recalibrate = true;
                                                                                             break;
                                                                                         case 'y1':
                                                                                         case 'cy':
-                                                                                            firstPoint.y = y;
-                                                                                            commandStart.coordinates[1] = y;
+                                                                                            pointA.y = y;
+                                                                                            commandA.coordinates[1] = y;
                                                                                             break;
                                                                                         case 'y2':
-                                                                                            lastPoint.y = y;
-                                                                                            commandEnd.coordinates[1] = y;
+                                                                                            pointB.y = y;
+                                                                                            commandB.coordinates[1] = y;
                                                                                             break;
                                                                                     }
                                                                                 }
@@ -8516,8 +8450,7 @@ var android = (function () {
                                                             }
                                                         }
                                                         break;
-                                                    }
-                                                    default: {
+                                                    default:
                                                         values = item.values.slice(0);
                                                         if (attribute) {
                                                             propertyName = [attribute];
@@ -8530,7 +8463,7 @@ var android = (function () {
                                                                 }
                                                             }
                                                         }
-                                                    }
+                                                        break;
                                                 }
                                             }
                                             if (values && propertyName) {
@@ -8640,14 +8573,19 @@ var android = (function () {
                                                             }
                                                         }
                                                         else if ($SvgBuild.instanceOfShape(item.parent) && item.parent.path) {
-                                                            let css = '';
-                                                            for (const attr in ATTRIBUTE_ANDROID) {
-                                                                if (ATTRIBUTE_ANDROID[attr] === propertyName[i]) {
-                                                                    css = $util$n.convertCamelCase(attr);
-                                                                    break;
+                                                            let css;
+                                                            if (propertyName[i] === 'pathData') {
+                                                                css = 'value';
+                                                            }
+                                                            else {
+                                                                for (const attr in ATTRIBUTE_ANDROID) {
+                                                                    if (ATTRIBUTE_ANDROID[attr] === propertyName[i]) {
+                                                                        css = $util$n.convertCamelCase(attr);
+                                                                        break;
+                                                                    }
                                                                 }
                                                             }
-                                                            if (css !== '') {
+                                                            if (css) {
                                                                 valueTo = item.parent.path[css];
                                                             }
                                                         }
@@ -8672,7 +8610,7 @@ var android = (function () {
                                             pathArray.push({
                                                 propertyName: 'pathData',
                                                 interpolator: createPathInterpolator(item.keySplines, 0),
-                                                startOffset: item.begin.length && item.begin[0] > 0 ? item.begin[0].toString() : '',
+                                                startOffset: item.delay > 0 ? item.delay.toString() : '',
                                                 duration: item.duration.toString(),
                                                 repeatCount: '0',
                                                 valueType: 'pathType',
@@ -8799,6 +8737,14 @@ var android = (function () {
                     }
                 }
                 else if ($SvgBuild.instanceOfImage(item)) {
+                    if (item.width === 0 || item.height === 0) {
+                        const image = this.application.session.image.get(item.href);
+                        if (image && image.width > 0 && image.height > 0) {
+                            item.width = image.width;
+                            item.height = image.height;
+                            item.setRect();
+                        }
+                    }
                     item.extract(this.options.excludeFromTransform.image);
                     if (item.visible || item.rotateOrigin) {
                         this.IMAGE_DATA.push(item);
@@ -8806,7 +8752,7 @@ var android = (function () {
                     continue;
                 }
                 else if ($SvgBuild.instanceOfContainer(item)) {
-                    if (item.length) {
+                    if (item.visible && item.length) {
                         this.parseVectorData(node, svg, item);
                         DDD.push({ templateName: item.name });
                     }
@@ -8955,7 +8901,7 @@ var android = (function () {
             return result;
         }
         queueAnimations(svg, name, predicate, pathData = '') {
-            const animate = svg.animation.filter(predicate).filter(item => !item.paused && item.begin.length > 0 && item.duration >= 0);
+            const animate = svg.animation.filter(predicate).filter(item => !item.paused && item.begin.length > 0 && (item.duration > 0 || $SvgBuild.instanceOfSet(item) && item.duration === 0));
             if (animate.length) {
                 this.ANIMATE_DATA.set(name, {
                     element: svg.element,

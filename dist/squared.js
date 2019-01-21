@@ -1,4 +1,4 @@
-/* squared 0.1.0
+/* squared 0.5.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -50,14 +50,9 @@
     const REGEXP_PATTERN = {
         CSS_URL: /url\("?(#?.*?)"?\)/,
         URI: /^[A-Za-z]+:\/\//,
-        UNIT: /^(?:\s*(-?[\d.]+)(px|em|ch|pc|pt|vw|vh|vmin|vmax|mm|cm|in))+$/
+        UNIT: /^(?:\s*(-?[\d.]+)(px|em|ch|pc|pt|vw|vh|vmin|vmax|mm|cm|in))+$/,
+        ATTRIBUTE: /([^\s]+)="(.*?)"/
     };
-    function formatString(value, ...params) {
-        for (let i = 0; i < params.length; i++) {
-            value = value.replace(`{${i}}`, params[i]);
-        }
-        return value;
-    }
     function capitalize(value, upper = true) {
         return value ? value.charAt(0)[upper ? 'toUpperCase' : 'toLowerCase']() + value.substring(1)[upper ? 'toLowerCase' : 'toString']() : '';
     }
@@ -193,6 +188,12 @@
         }
         return '0%';
     }
+    function formatString(value, ...params) {
+        for (let i = 0; i < params.length; i++) {
+            value = value.replace(`{${i}}`, params[i]);
+        }
+        return value;
+    }
     function hasBit(value, type) {
         return (value & type) === type;
     }
@@ -325,15 +326,6 @@
     function lastIndexOf(value, char = '/') {
         return value.substring(value.lastIndexOf(char) + 1);
     }
-    function hasSameValue(obj1, obj2, ...attrs) {
-        for (const attr of attrs) {
-            const value = compareObject(obj1, obj2, attr, false);
-            if (!value || value[0] !== value[1]) {
-                return false;
-            }
-        }
-        return true;
-    }
     function searchObject(obj, value) {
         const result = [];
         if (typeof value === 'object') {
@@ -345,18 +337,21 @@
             }
         }
         else {
-            let filter = (a) => a === value;
+            let search;
             if (/^\*.+\*$/.test(value)) {
-                filter = (a) => a.indexOf(value.replace(/\*/g, '')) !== -1;
+                search = (a) => a.indexOf(value.replace(/\*/g, '')) !== -1;
             }
             else if (/^\*/.test(value)) {
-                filter = (a) => a.endsWith(value.replace(/\*/, ''));
+                search = (a) => a.endsWith(value.replace(/\*/, ''));
             }
             else if (/\*$/.test(value)) {
-                filter = (a) => a.startsWith(value.replace(/\*/, ''));
+                search = (a) => a.startsWith(value.replace(/\*/, ''));
+            }
+            else {
+                search = (a) => a === value;
             }
             for (const i in obj) {
-                if (filter(i)) {
+                if (search(i)) {
                     result.push([i, obj[i]]);
                 }
             }
@@ -449,16 +444,6 @@
         }
         return false;
     }
-    function flatArray(list) {
-        let current = list;
-        while (current.some(item => Array.isArray(item))) {
-            current = [].concat.apply([], current.filter(item => item));
-        }
-        return current;
-    }
-    function flatMap(list, predicate) {
-        return list.map((item, index) => predicate(item, index)).filter((item) => hasValue(item));
-    }
     function sortArray(list, ascending, ...attrs) {
         return list.sort((a, b) => {
             for (const attr of attrs) {
@@ -475,10 +460,19 @@
             return 0;
         });
     }
+    function flatArray(list) {
+        let current = list;
+        while (current.some(item => Array.isArray(item))) {
+            current = [].concat.apply([], current.filter(item => item));
+        }
+        return current;
+    }
+    function flatMap(list, predicate) {
+        return list.map((item, index) => predicate(item, index)).filter((item) => hasValue(item));
+    }
 
     var util = /*#__PURE__*/Object.freeze({
         REGEXP_PATTERN: REGEXP_PATTERN,
-        formatString: formatString,
         capitalize: capitalize,
         convertUnderscore: convertUnderscore,
         convertCamelCase: convertCamelCase,
@@ -492,6 +486,7 @@
         convertEnum: convertEnum,
         formatPX: formatPX,
         formatPercent: formatPercent,
+        formatString: formatString,
         hasBit: hasBit,
         isNumber: isNumber,
         isString: isString,
@@ -513,7 +508,6 @@
         repeat: repeat,
         indexOf: indexOf,
         lastIndexOf: lastIndexOf,
-        hasSameValue: hasSameValue,
         searchObject: searchObject,
         hasValue: hasValue,
         withinRange: withinRange,
@@ -525,9 +519,9 @@
         partitionArray: partitionArray,
         retainArray: retainArray,
         spliceArray: spliceArray,
+        sortArray: sortArray,
         flatArray: flatArray,
-        flatMap: flatMap,
-        sortArray: sortArray
+        flatMap: flatMap
     });
 
     class Container {
@@ -647,6 +641,7 @@
         }
     }
 
+    const HEX_CHAR = '0123456789ABCDEF';
     const X11_CSS3 = {
         'Pink': { value: '#FFC0CB' },
         'LightPink': { value: '#FFB6C1' },
@@ -797,6 +792,8 @@
         'DarkSlateGrey': { value: '#2F4F4F' },
         'Black': { value: '#000000' }
     };
+    const REGEXP_HEX = /[A-Za-z\d]{3,}/;
+    const REGEXP_RGBA = /rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/;
     const HSL_SORTED = [];
     for (const name in X11_CSS3) {
         const x11 = X11_CSS3[name];
@@ -846,11 +843,14 @@
     }
     function sortHSL(a, b) {
         if (a.hsl && b.hsl) {
-            let [c, d] = [a.hsl.h, b.hsl.h];
+            let c = a.hsl.h;
+            let d = b.hsl.h;
             if (c === d) {
-                [c, d] = [a.hsl.s, b.hsl.s];
+                c = a.hsl.s;
+                d = b.hsl.s;
                 if (c === d) {
-                    [c, d] = [a.hsl.l, b.hsl.l];
+                    c = a.hsl.l;
+                    d = b.hsl.l;
                 }
             }
             return c >= d ? 1 : -1;
@@ -897,17 +897,16 @@
         }
     }
     function convertHex(value, opacity = 1) {
-        const hex = '0123456789ABCDEF';
         let rgb = (typeof value === 'string' ? parseInt(value) : value) * opacity;
         if (isNaN(rgb)) {
             return '00';
         }
         rgb = Math.max(0, Math.min(rgb, 255));
-        return hex.charAt((rgb - (rgb % 16)) / 16) + hex.charAt(rgb % 16);
+        return HEX_CHAR.charAt((rgb - (rgb % 16)) / 16) + HEX_CHAR.charAt(rgb % 16);
     }
     function convertRGBA(value) {
         value = value.replace(/#/g, '').trim();
-        if (/[A-Za-z\d]{3,}/.test(value)) {
+        if (REGEXP_HEX.test(value)) {
             let a = 255;
             switch (value.length) {
                 case 4:
@@ -954,7 +953,7 @@
                     value = formatRGBA(color.rgba);
                 }
             }
-            const match = value.match(/rgba?\((\d+), (\d+), (\d+),?\s*([\d.]+)?\)/);
+            const match = value.match(REGEXP_RGBA);
             if (match && match.length >= 4 && (match[4] === undefined || parseFloat(match[4]) > 0)) {
                 if (match[4] === undefined) {
                     match[4] = parseFloat(opacity).toFixed(2);
@@ -1259,17 +1258,12 @@
                 }
                 else {
                     const node = getElementAsNode(element);
-                    if (node) {
-                        if (node.style) {
-                            return node.style;
-                        }
-                        else if (node.plainText) {
-                            return node.unsafe('styleMap');
-                        }
+                    if (node && node.plainText) {
+                        return node.unsafe('styleMap');
                     }
                 }
             }
-            if (element.nodeName.charAt(0) !== '#') {
+            if (hasComputedStyle(element)) {
                 const style = getComputedStyle(element);
                 setElementCache(element, 'style', style);
                 return style;
@@ -1289,7 +1283,7 @@
         if (element) {
             let current = element.parentElement;
             while (current && (tagNames === undefined || !tagNames.includes(current.tagName))) {
-                result = getStyle(current)[attr];
+                result = getStyle(current)[attr] || '';
                 if (result === 'inherit' || exclude && exclude.some(value => result.indexOf(value) !== -1)) {
                     result = '';
                 }
@@ -1299,7 +1293,7 @@
                 current = current.parentElement;
             }
         }
-        return result || '';
+        return result;
     }
     function cssParent(element, attr, ...styles) {
         if (element) {
@@ -1537,7 +1531,7 @@
             if (trimString$$1) {
                 value = value.trim();
             }
-            if (element.children.length && Array.from(element.children).some(item => item.tagName === 'BR')) {
+            if (element.children && Array.from(element.children).some((item) => item.tagName === 'BR')) {
                 return true;
             }
             else if (!lineBreak && /\n/.test(value)) {
@@ -1613,12 +1607,12 @@
     function hasComputedStyle(element) {
         return !!element && typeof element['style'] === 'object';
     }
-    function withinViewportOrigin(element) {
+    function hasVisibleRect(element, checkViewport = false) {
         const bounds = element.getBoundingClientRect();
-        if (bounds.width !== 0 && bounds.height !== 0) {
-            return !(bounds.left < 0 && bounds.top < 0 && Math.abs(bounds.left) >= bounds.width && Math.abs(bounds.top) >= bounds.height);
-        }
-        return false;
+        return bounds.width !== 0 && bounds.height !== 0 && (!checkViewport || withinViewportOrigin(bounds));
+    }
+    function withinViewportOrigin(bounds) {
+        return !(bounds.left < 0 && bounds.top < 0 && Math.abs(bounds.left) >= bounds.width && Math.abs(bounds.top) >= bounds.height);
     }
     function setElementCache(element, attr, data) {
         element[`__${attr}`] = data;
@@ -1633,6 +1627,10 @@
     }
     function getElementAsNode(element) {
         return isString(element.className) && element.className.startsWith('squared') ? undefined : getElementCache(element, 'node');
+    }
+    function getElementAsNodeAttribute(element, attr) {
+        const node = getElementAsNode(element);
+        return node && node[attr] !== undefined ? node[attr] : undefined;
     }
 
     var dom = /*#__PURE__*/Object.freeze({
@@ -1667,11 +1665,13 @@
         getPreviousElementSibling: getPreviousElementSibling,
         getNextElementSibling: getNextElementSibling,
         hasComputedStyle: hasComputedStyle,
+        hasVisibleRect: hasVisibleRect,
         withinViewportOrigin: withinViewportOrigin,
         setElementCache: setElementCache,
         getElementCache: getElementCache,
         deleteElementCache: deleteElementCache,
-        getElementAsNode: getElementAsNode
+        getElementAsNode: getElementAsNode,
+        getElementAsNodeAttribute: getElementAsNodeAttribute
     });
 
     function formatPlaceholder(id, symbol = ':') {
@@ -1739,18 +1739,15 @@
         const result = { '__ROOT__': value };
         function parseSection(section) {
             const pattern = /(\t*<<(\w+)>>)\n[\w\W]*\n*\1/g;
-            let match = null;
-            do {
-                match = pattern.exec(section);
-                if (match) {
-                    const segment = match[0].replace(new RegExp(`^${match[1]}\\n`), '').replace(new RegExp(`${match[1]}$`), '');
-                    for (const index in result) {
-                        result[index] = result[index].replace(match[0], `{%${match[2]}}`);
-                    }
-                    result[match[2]] = segment;
-                    parseSection(segment);
+            let match;
+            while ((match = pattern.exec(section)) !== null) {
+                const segment = match[0].replace(new RegExp(`^${match[1]}\\n`), '').replace(new RegExp(`${match[1]}$`), '');
+                for (const index in result) {
+                    result[index] = result[index].replace(match[0], `{%${match[2]}}`);
                 }
-            } while (match);
+                result[match[2]] = segment;
+                parseSection(segment);
+            }
         }
         parseSection(value);
         return result;
@@ -1764,7 +1761,10 @@
             const unknown = data[attr];
             let result = '';
             let hash = '';
-            if (Array.isArray(unknown)) {
+            if (unknown === undefined || unknown === null) {
+                continue;
+            }
+            else if (Array.isArray(unknown)) {
                 hash = '%';
                 if (Array.isArray(unknown[0])) {
                     const match = new RegExp(partial(attr, 'start') + `([\\w\\W]*?)` + partial(attr, 'end')).exec(output);
@@ -1906,7 +1906,7 @@
             }
             exports.settings = appBase.userSettings;
             main = appBase.application;
-            main.userSettings = appBase.userSettings;
+            main.userSettings = exports.settings;
             if (Array.isArray(exports.settings.builtInExtensions)) {
                 const register = new Set();
                 for (let namespace of exports.settings.builtInExtensions) {
@@ -1922,8 +1922,8 @@
                         }
                     }
                 }
-                for (const item of register) {
-                    main.extensionManager.include(item);
+                for (const extension of register) {
+                    main.extensionManager.include(extension);
                 }
             }
             framework = value;
@@ -2052,7 +2052,7 @@
         return main && main.extensionManager.retrieve(value);
     }
     function ready() {
-        return main && !main.initialized && !main.closed;
+        return !!main && !main.initialized && !main.closed;
     }
     function close() {
         if (main && !main.initialized && main.size) {

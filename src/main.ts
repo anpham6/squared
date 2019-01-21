@@ -27,7 +27,7 @@ export function setFramework(value: AppFramework<T>, cached = false) {
         }
         settings = appBase.userSettings;
         main = appBase.application;
-        main.userSettings = appBase.userSettings;
+        main.userSettings = settings;
         if (Array.isArray(settings.builtInExtensions)) {
             const register = new Set<Extension>();
             for (let namespace of settings.builtInExtensions) {
@@ -43,8 +43,8 @@ export function setFramework(value: AppFramework<T>, cached = false) {
                     }
                 }
             }
-            for (const item of register) {
-                main.extensionManager.include(item);
+            for (const extension of register) {
+                main.extensionManager.include(extension);
             }
         }
         framework = value;
@@ -53,7 +53,7 @@ export function setFramework(value: AppFramework<T>, cached = false) {
     reset();
 }
 
-export function parseDocument(...elements: Undefined<string | HTMLElement>[]): FunctionMap<void> {
+export function parseDocument(...elements: (string | HTMLElement)[]): FunctionMap<void> {
     if (main && !main.closed) {
         if (settings.handleExtensionsAsync) {
             for (const item of extensionsAsync) {
@@ -181,7 +181,7 @@ export function retrieve(value: string) {
 }
 
 export function ready() {
-    return main && !main.initialized && !main.closed;
+    return !!main && !main.initialized && !main.closed;
 }
 
 export function close() {

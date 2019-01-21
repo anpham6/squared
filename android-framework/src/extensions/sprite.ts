@@ -14,9 +14,9 @@ const $util = squared.lib.util;
 
 export default class <T extends View> extends squared.base.extensions.Sprite<T> {
     public processNode(node: T, parent: T): ExtensionResult<T> {
-        let output = '';
-        let container: T | undefined;
         const mainData = <ImageAsset> node.data($const.EXT_NAME.SPRITE, 'mainData');
+        let container: T | undefined;
+        let output = '';
         if (mainData && mainData.uri && mainData.position) {
             container = new View(
                 this.application.nextId,

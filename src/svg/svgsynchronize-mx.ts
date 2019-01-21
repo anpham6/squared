@@ -25,24 +25,24 @@ type GroupData = {
 
 const $util = squared.lib.util;
 
-function insertSplitTimeValue(map: TimelineIndex, insertMap: TimelineIndex, splitTime: number) {
+function insertSplitTimeValue(map: TimelineIndex, insertMap: TimelineIndex, time: number) {
     let previous: NumberValue<AnimateValue> | undefined;
     let next: NumberValue<AnimateValue> | undefined;
     for (const [ordinal, value] of map.entries()) {
-        if (previous && splitTime <= ordinal) {
+        if (previous && time <= ordinal) {
             next = { ordinal, value };
             break;
         }
-        if (splitTime >= ordinal) {
+        if (time >= ordinal) {
             previous = { ordinal, value };
         }
     }
     if (previous && next) {
-        const value = getSplitValue(splitTime, previous.ordinal, next.ordinal, previous.value, next.value);
-        insertMap.set(splitTime, value);
+        const value = getSplitValue(time, previous.ordinal, next.ordinal, previous.value, next.value);
+        insertMap.set(time, value);
     }
     else if (previous) {
-        insertMap.set(splitTime, previous.value);
+        insertMap.set(time, previous.value);
     }
 }
 
@@ -91,14 +91,15 @@ function getPathData(map: KeyTimeMap, path: SvgPath, parent?: SvgContainer, free
     for (const [ordinal, data] of map.entries()) {
         const values: AnimateValue[] = [];
         baseVal.forEach(attr => {
-            if (data.has(attr)) {
-                values.push(<AnimateValue> data.get(attr));
+            let value = data.get(attr);
+            if (value !== undefined) {
+                values.push(value);
             }
             else if (freezeMap && freezeMap[attr]) {
                 values.push(freezeMap[attr].value);
             }
             else {
-                const value = path.getBaseValue(attr);
+                value = path.getBaseValue(attr);
                 if (value !== undefined) {
                     values.push(value);
                 }

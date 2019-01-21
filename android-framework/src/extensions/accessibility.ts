@@ -11,10 +11,10 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
 
     public afterBaseLayout() {
         for (const node of this.application.processing.cache.elements) {
-            if (!node.hasBit('excludeProcedure', $enum.NODE_PROCEDURE.ACCESSIBILITY)) {
+            const element = <HTMLElement> node.element;
+            if (element && !node.hasBit('excludeProcedure', $enum.NODE_PROCEDURE.ACCESSIBILITY)) {
                 switch (node.controlName) {
                     case CONTAINER_ANDROID.EDIT:
-                        const element = <HTMLElement> node.element;
                         if (!node.companion) {
                             [$dom.getPreviousElementSibling(element), $dom.getNextElementSibling(element)].some((sibling: HTMLLabelElement | null) => {
                                 if (sibling) {
@@ -38,7 +38,7 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                     case CONTAINER_ANDROID.CHECKBOX:
                     case CONTAINER_ANDROID.RADIO:
                     case CONTAINER_ANDROID.BUTTON:
-                        if ((<HTMLInputElement> node.element).disabled) {
+                        if ((<HTMLInputElement> element).disabled) {
                             node.android('focusable', 'false');
                         }
                         break;

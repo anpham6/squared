@@ -12,7 +12,6 @@ const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
-    public style: CSSStyleDeclaration;
     public alignmentType = 0;
     public depth = -1;
     public siblingIndex = Number.MAX_VALUE;
@@ -25,6 +24,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public positioned = false;
     public renderExtension = new Set<Extension<T>>();
     public controlId = '';
+    public style: CSSStyleDeclaration;
     public companion?: T;
 
     public abstract readonly localSettings: EnvironmentSettings;
@@ -49,14 +49,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     protected abstract readonly _boxReset: BoxModel;
 
     private _initialized = false;
-    private _parent?: T;
-    private _renderAs?: T;
     private _renderDepth = -1;
-    private _renderPositionId?: string;
     private _data = {};
     private _excludeSection = 0;
     private _excludeProcedure = 0;
     private _excludeResource = 0;
+    private _parent?: T;
+    private _renderAs?: T;
+    private _renderPositionId?: string;
     private readonly _element: Element | null = null;
 
     protected constructor(
@@ -68,12 +68,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             this._element = element;
             this.init();
         }
-        if ($dom.hasComputedStyle(element)) {
-            this.style = $dom.getElementCache(element, 'style') || getComputedStyle(element);
-        }
-        else {
-            this.style = {} as CSSStyleDeclaration;
-        }
+        this.style = $dom.hasComputedStyle(element) ? $dom.getStyle(element) : <CSSStyleDeclaration> {};
     }
 
     public abstract setControlType(viewName: string, containerType?: number): void;
@@ -674,7 +669,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 if (this.documentBody) {
                     if (this.marginTop > 0) {
                         const firstChild = this.firstChild;
-                        if (firstChild && !firstChild.lineBreak && firstChild.blockStatic && firstChild.marginTop >= this.marginTop) {
+                        if (firstChild && firstChild.blockStatic && firstChild.marginTop >= this.marginTop && !firstChild.lineBreak) {
                             this.css('marginTop', '0px', true);
                         }
                     }
@@ -743,9 +738,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             for (const attr of Array.from(CSS_SPACING.values()).slice(start, end)) {
                 this._boxReset[attr] = 1;
                 if (node) {
-                    const spacing = CSS_SPACING.get(margin ? keys[i] : keys[i + 4]);
-                    if (spacing) {
-                        node.modifyBox(fromParent ? keys[i] : keys[i + 4], this[spacing]);
+                    const name = CSS_SPACING.get(margin ? keys[i] : keys[i + 4]);
+                    if (name) {
+                        node.modifyBox(fromParent ? keys[i] : keys[i + 4], this[name]);
                     }
                 }
                 i++;

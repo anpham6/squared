@@ -3,7 +3,6 @@ import { REGEXP_PATTERN, capitalize, convertCamelCase, convertInt, convertPX, fl
 type T = squared.base.Node;
 
 export const enum USER_AGENT {
-    NONE = 0,
     CHROME = 2,
     SAFARI = 4,
     EDGE = 8,
@@ -284,17 +283,12 @@ export function getStyle(element: Element | null, cache = true): CSSStyleDeclara
             }
             else {
                 const node = getElementAsNode<T>(element);
-                if (node) {
-                    if (node.style) {
-                        return node.style;
-                    }
-                    else if (node.plainText) {
-                        return node.unsafe('styleMap') as CSSStyleDeclaration;
-                    }
+                if (node && node.plainText) {
+                    return node.unsafe('styleMap') as CSSStyleDeclaration;
                 }
             }
         }
-        if (element.nodeName.charAt(0) !== '#') {
+        if (hasComputedStyle(element)) {
             const style = getComputedStyle(element);
             setElementCache(element, 'style', style);
             return style;
@@ -316,7 +310,7 @@ export function cssInherit(element: Element | null, attr: string, exclude?: stri
     if (element) {
         let current = element.parentElement;
         while (current && (tagNames === undefined || !tagNames.includes(current.tagName))) {
-            result = getStyle(current)[attr];
+            result = getStyle(current)[attr] || '';
             if (result === 'inherit' || exclude && exclude.some(value => result.indexOf(value) !== -1)) {
                 result = '';
             }
@@ -326,7 +320,7 @@ export function cssInherit(element: Element | null, attr: string, exclude?: stri
             current = current.parentElement;
         }
     }
-    return result || '';
+    return result;
 }
 
 export function cssParent(element: Element | null, attr: string, ...styles: string[]) {

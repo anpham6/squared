@@ -47,13 +47,6 @@ export const REGEXP_PATTERN = {
     ATTRIBUTE: /([^\s]+)="(.*?)"/
 };
 
-export function formatString(value: string, ...params: string[]) {
-    for (let i = 0; i < params.length; i++) {
-        value = value.replace(`{${i}}`, params[i]);
-    }
-    return value;
-}
-
 export function capitalize(value: string, upper = true) {
     return value ? value.charAt(0)[upper ? 'toUpperCase' : 'toLowerCase']() + value.substring(1)[upper ? 'toLowerCase' : 'toString']() : '';
 }
@@ -202,6 +195,13 @@ export function formatPercent(value: string | number) {
     return '0%';
 }
 
+export function formatString(value: string, ...params: string[]) {
+    for (let i = 0; i < params.length; i++) {
+        value = value.replace(`{${i}}`, params[i]);
+    }
+    return value;
+}
+
 export function hasBit(value: number, type: number) {
     return (value & type) === type;
 }
@@ -277,20 +277,20 @@ export function optional(obj: UndefNull<object>, value: string, type?: string) {
     }
 }
 
-export function optionalAsObject(obj: UndefNull<object>, value: string) {
-    return optional(obj, value, 'object') as object;
+export function optionalAsObject(obj: UndefNull<object>, value: string): object {
+    return optional(obj, value, 'object');
 }
 
-export function optionalAsString(obj: UndefNull<object>, value: string) {
-    return optional(obj, value, 'string') as string;
+export function optionalAsString(obj: UndefNull<object>, value: string): string {
+    return optional(obj, value, 'string');
 }
 
-export function optionalAsNumber(obj: UndefNull<object>, value: string) {
-    return optional(obj, value, 'number') as number;
+export function optionalAsNumber(obj: UndefNull<object>, value: string): number {
+    return optional(obj, value, 'number');
 }
 
-export function optionalAsBoolean(obj: UndefNull<object>, value: string) {
-    return optional(obj, value, 'boolean') as boolean;
+export function optionalAsBoolean(obj: UndefNull<object>, value: string): boolean {
+    return optional(obj, value, 'boolean');
 }
 
 export function resolvePath(value: string) {
@@ -358,16 +358,6 @@ export function lastIndexOf(value: string, char = '/') {
     return value.substring(value.lastIndexOf(char) + 1);
 }
 
-export function hasSameValue(obj1: {}, obj2: {}, ...attrs: string[]) {
-    for (const attr of attrs) {
-        const value = compareObject(obj1, obj2, attr, false);
-        if (!value || value[0] !== value[1]) {
-            return false;
-        }
-    }
-    return true;
-}
-
 export function searchObject(obj: StringMap, value: string | StringMap) {
     const result: any[][] = [];
     if (typeof value === 'object') {
@@ -379,18 +369,21 @@ export function searchObject(obj: StringMap, value: string | StringMap) {
         }
     }
     else {
-        let filter = (a: string): boolean => a === value;
+        let search: (a: string) => boolean;
         if (/^\*.+\*$/.test(value)) {
-            filter = (a: string) => a.indexOf(value.replace(/\*/g, '')) !== -1;
+            search = (a: string) => a.indexOf(value.replace(/\*/g, '')) !== -1;
         }
         else if (/^\*/.test(value)) {
-            filter = (a: string) => a.endsWith(value.replace(/\*/, ''));
+            search = (a: string) => a.endsWith(value.replace(/\*/, ''));
         }
         else if (/\*$/.test(value)) {
-            filter = (a: string) => a.startsWith(value.replace(/\*/, ''));
+            search = (a: string) => a.startsWith(value.replace(/\*/, ''));
+        }
+        else {
+            search = (a: string): boolean => a === value;
         }
         for (const i in obj) {
-            if (filter(i)) {
+            if (search(i)) {
                 result.push([i, obj[i]]);
             }
         }
@@ -451,16 +444,16 @@ export function defaultWhenNull(options: {}, ...attrs: string[]) {
     }
 }
 
-export function minArray(list: number[]) {
+export function minArray(list: number[]): number {
     if (list.length) {
-        return Math.min.apply(null, list) as number;
+        return Math.min.apply(null, list);
     }
     return Number.MAX_VALUE;
 }
 
-export function maxArray(list: number[]) {
+export function maxArray(list: number[]): number {
     if (list.length) {
-        return Math.max.apply(null, list) as number;
+        return Math.max.apply(null, list);
     }
     return Number.MAX_VALUE * -1;
 }
@@ -496,18 +489,6 @@ export function spliceArray<T>(list: T[], item: T) {
     return false;
 }
 
-export function flatArray<T>(list: any[]): T[] {
-    let current = list;
-    while (current.some(item => Array.isArray(item))) {
-        current = [].concat.apply([], current.filter(item => item));
-    }
-    return current;
-}
-
-export function flatMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[] {
-    return list.map((item: T, index) => predicate(item, index)).filter((item: U) => hasValue(item));
-}
-
 export function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]) {
     return list.sort((a, b) => {
         for (const attr of attrs) {
@@ -523,4 +504,16 @@ export function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]) 
         }
         return 0;
     });
+}
+
+export function flatArray<T>(list: any[]): T[] {
+    let current = list;
+    while (current.some(item => Array.isArray(item))) {
+        current = [].concat.apply([], current.filter(item => item));
+    }
+    return current;
+}
+
+export function flatMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[] {
+    return list.map((item: T, index) => predicate(item, index)).filter((item: U) => hasValue(item));
 }

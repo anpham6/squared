@@ -4,7 +4,6 @@ export const enum APP_FRAMEWORK {
 }
 
 export const enum NODE_ALIGNMENT {
-    NONE = 0,
     UNKNOWN = 2,
     AUTO_LAYOUT = 4,
     HORIZONTAL = 8,
@@ -21,7 +20,6 @@ export const enum NODE_ALIGNMENT {
 }
 
 export const enum CSS_STANDARD {
-    NONE = 0,
     UNIT = 2,
     AUTO = 4,
     LEFT = 8,
@@ -48,7 +46,6 @@ export const enum BOX_STANDARD {
 }
 
 export enum APP_SECTION {
-    NONE = 0,
     DOM_TRAVERSE = 2,
     EXTENSION = 4,
     RENDER = 8,
@@ -56,7 +53,6 @@ export enum APP_SECTION {
 }
 
 export enum NODE_RESOURCE {
-    NONE = 0,
     BOX_STYLE = 2,
     BOX_SPACING = 4,
     FONT_STYLE = 8,
@@ -67,7 +63,6 @@ export enum NODE_RESOURCE {
 }
 
 export enum NODE_PROCEDURE {
-    NONE = 0,
     CONSTRAINT = 2,
     LAYOUT = 4,
     ALIGNMENT = 8,

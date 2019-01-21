@@ -1,6 +1,6 @@
 {
   "name": "android-widget",
-  "version": "0.1.0",
+  "version": "0.5.0",
   "description": "Extensions for the Android framework using widgets from the Android Support library.",
   "repository": {
     "type": "git",

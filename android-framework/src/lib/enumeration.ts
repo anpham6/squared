@@ -28,8 +28,7 @@ export const enum DENSITY_ANDROID {
 }
 
 export enum CONTAINER_NODE {
-    NONE = 0,
-    CHECKBOX,
+    CHECKBOX = 1,
     RADIO,
     EDIT,
     SELECT,

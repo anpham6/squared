@@ -10,6 +10,8 @@ function hasUnsupportedAccess(element: SVGElement) {
 
 export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
     return class extends Base implements squared.svg.SvgViewRect {
+        private _x: number | undefined;
+        private _y: number | undefined;
         private _width: number | undefined;
         private _height: number | undefined;
 
@@ -18,11 +20,12 @@ export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
             let y = this.y;
             let width = this.width;
             let height = this.height;
-            if (this.parent) {
-                x = this.parent.refitX(x);
-                y = this.parent.refitY(y);
-                width = this.parent.refitSize(width);
-                height = this.parent.refitSize(height);
+            const parent = this.parent;
+            if (parent) {
+                x = parent.refitX(x);
+                y = parent.refitY(y);
+                width = parent.refitSize(width);
+                height = parent.refitSize(height);
             }
             this.setBaseValue('x', x);
             this.setBaseValue('y', y);
@@ -42,91 +45,77 @@ export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
         }
 
         set x(value) {
-            const element = this.getElement();
-            if (element) {
-                element.x.baseVal.value = value;
-            }
+            this._x = value;
         }
         get x() {
-            const element = this.getElement();
-            if (element) {
-                return element.x.baseVal.value;
+            if (this._x !== undefined) {
+                return this._x;
             }
-            return 0;
+            else {
+                const element = this.getElement();
+                if (element) {
+                    return element.x.baseVal.value;
+                }
+                return 0;
+            }
         }
 
         set y(value) {
-            const element = this.getElement();
-            if (element) {
-                element.y.baseVal.value = value;
-            }
+            this._y = value;
         }
         get y() {
-            const element = this.getElement();
-            if (element) {
-                return element.y.baseVal.value;
+            if (this._y !== undefined) {
+                return this._y;
             }
-            return 0;
+            else {
+                const element = this.getElement();
+                if (element) {
+                    return element.y.baseVal.value;
+                }
+                return 0;
+            }
         }
 
         set width(value) {
-            const element = this.getElement();
-            if (element) {
-                if (hasUnsupportedAccess(element)) {
-                    this._width = value;
-                }
-                else {
-                    element.width.baseVal.value = value;
-                }
-            }
+            this._width = value;
         }
         get width() {
-            const element = this.getElement();
-            if (element) {
-                if (hasUnsupportedAccess(element)) {
-                    if (this._width !== undefined) {
-                        return this._width;
+            if (this._width !== undefined) {
+                return this._width;
+            }
+            else {
+                const element = this.getElement();
+                if (element) {
+                    if (hasUnsupportedAccess(element)) {
+                        return element.getBoundingClientRect().width;
                     }
                     else {
-                        const bounds = element.getBoundingClientRect();
-                        return bounds.width;
+                        return element.width.baseVal.value;
                     }
                 }
-                else {
-                    return element.width.baseVal.value;
-                }
+                return 0;
             }
-            return 0;
         }
 
         set height(value) {
-            const element = this.getElement();
-            if (element) {
-                if (hasUnsupportedAccess(element)) {
-                    this._height = value;
-                }
-                else {
-                    element.height.baseVal.value = value;
-                }
-            }
+            this._height = value;
         }
         get height() {
-            const element = this.getElement();
-            if (element) {
-                if (hasUnsupportedAccess(element)) {
-                    if (this._height !== undefined) {
-                        return this._height;
+            if (this._height !== undefined) {
+                return this._height;
+            }
+            else {
+                const element = this.getElement();
+                if (element) {
+                    if (hasUnsupportedAccess(element)) {
+                        return element.getBoundingClientRect().height;
                     }
                     else {
-                        const bounds = element.getBoundingClientRect();
-                        return bounds.height;
+                        return element.height.baseVal.value;
                     }
                 }
-                else {
-                    return element.height.baseVal.value;
-                }
+                return 0;
             }
-            return 0;
         }
     };
 };

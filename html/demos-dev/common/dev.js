@@ -31,11 +31,11 @@ function stringify(template) {
 
 function copy(id) {
     var element = document.getElementById(id);
+    var selection = window.getSelection();
     var range = document.createRange();
-    range.selectNode(element);
-    window.getSelection().addRange(range);
+    range.selectNodeContents(element);
+    selection.removeAllRanges();
+    selection.addRange(range);
     document.execCommand('copy');
-    setTimeout(function() {
-        window.getSelection().removeAllRanges();
-    }, 100);
+    setTimeout(function() { window.getSelection().removeAllRanges(); }, 1);
 }

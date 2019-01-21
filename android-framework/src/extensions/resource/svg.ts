@@ -375,9 +375,9 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                         name: svg.name,
                         width: $util.formatPX(svg.width),
                         height: $util.formatPX(svg.height),
-                        viewportWidth: svg.viewBox.width > 0 ? svg.viewBox.width.toString() : false,
-                        viewportHeight: svg.viewBox.height > 0 ? svg.viewBox.height.toString() : false,
-                        alpha: parseFloat(svg.opacity) < 1 ? svg.opacity.toString() : false,
+                        viewportWidth: svg.viewBox.width > 0 ? svg.viewBox.width.toString() : '',
+                        viewportHeight: svg.viewBox.height > 0 ? svg.viewBox.height.toString() : '',
+                        alpha: parseFloat(svg.opacity) < 1 ? svg.opacity.toString() : '',
                         A: [],
                         B: [{ templateName: svg.name }]
                     });
@@ -428,20 +428,14 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                             const sequential = item.sequential;
                             if (sequential) {
                                 if ($SvgBuild.instanceOfAnimateTransform(item)) {
-                                    let values = transformMap.get(sequential.value);
-                                    if (values === undefined) {
-                                        values = [];
-                                        transformMap.set(sequential.value, values);
-                                    }
+                                    const values = transformMap.get(sequential.value) || [];
                                     values.push(item);
+                                    transformMap.set(sequential.value, values);
                                 }
                                 else {
-                                    let values = sequentialMap.get(sequential.value);
-                                    if (values === undefined) {
-                                        values = [];
-                                        sequentialMap.set(sequential.value, values);
-                                    }
+                                    const values = sequentialMap.get(sequential.value) || [];
                                     values.push(item);
+                                    sequentialMap.set(sequential.value, values);
                                 }
                             }
                             else if (item.repeatCount === -1 || item.fillMode < $constS.FILL_MODE.FORWARDS) {
@@ -509,7 +503,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                         startOffset: item.delay > 0 ? item.delay.toString() : ''
                                     };
                                     if ($SvgBuild.instanceOfSet(item)) {
-                                        if (item.to !== '') {
+                                        if ($util.hasValue(item.to)) {
                                             options.propertyName = ATTRIBUTE_ANDROID[item.attributeName];
                                             if (options.propertyName) {
                                                 options.propertyValues = false;
@@ -569,41 +563,37 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                         }
                                         if ($SvgBuild.instanceOfAnimateTransform(item)) {
                                             switch (item.type) {
-                                                case SVGTransform.SVG_TRANSFORM_ROTATE: {
+                                                case SVGTransform.SVG_TRANSFORM_ROTATE:
                                                     values = $SvgAnimateTransform.toRotateList(item.values);
                                                     propertyName = ['rotation', 'pivotX', 'pivotY'];
                                                     break;
-                                                }
-                                                case SVGTransform.SVG_TRANSFORM_SCALE: {
+                                                case SVGTransform.SVG_TRANSFORM_SCALE:
                                                     values = $SvgAnimateTransform.toScaleList(item.values);
                                                     propertyName = ['scaleX', 'scaleY'];
                                                     break;
-                                                }
-                                                case SVGTransform.SVG_TRANSFORM_TRANSLATE: {
+                                                case SVGTransform.SVG_TRANSFORM_TRANSLATE:
                                                     values = $SvgAnimateTransform.toTranslateList(item.values);
                                                     propertyName = ['translateX', 'translateY'];
                                                     break;
-                                                }
                                             }
                                             options.valueType = 'floatType';
                                         }
                                         else {
                                             const attribute: string = ATTRIBUTE_ANDROID[item.attributeName];
                                             switch (options.valueType) {
-                                                case 'intType': {
+                                                case 'intType':
                                                     values = item.values.map(value => $util.convertInt(value).toString());
                                                     if (attribute) {
                                                         propertyName = [attribute];
                                                     }
-                                                }
-                                                case 'floatType': {
+                                                    break;
+                                                case 'floatType':
                                                     values = item.values.map(value => $util.convertFloat(value).toString());
                                                     if (attribute) {
                                                         propertyName = [attribute];
                                                     }
                                                     break;
-                                                }
-                                                case 'pathType': {
+                                                case 'pathType':
                                                     if (group.pathData) {
                                                         pathType: {
                                                             values = item.values.slice(0);
@@ -784,8 +774,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                         }
                                                     }
                                                     break;
-                                                }
-                                                default: {
+                                                default:
                                                     values = item.values.slice(0);
                                                     if (attribute) {
                                                         propertyName = [attribute];
@@ -798,7 +787,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                             }
                                                         }
                                                     }
-                                                }
+                                                    break;
                                             }
                                         }
                                         if (values && propertyName) {
@@ -1074,6 +1063,14 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 }
             }
             else if ($SvgBuild.instanceOfImage(item)) {
+                if (item.width === 0 || item.height === 0) {
+                    const image = this.application.session.image.get(item.href);
+                    if (image && image.width > 0 && image.height > 0) {
+                        item.width = image.width;
+                        item.height = image.height;
+                        item.setRect();
+                    }
+                }
                 item.extract(this.options.excludeFromTransform.image);
                 if (item.visible || item.rotateOrigin) {
                     this.IMAGE_DATA.push(item);

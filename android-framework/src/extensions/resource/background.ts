@@ -220,9 +220,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 const backgroundDimensions: Undefined<ImageAsset>[] = [];
                 const backgroundGradient: (BackgroundGradient & TemplateDataAA)[] = [];
                 const backgroundSize = stored.backgroundSize.split(',').map(value => value.trim());
+                const backgroundPosition: string[] = [];
                 const backgroundPositionX = stored.backgroundPositionX.split(',').map(value => value.trim());
                 const backgroundPositionY = stored.backgroundPositionY.split(',').map(value => value.trim());
-                const backgroundPosition: string[] = [];
                 if ($util.isArray(stored.backgroundImage) && !node.hasBit('excludeResource', $enum.NODE_RESOURCE.IMAGE_SOURCE)) {
                     backgroundImage.push(...stored.backgroundImage);
                     for (let i = 0; i < backgroundImage.length; i++) {

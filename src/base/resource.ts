@@ -347,8 +347,8 @@ export default abstract class Resource<T extends Node> implements squared.base.R
     public setFontStyle() {
         for (const node of this.cache) {
             const backgroundImage = Resource.hasDrawableBackground(node.data(Resource.KEY_NAME, 'boxStyle'));
-            if (!(node.renderChildren.length ||
-                !node.element ||
+            if (!(node.element === null ||
+                node.renderChildren.length ||
                 node.imageElement ||
                 node.svgElement ||
                 node.tagName === 'HR' ||

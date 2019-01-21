@@ -1,4 +1,4 @@
-/* squared.base 0.1.0
+/* squared.base 0.5.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -9,7 +9,6 @@
 
     var APP_SECTION;
     (function (APP_SECTION) {
-        APP_SECTION[APP_SECTION["NONE"] = 0] = "NONE";
         APP_SECTION[APP_SECTION["DOM_TRAVERSE"] = 2] = "DOM_TRAVERSE";
         APP_SECTION[APP_SECTION["EXTENSION"] = 4] = "EXTENSION";
         APP_SECTION[APP_SECTION["RENDER"] = 8] = "RENDER";
@@ -17,7 +16,6 @@
     })(APP_SECTION || (APP_SECTION = {}));
     var NODE_RESOURCE;
     (function (NODE_RESOURCE) {
-        NODE_RESOURCE[NODE_RESOURCE["NONE"] = 0] = "NONE";
         NODE_RESOURCE[NODE_RESOURCE["BOX_STYLE"] = 2] = "BOX_STYLE";
         NODE_RESOURCE[NODE_RESOURCE["BOX_SPACING"] = 4] = "BOX_SPACING";
         NODE_RESOURCE[NODE_RESOURCE["FONT_STYLE"] = 8] = "FONT_STYLE";
@@ -28,7 +26,6 @@
     })(NODE_RESOURCE || (NODE_RESOURCE = {}));
     var NODE_PROCEDURE;
     (function (NODE_PROCEDURE) {
-        NODE_PROCEDURE[NODE_PROCEDURE["NONE"] = 0] = "NONE";
         NODE_PROCEDURE[NODE_PROCEDURE["CONSTRAINT"] = 2] = "CONSTRAINT";
         NODE_PROCEDURE[NODE_PROCEDURE["LAYOUT"] = 4] = "LAYOUT";
         NODE_PROCEDURE[NODE_PROCEDURE["ALIGNMENT"] = 8] = "ALIGNMENT";
@@ -457,6 +454,16 @@
     function colorStop(parse) {
         return `${parse ? '' : '(?:'},?\\s*(${parse ? '' : '?:'}rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|[a-z]+)\\s*(${parse ? '' : '?:'}\\d+%)?${parse ? '' : ')'}`;
     }
+    function replaceExcluded(element, attr) {
+        let result = element[attr];
+        Array.from(element.children).forEach((item) => {
+            const child = $dom$1.getElementAsNode(item);
+            if (child && (child.excluded || $util$2.hasValue(child.dataset.target)) && child[attr] && child[attr].trim() !== '') {
+                result = result.replace(child[attr], '');
+            }
+        });
+        return result;
+    }
     class Resource {
         constructor(application, cache) {
             this.application = application;
@@ -710,7 +717,6 @@
                                 else {
                                     const images = [];
                                     pattern = new RegExp($util$2.REGEXP_PATTERN.CSS_URL, 'g');
-                                    match = null;
                                     while ((match = pattern.exec(value)) !== null) {
                                         if (match) {
                                             images.push(match[0]);
@@ -742,8 +748,8 @@
         setFontStyle() {
             for (const node of this.cache) {
                 const backgroundImage = Resource.hasDrawableBackground(node.data(Resource.KEY_NAME, 'boxStyle'));
-                if (!(node.renderChildren.length ||
-                    !node.element ||
+                if (!(node.element === null ||
+                    node.renderChildren.length ||
                     node.imageElement ||
                     node.svgElement ||
                     node.tagName === 'HR' ||
@@ -893,15 +899,15 @@
                         else if (node.inlineText) {
                             name = node.textContent.trim();
                             if (element.tagName === 'CODE') {
-                                value = $xml.replaceEntity(element.innerHTML);
+                                value = $xml.replaceEntity(replaceExcluded(element, 'innerHTML'));
                             }
                             else if ($dom$1.hasLineBreak(element, true)) {
-                                value = $xml.replaceEntity(element.innerHTML);
+                                value = $xml.replaceEntity(replaceExcluded(element, 'innerHTML'));
                                 value = value.replace(/\s*<br[^>]*>\s*/g, '\\n');
                                 value = value.replace(/(<([^>]+)>)/ig, '');
                             }
                             else {
-                                value = $xml.replaceEntity(node.textContent);
+                                value = $xml.replaceEntity(replaceExcluded(element, 'textContent'));
                             }
                             [value, inlineTrim] = replaceWhiteSpace(node, value);
                         }
@@ -989,13 +995,13 @@
         if (tagged.length) {
             const result = [];
             const untagged = [];
-            for (const item of extensions) {
-                const index = tagged.indexOf(item.name);
+            for (const ext of extensions) {
+                const index = tagged.indexOf(ext.name);
                 if (index !== -1) {
-                    result[index] = item;
+                    result[index] = ext;
                 }
                 else {
-                    untagged.push(item);
+                    untagged.push(ext);
                 }
             }
             return [...result.filter(item => item), ...untagged];
@@ -1202,7 +1208,6 @@
                         }
                         else {
                             imageElement.className = '__css.preload';
-                            imageElement.style.display = 'none';
                             documentRoot.appendChild(imageElement);
                         }
                     }
@@ -1211,7 +1216,7 @@
             const images = [];
             for (const element of this.parseElements) {
                 Array.from(element.querySelectorAll('IMG')).forEach((image) => {
-                    if (element.tagName === 'IMG') {
+                    if (image.tagName === 'IMG') {
                         if (image.complete) {
                             this.addImagePreload(image);
                         }
@@ -1235,11 +1240,7 @@
                     .then((result) => {
                     if (Array.isArray(result)) {
                         for (const item of result) {
-                            try {
-                                this.addImagePreload(item.target);
-                            }
-                            catch (_a) {
-                            }
+                            this.addImagePreload(item.target);
                         }
                     }
                     parseResume();
@@ -1313,11 +1314,11 @@
                     node.renderChildren.some((item) => {
                         for (const templates of this.processing.depthMap.values()) {
                             const key = item.renderPositionId;
-                            const view = templates.get(key);
-                            if (view) {
+                            const value = templates.get(key);
+                            if (value) {
                                 const indent = node.renderDepth + 1;
                                 if (item.renderDepth !== indent) {
-                                    templates.set(key, this.controllerHandler.replaceIndent(view, indent, this.processing.cache.children));
+                                    templates.set(key, this.controllerHandler.replaceIndent(value, indent, this.processing.cache.children));
                                 }
                                 return true;
                             }
@@ -1565,10 +1566,10 @@
                                                     break;
                                                 }
                                                 else {
-                                                    if (node.left < 0 && node.outsideX(parent.box) ||
+                                                    if ((!node.has('right') || node.right < 0) && (!node.has('bottom') || node.bottom < 0) && (node.left < 0 && node.outsideX(parent.box) ||
                                                         !node.has('left') && node.right < 0 && node.outsideX(parent.box) ||
                                                         node.top < 0 && node.outsideY(parent.box) ||
-                                                        !node.has('top') && node.bottom < 0 && node.outsideX(parent.box)) {
+                                                        !node.has('top') && node.bottom < 0 && node.outsideX(parent.box))) {
                                                         outside = true;
                                                     }
                                                     else {
@@ -1721,17 +1722,25 @@
                     let k = -1;
                     while (++k < axisY.length) {
                         let nodeY = axisY[k];
-                        if (nodeY.rendered || !nodeY.visible || this.parseElements.has(nodeY.element) && !nodeY.documentRoot && !nodeY.documentBody) {
+                        if (nodeY.rendered || !nodeY.visible) {
                             continue;
                         }
+                        else if (nodeY.htmlElement) {
+                            const element = nodeY.element;
+                            if (this.parseElements.has(element) && !nodeY.documentRoot && !nodeY.documentBody) {
+                                continue;
+                            }
+                            else if (nodeY.length === 0 && element.children.length && Array.from(element.children).every(item => this.parseElements.has(item))) {
+                                nodeY.inlineText = false;
+                            }
+                        }
+                        const extendable = nodeY.hasAlign(8192 /* EXTENDABLE */);
                         let parentY = nodeY.parent;
                         let unknownParent = parentY.hasAlign(2 /* UNKNOWN */);
-                        const extendable = nodeY.hasAlign(8192 /* EXTENDABLE */);
-                        if (nodeY.pageFlow &&
-                            axisY.length > 1 &&
-                            k < axisY.length - 1 &&
+                        if (axisY.length > 1 && k < axisY.length - 1 &&
+                            nodeY.pageFlow &&
+                            (parentY.alignmentType === 0 || extendable || unknownParent) &&
                             !parentY.hasAlign(4 /* AUTO_LAYOUT */) &&
-                            (parentY.alignmentType === 0 || unknownParent || extendable) &&
                             !nodeY.hasBit('excludeSection', APP_SECTION.DOM_TRAVERSE)) {
                             const horizontal = [];
                             const vertical = [];
@@ -1749,11 +1758,10 @@
                                     const previousAbove = vertical[vertical.length - 1];
                                     if (previousAbove.layoutVertical) {
                                         node.parent = previousAbove;
-                                        return true;
+                                        return;
                                     }
                                 }
                                 vertical.push(node);
-                                return true;
                             }
                             let l = k;
                             let m = 0;
@@ -1881,11 +1889,11 @@
                                 }
                             }
                         }
-                        if (unknownParent && k === axisY.length - 1) {
-                            parentY.alignmentType ^= 2 /* UNKNOWN */;
-                        }
                         if (extendable) {
                             nodeY.alignmentType ^= 8192 /* EXTENDABLE */;
+                        }
+                        if (unknownParent && k === axisY.length - 1) {
+                            parentY.alignmentType ^= 2 /* UNKNOWN */;
                         }
                         if (nodeY.renderAs && parentY.appendTry(nodeY, nodeY.renderAs, false)) {
                             nodeY.hide();
@@ -2151,37 +2159,35 @@
                 let pendingFloat = 0;
                 for (let i = 0; i < data.length; i++) {
                     const node = data.item(i);
-                    if (data.cleared.has(node)) {
-                        const clear = data.cleared.get(node);
-                        if ($util$3.hasBit(pendingFloat, clear === 'right' ? 4 : 2) || pendingFloat !== 0 && clear === 'both') {
-                            switch (clear) {
-                                case 'left':
-                                    if ($util$3.hasBit(pendingFloat, 2)) {
-                                        pendingFloat ^= 2;
-                                    }
-                                    current = 'left';
-                                    break;
-                                case 'right':
-                                    if ($util$3.hasBit(pendingFloat, 4)) {
-                                        pendingFloat ^= 4;
-                                    }
-                                    current = 'right';
-                                    break;
-                                case 'both':
-                                    switch (pendingFloat) {
-                                        case 2:
-                                            current = 'left';
-                                            break;
-                                        case 4:
-                                            current = 'right';
-                                            break;
-                                        default:
-                                            current = 'both';
-                                            break;
-                                    }
-                                    pendingFloat = 0;
-                                    break;
-                            }
+                    const clear = data.cleared.get(node);
+                    if (clear && ($util$3.hasBit(pendingFloat, clear === 'right' ? 4 : 2) || pendingFloat !== 0 && clear === 'both')) {
+                        switch (clear) {
+                            case 'left':
+                                if ($util$3.hasBit(pendingFloat, 2)) {
+                                    pendingFloat ^= 2;
+                                }
+                                current = 'left';
+                                break;
+                            case 'right':
+                                if ($util$3.hasBit(pendingFloat, 4)) {
+                                    pendingFloat ^= 4;
+                                }
+                                current = 'right';
+                                break;
+                            case 'both':
+                                switch (pendingFloat) {
+                                    case 2:
+                                        current = 'left';
+                                        break;
+                                    case 4:
+                                        current = 'right';
+                                        break;
+                                    default:
+                                        current = 'both';
+                                        break;
+                                }
+                                pendingFloat = 0;
+                                break;
                         }
                     }
                     if (current === '') {
@@ -2598,14 +2604,11 @@
             return node;
         }
         conditionElement(element) {
-            if (element instanceof SVGGraphicsElement && element.tagName !== 'svg') {
-                return false;
-            }
-            else if ($dom$2.hasComputedStyle(element)) {
-                if ($util$3.hasValue(element.dataset.use)) {
-                    return true;
+            if ($dom$2.hasComputedStyle(element)) {
+                if (element instanceof SVGGraphicsElement && element.tagName !== 'svg') {
+                    return false;
                 }
-                else if ($dom$2.withinViewportOrigin(element)) {
+                else if ($dom$2.hasVisibleRect(element, true) || $util$3.hasValue(element.dataset.use)) {
                     return true;
                 }
                 else {
@@ -2618,16 +2621,8 @@
                         }
                         current = current.parentElement;
                     }
-                    if (valid && element.children.length) {
-                        return Array.from(element.children).some((item) => {
-                            const style = $dom$2.getStyle(item);
-                            const float = style.cssFloat;
-                            const position = style.position;
-                            return position === 'absolute' || position === 'fixed' || float === 'left' || float === 'right';
-                        });
-                    }
+                    return valid && Array.from(element.children).some((item) => $dom$2.hasVisibleRect(item, true));
                 }
-                return false;
             }
             else {
                 return $dom$2.isPlainText(element);
@@ -3079,12 +3074,12 @@
             this.assets.length = 0;
         }
         saveToDisk(files) {
-            const settings = this.userSettings;
             if (!location.protocol.startsWith('http')) {
                 alert('SERVER (required): See README for instructions');
                 return;
             }
             if (files.length) {
+                const settings = this.userSettings;
                 files.push(...this.assets);
                 fetch(`/api/savetodisk` +
                     `?directory=${encodeURIComponent($util$7.trimString(settings.outputDirectory, '/'))}` +
@@ -3092,11 +3087,11 @@
                     `&filetype=${settings.outputArchiveFileType.toLowerCase()}` +
                     `&processingtime=${settings.outputMaxProcessingTime.toString().trim()}`, {
                     method: 'POST',
-                    body: JSON.stringify(files),
                     headers: new Headers({
                         'Accept': 'application/json, text/plain, */*',
                         'Content-Type': 'application/json'
-                    })
+                    }),
+                    body: JSON.stringify(files)
                 })
                     .then((response) => response.json())
                     .then((result) => {
@@ -3185,12 +3180,7 @@
                 this._element = element;
                 this.init();
             }
-            if ($dom$4.hasComputedStyle(element)) {
-                this.style = $dom$4.getElementCache(element, 'style') || getComputedStyle(element);
-            }
-            else {
-                this.style = {};
-            }
+            this.style = $dom$4.hasComputedStyle(element) ? $dom$4.getStyle(element) : {};
         }
         init() {
             if (!this._initialized) {
@@ -3719,7 +3709,7 @@
                     if (this.documentBody) {
                         if (this.marginTop > 0) {
                             const firstChild = this.firstChild;
-                            if (firstChild && !firstChild.lineBreak && firstChild.blockStatic && firstChild.marginTop >= this.marginTop) {
+                            if (firstChild && firstChild.blockStatic && firstChild.marginTop >= this.marginTop && !firstChild.lineBreak) {
                                 this.css('marginTop', '0px', true);
                             }
                         }
@@ -3784,9 +3774,9 @@
                 for (const attr of Array.from(CSS_SPACING.values()).slice(start, end)) {
                     this._boxReset[attr] = 1;
                     if (node) {
-                        const spacing = CSS_SPACING.get(margin ? keys[i] : keys[i + 4]);
-                        if (spacing) {
-                            node.modifyBox(fromParent ? keys[i] : keys[i + 4], this[spacing]);
+                        const name = CSS_SPACING.get(margin ? keys[i] : keys[i + 4]);
+                        if (name) {
+                            node.modifyBox(fromParent ? keys[i] : keys[i + 4], this[name]);
                         }
                     }
                     i++;
@@ -4174,7 +4164,7 @@
                 }
                 else {
                     const lineHeight = $util$8.convertInt(this.cssParent('lineHeight', true));
-                    this._cached.lineHeight = lineHeight > this.bounds.height ? lineHeight : 0;
+                    this._cached.lineHeight = lineHeight > this.bounds.height || this.some(node => node.plainText) ? lineHeight : 0;
                 }
             }
             return this._cached.lineHeight;
@@ -4330,11 +4320,14 @@
             }
             return this._cached.inlineVertical;
         }
+        set inlineText(value) {
+            this._cached.inlineText = value;
+        }
         get inlineText() {
             if (this._cached.inlineText === undefined) {
-                const element = this._element;
                 let value = false;
-                if (element) {
+                const element = this._element;
+                if (element && this.htmlElement && !this.svgElement) {
                     switch (element.tagName) {
                         case 'INPUT':
                         case 'BUTTON':
@@ -4343,12 +4336,12 @@
                         case 'TEXTAREA':
                             break;
                         default:
-                            value = (this.htmlElement &&
-                                $dom$4.hasFreeFormText(element) && (element.children.length === 0 ||
-                                Array.from(element.children).every(item => {
+                            if ($dom$4.hasFreeFormText(element)) {
+                                value = Array.from(element.children).every(item => {
                                     const node = $dom$4.getElementAsNode(item);
-                                    return !(node && !node.excluded || $dom$4.hasComputedStyle(item) && $util$8.hasValue(item.dataset.use));
-                                })));
+                                    return node === undefined || node.excluded || $util$8.hasValue(node.dataset.target);
+                                });
+                            }
                             break;
                     }
                 }
@@ -4408,10 +4401,10 @@
             if (this._cached.autoMargin === undefined) {
                 if (!this.pageFlow || this.blockStatic || this.display === 'table') {
                     const styleMap = this._initial.iteration === -1 ? this._styleMap : this._initial.styleMap;
-                    const left = styleMap.marginLeft === 'auto' && (this.pageFlow ? true : this.has('right'));
-                    const right = styleMap.marginRight === 'auto' && (this.pageFlow ? true : this.has('left'));
-                    const top = styleMap.marginTop === 'auto' && (this.pageFlow ? true : this.has('bottom'));
-                    const bottom = styleMap.marginBottom === 'auto' && (this.pageFlow ? true : this.has('top'));
+                    const left = styleMap.marginLeft === 'auto' && (this.pageFlow || this.has('right'));
+                    const right = styleMap.marginRight === 'auto' && (this.pageFlow || this.has('left'));
+                    const top = styleMap.marginTop === 'auto' && (this.pageFlow || this.has('bottom'));
+                    const bottom = styleMap.marginBottom === 'auto' && (this.pageFlow || this.has('top'));
                     this._cached.autoMargin = {
                         horizontal: left || right,
                         left: left && !right,
@@ -4482,17 +4475,15 @@
         }
         get overflow() {
             if (this._cached.overflow === undefined) {
-                const [overflow, overflowX, overflowY] = [this.css('overflow'), this.css('overflowX'), this.css('overflowY')];
                 const element = this._element;
+                const overflow = this.css('overflow');
+                const overflowX = this.css('overflowX');
+                const overflowY = this.css('overflowY');
                 let value = 0;
-                if (this.hasWidth && (overflow === 'scroll' ||
-                    overflowX === 'scroll' ||
-                    overflowX === 'auto' && element && element.clientWidth !== element.scrollWidth)) {
+                if (this.hasWidth && (overflow === 'scroll' || overflowX === 'scroll' || overflowX === 'auto' && element && element.clientWidth !== element.scrollWidth)) {
                     value |= 8 /* HORIZONTAL */;
                 }
-                if (this.hasHeight && (overflow === 'scroll' ||
-                    overflowY === 'scroll' ||
-                    overflowY === 'auto' && element && element.clientHeight !== element.scrollHeight)) {
+                if (this.hasHeight && (overflow === 'scroll' || overflowY === 'scroll' || overflowY === 'auto' && element && element.clientHeight !== element.scrollHeight)) {
                     value |= 16 /* VERTICAL */;
                 }
                 this._cached.overflow = value;

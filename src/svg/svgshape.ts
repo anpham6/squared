@@ -32,15 +32,15 @@ export default class SvgShape extends SvgSynchronize$MX(SvgView$MX(SvgElement)) 
             path = this._path;
         }
         const transform = this.transform.slice(0);
-        if (this.element !== path.element) {
+        if (path.element !== this.element) {
             transform.push(...path.transform);
         }
         path.draw(SvgBuild.filterTransforms(transform, exclusions ? exclusions[path.element.tagName] : undefined), residual);
     }
 
     public synchronize(useKeyTime = false) {
-        if (this.path && this.animation.length) {
-            this.mergeAnimate(this.getAnimateShape(), useKeyTime, this.path);
+        if (this._path && this.animation.length) {
+            this.mergeAnimate(this.getAnimateShape(), useKeyTime, this._path);
         }
     }
 

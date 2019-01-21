@@ -261,11 +261,11 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     public static toNumberList(value: string) {
         const result: number[] = [];
         const pattern = /-?[\d.]+/g;
-        let digit: RegExpExecArray | null;
-        while ((digit = pattern.exec(value)) !== null) {
-            const digitValue = parseFloat(digit[0]);
-            if (!isNaN(digitValue)) {
-                result.push(digitValue);
+        let match: RegExpExecArray | null;
+        while ((match = pattern.exec(value)) !== null) {
+            const digit = parseFloat(match[0]);
+            if (!isNaN(digit)) {
+                result.push(digit);
             }
         }
         return result;

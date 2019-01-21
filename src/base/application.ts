@@ -370,11 +370,11 @@ export default class Application<T extends Node> implements squared.base.Applica
                 node.renderChildren.some((item: T) => {
                     for (const templates of this.processing.depthMap.values()) {
                         const key = item.renderPositionId;
-                        const view = templates.get(key);
-                        if (view) {
+                        const value = templates.get(key);
+                        if (value) {
                             const indent = node.renderDepth + 1;
                             if (item.renderDepth !== indent) {
-                                templates.set(key, this.controllerHandler.replaceIndent(view, indent, this.processing.cache.children));
+                                templates.set(key, this.controllerHandler.replaceIndent(value, indent, this.processing.cache.children));
                             }
                             return true;
                         }
@@ -1247,37 +1247,35 @@ export default class Application<T extends Node> implements squared.base.Applica
             let pendingFloat = 0;
             for (let i = 0; i < data.length; i++) {
                 const node = data.item(i) as T;
-                if (data.cleared.has(node)) {
-                    const clear = data.cleared.get(node);
-                    if ($util.hasBit(pendingFloat, clear === 'right' ? 4 : 2) || pendingFloat !== 0 && clear === 'both') {
-                        switch (clear) {
-                            case 'left':
-                                if ($util.hasBit(pendingFloat, 2)) {
-                                    pendingFloat ^= 2;
-                                }
-                                current = 'left';
-                                break;
-                            case 'right':
-                                if ($util.hasBit(pendingFloat, 4)) {
-                                    pendingFloat ^= 4;
-                                }
-                                current = 'right';
-                                break;
-                            case 'both':
-                                switch (pendingFloat) {
-                                    case 2:
-                                        current = 'left';
-                                        break;
-                                    case 4:
-                                        current = 'right';
-                                        break;
-                                    default:
-                                        current = 'both';
-                                        break;
-                                }
-                                pendingFloat = 0;
-                                break;
-                        }
+                const clear = data.cleared.get(node);
+                if (clear && ($util.hasBit(pendingFloat, clear === 'right' ? 4 : 2) || pendingFloat !== 0 && clear === 'both')) {
+                    switch (clear) {
+                        case 'left':
+                            if ($util.hasBit(pendingFloat, 2)) {
+                                pendingFloat ^= 2;
+                            }
+                            current = 'left';
+                            break;
+                        case 'right':
+                            if ($util.hasBit(pendingFloat, 4)) {
+                                pendingFloat ^= 4;
+                            }
+                            current = 'right';
+                            break;
+                        case 'both':
+                            switch (pendingFloat) {
+                                case 2:
+                                    current = 'left';
+                                    break;
+                                case 4:
+                                    current = 'right';
+                                    break;
+                                default:
+                                    current = 'both';
+                                    break;
+                            }
+                            pendingFloat = 0;
+                            break;
                     }
                 }
                 if (current === '') {

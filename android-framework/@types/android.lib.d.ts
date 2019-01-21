@@ -36,7 +36,6 @@ declare global {
             function replaceTab(value: string, spaces?: number, preserve?: boolean): string;
             function calculateBias(start: number, end: number, accuracy: number): number;
             function replaceRTL(value: string, rtl?: boolean, api?: number): string;
-            function getAppTheme(assets: FileAsset[]): string;
             function getXmlNs(...values: string[]): string;
         }
     }

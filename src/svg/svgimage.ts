@@ -89,6 +89,9 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
         this.setBaseValue('height', height);
     }
 
+    set x(value) {
+        super.x = value;
+    }
     get x() {
         const value = super.x;
         if (value === 0 && this.imageElement) {
@@ -97,6 +100,9 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
         return value;
     }
 
+    set y(value) {
+        super.y = value;
+    }
     get y() {
         const value = super.y;
         if (value === 0 && this.imageElement) {
@@ -105,6 +111,9 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
         return value;
     }
 
+    set width(value) {
+        super.width = value;
+    }
     get width() {
         const value = super.width;
         if (value === 0 && this.imageElement) {
@@ -113,6 +122,9 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
         return value;
     }
 
+    set height(value) {
+        super.height = value;
+    }
     get height() {
         const value = super.height;
         if (value === 0 && this.imageElement) {

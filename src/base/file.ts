@@ -62,12 +62,12 @@ export default abstract class File<T extends Node> implements squared.base.File<
     }
 
     public saveToDisk(files: FileAsset[]) {
-        const settings = this.userSettings;
         if (!location.protocol.startsWith('http')) {
             alert('SERVER (required): See README for instructions');
             return;
         }
         if (files.length) {
+            const settings = this.userSettings;
             files.push(...this.assets);
             fetch(`/api/savetodisk` +
                 `?directory=${encodeURIComponent($util.trimString(settings.outputDirectory, '/'))}` +
@@ -76,11 +76,11 @@ export default abstract class File<T extends Node> implements squared.base.File<
                 `&processingtime=${settings.outputMaxProcessingTime.toString().trim()}`,
                 {
                     method: 'POST',
-                    body: JSON.stringify(files),
                     headers: new Headers({
                         'Accept': 'application/json, text/plain, */*',
                         'Content-Type': 'application/json'
-                    })
+                    }),
+                    body: JSON.stringify(files)
                 }
             )
             .then((response: Response) => response.json())
