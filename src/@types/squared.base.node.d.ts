@@ -15,6 +15,7 @@ declare global {
             renderPosition: number;
             renderExtension: Set<Extension<Node>>;
             documentRoot: boolean;
+            positionStatic: boolean;
             baselineActive: boolean;
             positioned: boolean;
             visible: boolean;
@@ -65,7 +66,6 @@ declare global {
             readonly lineHeight: number;
             readonly display: string;
             readonly position: string;
-            readonly positionStatic: boolean;
             readonly positionRelative: boolean;
             readonly positionAuto: boolean;
             readonly top: number;

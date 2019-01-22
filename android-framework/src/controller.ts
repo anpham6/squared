@@ -818,10 +818,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                 procedure: $enum.NODE_PROCEDURE.ALL,
                                 resource: $enum.NODE_RESOURCE.ALL
                             });
-                            container.css({
-                                'position': node.position,
-                                'zIndex': node.zIndex
-                            });
+                            container.css({ position: node.position, zIndex: node.zIndex });
                             parent.appendTry(node, container);
                             this.cache.append(container);
                             if (width > 0) {
@@ -1496,20 +1493,22 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     }
                 }
             }
-            if (baseline && baselineAlign.length) {
-                adjustBaseline(baseline, baselineAlign);
+            if (baseline) {
                 baseline.baselineActive = true;
-                if (node.lineHeight || baseline.lineHeight) {
-                    let offset = 0;
-                    if (baseline.lineHeight) {
-                        offset = baseline.lineHeight - baseline.bounds.height;
-                    }
-                    else {
-                        offset = node.lineHeight - (baseline.bounds.height - (baseline.paddingTop + baseline.paddingBottom));
-                    }
-                    if (offset > 0) {
-                        baseline.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.floor(offset / 2));
-                        baseline.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, Math.ceil(offset / 2));
+                if (baselineAlign.length) {
+                    adjustBaseline(baseline, baselineAlign);
+                    if (node.lineHeight || baseline.lineHeight) {
+                        let offset = 0;
+                        if (baseline.lineHeight) {
+                            offset = baseline.lineHeight - baseline.bounds.height;
+                        }
+                        else {
+                            offset = node.lineHeight - (baseline.bounds.height - (baseline.paddingTop + baseline.paddingBottom));
+                        }
+                        if (offset > 0) {
+                            baseline.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.floor(offset / 2));
+                            baseline.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, Math.ceil(offset / 2));
+                        }
                     }
                 }
             }

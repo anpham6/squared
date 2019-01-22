@@ -44,7 +44,7 @@ const TEMPLATES = {
     SHAPE: $xml.parseTemplate(SHAPE_TMPL),
     VECTOR: $xml.parseTemplate(VECTOR_TMPL)
 };
-const STORED = (<ResourceStoredMapAndroid> Resource.STORED);
+const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 
 function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = false): StringMap {
     const result = {

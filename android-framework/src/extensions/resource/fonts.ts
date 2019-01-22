@@ -84,7 +84,7 @@ if ($dom.isUserAgent($dom.USER_AGENT.EDGE)) {
     FONTREPLACE_ANDROID['consolas'] = 'monospace';
 }
 
-const STORED = (<ResourceStoredMapAndroid> Resource.STORED);
+const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 
 function deleteStyleAttribute(sorted: AttributeMap[], attrs: string, ids: number[]) {
     attrs.split(';').forEach(value => {

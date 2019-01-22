@@ -1736,7 +1736,7 @@
             .replace(/"/g, '&quot;');
     }
     function parseTemplate(value) {
-        const result = { '__ROOT__': value };
+        const result = { __ROOT__: value };
         function parseSection(section) {
             const pattern = /(\t*<<(\w+)>>)\n[\w\W]*\n*\1/g;
             let match;

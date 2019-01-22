@@ -482,6 +482,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                 hasWidth = true;
             }
             if (!hasWidth) {
+                const blockStatic = this.blockStatic && !this.has('maxWidth') && (this.htmlElement || this.svgElement);
                 if (this.plainText) {
                     this.android('layout_width', renderParent && this.bounds.width > renderParent.box.width && this.multiline && this.alignParent('left') ? 'match_parent' : 'wrap_content', false);
                 }
@@ -490,7 +491,14 @@ export default (Base: Constructor<squared.base.Node>) => {
                 }
                 else if (
                     this.flexElement && renderParent && renderParent.hasWidth ||
-                    !this.documentRoot && children.some(node => node.layoutVertical && !node.hasWidth && !node.floating && !node.autoMargin.horizontal) ||
+                    this.groupParent && children.some(node => !(node.plainText && node.multiline) && node.linear.width >= this.documentParent.box.width) ||
+                    blockStatic && (
+                        this.documentBody ||
+                        !!parent && (
+                            parent.documentBody ||
+                            parent.blockStatic && (this.singleChild || this.alignedVertically(this.previousSiblings()))
+                        )
+                    ) ||
                     this.layoutFrame && (
                         $NodeList.floated(children).size === 2 ||
                         children.some(node => node.blockStatic && (node.autoMargin.leftRight || node.rightAligned))
@@ -505,22 +513,14 @@ export default (Base: Constructor<squared.base.Node>) => {
                         this.inlineFlow ||
                         this.tableElement ||
                         this.flexElement ||
-                        !!parent && parent.flexElement ||
-                        !!parent && parent.gridElement ||
+                        !!parent && (parent.flexElement || parent.gridElement) ||
                         !!renderParent && renderParent.is(CONTAINER_NODE.GRID)
                     );
-                    if ((!wrap || this.blockStatic && !this.has('maxWidth')) && (
+                    if ((!wrap || blockStatic) && (
                             !!parent && this.linear.width >= parent.box.width ||
                             this.layoutVertical && !this.autoMargin.horizontal ||
-                            this.htmlElement && this.blockStatic && (
-                                this.documentBody ||
-                                !!parent && (
-                                    parent.documentBody ||
-                                    parent.blockStatic && (this.singleChild || this.alignedVertically(this.previousSiblings()))
-                                )
-                            ) ||
-                            this.groupParent && children.some(item => !(item.plainText && item.multiline) && item.linear.width >= this.documentParent.box.width)
-                        ))
+                            !this.documentRoot && children.some(node => node.layoutVertical && !node.autoMargin.horizontal && !node.hasWidth && !node.floating)
+                       ))
                     {
                         this.android('layout_width', 'match_parent', false);
                     }
@@ -569,11 +569,22 @@ export default (Base: Constructor<squared.base.Node>) => {
                 function setAutoMargin(node: View) {
                     if (!node.blockWidth) {
                         const alignment: string[] = [];
+                        const singleFrame = node.documentRoot && node.layoutFrame && node.length === 1 && node.has('maxWidth');
                         if (node.autoMargin.leftRight) {
-                            alignment.push('center_horizontal');
+                            if (singleFrame) {
+                                node.renderChildren[0].mergeGravity('layout_gravity', 'center_horizontal');
+                            }
+                            else {
+                                alignment.push('center_horizontal');
+                            }
                         }
                         else if (node.autoMargin.left) {
-                            alignment.push(right);
+                            if (singleFrame) {
+                                node.renderChildren[0].mergeGravity('layout_gravity', right);
+                            }
+                            else {
+                                alignment.push(right);
+                            }
                         }
                         else if (node.autoMargin.right) {
                             alignment.push(left);

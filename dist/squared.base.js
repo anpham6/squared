@@ -1013,14 +1013,9 @@
     function checkPositionStatic(node, parent) {
         const previousSiblings = node.previousSiblings();
         const nextSiblings = node.nextSiblings();
-        if (node.positionAuto &&
-            (previousSiblings.length === 0 || !previousSiblings.some(item => item.multiline > 0 || item.excluded && !item.blockStatic)) &&
-            (nextSiblings.length === 0 || nextSiblings.every(item => item.blockStatic || item.lineBreak || item.excluded) || node.element === $dom$2.getLastChildElement(parent.element))) {
-            node.css({
-                'position': 'static',
-                'display': 'inline-block',
-                'verticalAlign': 'top'
-            }, '', true);
+        if ((previousSiblings.length === 0 || !previousSiblings.some(item => item.multiline > 0 || item.excluded && !item.blockStatic)) && (nextSiblings.length === 0 || nextSiblings.every(item => item.blockStatic || item.lineBreak || item.excluded) || parent && node.element === $dom$2.getLastChildElement(parent.element))) {
+            node.css({ display: 'inline-block', verticalAlign: 'top' }, '', true);
+            node.positionStatic = true;
             return true;
         }
         return false;
@@ -1551,7 +1546,7 @@
                                 }
                             }
                             case 'absolute': {
-                                if (parent && checkPositionStatic(node, parent)) {
+                                if (node.positionAuto && checkPositionStatic(node, parent)) {
                                     break;
                                 }
                                 else if (this.userSettings.supportNegativeLeftTop) {
@@ -3319,6 +3314,15 @@
                             this._cached.blockStatic = undefined;
                             this._cached.autoMargin = undefined;
                             break;
+                        case 'pageFlow':
+                            this._cached.positionAuto = undefined;
+                            this._cached.blockStatic = undefined;
+                            this._cached.baseline = undefined;
+                            this._cached.floating = undefined;
+                            this._cached.autoMargin = undefined;
+                            this._cached.rightAligned = undefined;
+                            this._cached.bottomAligned = undefined;
+                            break;
                         default:
                             if (attr.startsWith('margin')) {
                                 this._cached.autoMargin = undefined;
@@ -4174,6 +4178,10 @@
         }
         get position() {
             return this.css('position');
+        }
+        set positionStatic(value) {
+            this._cached.positionStatic = value;
+            this.unsetCache('pageFlow');
         }
         get positionStatic() {
             if (this._cached.positionStatic === undefined) {

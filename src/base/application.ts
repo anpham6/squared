@@ -43,18 +43,12 @@ function prioritizeExtensions<T extends Node>(documentRoot: HTMLElement, element
     }
 }
 
-function checkPositionStatic<T extends Node>(node: T, parent: T) {
+function checkPositionStatic<T extends Node>(node: T, parent?: T) {
     const previousSiblings = node.previousSiblings();
     const nextSiblings = node.nextSiblings();
-    if (node.positionAuto &&
-        (previousSiblings.length === 0 || !previousSiblings.some(item => item.multiline > 0 || item.excluded && !item.blockStatic)) &&
-        (nextSiblings.length === 0 || nextSiblings.every(item => item.blockStatic || item.lineBreak || item.excluded) || node.element === $dom.getLastChildElement(parent.element)))
-    {
-        node.css({
-            'position': 'static',
-            'display': 'inline-block',
-            'verticalAlign': 'top'
-        }, '', true);
+    if ((previousSiblings.length === 0 || !previousSiblings.some(item => item.multiline > 0 || item.excluded && !item.blockStatic)) && (nextSiblings.length === 0 || nextSiblings.every(item => item.blockStatic || item.lineBreak || item.excluded) || parent && node.element === $dom.getLastChildElement(parent.element))) {
+        node.css({ display: 'inline-block', verticalAlign: 'top' }, '', true);
+        node.positionStatic = true;
         return true;
     }
     return false;
@@ -612,7 +606,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                             }
                         }
                         case 'absolute': {
-                            if (parent && checkPositionStatic(node, parent)) {
+                            if (node.positionAuto && checkPositionStatic(node, parent)) {
                                 break;
                             }
                             else if (this.userSettings.supportNegativeLeftTop) {

@@ -35,7 +35,7 @@ export default class Guideline<T extends View> extends squared.base.Extension<T>
     }
 
     public afterConstraints() {
-        const controller = (<android.base.Controller<T>> this.application.controllerHandler);
+        const controller = <android.base.Controller<T>> this.application.controllerHandler;
         for (const node of this.subscribers) {
             const alignParent = new Map<T, string[]>();
             node.each((item: T) => {

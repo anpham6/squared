@@ -5,7 +5,7 @@ import View from '../../view';
 
 const $util = squared.lib.util;
 
-const STORED = (<ResourceStoredMapAndroid> Resource.STORED);
+const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 
 function getResourceKey(dimens: Map<string, string>, key: string, value: string) {
     for (const [storedKey, storedvalue] of dimens.entries()) {

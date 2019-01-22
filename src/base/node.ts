@@ -238,6 +238,15 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         this._cached.blockStatic = undefined;
                         this._cached.autoMargin = undefined;
                         break;
+                    case 'pageFlow':
+                        this._cached.positionAuto = undefined;
+                        this._cached.blockStatic = undefined;
+                        this._cached.baseline = undefined;
+                        this._cached.floating = undefined;
+                        this._cached.autoMargin = undefined;
+                        this._cached.rightAligned = undefined;
+                        this._cached.bottomAligned = undefined;
+                        break;
                     default:
                         if (attr.startsWith('margin')) {
                             this._cached.autoMargin = undefined;
@@ -1180,6 +1189,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this.css('position');
     }
 
+    set positionStatic(value) {
+        this._cached.positionStatic = value;
+        this.unsetCache('pageFlow');
+    }
     get positionStatic() {
         if (this._cached.positionStatic === undefined) {
             this._cached.positionStatic = (() => {

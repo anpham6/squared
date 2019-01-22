@@ -102,22 +102,13 @@ export default class Fixed<T extends View> extends squared.base.Extension<T> {
             const width = node.cssInitial('width', true);
             const minWidth = node.cssInitial('minWidth', true);
             if (node.documentBody && node.some(item => item.has('right'))) {
-                node.css({
-                    'width': 'auto',
-                    'minWidth': 'auto'
-                }, '', true);
-                node.companion.css({
-                    'width': width,
-                    'minWidth': minWidth
-                }, '', true);
+                node.css({ width: 'auto', minWidth: 'auto' }, '', true);
+                node.companion.css({ width, minWidth }, '', true);
                 node.android('layout_width', 'match_parent');
             }
             else {
                 const offset = node.paddingLeft + node.paddingRight + (node.documentBody ? node.marginLeft + node.marginRight : 0);
-                node.companion.css({
-                    'width': reduceContainerWidth(node, width, offset),
-                    'minWidth': reduceContainerWidth(node, minWidth, offset)
-                }, '', true);
+                node.companion.css({ width: reduceContainerWidth(node, width, offset), minWidth: reduceContainerWidth(node, minWidth, offset) }, '', true);
             }
         }
     }

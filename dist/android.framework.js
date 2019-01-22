@@ -1744,6 +1744,7 @@ var android = (function () {
                     hasWidth = true;
                 }
                 if (!hasWidth) {
+                    const blockStatic = this.blockStatic && !this.has('maxWidth') && (this.htmlElement || this.svgElement);
                     if (this.plainText) {
                         this.android('layout_width', renderParent && this.bounds.width > renderParent.box.width && this.multiline && this.alignParent('left') ? 'match_parent' : 'wrap_content', false);
                     }
@@ -1751,7 +1752,10 @@ var android = (function () {
                         this.android('layout_width', 'wrap_content', false);
                     }
                     else if (this.flexElement && renderParent && renderParent.hasWidth ||
-                        !this.documentRoot && children.some(node => node.layoutVertical && !node.hasWidth && !node.floating && !node.autoMargin.horizontal) ||
+                        this.groupParent && children.some(node => !(node.plainText && node.multiline) && node.linear.width >= this.documentParent.box.width) ||
+                        blockStatic && (this.documentBody ||
+                            !!parent && (parent.documentBody ||
+                                parent.blockStatic && (this.singleChild || this.alignedVertically(this.previousSiblings())))) ||
                         this.layoutFrame && ($NodeList.floated(children).size === 2 ||
                             children.some(node => node.blockStatic && (node.autoMargin.leftRight || node.rightAligned)))) {
                         this.android('layout_width', 'match_parent', false);
@@ -1762,15 +1766,11 @@ var android = (function () {
                             this.inlineFlow ||
                             this.tableElement ||
                             this.flexElement ||
-                            !!parent && parent.flexElement ||
-                            !!parent && parent.gridElement ||
+                            !!parent && (parent.flexElement || parent.gridElement) ||
                             !!renderParent && renderParent.is(CONTAINER_NODE.GRID));
-                        if ((!wrap || this.blockStatic && !this.has('maxWidth')) && (!!parent && this.linear.width >= parent.box.width ||
+                        if ((!wrap || blockStatic) && (!!parent && this.linear.width >= parent.box.width ||
                             this.layoutVertical && !this.autoMargin.horizontal ||
-                            this.htmlElement && this.blockStatic && (this.documentBody ||
-                                !!parent && (parent.documentBody ||
-                                    parent.blockStatic && (this.singleChild || this.alignedVertically(this.previousSiblings())))) ||
-                            this.groupParent && children.some(item => !(item.plainText && item.multiline) && item.linear.width >= this.documentParent.box.width))) {
+                            !this.documentRoot && children.some(node => node.layoutVertical && !node.autoMargin.horizontal && !node.hasWidth && !node.floating))) {
                             this.android('layout_width', 'match_parent', false);
                         }
                         else {
@@ -1817,11 +1817,22 @@ var android = (function () {
                     function setAutoMargin(node) {
                         if (!node.blockWidth) {
                             const alignment = [];
+                            const singleFrame = node.documentRoot && node.layoutFrame && node.length === 1 && node.has('maxWidth');
                             if (node.autoMargin.leftRight) {
-                                alignment.push('center_horizontal');
+                                if (singleFrame) {
+                                    node.renderChildren[0].mergeGravity('layout_gravity', 'center_horizontal');
+                                }
+                                else {
+                                    alignment.push('center_horizontal');
+                                }
                             }
                             else if (node.autoMargin.left) {
-                                alignment.push(right);
+                                if (singleFrame) {
+                                    node.renderChildren[0].mergeGravity('layout_gravity', right);
+                                }
+                                else {
+                                    alignment.push(right);
+                                }
                             }
                             else if (node.autoMargin.right) {
                                 alignment.push(left);
@@ -3059,10 +3070,7 @@ var android = (function () {
                                     procedure: $enum$1.NODE_PROCEDURE.ALL,
                                     resource: $enum$1.NODE_RESOURCE.ALL
                                 });
-                                container.css({
-                                    'position': node.position,
-                                    'zIndex': node.zIndex
-                                });
+                                container.css({ position: node.position, zIndex: node.zIndex });
                                 parent.appendTry(node, container);
                                 this.cache.append(container);
                                 if (width > 0) {
@@ -3704,20 +3712,22 @@ var android = (function () {
                         }
                     }
                 }
-                if (baseline && baselineAlign.length) {
-                    adjustBaseline(baseline, baselineAlign);
+                if (baseline) {
                     baseline.baselineActive = true;
-                    if (node.lineHeight || baseline.lineHeight) {
-                        let offset = 0;
-                        if (baseline.lineHeight) {
-                            offset = baseline.lineHeight - baseline.bounds.height;
-                        }
-                        else {
-                            offset = node.lineHeight - (baseline.bounds.height - (baseline.paddingTop + baseline.paddingBottom));
-                        }
-                        if (offset > 0) {
-                            baseline.modifyBox(2 /* MARGIN_TOP */, Math.floor(offset / 2));
-                            baseline.modifyBox(8 /* MARGIN_BOTTOM */, Math.ceil(offset / 2));
+                    if (baselineAlign.length) {
+                        adjustBaseline(baseline, baselineAlign);
+                        if (node.lineHeight || baseline.lineHeight) {
+                            let offset = 0;
+                            if (baseline.lineHeight) {
+                                offset = baseline.lineHeight - baseline.bounds.height;
+                            }
+                            else {
+                                offset = node.lineHeight - (baseline.bounds.height - (baseline.paddingTop + baseline.paddingBottom));
+                            }
+                            if (offset > 0) {
+                                baseline.modifyBox(2 /* MARGIN_TOP */, Math.floor(offset / 2));
+                                baseline.modifyBox(8 /* MARGIN_BOTTOM */, Math.ceil(offset / 2));
+                            }
                         }
                     }
                 }
@@ -5873,22 +5883,13 @@ var android = (function () {
                 const width = node.cssInitial('width', true);
                 const minWidth = node.cssInitial('minWidth', true);
                 if (node.documentBody && node.some(item => item.has('right'))) {
-                    node.css({
-                        'width': 'auto',
-                        'minWidth': 'auto'
-                    }, '', true);
-                    node.companion.css({
-                        'width': width,
-                        'minWidth': minWidth
-                    }, '', true);
+                    node.css({ width: 'auto', minWidth: 'auto' }, '', true);
+                    node.companion.css({ width, minWidth }, '', true);
                     node.android('layout_width', 'match_parent');
                 }
                 else {
                     const offset = node.paddingLeft + node.paddingRight + (node.documentBody ? node.marginLeft + node.marginRight : 0);
-                    node.companion.css({
-                        'width': reduceContainerWidth(node, width, offset),
-                        'minWidth': reduceContainerWidth(node, minWidth, offset)
-                    }, '', true);
+                    node.companion.css({ width: reduceContainerWidth(node, width, offset), minWidth: reduceContainerWidth(node, minWidth, offset) }, '', true);
                 }
             }
         }
@@ -5905,12 +5906,12 @@ var android = (function () {
             const container = controller.createNodeWrapper(node, parent);
             container.css('display', 'block', true);
             if (node.has('maxWidth')) {
-                container.css('width', node.css('maxWidth'), true);
-                node.css('maxWidth', 'auto');
+                const maxWidth = node.css('maxWidth');
+                container.css({ width: maxWidth, maxWidth }, '', true);
             }
             if (node.has('maxHeight')) {
-                container.css('height', node.css('maxHeight'), true);
-                node.css('maxHeight', 'auto');
+                const maxHeight = node.css('maxHeight');
+                container.css({ height: maxHeight, maxHeight }, '', true);
             }
             const layout = new $Layout$9(parent, container, CONTAINER_NODE.FRAME, 2048 /* SINGLE */, 1, container.children);
             return { output: '', parent: container, renderAs: container, outputAs: this.application.renderLayout(layout) };

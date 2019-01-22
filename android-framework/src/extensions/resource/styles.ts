@@ -7,7 +7,7 @@ import { createStyleAttribute } from '../../lib/util';
 
 const $util = squared.lib.util;
 
-const STORED = (<ResourceStoredMapAndroid> Resource.STORED);
+const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 
 export default class ResourceStyles<T extends View> extends squared.base.Extension<T> {
     public readonly eventOnly = true;

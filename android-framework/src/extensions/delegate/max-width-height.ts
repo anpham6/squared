@@ -14,16 +14,16 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
     }
 
     public processNode(node: T, parent: T): ExtensionResult<T> {
-        const controller = (<android.base.Controller<T>> this.application.controllerHandler);
+        const controller = <android.base.Controller<T>> this.application.controllerHandler;
         const container = controller.createNodeWrapper(node, parent);
         container.css('display', 'block', true);
         if (node.has('maxWidth')) {
-            container.css('width', node.css('maxWidth'), true);
-            node.css('maxWidth', 'auto');
+            const maxWidth = node.css('maxWidth');
+            container.css({ width: maxWidth, maxWidth }, '', true);
         }
         if (node.has('maxHeight')) {
-            container.css('height', node.css('maxHeight'), true);
-            node.css('maxHeight', 'auto');
+            const maxHeight = node.css('maxHeight');
+            container.css({ height: maxHeight, maxHeight }, '', true);
         }
         const layout = new $Layout(
             parent,

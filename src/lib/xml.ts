@@ -75,7 +75,7 @@ export function replaceCharacter(value: string) {
 }
 
 export function parseTemplate(value: string) {
-    const result: StringMap = { '__ROOT__': value };
+    const result: StringMap = { __ROOT__: value };
     function parseSection(section: string) {
         const pattern = /(\t*<<(\w+)>>)\n[\w\W]*\n*\1/g;
         let match: RegExpExecArray | null;
