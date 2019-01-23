@@ -172,20 +172,19 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         const result = SvgBuild.clonePoints(values);
         const items = transform.slice(0).reverse();
         for (const item of items) {
+            const m = item.matrix;
             let x1 = 0;
             let y1 = 0;
             let x2 = 0;
             let y2 = 0;
-            let x3 = 0;
-            let y3 = 0;
             if (origin) {
                 switch (item.type) {
                     case SVGTransform.SVG_TRANSFORM_SCALE:
                         if (item.method.x) {
-                            x1 += origin.x;
+                            x2 = origin.x * (1 - m.a);
                         }
                         if (item.method.y) {
-                            y2 += origin.y;
+                            y2 = origin.y * (1 - m.d);
                         }
                         break;
                     case SVGTransform.SVG_TRANSFORM_SKEWX:
@@ -195,22 +194,21 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                         break;
                     case SVGTransform.SVG_TRANSFORM_SKEWY:
                         if (item.method.x) {
-                            x2 -= origin.x;
+                            x1 -= origin.x;
                         }
                         break;
                     case SVGTransform.SVG_TRANSFORM_ROTATE:
                         if (item.method.x) {
-                            x2 -= origin.x;
-                            x3 = origin.x + getRadiusY(item.angle, origin.x);
+                            x1 -= origin.x;
+                            x2 = origin.x + getRadiusY(item.angle, origin.x);
                         }
                         if (item.method.y) {
                             y1 -= origin.y;
-                            y3 = origin.y + getRadiusY(item.angle, origin.y);
+                            y2 = origin.y + getRadiusY(item.angle, origin.y);
                         }
                         break;
                 }
             }
-            const m = item.matrix;
             if (center) {
                 switch (item.type) {
                     case SVGTransform.SVG_TRANSFORM_SCALE:
@@ -230,12 +228,12 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             }
             for (const pt of result) {
                 const x = pt.x;
-                pt.x = applyMatrixX(m, x + x1, pt.y + y1) + x3;
-                pt.y = applyMatrixY(m, x + x2, pt.y + y2) + y3;
+                pt.x = applyMatrixX(m, x, pt.y + y1) + x2;
+                pt.y = applyMatrixY(m, x + x1, pt.y) + y2;
                 if (item.type === SVGTransform.SVG_TRANSFORM_SCALE && pt.rx !== undefined && pt.ry !== undefined) {
                     const rx = pt.rx;
-                    pt.rx = applyMatrixX(m, rx + x1, pt.ry + y1);
-                    pt.ry = applyMatrixY(m, rx + x2, pt.ry + y2);
+                    pt.rx = applyMatrixX(m, rx, pt.ry + y1);
+                    pt.ry = applyMatrixY(m, rx + x1, pt.ry);
                 }
             }
         }

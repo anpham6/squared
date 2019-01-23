@@ -1,6 +1,6 @@
+import { FileAsset } from '../../src/base/@types/application';
 import { StyleAttribute } from '../src/@types/application';
 import { ViewAttribute } from '../src/@types/node';
-import { FileAsset } from '../../src/base/@types/application';
 
 import * as $const from '../src/lib/constant';
 import * as $enum from '../src/lib/enumeration';
@@ -22,8 +22,8 @@ declare global {
             export import AXIS_ANDROID = $const.AXIS_ANDROID;
             export import LAYOUT_ANDROID = $const.LAYOUT_ANDROID;
             export import XMLNS_ANDROID = $const.XMLNS_ANDROID;
-            export import RESERVED_JAVA = $const.RESERVED_JAVA;
             export import PREFIX_ANDROID = $const.PREFIX_ANDROID;
+            export import RESERVED_JAVA = $const.RESERVED_JAVA;
         }
 
         namespace util {

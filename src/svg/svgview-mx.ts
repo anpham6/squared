@@ -109,12 +109,11 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                         return getTransformOrigin(element, origin.value);
                                     }
                                 }
-                                return getTransformOrigin(element);
+                                return undefined;
                             }
                             sortAttribute(attrMap['transform']).forEach(item => {
                                 const transforms = getTransform(element, item.value);
                                 if (transforms) {
-                                    const origin = getKeyframeOrigin(item.ordinal);
                                     transforms.forEach(transform => {
                                         let name: string;
                                         let value: string;
@@ -128,8 +127,9 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                                 value = `${transform.matrix.a} ${transform.matrix.d}`;
                                                 break;
                                             case SVGTransform.SVG_TRANSFORM_ROTATE:
+                                                const origin = getKeyframeOrigin(item.ordinal);
                                                 name = 'rotate';
-                                                value = `${transform.angle} ${origin.x} ${origin.y}`;
+                                                value = `${transform.angle} ${origin ? `${origin.x} ${origin.y}` : '0 0'}`;
                                                 break;
                                             case SVGTransform.SVG_TRANSFORM_SKEWX:
                                                 name = 'skewX';

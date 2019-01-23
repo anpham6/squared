@@ -16,10 +16,6 @@ const $xml = squared.lib.xml;
 
 const STORED = $Resource.STORED as ResourceStoredMapAndroid;
 
-function getHexARGB(value?: ColorData) {
-    return value ? (value.opaque ? value.valueARGB : value.valueRGB) : '';
-}
-
 function getRadiusPercent(value: string) {
     return $util.isPercent(value) ? parseInt(value) / 100 : 0.5;
 }
@@ -400,13 +396,13 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
         return '';
     }
 
-    public static addColor(value?: ColorData | string) {
+    public static addColor(value: ColorData | string | undefined) {
         if (typeof value === 'string') {
             value = $color.parseRGBA(value);
         }
         if (value && value.valueRGBA !== '#00000000') {
-            const valueARGB = getHexARGB(value);
-            let name = STORED.colors.get(valueARGB) || '';
+            const argb = value.opaque ? value.valueARGB : value.valueRGB;
+            let name = STORED.colors.get(argb) || '';
             if (name === '') {
                 const shade = $color.getColorByShade(value.valueRGB);
                 if (shade) {
@@ -417,7 +413,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                     else {
                         name = Resource.generateId('color', shade.name, 1);
                     }
-                    STORED.colors.set(valueARGB, name);
+                    STORED.colors.set(argb, name);
                 }
             }
             return name;
