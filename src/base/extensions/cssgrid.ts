@@ -13,19 +13,25 @@ type GridPosition = {
     columnSpan: number
 };
 
+type RepeatItem = {
+    name?: string
+    unit?: string
+    unitMin?: string
+};
+
 const $util = squared.lib.util;
 
-const REGEXP_PARTIAL = {
+const REGEXP_PARTIAL: StringMap = {
     UNIT: '[\\d.]+[a-z%]+|auto|max-content|min-content',
-    MINMAX: 'minmax\\((.*?), (.*?)\\)',
+    MINMAX: 'minmax\\(([^,]+), ([^)]+)\\)',
     FIT_CONTENT: 'fit-content\\(([\\d.]+[a-z%]+)\\)',
-    REPEAT: 'repeat\\((auto-fit|auto-fill|[0-9]+), ((?:minmax|fit-content)\\(.*?\\)|.*?)\\)',
     NAMED: '\\[([\\w\\-\\s]+)\\]'
 };
 
-const PATTERN_GRID = {
+const PATTERN_GRID: ObjectMap<RegExp> = {
     UNIT: new RegExp(`^(${REGEXP_PARTIAL.UNIT})$`),
-    NAMED: new RegExp(`\\s*(${REGEXP_PARTIAL.NAMED}|${REGEXP_PARTIAL.REPEAT}|${REGEXP_PARTIAL.MINMAX}|${REGEXP_PARTIAL.FIT_CONTENT}|${REGEXP_PARTIAL.UNIT})\\s*`, 'g')
+    NAMED: new RegExp(`\\s*(repeat\\((auto-fit|auto-fill|[0-9]+), (.+)\\)|${REGEXP_PARTIAL.NAMED}|${REGEXP_PARTIAL.MINMAX}|${REGEXP_PARTIAL.FIT_CONTENT}|${REGEXP_PARTIAL.UNIT})\\s*`),
+    REPEAT: new RegExp(`\\s*(${REGEXP_PARTIAL.NAMED}|${REGEXP_PARTIAL.MINMAX}|${REGEXP_PARTIAL.FIT_CONTENT}|${REGEXP_PARTIAL.UNIT})\\s*`, 'g'),
 };
 
 function repeatUnit(data: CssGridDirectionData, dimension: string[]) {
@@ -141,21 +147,25 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                 while ((match = PATTERN_GRID.NAMED.exec(value)) !== null) {
                     if (index < 2) {
                         const data = mainData[index === 0 ? 'row' : 'column'];
-                        if (match[1].charAt(0) === '[') {
-                            if (data.name[match[2]] === undefined) {
-                                data.name[match[2]] = [];
+                        if (match[1].startsWith('repeat')) {
+                            let replaced = false;
+                            for (let j = match[0].indexOf('(') + 1, k = 1; j < match[0].length; j++) {
+                                const char = match[0][j];
+                                if (char === '(') {
+                                    k++;
+                                }
+                                else if (char === ')') {
+                                    k--;
+                                    if (k === 0) {
+                                        value = value.substring(j + 1);
+                                        match[3] = match[3].substring(0, match[3].length - value.length);
+                                        replaced = true;
+                                        break;
+                                    }
+                                }
                             }
-                            data.name[match[2]].push(i);
-                        }
-                        else if (match[1].startsWith('minmax')) {
-                            data.unit.push(convertUnit(node, match[6]));
-                            data.unitMin.push(convertUnit(node, match[5]));
-                            data.repeat.push(false);
-                            i++;
-                        }
-                        else if (match[1].startsWith('repeat')) {
                             let iterations = 1;
-                            switch (match[3]) {
+                            switch (match[2]) {
                                 case 'auto-fit':
                                     data.autoFit = true;
                                     break;
@@ -166,44 +176,64 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                                     iterations = $util.convertInt(match[3]);
                                     break;
                             }
-                            if (match[4].startsWith('minmax')) {
-                                const minmax = new RegExp(REGEXP_PARTIAL.MINMAX, 'g');
-                                let matchMM: RegExpMatchArray | null;
-                                while ((matchMM = minmax.exec(match[4])) !== null) {
-                                    data.unit.push(convertUnit(node, matchMM[2]));
-                                    data.unitMin.push(convertUnit(node, matchMM[1]));
-                                    data.repeat.push(true);
-                                    i++;
-                                }
-                            }
-                            else if (match[4].charAt(0) === '[') {
-                                const unitName = match[4].split(' ');
-                                if (unitName.length === 2) {
-                                    const attr = unitName[0].substring(1, unitName[0].length - 1);
-                                    if (data.name[attr] === undefined) {
-                                        data.name[attr] = [];
+                            if (iterations > 0) {
+                                let matchRepeat: RegExpMatchArray | null;
+                                const repeating: RepeatItem[] = [];
+                                while ((matchRepeat = PATTERN_GRID.REPEAT.exec(match[3])) !== null) {
+                                    let matchPartial: RegExpMatchArray | null;
+                                    if ((matchPartial = new RegExp(REGEXP_PARTIAL.NAMED).exec(matchRepeat[1])) !== null) {
+                                        if (data.name[matchPartial[1]] === undefined) {
+                                            data.name[matchPartial[1]] = [];
+                                        }
+                                        repeating.push({ name: matchPartial[1] });
                                     }
+                                    else if ((matchPartial = new RegExp(REGEXP_PARTIAL.MINMAX).exec(matchRepeat[1])) !== null) {
+                                        repeating.push({ unit: convertUnit(node, matchPartial[2]), unitMin: convertUnit(node, matchPartial[1]) });
+                                    }
+                                    else if ((matchPartial = new RegExp(REGEXP_PARTIAL.FIT_CONTENT).exec(matchRepeat[1])) !== null) {
+                                        repeating.push({ unit: convertUnit(node, matchPartial[1]), unitMin: '0px' });
+                                    }
+                                    else if ((matchPartial = new RegExp(REGEXP_PARTIAL.UNIT).exec(matchRepeat[1])) !== null) {
+                                        repeating.push({ unit: convertUnit(node, matchPartial[0]) });
+                                    }
+                                }
+                                if (repeating.length) {
                                     for (let j = 0; j < iterations; j++) {
-                                        data.name[attr].push(i);
-                                        data.unit.push(unitName[1]);
-                                        data.unitMin.push('');
-                                        data.repeat.push(true);
-                                        i++;
-                                    }
-                                }
-                            }
-                            else {
-                                match[4].split(' ').forEach(unit => {
-                                    if (PATTERN_GRID.UNIT.test(unit)) {
-                                        for (let j = 0; j < iterations; j++) {
-                                            data.unit.push(unit);
-                                            data.unitMin.push('');
-                                            data.repeat.push(true);
-                                            i++;
+                                        for (const item of repeating) {
+                                            if (item.name) {
+                                                data.name[item.name].push(i);
+                                            }
+                                            else if (item.unit) {
+                                                data.unit.push(item.unit);
+                                                data.unitMin.push(item.unitMin || '');
+                                                data.repeat.push(true);
+                                                i++;
+                                            }
                                         }
                                     }
-                                });
+                                }
                             }
+                            if (replaced) {
+                                continue;
+                            }
+                        }
+                        else if (match[1].charAt(0) === '[') {
+                            if (data.name[match[4]] === undefined) {
+                                data.name[match[4]] = [];
+                            }
+                            data.name[match[4]].push(i);
+                        }
+                        else if (match[1].startsWith('minmax')) {
+                            data.unit.push(convertUnit(node, match[6]));
+                            data.unitMin.push(convertUnit(node, match[5]));
+                            data.repeat.push(false);
+                            i++;
+                        }
+                        else if (match[1].startsWith('fit-content')) {
+                            data.unit.push(convertUnit(node, match[7]));
+                            data.unitMin.push('0px');
+                            data.repeat.push(false);
+                            i++;
                         }
                         else if (PATTERN_GRID.UNIT.test(match[1])) {
                             data.unit.push(convertUnit(node, match[1]));
@@ -215,6 +245,7 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                     else {
                         mainData[index === 2 ? 'row' : 'column'].auto.push(node.convertPX(match[1]));
                     }
+                    value = value.replace(match[0], '');
                 }
             }
         });

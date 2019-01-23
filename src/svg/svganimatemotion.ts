@@ -30,7 +30,7 @@ export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.
             }
             if (this.keyTimes.length) {
                 const keyPoints = this.getAttribute('keyPoints');
-                if (keyPoints) {
+                if (keyPoints !== '') {
                     const points = SvgAnimate.toFractionList(keyPoints);
                     if (points.length === this.keyTimes.length) {
                         this.keyPoints = points;

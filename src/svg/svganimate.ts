@@ -133,8 +133,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
 
     public from = '';
     public by = '';
-    public values: string[] = [];
-    public keyTimes: number[] = [];
+    public values!: string[];
+    public keyTimes!: number[];
     public repeatDuration = -1;
     public additiveSum = false;
     public accumulateSum = false;
@@ -153,8 +153,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             const values = this.getAttribute('values');
             const keyTimes = this.getAttribute('keyTimes');
             if (values !== '' && keyTimes !== '') {
-                this.values.push(...$util.flatMap(values.split(';'), value => value.trim()));
-                this.keyTimes.push(...SvgAnimate.toFractionList(keyTimes));
+                this.values = $util.flatMap(values.split(';'), value => value.trim());
+                this.keyTimes = SvgAnimate.toFractionList(keyTimes);
                 if (this.values.length > 1 && this.keyTimes.length === this.values.length) {
                     if (this.keyTimes[0] === 0) {
                         this.from = this.values[0];
@@ -167,7 +167,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 }
             }
             const from = this.getAttribute('from');
-            if (this.values.length === 0 && this.to !== '') {
+            if (!$util.isArray(this.values) && this.to !== '') {
                 if (from !== '') {
                     this.from = from;
                 }
@@ -183,8 +183,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                         this.from = $dom.cssAttribute(element.parentElement, this.attributeName);
                     }
                 }
-                this.values.push(this.from, this.to);
-                this.keyTimes.push(0, 1);
+                this.values = [this.from, this.to];
+                this.keyTimes = [0, 1];
                 this.setAttribute('by');
             }
             if (values === '' && from !== '' && this.to !== '') {
@@ -194,7 +194,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 }
             }
             const repeatDur = this.getAttribute('repeatDur');
-            if (repeatDur && repeatDur !== 'indefinite') {
+            if (repeatDur !== '' && repeatDur !== 'indefinite') {
                 this.repeatDuration = convertClockTime(repeatDur);
             }
             const repeatCount = this.getAttribute('repeatCount');
@@ -220,6 +220,10 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             if (element.tagName === 'animate') {
                 this.setCalcMode(this.attributeName);
             }
+        }
+        if (this.values === undefined) {
+            this.values = [];
+            this.keyTimes = [];
         }
     }
 

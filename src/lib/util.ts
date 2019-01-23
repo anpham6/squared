@@ -44,7 +44,7 @@ export const REGEXP_PATTERN = {
     URL: /url\("?(.*?)"?\)/,
     URI: /^[A-Za-z]+:\/\//,
     UNIT: /^(?:\s*(-?[\d.]+)(px|em|ch|pc|pt|vw|vh|vmin|vmax|mm|cm|in))+$/,
-    ATTRIBUTE: /([^\s]+)="(.*?)"/
+    ATTRIBUTE: /([^\s]+)="([^"]+)"/
 };
 
 export function capitalize(value: string, upper = true) {

@@ -9,7 +9,7 @@ const $util = squared.lib.util;
 const CLIPPATH_SHAPE: ObjectMap<RegExp> = {
     url: REGEXP_SVG.URL,
     inset: new RegExp(`inset\\(${REGEXP_SVG.LENGTH}\\s?${REGEXP_SVG.LENGTH}?\\s?${REGEXP_SVG.LENGTH}?\\s?${REGEXP_SVG.LENGTH}?\\)`),
-    polygon: /polygon\((.*?)\)/,
+    polygon: /polygon\(([^)]+)\)/,
     circle: new RegExp(`circle\\(${REGEXP_SVG.LENGTH}(?: at ${REGEXP_SVG.LENGTH} ${REGEXP_SVG.LENGTH})?\\)`),
     ellipse: new RegExp(`ellipse\\(${REGEXP_SVG.LENGTH} ${REGEXP_SVG.LENGTH}(?: at ${REGEXP_SVG.LENGTH} ${REGEXP_SVG.LENGTH})?\\)`),
 };

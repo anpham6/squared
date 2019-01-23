@@ -27,7 +27,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
                 this.begin = sortNumber(begin.split(';').map(value => convertClockTime(value)));
             }
             const dur = this.getAttribute('dur');
-            if (dur && dur !== 'indefinite') {
+            if (dur !== '' && dur !== 'indefinite') {
                 this.duration = convertClockTime(dur);
             }
         }
@@ -35,7 +35,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
 
     public setAttribute(attr: string, equality?: string) {
         const value = this.getAttribute(attr);
-        if (value) {
+        if (value !== '') {
             if (equality !== undefined) {
                 this[attr + $util.capitalize(equality)] = value === equality;
             }

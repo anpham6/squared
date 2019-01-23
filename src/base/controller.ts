@@ -101,7 +101,7 @@ export default abstract class Controller<T extends Node> implements squared.base
     }
 
     public replaceIndent(value: string, depth: number, cache: T[]) {
-        value = $xml.replaceIndent(value, depth, /^({.*?})(\t*)(<.*)/);
+        value = $xml.replaceIndent(value, depth, /^({[^}]+})(\t*)(<.*)/);
         if (cache) {
             const pattern = /{@(\d+)}/g;
             let match: RegExpExecArray | null;

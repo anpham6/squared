@@ -57,7 +57,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                         }
                         const common: string[] = [];
                         for (const attr of attrMap.keys()) {
-                            const match = attr.match(/(\w+):(\w+)="(.*?)"/);
+                            const match = attr.match(/(\w+):(\w+)="([^"]+)"/);
                             if (match) {
                                 children.forEach(item => item.delete(match[1], match[2]));
                                 common.push(match[0]);

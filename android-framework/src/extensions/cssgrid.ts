@@ -171,6 +171,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 const minDimension = `min${$util.capitalize(dimension)}`;
                 let size = 0;
                 let minSize = 0;
+                let fitContent = false;
                 let minUnitSize = 0;
                 let sizeWeight = 0;
                 if (data.unit.every(value => value === 'auto')) {
@@ -182,7 +183,8 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     }
                 }
                 for (let i = 0, j = 0; i < cellData[cellSpan]; i++) {
-                    minUnitSize += parseInt(parent.convertPX(data.unitMin[cellData[cellStart] + i]));
+                    const unitMin = data.unitMin[cellData[cellStart] + i];
+                    minUnitSize += parseInt(parent.convertPX(unitMin));
                     let unit = data.unit[cellData[cellStart] + i];
                     if (!$util.hasValue(unit)) {
                         if (data.auto[j]) {
@@ -228,6 +230,9 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                 minSize += gap;
                             }
                         }
+                        if (unitMin === '0px' && node.textElement) {
+                            fitContent = true;
+                        }
                     }
                 }
                 if (cellData[cellSpan] > 1) {
@@ -263,8 +268,15 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     item.android(`layout_${direction}Weight`, sizeWeight.toString());
                     item.mergeGravity('layout_gravity', direction === 'column' ? 'fill_horizontal' : 'fill_vertical');
                 }
-                else if (size > 0 && !item.has(dimension)) {
-                    item.css(dimension, $util.formatPX(size), true);
+                else if (size > 0) {
+                    const maxDimension = `max${$util.capitalize(dimension)}`;
+                    if (fitContent && !item.has(maxDimension)) {
+                        item.css(maxDimension, $util.formatPX(size), true);
+                        item.mergeGravity('layout_gravity', direction === 'column' ? 'fill_horizontal' : 'fill_vertical');
+                    }
+                    else if (!item.has(dimension)) {
+                        item.css(dimension, $util.formatPX(size), true);
+                    }
                 }
             }
             const alignItems = node.has('alignSelf') ? node.css('alignSelf') : mainData.alignItems;
