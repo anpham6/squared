@@ -55,7 +55,7 @@ declare global {
             clipPath: string;
             clipRule: string;
             readonly parentElement: SVGGraphicsElement | null;
-            setPaint(): void;
+            setPaint(d?: string[]): void;
         }
 
         interface SvgElementTagNameMap extends SVGElementTagNameMap {
@@ -79,6 +79,12 @@ declare global {
             public static instanceOfAnimate(object?: SvgAnimation): object is SvgAnimate;
             public static instanceOfAnimateTransform(object?: SvgAnimation): object is SvgAnimateTransform;
             public static instanceOfAnimateMotion(object?: SvgAnimation): object is SvgAnimateMotion;
+            public static getLine(x1: number, y1: number, x2?: number, y2?: number): string;
+            public static getCircle(cx: number, cy: number, r: number): string;
+            public static getEllipse(cx: number, cy: number, rx: number, ry?: number): string;
+            public static getRect(width: number, height: number, x?: number, y?: number): string;
+            public static getPolygon(points: Point[] | DOMPoint[]): string;
+            public static getPolyline(points: Point[] | DOMPoint[]): string;
             public static getContainerOpacity(instance: SvgView): number;
             public static getContainerViewBox(instance: SvgContainer): Svg | SvgUseSymbol | undefined;
             public static convertTransformList(transform: SVGTransformList): SvgTransform[];
@@ -88,7 +94,8 @@ declare global {
             public static clonePoints(values: SvgPoint[] | SVGPointList): SvgPoint[];
             public static fromNumberList(values: number[]): Point[];
             public static toNumberList(value: string): number[];
-            public static getPathPoints(values: SvgPathCommand[]): SvgPoint[];
+            public static getPathBoxRect(value: string): BoxRect;
+            public static getPathPoints(values: SvgPathCommand[], includeRadius?: boolean): SvgPoint[];
             public static rebindPathPoints(values: SvgPathCommand[], points: SvgPoint[]): SvgPathCommand[];
             public static fromPathCommandList(values: SvgPathCommand[]): string;
             public static toPathCommandList(value: string): SvgPathCommand[];

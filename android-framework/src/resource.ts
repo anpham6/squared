@@ -8,6 +8,7 @@ import { RESERVED_JAVA } from './lib/constant';
 import View from './view';
 
 const $Resource = squared.base.Resource;
+const $SvgBuild = squared.svg && squared.svg.SvgBuild;
 const $color = squared.lib.color;
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
@@ -40,55 +41,55 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                     if (node.svgElement) {
                         if (path) {
                             const radial = <SvgRadialGradient> item;
-                            const mapPoint: Point[] = [];
-                            const SvgBuild = squared.svg && squared.svg.SvgBuild;
+                            const points: Point[] = [];
                             let cx: number | undefined;
                             let cy: number | undefined;
                             let cxDiameter: number | undefined;
                             let cyDiameter: number | undefined;
                             switch (path.element.tagName) {
-                                case 'path': {
-                                    if (SvgBuild) {
-                                        SvgBuild.toPathCommandList(path.value).forEach(command => mapPoint.push(...command.points));
+                                case 'path':
+                                    if ($SvgBuild) {
+                                        $SvgBuild.toPathCommandList(path.value).forEach(command => points.push(...command.points));
                                     }
-                                }
-                                case 'polygon': {
-                                    if (SvgBuild && path.element instanceof SVGPolygonElement) {
-                                        mapPoint.push(...SvgBuild.clonePoints(path.element.points));
+                                case 'polygon':
+                                    if ($SvgBuild && path.element instanceof SVGPolygonElement) {
+                                        points.push(...$SvgBuild.clonePoints(path.element.points));
                                     }
-                                    if (!mapPoint.length) {
+                                    if (!points.length) {
                                         break;
                                     }
-                                    cx = $util.minArray(mapPoint.map(pt => pt.x));
-                                    cy = $util.minArray(mapPoint.map(pt => pt.y));
-                                    cxDiameter = $util.maxArray(mapPoint.map(pt => pt.x)) - cx;
-                                    cyDiameter = $util.maxArray(mapPoint.map(pt => pt.y)) - cy;
+                                    const pointsX: number[] = [];
+                                    const pointsY: number[] = [];
+                                    for (const pt of points) {
+                                        pointsX.push(pt.x);
+                                        pointsY.push(pt.y);
+                                    }
+                                    cx = $util.minArray(pointsX);
+                                    cy = $util.minArray(pointsY);
+                                    cxDiameter = $util.maxArray(pointsX) - cx;
+                                    cyDiameter = $util.maxArray(pointsY) - cy;
                                     break;
-                                }
-                                case 'rect': {
+                                case 'rect':
                                     const rect = <SVGRectElement> path.element;
                                     cx = rect.x.baseVal.value;
                                     cy = rect.y.baseVal.value;
                                     cxDiameter = rect.width.baseVal.value;
                                     cyDiameter = rect.height.baseVal.value;
                                     break;
-                                }
-                                case 'circle': {
+                                case 'circle':
                                     const circle = <SVGCircleElement> path.element;
                                     cx = circle.cx.baseVal.value - circle.r.baseVal.value;
                                     cy = circle.cy.baseVal.value - circle.r.baseVal.value;
                                     cxDiameter = circle.r.baseVal.value * 2;
                                     cyDiameter = cxDiameter;
                                     break;
-                                }
-                                case 'ellipse': {
+                                case 'ellipse':
                                     const ellipse = <SVGEllipseElement> path.element;
                                     cx = ellipse.cx.baseVal.value - ellipse.rx.baseVal.value;
                                     cy = ellipse.cy.baseVal.value - ellipse.ry.baseVal.value;
                                     cxDiameter = ellipse.rx.baseVal.value * 2;
                                     cyDiameter = ellipse.ry.baseVal.value * 2;
                                     break;
-                                }
                             }
                             if (cx !== undefined && cy !== undefined && cxDiameter !== undefined && cyDiameter !== undefined) {
                                 const cxPercent = getRadiusPercent(radial.cxAsString);

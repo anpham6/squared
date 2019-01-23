@@ -12,7 +12,7 @@ declare global {
 
         namespace util {
             export import MATRIX = $util.MATRIX;
-            export import REGEXP_UNIT = $util.REGEXP_UNIT;
+            export import REGEXP_SVG = $util.REGEXP_SVG;
             export import SHAPES = $util.SHAPES;
             export import SVG = $util.SVG;
             function getHostDPI(): number;
@@ -21,7 +21,8 @@ declare global {
             function convertClockTime(value: string): number;
             function isVisible(element: Element): boolean;
             function setVisible(element: SVGGraphicsElement, value: boolean): void;
-            function getTargetElement(element: Element, parentElement?: SVGElement | HTMLElement | null): SVGElement | null;
+            function getTargetElement(element: Element, rootElement?: SVGElement | HTMLElement | null): SVGElement | null;
+            function getNearestViewBox(element: SVGElement): DOMRect | undefined;
             function sortNumber(values: number[], descending?: boolean): boolean;
             function createTransform(type: number, matrix: SvgMatrix | DOMMatrix, angle?: number, x?: boolean, y?: boolean): SvgTransform;
             function getTransform(element: SVGElement, value?: string): SvgTransform[] | undefined;

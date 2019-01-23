@@ -99,6 +99,34 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return object.instanceType === 3;
     }
 
+    public static getLine(x1: number, y1: number, x2 = 0, y2 = 0) {
+        return `M${x1},${y1} L${x2},${y2}`;
+    }
+
+    public static getCircle(cx: number, cy: number, r: number) {
+        return SvgBuild.getEllipse(cx, cy, r);
+    }
+
+    public static getEllipse(cx: number, cy: number, rx: number, ry?: number) {
+        if (ry === undefined) {
+            ry = rx;
+        }
+        return `M${cx - rx},${cy} a${rx},${ry},0,1,0,${rx * 2},0 a${rx},${ry},0,1,0,-${rx * 2},0`;
+    }
+
+    public static getRect(width: number, height: number, x = 0, y = 0) {
+        return `M${x},${y} h${width} v${height} h${-width} Z`;
+    }
+
+    public static getPolygon(points: Point[] | DOMPoint[]) {
+        const value = SvgBuild.getPolyline(points);
+        return value !== '' ? value + ' Z' : '';
+    }
+
+    public static getPolyline(points: Point[] | DOMPoint[]) {
+        return points.length ? `M${(points as Point[]).map(pt => `${pt.x},${pt.y}`).join(' ')}` : '';
+    }
+
     public static getContainerOpacity(instance: SvgView) {
         let result = parseFloat(instance.opacity);
         let current: SvgContainer | undefined = instance.parent;
@@ -271,7 +299,33 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
-    public static getPathPoints(values: SvgPathCommand[]) {
+    public static getPathBoxRect(values: string[]): BoxRect {
+        let top = Number.MAX_VALUE;
+        let right = -Number.MAX_VALUE;
+        let bottom = -Number.MAX_VALUE;
+        let left = Number.MAX_VALUE;
+        for (const value of values) {
+            const points = SvgBuild.getPathPoints(SvgBuild.toPathCommandList(value), true);
+            for (let i = 1; i < points.length; i++) {
+                const point = points[i];
+                if (point.y < top) {
+                    top = point.y;
+                }
+                else if (point.y > bottom) {
+                    bottom = point.y;
+                }
+                if (point.x < left) {
+                    left = point.x;
+                }
+                else if (point.x > right) {
+                    right = point.x;
+                }
+            }
+        }
+        return { top, bottom, left, right };
+    }
+
+    public static getPathPoints(values: SvgPathCommand[], includeRadius = false) {
         const result: SvgPoint[] = [];
         let x = 0;
         let y = 0;
@@ -290,6 +344,10 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 if (item.command.toUpperCase() === 'A') {
                     pt.rx = item.radiusX;
                     pt.ry = item.radiusY;
+                    if (includeRadius) {
+                        pt.x -= item.radiusX as number;
+                        pt.y -= item.radiusY as number;
+                    }
                 }
                 result.push(pt);
             }

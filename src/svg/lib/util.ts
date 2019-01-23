@@ -91,19 +91,20 @@ export const MATRIX = {
     }
 };
 
-export const REGEXP_UNIT = {
+export const REGEXP_SVG = {
+    URL: /url\("?(#.*?)"?\)/,
     ZERO_ONE: '(0(?:\\.\\d+)?|1(?:\\.0+)?)',
     DECIMAL: '(-?[\\d.]+)',
-    LENGTH: '([\\d.]+(?:[a-z]{2,}|%)?)',
+    LENGTH: '(-?[\\d.]+(?:[a-z]{2,}|%)?)',
     DEGREE: '(?:(-?[\\d.]+)(deg|rad|turn))'
 };
 
 const REGEXP_TRANSFORM = {
-    MATRIX: `(matrix(?:3d)?)\\(${REGEXP_UNIT.DECIMAL}, ${REGEXP_UNIT.DECIMAL}, ${REGEXP_UNIT.DECIMAL}, ${REGEXP_UNIT.DECIMAL}, ${REGEXP_UNIT.DECIMAL}, ${REGEXP_UNIT.DECIMAL}(?:, ${REGEXP_UNIT.DECIMAL})?(?:, ${REGEXP_UNIT.DECIMAL})?(?:, ${REGEXP_UNIT.DECIMAL})?(?:, ${REGEXP_UNIT.DECIMAL})?(?:, ${REGEXP_UNIT.DECIMAL})?(?:, ${REGEXP_UNIT.DECIMAL})?(?:, ${REGEXP_UNIT.DECIMAL})?(?:, ${REGEXP_UNIT.DECIMAL})?(?:, ${REGEXP_UNIT.DECIMAL})?(?:, ${REGEXP_UNIT.DECIMAL})?\\)`,
-    ROTATE: `(rotate[XY]?)\\(${REGEXP_UNIT.DEGREE}\\)`,
-    SKEW: `(skew[XY]?)\\(${REGEXP_UNIT.DEGREE}(?:, ${REGEXP_UNIT.DEGREE})?\\)`,
-    SCALE: `(scale[XY]?)\\(${REGEXP_UNIT.DECIMAL}(?:, ${REGEXP_UNIT.DECIMAL})?\\)`,
-    TRANSLATE: `(translate[XY]?)\\(${REGEXP_UNIT.LENGTH}(?:, ${REGEXP_UNIT.LENGTH})?\\)`
+    MATRIX: `(matrix(?:3d)?)\\(${REGEXP_SVG.DECIMAL}, ${REGEXP_SVG.DECIMAL}, ${REGEXP_SVG.DECIMAL}, ${REGEXP_SVG.DECIMAL}, ${REGEXP_SVG.DECIMAL}, ${REGEXP_SVG.DECIMAL}(?:, ${REGEXP_SVG.DECIMAL})?(?:, ${REGEXP_SVG.DECIMAL})?(?:, ${REGEXP_SVG.DECIMAL})?(?:, ${REGEXP_SVG.DECIMAL})?(?:, ${REGEXP_SVG.DECIMAL})?(?:, ${REGEXP_SVG.DECIMAL})?(?:, ${REGEXP_SVG.DECIMAL})?(?:, ${REGEXP_SVG.DECIMAL})?(?:, ${REGEXP_SVG.DECIMAL})?(?:, ${REGEXP_SVG.DECIMAL})?\\)`,
+    ROTATE: `(rotate[XY]?)\\(${REGEXP_SVG.DEGREE}\\)`,
+    SKEW: `(skew[XY]?)\\(${REGEXP_SVG.DEGREE}(?:, ${REGEXP_SVG.DEGREE})?\\)`,
+    SCALE: `(scale[XY]?)\\(${REGEXP_SVG.DECIMAL}(?:, ${REGEXP_SVG.DECIMAL})?\\)`,
+    TRANSLATE: `(translate[XY]?)\\(${REGEXP_SVG.LENGTH}(?:, ${REGEXP_SVG.LENGTH})?\\)`
 };
 
 export function getHostDPI() {
@@ -237,30 +238,46 @@ export function setOpacity(element: SVGGraphicsElement, value: string) {
     }
 }
 
-export function getTargetElement(element: Element, parentElement?: SVGElement | HTMLElement | null) {
+export function getTargetElement(element: Element, rootElement?: SVGElement) {
     const href = element.attributes.getNamedItem('href');
     if (href && href.value.charAt(0) === '#') {
         const id = href.value.substring(1);
-        if (parentElement) {
-            for (const target of Array.from(parentElement.querySelectorAll('*'))) {
-                if (target.id === id) {
-                    if (target instanceof SVGElement) {
-                        return target;
-                    }
-                    else {
-                        return null;
-                    }
+        let parent: SVGElement | HTMLElement | null;
+        if (rootElement === undefined) {
+            parent = element.parentElement;
+            while (parent && parent.parentElement instanceof SVGGraphicsElement) {
+                parent = parent.parentElement;
+            }
+        }
+        else {
+            parent = rootElement;
+        }
+        if (parent) {
+            for (const target of Array.from(parent.querySelectorAll('*'))) {
+                if (target.id === id && target instanceof SVGElement) {
+                    return target;
                 }
             }
         }
         else {
             const target = document.getElementById(id);
-            if (target && target instanceof SVGElement) {
+            if (target instanceof SVGElement) {
                 return target;
             }
         }
     }
     return null;
+}
+
+export function getNearestViewBox(element: SVGElement) {
+    let current = element.parentElement;
+    while (current && current instanceof SVGElement) {
+        if (SVG.svg(current) || SVG.symbol(current) && current.viewBox && current.viewBox.baseVal.width > 0 && current.viewBox.baseVal.height > 0) {
+            return current.viewBox.baseVal;
+        }
+        current = current.parentElement;
+    }
+    return undefined;
 }
 
 export function createTransform(type: number, matrix: SvgMatrix | DOMMatrix, angle = 0, x = true, y = true): SvgTransform {

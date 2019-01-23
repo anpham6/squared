@@ -66,7 +66,7 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
     private init() {
         [this.element, ...Array.from(this.element.querySelectorAll('defs'))].forEach(item => {
             item.querySelectorAll(':scope > set, :scope > animate, :scope > animateTransform, :scope > animateMotion').forEach((animation: SVGAnimationElement) => {
-                const target = getTargetElement(animation, this.element);
+                const target = getTargetElement(animation, this.documentRoot ? this.element : undefined);
                 if (target) {
                     if (animation.parentElement) {
                         animation.parentElement.removeChild(animation);

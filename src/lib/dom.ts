@@ -1,4 +1,4 @@
-import { REGEXP_PATTERN, capitalize, convertCamelCase, convertInt, convertPX, flatMap, formatPercent, formatPX, hasBit, isPercent, isString, maxArray, minArray, resolvePath, withinFraction } from './util';
+import { REGEXP_PATTERN, capitalize, convertCamelCase, convertFloat, convertPX, flatMap, formatPercent, formatPX, hasBit, isPercent, isString, maxArray, minArray, resolvePath, withinFraction } from './util';
 
 type T = squared.base.Node;
 
@@ -227,10 +227,10 @@ export function removeElementsByClassName(className: string) {
 
 export function convertClientUnit(value: string, dimension: number, dpi: number, fontSize: number, percent = false) {
     if (percent) {
-        return isPercent(value) ? convertInt(value) / 100 : (parseFloat(convertPX(value, dpi, fontSize)) / dimension);
+        return isPercent(value) ? convertFloat(value) / 100 : (parseFloat(convertPX(value, dpi, fontSize)) / dimension);
     }
     else {
-        return isPercent(value) ? Math.round(dimension * (convertInt(value) / 100)) : parseInt(convertPX(value, dpi, fontSize));
+        return isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseFloat(convertPX(value, dpi, fontSize));
     }
 }
 
@@ -298,7 +298,7 @@ export function getStyle(element: Element | null, cache = true): CSSStyleDeclara
 }
 
 export function cssResolveUrl(value: string) {
-    const match = value.match(REGEXP_PATTERN.CSS_URL);
+    const match = value.match(REGEXP_PATTERN.URL);
     if (match) {
         return resolvePath(match[1]);
     }

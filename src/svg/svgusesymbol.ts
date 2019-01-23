@@ -14,7 +14,6 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewR
         public readonly symbolElement: SVGSymbolElement)
     {
         super(element);
-        this.setPaint();
     }
 
     public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
@@ -25,16 +24,16 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewR
         this.each((item: SvgShape) => {
             if (item.path) {
                 item.path.parentElement = element;
-                item.path.setPaint();
             }
         });
         this.element = element;
-        const x = this.getBaseValue('x');
-        const y = this.getBaseValue('y');
+        const x = this.getBaseValue('x', 0);
+        const y = this.getBaseValue('y', 0);
         if (x !== 0 || y !== 0) {
             const pt = { x, y };
             this.cascade().forEach(item => item.translationOffset = pt);
         }
+        this.setPaint(this.getPathAll());
     }
 
     public synchronize(useKeyTime = false) {

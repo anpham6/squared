@@ -33,6 +33,7 @@ type ImageBitmap = {
     tileModeY: string;
 };
 
+const $SvgBuild = squared.svg && squared.svg.SvgBuild;
 const $enum = squared.base.lib.enumeration;
 const $color = squared.lib.color;
 const $dom = squared.lib.dom;
@@ -494,7 +495,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     });
                     const backgroundColor = getShapeAttribute(stored, 'backgroundColor') || [];
                     const borderRadius = getShapeAttribute(stored, 'radius');
-                    const vectorGradient = !!squared.svg && !!squared.svg.SvgPath && backgroundGradient.length > 0 && backgroundGradient.some(gradient => gradient.colorStops.length > 0);
+                    const vectorGradient = $SvgBuild && backgroundGradient.length > 0 && backgroundGradient.some(gradient => gradient.colorStops.length > 0);
                     if (vectorGradient) {
                         const width = node.bounds.width;
                         const height = node.bounds.height;
@@ -511,8 +512,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     CCC: [{
                                         render: [[]],
                                         name: `${node.controlId}_gradient_path`,
-                                        value: squared.svg.SvgPath.getRect(width, height),
-                                        clipPaths: false,
+                                        value: $SvgBuild.getRect(width, height),
+                                        clipElement: false,
                                         fillPattern: [{ gradients: backgroundGradient }]
                                     }],
                                     DDD: false

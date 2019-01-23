@@ -134,16 +134,16 @@ function getPathData(map: KeyTimeMap, path: SvgPath, parent?: SvgContainer, free
                 switch (tagName) {
                     case 'line':
                     case 'polyline':
-                        value = SvgPath.getPolyline(points);
+                        value = SvgBuild.getPolyline(points);
                         break;
                     case 'rect':
                     case 'polygon':
-                        value = SvgPath.getPolygon(points);
+                        value = SvgBuild.getPolygon(points);
                         break;
                     case 'circle':
                     case 'ellipse':
                         const pt = <Required<SvgPoint>> points[0];
-                        value = SvgPath.getEllipse(pt.x, pt.y, pt.rx, pt.ry);
+                        value = SvgBuild.getEllipse(pt.x, pt.y, pt.rx, pt.ry);
                         break;
                 }
                 if (value !== undefined) {

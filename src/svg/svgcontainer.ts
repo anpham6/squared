@@ -36,7 +36,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                 this.setAspectRatio(<squared.svg.SvgG> svg);
             }
             else if (SVG.use(item)) {
-                const target = getTargetElement(item, item.parentElement);
+                const target = getTargetElement(item);
                 if (target) {
                     if (SVG.symbol(target)) {
                         svg = new squared.svg.SvgUseSymbol(item, target);
@@ -90,6 +90,16 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
             }
         }
         return values;
+    }
+
+    public getPathAll() {
+        const result: string[] = [];
+        for (const item of this.cascade()) {
+            if (SvgBuild.instanceOfShape(item) && item.path) {
+                result.push(item.path.value);
+            }
+        }
+        return result;
     }
 
     private setAspectRatio(svg: squared.svg.SvgGroup, element?: SVGSVGElement | SVGSymbolElement) {

@@ -1571,7 +1571,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get visibleStyle() {
         if (this._cached.visibleStyle === undefined) {
             const borderWidth = this.borderTopWidth > 0 || this.borderRightWidth > 0 || this.borderBottomWidth > 0 || this.borderLeftWidth > 0;
-            const backgroundImage = $util.REGEXP_PATTERN.CSS_URL.test(this.css('backgroundImage')) || $util.REGEXP_PATTERN.CSS_URL.test(this.css('background'));
+            const backgroundImage = $util.REGEXP_PATTERN.URL.test(this.css('backgroundImage')) || $util.REGEXP_PATTERN.URL.test(this.css('background'));
             const backgroundColor = this.has('backgroundColor');
             const backgroundRepeat = this.css('backgroundRepeat');
             const paddingHorizontal = this.paddingLeft + this.paddingRight > 0;

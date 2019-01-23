@@ -7,7 +7,7 @@ import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 
 import { FILL_MODE, KEYSPLINE_NAME } from './lib/constant';
-import { REGEXP_UNIT, convertClockTime, getFontSize, getHostDPI, getTransform, getTransformInitialValue, getTransformOrigin, isVisible, setOpacity, setVisible } from './lib/util';
+import { REGEXP_SVG, convertClockTime, getFontSize, getHostDPI, getTransform, getTransformInitialValue, getTransformOrigin, isVisible, setOpacity, setVisible } from './lib/util';
 
 type AttributeMap = ObjectMap<NumberValue<string>[]>;
 
@@ -24,7 +24,7 @@ const ANIMATION_DEFAULT: StringMap = {
     'animation-fill-mode': 'none',
     'animation-timing-function': 'ease'
 };
-const REGEXP_CUBICBEZIER = new RegExp(`cubic-bezier\\(${REGEXP_UNIT.ZERO_ONE}, ${REGEXP_UNIT.DECIMAL}, ${REGEXP_UNIT.ZERO_ONE}, ${REGEXP_UNIT.DECIMAL}\\)`);
+const REGEXP_CUBICBEZIER = new RegExp(`cubic-bezier\\(${REGEXP_SVG.ZERO_ONE}, ${REGEXP_SVG.DECIMAL}, ${REGEXP_SVG.ZERO_ONE}, ${REGEXP_SVG.DECIMAL}\\)`);
 
 function parseAttribute(element: SVGElement, attr: string) {
     let value = $dom.cssAttribute(element, attr);

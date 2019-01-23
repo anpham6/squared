@@ -1,3 +1,2 @@
-export default `
-{&value}
+export default `{&value}
 <!-- filename: {&name} -->`;

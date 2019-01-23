@@ -14,7 +14,6 @@ export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(Svg
         public shapeElement: SVGGraphicsElement)
     {
         super(element);
-        this.setPaint();
         this.setShape(shapeElement);
     }
 
@@ -29,6 +28,7 @@ export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(Svg
             this.path = new SvgPath(this.shapeElement, this.element);
         }
         super.build(exclusions, residual);
+        this.setPaint(this.path ? [this.path.value] : undefined);
     }
 
     public synchronize(useKeyTime = false) {

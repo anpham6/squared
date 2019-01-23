@@ -11,6 +11,7 @@ declare global {
             refitY(value: number): number;
             refitSize(value: number): number;
             refitPoints(values: SvgPoint[]): SvgPoint[];
+            getPathAll(): string[];
         }
 
         interface SvgContainerRect extends SvgView, SvgViewRect, SvgViewBox, SvgSynchronize, SvgBaseVal {

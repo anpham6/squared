@@ -1,5 +1,4 @@
-export default `
-<?xml version="1.0" encoding="utf-8"?>
+export default `<?xml version="1.0" encoding="utf-8"?>
 <set xmlns:android="http://schemas.android.com/apk/res/android">
 <<A>>
 	<set android:name="{~name}" android:ordering="{~ordering}">
