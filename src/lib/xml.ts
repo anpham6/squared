@@ -93,9 +93,6 @@ export function parseTemplate(value: string) {
 }
 
 export function createTemplate(value: StringMap | string, data: ExternalData, format = false, index?: string) {
-    function partial(attr: string, section: string) {
-        return `(\\t*##${attr}-${section}##\\s*\\n)([\\w\\W]*?\\s*\\n)(\\t*##${attr}-${section}##\\s*\\n)`;
-    }
     let output: string = index === undefined ? value['__ROOT__'] : value[index];
     for (const attr in data) {
         const unknown = data[attr];
@@ -107,7 +104,10 @@ export function createTemplate(value: StringMap | string, data: ExternalData, fo
         else if (Array.isArray(unknown)) {
             hash = '%';
             if (Array.isArray(unknown[0])) {
-                const match = new RegExp(partial(attr, 'start') + `([\\w\\W]*?)` + partial(attr, 'end')).exec(output);
+                function partial(section: string) {
+                    return `(\\t*##${attr}-${section}##\\s*\\n)([\\w\\W]*?\\s*\\n)(\\t*##${attr}-${section}##\\s*\\n)`;
+                }
+                const match = new RegExp(partial('start') + `([\\w\\W]*?)` + partial('end')).exec(output);
                 if (match) {
                     let tagStart = '';
                     let tagEnd = '';

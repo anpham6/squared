@@ -85,8 +85,6 @@ declare global {
             public static getRect(width: number, height: number, x?: number, y?: number): string;
             public static getPolygon(points: Point[] | DOMPoint[]): string;
             public static getPolyline(points: Point[] | DOMPoint[]): string;
-            public static getContainerOpacity(instance: SvgView): number;
-            public static getContainerViewBox(instance: SvgContainer): Svg | SvgUseSymbol | undefined;
             public static convertTransformList(transform: SVGTransformList): SvgTransform[];
             public static filterTransforms(transform: SvgTransform[], exclude?: number[]): SvgTransform[];
             public static applyTransforms(transform: SvgTransform[], values: Point[], aspectRatio?: SvgAspectRatio, origin?: Point, center?: Point): SvgPoint[];

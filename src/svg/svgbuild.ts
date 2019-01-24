@@ -7,14 +7,12 @@ type SvgAnimate = squared.svg.SvgAnimate;
 type SvgAnimateMotion = squared.svg.SvgAnimateMotion;
 type SvgAnimateTransform = squared.svg.SvgAnimateTransform;
 type SvgAnimation = squared.svg.SvgAnimation;
-type SvgContainer = squared.svg.SvgContainer;
 type SvgElement = squared.svg.SvgElement;
 type SvgG = squared.svg.SvgG;
 type SvgImage = squared.svg.SvgImage;
 type SvgShape = squared.svg.SvgShape;
 type SvgUse = squared.svg.SvgUse;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
-type SvgView = squared.svg.SvgView;
 
 const $util = squared.lib.util;
 
@@ -127,34 +125,6 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return points.length ? `M${(points as Point[]).map(pt => `${pt.x},${pt.y}`).join(' ')}` : '';
     }
 
-    public static getContainerOpacity(instance: SvgView) {
-        let result = parseFloat(instance.opacity);
-        let current: SvgContainer | undefined = instance.parent;
-        while (current) {
-            const opacity = parseFloat(current['opacity'] || '1');
-            if (!isNaN(opacity) && opacity < 1) {
-                result *= opacity;
-            }
-            current = current['parent'];
-        }
-        return result;
-    }
-
-    public static getContainerViewBox(instance: SvgContainer): Svg | SvgUseSymbol | undefined {
-        let current: SvgContainer | undefined = instance;
-        while (current) {
-            switch (current.element.tagName) {
-                case 'svg':
-                    return <Svg> current;
-                case 'symbol':
-                    return <SvgUseSymbol> current;
-                default:
-                    current = current['parent'];
-            }
-        }
-        return undefined;
-    }
-
     public static convertTransformList(transform: SVGTransformList) {
         const result: SvgTransform[] = [];
         for (let i = 0; i < transform.numberOfItems; i++) {
@@ -241,11 +211,28 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static getCenterPoint(values: SvgPoint[]): SvgPoint {
-        const pointsX = values.map(pt => pt.x);
-        const pointsY = values.map(pt => pt.y);
+        let minX = values[0].x;
+        let minY = values[0].y;
+        let maxX = minX;
+        let maxY = minY;
+        for (let i = 1; i < values.length; i++) {
+            const pt = values[i];
+            if (pt.x < minX) {
+                minX = pt.x;
+            }
+            else if (pt.x > maxX) {
+                maxX = pt.x;
+            }
+            if (pt.y < minY) {
+                minY = pt.y;
+            }
+            else if (pt.y > maxX) {
+                maxY = pt.y;
+            }
+        }
         return {
-            x: ($util.minArray(pointsX) + $util.maxArray(pointsX)) / 2,
-            y: ($util.minArray(pointsY) + $util.maxArray(pointsY)) / 2
+            x: (minX + maxX) / 2,
+            y: (minY + maxY) / 2
         };
     }
 
@@ -304,23 +291,22 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         let left = Number.MAX_VALUE;
         for (const value of values) {
             const points = SvgBuild.getPathPoints(SvgBuild.toPathCommandList(value), true);
-            for (let i = 1; i < points.length; i++) {
-                const point = points[i];
-                if (point.y < top) {
-                    top = point.y;
+            for (const pt of points) {
+                if (pt.y < top) {
+                    top = pt.y;
                 }
-                else if (point.y > bottom) {
-                    bottom = point.y;
+                else if (pt.y > bottom) {
+                    bottom = pt.y;
                 }
-                if (point.x < left) {
-                    left = point.x;
+                if (pt.x < left) {
+                    left = pt.x;
                 }
-                else if (point.x > right) {
-                    right = point.x;
+                else if (pt.x > right) {
+                    right = pt.x;
                 }
             }
         }
-        return { top, bottom, left, right };
+        return { top, right, bottom, left };
     }
 
     public static getPathPoints(values: SvgPathCommand[], includeRadius = false) {

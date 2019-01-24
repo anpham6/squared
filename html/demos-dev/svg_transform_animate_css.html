@@ -11,7 +11,7 @@
         }
         #transform1 {
             animation-name: scale;
-            animation-duration: 5s;
+            animation-duration: 10s;
             animation-iteration-count: 1;
         }
         #transform2 {
@@ -37,13 +37,16 @@
         }
         @keyframes scale {
             from {
-                transform: scale(1);
+                transform: scale(1.5);
+                transform-origin: right 25%;
             }
-            75% {
-                transform: scale(2, 2.1);
+            50% {
+                transform: scale(2);
+                transform-origin: center 50%;
             }
             to {
-                transform: scale(3);
+                transform: scale(1);
+                transform-origin: left 10px;
             }
         }
         @keyframes translate {

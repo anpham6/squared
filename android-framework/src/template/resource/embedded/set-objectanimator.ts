@@ -45,7 +45,7 @@ export default `<?xml version="1.0" encoding="utf-8"?>
 		</set>
 		<<fill>>
 		<set android:ordering="{~ordering}">
-		<<replace>>
+		<<after>>
 			<objectAnimator
 				android:propertyName="{&propertyName}"
 				android:valueType="{~valueType}"
@@ -55,7 +55,7 @@ export default `<?xml version="1.0" encoding="utf-8"?>
 				android:startOffset="{~startOffset}"
 				android:duration="{~duration}"
 				android:repeatCount="{~repeatCount}" />
-		<<replace>>
+		<<after>>
 		</set>
 		<<fill>>
 	<<AA>>

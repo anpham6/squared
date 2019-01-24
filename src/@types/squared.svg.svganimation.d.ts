@@ -37,6 +37,7 @@ declare global {
         interface SvgAnimateTransform extends SvgAnimate {
             type: number;
             element?: SVGAnimateTransformElement;
+            transformOrigin?: Point[];
             setType(value: string): void;
         }
 

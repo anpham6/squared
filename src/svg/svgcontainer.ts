@@ -4,7 +4,22 @@ import SvgBuild from './svgbuild';
 
 import { SVG, getTargetElement } from './lib/util';
 
+type Svg = squared.svg.Svg;
 type SvgView = squared.svg.SvgView;
+
+function getNearestViewBox(instance: SvgContainer) {
+    let current = instance as any;
+    while (current) {
+        switch (current.element.tagName) {
+            case 'svg':
+            case 'symbol':
+                return <Svg> current;
+            default:
+                current = current.parent;
+        }
+    }
+    return undefined;
+}
 
 export default class SvgContainer extends squared.lib.base.Container<SvgView> implements squared.svg.SvgContainer {
     public aspectRatio: SvgAspectRatio = {
@@ -103,7 +118,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
     }
 
     private setAspectRatio(svg: squared.svg.SvgGroup, element?: SVGSVGElement | SVGSymbolElement) {
-        const parent = SvgBuild.getContainerViewBox(this);
+        const parent = getNearestViewBox(this);
         if (parent) {
             const aspectRatio = svg.aspectRatio;
             if (element) {
