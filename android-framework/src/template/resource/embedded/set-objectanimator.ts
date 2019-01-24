@@ -44,7 +44,7 @@ export default `<?xml version="1.0" encoding="utf-8"?>
 		<<indefinite>>
 		</set>
 		<<fill>>
-		<set android:ordering="{~ordering}">
+		<set android:name="{~name}" android:ordering="{~ordering}">
 		<<after>>
 			<objectAnimator
 				android:propertyName="{&propertyName}"
