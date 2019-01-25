@@ -25,7 +25,8 @@ export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(Svg
 
     public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
         if (this.path === undefined) {
-            this.path = new SvgPath(this.shapeElement, this.element);
+            this.path = new SvgPath(this.shapeElement);
+            this.path.useParent = this;
         }
         super.build(exclusions, residual);
         this.setPaint(this.path ? [this.path.value] : undefined);

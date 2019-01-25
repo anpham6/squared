@@ -206,6 +206,9 @@ export const SVG = {
     clipPath: (element: Element): element is SVGClipPathElement => {
         return element.tagName === 'clipPath';
     },
+    pattern: (element: Element): element is SVGPatternElement => {
+        return element.tagName === 'pattern';
+    },
     linearGradient: (element: Element): element is SVGLinearGradientElement => {
         return element.tagName === 'linearGradient';
     },

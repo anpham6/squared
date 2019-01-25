@@ -48,23 +48,25 @@ export const REGEXP_PATTERN = {
 };
 
 export function capitalize(value: string, upper = true) {
-    return value ? value.charAt(0)[upper ? 'toUpperCase' : 'toLowerCase']() + value.substring(1)[upper ? 'toLowerCase' : 'toString']() : '';
+    if (value !== '') {
+        return value.charAt(0)[upper ? 'toUpperCase' : 'toLowerCase']() + value.substring(1);
+    }
+    return value;
 }
 
 export function convertUnderscore(value: string) {
     value = value.charAt(0).toLowerCase() + value.substring(1);
-    const result = value.match(/([a-z][A-Z])/g);
-    if (result) {
-        result.forEach(match => value = value.replace(match, `${match[0]}_${match[1].toLowerCase()}`));
+    const matchArray = value.match(/([a-z][A-Z])/g);
+    if (matchArray) {
+        matchArray.forEach(match => value = value.replace(match, `${match[0]}_${match[1].toLowerCase()}`));
     }
     return value;
 }
 
 export function convertCamelCase(value: string, char = '-') {
-    value = value.replace(new RegExp(`^${char}+`), '');
-    const result = value.match(new RegExp(`(${char}[a-z])`, 'g'));
-    if (result) {
-        result.forEach(match => value = value.replace(match, match[1].toUpperCase()));
+    const matchArray = value.replace(new RegExp(`^${char}+`), '').match(new RegExp(`(${char}[a-z])`, 'g'));
+    if (matchArray) {
+        matchArray.forEach(match => value = value.replace(match, match[1].toUpperCase()));
     }
     return value;
 }
@@ -183,16 +185,20 @@ export function convertEnum(value: number, base: {}, derived: {}): string {
 }
 
 export function formatPX(value: string | number) {
-    value = parseFloat(value as string);
-    return `${!isNaN(value) ? Math.round(value) : 0}px`;
+    if (typeof value === 'string') {
+        value = parseFloat(value);
+    }
+    return isNaN(value) ? '0px' : `${Math.round(value)}px`;
 }
 
 export function formatPercent(value: string | number) {
-    value = parseFloat(value as string);
-    if (!isNaN(value)) {
-        return value < 1 ? convertPercent(value) : `${Math.round(value)}%`;
+    if (typeof value === 'string') {
+        value = parseFloat(value);
     }
-    return '0%';
+    if (isNaN(value)) {
+        return '0%';
+    }
+    return value < 1 ? convertPercent(value) : `${Math.round(value)}%`;
 }
 
 export function formatString(value: string, ...params: string[]) {

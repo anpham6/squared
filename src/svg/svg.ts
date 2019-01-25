@@ -38,8 +38,9 @@ function getBaseValue(element: SVGGradientElement, ...attrs: string[]) {
 }
 
 export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer)))) implements squared.svg.Svg {
-    public readonly patterns = {
+    public readonly definitions = {
         clipPath: new Map<string, SVGClipPathElement>(),
+        pattern: new Map<string, SVGPatternElement>(),
         gradient: new Map<string, SvgGradient>()
     };
 
@@ -74,26 +75,29 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
                     target.appendChild(animation);
                 }
             });
-            item.querySelectorAll('clipPath, linearGradient, radialGradient').forEach((pattern: SVGElement) => {
-                if (pattern.id) {
-                    const id = `#${pattern.id}`;
-                    if (SVG.clipPath(pattern)) {
-                        this.patterns.clipPath.set(id, pattern);
+            item.querySelectorAll('clipPath, pattern, linearGradient, radialGradient').forEach((definition: SVGElement) => {
+                if (definition.id) {
+                    const id = `#${definition.id}`;
+                    if (SVG.clipPath(definition)) {
+                        this.definitions.clipPath.set(id, definition);
                     }
-                    else if (SVG.linearGradient(pattern)) {
-                        this.patterns.gradient.set(id, {
-                            element: pattern,
+                    else if (SVG.pattern(definition)) {
+                        this.definitions.pattern.set(id, definition);
+                    }
+                    else if (SVG.linearGradient(definition)) {
+                        this.definitions.gradient.set(id, {
+                            element: definition,
                             type: 'linear',
-                            colorStop: getColorStop(pattern),
-                            ...getBaseValue(pattern, 'x1', 'x2', 'y1', 'y2')
+                            colorStop: getColorStop(definition),
+                            ...getBaseValue(definition, 'x1', 'x2', 'y1', 'y2')
                         });
                     }
-                    else if (SVG.radialGradient(pattern)) {
-                        this.patterns.gradient.set(id, {
-                            element: pattern,
+                    else if (SVG.radialGradient(definition)) {
+                        this.definitions.gradient.set(id, {
+                            element: definition,
                             type: 'radial',
-                            colorStop: getColorStop(pattern),
-                            ...getBaseValue(pattern, 'cx', 'cy', 'r', 'fx', 'fy')
+                            colorStop: getColorStop(definition),
+                            ...getBaseValue(definition, 'cx', 'cy', 'r', 'fx', 'fy')
                         });
                     }
                 }

@@ -15,17 +15,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
 
     private _transform?: SvgTransform[];
 
-    constructor(
-        public readonly element: SVGGraphicsElement,
-        parentElement?: SVGGraphicsElement)
-    {
+    constructor(public readonly element: SVGGraphicsElement) {
         super(element);
-        if (parentElement) {
-            this.parentElement = parentElement;
-        }
-        else if (SVG.g(element.parentElement) || SVG.use(element.parentElement)) {
-            this.parentElement = element.parentElement;
-        }
         this.init();
     }
 

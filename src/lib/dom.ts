@@ -353,9 +353,9 @@ export function cssAttribute(element: Element, attr: string, computed = false) {
     const node = getElementAsNode<T>(element);
     let value = node && node.cssInitial(name) || cssInline(element, name);
     if (!value) {
-        const attribute = element.attributes.getNamedItem(attr);
-        if (attribute) {
-            value = attribute.value.trim();
+        const item = element.attributes.getNamedItem(attr);
+        if (item) {
+            value = item.value.trim();
         }
     }
     return value || computed && getStyle(element)[name] as string || '';

@@ -54,7 +54,7 @@ declare global {
             strokeDashOffset: string;
             clipPath: string;
             clipRule: string;
-            readonly parentElement: SVGGraphicsElement | null;
+            useParent?: SvgUse | SvgUseSymbol;
             setPaint(d?: string[]): void;
         }
 

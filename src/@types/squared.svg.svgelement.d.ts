@@ -21,7 +21,7 @@ declare global {
             extract(exclude?: number[]): void;
         }
 
-        interface SvgUse extends SvgShape, SvgViewRect, SvgBaseVal {
+        interface SvgUse extends SvgShape, SvgViewRect, SvgBaseVal, SvgPaint {
             shapeElement: SVGGraphicsElement;
             setShape(value: SVGGraphicsElement): void;
         }

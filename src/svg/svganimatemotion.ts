@@ -10,7 +10,7 @@ export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.
     public rotate = 0;
     public rotateAuto = false;
     public rotateAutoReverse = false;
-    public keyPoints?: number[] = [];
+    public keyPoints?: number[];
 
     constructor(public element?: SVGAnimateMotionElement) {
         super(element);

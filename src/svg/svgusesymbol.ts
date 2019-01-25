@@ -18,15 +18,15 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewR
 
     public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
         this.setRect();
-        const element = this.element;
-        this.element = <SVGUseElement> (this.symbolElement as unknown);
-        super.build(exclusions, residual);
         this.each((item: SvgShape) => {
             if (item.path) {
-                item.path.parentElement = element;
+                item.path.useParent = this;
             }
         });
-        this.element = element;
+        const useElement = this.element;
+        this.element = this.symbolElement as any;
+        super.build(exclusions, residual);
+        this.element = useElement;
         const x = this.getBaseValue('x', 0);
         const y = this.getBaseValue('y', 0);
         if (x !== 0 || y !== 0) {

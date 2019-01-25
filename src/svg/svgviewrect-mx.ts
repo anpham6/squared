@@ -10,10 +10,10 @@ function hasUnsupportedAccess(element: SVGElement) {
 
 export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
     return class extends Base implements squared.svg.SvgViewRect {
-        private _x: number | undefined;
-        private _y: number | undefined;
-        private _width: number | undefined;
-        private _height: number | undefined;
+        private _x?: number;
+        private _y?: number;
+        private _width?: number;
+        private _height?: number;
 
         public setRect() {
             let x = this.x;

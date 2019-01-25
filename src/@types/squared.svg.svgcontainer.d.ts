@@ -20,8 +20,9 @@ declare global {
         interface Svg extends SvgContainer, SvgContainerRect {
             readonly element: SVGSVGElement;
             readonly documentRoot: boolean;
-            readonly patterns: {
+            readonly definitions: {
                 clipPath: Map<string, SVGClipPathElement>;
+                pattern: Map<string, SVGPatternElement>;
                 gradient: Map<string, Gradient>;
             };
         }

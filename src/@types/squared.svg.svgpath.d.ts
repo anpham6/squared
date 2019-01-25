@@ -10,7 +10,7 @@ declare global {
         }
 
         class SvgPath implements SvgPath {
-            constructor(element: SVGGraphicsElement, parentElement?: SVGGraphicsElement);
+            constructor(element: SVGGraphicsElement);
         }
     }
 }

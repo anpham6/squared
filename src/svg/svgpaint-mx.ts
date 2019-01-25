@@ -2,6 +2,9 @@ import SvgBuild from './svgbuild';
 
 import { REGEXP_SVG, getFontSize, getHostDPI } from './lib/util';
 
+type SvgUse = squared.svg.SvgUse;
+type SvgUseSymbol = squared.svg.SvgUseSymbol;
+
 const $color = squared.lib.color;
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
@@ -33,10 +36,10 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
         public clipPath = '';
         public clipRule = '';
 
-        public parentElement: SVGGraphicsElement | null = null;
+        public useParent?: SvgUse | SvgUseSymbol;
 
         public setPaint(d?: string[]) {
-            this.setAttribute('color');
+            this.setAttribute('color', true);
             this.setColor('fill');
             this.setAttribute('fill-opacity');
             this.setAttribute('fill-rule');
@@ -49,7 +52,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             this.setAttribute('stroke-dasharray');
             this.setAttribute('stroke-dashoffset');
             this.setAttribute('clip-rule');
-            const clipPath = this.getAttribute('clip-path');
+            const clipPath = this.getAttribute('clip-path', false, false);
             if (clipPath !== '') {
                 for (const name in CLIPPATH_SHAPE) {
                     const match = CLIPPATH_SHAPE[name].exec(clipPath);
@@ -153,53 +156,52 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
         }
 
         private setColor(attr: string) {
-            const element = this.element;
-            let value: string | null = this.getAttribute(attr);
+            const value = this.getAttribute(attr);
             const match = REGEXP_SVG.URL.exec(value);
             if (match) {
                 this[`${attr}Pattern`] = match[1];
-                value = '';
             }
             else if (value !== '') {
+                let color: ColorData | undefined;
                 switch (value.toLowerCase()) {
                     case 'none':
                     case 'transparent':
                     case 'rgba(0, 0, 0, 0)':
-                        value = '';
+                        this[attr] = '';
                         break;
-                    case 'currentcolor': {
-                        const color = $color.parseRGBA(this.color || $dom.cssAttribute(element, attr, true));
-                        value = color ? color.valueRGB : null;
+                    case 'currentcolor':
+                        color = $color.parseRGBA(this.color || $dom.cssAttribute(this.element, attr, true));
                         break;
-                    }
-                    default: {
-                        const color = $color.parseRGBA(value);
-                        if (color) {
-                            value = color.valueRGB;
-                        }
+                    default:
+                        color = $color.parseRGBA(value);
                         break;
-                    }
                 }
-            }
-            else {
-                if (attr === 'fill') {
-                    value = null;
+                if (color) {
+                    this[attr] = color.valueRGB;
                 }
-            }
-            if (value !== null) {
-                this[attr] = value;
             }
         }
 
-        private setAttribute(attr: string) {
-            const value = this.getAttribute(attr);
+        private setAttribute(attr: string, computed = false) {
+            const value = this.getAttribute(attr, computed);
             if (value !== '') {
                 this[$util.convertCamelCase(attr)] = value;
             }
         }
 
-        private getAttribute(attr: string) {
-            return $dom.cssAttribute(this.element, attr) || (this.parentElement ? $dom.cssAttribute(this.parentElement, attr) : '');
+        private getAttribute(attr: string, computed = false, inherited = true) {
+            let value = $dom.cssAttribute(this.element, attr, computed);
+            if (inherited && value === '') {
+                let current = this.useParent || this.parent;
+                while (current) {
+                    value = $dom.cssAttribute(current.element, attr);
+                    if ($util.isString(value)) {
+                        break;
+                    }
+                    current = current['parent'];
+                }
+            }
+            return value;
         }
     };
 };
