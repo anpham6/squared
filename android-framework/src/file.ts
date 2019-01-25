@@ -1,7 +1,10 @@
 import { FileAsset, SessionData, TemplateDataA } from '../../src/base/@types/application';
 import { ResourceStoredMapAndroid, UserSettingsAndroid } from './@types/application';
 
+import View from './view';
+
 import { BUILD_ANDROID } from './lib/enumeration';
+import { getXmlNs, replaceTab, replaceUnit } from './lib/util';
 
 import COLOR_TMPL from './template/resource/color';
 import DIMEN_TMPL from './template/resource/dimen';
@@ -10,10 +13,6 @@ import FONT_TMPL from './template/resource/font';
 import STRING_TMPL from './template/resource/string';
 import STRINGARRAY_TMPL from './template/resource/string-array';
 import STYLE_TMPL from './template/resource/style';
-
-import View from './view';
-
-import { getXmlNs, replaceTab, replaceUnit } from './lib/util';
 
 import $NodeList = squared.base.NodeList;
 

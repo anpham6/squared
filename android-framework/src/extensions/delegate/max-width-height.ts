@@ -1,8 +1,8 @@
 import { ExtensionResult } from '../../../../src/base/@types/application';
 
-import { CONTAINER_NODE } from '../../lib/enumeration';
-
 import View from '../../view';
+
+import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import $Layout = squared.base.Layout;
 

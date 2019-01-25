@@ -1,8 +1,8 @@
-import { BOX_STANDARD } from '../lib/enumeration';
-
 import Extension from '../extension';
 import Layout from '../layout';
 import Node from '../node';
+
+import { BOX_STANDARD } from '../lib/enumeration';
 
 const $util = squared.lib.util;
 

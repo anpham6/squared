@@ -1,12 +1,12 @@
 import { ResourceAssetMap, ResourceStoredMap, SessionData, UserSettings } from './@types/application';
 import { LinearGradient, RadialGradient } from './@types/node';
 
-import { NODE_RESOURCE } from './lib/enumeration';
-
 import Application from './application';
 import File from './file';
 import Node from './node';
 import NodeList from './nodelist';
+
+import { NODE_RESOURCE } from './lib/enumeration';
 
 const $color = squared.lib.color;
 const $dom = squared.lib.dom;

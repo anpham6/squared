@@ -1,10 +1,9 @@
 import { ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from '../../@types/application';
 
-import { BUILD_ANDROID } from '../../lib/enumeration';
-
 import Resource from '../../resource';
 import View from '../../view';
 
+import { BUILD_ANDROID } from '../../lib/enumeration';
 import { replaceUnit } from '../../lib/util';
 
 type StyleList = ObjectMap<number[]>;

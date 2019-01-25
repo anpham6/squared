@@ -1,12 +1,11 @@
 import { ExtensionResult } from '../../../src/base/@types/application';
 import { ListData } from '../../../src/base/@types/extension';
 
-import { BOX_ANDROID, CONTAINER_ANDROID } from '../lib/constant';
-import { CONTAINER_NODE } from '../lib/enumeration';
-
 import Resource from '../resource';
 import View from '../view';
 
+import { BOX_ANDROID, CONTAINER_ANDROID } from '../lib/constant';
+import { CONTAINER_NODE } from '../lib/enumeration';
 import { createViewAttribute } from '../lib/util';
 
 import $Layout = squared.base.Layout;

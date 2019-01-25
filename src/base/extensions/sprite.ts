@@ -1,9 +1,9 @@
 import { ImageAsset } from '../@types/application';
 
-import { EXT_NAME } from '../lib/constant';
-
 import Extension from '../extension';
 import Node from '../node';
+
+import { EXT_NAME } from '../lib/constant';
 
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;

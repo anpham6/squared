@@ -1,7 +1,7 @@
-import { NODE_ALIGNMENT } from './lib/enumeration';
-
 import Node from './node';
 import NodeList from './nodelist';
+
+import { NODE_ALIGNMENT } from './lib/enumeration';
 
 const $util = squared.lib.util;
 

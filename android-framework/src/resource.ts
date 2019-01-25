@@ -3,9 +3,9 @@ import { ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from '.
 import { BackgroundGradient } from './@types/node';
 import { SvgLinearGradient, SvgRadialGradient } from '../../src/svg/@types/object';
 
-import { RESERVED_JAVA } from './lib/constant';
-
 import View from './view';
+
+import { RESERVED_JAVA } from './lib/constant';
 
 const $Resource = squared.base.Resource;
 const $SvgBuild = squared.svg && squared.svg.SvgBuild;

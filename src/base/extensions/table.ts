@@ -1,11 +1,11 @@
 import { ExtensionResult } from '../@types/application';
 import { TableData } from '../@types/extension';
 
-import { EXT_NAME } from '../lib/constant';
-import { BOX_STANDARD, CSS_STANDARD } from '../lib/enumeration';
-
 import Extension from '../extension';
 import Node from '../node';
+
+import { EXT_NAME } from '../lib/constant';
+import { BOX_STANDARD, CSS_STANDARD } from '../lib/enumeration';
 
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;

@@ -2,11 +2,11 @@ import { ExtensionResult } from '../../../src/base/@types/application';
 import { FlexboxData } from '../../../src/base/@types/extension';
 import { InitialData } from '../../../src/base/@types/node';
 
-import { AXIS_ANDROID } from '../lib/constant';
-import { CONTAINER_NODE } from '../lib/enumeration';
-
 import Controller from '../controller';
 import View from '../view';
+
+import { AXIS_ANDROID } from '../lib/constant';
+import { CONTAINER_NODE } from '../lib/enumeration';
 
 import $Layout = squared.base.Layout;
 import $NodeList = squared.base.NodeList;

@@ -1,9 +1,9 @@
 import { ExtensionResult } from '../@types/application';
 
-import { EXT_NAME } from '../lib/constant';
-
 import Extension from '../extension';
 import Node from '../node';
+
+import { EXT_NAME } from '../lib/constant';
 
 const $dom = squared.lib.dom;
 

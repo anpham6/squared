@@ -1,9 +1,9 @@
 import { ExtensionResult } from '../../../../src/base/@types/application';
 
+import View from '../../view';
+
 import { AXIS_ANDROID, CONTAINER_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
-
-import View from '../../view';
 
 import $NodeList = squared.base.NodeList;
 

@@ -1,7 +1,5 @@
 import { AppSession, AppProcessing, FileAsset, ImageAsset, LayoutResult, LayoutType, SessionData, UserSettings } from './@types/application';
 
-import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } from './lib/enumeration';
-
 import Controller from './controller';
 import Extension from './extension';
 import ExtensionManager from './extensionmanager';
@@ -9,6 +7,8 @@ import Layout from './layout';
 import Node from './node';
 import NodeList from './nodelist';
 import Resource from './resource';
+
+import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } from './lib/enumeration';
 
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;

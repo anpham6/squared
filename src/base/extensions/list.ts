@@ -1,12 +1,12 @@
 import { ExtensionResult } from '../@types/application';
 import { ListData } from '../@types/extension';
 
-import { EXT_NAME } from '../lib/constant';
-import { BOX_STANDARD, NODE_RESOURCE } from '../lib/enumeration';
-
 import Extension from '../extension';
 import Node from '../node';
 import NodeList from '../nodelist';
+
+import { EXT_NAME } from '../lib/constant';
+import { BOX_STANDARD, NODE_RESOURCE } from '../lib/enumeration';
 
 const $util = squared.lib.util;
 

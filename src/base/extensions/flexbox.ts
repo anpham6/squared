@@ -2,12 +2,12 @@ import { ExtensionResult } from '../@types/application';
 import { FlexboxData } from '../@types/extension';
 import { InitialData } from '../@types/node';
 
-import { EXT_NAME } from '../lib/constant';
-import { NODE_ALIGNMENT } from '../lib/enumeration';
-
 import Extension from '../extension';
 import Node from '../node';
 import NodeList from '../nodelist';
+
+import { EXT_NAME } from '../lib/constant';
+import { NODE_ALIGNMENT } from '../lib/enumeration';
 
 export default abstract class Flexbox<T extends Node> extends Extension<T> {
     public static createDataAttribute<T extends Node>(node: T, children: T[]): FlexboxData<T> {

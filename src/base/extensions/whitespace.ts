@@ -1,7 +1,7 @@
-import { BOX_STANDARD, CSS_STANDARD, NODE_ALIGNMENT } from '../lib/enumeration';
-
 import Extension from '../extension';
 import Node from '../node';
+
+import { BOX_STANDARD, CSS_STANDARD, NODE_ALIGNMENT } from '../lib/enumeration';
 
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;

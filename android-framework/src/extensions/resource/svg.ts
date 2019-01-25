@@ -3,17 +3,16 @@ import { SvgMatrix, SvgPoint, SvgTransform } from '../../../../src/svg/@types/ob
 import { ResourceStoredMapAndroid } from '../../@types/application';
 import { ResourceSvgOptions } from '../../@types/extension';
 
+import Resource from '../../resource';
+import View from '../../view';
+
 import { BUILD_ANDROID } from '../../lib/enumeration';
+import { getXmlNs } from '../../lib/util';
 
 import ANIMATEDVECTOR_TMPL from '../../template/resource/embedded/animated-vector';
 import LAYERLIST_TMPL from '../../template/resource/embedded/layer-list';
 import SETOBJECTANIMATOR_TMPL from '../../template/resource/embedded/set-objectanimator';
 import VECTOR_TMPL from '../../template/resource/embedded/vector';
-
-import Resource from '../../resource';
-import View from '../../view';
-
-import { getXmlNs } from '../../lib/util';
 
 if (!squared.svg) {
     squared.svg = { lib: {} } as any;
@@ -107,23 +106,23 @@ const $constS = squared.svg.lib.constant;
 const $utilS = squared.svg.lib.util;
 
 const INTERPOLATOR_ANDROID = {
-    ACCELERATE_DECELERATE: '@android:anim/accelerate_decelerate_interpolator',
-    ACCELERATE:	'@android:anim/accelerate_interpolator',
-    ANTICIPATE:	'@android:anim/anticipate_interpolator',
-    ANTICIPATE_OVERSHOOT: '@android:anim/anticipate_overshoot_interpolator',
-    BOUNCE:	'@android:anim/bounce_interpolator',
-    CYCLE: '@android:anim/cycle_interpolator',
-    DECELERATE:	'@android:anim/decelerate_interpolator',
-    LINEAR: '@android:anim/linear_interpolator',
-    OVERSHOOT: '@android:anim/overshoot_interpolator'
+    accelerate_decelerate: '@android:anim/accelerate_decelerate_interpolator',
+    accelerate:	'@android:anim/accelerate_interpolator',
+    anticipate:	'@android:anim/anticipate_interpolator',
+    anticipate_overshoot: '@android:anim/anticipate_overshoot_interpolator',
+    bounce:	'@android:anim/bounce_interpolator',
+    cycle: '@android:anim/cycle_interpolator',
+    decelerate:	'@android:anim/decelerate_interpolator',
+    linear: '@android:anim/linear_interpolator',
+    overshoot: '@android:anim/overshoot_interpolator'
 };
 
 if ($constS) {
     Object.assign(INTERPOLATOR_ANDROID, {
-        [$constS.KEYSPLINE_NAME['ease-in']]: INTERPOLATOR_ANDROID.ACCELERATE,
-        [$constS.KEYSPLINE_NAME['ease-out']]: INTERPOLATOR_ANDROID.DECELERATE,
-        [$constS.KEYSPLINE_NAME['ease-in-out']]: INTERPOLATOR_ANDROID.ACCELERATE_DECELERATE,
-        [$constS.KEYSPLINE_NAME['linear']]: INTERPOLATOR_ANDROID.LINEAR
+        [$constS.KEYSPLINE_NAME['ease-in']]: INTERPOLATOR_ANDROID.accelerate,
+        [$constS.KEYSPLINE_NAME['ease-out']]: INTERPOLATOR_ANDROID.decelerate,
+        [$constS.KEYSPLINE_NAME['ease-in-out']]: INTERPOLATOR_ANDROID.accelerate_decelerate,
+        [$constS.KEYSPLINE_NAME['linear']]: INTERPOLATOR_ANDROID.linear
     });
 }
 
@@ -348,7 +347,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
             image: [SVGTransform.SVG_TRANSFORM_SKEWX, SVGTransform.SVG_TRANSFORM_SKEWY]
         },
         vectorAnimateOrdering: 'together',
-        vectorAnimateInterpolator: INTERPOLATOR_ANDROID.LINEAR
+        vectorAnimateInterpolator: INTERPOLATOR_ANDROID.linear
     };
 
     public readonly eventOnly = true;
@@ -1462,6 +1461,6 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
         if (keySplines && keySplines[index]) {
             return INTERPOLATOR_ANDROID[keySplines[index]] || createPathInterpolator(keySplines[index]);
         }
-        return this.options.vectorAnimateInterpolator || INTERPOLATOR_ANDROID.LINEAR;
+        return this.options.vectorAnimateInterpolator || '';
     }
 }

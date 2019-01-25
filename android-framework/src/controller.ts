@@ -2,16 +2,15 @@ import { ControllerSettings, LayoutType, SessionData } from '../../src/base/@typ
 import { UserSettingsAndroid } from './@types/application';
 import { ViewAttribute } from './@types/node';
 
-import { AXIS_ANDROID, BOX_ANDROID, CONTAINER_ANDROID, XMLNS_ANDROID } from './lib/constant';
-import { BUILD_ANDROID, CONTAINER_NODE, DENSITY_ANDROID } from './lib/enumeration';
-
-import BASE_TMPL from './template/base';
-
 import Resource from './resource';
 import View from './view';
 import ViewGroup from './viewgroup';
 
+import { AXIS_ANDROID, BOX_ANDROID, CONTAINER_ANDROID, XMLNS_ANDROID } from './lib/constant';
+import { BUILD_ANDROID, CONTAINER_NODE, DENSITY_ANDROID } from './lib/enumeration';
 import { createViewAttribute, getXmlNs, replaceTab, replaceUnit } from './lib/util';
+
+import BASE_TMPL from './template/base';
 
 import $Layout = squared.base.Layout;
 import $NodeList = squared.base.NodeList;

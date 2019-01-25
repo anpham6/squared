@@ -1,11 +1,10 @@
 import { ExtensionResult } from '../../../src/base/@types/application';
 import { CssGridCellData, CssGridData, CssGridDirectionData } from '../../../src/base/@types/extension';
 
-import { BOX_ANDROID, CONTAINER_ANDROID } from '../lib/constant';
-import { CONTAINER_NODE } from '../lib/enumeration';
-
 import View from '../view';
 
+import { BOX_ANDROID, CONTAINER_ANDROID } from '../lib/constant';
+import { CONTAINER_NODE } from '../lib/enumeration';
 import { createViewAttribute } from '../lib/util';
 
 import $Layout = squared.base.Layout;

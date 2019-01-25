@@ -1,6 +1,6 @@
-import { CONTAINER_ANDROID } from '../lib/constant';
-
 import View from '../view';
+
+import { CONTAINER_ANDROID } from '../lib/constant';
 
 const $enum = squared.base.lib.enumeration;
 const $dom = squared.lib.dom;

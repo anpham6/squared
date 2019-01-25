@@ -1,11 +1,11 @@
 import { ExtensionResult } from '../@types/application';
 import { CssGridCellData, CssGridData, CssGridDirectionData } from '../@types/extension';
 
-import { EXT_NAME } from '../lib/constant';
-import { BOX_STANDARD } from '../lib/enumeration';
-
 import Extension from '../extension';
 import Node from '../node';
+
+import { EXT_NAME } from '../lib/constant';
+import { BOX_STANDARD } from '../lib/enumeration';
 
 type GridPosition = {
     placement: number[],

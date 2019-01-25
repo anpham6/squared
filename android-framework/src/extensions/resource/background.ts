@@ -3,16 +3,15 @@ import { ResourceStoredMapAndroid } from '../../@types/application';
 import { ResourceBackgroundOptions } from '../../@types/extension';
 import { BackgroundGradient } from '../../@types/node';
 
+import Resource from '../../resource';
+import View from '../../view';
+
 import { CONTAINER_NODE } from '../../lib/enumeration';
+import { getXmlNs } from '../../lib/util';
 
 import LAYERLIST_TMPL from '../../template/resource/embedded/layer-list';
 import SHAPE_TMPL from '../../template/resource/embedded/shape';
 import VECTOR_TMPL from '../../template/resource/embedded/vector';
-
-import Resource from '../../resource';
-import View from '../../view';
-
-import { getXmlNs } from '../../lib/util';
 
 type BackgroundImage = {
     src?: string;

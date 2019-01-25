@@ -1,10 +1,6 @@
 import { AppFramework } from '../../src/base/@types/application';
 import { UserSettingsAndroid } from './@types/application';
 
-import { EXT_ANDROID, XMLNS_ANDROID } from './lib/constant';
-import { API_ANDROID } from './customizations';
-import SETTINGS from './settings';
-
 import Controller from './controller';
 import ExtensionManager from './extensionmanager';
 import File from './file';
@@ -43,6 +39,9 @@ import ResourceSvg from './extensions/resource/svg';
 import * as constant from './lib/constant';
 import * as enumeration from './lib/enumeration';
 import * as util from './lib/util';
+
+import { API_ANDROID } from './customizations';
+import SETTINGS from './settings';
 
 type T = View;
 type Application = squared.base.Application<T>;
@@ -124,7 +123,7 @@ const appBase: AppFramework<T> = {
             }
         },
         addXmlNs(name: string, uri: string) {
-            XMLNS_ANDROID[name] = uri;
+            constant.XMLNS_ANDROID[name] = uri;
         },
         writeLayoutAllXml(saveToDisk = false) {
             if (fileHandler && checkApplication(application)) {
@@ -195,7 +194,7 @@ const appBase: AppFramework<T> = {
     },
     create() {
         const EN = squared.base.lib.constant.EXT_NAME;
-        const EA = EXT_ANDROID;
+        const EA = constant.EXT_ANDROID;
         application = new squared.base.Application(framework, Controller, Resource, ExtensionManager, View);
         fileHandler = new File(application.resourceHandler);
         userSettings = { ...SETTINGS };

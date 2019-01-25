@@ -1,10 +1,10 @@
 import { ExtensionResult } from '../../../../src/base/@types/application';
 import { ConstraintGuidelineOptions } from '../../@types/extension';
 
+import View from '../../view';
+
 import { AXIS_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
-
-import View from '../../view';
 
 import $Layout = squared.base.Layout;
 

@@ -1,10 +1,10 @@
 import { ImageAsset, ExtensionResult } from '../../../src/base/@types/application';
 
-import { CONTAINER_ANDROID } from '../lib/constant';
-import { CONTAINER_NODE } from '../lib/enumeration';
-
 import Resource from '../resource';
 import View from '../view';
+
+import { CONTAINER_ANDROID } from '../lib/constant';
+import { CONTAINER_NODE } from '../lib/enumeration';
 
 import $Layout = squared.base.Layout;
 

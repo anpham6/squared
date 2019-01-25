@@ -1,11 +1,10 @@
 import { ExtensionResult } from '../../../src/base/@types/application';
 
-import { EXT_ANDROID } from '../lib/constant';
-import { CONTAINER_NODE } from '../lib/enumeration';
-
 import Resource from '../resource';
 import View from '../view';
 
+import { EXT_ANDROID } from '../lib/constant';
+import { CONTAINER_NODE } from '../lib/enumeration';
 import { createViewAttribute } from '../lib/util';
 
 export default class Substitute<T extends View> extends squared.base.extensions.Substitute<T> {
