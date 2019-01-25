@@ -2,10 +2,12 @@ import { SvgAspectRatio, SvgPoint, SvgTransformExclusions, SvgTransformResidual 
 
 import SvgBuild from './svgbuild';
 
-import { SVG, getTargetElement } from './lib/util';
+import { REGEXP_SVG, SVG, getTargetElement } from './lib/util';
 
 type Svg = squared.svg.Svg;
 type SvgView = squared.svg.SvgView;
+
+const $dom = squared.lib.dom;
 
 function getNearestViewBox(instance: SvgContainer) {
     let current = instance as any;
@@ -21,24 +23,41 @@ function getNearestViewBox(instance: SvgContainer) {
     return undefined;
 }
 
+function getFillPattern(element: SVGGraphicsElement, viewport?: Svg) {
+    if (viewport) {
+        const value = $dom.cssInheritAttribute(element, 'fill');
+        if (value !== '') {
+            const match = REGEXP_SVG.URL.exec(value);
+            if (match) {
+                return viewport.definitions.pattern.get(match[1]);
+            }
+        }
+    }
+    return undefined;
+}
+
 export default class SvgContainer extends squared.lib.base.Container<SvgView> implements squared.svg.SvgContainer {
     public aspectRatio: SvgAspectRatio = {
         x: 0,
         y: 0,
         unit: 1
     };
+    public parent?: SvgContainer;
+    public viewport?: Svg;
 
-    constructor(public readonly element: SvgGroup) {
+    constructor(public readonly element: SVGContainerElement) {
         super();
     }
 
-    public append(item: SvgView) {
+    public append(item: SvgView, viewport?: Svg) {
         item.parent = this;
+        item.viewport = viewport || this.getViewport();
         return super.append(item);
     }
 
     public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
         this.clear();
+        const viewport = this.getViewport();
         for (let i = 0; i < this.element.children.length; i++) {
             const item = this.element.children[i];
             let svg: SvgView | undefined;
@@ -69,10 +88,16 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                 svg = new squared.svg.SvgImage(item);
             }
             else if (SVG.shape(item)) {
-                svg = new squared.svg.SvgShape(item);
+                const target = getFillPattern(item, viewport);
+                if (target) {
+                    svg = new squared.svg.SvgPatternShape(item, target);
+                }
+                else {
+                    svg = new squared.svg.SvgShape(item);
+                }
             }
             if (svg) {
-                this.append(svg);
+                this.append(svg, viewport);
                 svg.build(exclusions, residual);
             }
         }
@@ -110,11 +135,15 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
     public getPathAll() {
         const result: string[] = [];
         for (const item of this.cascade()) {
-            if (SvgBuild.instanceOfShape(item) && item.path) {
+            if (SvgBuild.instanceOfShape(item) && item.path && item.path.value) {
                 result.push(item.path.value);
             }
         }
         return result;
+    }
+
+    private getViewport(): Svg | undefined {
+        return this.viewport || (SvgBuild.instanceOfSvg(this) ? this as any : undefined);
     }
 
     private setAspectRatio(svg: squared.svg.SvgGroup, element?: SVGSVGElement | SVGSymbolElement) {

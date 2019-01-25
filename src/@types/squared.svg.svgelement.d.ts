@@ -3,6 +3,7 @@ import { SvgTransformExclusions, SvgTransformResidual } from '../svg/@types/obje
 declare global {
     namespace squared.svg {
         interface SvgElement {
+            viewport?: Svg;
             parent?: SvgContainer;
             readonly element: SVGGraphicsElement;
             build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual): void;
@@ -10,20 +11,20 @@ declare global {
         }
 
         interface SvgShape extends SvgElement, SvgView, SvgSynchronize {
-            type: number;
             path?: SvgPath;
-            setType(element?: SVGGraphicsElement): void;
+            readonly element: SVGShapeElement | SVGUseElement;
+            setPath(): void;
         }
 
         interface SvgImage extends SvgElement, SvgView, SvgViewRect, SvgBaseVal, SvgTransformable {
-            href: string;
             readonly element: SVGImageElement | SVGUseElement;
+            readonly href: string;
             extract(exclude?: number[]): void;
         }
 
         interface SvgUse extends SvgShape, SvgViewRect, SvgBaseVal, SvgPaint {
+            readonly element: SVGUseElement;
             shapeElement: SVGGraphicsElement;
-            setShape(value: SVGGraphicsElement): void;
         }
 
         class SvgElement implements SvgElement {
@@ -31,7 +32,7 @@ declare global {
         }
 
         class SvgShape implements SvgShape {
-            constructor(element: SVGGraphicsElement);
+            constructor(element: SVGGraphicsElement, initPath?: boolean);
         }
 
         class SvgImage implements SvgImage {

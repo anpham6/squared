@@ -147,8 +147,8 @@ const ATTRIBUTE_ANDROID = {
 const TEMPLATES: ObjectMap<StringMap> = {};
 const STORED = Resource.STORED as ResourceStoredMapAndroid;
 
-function getGroupName(svg: SvgView, suffix: string) {
-    return `${svg.name}_${suffix}`;
+function getVectorName(target: SvgView, section: string, index = -1) {
+    return `${section}_${target.name + (index !== -1 ? `_${index + 1}` : '')}`;
 }
 
 function createPathInterpolator(value: string) {
@@ -353,6 +353,8 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
 
     public readonly eventOnly = true;
 
+    private NODE_INSTANCE!: T;
+    private SVG_INSTANCE!: $Svg;
     private VECTOR_DATA = new Map<string, GroupData>();
     private ANIMATE_DATA = new Map<string, AnimateGroup>();
     private IMAGE_DATA: SvgImage[] = [];
@@ -379,13 +381,15 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 const getFilename = (prefix = '', suffix = '') => {
                     return templateName + (prefix !== '' ? `_${prefix}` : '') + (this.IMAGE_DATA.length ? '_vector' : '') + (suffix !== '' ? `_${suffix}` : '');
                 };
+                this.NODE_INSTANCE = node;
+                this.SVG_INSTANCE = svg;
                 this.VECTOR_DATA.clear();
                 this.ANIMATE_DATA.clear();
                 this.IMAGE_DATA.length = 0;
                 this.NAMESPACE_AAPT = false;
                 svg.build(this.options.excludeFromTransform, partitionTransforms);
                 svg.synchronize();
-                this.parseVectorData(node, svg, svg);
+                this.parseVectorData(svg);
                 this.queueAnimations(
                     svg,
                     svg.name,
@@ -1197,37 +1201,39 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
         this.application.controllerHandler.localSettings.unsupported.tagName.add('svg');
     }
 
-    private parseVectorData(node: T, svg: $Svg, group: SvgGroup) {
-        const groupData = this.createGroup(svg, group);
+    private parseVectorData(group: SvgGroup) {
+        const groupData = this.createGroup(group);
         for (const item of group) {
             const CCC: ExternalData[] = [];
             const DDD: StringMap[] = [];
             if ($SvgBuild.instanceOfShape(item)) {
                 if (item.visible && item.path && item.path.value) {
-                    CCC.push(this.createPath(node, svg, item, item.path));
+                    CCC.push(this.createPath(item, item.path));
                 }
                 else {
                     continue;
                 }
             }
             else if ($SvgBuild.instanceOfImage(item)) {
-                if (item.width === 0 || item.height === 0) {
-                    const image = this.application.session.image.get(item.href);
-                    if (image && image.width > 0 && image.height > 0) {
-                        item.width = image.width;
-                        item.height = image.height;
-                        item.setRect();
+                if (!$SvgBuild.instanceOfPattern(group)) {
+                    if (item.width === 0 || item.height === 0) {
+                        const image = this.application.session.image.get(item.href);
+                        if (image && image.width > 0 && image.height > 0) {
+                            item.width = image.width;
+                            item.height = image.height;
+                            item.setRect();
+                        }
                     }
-                }
-                item.extract(this.options.excludeFromTransform.image);
-                if (item.visible || item.rotateOrigin) {
-                    this.IMAGE_DATA.push(item);
+                    item.extract(this.options.excludeFromTransform.image);
+                    if (item.visible || item.rotateOrigin) {
+                        this.IMAGE_DATA.push(item);
+                    }
                 }
                 continue;
             }
             else if ($SvgBuild.instanceOfContainer(item)) {
                 if (item.visible && item.length) {
-                    this.parseVectorData(node, svg, <SvgGroup> item);
+                    this.parseVectorData(<SvgGroup> item);
                     DDD.push({ templateName: item.name });
                 }
                 else {
@@ -1239,7 +1245,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
         this.VECTOR_DATA.set(group.name, groupData);
     }
 
-    private createGroup(svg: $Svg, target: SvgGroup) {
+    private createGroup(target: SvgGroup) {
         const group: TransformData[][] = [[]];
         const clipGroup: StringMap[] = [];
         const result: GroupData = {
@@ -1247,14 +1253,13 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
             clipGroup,
             BB: []
         };
-        if (svg !== target) {
-            const name = target.name;
+        if (this.SVG_INSTANCE !== target) {
             const [transformHost, transformClient] = segmentTransforms(target.element, target.transform);
             if (transformHost.length) {
                 const transformed: SvgTransform[] = [];
                 for (let i = 0; i < transformHost.length; i++) {
                     group[0].push({
-                        groupName: getGroupName(target, `transform_${i + 1}`),
+                        groupName: getVectorName(target, 'transform', i + 1),
                         ...createTransformData(transformHost[i])
                     });
                     transformed.push(...transformHost[i]);
@@ -1262,17 +1267,20 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 target.transformed = transformed.reverse();
             }
             if (($SvgBuild.instanceOfG(target) || $SvgBuild.instanceOfUseSymbol(target)) && $util.hasValue(target.clipPath)) {
-                this.createClipPath(svg, target, clipGroup, target.clipPath);
+                this.createClipPath(target, clipGroup, target.clipPath);
             }
-            const groupName = `group_${name}`;
+            else if ($SvgBuild.instanceOfPatternGroup(target)) {
+                this.createClipPath(target, clipGroup, target.clipRegion);
+            }
+            const groupName = getVectorName(target, 'group');
             this.queueAnimations(target, groupName, item => $SvgBuild.instanceOfAnimateTransform(item));
             group[0].push({
                 groupName,
                 ...createTransformData(transformClient)
             });
-            if (($SvgBuild.instance(target) || $SvgBuild.instanceOfUse(target)) && (target.x !== 0 || target.y !== 0)) {
+            if (($SvgBuild.instanceOfSvg(target) || $SvgBuild.instanceOfUse(target)) && (target.x !== 0 || target.y !== 0)) {
                 group[0].push({
-                    groupName: getGroupName(target, 'translate'),
+                    groupName: getVectorName(target, 'translate'),
                     translateX: target.x.toString(),
                     translateY: target.y.toString()
                 });
@@ -1281,7 +1289,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
         return result;
     }
 
-    private createPath(node: T, svg: $Svg, target: $SvgShape, path: $SvgPath) {
+    private createPath(target: $SvgShape, path: $SvgPath) {
         const render: TransformData[][] = [[]];
         const clipElement: StringMap[] = [];
         const result: PathData = {
@@ -1294,37 +1302,37 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
         if (path.transformResidual) {
             for (let i = 0; i < path.transformResidual.length; i++) {
                 render[0].push({
-                    groupName: getGroupName(target, `transform_${i + 1}`),
+                    groupName: getVectorName(target, 'transform', i + 1),
                     ...createTransformData(path.transformResidual[i])
                 });
             }
         }
         if (path.rotateOrigin && (path.rotateOrigin.angle !== undefined || path.rotateOrigin.x !== 0 || path.rotateOrigin.y !== 0)) {
             render[0].push({
-                groupName: getGroupName(target, 'rotate'),
+                groupName: getVectorName(target, 'rotate'),
                 rotation: (path.rotateOrigin.angle || 0).toString(),
                 pivotX: path.rotateOrigin.x.toString(),
                 pivotY: path.rotateOrigin.y.toString()
             });
         }
-        if ($SvgBuild.instanceOfUse(target) && $util.hasValue(target.clipPath) && this.createClipPath(svg, target, clipElement, target.clipPath)) {
+        if ($SvgBuild.instanceOfUse(target) && $util.hasValue(target.clipPath) && this.createClipPath(target, clipElement, target.clipPath)) {
             clipped++;
         }
         if ($util.hasValue(path.clipPath)) {
             const shape = new $SvgShape(path.element);
             shape.build(this.options.excludeFromTransform, partitionTransforms);
             shape.synchronize();
-            if (this.createClipPath(svg, shape, clipElement, path.clipPath)) {
+            if (this.createClipPath(shape, clipElement, path.clipPath)) {
                 clipped++;
             }
         }
-        const groupName = `group_${target.name}`;
+        const groupName = getVectorName(target, 'group');
         if (this.queueAnimations(target, groupName, item => $SvgBuild.instanceOfAnimateTransform(item)) || clipped > 0) {
             render[0].push({ groupName });
         }
         if ($SvgBuild.instanceOfUse(target) && (target.x !== 0 || target.y !== 0)) {
             render[0].push({
-                groupName: getGroupName(target, 'translate'),
+                groupName: getVectorName(target, 'translate'),
                 translateX: target.x.toString(),
                 translateY: target.y.toString()
             });
@@ -1341,7 +1349,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
             const pattern = `${attr}Pattern`;
             const value = result[pattern];
             if (value) {
-                const gradient = svg.definitions.gradient.get(value);
+                const gradient = this.SVG_INSTANCE.definitions.gradient.get(value);
                 if (gradient) {
                     switch (path.element.tagName) {
                         case 'path':
@@ -1353,7 +1361,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                         case 'polyline':
                         case 'circle':
                         case 'ellipse': {
-                            const gradients = Resource.createBackgroundGradient(node, [gradient], path);
+                            const gradients = Resource.createBackgroundGradient(this.NODE_INSTANCE, [gradient], path);
                             if (gradients.length) {
                                 result[attr] = '';
                                 result[pattern] = [{ gradients }];
@@ -1388,45 +1396,49 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
         return result;
     }
 
-    private createClipPath(svg: $Svg, target: SvgView, clip: StringMap[], clipPath: string) {
-        if (clipPath.charAt(0) === '#') {
-            const element = svg.definitions.clipPath.get(clipPath);
-            if (element) {
-                const g = new $SvgG(element);
-                g.build(this.options.excludeFromTransform, partitionTransforms);
-                g.synchronize();
-                g.each((child: $SvgShape) => {
-                    if (child.path && child.path.value) {
-                        clip.push({
-                            clipName: child.name,
-                            clipPathData: child.path.value
-                        });
-                        this.queueAnimations(
-                            child,
-                            child.name,
-                            item => $SvgBuild.instanceOfAnimate(item),
-                            child.path.value
-                        );
-                    }
-                });
-                return true;
+    private createClipPath(target: SvgView, clipArray: StringMap[], clipPath: string) {
+        let result = 0;
+        clipPath.split(';').forEach((value, index, array) => {
+            if (value.charAt(0) === '#') {
+                const element = this.SVG_INSTANCE.definitions.clipPath.get(value);
+                if (element) {
+                    const g = new $SvgG(element);
+                    g.build(this.options.excludeFromTransform, partitionTransforms);
+                    g.synchronize();
+                    g.each((child: $SvgShape) => {
+                        if (child.path && child.path.value) {
+                            const clipName = getVectorName(child, 'clip_path', array.length > 1 ? index + 1 : -1);
+                            clipArray.push({
+                                clipName,
+                                clipPathData: child.path.value
+                            });
+                            this.queueAnimations(
+                                child,
+                                clipName,
+                                item => $SvgBuild.instanceOfAnimate(item),
+                                child.path.value
+                            );
+                        }
+                    });
+                }
+                result++;
             }
-        }
-        else {
-            const clipName = `clip_path_${target.name}`;
-            clip.push({
-                clipName,
-                clipPathData: clipPath
-            });
-            this.queueAnimations(
-                target,
-                clipName,
-                item => $SvgBuild.instanceOfAnimate(item) && item.attributeName === 'clip-path',
-                clipPath
-            );
-            return true;
-        }
-        return false;
+            else {
+                const clipName = getVectorName(target, 'clip_path', array.length > 1 ? index + 1 : -1);
+                clipArray.push({
+                    clipName,
+                    clipPathData: value
+                });
+                this.queueAnimations(
+                    target,
+                    clipName,
+                    item => $SvgBuild.instanceOfAnimate(item) && item.attributeName === 'clip-path',
+                    value
+                );
+                result++;
+            }
+        });
+        return result > 0;
     }
 
     private queueAnimations(svg: SvgView, name: string, predicate: IteratorPredicate<SvgAnimation, void>, pathData = '') {

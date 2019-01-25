@@ -133,12 +133,6 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
         return value;
     }
 
-    set href(value) {
-        const element = this.imageElement || this.element;
-        if (SVG.image(element)) {
-            element.href.baseVal = value;
-        }
-    }
     get href() {
         const element = this.imageElement || this.element;
         if (SVG.image(element)) {

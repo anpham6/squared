@@ -187,7 +187,7 @@ export function newBoxRect(): BoxRect {
     };
 }
 
-export function newRectDimensions(): RectDimensions {
+export function newRectDimension(): RectDimension {
     return { width: 0, height: 0, ...newBoxRect() };
 }
 
@@ -234,11 +234,11 @@ export function convertClientUnit(value: string, dimension: number, dpi: number,
     }
 }
 
-export function getRangeClientRect(element: Element): TextDimensions {
+export function getRangeClientRect(element: Element): TextDimension {
     const range = document.createRange();
     range.selectNodeContents(element);
     const domRect = Array.from(range.getClientRects()).filter(item => !(Math.round(item.width) === 0 && withinFraction(item.left, item.right)));
-    let bounds: RectDimensions = newRectDimensions();
+    let bounds: RectDimension = newRectDimension();
     let multiline = 0;
     if (domRect.length) {
         bounds = assignBounds(domRect[0]);
@@ -263,7 +263,7 @@ export function getRangeClientRect(element: Element): TextDimensions {
     return { ...bounds, multiline };
 }
 
-export function assignBounds(bounds: RectDimensions | DOMRect): RectDimensions {
+export function assignBounds(bounds: RectDimension | DOMRect): RectDimension {
     return {
         top: bounds.top,
         right: bounds.right,
@@ -348,19 +348,6 @@ export function cssFromParent(element: Element | null, attr: string) {
     return false;
 }
 
-export function cssAttribute(element: Element, attr: string, computed = false) {
-    const name = convertCamelCase(attr);
-    const node = getElementAsNode<T>(element);
-    let value = node && node.cssInitial(name) || cssInline(element, name);
-    if (!value) {
-        const item = element.attributes.getNamedItem(attr);
-        if (item) {
-            value = item.value.trim();
-        }
-    }
-    return value || computed && getStyle(element)[name] as string || '';
-}
-
 export function cssInline(element: Element, attr: string) {
     let value = '';
     if (typeof element['style'] === 'object') {
@@ -375,7 +362,34 @@ export function cssInline(element: Element, attr: string) {
     return value || '';
 }
 
-export function getBackgroundPosition(value: string, dimension: RectDimensions, dpi: number, fontSize: number, leftPerspective = false, percent = false) {
+export function cssAttribute(element: Element, attr: string, computed = false) {
+    const name = convertCamelCase(attr);
+    const node = getElementAsNode<T>(element);
+    let value = node && node.cssInitial(name) || cssInline(element, name);
+    if (!value) {
+        const item = element.attributes.getNamedItem(attr);
+        if (item) {
+            value = item.value.trim();
+        }
+    }
+    return value || computed && getStyle(element)[name] as string || '';
+}
+
+export function cssInheritAttribute(element: Element, attr: string) {
+    let current: HTMLElement | Element | null = element;
+    let value = '';
+    do {
+        value = cssAttribute(current, attr);
+        if (value !== '' && value !== 'inherit') {
+            break;
+        }
+        current = current.parentElement;
+    }
+    while (current);
+    return value;
+}
+
+export function getBackgroundPosition(value: string, dimension: RectDimension, dpi: number, fontSize: number, leftPerspective = false, percent = false) {
     const result: RectPosition = {
         top: 0,
         left: 0,

@@ -9,7 +9,10 @@ type SvgAnimateTransform = squared.svg.SvgAnimateTransform;
 type SvgAnimation = squared.svg.SvgAnimation;
 type SvgElement = squared.svg.SvgElement;
 type SvgG = squared.svg.SvgG;
+type SvgGroup = squared.svg.SvgGroup;
 type SvgImage = squared.svg.SvgImage;
+type SvgPattern = squared.svg.SvgPattern;
+type SvgPatternShape = squared.svg.SvgPatternShape;
 type SvgShape = squared.svg.SvgShape;
 type SvgUse = squared.svg.SvgUse;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
@@ -49,12 +52,12 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         }
     }
 
-    public static instance(object?: SvgElement): object is Svg {
+    public static instanceOfSvg(object?: SvgElement): object is Svg {
         return !!object && SVG.svg(object.element);
     }
 
-    public static instanceOfContainer(object?: SvgElement): object is Svg | SvgG | SvgUseSymbol {
-        return SvgBuild.instance(object) || SvgBuild.instanceOfG(object) || SvgBuild.instanceOfUseSymbol(object);
+    public static instanceOfContainer(object?: SvgElement): object is SvgGroup {
+        return SvgBuild.instanceOfSvg(object) || SvgBuild.instanceOfG(object) || SvgBuild.instanceOfUseSymbol(object) || SvgBuild.instanceOfPattern(object) || SvgBuild.instanceOfPatternGroup(object);
     }
 
     public static instanceOfElement(object?: SvgElement): object is SvgElement {
@@ -65,20 +68,28 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return !!object && SVG.g(object.element);
     }
 
+    public static instanceOfUse(object?: SvgElement): object is SvgUse {
+        return !!object && SVG.use(object.element);
+    }
+
     public static instanceOfUseSymbol(object?: SvgElement): object is SvgUseSymbol {
         return SvgBuild.instanceOfUse(object) && object['symbolElement'] !== undefined;
     }
 
     public static instanceOfShape(object?: SvgElement): object is SvgShape {
-        return !!object && SVG.shape(object.element) || SvgBuild.instanceOfUse(object) && object['path'] !== undefined;
+        return (!!object && SVG.shape(object.element) || SvgBuild.instanceOfUse(object)) && object['setPath'] !== undefined;
     }
 
     public static instanceOfImage(object?: SvgElement): object is SvgImage {
         return !!object && SVG.image(object.element) || SvgBuild.instanceOfUse(object) && object['imageElement'] !== undefined;
     }
 
-    public static instanceOfUse(object?: SvgElement): object is SvgUse {
-        return !!object && SVG.use(object.element);
+    public static instanceOfPatternGroup(object?: SvgElement): object is SvgPatternShape {
+        return !!object && SVG.shape(object.element) && object['patternElement'] !== undefined && object['clipRegion'] !== undefined;
+    }
+
+    public static instanceOfPattern(object?: SvgElement): object is SvgPattern {
+        return !!object && SVG.shape(object.element) && object['patternElement'] !== undefined && object['clipRegion'] === undefined;
     }
 
     public static instanceOfSet(object: SvgAnimation) {
@@ -329,8 +340,12 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     pt.rx = item.radiusX;
                     pt.ry = item.radiusY;
                     if (includeRadius) {
-                        pt.x -= item.radiusX as number;
-                        pt.y -= item.radiusY as number;
+                        if (item.coordinates[j] >= 0) {
+                            pt.y -= item.radiusY as number;
+                        }
+                        else {
+                            pt.y += item.radiusY as number;
+                        }
                     }
                 }
                 result.push(pt);

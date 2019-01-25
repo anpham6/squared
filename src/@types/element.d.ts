@@ -12,10 +12,10 @@ interface RectPosition extends BoxRect {
     originalY: string;
 }
 
-interface RectDimensions extends BoxRect, Dimension {
+interface RectDimension extends BoxRect, Dimension {
 }
 
-interface TextDimensions extends RectDimensions {
+interface TextDimension extends RectDimension {
     multiline: number;
 }
 
@@ -97,5 +97,7 @@ interface ColorStop {
     opacity: number;
 }
 
-type SvgGroup = SVGGElement | SVGSVGElement | SVGUseElement;
 type CSSRuleData = Map<string, ObjectMap<StringMap>>;
+
+type SVGContainerElement = SVGSVGElement | SVGGElement | SVGUseElement;
+type SVGShapeElement = SVGPathElement | SVGLineElement | SVGRectElement | SVGCircleElement | SVGEllipseElement | SVGPolylineElement | SVGPolygonElement;

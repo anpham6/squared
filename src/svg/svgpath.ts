@@ -1,4 +1,4 @@
-import { SvgPoint, SvgTransform, SvgTransformResidual } from './@types/object';
+import { SvgPoint, SvgTransform, SvgTransformExclusions, SvgTransformResidual } from './@types/object';
 
 import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgPaint$MX from './svgpaint-mx';
@@ -8,6 +8,15 @@ import SvgBuild from './svgbuild';
 import { SVG, getTransform, getTransformOrigin } from './lib/util';
 
 export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) implements squared.svg.SvgPath {
+    public static build(path: SvgPath, transform?: SvgTransform[], element?: SVGGraphicsElement, exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
+        transform = transform ? transform.slice(0) : [];
+        if (element && path.element !== element) {
+            transform.push(...path.transform);
+        }
+        path.draw(SvgBuild.filterTransforms(transform, exclusions ? exclusions[path.element.tagName] : undefined), residual);
+        return path;
+    }
+
     public name = '';
     public value = '';
     public transformed: SvgTransform[] | null = null;

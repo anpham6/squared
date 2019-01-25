@@ -2,9 +2,9 @@ export interface InitialData<T> {
     iteration: number;
     styleMap: StringMap;
     children: T[];
-    bounds?: RectDimensions;
-    linear?: RectDimensions;
-    box?: RectDimensions;
+    bounds?: RectDimension;
+    linear?: RectDimension;
+    box?: RectDimension;
     documentParent?: T;
 }
 

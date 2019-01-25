@@ -2,45 +2,34 @@ import { SvgTransformExclusions, SvgTransformResidual } from './@types/object';
 
 import SvgSynchronize$MX from './svgsynchronize-mx';
 import SvgView$MX from './svgview-mx';
-import SvgBuild from './svgbuild';
 import SvgElement from './svgelement';
 import SvgPath from './svgpath';
 
-import { SHAPES } from './lib/util';
-
 export default class SvgShape extends SvgSynchronize$MX(SvgView$MX(SvgElement)) implements squared.svg.SvgShape {
-    public type!: number;
+    public readonly element!: SVGShapeElement | SVGUseElement;
 
     private _path?: SvgPath;
 
-    constructor(public readonly element: SVGGraphicsElement) {
+    constructor(element: SVGGraphicsElement, initPath = true) {
         super(element);
-        this.setType();
+        if (initPath) {
+            this.setPath();
+        }
     }
 
-    public setType(element?: SVGGraphicsElement) {
-        this.type = SHAPES[(element || this.element).tagName] || 0;
+    public setPath() {
+        this.path = new SvgPath(this.element);
     }
 
     public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
-        let path: SvgPath;
-        if (this._path === undefined) {
-            path = new SvgPath(this.element);
-            this.path = path;
+        if (this.path) {
+            SvgPath.build(this.path, this.transform, this.element, exclusions, residual);
         }
-        else {
-            path = this._path;
-        }
-        const transform = this.transform.slice(0);
-        if (path.element !== this.element) {
-            transform.push(...path.transform);
-        }
-        path.draw(SvgBuild.filterTransforms(transform, exclusions ? exclusions[path.element.tagName] : undefined), residual);
     }
 
     public synchronize(useKeyTime = false) {
-        if (this._path && this.animation.length) {
-            this.mergeAnimate(this.getAnimateShape(), useKeyTime, this._path);
+        if (this.path && this.animation.length) {
+            this.mergeAnimate(this.getAnimateShape(), useKeyTime, this.path);
         }
     }
 

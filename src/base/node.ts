@@ -32,9 +32,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     protected _cached: CachedValue<T> = {};
     protected _styleMap: StringMap = {};
-    protected _box?: RectDimensions;
-    protected _bounds?: RectDimensions;
-    protected _linear?: RectDimensions;
+    protected _box?: RectDimension;
+    protected _bounds?: RectDimension;
+    protected _linear?: RectDimension;
     protected _controlName?: string;
     protected _renderParent?: T;
     protected _documentParent?: T;
@@ -383,8 +383,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return false;
     }
 
-    public intersectX(rect: RectDimensions, dimension = 'linear') {
-        const self: RectDimensions = this[dimension];
+    public intersectX(rect: RectDimension, dimension = 'linear') {
+        const self: RectDimension = this[dimension];
         return (
             rect.top >= self.top && rect.top < self.bottom ||
             rect.bottom > self.top && rect.bottom <= self.bottom ||
@@ -393,8 +393,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         );
     }
 
-    public intersectY(rect: RectDimensions, dimension = 'linear') {
-        const self: RectDimensions = this[dimension];
+    public intersectY(rect: RectDimension, dimension = 'linear') {
+        const self: RectDimension = this[dimension];
         return (
             rect.left >= self.left && rect.left < self.right ||
             rect.right > self.left && rect.right <= self.right ||
@@ -403,23 +403,23 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         );
     }
 
-    public withinX(rect: RectDimensions, dimension = 'linear') {
-        const self: RectDimensions = this[dimension];
+    public withinX(rect: RectDimension, dimension = 'linear') {
+        const self: RectDimension = this[dimension];
         return Math.ceil(self.top) >= Math.floor(rect.top) && Math.floor(self.bottom) <= Math.ceil(rect.bottom);
     }
 
-    public withinY(rect: RectDimensions, dimension = 'linear') {
-        const self: RectDimensions = this[dimension];
+    public withinY(rect: RectDimension, dimension = 'linear') {
+        const self: RectDimension = this[dimension];
         return Math.ceil(self.left) >= Math.floor(rect.left) && Math.floor(self.right) <= Math.ceil(rect.right);
     }
 
-    public outsideX(rect: RectDimensions, dimension = 'linear') {
-        const self: RectDimensions = this[dimension];
+    public outsideX(rect: RectDimension, dimension = 'linear') {
+        const self: RectDimension = this[dimension];
         return Math.ceil(self.left) < Math.floor(rect.left) || Math.ceil(self.left) >= Math.floor(rect.right);
     }
 
-    public outsideY(rect: RectDimensions, dimension = 'linear') {
-        const self: RectDimensions = this[dimension];
+    public outsideY(rect: RectDimension, dimension = 'linear') {
+        const self: RectDimension = this[dimension];
         return Math.ceil(self.top) < Math.floor(rect.top) || Math.ceil(self.top) >= Math.floor(rect.bottom);
     }
 
@@ -854,7 +854,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     private setDimensions(dimension: string) {
-        const bounds: RectDimensions = this.unsafe(dimension);
+        const bounds: RectDimension = this.unsafe(dimension);
         if (bounds) {
             bounds.width = this.bounds.width;
             bounds.height = bounds.bottom - bounds.top;
@@ -999,7 +999,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get bounds() {
-        return this._bounds || $dom.newRectDimensions();
+        return this._bounds || $dom.newRectDimension();
     }
 
     get linear() {
@@ -1020,7 +1020,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             }
             this.setDimensions('linear');
         }
-        return this._linear || $dom.newRectDimensions();
+        return this._linear || $dom.newRectDimension();
     }
 
     get box() {
@@ -1041,7 +1041,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             }
             this.setDimensions('box');
         }
-        return this._box || $dom.newRectDimensions();
+        return this._box || $dom.newRectDimension();
     }
 
     set renderAs(value) {

@@ -1,4 +1,4 @@
-import { SvgPoint, SvgTransform, SvgTransformResidual } from '../svg/@types/object';
+import { SvgPoint, SvgTransform, SvgTransformExclusions, SvgTransformResidual } from '../svg/@types/object';
 
 declare global {
     namespace squared.svg {
@@ -10,6 +10,7 @@ declare global {
         }
 
         class SvgPath implements SvgPath {
+            public static build(path: SvgPath, transform?: SvgTransform[], element?: SVGGraphicsElement, exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual): SvgPath;
             constructor(element: SVGGraphicsElement);
         }
     }

@@ -1,3 +1,5 @@
+import { SvgPoint } from './@types/object';
+
 import SvgBuild from './svgbuild';
 
 const $dom = squared.lib.dom;
@@ -8,7 +10,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
 
         public setBaseValue(attr: string, value?: any) {
             if (value !== undefined) {
-                if (this.validateType(attr, value)) {
+                if (this.validateBaseValueType(attr, value)) {
                     this._baseVal[attr] = value;
                     return true;
                 }
@@ -41,7 +43,62 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             return this._baseVal[attr] === undefined && !this.setBaseValue(attr) ? defaultValue : this._baseVal[attr];
         }
 
-        private validateType(attr: string, value: any) {
+        public refitBaseValue(x: number, y: number, scaleX = 1, scaleY = 1) {
+            function setPoints(values: SvgPoint[]) {
+                for (const pt of values) {
+                    pt.x += x;
+                    pt.y += y;
+                    if (pt.rx !== undefined && pt.ry !== undefined) {
+                        pt.rx *= scaleX;
+                        pt.ry *= scaleY;
+                    }
+                }
+            }
+            for (const attr in this._baseVal) {
+                const value = this._baseVal[attr];
+                if (typeof value === 'string') {
+                    if (attr === 'd') {
+                        const commands = SvgBuild.toPathCommandList(value);
+                        const points = SvgBuild.getPathPoints(commands);
+                        setPoints(points);
+                        this._baseVal[attr] = SvgBuild.fromPathCommandList(SvgBuild.rebindPathPoints(commands, points));
+                    }
+                }
+                else if (typeof value === 'number') {
+                    switch (attr) {
+                        case 'cx':
+                        case 'x1':
+                        case 'x2':
+                        case 'x':
+                            this._baseVal[attr] += x;
+                            break;
+                        case 'cy':
+                        case 'y1':
+                        case 'y2':
+                        case 'y':
+                            this._baseVal[attr] += y;
+                        case 'r':
+                            this._baseVal[attr] *= Math.min(scaleX, scaleY);
+                            break;
+                        case 'rx':
+                        case 'width':
+                            this._baseVal[attr] *= scaleX;
+                            break;
+                        case 'height':
+                        case 'ry':
+                            this._baseVal[attr] *= scaleY;
+                            break;
+                    }
+                }
+                else if (Array.isArray(value)) {
+                    if (attr === 'points') {
+                        setPoints(value);
+                    }
+                }
+            }
+        }
+
+        public validateBaseValueType(attr: string, value?: any) {
             switch (attr) {
                 case 'd':
                     return typeof value === 'string';
@@ -62,7 +119,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                 case 'points':
                     return Array.isArray(value);
             }
-            return false;
+            return undefined;
         }
     };
 };

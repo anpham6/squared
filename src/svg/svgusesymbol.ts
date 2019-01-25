@@ -5,8 +5,10 @@ import SvgPaint$MX from './svgpaint-mx';
 import SvgSynchronize$MX from './svgsynchronize-mx';
 import SvgView$MX from './svgview-mx';
 import SvgViewRect$MX from './svgviewrect-mx';
+import SvgBuild from './svgbuild';
 import SvgContainer from './svgcontainer';
-import SvgShape from './svgshape';
+
+type SvgView = squared.svg.SvgView;
 
 export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer))))) implements squared.svg.SvgUseSymbol {
     constructor(
@@ -18,8 +20,8 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewR
 
     public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
         this.setRect();
-        this.each((item: SvgShape) => {
-            if (item.path) {
+        this.each((item: SvgView) => {
+            if (SvgBuild.instanceOfShape(item) && item.path) {
                 item.path.useParent = this;
             }
         });

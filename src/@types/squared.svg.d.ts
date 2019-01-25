@@ -31,6 +31,8 @@ declare global {
         interface SvgBaseVal extends SvgElement {
             setBaseValue(attr: string, value?: any): boolean;
             getBaseValue(attr: string, defaultValue?: any): any;
+            refitBaseValue(x: number, y: number, scaleX?: number, scaleY?: number): void;
+            validateBaseValueType(attr: string, value?: any): boolean | undefined;
         }
 
         interface SvgViewBox {
@@ -67,10 +69,12 @@ declare global {
 
         class SvgBuild {
             public static setName(element?: SVGElement): string;
-            public static instance(object?: SvgElement): object is Svg;
-            public static instanceOfContainer(object?: SvgElement): object is Svg | SvgG | SvgUseSymbol;
+            public static instanceOfSvg(object?: SvgElement): object is Svg;
+            public static instanceOfContainer(object?: SvgElement): object is SvgGroup;
             public static instanceOfElement(object?: SvgElement): object is SvgElement;
             public static instanceOfG(object?: SvgElement): object is SvgG;
+            public static instanceOfPattern(object?: SvgElement): object is SvgPattern;
+            public static instanceOfPatternGroup(object?: SvgElement): object is SvgPatternShape;
             public static instanceOfUseSymbol(object?: SvgElement): object is SvgUseSymbol;
             public static instanceOfShape(object?: SvgElement): object is SvgShape;
             public static instanceOfImage(object?: SvgElement): object is SvgImage;

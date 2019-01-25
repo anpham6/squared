@@ -3,7 +3,6 @@
 android-framework/
 android-widget/
 build/
-global/
 html/demos/android/
 html/demos-dev/
 node_modules/
