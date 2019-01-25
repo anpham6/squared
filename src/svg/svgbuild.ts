@@ -1,6 +1,7 @@
 import { SvgPathCommand, SvgPoint, SvgTransform } from './@types/object';
 
-import { SVG, applyMatrixX, applyMatrixY, createTransform, getRadiusY } from './lib/util';
+import { INSTANCE_TYPE } from './lib/constant';
+import { applyMatrixX, applyMatrixY, createTransform, getRadiusY } from './lib/util';
 
 type Svg = squared.svg.Svg;
 type SvgAnimate = squared.svg.SvgAnimate;
@@ -22,6 +23,70 @@ const $util = squared.lib.util;
 const NAME_GRAPHICS = new Map<string, number>();
 
 export default class SvgBuild implements squared.svg.SvgBuild {
+    public static asContainer(object: SvgElement): object is SvgGroup {
+        return $util.hasBit(object.instanceType, INSTANCE_TYPE.SVG_CONTAINER);
+    }
+
+    public static asElement(object: SvgElement): object is SvgElement {
+        return $util.hasBit(object.instanceType, INSTANCE_TYPE.SVG_ELEMENT);
+    }
+
+    public static asAnimation(object: SvgAnimation) {
+        return $util.hasBit(object.instanceType, INSTANCE_TYPE.SVG_ANIMATION);
+    }
+
+    public static asAnimationAnimate(object: SvgAnimation): object is SvgAnimate {
+        return $util.hasBit(object.instanceType, INSTANCE_TYPE.SVG_ANIMATE);
+    }
+
+    public static asSvg(object: SvgElement): object is Svg {
+        return object.instanceType === INSTANCE_TYPE.SVG_SVG;
+    }
+
+    public static asG(object: SvgElement): object is SvgG {
+        return object.instanceType === INSTANCE_TYPE.SVG_G;
+    }
+
+    public static asUseSymbol(object: SvgElement): object is SvgUseSymbol {
+        return object.instanceType === INSTANCE_TYPE.SVG_USE_SYMBOL;
+    }
+
+    public static asShape(object: SvgElement): object is SvgShape {
+        return $util.hasBit(object.instanceType, INSTANCE_TYPE.SVG_SHAPE);
+    }
+
+    public static asImage(object: SvgElement): object is SvgImage {
+        return object.instanceType === INSTANCE_TYPE.SVG_IMAGE;
+    }
+
+    public static asUse(object: SvgElement): object is SvgUse {
+        return object.instanceType === INSTANCE_TYPE.SVG_USE;
+    }
+
+    public static asPattern(object: SvgElement): object is SvgPattern {
+        return object.instanceType === INSTANCE_TYPE.SVG_PATTERN;
+    }
+
+    public static asPatternShape(object: SvgElement): object is SvgPatternShape {
+        return object.instanceType === INSTANCE_TYPE.SVG_PATTERN_SHAPE;
+    }
+
+    public static asSet(object: SvgAnimation) {
+        return object.instanceType === INSTANCE_TYPE.SVG_ANIMATION;
+    }
+
+    public static asAnimate(object: SvgAnimation): object is SvgAnimate {
+        return object.instanceType === INSTANCE_TYPE.SVG_ANIMATE;
+    }
+
+    public static asAnimateMotion(object: SvgAnimation): object is SvgAnimateMotion {
+        return object.instanceType === INSTANCE_TYPE.SVG_ANIMATE_MOTION;
+    }
+
+    public static asAnimateTransform(object: SvgAnimation): object is SvgAnimateTransform {
+        return object.instanceType === INSTANCE_TYPE.SVG_ANIMATE_TRANSFORM;
+    }
+
     public static setName(element?: SVGElement) {
         if (element) {
             let result = '';
@@ -50,62 +115,6 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             NAME_GRAPHICS.clear();
             return '';
         }
-    }
-
-    public static instanceOfSvg(object?: SvgElement): object is Svg {
-        return !!object && SVG.svg(object.element);
-    }
-
-    public static instanceOfContainer(object?: SvgElement): object is SvgGroup {
-        return SvgBuild.instanceOfSvg(object) || SvgBuild.instanceOfG(object) || SvgBuild.instanceOfUseSymbol(object) || SvgBuild.instanceOfPattern(object) || SvgBuild.instanceOfPatternGroup(object);
-    }
-
-    public static instanceOfElement(object?: SvgElement): object is SvgElement {
-        return SvgBuild.instanceOfShape(object) || SvgBuild.instanceOfImage(object) || SvgBuild.instanceOfUse(object) && !SvgBuild.instanceOfUseSymbol(object);
-    }
-
-    public static instanceOfG(object?: SvgElement): object is SvgG {
-        return !!object && SVG.g(object.element);
-    }
-
-    public static instanceOfUse(object?: SvgElement): object is SvgUse {
-        return !!object && SVG.use(object.element);
-    }
-
-    public static instanceOfUseSymbol(object?: SvgElement): object is SvgUseSymbol {
-        return SvgBuild.instanceOfUse(object) && object['symbolElement'] !== undefined;
-    }
-
-    public static instanceOfShape(object?: SvgElement): object is SvgShape {
-        return (!!object && SVG.shape(object.element) || SvgBuild.instanceOfUse(object)) && object['setPath'] !== undefined;
-    }
-
-    public static instanceOfImage(object?: SvgElement): object is SvgImage {
-        return !!object && SVG.image(object.element) || SvgBuild.instanceOfUse(object) && object['imageElement'] !== undefined;
-    }
-
-    public static instanceOfPatternGroup(object?: SvgElement): object is SvgPatternShape {
-        return !!object && SVG.shape(object.element) && object['patternElement'] !== undefined && object['clipRegion'] !== undefined;
-    }
-
-    public static instanceOfPattern(object?: SvgElement): object is SvgPattern {
-        return !!object && SVG.shape(object.element) && object['patternElement'] !== undefined && object['clipRegion'] === undefined;
-    }
-
-    public static instanceOfSet(object: SvgAnimation) {
-        return object.instanceType === 0;
-    }
-
-    public static instanceOfAnimate(object: SvgAnimation): object is SvgAnimate {
-        return object.instanceType === 1;
-    }
-
-    public static instanceOfAnimateTransform(object: SvgAnimation): object is SvgAnimateTransform {
-        return object.instanceType === 2;
-    }
-
-    public static instanceOfAnimateMotion(object: SvgAnimation): object is SvgAnimateMotion {
-        return object.instanceType === 3;
     }
 
     public static getLine(x1: number, y1: number, x2 = 0, y2 = 0) {

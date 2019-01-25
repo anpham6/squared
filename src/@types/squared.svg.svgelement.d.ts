@@ -6,6 +6,7 @@ declare global {
             viewport?: Svg;
             parent?: SvgContainer;
             readonly element: SVGGraphicsElement;
+            readonly instanceType: number;
             build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual): void;
             synchronize(useKeyTime?: boolean): void;
         }

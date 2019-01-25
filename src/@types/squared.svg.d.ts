@@ -68,21 +68,23 @@ declare global {
         }
 
         class SvgBuild {
+            public static asSvg(object: SvgElement): object is Svg;
+            public static asContainer(object: SvgElement): object is SvgGroup;
+            public static asElement(object: SvgElement): object is SvgElement;
+            public static asAnimation(object: SvgAnimation): boolean;
+            public static asAnimationAnimate(object: SvgAnimation): object is SvgAnimate;
+            public static asG(object: SvgElement): object is SvgG;
+            public static asPattern(object: SvgElement): object is SvgPattern;
+            public static asPatternShape(object: SvgElement): object is SvgPatternShape;
+            public static asUseSymbol(object: SvgElement): object is SvgUseSymbol;
+            public static asShape(object: SvgElement): object is SvgShape;
+            public static asImage(object: SvgElement): object is SvgImage;
+            public static asUse(object: SvgElement): object is SvgUse;
+            public static asSet(object: SvgAnimation): boolean;
+            public static asAnimate(object: SvgAnimation): object is SvgAnimate;
+            public static asAnimateTransform(object: SvgAnimation): object is SvgAnimateTransform;
+            public static asAnimateMotion(object: SvgAnimation): object is SvgAnimateMotion;
             public static setName(element?: SVGElement): string;
-            public static instanceOfSvg(object?: SvgElement): object is Svg;
-            public static instanceOfContainer(object?: SvgElement): object is SvgGroup;
-            public static instanceOfElement(object?: SvgElement): object is SvgElement;
-            public static instanceOfG(object?: SvgElement): object is SvgG;
-            public static instanceOfPattern(object?: SvgElement): object is SvgPattern;
-            public static instanceOfPatternGroup(object?: SvgElement): object is SvgPatternShape;
-            public static instanceOfUseSymbol(object?: SvgElement): object is SvgUseSymbol;
-            public static instanceOfShape(object?: SvgElement): object is SvgShape;
-            public static instanceOfImage(object?: SvgElement): object is SvgImage;
-            public static instanceOfUse(object?: SvgElement): object is SvgUse;
-            public static instanceOfSet(object?: SvgAnimation): boolean;
-            public static instanceOfAnimate(object?: SvgAnimation): object is SvgAnimate;
-            public static instanceOfAnimateTransform(object?: SvgAnimation): object is SvgAnimateTransform;
-            public static instanceOfAnimateMotion(object?: SvgAnimation): object is SvgAnimateMotion;
             public static getLine(x1: number, y1: number, x2?: number, y2?: number): string;
             public static getCircle(cx: number, cy: number, r: number): string;
             public static getEllipse(cx: number, cy: number, rx: number, ry?: number): string;

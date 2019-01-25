@@ -6,6 +6,7 @@ import SvgView$MX from './svgview-mx';
 import SvgViewRect$MX from './svgviewrect-mx';
 import SvgContainer from './svgcontainer';
 
+import { INSTANCE_TYPE } from './lib/constant';
 import { SVG, getTargetElement } from './lib/util';
 
 const $color = squared.lib.color;
@@ -107,5 +108,9 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
 
     get viewBox() {
         return this.element.viewBox.baseVal;
+    }
+
+    get instanceType() {
+        return INSTANCE_TYPE.SVG_SVG;
     }
 }

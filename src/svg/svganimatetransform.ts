@@ -1,6 +1,8 @@
 import SvgAnimate from './svganimate';
 import SvgBuild from './svgbuild';
 
+import { INSTANCE_TYPE } from './lib/constant';
+
 export default class SvgAnimateTransform extends SvgAnimate implements squared.svg.SvgAnimateTransform {
     public static toRotateList(values: string[]) {
         const result = values.map(value => {
@@ -94,6 +96,6 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
     }
 
     get instanceType() {
-        return 2;
+        return INSTANCE_TYPE.SVG_ANIMATE_TRANSFORM;
     }
 }

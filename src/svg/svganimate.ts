@@ -1,7 +1,7 @@
 import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 
-import { FILL_MODE, KEYSPLINE_NAME } from './lib/constant';
+import { FILL_MODE, INSTANCE_TYPE, KEYSPLINE_NAME } from './lib/constant';
 import { convertClockTime, getFontSize, getHostDPI, getTransformInitialValue, sortNumber } from './lib/util';
 
 const $color = squared.lib.color;
@@ -355,6 +355,6 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
 
     get instanceType() {
-        return 1;
+        return INSTANCE_TYPE.SVG_ANIMATE;
     }
 }

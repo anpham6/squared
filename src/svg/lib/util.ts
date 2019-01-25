@@ -164,17 +164,17 @@ export function convertClockTime(value: string) {
 }
 
 export const SVG = {
-    svg: (element: Element | null): element is SVGSVGElement => {
-        return !!element && element.tagName === 'svg';
+    svg: (element: Element): element is SVGSVGElement => {
+        return element.tagName === 'svg';
     },
-    g: (element: Element | null): element is SVGGElement => {
-        return !!element && element.tagName === 'g';
+    g: (element: Element): element is SVGGElement => {
+        return element.tagName === 'g';
     },
-    use: (element: Element | null): element is SVGUseElement => {
-        return !!element && element.tagName === 'use';
+    symbol: (element: Element): element is SVGSymbolElement => {
+        return element.tagName === 'symbol';
     },
-    symbol: (element: Element | null): element is SVGSymbolElement => {
-        return !!element && element.tagName === 'symbol';
+    path: (element: Element): element is SVGPathElement => {
+        return element.tagName === 'path';
     },
     shape: (element: Element): element is SVGGraphicsElement => {
         return SHAPES[element.tagName] !== undefined;
@@ -182,8 +182,8 @@ export const SVG = {
     image: (element: Element): element is SVGImageElement => {
         return element.tagName === 'image';
     },
-    path: (element: Element): element is SVGPathElement => {
-        return element.tagName === 'path';
+    use: (element: Element): element is SVGUseElement => {
+        return element.tagName === 'use';
     },
     line: (element: Element): element is SVGLineElement => {
         return element.tagName === 'line';
@@ -403,19 +403,28 @@ export function getTransformOrigin(element: SVGElement, value?: string) {
     };
     value = value || $dom.cssAttribute(element, 'transform-origin');
     if (value !== '') {
-        const parent = element.parentElement;
-        let width = 0;
-        let height = 0;
-        let baseVal: DOMRect | undefined;
-        if (SVG.svg(parent) && parent.viewBox) {
-            baseVal = parent.viewBox.baseVal;
+        const viewBox = getNearestViewBox(element);
+        let width!: number;
+        let height!: number;
+        if (viewBox) {
+            width = viewBox.width;
+            height = viewBox.height;
         }
-        else if (parent instanceof SVGGraphicsElement && SVG.svg(parent.viewportElement) && parent.viewportElement.viewBox) {
-            baseVal = parent.viewportElement.viewBox.baseVal;
+        else {
+            const parent = element.parentElement;
+            if (parent instanceof SVGGraphicsElement && parent.viewportElement && (SVG.svg(parent.viewportElement) || SVG.symbol(parent.viewportElement)) && parent.viewportElement.viewBox) {
+                width = parent.viewportElement.viewBox.baseVal.width;
+                height = parent.viewportElement.viewBox.baseVal.height;
+            }
         }
-        if (baseVal) {
-            width = baseVal.width;
-            height = baseVal.height;
+        if (!width || !height) {
+            const bounds = element.getBoundingClientRect();
+            if (!width) {
+                width = bounds.width;
+            }
+            if (!height) {
+                height = bounds.height;
+            }
         }
         let positions = value.split(' ');
         if (positions.length === 1) {

@@ -16,7 +16,7 @@
         }
         #transform2 {
             animation-name: translate;
-            animation-duration: 20s;
+            animation-duration: 10s;
             animation-iteration-count: 1;
         }
         #transform3 {
@@ -41,7 +41,7 @@
                 transform-origin: right 25%;
             }
             50% {
-                transform: scale(2);
+                transform: scale(2, 2.1);
                 transform-origin: center 50%;
             }
             to {
@@ -51,13 +51,13 @@
         }
         @keyframes translate {
             from {
-                transform: translateX(10px);
+                transform: translateX(25px);
             }
-            75% {
+            25% {
                 transform: translateX(50px);
             }
             to {
-                transform: translate(80px, 80px);
+                transform: translate(100px, 150px);
             }
         }
         @keyframes rotate {

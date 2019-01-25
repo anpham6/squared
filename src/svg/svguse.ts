@@ -6,12 +6,15 @@ import SvgViewRect$MX from './svgviewrect-mx';
 import SvgPath from './svgpath';
 import SvgShape from './svgshape';
 
+import { INSTANCE_TYPE } from './lib/constant';
+
 export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgShape))) implements squared.svg.SvgUse {
     constructor(
         public readonly element: SVGUseElement,
         public shapeElement: SVGGraphicsElement)
     {
-        super(element);
+        super(element, false);
+        this.setPath();
     }
 
     public setPath() {
@@ -29,5 +32,9 @@ export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(Svg
             this.mergeAnimate(this.getAnimateViewRect(), useKeyTime);
         }
         super.synchronize(useKeyTime);
+    }
+
+    get instanceType() {
+        return INSTANCE_TYPE.SVG_USE;
     }
 }

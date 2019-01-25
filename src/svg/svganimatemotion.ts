@@ -1,5 +1,6 @@
 import SvgAnimate from './svganimate';
 
+import { INSTANCE_TYPE } from './lib/constant';
 import { SVG, getTargetElement } from './lib/util';
 
 const $util = squared.lib.util;
@@ -51,6 +52,6 @@ export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.
     }
 
     get instanceType() {
-        return 3;
+        return INSTANCE_TYPE.SVG_ANIMATE_MOTION;
     }
 }

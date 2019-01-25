@@ -5,6 +5,7 @@ import SvgPaint$MX from './svgpaint-mx';
 import SvgElement from './svgelement';
 import SvgBuild from './svgbuild';
 
+import { INSTANCE_TYPE } from './lib/constant';
 import { SVG, getTransform, getTransformOrigin } from './lib/util';
 
 export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) implements squared.svg.SvgPath {
@@ -30,11 +31,11 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     }
 
     public draw(transform?: SvgTransform[], residual?: SvgTransformResidual, save = true) {
-        const element = this.element;
         if (save) {
             this.transformed = null;
         }
         const parent = this.parent;
+        const element = this.element;
         let d = '';
         if (SVG.path(element)) {
             d = this.getBaseValue('d');
@@ -207,5 +208,9 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             this._transform = getTransform(this.element) || SvgBuild.convertTransformList(this.element.transform.baseVal);
         }
         return this._transform;
+    }
+
+    get instanceType() {
+        return INSTANCE_TYPE.SVG_PATH;
     }
 }

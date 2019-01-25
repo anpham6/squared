@@ -2,6 +2,7 @@ import { SvgAspectRatio, SvgPoint, SvgTransformExclusions, SvgTransformResidual 
 
 import SvgBuild from './svgbuild';
 
+import { INSTANCE_TYPE } from './lib/constant';
 import { REGEXP_SVG, SVG, getTargetElement } from './lib/util';
 
 type Svg = squared.svg.Svg;
@@ -135,7 +136,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
     public getPathAll() {
         const result: string[] = [];
         for (const item of this.cascade()) {
-            if (SvgBuild.instanceOfShape(item) && item.path && item.path.value) {
+            if (SvgBuild.asShape(item) && item.path && item.path.value) {
                 result.push(item.path.value);
             }
         }
@@ -143,7 +144,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
     }
 
     private getViewport(): Svg | undefined {
-        return this.viewport || (SvgBuild.instanceOfSvg(this) ? this as any : undefined);
+        return this.viewport || (SvgBuild.asSvg(this) ? this as any : undefined);
     }
 
     private setAspectRatio(svg: squared.svg.SvgGroup, element?: SVGSVGElement | SVGSymbolElement) {
@@ -171,5 +172,9 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
             aspectRatio.y += parent.aspectRatio.y;
             aspectRatio.unit *= parent.aspectRatio.unit;
         }
+    }
+
+    get instanceType() {
+        return INSTANCE_TYPE.SVG_CONTAINER;
     }
 }

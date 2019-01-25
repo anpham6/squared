@@ -9,6 +9,8 @@ import SvgShape from './svgshape';
 import SvgPath from './svgpath';
 import SvgPattern from './svgpattern';
 
+import { INSTANCE_TYPE } from './lib/constant';
+
 const $util = squared.lib.util;
 
 export default class SvgPatternShape extends SvgPaint$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer))) implements squared.svg.SvgPatternShape {
@@ -49,7 +51,7 @@ export default class SvgPatternShape extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                     const pattern = new SvgPattern(this.element, this.patternElement);
                     pattern.build(exclusions, residual);
                     pattern.cascade().forEach(item => {
-                        if (SvgBuild.instanceOfShape(item) && item.path) {
+                        if (SvgBuild.asShape(item) && item.path) {
                             item.path.refitBaseValue(x, y);
                             SvgPath.build(<SvgPath> item.path, item.transform, item.element, exclusions, residual);
                             item.path.fillOpacity = (parseFloat(item.path.fillOpacity) * parseFloat(this.fillOpacity)).toString();
@@ -79,5 +81,9 @@ export default class SvgPatternShape extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
 
     get animation() {
         return super.animation.filter(item => this.validateBaseValueType(item.attributeName, 0) === undefined);
+    }
+
+    get instanceType() {
+        return INSTANCE_TYPE.SVG_PATTERN_SHAPE;
     }
 }

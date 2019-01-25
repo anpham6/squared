@@ -9,6 +9,7 @@ declare global {
         interface SvgContainer extends Container<SvgView>, SvgElement {
             aspectRatio: SvgAspectRatio;
             readonly element: SVGContainerElement;
+            readonly instanceType: number;
             append(item: SvgView, viewport?: Svg): this;
             refitX(value: number): number;
             refitY(value: number): number;

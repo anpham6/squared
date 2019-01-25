@@ -1,3 +1,4 @@
+import { INSTANCE_TYPE } from './lib/constant';
 import { convertClockTime, sortNumber } from './lib/util';
 
 const $util = squared.lib.util;
@@ -58,6 +59,6 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     get instanceType() {
-        return 0;
+        return INSTANCE_TYPE.SVG_ANIMATION;
     }
 }

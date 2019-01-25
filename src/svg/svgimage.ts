@@ -6,6 +6,7 @@ import SvgViewRect$MX from './svgviewrect-mx';
 import SvgBuild from './svgbuild';
 import SvgElement from './svgelement';
 
+import { INSTANCE_TYPE } from './lib/constant';
 import { SVG, applyMatrixX, applyMatrixY } from './lib/util';
 
 const $util = squared.lib.util;
@@ -139,5 +140,9 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
             return $util.resolvePath(element.href.baseVal);
         }
         return '';
+    }
+
+    get instanceType() {
+        return INSTANCE_TYPE.SVG_IMAGE;
     }
 }

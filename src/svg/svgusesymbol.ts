@@ -8,6 +8,8 @@ import SvgViewRect$MX from './svgviewrect-mx';
 import SvgBuild from './svgbuild';
 import SvgContainer from './svgcontainer';
 
+import { INSTANCE_TYPE } from './lib/constant';
+
 type SvgView = squared.svg.SvgView;
 
 export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer))))) implements squared.svg.SvgUseSymbol {
@@ -21,7 +23,7 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewR
     public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
         this.setRect();
         this.each((item: SvgView) => {
-            if (SvgBuild.instanceOfShape(item) && item.path) {
+            if (SvgBuild.asShape(item) && item.path) {
                 item.path.useParent = this;
             }
         });
@@ -47,5 +49,9 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewR
 
     get viewBox() {
         return this.symbolElement.viewBox.baseVal;
+    }
+
+    get instanceType() {
+        return INSTANCE_TYPE.SVG_USE_SYMBOL;
     }
 }
