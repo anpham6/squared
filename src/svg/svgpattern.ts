@@ -17,10 +17,7 @@ export default class SvgPattern extends SvgBaseVal$MX(SvgView$MX(SvgContainer)) 
     }
 
     public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
-        const shapeElement = this.element;
-        this.element = this.patternElement as any;
-        super.build(exclusions, residual);
-        this.element = shapeElement;
+        super.build(exclusions, residual, this.patternElement);
     }
 
     get animation(): SvgAnimation[] {

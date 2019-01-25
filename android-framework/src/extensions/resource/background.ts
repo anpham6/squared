@@ -510,7 +510,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 BB: [{
                                     CCC: [{
                                         render: [[]],
-                                        name: `${node.controlId}_gradient_path`,
                                         value: $SvgBuild.getRect(width, height),
                                         clipElement: false,
                                         fillPattern: [{ gradients: backgroundGradient }]

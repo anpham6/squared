@@ -13,7 +13,7 @@ export default class SvgElement implements squared.svg.SvgElement {
     constructor(public readonly element: SVGGraphicsElement) {
     }
 
-    public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {}
+    public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual, element?: Element) {}
     public synchronize(useKeyTime?: boolean) {}
 
     get instanceType() {

@@ -27,10 +27,7 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewR
                 item.path.useParent = this;
             }
         });
-        const useElement = this.element;
-        this.element = this.symbolElement as any;
-        super.build(exclusions, residual);
-        this.element = useElement;
+        super.build(exclusions, residual, this.symbolElement);
         const x = this.getBaseValue('x', 0);
         const y = this.getBaseValue('y', 0);
         if (x !== 0 || y !== 0) {

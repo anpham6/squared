@@ -57,7 +57,9 @@ declare global {
             clipPath: string;
             clipRule: string;
             useParent?: SvgUse | SvgUseSymbol;
+            patternParent?: SvgPattern;
             setPaint(d?: string[]): void;
+            resetPaint(): void;
         }
 
         interface SvgElementTagNameMap extends SVGElementTagNameMap {

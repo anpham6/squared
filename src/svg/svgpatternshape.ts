@@ -34,12 +34,12 @@ export default class SvgPatternShape extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
             const d = [path.value];
             this.setPaint(d);
             const boxRect = SvgBuild.getPathBoxRect(d);
-            const xAsString = this.patternElement.width.baseVal.valueAsString;
-            const yAsString = this.patternElement.height.baseVal.valueAsString;
-            const percentWidth = $util.isPercent(xAsString) ? parseInt(xAsString) / 100 : parseFloat(xAsString);
-            const percentHeight = $util.isPercent(yAsString) ? parseInt(yAsString) / 100 : parseFloat(yAsString);
-            const tileWidth = (boxRect.right - boxRect.left) * percentWidth;
-            const tileHeight = (boxRect.bottom - boxRect.top) * percentHeight;
+            const widthAsString = this.patternElement.width.baseVal.valueAsString;
+            const heightAsString = this.patternElement.height.baseVal.valueAsString;
+            const widthAsPercent = $util.isPercent(widthAsString) ? parseInt(widthAsString) / 100 : parseFloat(widthAsString);
+            const heightAsPercent = $util.isPercent(heightAsString) ? parseInt(heightAsString) / 100 : parseFloat(heightAsString);
+            const tileWidth = (boxRect.right - boxRect.left) * widthAsPercent;
+            const tileHeight = (boxRect.bottom - boxRect.top) * heightAsPercent;
             let height = 1;
             let j = 0;
             while (height > 0) {
@@ -52,6 +52,7 @@ export default class SvgPatternShape extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                     pattern.build(exclusions, residual);
                     pattern.cascade().forEach(item => {
                         if (SvgBuild.asShape(item) && item.path) {
+                            item.path.patternParent = this;
                             item.path.refitBaseValue(x, y);
                             SvgPath.build(<SvgPath> item.path, item.transform, item.element, exclusions, residual);
                             item.path.fillOpacity = (parseFloat(item.path.fillOpacity) * parseFloat(this.fillOpacity)).toString();
@@ -59,12 +60,12 @@ export default class SvgPatternShape extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                         }
                     });
                     this.append(pattern);
-                    width -= percentWidth;
+                    width -= widthAsPercent;
                     i++;
                 }
                 while (width > 0);
                 j++;
-                height -= percentHeight;
+                height -= heightAsPercent;
             }
             if (this.stroke !== '' && parseFloat(this.strokeWidth) > 0) {
                 path.fill = '';

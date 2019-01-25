@@ -2,6 +2,7 @@ import SvgBuild from './svgbuild';
 
 import { REGEXP_SVG, getFontSize, getHostDPI } from './lib/util';
 
+type SvgPattern = squared.svg.SvgPattern;
 type SvgUse = squared.svg.SvgUse;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
 
@@ -19,26 +20,28 @@ const CLIPPATH_SHAPE: ObjectMap<RegExp> = {
 
 export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
     return class extends Base implements squared.svg.SvgPaint {
-        public fill = 'black';
-        public fillPattern = '';
-        public fillOpacity = '1';
-        public fillRule = 'nonzero';
-        public stroke = '';
-        public strokeWidth = '1';
-        public strokePattern = '';
-        public strokeOpacity = '1';
-        public strokeLinecap = 'butt';
-        public strokeLinejoin = 'miter';
-        public strokeMiterlimit = '4';
-        public strokeDashArray = '';
-        public strokeDashOffset = '0';
-        public color = '';
-        public clipPath = '';
-        public clipRule = '';
+        public fill!: string;
+        public fillPattern!: string;
+        public fillOpacity!: string;
+        public fillRule!: string;
+        public stroke!: string;
+        public strokeWidth!: string;
+        public strokePattern!: string;
+        public strokeOpacity!: string;
+        public strokeLinecap!: string;
+        public strokeLinejoin!: string;
+        public strokeMiterlimit!: string;
+        public strokeDashArray!: string;
+        public strokeDashOffset!: string;
+        public color!: string;
+        public clipPath!: string;
+        public clipRule!: string;
 
+        public patternParent?: SvgPattern;
         public useParent?: SvgUse | SvgUseSymbol;
 
         public setPaint(d?: string[]) {
+            this.resetPaint();
             this.setAttribute('color', true);
             this.setColor('fill');
             this.setAttribute('fill-opacity');
@@ -155,6 +158,25 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             }
         }
 
+        public resetPaint() {
+            this.fill = 'black';
+            this.fillPattern = '';
+            this.fillOpacity = '1';
+            this.fillRule = 'nonzero';
+            this.stroke = '';
+            this.strokeWidth = '1';
+            this.strokePattern = '';
+            this.strokeOpacity = '1';
+            this.strokeLinecap = 'butt';
+            this.strokeLinejoin = 'miter';
+            this.strokeMiterlimit = '4';
+            this.strokeDashArray = '';
+            this.strokeDashOffset = '0';
+            this.color = '';
+            this.clipPath = '';
+            this.clipRule = '';
+        }
+
         private setColor(attr: string) {
             const value = this.getAttribute(attr);
             const match = REGEXP_SVG.URL.exec(value);
@@ -192,6 +214,15 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
         private getAttribute(attr: string, computed = false, inherited = true) {
             let value = $dom.cssAttribute(this.element, attr, computed);
             if (inherited && value === '') {
+                if (this.patternParent) {
+                    switch (attr) {
+                        case 'fill-opacity':
+                        case 'stroke-opacity':
+                            break;
+                        default:
+                            return value;
+                    }
+                }
                 let current = this.useParent || this.parent;
                 while (current) {
                     value = $dom.cssAttribute(current.element, attr);

@@ -7,7 +7,7 @@ declare global {
             parent?: SvgContainer;
             readonly element: SVGGraphicsElement;
             readonly instanceType: number;
-            build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual): void;
+            build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual, element?: Element): void;
             synchronize(useKeyTime?: boolean): void;
         }
 

@@ -5,7 +5,7 @@ export default `<?xml version="1.0" encoding="utf-8"?>
 	<group android:name="{~groupName}" android:rotation="{~rotation}" android:pivotX="{~pivotX}" android:pivotY="{~pivotY}" android:scaleX="{~scaleX}" android:scaleY="{~scaleY}" android:translateX="{~translateX}" android:translateY="{~translateY}">
 	##group-start##
 		<<clipGroup>>
-		<clip-path android:name="{&clipName}" android:pathData="{&clipPathData}" />
+		<clip-path android:name="{~clipName}" android:pathData="{&clipPathData}" />
 		<<clipGroup>>
 		<<BB>>
 			<<CCC>>
@@ -13,12 +13,9 @@ export default `<?xml version="1.0" encoding="utf-8"?>
 			<group android:name="{~groupName}" android:rotation="{~rotation}" android:pivotX="{~pivotX}" android:pivotY="{~pivotY}" android:scaleX="{~scaleX}" android:scaleY="{~scaleY}" android:translateX="{~translateX}" android:translateY="{~translateY}">
 			##render-start##
 				<<clipElement>>
-				<clip-path android:name="{&clipName}" android:pathData="{&clipPathData}" />
+				<clip-path android:name="{~clipName}" android:pathData="{&clipPathData}" />
 				<<clipElement>>
-				<path android:name="{&name}" android:pathData="{&value}"
-					android:fillColor="{~fill}" android:fillAlpha="{~fillOpacity}" android:fillType="{~fillRule}"
-					android:strokeColor="{~stroke}" android:strokeAlpha="{~strokeOpacity}" android:strokeWidth="{~strokeWidth}"
-					android:strokeLineCap="{~strokeLinecap}" android:strokeLineJoin="{~strokeLinejoin}" android:strokeMiterLimit="{~strokeMiterlimit}">
+				<path android:name="{~name}" android:pathData="{&value}" android:fillColor="{~fill}" android:fillAlpha="{~fillOpacity}" android:fillType="{~fillRule}" android:strokeColor="{~stroke}" android:strokeAlpha="{~strokeOpacity}" android:strokeWidth="{~strokeWidth}" android:strokeLineCap="{~strokeLinecap}" android:strokeLineJoin="{~strokeLinejoin}" android:strokeMiterLimit="{~strokeMiterlimit}">
 				<<fillPattern>>
 					<aapt:attr name="android:fillColor">
 					<<gradients>>

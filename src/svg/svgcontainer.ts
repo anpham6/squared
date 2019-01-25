@@ -56,11 +56,14 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         return super.append(item);
     }
 
-    public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
+    public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual, element?: Element) {
+        if (element === undefined) {
+            element = this.element;
+        }
         this.clear();
         const viewport = this.getViewport();
-        for (let i = 0; i < this.element.children.length; i++) {
-            const item = this.element.children[i];
+        for (let i = 0; i < element.children.length; i++) {
+            const item = element.children[i];
             let svg: SvgView | undefined;
             if (SVG.svg(item)) {
                 svg = new squared.svg.Svg(item, false);

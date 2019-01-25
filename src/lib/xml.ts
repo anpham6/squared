@@ -160,7 +160,9 @@ export function createTemplate(value: StringMap | string, data: ExternalData, fo
         }
     }
     if (index === undefined) {
-        output = output.replace(/\n+\t*{%\w+}\n+/g, '\n').trim();
+        output = output
+            .replace(/\n*\t*{%\w+}\n+/g, '\n')
+            .replace(/\n\n/g, '\n').trim();
         if (format) {
             output = formatTemplate(output);
         }
