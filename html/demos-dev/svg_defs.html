@@ -70,8 +70,13 @@
         </svg>
         <br /><br />
         <svg viewBox="0 0 30 10">
-            <circle id="myCircle" cx="5" cy="5" r="4" />
+            <circle id="myCircle" cx="5" cy="5" r="4">
+                <animate attributeName="cx" by="20" dur="10s" repeatCount="1" />
+                <animate attributeName="cy" from="5" by="5" dur="10s" repeatCount="1" />
+            </circle>
             <use href="#myCircle" x="10" fill="blue">
+                <set attributeName="fill" begin="0s" to="blue" />
+                <set attributeName="fill-opacity" begin="0s" to="1" />
                 <set attributeName="fill" begin="2s" to="green" duration="5s" repeatCount="10" />
                 <set attributeName="fill-opacity" begin="10s" to="0.5" duration="indefinite" />
             </use>

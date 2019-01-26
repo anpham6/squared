@@ -26,13 +26,13 @@ export default class SvgShape extends SvgSynchronize$MX(SvgView$MX(SvgElement)) 
     public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
         if (this.path) {
             this.path.parent = this.parent;
-            SvgPath.build(this.path, this.transform, this.element, exclusions, residual);
+            SvgPath.build(this.path, this.transform, exclusions, residual);
         }
     }
 
-    public synchronize(useKeyTime = false) {
+    public synchronize(useKeyTime = false, element?: SVGGraphicsElement) {
         if (this.path && this.animation.length) {
-            this.mergeAnimate(this.getAnimateShape(), useKeyTime, this.path);
+            this.mergeAnimate(this.getAnimateShape(element || this.element, this.animation), useKeyTime, this.path);
         }
     }
 

@@ -9,6 +9,9 @@ import SvgShape from './svgshape';
 import { INSTANCE_TYPE } from './lib/constant';
 
 export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgShape))) implements squared.svg.SvgUse {
+    private __get_transform = false;
+    private __get_animation = false;
+
     constructor(
         public readonly element: SVGUseElement,
         public shapeElement: SVGGraphicsElement)
@@ -29,9 +32,27 @@ export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(Svg
 
     public synchronize(useKeyTime = false) {
         if (this.animation.length) {
-            this.mergeAnimate(this.getAnimateViewRect(), useKeyTime);
+            this.mergeAnimate(this.getAnimateViewRect(this.animation), useKeyTime);
         }
-        super.synchronize(useKeyTime);
+        super.synchronize(useKeyTime, this.shapeElement);
+    }
+
+    get transform() {
+        const transform = super.transform;
+        if (!this.__get_transform) {
+            transform.push(...this.getTransforms(this.shapeElement));
+            this.__get_transform = true;
+        }
+        return transform;
+    }
+
+    get animation() {
+        const animation = super.animation;
+        if (!this.__get_animation) {
+            animation.push(...this.getAnimations(this.shapeElement));
+            this.__get_animation = true;
+        }
+        return animation;
     }
 
     get instanceType() {

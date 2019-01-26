@@ -71,7 +71,13 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
         private _animation?: SvgAnimation[];
         private _transform?: SvgTransform[];
 
-        private getAnimations(element: SVGElement) {
+        public getTransforms(companion?: SVGGraphicsElement) {
+            const element = companion || this.element;
+            return getTransform(element) || SvgBuild.convertTransformList(element.transform.baseVal);
+        }
+
+        public getAnimations(companion?: SVGGraphicsElement) {
+            const element = companion || this.element;
             const result: SvgAnimation[] = [];
             const animationName = parseAttribute(element, 'animation-name');
             if (animationName.length) {
@@ -113,7 +119,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 }
                                 return undefined;
                             }
-                            sortAttribute(attrMap['transform']).forEach(item => {
+                            for (const item of sortAttribute(attrMap['transform'])) {
                                 const transforms = getTransform(element, item.value);
                                 if (transforms) {
                                     const origin = getKeyframeOrigin(item.ordinal);
@@ -181,7 +187,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                         }
                                     });
                                 }
-                            });
+                            }
                         }
                         delete attrMap['transform'];
                         delete attrMap['transform-origin'];
@@ -195,27 +201,22 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 case 'skewX':
                                 case 'skewY':
                                 case 'translate':
-                                    const animateTransform = new SvgAnimateTransform();
-                                    animateTransform.attributeName = 'transform';
-                                    animateTransform.setType(name);
-                                    animate = animateTransform;
-                                    if (animation[0].ordinal !== 0) {
-                                        animation.unshift({
-                                            ordinal: 0,
-                                            value: getTransformInitialValue(name)
-                                        });
-                                    }
+                                    animate = new SvgAnimateTransform();
+                                    animate.attributeName = 'transform';
+                                    animate.fromBaseValue = getTransformInitialValue(name);
+                                    (<SvgAnimateTransform> animate).setType(name);
                                     break;
                                 default:
                                     animate = new SvgAnimate();
                                     animate.attributeName = name;
-                                    if (animation[0].ordinal !== 0) {
-                                        animation.unshift({
-                                            ordinal: 0,
-                                            value: $dom.cssAttribute(element, name)
-                                        });
-                                    }
+                                    animate.fromBaseValue = $util.optionalAsString(element, `${name}.baseVal.value`) || $dom.cssAttribute(element, name);
                                     break;
+                            }
+                            if (animation[0].ordinal !== 0) {
+                                animation.unshift({
+                                    ordinal: 0,
+                                    value: animate.fromBaseValue
+                                });
                             }
                             animate.paused = cssData['animation-play-state'][index] === 'paused';
                             animate.delay = convertClockTime(cssData['animation-delay'][index]);
@@ -322,14 +323,14 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
 
         get transform() {
             if (this._transform === undefined) {
-                this._transform = getTransform(this.element) || SvgBuild.convertTransformList(this.element.transform.baseVal);
+                this._transform = this.getTransforms();
             }
             return this._transform;
         }
 
         get animation() {
             if (this._animation === undefined) {
-                this._animation = this.getAnimations(this.element);
+                this._animation = this.getAnimations();
             }
             return this._animation;
         }

@@ -16,7 +16,6 @@ declare global {
 
         interface SvgAnimate extends SvgAnimation {
             from: string;
-            by: string;
             values: string[];
             keyTimes: number[];
             repeatCount: number;
@@ -29,6 +28,7 @@ declare global {
             element?: SVGAnimateElement;
             end?: number;
             keySplines?: string[];
+            fromBaseValue?: string;
             sequential?: NumberValue<string>;
             readonly fromToType: boolean;
             setCalcMode(name: string): void;

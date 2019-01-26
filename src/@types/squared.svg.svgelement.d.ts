@@ -15,6 +15,7 @@ declare global {
             path?: SvgPath;
             readonly element: SVGShapeElement | SVGUseElement;
             setPath(): void;
+            synchronize(useKeyTime?: boolean, element?: SVGGraphicsElement): void;
         }
 
         interface SvgImage extends SvgElement, SvgView, SvgViewRect, SvgBaseVal, SvgTransformable {
@@ -26,6 +27,7 @@ declare global {
         interface SvgUse extends SvgShape, SvgViewRect, SvgBaseVal, SvgPaint {
             readonly element: SVGUseElement;
             shapeElement: SVGGraphicsElement;
+            synchronize(useKeyTime?: boolean, element?: SVGGraphicsElement): void;
         }
 
         class SvgElement implements SvgElement {

@@ -29,7 +29,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
         if (element === undefined) {
             element = this.element;
         }
-        const path = SvgPath.build(new SvgPath(element), this.transform, element, exclusions);
+        const path = SvgPath.build(new SvgPath(element), this.transform, exclusions);
         if (path.value) {
             this.clipRegion = path.value;
             if (path.clipPath) {
@@ -58,7 +58,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                         if (SvgBuild.asShape(item) && item.path) {
                             item.path.patternParent = this;
                             item.path.refitBaseValue(x, y);
-                            SvgPath.build(<SvgPath> item.path, item.transform, item.element, exclusions, residual);
+                            SvgPath.build(<SvgPath> item.path, item.transform, exclusions, residual);
                             item.path.fillOpacity = (parseFloat(item.path.fillOpacity) * parseFloat(this.fillOpacity)).toString();
                             item.path.clipPath = SvgBuild.getRect(tileWidth, tileHeight, x, y) + (item.path.clipPath !== '' ? `;${item.path.clipPath}` : '');
                         }

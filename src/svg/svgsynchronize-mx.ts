@@ -2,14 +2,16 @@ import { SvgPoint } from './@types/object';
 
 import SvgAnimate from './svganimate';
 import SvgAnimateTransform from './svganimatetransform';
+
 import SvgBuild from './svgbuild';
 import SvgPath from './svgpath';
 
 import { FILL_MODE } from './lib/constant';
 import { SVG, getLeastCommonMultiple, getTransformOrigin, sortNumber } from './lib/util';
 
-type SvgContainer = squared.svg.SvgContainer;
+type SvgAnimation = squared.svg.SvgAnimation;
 type SvgBaseVal = squared.svg.SvgBaseVal;
+type SvgContainer = squared.svg.SvgContainer;
 
 type AnimateValue = number | Point[];
 type TimelineIndex = Map<number, AnimateValue>;
@@ -269,10 +271,9 @@ function getGroupDuration(item: SvgAnimate) {
 
 export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
     return class extends Base implements squared.svg.SvgSynchronize {
-        public getAnimateShape() {
-            const element = this.element;
+        public getAnimateShape(element: SVGGraphicsElement, animation: SvgAnimation[]) {
             const result: SvgAnimate[] = [];
-            for (const item of this.animation as SvgAnimate[]) {
+            for (const item of animation as SvgAnimate[]) {
                 if (playableAnimation(item)) {
                     switch (item.attributeName) {
                         case 'r':
@@ -315,9 +316,9 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
             return result;
         }
 
-        public getAnimateViewRect() {
+        public getAnimateViewRect(animation: SvgAnimation[]) {
             const result: SvgAnimate[] = [];
-            for (const item of this.animation as SvgAnimate[]) {
+            for (const item of animation as SvgAnimate[]) {
                 if (playableAnimation(item)) {
                     switch (item.attributeName) {
                         case 'x':
@@ -604,7 +605,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                             }
                                         }
                                     }
-                                    const maxThreadTime = Math.min(nextBeginTime || Number.MAX_VALUE, item.end || Number.MAX_VALUE);
+                                    const maxThreadTime = Math.min(nextBeginTime || Number.MAX_VALUE, item.end || Number.MAX_VALUE, item.repeatDuration !== -1 && item.repeatDuration < duration ? item.repeatDuration : Number.MAX_VALUE);
                                     let lastValue: AnimateValue | undefined;
                                     let complete = false;
                                     if (maxThreadTime > maxTime) {
@@ -623,12 +624,14 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                                     time = begin + durationTotal;
                                                                     value = getSplitValue(repeatFraction, keyTime, item.keyTimes[m], value, getItemValue(item, m, baseValue, k));
                                                                     repeatFraction = -1;
+                                                                    complete = true;
                                                                     break;
                                                                 }
                                                             }
                                                         }
                                                         else if (repeatFraction === keyTime) {
                                                             repeatFraction = -1;
+                                                            complete = true;
                                                         }
                                                     }
                                                     if (time === undefined) {
@@ -669,18 +672,15 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                                         maxTime = time;
                                                                         continue;
                                                                     }
-                                                                    if (time === maxTime && repeatingMap[attr].get(time) === value) {
-                                                                        insertInterpolator(repeatingInterpolatorMap, time, item.keySplines, l);
-                                                                        continue;
-                                                                    }
-                                                                    else {
-                                                                        time = Math.max(time, maxTime + 1);
-                                                                    }
+                                                                    time = Math.max(time, maxTime + 1);
                                                                 }
                                                             }
                                                         }
                                                     }
                                                     if (time > maxTime) {
+                                                        if (l === item.keyTimes.length - 1 && !repeatingMap[attr].has(time - 1) && (k < repeatTotal - 1 || incomplete.length === 0 && item.fillMode < FILL_MODE.FORWARDS)) {
+                                                            time--;
+                                                        }
                                                         insertInterpolator(repeatingInterpolatorMap, time, item.keySplines, l);
                                                         repeatingMap[attr].set(time, value);
                                                         maxTime = time;
@@ -754,7 +754,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         let joined = false;
                                         do {
                                             for (let k = 0; k < item.keyTimes.length; k++) {
-                                                const time = getItemTime(begin, duration, item.keyTimes, j, k);
+                                                let time = getItemTime(begin, duration, item.keyTimes, j, k);
                                                 if (!joined && time >= maxTime) {
                                                     [maxTime, baseValue] = insertSplitKeyTimeValue(repeatingMap[attr], repeatingInterpolatorMap, item, baseValue, begin, j, maxTime);
                                                     joined = true;
@@ -767,6 +767,9 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                         return;
                                                     }
                                                     if (time > maxTime) {
+                                                        if (k === item.keyTimes.length - 1 && time < maxThreadTime && !repeatingMap[attr].has(time - 1)) {
+                                                            time--;
+                                                        }
                                                         baseValue = getItemValue(item, k, baseValue, j);
                                                         insertInterpolator(repeatingInterpolatorMap, time, item.keySplines, k);
                                                         repeatingMap[attr].set(time, baseValue);
@@ -842,13 +845,16 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                             do {
                                 let joined = false;
                                 for (let j = 0; j < item.keyTimes.length; j++) {
-                                    const time = getItemTime(begin, item.duration, item.keyTimes, i, j);
+                                    let time = getItemTime(begin, item.duration, item.keyTimes, i, j);
                                     if (!joined && time >= maxTime) {
                                         [maxTime, baseValue] = insertSplitKeyTimeValue(insertMap, repeatingInterpolatorMap, item, baseValue, begin, i, maxTime);
                                         keyTimesRepeating.push(maxTime);
                                         joined = true;
                                     }
                                     if (joined && time > maxTime) {
+                                        if (j === item.keyTimes.length - 1 && time < repeatingEndTime && !insertMap[attr].has(time - 1)) {
+                                            time--;
+                                        }
                                         baseValue = getItemValue(item, j, baseValue, i);
                                         insertInterpolator(repeatingInterpolatorMap, time, item.keySplines, j);
                                         insertMap.set(time, baseValue);
@@ -926,11 +932,15 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                         let i = 0;
                         do {
                             for (let j = 0; j < item.keyTimes.length; j++) {
-                                maxTime = getItemTime(0, item.duration, item.keyTimes, i, j);
+                                let time = getItemTime(0, item.duration, item.keyTimes, i, j);
+                                if (j === item.keyTimes.length - 1 && time < indefiniteDurationTotal && !result[attr].has(time - 1)) {
+                                    time--;
+                                }
                                 baseValue = getItemValue(item, j, baseValue, i);
-                                insertInterpolator(indefiniteInterpolatorMap, maxTime, item.keySplines, j);
-                                result[attr].set(maxTime, baseValue);
-                                keyTimes.push(maxTime);
+                                insertInterpolator(indefiniteInterpolatorMap, time, item.keySplines, j);
+                                result[attr].set(time, baseValue);
+                                maxTime = time;
+                                keyTimes.push(time);
                             }
                         }
                         while (maxTime < indefiniteDurationTotal && ++i);

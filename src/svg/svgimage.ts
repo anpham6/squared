@@ -15,6 +15,9 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
     public rotateOrigin?: SvgPoint;
     public readonly imageElement: SVGImageElement | null = null;
 
+    private __get_transform = false;
+    private __get_animation = false;
+
     constructor(
         public readonly element: SVGImageElement | SVGUseElement,
         imageElement?: SVGImageElement)
@@ -140,6 +143,28 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
             return $util.resolvePath(element.href.baseVal);
         }
         return '';
+    }
+
+    get transform() {
+        const transform = super.transform;
+        if (!this.__get_transform) {
+            if (this.imageElement) {
+                transform.push(...this.getTransforms(this.imageElement));
+            }
+            this.__get_transform = true;
+        }
+        return transform;
+    }
+
+    get animation() {
+        const animation = super.animation;
+        if (!this.__get_animation) {
+            if (this.imageElement) {
+                animation.push(...this.getAnimations(this.imageElement));
+            }
+            this.__get_animation = true;
+        }
+        return animation;
     }
 
     get instanceType() {

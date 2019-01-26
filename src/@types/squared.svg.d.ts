@@ -3,13 +3,15 @@ import { SvgAspectRatio, SvgPathCommand, SvgPoint, SvgRect, SvgTransform } from 
 declare global {
     namespace squared.svg {
         interface SvgView extends SvgElement {
-            animation: SvgAnimation[];
-            transform: SvgTransform[];
             opacity: string;
             visible: boolean;
             transformed: SvgTransform[] | null;
             translationOffset?: Point;
             readonly name: string;
+            readonly transform: SvgTransform[];
+            readonly animation: SvgAnimation[];
+            getTransforms(companion?: SVGGraphicsElement): SvgTransform[];
+            getAnimations(companion?: SVGGraphicsElement): SvgAnimation[];
         }
 
         interface SvgTransformable {
@@ -19,8 +21,8 @@ declare global {
         }
 
         interface SvgSynchronize {
-            getAnimateShape(): SvgAnimate[];
-            getAnimateViewRect(): SvgAnimate[];
+            getAnimateShape(element: SVGGraphicsElement, animation: SvgAnimation[]): SvgAnimate[];
+            getAnimateViewRect(animation: SvgAnimation[]): SvgAnimate[];
             mergeAnimate(animations: SvgAnimate[], useKeyTime?: boolean, path?: SvgPath): void;
         }
 

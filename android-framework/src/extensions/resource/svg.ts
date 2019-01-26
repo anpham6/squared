@@ -375,9 +375,9 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
             if (node.svgElement) {
                 const svg = new $Svg(<SVGSVGElement> node.element);
                 const supportedKeyFrames = node.localSettings.targetAPI >= BUILD_ANDROID.MARSHMALLOW;
-                const templateName = $util.convertWord(`${node.tagName.toLowerCase()}_${node.controlId}_viewbox`, true);
+                const templateName = $util.convertWord(`${node.tagName}_${node.controlId}_viewbox`, true).toLowerCase();
                 const getFilename = (prefix = '', suffix = '') => {
-                    return templateName + (prefix !== '' ? `_${prefix}` : '') + (this.IMAGE_DATA.length ? '_vector' : '') + (suffix !== '' ? `_${suffix}` : '');
+                    return templateName + (prefix !== '' ? `_${prefix}` : '') + (this.IMAGE_DATA.length ? '_vector' : '') + (suffix !== '' ? `_${suffix.toLowerCase()}` : '');
                 };
                 this.NODE_INSTANCE = node;
                 this.SVG_INSTANCE = svg;

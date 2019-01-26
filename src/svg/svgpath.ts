@@ -9,12 +9,8 @@ import { INSTANCE_TYPE } from './lib/constant';
 import { SVG, getTransform, getTransformOrigin } from './lib/util';
 
 export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) implements squared.svg.SvgPath {
-    public static build(path: SvgPath, transform?: SvgTransform[], element?: SVGGraphicsElement, exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
-        transform = transform ? transform.slice(0) : [];
-        if (element && path.element !== element) {
-            transform.push(...path.transform);
-        }
-        path.draw(SvgBuild.filterTransforms(transform, exclusions ? exclusions[path.element.tagName] : undefined), residual);
+    public static build(path: SvgPath, transform: SvgTransform[], exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
+        path.draw(SvgBuild.filterTransforms(transform, exclusions && exclusions[path.element.tagName]), residual);
         return path;
     }
 

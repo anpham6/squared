@@ -10,7 +10,7 @@ declare global {
         }
 
         class SvgPath implements SvgPath {
-            public static build(path: SvgPath, transform?: SvgTransform[], element?: SVGGraphicsElement, exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual): SvgPath;
+            public static build(path: SvgPath, transform: SvgTransform[], exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual): SvgPath;
             constructor(element: SVGGraphicsElement);
         }
     }
