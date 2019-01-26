@@ -13,9 +13,10 @@ type SvgG = squared.svg.SvgG;
 type SvgGroup = squared.svg.SvgGroup;
 type SvgImage = squared.svg.SvgImage;
 type SvgPattern = squared.svg.SvgPattern;
-type SvgPatternShape = squared.svg.SvgPatternShape;
 type SvgShape = squared.svg.SvgShape;
+type SvgShapePattern = squared.svg.SvgShapePattern;
 type SvgUse = squared.svg.SvgUse;
+type SvgUsePattern = squared.svg.SvgUsePattern;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
 
 const $util = squared.lib.util;
@@ -31,16 +32,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return $util.hasBit(object.instanceType, INSTANCE_TYPE.SVG_ELEMENT);
     }
 
-    public static asAnimation(object: SvgAnimation) {
-        return $util.hasBit(object.instanceType, INSTANCE_TYPE.SVG_ANIMATION);
-    }
-
-    public static asAnimationAnimate(object: SvgAnimation): object is SvgAnimate {
-        return $util.hasBit(object.instanceType, INSTANCE_TYPE.SVG_ANIMATE);
-    }
-
     public static asSvg(object: SvgElement): object is Svg {
-        return object.instanceType === INSTANCE_TYPE.SVG_SVG;
+        return object.instanceType === INSTANCE_TYPE.SVG;
     }
 
     public static asG(object: SvgElement): object is SvgG {
@@ -49,6 +42,18 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static asUseSymbol(object: SvgElement): object is SvgUseSymbol {
         return object.instanceType === INSTANCE_TYPE.SVG_USE_SYMBOL;
+    }
+
+    public static asPattern(object: SvgElement): object is SvgPattern {
+        return object.instanceType === INSTANCE_TYPE.SVG_PATTERN;
+    }
+
+    public static asShapePattern(object: SvgElement): object is SvgShapePattern {
+        return object.instanceType === INSTANCE_TYPE.SVG_SHAPE_PATTERN;
+    }
+
+    public static asUsePattern(object: SvgElement): object is SvgUsePattern {
+        return object.instanceType === INSTANCE_TYPE.SVG_USE_PATTERN;
     }
 
     public static asShape(object: SvgElement): object is SvgShape {
@@ -63,16 +68,16 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return object.instanceType === INSTANCE_TYPE.SVG_USE;
     }
 
-    public static asPattern(object: SvgElement): object is SvgPattern {
-        return object.instanceType === INSTANCE_TYPE.SVG_PATTERN;
-    }
-
-    public static asPatternShape(object: SvgElement): object is SvgPatternShape {
-        return object.instanceType === INSTANCE_TYPE.SVG_PATTERN_SHAPE;
-    }
-
     public static asSet(object: SvgAnimation) {
         return object.instanceType === INSTANCE_TYPE.SVG_ANIMATION;
+    }
+
+    public static asAnimation(object: SvgAnimation) {
+        return $util.hasBit(object.instanceType, INSTANCE_TYPE.SVG_ANIMATION);
+    }
+
+    public static asAnimationAnimate(object: SvgAnimation): object is SvgAnimate {
+        return $util.hasBit(object.instanceType, INSTANCE_TYPE.SVG_ANIMATE);
     }
 
     public static asAnimate(object: SvgAnimation): object is SvgAnimate {

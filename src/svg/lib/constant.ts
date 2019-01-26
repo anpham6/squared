@@ -2,18 +2,19 @@ export const enum INSTANCE_TYPE {
     SVG_CONTAINER = 2,
     SVG_ELEMENT = 4,
     SVG_ANIMATION = 8,
-    SVG_SVG = 2 | 16,
+    SVG = 2 | 16,
     SVG_G = 2 | 32,
     SVG_USE_SYMBOL = 2 | 64,
     SVG_PATTERN = 2 | 128,
-    SVG_PATTERN_SHAPE = 2 | 256,
-    SVG_PATH = 4 | 512,
-    SVG_SHAPE = 4 | 1024,
-    SVG_IMAGE = 4 | 2048,
-    SVG_USE = 4 | 1024 | 4096,
-    SVG_ANIMATE = 8 | 8192,
-    SVG_ANIMATE_MOTION = 8 | 8192 | 16384,
-    SVG_ANIMATE_TRANSFORM = 8 | 8192 | 32768
+    SVG_SHAPE_PATTERN = 2 | 256,
+    SVG_USE_PATTERN = 2 | 512,
+    SVG_PATH = 4 | 1024,
+    SVG_SHAPE = 4 | 2048,
+    SVG_IMAGE = 4 | 4096,
+    SVG_USE = 4 | 2048 | 8192,
+    SVG_ANIMATE = 8 | 16384,
+    SVG_ANIMATE_MOTION = 8 | 16384 | 32768,
+    SVG_ANIMATE_TRANSFORM = 8 | 16384 | 65536
 }
 
 export const enum FILL_MODE {

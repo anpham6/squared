@@ -13,9 +13,10 @@ import { INSTANCE_TYPE } from './lib/constant';
 
 const $util = squared.lib.util;
 
-export default class SvgPatternShape extends SvgPaint$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer))) implements squared.svg.SvgPatternShape {
-    public clipRegion: string = '';
+export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer))) implements squared.svg.SvgShapePattern {
     public drawRegion?: BoxRect;
+
+    private _clipRegion: string[] = [];
 
     constructor(
         public element: SVGGraphicsElement,
@@ -24,12 +25,15 @@ export default class SvgPatternShape extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
         super(element);
     }
 
-    public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
-        const path = SvgPath.build(new SvgPath(this.element), this.transform, this.element, exclusions);
+    public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual, element?: SVGGraphicsElement) {
+        if (element === undefined) {
+            element = this.element;
+        }
+        const path = SvgPath.build(new SvgPath(element), this.transform, element, exclusions);
         if (path.value) {
             this.clipRegion = path.value;
             if (path.clipPath) {
-                this.clipRegion += `;${path.clipPath}`;
+                this.clipRegion = path.clipPath;
             }
             const d = [path.value];
             this.setPaint(d);
@@ -48,7 +52,7 @@ export default class SvgPatternShape extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                 let i = 0;
                 do {
                     const x = boxRect.left + i * tileWidth;
-                    const pattern = new SvgPattern(this.element, this.patternElement);
+                    const pattern = new SvgPattern(element, this.patternElement);
                     pattern.build(exclusions, residual);
                     pattern.cascade().forEach(item => {
                         if (SvgBuild.asShape(item) && item.path) {
@@ -72,7 +76,7 @@ export default class SvgPatternShape extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                 path.fillOpacity = '0';
                 path.stroke = this.stroke;
                 path.strokeWidth = this.strokeWidth;
-                const shape = new SvgShape(this.element, false);
+                const shape = new SvgShape(element, false);
                 shape.path = path;
                 this.append(shape);
             }
@@ -80,11 +84,19 @@ export default class SvgPatternShape extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
         }
     }
 
-    get animation() {
-        return super.animation.filter(item => this.validateBaseValueType(item.attributeName, 0) === undefined);
+    set clipRegion(value) {
+        if (value !== '') {
+            this._clipRegion.push(value);
+        }
+        else {
+            this._clipRegion.length = 0;
+        }
+    }
+    get clipRegion() {
+        return this._clipRegion.length ? this._clipRegion.join(';') : '';
     }
 
     get instanceType() {
-        return INSTANCE_TYPE.SVG_PATTERN_SHAPE;
+        return INSTANCE_TYPE.SVG_SHAPE_PATTERN;
     }
 }

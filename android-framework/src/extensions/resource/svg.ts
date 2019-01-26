@@ -1258,7 +1258,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 target.transformed = transformed.reverse();
             }
             let groupName: string;
-            if ($SvgBuild.asPatternShape(target)) {
+            if ($SvgBuild.asShapePattern(target) || $SvgBuild.asUsePattern(target)) {
                 this.createClipPath(target, clipGroup, target.clipRegion);
                 groupName = getVectorName(target, 'pattern');
             }
@@ -1271,16 +1271,15 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
             if (!this.queueAnimations(target, groupName, item => $SvgBuild.asAnimateTransform(item))) {
                 groupName = '';
             }
-            group[0].push({
+            const baseData: TransformData = {
                 groupName,
                 ...createTransformData(transformClient)
-            });
-            if (($SvgBuild.asSvg(target) || $SvgBuild.asUseSymbol(target)) && (target.x !== 0 || target.y !== 0)) {
-                group[0].push({
-                    translateX: target.x.toString(),
-                    translateY: target.y.toString()
-                });
+            };
+            if (($SvgBuild.asSvg(target) || $SvgBuild.asUseSymbol(target) || $SvgBuild.asUsePattern(target)) && (target.x !== 0 || target.y !== 0)) {
+                baseData.translateX = (parseFloat(baseData.translateX || '0') + target.x).toString();
+                baseData.translateY = (parseFloat(baseData.translateY || '0') + target.y).toString();
             }
+            group[0].push(baseData);
         }
         return result;
     }
@@ -1315,18 +1314,20 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
             shape.synchronize();
             this.createClipPath(shape, clipElement, path.clipPath);
         }
+        const baseData: TransformData = {};
         const groupName = getVectorName(target, 'group');
         if (this.queueAnimations(target, groupName, item => $SvgBuild.asAnimateTransform(item))) {
-            render[0].push({ groupName });
+            baseData.groupName = groupName;
         }
         else if (clipElement.length) {
-            render[0].push({});
+            baseData.groupName = '';
         }
         if ($SvgBuild.asUse(target) && (target.x !== 0 || target.y !== 0)) {
-            render[0].push({
-                translateX: target.x.toString(),
-                translateY: target.y.toString()
-            });
+            baseData.translateX = target.x.toString();
+            baseData.translateY = target.y.toString();
+        }
+        if (Object.keys(baseData).length) {
+            render[0].push(baseData);
         }
         const opacity = getOuterOpacity(target);
         for (const attr in path) {

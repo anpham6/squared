@@ -59,11 +59,14 @@
                 </clipPath>
             </defs>
             <g fill="url(#Pattern)">
-                <rect x="10" y="10" width="100" height="100" stroke="black" />
-                <rect x="80" y="80" width="100" height="100" stroke="black" />
+                <rect id="rect" x="10" y="10" width="100" height="100" stroke="black" />
+                <use href="#rect" x="80" y="80" fill="url(#Pattern)" stroke="blue">
+                    <!--<animate attributeName="x" values="0; 50" keyTimes="0; 1" begin="0s" dur="10s" repeatCount="1" />
+                    <animate attributeName="y" values="0; 30; 50" keyTimes="0; 0.5; 1" begin="0s" dur="10s" repeatCount="1" />-->
+                </use>
                 <g stroke="white" fill-opacity="0.5">
-                    <circle cx="50" cy="50" r="50" />
-                    <circle cx="100" cy="100" r="50" />
+                    <circle id="circle" cx="50" cy="50" r="50" />
+                    <use href="#circle" x="100" y="100" stroke="blue" />
                 </g>
             </g>
           </svg>

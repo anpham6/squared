@@ -12,10 +12,11 @@ import SvgImage from './svgimage';
 import SvgPaint from './svgpaint-mx';
 import SvgPath from './svgpath';
 import SvgPattern from './svgpattern';
-import SvgPatternShape from './svgpatternshape';
 import SvgShape from './svgshape';
+import SvgShapePattern from './svgshapepattern';
 import SvgSynchronize from './svgsynchronize-mx';
 import SvgUse from './svguse';
+import SvgUsePattern from './svgusepattern';
 import SvgUseSymbol from './svgusesymbol';
 import SvgView from './svgview-mx';
 import SvgViewRect from './svgviewrect-mx';
@@ -43,10 +44,11 @@ export {
     SvgPaint,
     SvgPath,
     SvgPattern,
-    SvgPatternShape,
     SvgShape,
+    SvgShapePattern,
     SvgSynchronize,
     SvgUse,
+    SvgUsePattern,
     SvgUseSymbol,
     SvgView,
     SvgViewRect,

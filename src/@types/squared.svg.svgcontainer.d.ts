@@ -4,7 +4,7 @@ import Container = squared.lib.base.Container;
 
 declare global {
     namespace squared.svg {
-        type SvgGroup = Svg | SvgG | SvgUseSymbol | SvgPattern | SvgPatternShape;
+        type SvgGroup = Svg | SvgG | SvgUseSymbol | SvgPattern | SvgShapePattern | SvgUsePattern;
 
         interface SvgContainer extends Container<SvgView>, SvgElement {
             aspectRatio: SvgAspectRatio;
@@ -40,15 +40,20 @@ declare global {
             readonly symbolElement: SVGSymbolElement;
         }
 
-        interface SvgPattern extends SvgContainer, SvgView, SvgBaseVal {
+        interface SvgPattern extends SvgContainer, SvgView {
             readonly element: SVGGraphicsElement;
             readonly patternElement: SVGPatternElement;
         }
 
-        interface SvgPatternShape extends SvgPattern, SvgPaint {
+        interface SvgShapePattern extends SvgPattern, SvgPaint {
             clipRegion: string;
-            readonly element: SVGGraphicsElement;
+            readonly element: SVGGraphicsElement | SVGUseElement;
             readonly patternElement: SVGPatternElement;
+        }
+
+        interface SvgUsePattern extends SvgShapePattern, SvgViewRect {
+            readonly element: SVGUseElement;
+            readonly shapeElement: SVGGraphicsElement;
         }
 
         class SvgContainer implements SvgContainer {
@@ -67,12 +72,16 @@ declare global {
             constructor(element: SVGUseElement, symbolElement: SVGSymbolElement);
         }
 
-        class SvgPatternTile implements SvgPatternTile {
+        class SvgPattern implements SvgPattern {
             constructor(element: SVGGraphicsElement, patternElement: SVGPatternElement);
         }
 
-        class SvgPatternShape implements SvgPatternShape {
+        class SvgShapePattern implements SvgShapePattern {
             constructor(element: SVGGraphicsElement, patternElement: SVGPatternElement);
+        }
+
+        class SvgUsePattern implements SvgUsePattern {
+            constructor(element: SVGUseElement, shapeElement: SVGGraphicsElement, patternElement: SVGPatternElement);
         }
     }
 }

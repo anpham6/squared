@@ -111,6 +111,6 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
     }
 
     get instanceType() {
-        return INSTANCE_TYPE.SVG_SVG;
+        return INSTANCE_TYPE.SVG;
     }
 }

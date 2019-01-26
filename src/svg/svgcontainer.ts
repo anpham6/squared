@@ -10,16 +10,12 @@ type SvgView = squared.svg.SvgView;
 
 const $dom = squared.lib.dom;
 
-function getNearestViewBox(instance: SvgContainer) {
-    let current = instance as any;
-    while (current) {
-        switch (current.element.tagName) {
-            case 'svg':
-            case 'symbol':
-                return <Svg> current;
-            default:
-                current = current.parent;
+function getNearestViewBox(instance: SvgContainer | undefined) {
+    while (instance) {
+        if (SvgBuild.asSvg(instance) || SvgBuild.asUseSymbol(instance)) {
+            return instance;
         }
+        instance = instance.parent;
     }
     return undefined;
 }
@@ -84,7 +80,14 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                         svg = new squared.svg.SvgImage(item, target);
                     }
                     else if (SVG.shape(target)) {
-                        svg = new squared.svg.SvgUse(item, target);
+                        const pattern = getFillPattern(item, viewport);
+                        if (pattern) {
+                            svg = new squared.svg.SvgUsePattern(item, target, pattern);
+                            this.setAspectRatio(<squared.svg.SvgUsePattern> svg);
+                        }
+                        else {
+                            svg = new squared.svg.SvgUse(item, target);
+                        }
                     }
                 }
             }
@@ -94,7 +97,8 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
             else if (SVG.shape(item)) {
                 const target = getFillPattern(item, viewport);
                 if (target) {
-                    svg = new squared.svg.SvgPatternShape(item, target);
+                    svg = new squared.svg.SvgShapePattern(item, target);
+                    this.setAspectRatio(<squared.svg.SvgShapePattern> svg);
                 }
                 else {
                     svg = new squared.svg.SvgShape(item);
