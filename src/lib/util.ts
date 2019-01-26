@@ -49,7 +49,12 @@ export const REGEXP_PATTERN = {
 
 export function capitalize(value: string, upper = true) {
     if (value !== '') {
-        return value.charAt(0)[upper ? 'toUpperCase' : 'toLowerCase']() + value.substring(1);
+        if (upper) {
+            return value.charAt(0).toUpperCase() + value.substring(1).toLowerCase();
+        }
+        else {
+            return value.charAt(0).toLowerCase() + value.substring(1);
+        }
     }
     return value;
 }

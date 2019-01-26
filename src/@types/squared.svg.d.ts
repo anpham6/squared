@@ -3,11 +3,11 @@ import { SvgAspectRatio, SvgPathCommand, SvgPoint, SvgRect, SvgTransform } from 
 declare global {
     namespace squared.svg {
         interface SvgView extends SvgElement {
+            name: string;
             opacity: string;
             visible: boolean;
             transformed: SvgTransform[] | null;
             translationOffset?: Point;
-            readonly name: string;
             readonly transform: SvgTransform[];
             readonly animation: SvgAnimation[];
             getTransforms(companion?: SVGGraphicsElement): SvgTransform[];

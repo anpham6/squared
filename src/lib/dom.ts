@@ -204,6 +204,13 @@ export function newBoxModel(): BoxModel {
     };
 }
 
+export function getDOMRect(element: Element) {
+    const result: Partial<DOMRect> = element.getBoundingClientRect();
+    result.x = result.left;
+    result.y = result.top;
+    return <DOMRect> result;
+}
+
 export function createElement(parent: Element | null, block = false) {
     const element = document.createElement(block ? 'div' : 'span');
     const style = element.style;

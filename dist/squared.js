@@ -1,4 +1,4 @@
-/* squared 0.5.0
+/* squared 0.5.1
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -48,27 +48,34 @@
         return [current1, current2];
     }
     const REGEXP_PATTERN = {
-        CSS_URL: /url\("?(#?.*?)"?\)/,
+        URL: /url\("?(.*?)"?\)/,
         URI: /^[A-Za-z]+:\/\//,
         UNIT: /^(?:\s*(-?[\d.]+)(px|em|ch|pc|pt|vw|vh|vmin|vmax|mm|cm|in))+$/,
-        ATTRIBUTE: /([^\s]+)="(.*?)"/
+        ATTRIBUTE: /([^\s]+)="([^"]+)"/
     };
     function capitalize(value, upper = true) {
-        return value ? value.charAt(0)[upper ? 'toUpperCase' : 'toLowerCase']() + value.substring(1)[upper ? 'toLowerCase' : 'toString']() : '';
+        if (value !== '') {
+            if (upper) {
+                return value.charAt(0).toUpperCase() + value.substring(1).toLowerCase();
+            }
+            else {
+                return value.charAt(0).toLowerCase() + value.substring(1);
+            }
+        }
+        return value;
     }
     function convertUnderscore(value) {
         value = value.charAt(0).toLowerCase() + value.substring(1);
-        const result = value.match(/([a-z][A-Z])/g);
-        if (result) {
-            result.forEach(match => value = value.replace(match, `${match[0]}_${match[1].toLowerCase()}`));
+        const matchArray = value.match(/([a-z][A-Z])/g);
+        if (matchArray) {
+            matchArray.forEach(match => value = value.replace(match, `${match[0]}_${match[1].toLowerCase()}`));
         }
         return value;
     }
     function convertCamelCase(value, char = '-') {
-        value = value.replace(new RegExp(`^${char}+`), '');
-        const result = value.match(new RegExp(`(${char}[a-z])`, 'g'));
-        if (result) {
-            result.forEach(match => value = value.replace(match, match[1].toUpperCase()));
+        const matchArray = value.replace(new RegExp(`^${char}+`), '').match(new RegExp(`(${char}[a-z])`, 'g'));
+        if (matchArray) {
+            matchArray.forEach(match => value = value.replace(match, match[1].toUpperCase()));
         }
         return value;
     }
@@ -178,15 +185,19 @@
         return '';
     }
     function formatPX(value) {
-        value = parseFloat(value);
-        return `${!isNaN(value) ? Math.round(value) : 0}px`;
+        if (typeof value === 'string') {
+            value = parseFloat(value);
+        }
+        return isNaN(value) ? '0px' : `${Math.round(value)}px`;
     }
     function formatPercent(value) {
-        value = parseFloat(value);
-        if (!isNaN(value)) {
-            return value < 1 ? convertPercent(value) : `${Math.round(value)}%`;
+        if (typeof value === 'string') {
+            value = parseFloat(value);
         }
-        return '0%';
+        if (isNaN(value)) {
+            return '0%';
+        }
+        return value < 1 ? convertPercent(value) : `${Math.round(value)}%`;
     }
     function formatString(value, ...params) {
         for (let i = 0; i < params.length; i++) {
@@ -1169,7 +1180,7 @@
             bottom: 0
         };
     }
-    function newRectDimensions() {
+    function newRectDimension() {
         return Object.assign({ width: 0, height: 0 }, newBoxRect());
     }
     function newBoxModel() {
@@ -1183,6 +1194,12 @@
             paddingBottom: 0,
             paddingLeft: 0
         };
+    }
+    function getDOMRect(element) {
+        const result = element.getBoundingClientRect();
+        result.x = result.left;
+        result.y = result.top;
+        return result;
     }
     function createElement(parent, block = false) {
         const element = document.createElement(block ? 'div' : 'span');
@@ -1205,17 +1222,17 @@
     }
     function convertClientUnit(value, dimension, dpi, fontSize, percent = false) {
         if (percent) {
-            return isPercent(value) ? convertInt(value) / 100 : (parseFloat(convertPX(value, dpi, fontSize)) / dimension);
+            return isPercent(value) ? convertFloat(value) / 100 : (parseFloat(convertPX(value, dpi, fontSize)) / dimension);
         }
         else {
-            return isPercent(value) ? Math.round(dimension * (convertInt(value) / 100)) : parseInt(convertPX(value, dpi, fontSize));
+            return isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseFloat(convertPX(value, dpi, fontSize));
         }
     }
     function getRangeClientRect(element) {
         const range = document.createRange();
         range.selectNodeContents(element);
         const domRect = Array.from(range.getClientRects()).filter(item => !(Math.round(item.width) === 0 && withinFraction(item.left, item.right)));
-        let bounds = newRectDimensions();
+        let bounds = newRectDimension();
         let multiline = 0;
         if (domRect.length) {
             bounds = assignBounds(domRect[0]);
@@ -1272,7 +1289,7 @@
         return { display: 'none' };
     }
     function cssResolveUrl(value) {
-        const match = value.match(REGEXP_PATTERN.CSS_URL);
+        const match = value.match(REGEXP_PATTERN.URL);
         if (match) {
             return resolvePath(match[1]);
         }
@@ -1318,18 +1335,6 @@
         }
         return false;
     }
-    function cssAttribute(element, attr, computed = false) {
-        const name = convertCamelCase(attr);
-        const node = getElementAsNode(element);
-        let value = node && node.cssInitial(name) || cssInline(element, name);
-        if (!value) {
-            const attribute = element.attributes.getNamedItem(attr);
-            if (attribute) {
-                value = attribute.value.trim();
-            }
-        }
-        return value || computed && getStyle(element)[name] || '';
-    }
     function cssInline(element, attr) {
         let value = '';
         if (typeof element['style'] === 'object') {
@@ -1342,6 +1347,30 @@
             }
         }
         return value || '';
+    }
+    function cssAttribute(element, attr, computed = false) {
+        const name = convertCamelCase(attr);
+        const node = getElementAsNode(element);
+        let value = node && node.cssInitial(name) || cssInline(element, name);
+        if (!value) {
+            const item = element.attributes.getNamedItem(attr);
+            if (item) {
+                value = item.value.trim();
+            }
+        }
+        return value || computed && getStyle(element)[name] || '';
+    }
+    function cssInheritAttribute(element, attr) {
+        let current = element;
+        let value = '';
+        do {
+            value = cssAttribute(current, attr);
+            if (value !== '' && value !== 'inherit') {
+                break;
+            }
+            current = current.parentElement;
+        } while (current);
+        return value;
     }
     function getBackgroundPosition(value, dimension, dpi, fontSize, leftPerspective = false, percent = false) {
         const result = {
@@ -1640,8 +1669,9 @@
         getKeyframeRules: getKeyframeRules,
         getDataSet: getDataSet,
         newBoxRect: newBoxRect,
-        newRectDimensions: newRectDimensions,
+        newRectDimension: newRectDimension,
         newBoxModel: newBoxModel,
+        getDOMRect: getDOMRect,
         createElement: createElement,
         removeElementsByClassName: removeElementsByClassName,
         convertClientUnit: convertClientUnit,
@@ -1652,8 +1682,9 @@
         cssInherit: cssInherit,
         cssParent: cssParent,
         cssFromParent: cssFromParent,
-        cssAttribute: cssAttribute,
         cssInline: cssInline,
+        cssAttribute: cssAttribute,
+        cssInheritAttribute: cssInheritAttribute,
         getBackgroundPosition: getBackgroundPosition,
         getFirstChildElement: getFirstChildElement,
         getLastChildElement: getLastChildElement,
@@ -1753,9 +1784,6 @@
         return result;
     }
     function createTemplate(value, data, format = false, index) {
-        function partial(attr, section) {
-            return `(\\t*##${attr}-${section}##\\s*\\n)([\\w\\W]*?\\s*\\n)(\\t*##${attr}-${section}##\\s*\\n)`;
-        }
         let output = index === undefined ? value['__ROOT__'] : value[index];
         for (const attr in data) {
             const unknown = data[attr];
@@ -1767,7 +1795,10 @@
             else if (Array.isArray(unknown)) {
                 hash = '%';
                 if (Array.isArray(unknown[0])) {
-                    const match = new RegExp(partial(attr, 'start') + `([\\w\\W]*?)` + partial(attr, 'end')).exec(output);
+                    function partial(section) {
+                        return `(\\t*##${attr}-${section}##\\s*\\n)([\\w\\W]*?\\s*\\n)(\\t*##${attr}-${section}##\\s*\\n)`;
+                    }
+                    const match = new RegExp(partial('start') + `([\\w\\W]*?)` + partial('end')).exec(output);
                     if (match) {
                         let tagStart = '';
                         let tagEnd = '';
@@ -1820,7 +1851,9 @@
             }
         }
         if (index === undefined) {
-            output = output.replace(/\n+\t*{%\w+}\n+/g, '\n').trim();
+            output = output
+                .replace(/\n*\t*{%\w+}\n+/g, '\n')
+                .replace(/\n\n/g, '\n').trim();
             if (format) {
                 output = formatTemplate(output);
             }

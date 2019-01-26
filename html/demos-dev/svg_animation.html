@@ -10,8 +10,8 @@
             padding: 10px;
         }
         #animate {
-            animation-name: zorro1, zorro2, zorro2;
-            animation-delay: 2s, 5s, 3s;
+            animation-name: zorro1, zorro2, zorro1;
+            animation-delay: 2s, 5s, -2s;
             animation-duration: 3s, 5s, 3s;
             animation-iteration-count: infinite, 3, 2;
             animation-direction: reverse, normal, alternate-reverse;
@@ -112,10 +112,7 @@
     <!-- START: DEMO -->
     <div id="squared_ui" style="width: 300px;">
         <svg viewBox="0 0 200 200">
-             <rect id="animate" x="10" y="10" width="30" height="20" fill="purple">
-                <animate attributeName="x" from="0" to="100" begin="0s" dur="5s" repeatCount="5" />
-                <animate attributeName="y" from="0" to="100" begin="0s" dur="5s" repeatCount="5" />
-             </rect>
+             <rect id="animate" x="10" y="10" width="30" height="20" fill="purple" />
              <rect id="rotate" x="50" y="50" width="30" height="20" fill="red" />
              <rect id="opacity-step" x="25" y="25" width="30" height="20" fill="blue" style="fill-opacity: 0;" />
              <rect id="translate-step" x="50" y="50" width="30" height="20" fill="green" />

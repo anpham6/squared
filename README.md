@@ -362,6 +362,18 @@ Some applications can benefit from using includes or merge tags to share common 
 
 The attributes "android-include" and "android-include-end" can only be applied to elements which share the same parent container. See /demos/gradient.html for usage instructions.
 
+### ANDROID: SVG animations with CSS/SMIL
+
+Only the layout and resources in XML are generated with squared which can be viewed on the Android device/emulator without any Java/Kotlin backend code. To play animations you also have to "start" the animation with some backend code in MainActivity.java.
+
+```javascript
+    android.widget.ImageView imageView1 = findViewById(R.id.imageview_1);
+    if (imageView1 != null) {
+        android.graphics.drawable.Animatable animatable = imageView1.getDrawable();
+        animatable.start();
+    }
+```
+
 ### SAMPLE: Generated from HTML and CSS
 
 <img src="html/demos/android/form.png" alt="form" />

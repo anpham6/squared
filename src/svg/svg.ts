@@ -107,7 +107,12 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
     }
 
     get viewBox() {
-        return this.element.viewBox.baseVal;
+        if (this.element.viewBox.baseVal) {
+            return this.element.viewBox.baseVal;
+        }
+        else {
+            return $dom.getDOMRect(this.element);
+        }
     }
 
     get instanceType() {

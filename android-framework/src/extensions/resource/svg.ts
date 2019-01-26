@@ -519,7 +519,6 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                     fill: []
                                 };
                                 const indefiniteData: IndefiniteData = {
-                                    name: `${setData.name}_infinite`,
                                     ordering: 'sequentially',
                                     repeat: []
                                 };

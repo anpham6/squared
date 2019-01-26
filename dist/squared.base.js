@@ -1,4 +1,4 @@
-/* squared.base 0.5.0
+/* squared.base 0.5.1
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -6,44 +6,6 @@
     typeof define === 'function' && define.amd ? define(['exports'], factory) :
     (global = global || self, factory((global.squared = global.squared || {}, global.squared.base = {})));
 }(this, function (exports) { 'use strict';
-
-    var APP_SECTION;
-    (function (APP_SECTION) {
-        APP_SECTION[APP_SECTION["DOM_TRAVERSE"] = 2] = "DOM_TRAVERSE";
-        APP_SECTION[APP_SECTION["EXTENSION"] = 4] = "EXTENSION";
-        APP_SECTION[APP_SECTION["RENDER"] = 8] = "RENDER";
-        APP_SECTION[APP_SECTION["ALL"] = 14] = "ALL";
-    })(APP_SECTION || (APP_SECTION = {}));
-    var NODE_RESOURCE;
-    (function (NODE_RESOURCE) {
-        NODE_RESOURCE[NODE_RESOURCE["BOX_STYLE"] = 2] = "BOX_STYLE";
-        NODE_RESOURCE[NODE_RESOURCE["BOX_SPACING"] = 4] = "BOX_SPACING";
-        NODE_RESOURCE[NODE_RESOURCE["FONT_STYLE"] = 8] = "FONT_STYLE";
-        NODE_RESOURCE[NODE_RESOURCE["VALUE_STRING"] = 16] = "VALUE_STRING";
-        NODE_RESOURCE[NODE_RESOURCE["IMAGE_SOURCE"] = 32] = "IMAGE_SOURCE";
-        NODE_RESOURCE[NODE_RESOURCE["ASSET"] = 56] = "ASSET";
-        NODE_RESOURCE[NODE_RESOURCE["ALL"] = 126] = "ALL";
-    })(NODE_RESOURCE || (NODE_RESOURCE = {}));
-    var NODE_PROCEDURE;
-    (function (NODE_PROCEDURE) {
-        NODE_PROCEDURE[NODE_PROCEDURE["CONSTRAINT"] = 2] = "CONSTRAINT";
-        NODE_PROCEDURE[NODE_PROCEDURE["LAYOUT"] = 4] = "LAYOUT";
-        NODE_PROCEDURE[NODE_PROCEDURE["ALIGNMENT"] = 8] = "ALIGNMENT";
-        NODE_PROCEDURE[NODE_PROCEDURE["AUTOFIT"] = 16] = "AUTOFIT";
-        NODE_PROCEDURE[NODE_PROCEDURE["OPTIMIZATION"] = 32] = "OPTIMIZATION";
-        NODE_PROCEDURE[NODE_PROCEDURE["CUSTOMIZATION"] = 64] = "CUSTOMIZATION";
-        NODE_PROCEDURE[NODE_PROCEDURE["ACCESSIBILITY"] = 128] = "ACCESSIBILITY";
-        NODE_PROCEDURE[NODE_PROCEDURE["LOCALIZATION"] = 256] = "LOCALIZATION";
-        NODE_PROCEDURE[NODE_PROCEDURE["POSITIONAL"] = 46] = "POSITIONAL";
-        NODE_PROCEDURE[NODE_PROCEDURE["NONPOSITIONAL"] = 464] = "NONPOSITIONAL";
-        NODE_PROCEDURE[NODE_PROCEDURE["ALL"] = 510] = "ALL";
-    })(NODE_PROCEDURE || (NODE_PROCEDURE = {}));
-
-    var enumeration = /*#__PURE__*/Object.freeze({
-        get APP_SECTION () { return APP_SECTION; },
-        get NODE_RESOURCE () { return NODE_RESOURCE; },
-        get NODE_PROCEDURE () { return NODE_PROCEDURE; }
-    });
 
     const $dom = squared.lib.dom;
     const $util = squared.lib.util;
@@ -447,6 +409,44 @@
         }
     }
 
+    var APP_SECTION;
+    (function (APP_SECTION) {
+        APP_SECTION[APP_SECTION["DOM_TRAVERSE"] = 2] = "DOM_TRAVERSE";
+        APP_SECTION[APP_SECTION["EXTENSION"] = 4] = "EXTENSION";
+        APP_SECTION[APP_SECTION["RENDER"] = 8] = "RENDER";
+        APP_SECTION[APP_SECTION["ALL"] = 14] = "ALL";
+    })(APP_SECTION || (APP_SECTION = {}));
+    var NODE_RESOURCE;
+    (function (NODE_RESOURCE) {
+        NODE_RESOURCE[NODE_RESOURCE["BOX_STYLE"] = 2] = "BOX_STYLE";
+        NODE_RESOURCE[NODE_RESOURCE["BOX_SPACING"] = 4] = "BOX_SPACING";
+        NODE_RESOURCE[NODE_RESOURCE["FONT_STYLE"] = 8] = "FONT_STYLE";
+        NODE_RESOURCE[NODE_RESOURCE["VALUE_STRING"] = 16] = "VALUE_STRING";
+        NODE_RESOURCE[NODE_RESOURCE["IMAGE_SOURCE"] = 32] = "IMAGE_SOURCE";
+        NODE_RESOURCE[NODE_RESOURCE["ASSET"] = 56] = "ASSET";
+        NODE_RESOURCE[NODE_RESOURCE["ALL"] = 126] = "ALL";
+    })(NODE_RESOURCE || (NODE_RESOURCE = {}));
+    var NODE_PROCEDURE;
+    (function (NODE_PROCEDURE) {
+        NODE_PROCEDURE[NODE_PROCEDURE["CONSTRAINT"] = 2] = "CONSTRAINT";
+        NODE_PROCEDURE[NODE_PROCEDURE["LAYOUT"] = 4] = "LAYOUT";
+        NODE_PROCEDURE[NODE_PROCEDURE["ALIGNMENT"] = 8] = "ALIGNMENT";
+        NODE_PROCEDURE[NODE_PROCEDURE["AUTOFIT"] = 16] = "AUTOFIT";
+        NODE_PROCEDURE[NODE_PROCEDURE["OPTIMIZATION"] = 32] = "OPTIMIZATION";
+        NODE_PROCEDURE[NODE_PROCEDURE["CUSTOMIZATION"] = 64] = "CUSTOMIZATION";
+        NODE_PROCEDURE[NODE_PROCEDURE["ACCESSIBILITY"] = 128] = "ACCESSIBILITY";
+        NODE_PROCEDURE[NODE_PROCEDURE["LOCALIZATION"] = 256] = "LOCALIZATION";
+        NODE_PROCEDURE[NODE_PROCEDURE["POSITIONAL"] = 46] = "POSITIONAL";
+        NODE_PROCEDURE[NODE_PROCEDURE["NONPOSITIONAL"] = 464] = "NONPOSITIONAL";
+        NODE_PROCEDURE[NODE_PROCEDURE["ALL"] = 510] = "ALL";
+    })(NODE_PROCEDURE || (NODE_PROCEDURE = {}));
+
+    var enumeration = /*#__PURE__*/Object.freeze({
+        get APP_SECTION () { return APP_SECTION; },
+        get NODE_RESOURCE () { return NODE_RESOURCE; },
+        get NODE_PROCEDURE () { return NODE_PROCEDURE; }
+    });
+
     const $color = squared.lib.color;
     const $dom$1 = squared.lib.dom;
     const $util$2 = squared.lib.util;
@@ -716,7 +716,7 @@
                                 }
                                 else {
                                     const images = [];
-                                    pattern = new RegExp($util$2.REGEXP_PATTERN.CSS_URL, 'g');
+                                    pattern = new RegExp($util$2.REGEXP_PATTERN.URL, 'g');
                                     while ((match = pattern.exec(value)) !== null) {
                                         if (match) {
                                             images.push(match[0]);
@@ -2841,7 +2841,7 @@
             return value.replace(/{[<:@#>]\d+(\^\d+)?}/g, '').trim();
         }
         replaceIndent(value, depth, cache) {
-            value = $xml$2.replaceIndent(value, depth, /^({.*?})(\t*)(<.*)/);
+            value = $xml$2.replaceIndent(value, depth, /^({[^}]+})(\t*)(<.*)/);
             if (cache) {
                 const pattern = /{@(\d+)}/g;
                 let match;
@@ -4005,7 +4005,7 @@
             return this._element === document.body;
         }
         get bounds() {
-            return this._bounds || $dom$4.newRectDimensions();
+            return this._bounds || $dom$4.newRectDimension();
         }
         get linear() {
             if (this._linear === undefined && this._bounds) {
@@ -4025,7 +4025,7 @@
                 }
                 this.setDimensions('linear');
             }
-            return this._linear || $dom$4.newRectDimensions();
+            return this._linear || $dom$4.newRectDimension();
         }
         get box() {
             if (this._box === undefined && this._bounds) {
@@ -4045,7 +4045,7 @@
                 }
                 this.setDimensions('box');
             }
-            return this._box || $dom$4.newRectDimensions();
+            return this._box || $dom$4.newRectDimension();
         }
         set renderAs(value) {
             if (!this.rendered && value && !value.rendered) {
@@ -4527,7 +4527,7 @@
         get visibleStyle() {
             if (this._cached.visibleStyle === undefined) {
                 const borderWidth = this.borderTopWidth > 0 || this.borderRightWidth > 0 || this.borderBottomWidth > 0 || this.borderLeftWidth > 0;
-                const backgroundImage = $util$8.REGEXP_PATTERN.CSS_URL.test(this.css('backgroundImage')) || $util$8.REGEXP_PATTERN.CSS_URL.test(this.css('background'));
+                const backgroundImage = $util$8.REGEXP_PATTERN.URL.test(this.css('backgroundImage')) || $util$8.REGEXP_PATTERN.URL.test(this.css('background'));
                 const backgroundColor = this.has('backgroundColor');
                 const backgroundRepeat = this.css('backgroundRepeat');
                 const paddingHorizontal = this.paddingLeft + this.paddingRight > 0;
@@ -4878,14 +4878,14 @@
     const $util$a = squared.lib.util;
     const REGEXP_PARTIAL = {
         UNIT: '[\\d.]+[a-z%]+|auto|max-content|min-content',
-        MINMAX: 'minmax\\((.*?), (.*?)\\)',
+        MINMAX: 'minmax\\(([^,]+), ([^)]+)\\)',
         FIT_CONTENT: 'fit-content\\(([\\d.]+[a-z%]+)\\)',
-        REPEAT: 'repeat\\((auto-fit|auto-fill|[0-9]+), ((?:minmax|fit-content)\\(.*?\\)|.*?)\\)',
         NAMED: '\\[([\\w\\-\\s]+)\\]'
     };
     const PATTERN_GRID = {
         UNIT: new RegExp(`^(${REGEXP_PARTIAL.UNIT})$`),
-        NAMED: new RegExp(`\\s*(${REGEXP_PARTIAL.NAMED}|${REGEXP_PARTIAL.REPEAT}|${REGEXP_PARTIAL.MINMAX}|${REGEXP_PARTIAL.FIT_CONTENT}|${REGEXP_PARTIAL.UNIT})\\s*`, 'g')
+        NAMED: new RegExp(`\\s*(repeat\\((auto-fit|auto-fill|[0-9]+), (.+)\\)|${REGEXP_PARTIAL.NAMED}|${REGEXP_PARTIAL.MINMAX}|${REGEXP_PARTIAL.FIT_CONTENT}|${REGEXP_PARTIAL.UNIT})\\s*`),
+        REPEAT: new RegExp(`\\s*(${REGEXP_PARTIAL.NAMED}|${REGEXP_PARTIAL.MINMAX}|${REGEXP_PARTIAL.FIT_CONTENT}|${REGEXP_PARTIAL.UNIT})\\s*`, 'g'),
     };
     function repeatUnit(data, dimension) {
         const unitPX = [];
@@ -4990,21 +4990,25 @@
                     while ((match = PATTERN_GRID.NAMED.exec(value)) !== null) {
                         if (index < 2) {
                             const data = mainData[index === 0 ? 'row' : 'column'];
-                            if (match[1].charAt(0) === '[') {
-                                if (data.name[match[2]] === undefined) {
-                                    data.name[match[2]] = [];
+                            if (match[1].startsWith('repeat')) {
+                                let replaced = false;
+                                for (let j = match[0].indexOf('(') + 1, k = 1; j < match[0].length; j++) {
+                                    const char = match[0][j];
+                                    if (char === '(') {
+                                        k++;
+                                    }
+                                    else if (char === ')') {
+                                        k--;
+                                        if (k === 0) {
+                                            value = value.substring(j + 1);
+                                            match[3] = match[3].substring(0, match[3].length - value.length);
+                                            replaced = true;
+                                            break;
+                                        }
+                                    }
                                 }
-                                data.name[match[2]].push(i);
-                            }
-                            else if (match[1].startsWith('minmax')) {
-                                data.unit.push(convertUnit(node, match[6]));
-                                data.unitMin.push(convertUnit(node, match[5]));
-                                data.repeat.push(false);
-                                i++;
-                            }
-                            else if (match[1].startsWith('repeat')) {
                                 let iterations = 1;
-                                switch (match[3]) {
+                                switch (match[2]) {
                                     case 'auto-fit':
                                         data.autoFit = true;
                                         break;
@@ -5015,44 +5019,64 @@
                                         iterations = $util$a.convertInt(match[3]);
                                         break;
                                 }
-                                if (match[4].startsWith('minmax')) {
-                                    const minmax = new RegExp(REGEXP_PARTIAL.MINMAX, 'g');
-                                    let matchMM;
-                                    while ((matchMM = minmax.exec(match[4])) !== null) {
-                                        data.unit.push(convertUnit(node, matchMM[2]));
-                                        data.unitMin.push(convertUnit(node, matchMM[1]));
-                                        data.repeat.push(true);
-                                        i++;
-                                    }
-                                }
-                                else if (match[4].charAt(0) === '[') {
-                                    const unitName = match[4].split(' ');
-                                    if (unitName.length === 2) {
-                                        const attr = unitName[0].substring(1, unitName[0].length - 1);
-                                        if (data.name[attr] === undefined) {
-                                            data.name[attr] = [];
+                                if (iterations > 0) {
+                                    let matchRepeat;
+                                    const repeating = [];
+                                    while ((matchRepeat = PATTERN_GRID.REPEAT.exec(match[3])) !== null) {
+                                        let matchPartial;
+                                        if ((matchPartial = new RegExp(REGEXP_PARTIAL.NAMED).exec(matchRepeat[1])) !== null) {
+                                            if (data.name[matchPartial[1]] === undefined) {
+                                                data.name[matchPartial[1]] = [];
+                                            }
+                                            repeating.push({ name: matchPartial[1] });
                                         }
+                                        else if ((matchPartial = new RegExp(REGEXP_PARTIAL.MINMAX).exec(matchRepeat[1])) !== null) {
+                                            repeating.push({ unit: convertUnit(node, matchPartial[2]), unitMin: convertUnit(node, matchPartial[1]) });
+                                        }
+                                        else if ((matchPartial = new RegExp(REGEXP_PARTIAL.FIT_CONTENT).exec(matchRepeat[1])) !== null) {
+                                            repeating.push({ unit: convertUnit(node, matchPartial[1]), unitMin: '0px' });
+                                        }
+                                        else if ((matchPartial = new RegExp(REGEXP_PARTIAL.UNIT).exec(matchRepeat[1])) !== null) {
+                                            repeating.push({ unit: convertUnit(node, matchPartial[0]) });
+                                        }
+                                    }
+                                    if (repeating.length) {
                                         for (let j = 0; j < iterations; j++) {
-                                            data.name[attr].push(i);
-                                            data.unit.push(unitName[1]);
-                                            data.unitMin.push('');
-                                            data.repeat.push(true);
-                                            i++;
-                                        }
-                                    }
-                                }
-                                else {
-                                    match[4].split(' ').forEach(unit => {
-                                        if (PATTERN_GRID.UNIT.test(unit)) {
-                                            for (let j = 0; j < iterations; j++) {
-                                                data.unit.push(unit);
-                                                data.unitMin.push('');
-                                                data.repeat.push(true);
-                                                i++;
+                                            for (const item of repeating) {
+                                                if (item.name) {
+                                                    data.name[item.name].push(i);
+                                                }
+                                                else if (item.unit) {
+                                                    data.unit.push(item.unit);
+                                                    data.unitMin.push(item.unitMin || '');
+                                                    data.repeat.push(true);
+                                                    i++;
+                                                }
                                             }
                                         }
-                                    });
+                                    }
                                 }
+                                if (replaced) {
+                                    continue;
+                                }
+                            }
+                            else if (match[1].charAt(0) === '[') {
+                                if (data.name[match[4]] === undefined) {
+                                    data.name[match[4]] = [];
+                                }
+                                data.name[match[4]].push(i);
+                            }
+                            else if (match[1].startsWith('minmax')) {
+                                data.unit.push(convertUnit(node, match[6]));
+                                data.unitMin.push(convertUnit(node, match[5]));
+                                data.repeat.push(false);
+                                i++;
+                            }
+                            else if (match[1].startsWith('fit-content')) {
+                                data.unit.push(convertUnit(node, match[7]));
+                                data.unitMin.push('0px');
+                                data.repeat.push(false);
+                                i++;
                             }
                             else if (PATTERN_GRID.UNIT.test(match[1])) {
                                 data.unit.push(convertUnit(node, match[1]));
@@ -5064,6 +5088,7 @@
                         else {
                             mainData[index === 2 ? 'row' : 'column'].auto.push(node.convertPX(match[1]));
                         }
+                        value = value.replace(match[0], '');
                     }
                 }
             });
@@ -6055,7 +6080,7 @@
                 let url = node.css('backgroundImage');
                 if (!$util$e.hasValue(url) || url === 'none') {
                     url = '';
-                    const match = $util$e.REGEXP_PATTERN.CSS_URL.exec(node.css('background'));
+                    const match = $util$e.REGEXP_PATTERN.URL.exec(node.css('background'));
                     if (match) {
                         url = match[0];
                     }

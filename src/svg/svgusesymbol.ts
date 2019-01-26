@@ -9,6 +9,8 @@ import SvgContainer from './svgcontainer';
 
 import { INSTANCE_TYPE } from './lib/constant';
 
+const $dom = squared.lib.dom;
+
 export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer))))) implements squared.svg.SvgUseSymbol {
     constructor(
         public element: SVGUseElement,
@@ -37,7 +39,12 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewR
     }
 
     get viewBox() {
-        return this.symbolElement.viewBox.baseVal;
+        if (this.symbolElement.viewBox.baseVal) {
+            return this.symbolElement.viewBox.baseVal;
+        }
+        else {
+            return $dom.getDOMRect(this.element);
+        }
     }
 
     get instanceType() {

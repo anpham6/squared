@@ -68,8 +68,8 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
         public translationOffset?: Point;
 
         private _name?: string;
-        private _animation?: SvgAnimation[];
         private _transform?: SvgTransform[];
+        private _animation?: SvgAnimation[];
 
         public getTransforms(companion?: SVGGraphicsElement) {
             const element = companion || this.element;
@@ -314,6 +314,9 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             return result;
         }
 
+        set name(value) {
+            this._name = value;
+        }
         get name() {
             if (this._name === undefined) {
                 this._name = SvgBuild.setName(this.element);
