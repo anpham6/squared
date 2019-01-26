@@ -155,6 +155,9 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 }
             }
             if (parent) {
+                if (this.transformed === null) {
+                    points = SvgBuild.clonePoints(points);
+                }
                 parent.refitPoints(points);
             }
             d = element.tagName === 'polygon' ? SvgBuild.getPolygon(points) : SvgBuild.getPolyline(points);

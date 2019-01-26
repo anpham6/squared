@@ -66,8 +66,16 @@
             <!--<path d="M10,30 A20,20,0,0,1,50,30 A20,20,0,0,1,90,30 Q90,60,50,90 Q10,60,10,30 Z" fill="red">
                 <animate attributeName="d" to="M20,60 A40,40,0,0,1,100,60 A40,40,0,0,1,180,60 Q180,120,100,180 Q20,120,20,60 Z" dur="5s" repeatCount="1" />
             </path>
-            <set attributeName="fill-opacity" begin="5s" to="1" />
             <animate attributeType="CSS" attributeName="opacity" values="1; 0" keyTimes="0; 1" dur="10s" repeatCount="1" />-->
+        </svg>
+        <br /><br />
+        <svg viewBox="0 0 30 10">
+            <circle id="myCircle" cx="5" cy="5" r="4" />
+            <use href="#myCircle" x="10" fill="blue">
+                <set attributeName="fill" begin="2s" to="green" duration="5s" repeatCount="10" />
+                <set attributeName="fill-opacity" begin="10s" to="0.5" duration="indefinite" />
+            </use>
+            <use href="#myCircle" x="20" fill="white" stroke="blue" />
         </svg>
         <br /><br />
         <svg viewBox="0 0 100 100">
@@ -100,12 +108,6 @@
             <rect x="80" y="50" width="60" height="30" fill="url(#exampleGradient)" />
             <polygon points="100,100 150,25 150,75 200,0" stroke="black" fill="url(#flameGradient)" />
             <path d="M10,30 A20,20,0,0,1,50,30 A20,20,0,0,1,90,30 Q90,60,50,90 Q10,60,10,30 Z" fill="url(#flameGradient)" />
-        </svg>
-        <br /><br />
-        <svg viewBox="0 0 30 10">
-            <circle id="myCircle" cx="5" cy="5" r="4" />
-            <use href="#myCircle" x="10" fill="blue" />
-            <use href="#myCircle" x="20" fill="white" stroke="blue" />
         </svg>
         <br /><br />
         <svg width="300px" height="50px" viewBox="0 0 300 50">

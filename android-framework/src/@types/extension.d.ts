@@ -6,7 +6,6 @@ export interface ConstraintGuidelineOptions {
 
 export interface ResourceSvgOptions {
     excludeFromTransform: SvgTransformExclusions;
-    vectorAnimateOrdering: string;
     vectorAnimateInterpolator: string;
 }
 

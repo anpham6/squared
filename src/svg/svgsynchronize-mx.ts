@@ -256,7 +256,7 @@ function getSplitValue(fraction: number, previousFraction: number, nextFraction:
 }
 
 function playableAnimation(item: SvgAnimate) {
-    return !item.paused && item.begin.length > 0 && item.keyTimes.length > 1 && item.duration > 0;
+    return !SvgBuild.asSet(item) && !item.paused && item.begin.length > 0 && item.keyTimes.length > 1 && item.duration > 0;
 }
 
 function getDuration(item: SvgAnimate) {
