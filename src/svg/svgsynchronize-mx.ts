@@ -871,7 +871,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                 const from = repeat.values[0] || repeat.from;
                                 value = parseFloat(from);
                                 if (isNaN(value)) {
-                                    value = SvgBuild.fromNumberList(SvgBuild.toNumberList(from));
+                                    value = SvgBuild.convertNumberList(SvgBuild.toNumberList(from));
                                     if (value.length === 0) {
                                         value = undefined;
                                     }

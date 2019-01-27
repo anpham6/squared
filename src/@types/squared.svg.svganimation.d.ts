@@ -28,15 +28,17 @@ declare global {
             element?: SVGAnimateElement;
             end?: number;
             keySplines?: string[];
-            fromBaseValue?: string;
+            additiveFrom?: string;
             sequential?: NumberValue<string>;
             readonly fromToType: boolean;
             setCalcMode(name: string): void;
+            convertToValues(checkKeyTimes?: boolean): void;
         }
 
         interface SvgAnimateTransform extends SvgAnimate {
             type: number;
             element?: SVGAnimateTransformElement;
+            transformFrom?: string;
             transformOrigin?: Point[];
             setType(value: string): void;
         }

@@ -37,7 +37,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
             }
             const d = [path.value];
             this.setPaint(d);
-            const boxRect = SvgBuild.getPathBoxRect(d);
+            const boxRect = SvgBuild.toBoxRect(d);
             const widthAsString = this.patternElement.width.baseVal.valueAsString;
             const heightAsString = this.patternElement.height.baseVal.valueAsString;
             const widthAsPercent = $util.isPercent(widthAsString) ? parseInt(widthAsString) / 100 : parseFloat(widthAsString);

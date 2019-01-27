@@ -15,7 +15,7 @@ export default `<?xml version="1.0" encoding="utf-8"?>
 				<<clipElement>>
 				<clip-path android:name="{~clipName}" android:pathData="{&clipPathData}" />
 				<<clipElement>>
-				<path android:name="{~name}" android:pathData="{&value}" android:fillColor="{~fill}" android:fillAlpha="{~fillOpacity}" android:fillType="{~fillRule}" android:strokeColor="{~stroke}" android:strokeAlpha="{~strokeOpacity}" android:strokeWidth="{~strokeWidth}" android:strokeLineCap="{~strokeLinecap}" android:strokeLineJoin="{~strokeLinejoin}" android:strokeMiterLimit="{~strokeMiterlimit}">
+				<path android:name="{~name}" android:fillColor="{~fill}" android:fillAlpha="{~fillOpacity}" android:fillType="{~fillRule}" android:strokeColor="{~stroke}" android:strokeAlpha="{~strokeOpacity}" android:strokeWidth="{~strokeWidth}" android:strokeLineCap="{~strokeLinecap}" android:strokeLineJoin="{~strokeLinejoin}" android:strokeMiterLimit="{~strokeMiterlimit}" android:pathData="{&value}">
 				<<fillPattern>>
 					<aapt:attr name="android:fillColor">
 					<<gradients>>

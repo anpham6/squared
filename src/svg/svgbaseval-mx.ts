@@ -10,7 +10,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
 
         public setBaseValue(attr: string, value?: any) {
             if (value !== undefined) {
-                if (this.validateBaseValueType(attr, value)) {
+                if (this.validateBaseValue(attr, value)) {
                     this._baseVal[attr] = value;
                     return true;
                 }
@@ -59,7 +59,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                 if (typeof value === 'string') {
                     if (attr === 'd') {
                         const commands = SvgBuild.toPathCommandList(value);
-                        const points = SvgBuild.getPathPoints(commands);
+                        const points = SvgBuild.unbindPathPoints(commands);
                         setPoints(points);
                         this._baseVal[attr] = SvgBuild.fromPathCommandList(SvgBuild.rebindPathPoints(commands, points));
                     }
@@ -98,7 +98,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             }
         }
 
-        public validateBaseValueType(attr: string, value?: any) {
+        public validateBaseValue(attr: string, value?: any) {
             switch (attr) {
                 case 'd':
                     return typeof value === 'string';

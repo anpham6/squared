@@ -20,7 +20,7 @@ export default class SvgUsePattern extends SvgSynchronize$MX(SvgViewRect$MX(SvgS
     }
 
     public synchronize(useKeyTime = false) {
-        const animation = this.animation.filter(item => this.validateBaseValueType(item.attributeName, 0) === undefined || item.attributeName === 'x' || item.attributeName === 'y');
+        const animation = this.animation.filter(item => this.validateBaseValue(item.attributeName, 0) === undefined || item.attributeName === 'x' || item.attributeName === 'y');
         if (animation.length) {
             this.mergeAnimate(this.getAnimateViewRect(animation), useKeyTime);
         }

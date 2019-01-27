@@ -508,6 +508,22 @@ export function getTransformInitialValue(nameType: string | number) {
     return '';
 }
 
+export function getTransformName(type: number) {
+    switch (type) {
+        case SVGTransform.SVG_TRANSFORM_ROTATE:
+            return 'rotate';
+        case SVGTransform.SVG_TRANSFORM_SCALE:
+            return 'scale';
+        case SVGTransform.SVG_TRANSFORM_SKEWX:
+            return 'skewX';
+        case SVGTransform.SVG_TRANSFORM_SKEWY:
+            return 'skewY';
+        case SVGTransform.SVG_TRANSFORM_TRANSLATE:
+            return 'translate';
+    }
+    return '';
+}
+
 export function sortNumber(values: number[], descending = false) {
     return descending ? values.sort((a, b) => a > b ? -1 : 1) : values.sort((a, b) => a < b ? -1 : 1);
 }

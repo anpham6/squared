@@ -30,6 +30,7 @@ declare global {
             function getTransformOrigin(element: SVGElement, value?: string): Point;
             function getTransformRotate(element: SVGElement): SvgPoint[];
             function getTransformInitialValue(nameType: string | number): string;
+            function getTransformName(type: number): string;
             function getLeastCommonMultiple(values: number[], minimum?: number, offset?: number[]): number;
             function applyMatrixX(matrix: SvgMatrix | DOMMatrix, x: number, y: number): number;
             function applyMatrixY(matrix: SvgMatrix | DOMMatrix, x: number, y: number): number;

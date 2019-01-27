@@ -31,8 +31,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 }
                 break;
             case 'points':
-                currentValue = SvgBuild.fromNumberList(SvgBuild.toNumberList(values[index]));
-                nextValue = SvgBuild.fromNumberList(SvgBuild.toNumberList(values[index + 1]));
+                currentValue = SvgBuild.convertNumberList(SvgBuild.toNumberList(values[index]));
+                nextValue = SvgBuild.convertNumberList(SvgBuild.toNumberList(values[index + 1]));
                 break;
             case 'rotate':
             case 'scale':
@@ -132,40 +132,37 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
 
     public from = '';
-    public values!: string[];
-    public keyTimes!: number[];
     public repeatDuration = -1;
     public additiveSum = false;
     public accumulateSum = false;
     public fillMode = 0;
     public alternate = false;
     public end?: number;
-    public fromBaseValue?: string;
+    public additiveFrom?: string;
     public sequential?: NumberValue<string>;
 
     private _repeatCount = 1;
     private _reverse = false;
+    private _values: string[] | undefined;
+    private _keyTimes: number[] | undefined;
     private _keySplines?: string[];
 
     constructor(public element?: SVGAnimateElement) {
         super(element);
         if (element) {
             if (this.attributeName === 'transform') {
-                this.fromBaseValue = getTransformInitialValue(this.getAttribute('type'));
+                this.additiveFrom = getTransformInitialValue(this.getAttribute('type'));
             }
             else if (element.parentElement) {
-                this.fromBaseValue = $util.optionalAsString(element.parentElement, `${this.attributeName}.baseVal.value`) || $dom.cssAttribute(element.parentElement, this.attributeName);
+                this.additiveFrom = $util.optionalAsString(element.parentElement, `${this.attributeName}.baseVal.value`) || $dom.cssAttribute(element.parentElement, this.attributeName);
             }
             const values = this.getAttribute('values');
+            this.keyTimes = SvgAnimate.toFractionList(this.getAttribute('keyTimes'));
             if (values !== '') {
-                const keyTimes = this.getAttribute('keyTimes');
-                if (keyTimes !== '') {
+                if (this.keyTimes.length) {
                     this.values = $util.flatMap(values.split(';'), value => value.trim());
-                    this.keyTimes = SvgAnimate.toFractionList(keyTimes);
                     if (this.values.length > 1 && this.keyTimes.length === this.values.length) {
-                        if (this.keyTimes[0] === 0) {
-                            this.from = this.values[0];
-                        }
+                        this.from = this.values[0];
                         this.to = this.values[this.values.length - 1];
                     }
                     else {
@@ -176,6 +173,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             }
             else {
                 this.from = this.getAttribute('from');
+                let fromTo: boolean;
                 if (this.to !== '') {
                     if (this.from !== '') {
                         this.setAttribute('additive', 'sum');
@@ -183,18 +181,21 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                             this.setAttribute('accumulate', 'sum');
                         }
                     }
+                    fromTo = true;
                 }
                 else {
                     const by = this.getAttribute('by');
                     if ($util.isNumber(by)) {
-                        if (this.from === '' && this.fromBaseValue) {
-                            this.from = this.fromBaseValue;
+                        if (this.from === '' && this.additiveFrom) {
+                            this.from = this.additiveFrom;
                         }
                         if ($util.isNumber(this.from)) {
                             this.to = (parseFloat(this.from) + parseFloat(by)).toString();
                         }
                     }
+                    fromTo = false;
                 }
+                this.convertToValues(fromTo);
             }
             const repeatDur = this.getAttribute('repeatDur');
             if (repeatDur !== '' && repeatDur !== 'indefinite') {
@@ -202,12 +203,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             }
             if (!(this.duration !== -1 && this.repeatDuration !== -1 && this.repeatDuration < this.duration)) {
                 const repeatCount = this.getAttribute('repeatCount');
-                if (repeatCount === 'indefinite') {
-                    this.repeatCount = -1;
-                }
-                else {
-                    this.repeatCount = parseFloat(repeatCount);
-                }
+                this.repeatCount = repeatCount === 'indefinite' ? -1 : parseFloat(repeatCount);
             }
             if (this.begin.length) {
                 const end = this.getAttribute('end');
@@ -225,14 +221,6 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             if (element.tagName === 'animate') {
                 this.setCalcMode(this.attributeName);
             }
-            if ((this.values === undefined || this.values.length === 0) && this.from !== '' && this.to !== '') {
-                this.values = [this.from, this.to];
-                this.keyTimes = [0, 1];
-            }
-        }
-        if (this.values === undefined) {
-            this.values = [];
-            this.keyTimes = [];
         }
     }
 
@@ -267,6 +255,15 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         }
     }
 
+    public convertToValues(checkKeyTimes = false) {
+        if (this.to !== '') {
+            this.values = [this.from, this.to];
+            if (this.keyTimes.length !== 2 || !checkKeyTimes) {
+                this.keyTimes = [0, 1];
+            }
+        }
+    }
+
     set repeatCount(value) {
         if (!isNaN(value)) {
             this._repeatCount = value;
@@ -288,22 +285,38 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         }
     }
     get repeatCount() {
-        const duration = this.duration;
-        if (duration !== -1) {
-            if (this._repeatCount === -1 && this.repeatDuration === -1) {
-                return -1;
-            }
-            else if (this._repeatCount !== -1 && this.repeatDuration !== -1 && this._repeatCount * duration <= this.repeatDuration) {
+        if (this._repeatCount === -1 && this.repeatDuration === -1) {
+            return -1;
+        }
+        else if (this.duration > 0) {
+            if (this._repeatCount !== -1 && this.repeatDuration !== -1 && this._repeatCount * this.duration <= this.repeatDuration) {
                 return this._repeatCount;
             }
-            else if (this.repeatDuration !== -1) {
-                return this.repeatDuration / duration;
-            }
-            else {
-                return this._repeatCount;
+            else if (this.repeatDuration !== -1 && this.duration > 0) {
+                return this.repeatDuration / this.duration;
             }
         }
-        return 1;
+        return this._repeatCount;
+    }
+
+    set values(value) {
+        this._values = value;
+    }
+    get values() {
+        if (this._values === undefined) {
+            this._values = [];
+        }
+        return this._values;
+    }
+
+    set keyTimes(value) {
+        this._keyTimes = value;
+    }
+    get keyTimes() {
+        if (this._keyTimes === undefined) {
+            this._keyTimes = [];
+        }
+        return this._keyTimes;
     }
 
     set keySplines(value) {

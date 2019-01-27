@@ -67,7 +67,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         else if (d && d.length) {
                             const dpi = getHostDPI();
                             const fontSize = getFontSize(this.element);
-                            const boxRect = SvgBuild.getPathBoxRect(d);
+                            const boxRect = SvgBuild.toBoxRect(d);
                             const width = boxRect.right - boxRect.left;
                             const height = boxRect.bottom - boxRect.top;
                             const parent = this.parent;

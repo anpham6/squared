@@ -203,20 +203,14 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 case 'translate':
                                     animate = new SvgAnimateTransform();
                                     animate.attributeName = 'transform';
-                                    animate.fromBaseValue = getTransformInitialValue(name);
+                                    animate.additiveFrom = getTransformInitialValue(name);
                                     (<SvgAnimateTransform> animate).setType(name);
                                     break;
                                 default:
                                     animate = new SvgAnimate();
                                     animate.attributeName = name;
-                                    animate.fromBaseValue = $util.optionalAsString(element, `${name}.baseVal.value`) || $dom.cssAttribute(element, name);
+                                    animate.additiveFrom = $util.optionalAsString(element, `${name}.baseVal.value`) || $dom.cssAttribute(element, name);
                                     break;
-                            }
-                            if (animation[0].ordinal !== 0) {
-                                animation.unshift({
-                                    ordinal: 0,
-                                    value: animate.fromBaseValue
-                                });
                             }
                             animate.paused = cssData['animation-play-state'][index] === 'paused';
                             animate.delay = convertClockTime(cssData['animation-delay'][index]);
@@ -303,7 +297,11 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         result.push(new SvgAnimate(<SVGAnimateElement> item));
                         break;
                     case 'animateTransform':
-                        result.push(new SvgAnimateTransform(<SVGAnimateTransformElement> item));
+                        const animate = new SvgAnimateTransform(<SVGAnimateTransformElement> item);
+                        if (!animate.additiveSum && SvgBuild.asShape(this) && this.path) {
+                            animate.transformFrom = this.path.draw(undefined, undefined, true);
+                        }
+                        result.push(animate);
                         break;
                     case 'animateMotion':
                         result.push(new SvgAnimateMotion(<SVGAnimateMotionElement> item));

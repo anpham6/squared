@@ -34,7 +34,7 @@ declare global {
             setBaseValue(attr: string, value?: any): boolean;
             getBaseValue(attr: string, defaultValue?: any): any;
             refitBaseValue(x: number, y: number, scaleX?: number, scaleY?: number): void;
-            validateBaseValueType(attr: string, value?: any): boolean | undefined;
+            validateBaseValue(attr: string, value?: any): boolean | undefined;
         }
 
         interface SvgViewBox {
@@ -93,21 +93,21 @@ declare global {
             public static getLine(x1: number, y1: number, x2?: number, y2?: number): string;
             public static getCircle(cx: number, cy: number, r: number): string;
             public static getEllipse(cx: number, cy: number, rx: number, ry?: number): string;
-            public static getRect(width: number, height: number, x?: number, y?: number): string;
+            public static getRect(width: number, height: number, x?: number, y?: number, absolute?: boolean): string;
             public static getPolygon(points: Point[] | DOMPoint[]): string;
             public static getPolyline(points: Point[] | DOMPoint[]): string;
-            public static convertTransformList(transform: SVGTransformList): SvgTransform[];
             public static filterTransforms(transform: SvgTransform[], exclude?: number[]): SvgTransform[];
             public static applyTransforms(transform: SvgTransform[], values: Point[], aspectRatio?: SvgAspectRatio, origin?: Point, center?: Point): SvgPoint[];
-            public static getCenterPoint(values: Point[]): Point[];
+            public static getPointCenter(values: Point[]): Point[];
             public static clonePoints(values: SvgPoint[] | SVGPointList): SvgPoint[];
-            public static fromNumberList(values: number[]): Point[];
-            public static toNumberList(value: string): number[];
-            public static getPathBoxRect(value: string): BoxRect;
-            public static getPathPoints(values: SvgPathCommand[], includeRadius?: boolean): SvgPoint[];
+            public static convertTransformList(transform: SVGTransformList): SvgTransform[];
+            public static convertNumberList(values: number[]): Point[];
+            public static unbindPathPoints(values: SvgPathCommand[], includeRadius?: boolean): SvgPoint[];
             public static rebindPathPoints(values: SvgPathCommand[], points: SvgPoint[]): SvgPathCommand[];
-            public static fromPathCommandList(values: SvgPathCommand[]): string;
+            public static toNumberList(value: string): number[];
+            public static toBoxRect(value: string): BoxRect;
             public static toPathCommandList(value: string): SvgPathCommand[];
+            public static fromPathCommandList(values: SvgPathCommand[]): string;
         }
     }
 }

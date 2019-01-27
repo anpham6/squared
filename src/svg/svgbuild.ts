@@ -137,8 +137,13 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return `M${cx - rx},${cy} a${rx},${ry},0,1,0,${rx * 2},0 a${rx},${ry},0,1,0,-${rx * 2},0`;
     }
 
-    public static getRect(width: number, height: number, x = 0, y = 0) {
-        return `M${x},${y} h${width} v${height} h${-width} Z`;
+    public static getRect(width: number, height: number, x = 0, y = 0, absolute = false) {
+        if (absolute) {
+            return `M${x},${y} ${x + width},${y} ${x + width},${y + height} ${x},${y + height} Z`;
+        }
+        else {
+            return `M${x},${y} h${width} v${height} h${-width} Z`;
+        }
     }
 
     public static getPolygon(points: Point[] | DOMPoint[]) {
@@ -235,7 +240,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
-    public static getCenterPoint(values: SvgPoint[]): SvgPoint {
+    public static getPointCenter(values: SvgPoint[]): SvgPoint {
         let minX = values[0].x;
         let minY = values[0].y;
         let maxX = minX;
@@ -285,7 +290,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
-    public static fromNumberList(values: number[]) {
+    public static convertNumberList(values: number[]) {
         const result: Point[] = [];
         for (let i = 0; i < values.length; i += 2) {
             result.push({
@@ -296,45 +301,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result.length % 2 === 0 ? result : [];
     }
 
-    public static toNumberList(value: string) {
-        const result: number[] = [];
-        const pattern = /-?[\d.]+/g;
-        let match: RegExpExecArray | null;
-        while ((match = pattern.exec(value)) !== null) {
-            const digit = parseFloat(match[0]);
-            if (!isNaN(digit)) {
-                result.push(digit);
-            }
-        }
-        return result;
-    }
-
-    public static getPathBoxRect(values: string[]): BoxRect {
-        let top = Number.MAX_VALUE;
-        let right = -Number.MAX_VALUE;
-        let bottom = -Number.MAX_VALUE;
-        let left = Number.MAX_VALUE;
-        for (const value of values) {
-            const points = SvgBuild.getPathPoints(SvgBuild.toPathCommandList(value), true);
-            for (const pt of points) {
-                if (pt.y < top) {
-                    top = pt.y;
-                }
-                else if (pt.y > bottom) {
-                    bottom = pt.y;
-                }
-                if (pt.x < left) {
-                    left = pt.x;
-                }
-                else if (pt.x > right) {
-                    right = pt.x;
-                }
-            }
-        }
-        return { top, right, bottom, left };
-    }
-
-    public static getPathPoints(values: SvgPathCommand[], includeRadius = false) {
+    public static unbindPathPoints(values: SvgPathCommand[], includeRadius = false) {
         const result: SvgPoint[] = [];
         let x = 0;
         let y = 0;
@@ -432,31 +399,42 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return values;
     }
 
-    public static fromPathCommandList(values: SvgPathCommand[]) {
-        let result = '';
-        for (const item of values) {
-            result += (result !== '' ? ' ' : '') + item.command;
-            switch (item.command.toUpperCase()) {
-                case 'M':
-                case 'L':
-                case 'C':
-                case 'S':
-                case 'Q':
-                case 'T':
-                    result += item.coordinates.join(',');
-                    break;
-                case 'H':
-                    result += item.coordinates[0];
-                    break;
-                case 'V':
-                    result += item.coordinates[1];
-                    break;
-                case 'A':
-                    result += `${item.radiusX},${item.radiusY},${item.xAxisRotation},${item.largeArcFlag},${item.sweepFlag},${item.coordinates.join(',')}`;
-                    break;
+    public static toNumberList(value: string) {
+        const result: number[] = [];
+        const pattern = /-?[\d.]+/g;
+        let match: RegExpExecArray | null;
+        while ((match = pattern.exec(value)) !== null) {
+            const digit = parseFloat(match[0]);
+            if (!isNaN(digit)) {
+                result.push(digit);
             }
         }
         return result;
+    }
+
+    public static toBoxRect(values: string[]): BoxRect {
+        let top = Number.MAX_VALUE;
+        let right = -Number.MAX_VALUE;
+        let bottom = -Number.MAX_VALUE;
+        let left = Number.MAX_VALUE;
+        for (const value of values) {
+            const points = SvgBuild.unbindPathPoints(SvgBuild.toPathCommandList(value), true);
+            for (const pt of points) {
+                if (pt.y < top) {
+                    top = pt.y;
+                }
+                else if (pt.y > bottom) {
+                    bottom = pt.y;
+                }
+                if (pt.x < left) {
+                    left = pt.x;
+                }
+                else if (pt.x > right) {
+                    right = pt.x;
+                }
+            }
+        }
+        return { top, right, bottom, left };
     }
 
     public static toPathCommandList(value: string) {
@@ -590,6 +568,33 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     largeArcFlag,
                     sweepFlag
                 });
+            }
+        }
+        return result;
+    }
+
+    public static fromPathCommandList(values: SvgPathCommand[]) {
+        let result = '';
+        for (const item of values) {
+            result += (result !== '' ? ' ' : '') + item.command;
+            switch (item.command.toUpperCase()) {
+                case 'M':
+                case 'L':
+                case 'C':
+                case 'S':
+                case 'Q':
+                case 'T':
+                    result += item.coordinates.join(',');
+                    break;
+                case 'H':
+                    result += item.coordinates[0];
+                    break;
+                case 'V':
+                    result += item.coordinates[1];
+                    break;
+                case 'A':
+                    result += `${item.radiusX},${item.radiusY},${item.xAxisRotation},${item.largeArcFlag},${item.sweepFlag},${item.coordinates.join(',')}`;
+                    break;
             }
         }
         return result;

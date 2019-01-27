@@ -26,8 +26,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         this.init();
     }
 
-    public draw(transform?: SvgTransform[], residual?: SvgTransformResidual, save = true) {
-        if (save) {
+    public draw(transform?: SvgTransform[], residual?: SvgTransformResidual, extract = false) {
+        if (!extract) {
             this.transformed = null;
         }
         const parent = this.parent;
@@ -38,7 +38,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             if (parent && parent.aspectRatio.unit !== 1 || transform && transform.length) {
                 const commands = SvgBuild.toPathCommandList(d);
                 if (commands.length) {
-                    let points = SvgBuild.getPathPoints(commands);
+                    let points = SvgBuild.unbindPathPoints(commands);
                     if (points.length) {
                         if (transform && transform.length) {
                             if (typeof residual === 'function') {
@@ -158,7 +158,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             }
             d = element.tagName === 'polygon' ? SvgBuild.getPolygon(points) : SvgBuild.getPolyline(points);
         }
-        if (save) {
+        if (!extract) {
             this.value = d;
             this.setPaint([d]);
         }
