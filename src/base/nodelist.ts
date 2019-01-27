@@ -34,15 +34,15 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
         const lineHeight = $util.maxArray(list.map(node => node.lineHeight));
         const boundsHeight = $util.maxArray(list.map(node => node.bounds.height));
         return list.filter(item => lineHeight > boundsHeight ? item.lineHeight === lineHeight : item.bounds.height === boundsHeight).sort((a, b) => {
-            if (a.groupParent || a.length > 0 || (!a.baseline && b.baseline)) {
+            if (a.groupParent || a.length || (!a.baseline && b.baseline)) {
                 return 1;
             }
-            else if (b.groupParent || b.length > 0 || (a.baseline && !b.baseline)) {
+            else if (b.groupParent || b.length || (a.baseline && !b.baseline)) {
                 return -1;
             }
             if (!a.imageElement || !b.imageElement) {
                 if (a.multiline || b.multiline) {
-                    if (a.lineHeight && b.lineHeight) {
+                    if (a.lineHeight > 0 && b.lineHeight > 0) {
                         return a.lineHeight <= b.lineHeight ? 1 : -1;
                     }
                     else if (a.fontSize === b.fontSize) {

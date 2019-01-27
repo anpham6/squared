@@ -1,3 +1,4 @@
+import { CachedValue } from '../../src/base/@types/node';
 import { Constraint, LocalSettings } from './@types/node';
 
 import { AXIS_ANDROID, CONTAINER_ANDROID, ELEMENT_ANDROID, LAYOUT_ANDROID, RESERVED_JAVA } from './lib/constant';
@@ -13,16 +14,8 @@ const $enum = squared.base.lib.enumeration;
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
-function setLineHeight<T extends squared.base.Node>(node: T, lineHeight: number) {
-    const offset = lineHeight - (node.hasHeight ? node.height : node.bounds.height);
-    if (offset > 0) {
-        node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.floor(offset / 2) - (node.inlineVertical ? $util.convertInt(node.verticalAlign) : 0));
-        node.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, Math.ceil(offset / 2));
-    }
-}
-
 export default (Base: Constructor<squared.base.Node>) => {
-    return class View extends Base implements squared.base.Node {
+    return class View extends Base implements android.base.View {
         public static documentBody() {
             if (View._documentBody === undefined) {
                 const body = new View(0, document.body);
@@ -736,6 +729,19 @@ export default (Base: Constructor<squared.base.Node>) => {
             }
         }
 
+        public applyLineHeight(value: number, isolated = false) {
+            if (isolated && this.support.lineHeight) {
+                this.android('lineHeight', $util.formatPX(value));
+            }
+            else {
+                const offset = value - (this.hasHeight ? this.height : this.bounds.height);
+                if (offset > 0) {
+                    this.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.floor(offset / 2) - (this.inlineVertical ? $util.convertInt(this.verticalAlign) : 0));
+                    this.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, Math.ceil(offset / 2));
+                }
+            }
+        }
+
         public applyOptimizations() {
             if (this.renderParent) {
                 this.autoSizeBoxModel();
@@ -920,7 +926,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                     }
                     const lineHeight = Math.max(this.lineHeight, $util.maxArray(this.renderChildren.map(node => node.lineHeight)));
                     if (lineHeight > 0) {
-                        setLineHeight(this, lineHeight);
+                        this.applyLineHeight(lineHeight);
                     }
                 }
                 if (!this.hasAlign($enum.NODE_ALIGNMENT.MULTILINE) && !this.hasAlign($enum.NODE_ALIGNMENT.RIGHT) && !this.visibleStyle.background) {
@@ -948,7 +954,7 @@ export default (Base: Constructor<squared.base.Node>) => {
             const renderParent = this.renderParent;
             if (renderParent && !renderParent.layoutHorizontal) {
                 const lineHeight = this.lineHeight;
-                if (lineHeight) {
+                if (lineHeight > 0) {
                     const setMinHeight = () => {
                         const minHeight = this.android('minHeight');
                         const value = lineHeight + this.contentBoxHeight;
@@ -959,8 +965,8 @@ export default (Base: Constructor<squared.base.Node>) => {
                     };
                     if (this.length === 0) {
                         if (!this.layoutHorizontal) {
-                            if (this.inlineStatic && this.visibleStyle.background) {
-                                setLineHeight(this, lineHeight);
+                            if (this.support.lineHeight || this.inlineStatic && this.visibleStyle.background) {
+                                this.applyLineHeight(lineHeight, true);
                             }
                             else {
                                 setMinHeight();
@@ -968,7 +974,11 @@ export default (Base: Constructor<squared.base.Node>) => {
                         }
                     }
                     else if (this.layoutVertical) {
-                        this.each((node: View) => !node.layoutHorizontal && setLineHeight(node, lineHeight), true);
+                        this.each((node: View) => {
+                            if (!node.layoutHorizontal) {
+                                node.applyLineHeight(lineHeight, true);
+                            }
+                        }, true);
                     }
                 }
             }
@@ -1013,11 +1023,16 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         get support() {
-            return {
-                container: {
-                    positionRelative: this.layoutRelative || this.layoutConstraint
-                }
-            };
+            const cached: CachedValue<View> = this.unsafe('cached') || {};
+            if (cached.support === undefined) {
+                cached.support = {
+                    lineHeight: this.textElement && this.supported('android', 'lineHeight'),
+                    container: {
+                        positionRelative: this.layoutRelative || this.layoutConstraint
+                    }
+                };
+            }
+            return cached.support;
         }
 
         get inlineWidth() {

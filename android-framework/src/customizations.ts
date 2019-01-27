@@ -74,6 +74,7 @@ export const API_ANDROID: Customizations = {
     [BUILD_ANDROID.NOUGAT_1]: {
         android: {
             'fontWeight': false,
+            'justificationMode': false,
             'layout_marginHorizontal': false,
             'layout_marginVertical': false,
             'paddingHorizontal': false,

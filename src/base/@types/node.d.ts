@@ -53,6 +53,7 @@ export interface CachedValue<T> {
     flexbox?: Flexbox;
     autoMargin?: AutoMargin;
     visibleStyle?: VisibleStyle;
+    support?: Support;
 }
 
 export interface VisibleStyle {
@@ -69,6 +70,7 @@ export interface VisibleStyle {
 }
 
 export interface Support {
+    lineHeight: boolean;
     container: {
         positionRelative: boolean;
     };

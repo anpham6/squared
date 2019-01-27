@@ -49,6 +49,15 @@ function sortHorizontalFloat<T extends View>(list: T[]) {
     return false;
 }
 
+function setBaselineLineHeight<T extends View>(node: T, baseline: T, isolated = false) {
+    if (baseline.lineHeight > 0) {
+        baseline.applyLineHeight(baseline.lineHeight, isolated);
+    }
+    else if (node.lineHeight > 0) {
+        baseline.applyLineHeight(node.lineHeight + baseline.paddingTop + baseline.paddingBottom);
+    }
+}
+
 function adjustBaseline<T extends View>(baseline: T, nodes: T[]) {
     for (const node of nodes) {
         if (node !== baseline) {
@@ -935,29 +944,32 @@ export default class Controller<T extends View> extends squared.base.Controller<
         }
         switch (node.controlName) {
             case CONTAINER_ANDROID.TEXT:
-                const scrollbars: string[] = [];
+                const overflow: string[] = [];
                 if (node.overflowX) {
-                    scrollbars.push(AXIS_ANDROID.HORIZONTAL);
+                    overflow.push(AXIS_ANDROID.HORIZONTAL);
                 }
                 if (node.overflowY) {
-                    scrollbars.push(AXIS_ANDROID.VERTICAL);
+                    overflow.push(AXIS_ANDROID.VERTICAL);
                 }
-                if (scrollbars.length) {
-                    node.android('scrollbars', scrollbars.join('|'));
+                if (overflow.length) {
+                    node.android('scrollbars', overflow.join('|'));
                 }
-                if (node.css('whiteSpace') === 'nowrap') {
-                    node.android('singleLine', 'true');
+                if (node.has('letterSpacing')) {
+                    node.android('letterSpacing', node.css('letterSpacing'));
                 }
-                const textShadow = node.css('textShadow');
-                if (textShadow !== 'none') {
-                    [/^(rgba?\(\d+, \d+, \d+(?:, [\d.]+)?\)) ([\d.]+[a-z]+) ([\d.]+[a-z]+) ([\d.]+[a-z]+)$/, /^([\d.]+[a-z]+) ([\d.]+[a-z]+) ([\d.]+[a-z]+) (.+)$/].some((value, index) => {
-                        const match = textShadow.match(value);
+                if (node.css('textAlign') === 'justify') {
+                    node.android('justificationMode', 'inter_word');
+                }
+                if (node.has('textShadow')) {
+                    const value = node.css('textShadow');
+                    [/^(rgba?\(\d+, \d+, \d+(?:, [\d.]+)?\)) ([\d.]+[a-z]+) ([\d.]+[a-z]+) ([\d.]+[a-z]+)$/, /^([\d.]+[a-z]+) ([\d.]+[a-z]+) ([\d.]+[a-z]+) (.+)$/].some((pattern, index) => {
+                        const match = value.match(pattern);
                         if (match) {
                             const color = $color.parseRGBA(match[index === 0 ? 1 : 4]);
                             if (color) {
-                                const colorValue = Resource.addColor(color);
-                                if (colorValue !== '') {
-                                    node.android('shadowColor', `@color/${colorValue}`);
+                                const colorName = Resource.addColor(color);
+                                if (colorName !== '') {
+                                    node.android('shadowColor', `@color/${colorName}`);
                                 }
                             }
                             node.android('shadowDx', $util.convertInt(match[index === 0 ? 2 : 1]).toString());
@@ -967,6 +979,12 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         }
                         return false;
                     });
+                }
+                if (node.lineHeight > 0 && node.support.lineHeight && parent.layoutVertical) {
+                    node.android('lineHeight', $util.formatPX(node.lineHeight));
+                }
+                if (node.css('whiteSpace') === 'nowrap') {
+                    node.android('singleLine', 'true');
                 }
                 break;
             case CONTAINER_ANDROID.BUTTON:
@@ -1414,102 +1432,99 @@ export default class Controller<T extends View> extends squared.base.Controller<
             alignmentMultiLine = true;
         }
         for (let i = 0; i < rows.length; i++) {
-            const items = rows[i];
-            const baselineItems = $NodeList.baseline(items);
-            const baseline = baselineItems[0] as T | undefined;
-            const textBaseline = $NodeList.baseline(items, true)[0] as T | undefined;
-            let textBottom = getTextBottom(items);
-            if (baseline && textBottom && textBottom.bounds.height > baseline.bounds.height) {
-                baseline.anchor('bottom', textBottom.documentId);
+            let baseline: T | undefined;
+            let isolated = false;
+            if (rows[i].length > 1) {
+                const baselineItems = $NodeList.baseline(rows[i]);
+                baseline = baselineItems[0] as T | undefined;
+                const textBaseline = $NodeList.baseline(rows[i], true)[0] as T | undefined;
+                let textBottom = getTextBottom(rows[i]);
+                if (baseline && textBottom && textBottom.bounds.height > baseline.bounds.height) {
+                    baseline.anchor('bottom', textBottom.documentId);
+                }
+                else {
+                    textBottom = undefined;
+                }
+                const baselineAlign: T[] = [];
+                let documentId = i === 0 ? 'true' : (baseline ? baseline.documentId : '');
+                const tryHeight = (child: T) => {
+                    if (!alignmentMultiLine) {
+                        if (baselineItems.includes(child) || child.actualParent && child.actualHeight >= child.actualParent.box.height) {
+                            return true;
+                        }
+                        else if (!node.hasHeight) {
+                            node.css('height', $util.formatPX(node.bounds.height), true);
+                        }
+                    }
+                    return false;
+                };
+                for (const item of rows[i]) {
+                    if (item !== baseline) {
+                        if (item.baseline) {
+                            baselineAlign.push(item);
+                        }
+                        else if (item.inlineVertical) {
+                            switch (item.verticalAlign) {
+                                case 'text-top':
+                                    if (textBaseline) {
+                                        item.anchor('top', textBaseline.documentId);
+                                    }
+                                    break;
+                                case 'super':
+                                case 'top':
+                                    if (documentId) {
+                                        item.anchor('top', documentId);
+                                    }
+                                    break;
+                                case 'middle':
+                                    if (!alignmentMultiLine) {
+                                        item.anchor('centerVertical', 'true');
+                                    }
+                                    else if (baseline) {
+                                        const height = Math.max(item.bounds.height, item.lineHeight);
+                                        const heightParent = Math.max(baseline.bounds.height, baseline.lineHeight);
+                                        if (height < heightParent) {
+                                            item.anchor('top', baseline.documentId);
+                                            item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.round((heightParent - height) / 2));
+                                        }
+                                    }
+                                    break;
+                                case 'text-bottom':
+                                    if (textBaseline && item !== textBottom) {
+                                        item.anchor('bottom', textBaseline.documentId);
+                                    }
+                                    break;
+                                case 'sub':
+                                case 'bottom':
+                                    if (tryHeight(item)) {
+                                        documentId = '';
+                                    }
+                                    if (documentId) {
+                                        item.anchor('bottom', documentId);
+                                    }
+                                    break;
+                                default:
+                                    if (item.verticalAlign !== '0px' && !item.svgElement) {
+                                        baselineAlign.push(item);
+                                    }
+                                    break;
+                            }
+                        }
+                    }
+                }
+                if (baseline) {
+                    baseline.baselineActive = true;
+                    if (baselineAlign.length) {
+                        adjustBaseline(baseline, baselineAlign);
+                    }
+                }
             }
             else {
-                textBottom = undefined;
-            }
-            const baselineAlign: T[] = [];
-            let documentId = i === 0 ? 'true' : (baseline ? baseline.documentId : '');
-            const tryHeight = (child: T) => {
-                if (!alignmentMultiLine) {
-                    if (baselineItems.includes(child) || child.actualParent && child.actualHeight >= child.actualParent.box.height) {
-                        return true;
-                    }
-                    else if (!node.hasHeight) {
-                        node.css('height', $util.formatPX(node.bounds.height), true);
-                    }
-                }
-                return false;
-            };
-            for (const item of items) {
-                if (item !== baseline) {
-                    if (item.baseline) {
-                        baselineAlign.push(item);
-                    }
-                    else if (item.inlineVertical) {
-                        switch (item.verticalAlign) {
-                            case 'text-top':
-                                if (textBaseline) {
-                                    item.anchor('top', textBaseline.documentId);
-                                }
-                                break;
-                            case 'super':
-                            case 'top':
-                                if (documentId) {
-                                    item.anchor('top', documentId);
-                                }
-                                break;
-                            case 'middle':
-                                if (!alignmentMultiLine) {
-                                    item.anchor('centerVertical', 'true');
-                                }
-                                else if (baseline) {
-                                    const height = Math.max(item.bounds.height, item.lineHeight);
-                                    const heightParent = Math.max(baseline.bounds.height, baseline.lineHeight);
-                                    if (height < heightParent) {
-                                        item.anchor('top', baseline.documentId);
-                                        item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.round((heightParent - height) / 2));
-                                    }
-                                }
-                                break;
-                            case 'text-bottom':
-                                if (textBaseline && item !== textBottom) {
-                                    item.anchor('bottom', textBaseline.documentId);
-                                }
-                                break;
-                            case 'sub':
-                            case 'bottom':
-                                if (tryHeight(item)) {
-                                    documentId = '';
-                                }
-                                if (documentId) {
-                                    item.anchor('bottom', documentId);
-                                }
-                                break;
-                            default:
-                                if (item.verticalAlign !== '0px' && !item.svgElement) {
-                                    baselineAlign.push(item);
-                                }
-                                break;
-                        }
-                    }
-                }
+                baseline = rows[i][0];
+                isolated = true;
             }
             if (baseline) {
-                baseline.baselineActive = true;
-                if (baselineAlign.length) {
-                    adjustBaseline(baseline, baselineAlign);
-                    if (node.lineHeight || baseline.lineHeight) {
-                        let offset = 0;
-                        if (baseline.lineHeight) {
-                            offset = baseline.lineHeight - baseline.bounds.height;
-                        }
-                        else {
-                            offset = node.lineHeight - (baseline.bounds.height - (baseline.paddingTop + baseline.paddingBottom));
-                        }
-                        if (offset > 0) {
-                            baseline.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.floor(offset / 2));
-                            baseline.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, Math.ceil(offset / 2));
-                        }
-                    }
-                }
+                setBaselineLineHeight(node, baseline, isolated);
             }
         }
     }
@@ -1527,6 +1542,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             else {
                 textBottom = undefined;
             }
+            setBaselineLineHeight(node, baseline);
         }
         for (let i = 0; i < children.length; i++) {
             const item = children[i];

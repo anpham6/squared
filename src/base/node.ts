@@ -558,7 +558,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return '';
     }
 
-    public has(attr: string, checkType: number = 0, options?: ObjectMap<string | string[]>) {
+    public has(attr: string, checkType: number = 0, options?: ObjectMap<string | string[]>): boolean {
         const value = (options && options.map === 'initial' ? this._initial.styleMap : this._styleMap)[attr];
         if ($util.hasValue(value)) {
             switch (value) {
@@ -589,10 +589,13 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     }
                 case 'none':
                 case 'initial':
+                case 'unset':
                 case 'normal':
                 case 'transparent':
                 case 'rgba(0, 0, 0, 0)':
                     return false;
+                case 'inherit':
+                    return this.documentParent.has(attr, checkType, options);
                 default:
                     if (options) {
                         if (options.not) {
