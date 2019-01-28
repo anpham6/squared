@@ -193,7 +193,12 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         delete attrMap['transform-origin'];
                         for (const name in attrMap) {
                             const animation = attrMap[name];
-                            sortAttribute(animation);
+                            if (animation.length === 1 && animation[0].ordinal !== 0) {
+                                animation.unshift({ ordinal: 0, value: '' });
+                            }
+                            else {
+                                sortAttribute(animation);
+                            }
                             let animate: SvgAnimate;
                             switch (name) {
                                 case 'rotate':
@@ -203,13 +208,13 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 case 'translate':
                                     animate = new SvgAnimateTransform();
                                     animate.attributeName = 'transform';
-                                    animate.additiveFrom = getTransformInitialValue(name);
+                                    animate.baseFrom = getTransformInitialValue(name);
                                     (<SvgAnimateTransform> animate).setType(name);
                                     break;
                                 default:
                                     animate = new SvgAnimate();
                                     animate.attributeName = name;
-                                    animate.additiveFrom = $util.optionalAsString(element, `${name}.baseVal.value`) || $dom.cssAttribute(element, name);
+                                    animate.baseFrom = $util.optionalAsString(element, `${name}.baseVal.value`) || $dom.cssAttribute(element, name);
                                     break;
                             }
                             animate.paused = cssData['animation-play-state'][index] === 'paused';
@@ -245,12 +250,15 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     if (KEYSPLINE_NAME[keySplines[i]]) {
                                         keySplines[i] = KEYSPLINE_NAME[keySplines[i]];
                                     }
-                                    else if (keySplines[i].startsWith('steps')) {
+                                    else if (keySplines[i].startsWith('step')) {
+                                        if (i === 0 && values[i] === '' && animate.baseFrom) {
+                                            values[i] = animate.baseFrom;
+                                        }
                                         const steps = SvgAnimate.toStepFractionList(name, keySplines[i], i, keyTimes, values, getHostDPI(), getFontSize(element));
                                         if (steps) {
                                             keyTimesData.push(...steps[0]);
                                             valuesData.push(...steps[1]);
-                                            steps[0].forEach(() => keySplinesData.push(KEYSPLINE_NAME.step));
+                                            steps[0].forEach(() => keySplinesData.push(KEYSPLINE_NAME['step']));
                                             continue;
                                         }
                                         keySplines[i] = KEYSPLINE_NAME.linear;

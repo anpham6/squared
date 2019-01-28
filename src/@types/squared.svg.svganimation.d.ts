@@ -9,6 +9,7 @@ declare global {
             paused: boolean;
             element?: SVGAnimationElement;
             parent?: SvgView | SvgPath;
+            baseFrom?: string;
             readonly instanceType: number;
             setAttribute(attr: string, equality?: string): void;
             getAttribute(attr: string): string;
@@ -28,11 +29,10 @@ declare global {
             element?: SVGAnimateElement;
             end?: number;
             keySplines?: string[];
-            additiveFrom?: string;
             sequential?: NumberValue<string>;
             readonly fromToType: boolean;
             setCalcMode(name: string): void;
-            convertToValues(checkKeyTimes?: boolean): void;
+            convertToValues(keyTimes?: number[]): void;
         }
 
         interface SvgAnimateTransform extends SvgAnimate {

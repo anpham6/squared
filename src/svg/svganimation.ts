@@ -1,6 +1,7 @@
 import { INSTANCE_TYPE } from './lib/constant';
-import { convertClockTime, sortNumber } from './lib/util';
+import { convertClockTime, getTransformInitialValue, sortNumber } from './lib/util';
 
+const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 export default class SvgAnimation implements squared.svg.SvgAnimation {
@@ -11,6 +12,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     public paused = false;
     public element?: SVGAnimationElement;
     public parent?: squared.svg.SvgView | squared.svg.SvgPath;
+    public baseFrom?: string;
 
     constructor(element?: SVGAnimationElement) {
         if (element) {
@@ -30,6 +32,12 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
             const dur = this.getAttribute('dur');
             if (dur !== '' && dur !== 'indefinite') {
                 this.duration = convertClockTime(dur);
+            }
+            if (this.attributeName === 'transform') {
+                this.baseFrom = getTransformInitialValue(this.getAttribute('type'));
+            }
+            else if (element.parentElement) {
+                this.baseFrom = $util.optionalAsString(element.parentElement, `${this.attributeName}.baseVal.value`) || $dom.cssInheritAttribute(element.parentElement, this.attributeName);
             }
         }
     }

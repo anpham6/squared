@@ -354,6 +354,10 @@ function getValueType(attributeName: string) {
     }
 }
 
+function isColorType(attributeName: string) {
+    return attributeName === 'fill' || attributeName === 'stroke';
+}
+
 function createAnimateFromTo(attributeName: string, delay: number, to: string, from?: string) {
     const result = new $SvgAnimate();
     result.attributeName = attributeName;
@@ -621,7 +625,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                     propertyName,
                                                     duration: '1',
                                                     repeatCount: '0',
-                                                    valueType: valueType || 'floatType',
+                                                    valueType: valueType || '',
                                                     valueFrom: valueType === 'pathType' ? valueTo : '',
                                                     valueTo
                                                 });
@@ -650,7 +654,8 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                     }
                                     if ($SvgBuild.asSet(item)) {
                                         let valueTo: string | undefined;
-                                        if (item.attributeName === 'fill' || item.attributeName === 'stroke') {
+                                        let valueFrom = '';
+                                        if (isColorType(item.attributeName)) {
                                             const colorName = Resource.addColor(item.to);
                                             if (colorName !== '') {
                                                 valueTo = `@color/${colorName}`;
@@ -658,6 +663,9 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                         }
                                         else {
                                             valueTo = item.to;
+                                            if (valueType === 'pathType') {
+                                                valueFrom = valueTo;
+                                            }
                                         }
                                         if (valueTo) {
                                             animatorData.repeating.push({
@@ -667,12 +675,12 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                 duration: '1',
                                                 repeatCount: '0',
                                                 valueType: valueType || '',
-                                                valueFrom: valueType === 'pathType' ? valueTo : '',
+                                                valueFrom,
                                                 valueTo
                                             });
                                         }
                                     }
-                                    else if (valueType) {
+                                    else if (valueType !== undefined) {
                                         const options: TemplateData = {
                                             startOffset: item.delay > 0 ? item.delay.toString() : '',
                                             valueType,
@@ -907,15 +915,18 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                     }
                                                     break;
                                                 default:
-                                                    values = item.values.slice(0);
                                                     if (attribute) {
+                                                        values = item.values.slice(0);
                                                         propertyName = [attribute];
-                                                    }
-                                                    if (propertyName) {
-                                                        for (let i = 0; i < values.length; i++) {
-                                                            const colorName = Resource.addColor(values[i]);
-                                                            if (colorName !== '') {
-                                                                values[i] = `@color/${colorName}`;
+                                                        if (isColorType(item.attributeName)) {
+                                                            for (let i = 0; i < values.length; i++) {
+                                                                if (i === 0 && values[i] === '' && item.baseFrom) {
+                                                                    values[i] = item.baseFrom;
+                                                                }
+                                                                const colorName = Resource.addColor(values[i]);
+                                                                if (colorName !== '') {
+                                                                    values[i] = `@color/${colorName}`;
+                                                                }
                                                             }
                                                         }
                                                     }
@@ -933,7 +944,11 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                         }
                                                     }
                                                     else {
-                                                        return values[valueIndex].toString();
+                                                        let value = values[valueIndex] !== null ? values[valueIndex].toString() : '';
+                                                        if (!value && valueIndex === 0 && item.baseFrom) {
+                                                            value = item.baseFrom;
+                                                        }
+                                                        return value;
                                                     }
                                                 }
                                                 return undefined;
@@ -957,7 +972,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                 });
                                                                 if (transformOrigin && originX && originY) {
                                                                     if (transformOrigin[j]) {
-                                                                        interpolator = createPathInterpolator($constS.KEYSPLINE_NAME.step);
+                                                                        interpolator = createPathInterpolator($constS.KEYSPLINE_NAME['step']);
                                                                         originX.push({
                                                                             interpolator,
                                                                             fraction,
@@ -1049,7 +1064,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                     if (direction) {
                                                                         translateData.repeating.push({
                                                                             propertyName: direction,
-                                                                            interpolator: createPathInterpolator($constS.KEYSPLINE_NAME.step),
+                                                                            interpolator: createPathInterpolator($constS.KEYSPLINE_NAME['step']),
                                                                             duration: duration.toString(),
                                                                             repeatCount: '0',
                                                                             valueType: 'floatType',
@@ -1097,22 +1112,26 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                     }
                                                     else {
                                                         let valueFrom: string | undefined;
-                                                        let valueTo: string;
                                                         if (values.length > 1) {
                                                             valueFrom = values[0].toString();
-                                                            valueTo = values[values.length - 1].toString();
+                                                            propertyOptions.valueTo = values[values.length - 1].toString();
                                                         }
                                                         else {
                                                             valueFrom = item.from;
-                                                            valueTo = item.to;
+                                                            propertyOptions.valueTo = item.to;
                                                         }
                                                         if (valueFrom) {
                                                             propertyOptions.valueFrom = valueFrom;
                                                         }
                                                         else if (options.valueType === 'pathType') {
-                                                            propertyOptions.valueFrom = group.pathData || valueTo;
+                                                            propertyOptions.valueFrom = group.pathData || propertyOptions.valueTo;
                                                         }
-                                                        propertyOptions.valueTo = valueTo;
+                                                        else if (item.baseFrom) {
+                                                            propertyOptions.valueFrom = item.baseFrom;
+                                                        }
+                                                        if (options.valueType !== 'pathType' && propertyOptions.valueFrom === propertyOptions.valueTo) {
+                                                            propertyOptions.valueFrom = '';
+                                                        }
                                                     }
                                                     if (propertyOptions.valueTo) {
                                                         propertyOptions.propertyValues = false;
@@ -1197,10 +1216,10 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                             src: Resource.addImage({ mdpi: item.href }),
                             rotate: []
                         };
-                        if (item.rotateOrigin && item.rotateOrigin.angle) {
+                        if (item.rotateAngle) {
                             data.rotate.push({
                                 src: data.src,
-                                fromDegrees: item.rotateOrigin.angle.toString(),
+                                fromDegrees: item.rotateAngle.toString(),
                                 visible: item.visible ? 'true' : 'false'
                             });
                             data.src = '';
@@ -1269,7 +1288,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                         }
                     }
                     item.extract(this.options.excludeFromTransform.image);
-                    if (item.visible || item.rotateOrigin) {
+                    if (item.visible || item.rotateAngle !== undefined) {
                         this.IMAGE_DATA.push(item);
                     }
                 }
@@ -1367,13 +1386,6 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
         }
         if (Object.keys(baseData).length) {
             render[0].push(baseData);
-        }
-        if (path.rotateOrigin && (path.rotateOrigin.angle !== undefined || path.rotateOrigin.x !== 0 || path.rotateOrigin.y !== 0)) {
-            render[0].push({
-                rotation: (path.rotateOrigin.angle || 0).toString(),
-                pivotX: path.rotateOrigin.x.toString(),
-                pivotY: path.rotateOrigin.y.toString()
-            });
         }
         if (path.transformResidual) {
             for (let i = 0; i < path.transformResidual.length; i++) {

@@ -16,7 +16,7 @@ declare global {
 
         interface SvgTransformable {
             transformed: SvgTransform[] | null;
-            rotateOrigin?: SvgPoint;
+            rotateAngle?: number;
             transformResidual?: SvgTransform[][];
         }
 
@@ -93,7 +93,7 @@ declare global {
             public static getLine(x1: number, y1: number, x2?: number, y2?: number): string;
             public static getCircle(cx: number, cy: number, r: number): string;
             public static getEllipse(cx: number, cy: number, rx: number, ry?: number): string;
-            public static getRect(width: number, height: number, x?: number, y?: number, absolute?: boolean): string;
+            public static getRect(width: number, height: number, x?: number, y?: number): string;
             public static getPolygon(points: Point[] | DOMPoint[]): string;
             public static getPolyline(points: Point[] | DOMPoint[]): string;
             public static filterTransforms(transform: SvgTransform[], exclude?: number[]): SvgTransform[];

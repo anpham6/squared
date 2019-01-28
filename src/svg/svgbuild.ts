@@ -137,13 +137,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return `M${cx - rx},${cy} a${rx},${ry},0,1,0,${rx * 2},0 a${rx},${ry},0,1,0,-${rx * 2},0`;
     }
 
-    public static getRect(width: number, height: number, x = 0, y = 0, absolute = false) {
-        if (absolute) {
-            return `M${x},${y} ${x + width},${y} ${x + width},${y + height} ${x},${y + height} Z`;
-        }
-        else {
-            return `M${x},${y} h${width} v${height} h${-width} Z`;
-        }
+    public static getRect(width: number, height: number, x = 0, y = 0) {
+        return `M${x},${y} ${x + width},${y} ${x + width},${y + height} ${x},${y + height} Z`;
     }
 
     public static getPolygon(points: Point[] | DOMPoint[]) {

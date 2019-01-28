@@ -2,10 +2,9 @@ import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 
 import { FILL_MODE, INSTANCE_TYPE, KEYSPLINE_NAME } from './lib/constant';
-import { convertClockTime, getFontSize, getHostDPI, getTransformInitialValue, sortNumber } from './lib/util';
+import { convertClockTime, getFontSize, getHostDPI, sortNumber } from './lib/util';
 
 const $color = squared.lib.color;
-const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 function getSplitValue(current: number, next: number, percent: number) {
@@ -57,10 +56,10 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         }
         if (currentValue && nextValue && currentValue.length && currentValue.length === nextValue.length) {
             switch (spline)  {
-                case 'steps-start':
+                case 'step-start':
                     spline = 'steps(1, start)';
                     break;
-                case 'steps-end':
+                case 'step-end':
                     spline = 'steps(1, end)';
                     break;
             }
@@ -71,10 +70,11 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 const interval = 100 / stepSize;
                 const splitTimes: number[] = [];
                 const splitValues: string[] = [];
-                for (let i = 0, j = match[2] === 'start' ? 1 : 0; i < stepSize; i++) {
+                for (let i = 0; i < stepSize; i++) {
+                    const offset = i === 0 && match[2] === 'start' ? 1 : 0;
                     const time = keyTimes[index] + keyTimeTotal * (i / stepSize);
+                    const percent = (interval * (i + offset)) / 100;
                     const value: string[] = [];
-                    const percent = (j > 0 && i === stepSize - 1 ? 100 : interval * (i + j)) / 100;
                     switch (name) {
                         case 'fill':
                         case 'stroke': {
@@ -138,7 +138,6 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public fillMode = 0;
     public alternate = false;
     public end?: number;
-    public additiveFrom?: string;
     public sequential?: NumberValue<string>;
 
     private _repeatCount = 1;
@@ -150,57 +149,34 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     constructor(public element?: SVGAnimateElement) {
         super(element);
         if (element) {
-            if (this.attributeName === 'transform') {
-                this.additiveFrom = getTransformInitialValue(this.getAttribute('type'));
-            }
-            else if (element.parentElement) {
-                this.additiveFrom = $util.optionalAsString(element.parentElement, `${this.attributeName}.baseVal.value`) || $dom.cssAttribute(element.parentElement, this.attributeName);
-            }
             const values = this.getAttribute('values');
-            this.keyTimes = SvgAnimate.toFractionList(this.getAttribute('keyTimes'));
+            const keyTimes = this.duration !== -1 ? SvgAnimate.toFractionList(this.getAttribute('keyTimes')) : [];
             if (values !== '') {
                 this.values = $util.flatMap(values.split(';'), value => value.trim());
-                if (this.keyTimes.length) {
-                    if (this.values.length > 1 && this.keyTimes.length === this.values.length) {
-                        this.from = this.values[0];
-                        this.to = this.values[this.values.length - 1];
-                    }
-                    else {
-                        this.values.length = 0;
-                        this.keyTimes.length = 0;
-                    }
+                if (this.values.length > 1 && keyTimes.length === this.values.length) {
+                    this.from = this.values[0];
+                    this.to = this.values[this.values.length - 1];
+                    this.keyTimes = keyTimes;
                 }
-                else {
-                    if (this.values.length === 1) {
-                        this.to = values[0];
-                        this.convertToValues();
-                    }
-                    else {
-                        for (let i = 0; i < this.values.length; i++) {
-                            this.keyTimes.push(i / (this.values.length - 1));
-                        }
-                    }
+                else if (this.values.length === 1) {
+                    this.to = values[0];
+                    this.convertToValues();
                 }
             }
             else {
                 this.from = this.getAttribute('from');
-                let fromTo: boolean;
-                if (this.to !== '') {
-                    fromTo = true;
-                }
-                else {
+                if (this.to === '') {
                     const by = this.getAttribute('by');
                     if ($util.isNumber(by)) {
-                        if (this.from === '' && this.additiveFrom) {
-                            this.from = this.additiveFrom;
+                        if (this.from === '' && this.baseFrom) {
+                            this.from = this.baseFrom;
                         }
                         if ($util.isNumber(this.from)) {
                             this.to = (parseFloat(this.from) + parseFloat(by)).toString();
                         }
                     }
-                    fromTo = false;
                 }
-                this.convertToValues(fromTo);
+                this.convertToValues(keyTimes);
             }
             this.setAttribute('additive', 'sum');
             const repeatDur = this.getAttribute('repeatDur');
@@ -233,40 +209,51 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public setCalcMode(name: string) {
         if (this.element) {
             switch (this.getAttribute('calcMode')) {
-                case 'discrete':
-                    const keyTimes: number[] = [];
-                    const values: string[] = [];
-                    const keySplines: string[] = [];
-                    for (let i = 0; i < this.keyTimes.length - 1; i++) {
-                        const result = SvgAnimate.toStepFractionList(name, 'steps-start', i, this.keyTimes, this.values, getHostDPI(), getFontSize(this.element));
-                        if (result) {
-                            keyTimes.push(...result[0]);
-                            values.push(...result[1]);
-                            result[0].forEach(() => keySplines.push(KEYSPLINE_NAME.step));
+                case 'discrete': {
+                    if (this.fromToType) {
+                        const keyTimes: number[] = [];
+                        const values: string[] = [];
+                        for (let i = 0; i < this.keyTimes.length - 1; i++) {
+                            const result = SvgAnimate.toStepFractionList(name, 'step-end', i, this.keyTimes, this.values, getHostDPI(), getFontSize(this.element));
+                            if (result) {
+                                keyTimes.push(...result[0]);
+                                values.push(...result[1]);
+                            }
                         }
-                        else {
-                            return;
-                        }
+                        keyTimes.push(this.keyTimes.pop() as number);
+                        values.push(this.values.pop() as string);
+                        this.values = values;
+                        this.keyTimes = keyTimes;
+                        this._keySplines = [KEYSPLINE_NAME['step']];
                     }
-                    keyTimes.push(this.keyTimes.pop() as number);
-                    values.push(this.values.pop() as string);
-                    this.keyTimes = keyTimes;
-                    this.values = values;
-                    this._keySplines = keySplines;
+                    else {
+                        this.from = '';
+                        this.to = '';
+                        this._values = undefined;
+                        this._keyTimes = undefined;
+                    }
                     break;
+                }
                 case 'spline':
                     this.keySplines = $util.flatMap(this.getAttribute('keySplines').split(';'), value => value.trim());
+                case 'linear':
+                    if (this.keyTimes[0] !== 0 && this.keyTimes[this.keyTimes.length - 1] !== 1) {
+                        const keyTimes: number[] = [];
+                        for (let i = 0; i < this.values.length; i++) {
+                            keyTimes.push(i / (this.values.length - 1));
+                        }
+                        this._keyTimes = keyTimes;
+                        this._keySplines = undefined;
+                    }
                     break;
             }
         }
     }
 
-    public convertToValues(checkKeyTimes = false) {
+    public convertToValues(keyTimes?: number[]) {
         if (this.to !== '') {
             this.values = [this.from, this.to];
-            if (this.keyTimes.length !== 2 || !checkKeyTimes) {
-                this.keyTimes = [0, 1];
-            }
+            this.keyTimes = keyTimes && keyTimes.length === 2 ? keyTimes : [0, 1];
         }
     }
 

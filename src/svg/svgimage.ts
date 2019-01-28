@@ -1,5 +1,3 @@
-import { SvgPoint } from './@types/object';
-
 import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgView$MX from './svgview-mx';
 import SvgViewRect$MX from './svgviewrect-mx';
@@ -12,7 +10,7 @@ import { SVG, applyMatrixX, applyMatrixY } from './lib/util';
 const $util = squared.lib.util;
 
 export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgElement))) implements squared.svg.SvgImage {
-    public rotateOrigin?: SvgPoint;
+    public rotateAngle?: number;
     public readonly imageElement: SVGImageElement | null = null;
 
     private __get_transform = false;
@@ -65,11 +63,11 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
                             if (m.d < 0) {
                                 y += m.d * height;
                             }
-                            if (this.rotateOrigin) {
-                                this.rotateOrigin.angle = (this.rotateOrigin.angle || 0) + item.angle;
+                            if (this.rotateAngle !== undefined) {
+                                this.rotateAngle += item.angle;
                             }
                             else {
-                                this.rotateOrigin = { angle: item.angle, x: 0, y: 0 };
+                                this.rotateAngle = item.angle;
                             }
                         }
                         break;

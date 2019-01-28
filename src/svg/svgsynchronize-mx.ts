@@ -411,19 +411,19 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                 let repeatingResult: KeyTimeMap | undefined;
                 let indefiniteResult: KeyTimeMap | undefined;
                 let indefiniteDurationTotal = 0;
-                function insertSplitKeyTimeValue(map: TimelineIndex, interpolatorMap: InterpolatorMap, item: SvgAnimate, baseValue: AnimateValue, begin: number, iteration: number, splitTime: number, adjustment = 0): [number, AnimateValue] {
+                function insertSplitKeyTimeValue(map: TimelineIndex, interpolatorMap: InterpolatorMap, item: SvgAnimate, baseValue: AnimateValue, begin: number, iteration: number, time: number): [number, AnimateValue] {
                     let actualTime: number;
                     if (begin < 0) {
-                        actualTime = splitTime - begin;
+                        actualTime = time - begin;
                         begin = 0;
                     }
                     else {
-                        actualTime = splitTime;
+                        actualTime = time;
                     }
-                    if (actualTime + 1 % 1000) {
+                    if (actualTime + 1 % (item.duration % 1000 === 0 ? 1000 : 100) === 0) {
                         actualTime++;
                     }
-                    const fraction = (actualTime - (begin + item.duration * iteration)) / item.duration;
+                    const fraction = Math.max(0, Math.min((actualTime - (begin + item.duration * iteration)) / item.duration, 1));
                     const keyTimes = item.keyTimes;
                     let previousIndex = -1;
                     let nextIndex = -1;
@@ -450,7 +450,6 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                         nextIndex = previousIndex !== -1 ? previousIndex + 1 : keyTimes.length - 1;
                         value = getItemValue(item, nextIndex, baseValue, iteration);
                     }
-                    let time = splitTime + adjustment;
                     if (map.get(time) !== value) {
                         while (map.has(time)) {
                             time++;
@@ -647,7 +646,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                         }
                                                         else {
                                                             function adjustNumberValue(splitTime: number) {
-                                                                [maxTime, lastValue] = insertSplitKeyTimeValue(repeatingMap[attr], repeatingInterpolatorMap, item, baseValue, begin, k, splitTime, !parallel && splitTime === groupBegin[i + 1] && !repeatingMap[attr].has(splitTime - 1) ? -1 : 0);
+                                                                [maxTime, lastValue] = insertSplitKeyTimeValue(repeatingMap[attr], repeatingInterpolatorMap, item, baseValue, begin, k, splitTime);
                                                             }
                                                             if (begin < 0 && maxTime === -1) {
                                                                 if (time > 0) {
@@ -656,8 +655,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                             }
                                                             else {
                                                                 if (time > maxThreadTime) {
-                                                                    parallel = false;
-                                                                    adjustNumberValue(maxThreadTime);
+                                                                    adjustNumberValue(maxThreadTime + (maxThreadTime === groupBegin[i + 1] && !repeatingMap[attr].has(maxThreadTime - 1) ? -1 : 0));
                                                                     complete = false;
                                                                     break threadTimeExceeded;
                                                                 }
@@ -680,7 +678,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                                         parallel = false;
                                                                     }
                                                                     else if (k > 0 && l === 0) {
-                                                                        if (item.additiveSum && item.accumulateSum) {
+                                                                        if (item.accumulateSum) {
                                                                             insertInterpolator(repeatingInterpolatorMap, time, item.keySplines, l);
                                                                             maxTime = time;
                                                                             continue;
@@ -692,7 +690,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                         }
                                                     }
                                                     if (time > maxTime) {
-                                                        if (l === item.keyTimes.length - 1 && (k < repeatTotal - 1 || incomplete.length === 0 && item.fillMode < FILL_MODE.FORWARDS) && !repeatingMap[attr].has(time - 1)) {
+                                                        if (l === item.keyTimes.length - 1 && (k < repeatTotal - 1 || incomplete.length === 0 && item.fillMode < FILL_MODE.FORWARDS) && !item.accumulateSum && !repeatingMap[attr].has(time - 1)) {
                                                             time--;
                                                         }
                                                         insertInterpolator(repeatingInterpolatorMap, time, item.keySplines, l);
