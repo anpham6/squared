@@ -512,6 +512,9 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                         const transformTargets: $SvgAnimate[][] = [];
                         for (const item of group.animate as $SvgAnimate[]) {
                             const sequential = item.sequential;
+                            if ($SvgBuild.asAnimateTransform(item)) {
+                                item.expandToValues();
+                            }
                             if (sequential) {
                                 if ($SvgBuild.asAnimateTransform(item)) {
                                     const values = transformMap.get(sequential.value) || [];
@@ -669,10 +672,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                             });
                                         }
                                     }
-                                    else {
-                                        if (valueType === undefined) {
-                                            continue;
-                                        }
+                                    else if (valueType) {
                                         const options: TemplateData = {
                                             startOffset: item.delay > 0 ? item.delay.toString() : '',
                                             valueType,
@@ -691,7 +691,6 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                         let propertyName: string[] | undefined;
                                         let values: string[] | (number[] | null[])[] | undefined;
                                         if ($SvgBuild.asAnimateTransform(item)) {
-                                            animateTransform = true;
                                             propertyName = getTransformPropertyName(item.type);
                                             switch (item.type) {
                                                 case SVGTransform.SVG_TRANSFORM_ROTATE:
@@ -706,13 +705,12 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                             }
                                             options.valueType = 'floatType';
                                             transformOrigin = item.transformOrigin;
+                                            animateTransform = true;
                                         }
                                         else {
                                             let attribute: string | undefined = ATTRIBUTE_ANDROID[item.attributeName];
-                                            if (attribute === undefined) {
-                                                if (getTransformInitialValue(item.attributeName)) {
-                                                    attribute = item.attributeName;
-                                                }
+                                            if (attribute === undefined && getTransformInitialValue(item.attributeName)) {
+                                                attribute = item.attributeName;
                                             }
                                             switch (options.valueType) {
                                                 case 'intType':
@@ -1065,16 +1063,14 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                 propertyData.repeating.push(propertyOptions);
                                                             }
                                                         }
-                                                        const fillAfter = getFillAfter(propertyName[i]);
-                                                        if (fillAfter) {
-                                                            propertyData.repeating.push(...fillAfter);
+                                                        const fillRepeat = getFillAfter(propertyName[i]);
+                                                        if (fillRepeat) {
+                                                            propertyData.repeating.push(...fillRepeat);
                                                         }
-                                                        if (setData.AA) {
-                                                            if (translateData.repeating.length) {
-                                                                setData.AA.push(translateData);
-                                                            }
-                                                            setData.AA.push(propertyData);
+                                                        if (translateData.repeating.length) {
+                                                            setData.AA.push(translateData);
                                                         }
+                                                        setData.AA.push(propertyData);
                                                         continue;
                                                     }
                                                 }
@@ -1089,7 +1085,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                         if (valueTo !== null) {
                                                             if (values.length > 1) {
                                                                 const from = values[0][i];
-                                                                if (from !== null) {
+                                                                if (from !== null && from !== valueTo) {
                                                                     propertyOptions.valueFrom = from.toString();
                                                                 }
                                                             }
@@ -1100,27 +1096,32 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                         }
                                                     }
                                                     else {
+                                                        let valueFrom: string | undefined;
+                                                        let valueTo: string;
                                                         if (values.length > 1) {
-                                                            const from = values[0];
-                                                            const to = values[values.length - 1];
-                                                            propertyOptions.valueFrom = options.valueType === 'pathType' || from !== to ? from.toString() : '';
-                                                            propertyOptions.valueTo = to.toString();
+                                                            valueFrom = values[0].toString();
+                                                            valueTo = values[values.length - 1].toString();
                                                         }
                                                         else {
-                                                            propertyOptions.valueFrom = options.valueType === 'pathType' || item.from !== item.to ? item.from : '';
-                                                            propertyOptions.valueTo = item.to;
+                                                            valueFrom = item.from;
+                                                            valueTo = item.to;
                                                         }
+                                                        if (valueFrom) {
+                                                            propertyOptions.valueFrom = valueFrom;
+                                                        }
+                                                        else if (options.valueType === 'pathType') {
+                                                            propertyOptions.valueFrom = group.pathData || valueTo;
+                                                        }
+                                                        propertyOptions.valueTo = valueTo;
                                                     }
                                                     if (propertyOptions.valueTo) {
                                                         propertyOptions.propertyValues = false;
                                                         animatorData.repeating.push(propertyOptions);
                                                     }
                                                 }
-                                                {
-                                                    const fillAfter = getFillAfter(propertyName[i]);
-                                                    if (fillAfter) {
-                                                        fillData.after.push(...fillAfter);
-                                                    }
+                                                const fillAfter = getFillAfter(propertyName[i]);
+                                                if (fillAfter) {
+                                                    fillData.after.push(...fillAfter);
                                                 }
                                             }
                                         }
@@ -1153,9 +1154,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                     if (animatorData.indefinite && indefiniteData.repeat.length) {
                                         animatorData.indefinite.push(indefiniteData);
                                     }
-                                    if (setData.AA) {
-                                        setData.AA.push(animatorData);
-                                    }
+                                    setData.AA.push(animatorData);
                                 }
                             }
                             if ($util.isArray(setData.AA)) {

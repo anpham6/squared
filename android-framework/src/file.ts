@@ -281,7 +281,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                             value: themeData.items[name]
                         });
                     }
-                    if (!appTheme[filename] || themeName !== 'AppTheme' || items.length > 0) {
+                    if (!appTheme[filename] || themeName !== 'AppTheme' || items.length) {
                         data.A.push({
                             name: themeName,
                             parent: themeData.parent,

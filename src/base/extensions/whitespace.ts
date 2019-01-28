@@ -74,14 +74,14 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                         }
                                     }
                                     else {
-                                        if (marginTop === 0 && current.length > 0) {
+                                        if (marginTop === 0 && current.length) {
                                             const topChild = current.firstChild;
                                             if (topChild && topChild.blockStatic) {
                                                 marginTop = $util.convertInt(topChild.cssInitial('marginTop', false, true));
                                                 current = topChild as T;
                                             }
                                         }
-                                        if (previousMarginBottom === 0 && previous.length > 0) {
+                                        if (previousMarginBottom === 0 && previous.length) {
                                             const bottomChild = previous.lastChild;
                                             if (bottomChild && bottomChild.blockStatic) {
                                                 previousMarginBottom = $util.convertInt(bottomChild.cssInitial('marginBottom', false, true));

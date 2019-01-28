@@ -119,16 +119,16 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
 
     public static toFractionList(value: string, delimiter = ';') {
-        let previous = -1;
+        let previous = 0;
         const result = $util.flatMap(value.split(delimiter), segment => {
             const fraction = parseFloat(segment);
-            if (!isNaN(fraction) && fraction <= 1 && (previous === -1 || fraction > previous)) {
+            if (!isNaN(fraction) && fraction >= previous && fraction <= 1) {
                 previous = fraction;
                 return fraction;
             }
             return -1;
         });
-        return result.length > 1 && result.some(percent => percent !== -1) && result[0] === 0 ? result : [];
+        return result.length > 1 && result[0] === 0 && result.some(percent => percent !== -1) ? result : [];
     }
 
     public from = '';
@@ -159,8 +159,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             const values = this.getAttribute('values');
             this.keyTimes = SvgAnimate.toFractionList(this.getAttribute('keyTimes'));
             if (values !== '') {
+                this.values = $util.flatMap(values.split(';'), value => value.trim());
                 if (this.keyTimes.length) {
-                    this.values = $util.flatMap(values.split(';'), value => value.trim());
                     if (this.values.length > 1 && this.keyTimes.length === this.values.length) {
                         this.from = this.values[0];
                         this.to = this.values[this.values.length - 1];
@@ -170,17 +170,22 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                         this.keyTimes.length = 0;
                     }
                 }
+                else {
+                    if (this.values.length === 1) {
+                        this.to = values[0];
+                        this.convertToValues();
+                    }
+                    else {
+                        for (let i = 0; i < this.values.length; i++) {
+                            this.keyTimes.push(i / (this.values.length - 1));
+                        }
+                    }
+                }
             }
             else {
                 this.from = this.getAttribute('from');
                 let fromTo: boolean;
                 if (this.to !== '') {
-                    if (this.from !== '') {
-                        this.setAttribute('additive', 'sum');
-                        if (this.additiveSum) {
-                            this.setAttribute('accumulate', 'sum');
-                        }
-                    }
                     fromTo = true;
                 }
                 else {
@@ -197,6 +202,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 }
                 this.convertToValues(fromTo);
             }
+            this.setAttribute('additive', 'sum');
             const repeatDur = this.getAttribute('repeatDur');
             if (repeatDur !== '' && repeatDur !== 'indefinite') {
                 this.repeatDuration = convertClockTime(repeatDur);
@@ -282,6 +288,12 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             else if ($util.hasBit(this.fillMode, FILL_MODE.FREEZE)) {
                 this.fillMode ^= FILL_MODE.FREEZE;
             }
+            if (this.repeatCount !== 1) {
+                this.setAttribute('accumulate', 'sum');
+            }
+            else {
+                this.accumulateSum = false;
+            }
         }
     }
     get repeatCount() {
@@ -301,6 +313,9 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
 
     set values(value) {
         this._values = value;
+        if (this._keyTimes && this._keyTimes.length !== value.length) {
+            this._keyTimes = undefined;
+        }
     }
     get values() {
         if (this._values === undefined) {
@@ -310,7 +325,9 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
 
     set keyTimes(value) {
-        this._keyTimes = value;
+        if (value.every(fraction => fraction >= 0 && fraction <= 1) && (this._values === undefined || this._values.length === value.length)) {
+            this._keyTimes = value;
+        }
     }
     get keyTimes() {
         if (this._keyTimes === undefined) {

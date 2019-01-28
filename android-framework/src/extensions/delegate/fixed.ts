@@ -41,7 +41,7 @@ function reduceContainerWidth<T extends View>(node: T, value: string, offset: nu
 export default class Fixed<T extends View> extends squared.base.Extension<T> {
     public condition(node: T) {
         const fixed = getFixedNodes(node);
-        if (fixed.length > 0) {
+        if (fixed.length) {
             const top = fixed.filter(item => item.has('top') && item.top >= 0).map(item => item.top);
             const right = fixed.filter(item => item.has('right') && item.right >= 0).map(item => item.right);
             const bottom = fixed.filter(item => item.has('bottom') && item.bottom >= 0).map(item => item.bottom);

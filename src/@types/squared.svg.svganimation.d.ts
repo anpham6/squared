@@ -41,6 +41,7 @@ declare global {
             transformFrom?: string;
             transformOrigin?: Point[];
             setType(value: string): void;
+            expandToValues(): void;
         }
 
         interface SvgAnimateMotion extends SvgAnimate {

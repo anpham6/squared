@@ -298,7 +298,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         break;
                     case 'animateTransform':
                         const animate = new SvgAnimateTransform(<SVGAnimateTransformElement> item);
-                        if (!animate.additiveSum && SvgBuild.asShape(this) && this.path) {
+                        if (SvgBuild.asShape(this) && this.path) {
                             animate.transformFrom = this.path.draw(undefined, undefined, true);
                         }
                         result.push(animate);
