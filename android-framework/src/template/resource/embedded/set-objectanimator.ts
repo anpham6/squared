@@ -4,6 +4,11 @@ export default `<?xml version="1.0" encoding="utf-8"?>
 	<set android:ordering="{~ordering}">
 	<<AA>>
 		<set android:ordering="{~ordering}">
+		<<fillBefore>>
+			<set>
+			<<values>><<values>>
+			</set>
+		<<fillBefore>>
 		<<repeating>>
 			<objectAnimator
 				android:propertyName="{~propertyName}"
@@ -28,8 +33,13 @@ export default `<?xml version="1.0" encoding="utf-8"?>
 			</objectAnimator>
 		<<repeating>>
 		<<indefinite>>
-			<set android:ordering="{~ordering}">
-			<<repeat>>
+			<set android:ordering="sequentially">
+			<<values>><<values>>
+			</set>
+		<<indefinite>>
+		<<fillAfter>>
+			<set>
+			<<values>>
 				<objectAnimator
 					android:propertyName="{&propertyName}"
 					android:valueType="{~valueType}"
@@ -39,19 +49,8 @@ export default `<?xml version="1.0" encoding="utf-8"?>
 					android:startOffset="{~startOffset}"
 					android:duration="{~duration}"
 					android:repeatCount="{~repeatCount}" />
-			<<repeat>>
+			<<values>>
 			</set>
-		<<indefinite>>
-		<<fillAfter>>
-			<objectAnimator
-				android:propertyName="{&propertyName}"
-				android:valueType="{~valueType}"
-				android:interpolator="{~interpolator}"
-				android:valueFrom="{~valueFrom}"
-				android:valueTo="{&valueTo}"
-				android:startOffset="{~startOffset}"
-				android:duration="{~duration}"
-				android:repeatCount="{~repeatCount}" />
 		<<fillAfter>>
 		</set>
 	<<AA>>

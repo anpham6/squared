@@ -252,6 +252,20 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         }
     }
 
+    private setFillMode(mode: boolean, value: number) {
+        const hasBit = $util.hasBit(this.fillMode, value);
+        if (mode) {
+            if (!hasBit) {
+                this.fillMode |= value;
+            }
+        }
+        else {
+            if (hasBit) {
+                this.fillMode ^= value;
+            }
+        }
+    }
+
     set repeatCount(value) {
         if (!isNaN(value)) {
             this._repeatCount = value;
@@ -263,13 +277,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             this._repeatCount = 1;
         }
         if (this.element) {
-            const fill = this.getAttribute('fill');
-            if (fill === 'freeze' && this.repeatCount !== -1) {
-                this.fillMode |= FILL_MODE.FREEZE;
-            }
-            else if ($util.hasBit(this.fillMode, FILL_MODE.FREEZE)) {
-                this.fillMode ^= FILL_MODE.FREEZE;
-            }
+            this.fillFreeze = this.repeatCount !== -1 && this.getAttribute('fill') === 'freeze';
             if (this.repeatCount !== 1) {
                 this.setAttribute('accumulate', 'sum');
             }
@@ -369,6 +377,31 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
 
     get fromToType() {
         return this.keyTimes.length === 2 && this.keyTimes[0] === 0 && this.keyTimes[1] === 1;
+    }
+
+    set fillBackwards(value) {
+        this.setFillMode(value, FILL_MODE.BACKWARDS);
+    }
+    get fillBackwards() {
+        return $util.hasBit(this.fillMode, FILL_MODE.BACKWARDS);
+    }
+
+    set fillForwards(value) {
+        this.setFillMode(value, FILL_MODE.FORWARDS);
+    }
+    get fillForwards() {
+        return $util.hasBit(this.fillMode, FILL_MODE.FORWARDS);
+    }
+
+    set fillFreeze(value) {
+        this.setFillMode(value, FILL_MODE.FREEZE);
+    }
+    get fillFreeze() {
+        return $util.hasBit(this.fillMode, FILL_MODE.FREEZE);
+    }
+
+    get fillReset() {
+        return this.fillMode < FILL_MODE.FORWARDS;
     }
 
     get instanceType() {

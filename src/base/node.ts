@@ -435,10 +435,13 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
         else {
             if (arguments.length >= 2) {
-                this._styleMap[attr] = $util.hasValue(value) ? value : '';
+                this._styleMap[attr] = value;
                 if (cache) {
                     this.unsetCache(attr);
                 }
+            }
+            else if (this._styleMap[attr] === 'inherit' && this._element) {
+                return $dom.cssInheritAttribute(this._element.parentElement, attr);
             }
             return this._styleMap[attr] || this.style && this.style[attr] || '';
         }

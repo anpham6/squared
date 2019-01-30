@@ -382,17 +382,16 @@ export function cssAttribute(element: Element, attr: string, computed = false) {
     return value || computed && getStyle(element)[name] as string || '';
 }
 
-export function cssInheritAttribute(element: Element, attr: string) {
+export function cssInheritAttribute(element: Element | null, attr: string) {
     let current: HTMLElement | Element | null = element;
     let value = '';
-    do {
+    while (current) {
         value = cssAttribute(current, attr);
         if (value !== '' && value !== 'inherit') {
             break;
         }
         current = current.parentElement;
     }
-    while (current);
     return value;
 }
 

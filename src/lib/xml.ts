@@ -7,6 +7,13 @@ type XMLTagData = {
     closing: boolean;
 };
 
+function replaceTemplateSection(data: StringMap, value: string) {
+    for (const index in data) {
+        value = value.replace(new RegExp(`\\t*<<${index}>>[\\w\\W]*<<${index}>>`), `{%${index}}`);
+    }
+    return value;
+}
+
 export function formatPlaceholder(id: string | number, symbol = ':') {
     return `{${symbol + id.toString()}}`;
 }
@@ -75,20 +82,19 @@ export function replaceCharacter(value: string) {
 }
 
 export function parseTemplate(value: string) {
-    const result: StringMap = { __ROOT__: value };
+    const result: StringMap = {};
     function parseSection(section: string) {
-        const pattern = /(\t*<<(\w+)>>)\n[\w\W]*\n*\1/g;
+        const data: StringMap = {};
+        const pattern = /(\t*<<(\w+)>>)\n*[\w\W]*\n*\1/g;
         let match: RegExpExecArray | null;
         while ((match = pattern.exec(section)) !== null) {
             const segment = match[0].replace(new RegExp(`^${match[1]}\\n`), '').replace(new RegExp(`${match[1]}$`), '');
-            for (const index in result) {
-                result[index] = result[index].replace(match[0], `{%${match[2]}}`);
-            }
-            result[match[2]] = segment;
-            parseSection(segment);
+            data[match[2]] = replaceTemplateSection(parseSection(segment), segment);
         }
+        Object.assign(result, data);
+        return data;
     }
-    parseSection(value);
+    result['__ROOT__'] = replaceTemplateSection(parseSection(value), value);
     return result;
 }
 

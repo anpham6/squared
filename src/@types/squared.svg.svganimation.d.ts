@@ -31,7 +31,11 @@ declare global {
             keySplines?: string[];
             animationName?: string;
             sequential?: NumberValue<string>;
+            fillBackwards: boolean;
+            fillForwards: boolean;
+            fillFreeze: boolean;
             readonly fromToType: boolean;
+            readonly fillReset: boolean;
             setCalcMode(name: string): void;
             convertToValues(keyTimes?: number[]): void;
         }

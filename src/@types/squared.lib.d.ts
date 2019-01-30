@@ -37,7 +37,7 @@ declare global {
             function cssFromParent(element: Element | null, attr: string): boolean;
             function cssInline(element: Element, attr: string): string;
             function cssAttribute(element: Element, attr: string, computed?: boolean): string;
-            function cssInheritAttribute(element: Element, attr: string): string;
+            function cssInheritAttribute(element: Element | null, attr: string): string;
             function getBackgroundPosition(value: string, dimension: RectDimension, dpi: number, fontSize: number, leftPerspective?: boolean, percent?: boolean): RectPosition;
             function getFirstChildElement(elements: Element | null, lineBreak?: boolean): Element | null;
             function getLastChildElement(elements: Element | null, lineBreak?: boolean): Element | null;

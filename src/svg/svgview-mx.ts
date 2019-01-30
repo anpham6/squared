@@ -6,7 +6,7 @@ import SvgAnimateTransform from './svganimatetransform';
 import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 
-import { FILL_MODE, KEYSPLINE_NAME } from './lib/constant';
+import { KEYSPLINE_NAME } from './lib/constant';
 import { REGEXP_SVG, convertClockTime, getFontSize, getHostDPI, getTransform, getTransformInitialValue, getTransformOrigin, isVisible, setOpacity, setVisible } from './lib/util';
 
 interface AttributeData extends NumberValue<string> {
@@ -236,7 +236,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     keySplines.push(spline ? spline.value : timingFunction);
                                 }
                                 const transformOrigin = animation[i].transformOrigin;
-                                if (transformOrigin && animate instanceof SvgAnimateTransform) {
+                                if (transformOrigin && SvgBuild.asAnimateTransform(animate)) {
                                     if (animate.transformOrigin === undefined) {
                                         animate.transformOrigin = [];
                                     }
@@ -283,12 +283,8 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 animate.keyTimes = keyTimes;
                             }
                             animate.repeatCount = iterationCount !== 'infinite' ? parseFloat(iterationCount) : -1;
-                            if (fillMode === 'forwards' || fillMode === 'both') {
-                                animate.fillMode |= FILL_MODE.FORWARDS;
-                            }
-                            if (fillMode === 'backwards' || fillMode === 'both') {
-                                animate.fillMode |= FILL_MODE.BACKWARDS;
-                            }
+                            animate.fillForwards = fillMode === 'forwards' || fillMode === 'both';
+                            animate.fillBackwards = fillMode === 'backwards' || fillMode === 'both';
                             animate.reverse = direction.endsWith('reverse');
                             animate.alternate = (animate.repeatCount === -1 || animate.repeatCount > 1) && direction.startsWith('alternate');
                             result.push(animate);

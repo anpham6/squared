@@ -6,7 +6,7 @@ import SvgAnimateTransform from './svganimatetransform';
 import SvgBuild from './svgbuild';
 import SvgPath from './svgpath';
 
-import { FILL_MODE, SYNCHRONIZE_MODE } from './lib/constant';
+import { SYNCHRONIZE_MODE } from './lib/constant';
 import { SVG, getLeastCommonMultiple, getTransformName, getTransformOrigin, sortNumber, getTransformInitialValue } from './lib/util';
 
 type SvgAnimation = squared.svg.SvgAnimation;
@@ -466,7 +466,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                     return item.begin.length > 1 || item.alternate || item.end !== undefined || index === 0 && item.additiveSum;
                 }
                 if (mergeable.length > 1) {
-                    if (mergeable.some(item => $util.hasBit(item.fillMode, FILL_MODE.BACKWARDS))) {
+                    if (mergeable.some(item => item.fillBackwards)) {
                         partitions.push(mergeable);
                     }
                     else {
@@ -559,7 +559,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
             });
             partitions.forEach(mergeable => {
                 const transforming = SvgBuild.asAnimateTransform(mergeable[0]);
-                const fillBackwards = mergeable.filter(item => $util.hasBit(item.fillMode, FILL_MODE.BACKWARDS));
+                const fillBackwards = mergeable.filter(item => item.fillBackwards);
                 const groupName: ObjectMap<Map<number, GroupData>> = {};
                 let repeatingDuration = 0;
                 for (const item of mergeable) {
@@ -582,7 +582,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                             const ignore: SvgAnimate[] = [];
                             do {
                                 const item = group.items[i];
-                                const groupEnd = item.repeatCount === -1 || item.fillMode >= FILL_MODE.FORWARDS;
+                                const groupEnd = item.repeatCount === -1 || !item.fillReset;
                                 const repeatDuration = item.duration * item.repeatCount;
                                 for (let j = 0; j < i; j++) {
                                     const subitem = group.items[j];
@@ -590,7 +590,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         ignore.push(subitem);
                                     }
                                 }
-                                if (item.repeatCount !== -1 && item.fillMode >= FILL_MODE.FORWARDS) {
+                                if (item.repeatCount !== -1 && !item.fillReset) {
                                     freezeTime = Math.min(begin + repeatDuration, freezeTime);
                                 }
                                 if (groupEnd) {
@@ -683,11 +683,11 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                         let previousItem: SvgAnimateTransform | undefined;
                         function checkComplete(animate: SvgAnimate, delayed: boolean) {
                             incomplete = incomplete.filter(item => item.value !== animate);
-                            if ($util.hasBit(animate.fillMode, FILL_MODE.FORWARDS)) {
+                            if (animate.fillForwards) {
                                 forwardMap[attr] = true;
                                 return true;
                             }
-                            else if ($util.hasBit(animate.fillMode, FILL_MODE.FREEZE)) {
+                            else if (animate.fillFreeze) {
                                 freezeMap[attr] = { ordinal: maxTime, value: baseValue };
                                 return true;
                             }
@@ -852,7 +852,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                     }
                                                 }
                                                 if (time > maxTime) {
-                                                    if (l === item.keyTimes.length - 1 && (k < repeatTotal - 1 || incomplete.length === 0 && item.fillMode < FILL_MODE.FORWARDS) && !item.accumulateSum && !repeatingMap[attr].has(time - 1)) {
+                                                    if (l === item.keyTimes.length - 1 && (k < repeatTotal - 1 || incomplete.length === 0 && item.fillReset) && !item.accumulateSum && !repeatingMap[attr].has(time - 1)) {
                                                         time--;
                                                     }
                                                     insertInterpolator(repeatingInterpolatorMap, item, time, l, useKeyTime);
