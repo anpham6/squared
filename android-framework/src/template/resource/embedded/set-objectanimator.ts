@@ -42,10 +42,7 @@ export default `<?xml version="1.0" encoding="utf-8"?>
 			<<repeat>>
 			</set>
 		<<indefinite>>
-		</set>
-		<<fill>>
-		<set android:ordering="{~ordering}">
-		<<after>>
+		<<fillAfter>>
 			<objectAnimator
 				android:propertyName="{&propertyName}"
 				android:valueType="{~valueType}"
@@ -55,9 +52,8 @@ export default `<?xml version="1.0" encoding="utf-8"?>
 				android:startOffset="{~startOffset}"
 				android:duration="{~duration}"
 				android:repeatCount="{~repeatCount}" />
-		<<after>>
+		<<fillAfter>>
 		</set>
-		<<fill>>
 	<<AA>>
 	</set>
 <<A>>

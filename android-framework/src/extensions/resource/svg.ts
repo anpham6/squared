@@ -48,11 +48,7 @@ interface SetData extends SetOrdering, TemplateDataAA {
 interface ObjectAnimatorData extends SetOrdering, TemplateDataAAA {
     repeating: TemplateData[];
     indefinite: TemplateData[] | false;
-    fill: TemplateData[] | false;
-}
-
-interface FillAfterData extends SetOrdering, ExternalData {
-    after: TemplateData[];
+    fillAfter: TemplateData[] | false;
 }
 
 interface IndefiniteData extends SetOrdering, ExternalData {
@@ -320,13 +316,13 @@ function segmentTransforms(element: SVGGraphicsElement, transform: SvgTransform[
 
 function getValueType(attributeName: string) {
     switch (attributeName) {
-        case 'transform':
         case 'fill':
         case 'stroke':
             return '';
         case 'opacity':
         case 'stroke-opacity':
         case 'fill-opacity':
+        case 'transform':
             return 'floatType';
         case 'stroke-width':
             return 'intType';
@@ -382,6 +378,26 @@ function getTransformPropertyName(type: number) {
     return undefined;
 }
 
+function getTransformValues(item: $SvgAnimateTransform) {
+    switch (item.type) {
+        case SVGTransform.SVG_TRANSFORM_ROTATE:
+            return $SvgAnimateTransform.toRotateList(item.values);
+        case SVGTransform.SVG_TRANSFORM_SCALE:
+            return $SvgAnimateTransform.toScaleList(item.values);
+        case SVGTransform.SVG_TRANSFORM_TRANSLATE:
+            return $SvgAnimateTransform.toTranslateList(item.values);
+    }
+    return undefined;
+}
+
+function getAttributePropertyName(value: string, checkTransform = true) {
+    let result: string | undefined = ATTRIBUTE_ANDROID[value];
+    if (result === undefined && checkTransform && getTransformInitialValue(value)) {
+        result = value;
+    }
+    return result;
+}
+
 function getTransformInitialValue(name: string) {
     switch (name) {
         case 'rotation':
@@ -419,6 +435,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
     private VECTOR_DATA = new Map<string, GroupData>();
     private ANIMATE_DATA = new Map<string, AnimateGroup>();
     private IMAGE_DATA: SvgImage[] = [];
+    private SYNCHRONIZE_MODE = 0;
     private NAMESPACE_AAPT = false;
 
     public beforeInit() {
@@ -448,8 +465,9 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 this.ANIMATE_DATA.clear();
                 this.IMAGE_DATA.length = 0;
                 this.NAMESPACE_AAPT = false;
+                this.SYNCHRONIZE_MODE = $constS.SYNCHRONIZE_MODE.FROMTO_ANIMATE | (supportedKeyFrames ? $constS.SYNCHRONIZE_MODE.KEYTIME_TRANSFORM : $constS.SYNCHRONIZE_MODE.IGNORE_TRANSFORM);
                 svg.build(this.options.excludeFromTransform, partitionTransforms);
-                svg.synchronize();
+                svg.synchronize(this.SYNCHRONIZE_MODE);
                 this.parseVectorData(svg);
                 this.queueAnimations(
                     svg,
@@ -516,9 +534,6 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                         const transformTargets: $SvgAnimate[][] = [];
                         for (const item of group.animate as $SvgAnimate[]) {
                             const sequential = item.sequential;
-                            if ($SvgBuild.asAnimateTransform(item)) {
-                                item.expandToValues();
-                            }
                             if (sequential) {
                                 if ($SvgBuild.asAnimateTransform(item)) {
                                     const values = transformMap.get(sequential.value) || [];
@@ -531,22 +546,29 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                     sequentialMap.set(sequential.value, values);
                                 }
                             }
-                            else if ($SvgBuild.asSet(item)) {
-                                if (ATTRIBUTE_ANDROID[item.attributeName] && $util.hasValue(item.to)) {
-                                    together.push(item);
-                                }
-                            }
-                            else if (item.repeatCount === -1) {
-                                isolated.push(item);
-                            }
-                            else if ((!item.fromToType || $SvgBuild.asAnimateTransform(item) && item.transformOrigin) && !(supportedKeyFrames && getValueType(item.attributeName) !== 'pathType')) {
-                                togetherTargets.push([item]);
-                            }
-                            else if (item.fillMode < $constS.FILL_MODE.FORWARDS) {
-                                isolated.push(item);
-                            }
                             else {
-                                together.push(item);
+                                if ($SvgBuild.asSet(item)) {
+                                    if (ATTRIBUTE_ANDROID[item.attributeName] && $util.hasValue(item.to)) {
+                                        together.push(item);
+                                    }
+                                }
+                                else {
+                                    if ($SvgBuild.asAnimateTransform(item)) {
+                                        item.expandToValues();
+                                    }
+                                    if (item.repeatCount === -1) {
+                                        isolated.push(item);
+                                    }
+                                    else if ((!item.fromToType || $SvgBuild.asAnimateTransform(item) && item.transformOrigin) && !(supportedKeyFrames && getValueType(item.attributeName) !== 'pathType')) {
+                                        togetherTargets.push([item]);
+                                    }
+                                    else if (item.fillMode < $constS.FILL_MODE.FORWARDS) {
+                                        isolated.push(item);
+                                    }
+                                    else {
+                                        together.push(item);
+                                    }
+                                }
                             }
                         }
                         if (together.length) {
@@ -563,34 +585,42 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                         }
                         [togetherTargets, transformTargets, ...isolatedTargets].forEach((targets, index) => {
                             const setData: SetData = {
-                                ordering: index === 0 ? '' : 'sequentially',
+                                ordering: index === 0 ? 'together' : 'sequentially',
                                 AA: []
                             };
                             animatorMap.clear();
                             for (const items of targets) {
                                 let ordering: string;
                                 let sequential: boolean;
-                                if (items.some(item => item.sequential !== undefined)) {
-                                    ordering = index === 0 ? 'sequentially' : '';
+                                let requireFill: boolean;
+                                let useKeyFrames: boolean;
+                                if (items.every(item => item.sequential !== undefined && item.sequential.value !== '')) {
+                                    ordering = $SvgBuild.asAnimateTransform(items[0]) ? 'together' : 'sequentially';
                                     sequential = true;
+                                    requireFill = false;
+                                    useKeyFrames = $SvgBuild.asAnimateTransform(items[0]);
+                                }
+                                else if (items.every(item => item.sequential !== undefined && item.sequential.value === '')) {
+                                    ordering = 'sequentially';
+                                    sequential = true;
+                                    requireFill = false;
+                                    useKeyFrames = true;
                                 }
                                 else {
-                                    ordering = '';
+                                    ordering = 'sequentially';
                                     sequential = false;
+                                    requireFill = true;
+                                    useKeyFrames = true;
                                 }
                                 const animatorData: ObjectAnimatorData = {
                                     ordering,
                                     repeating: [],
                                     indefinite: [],
-                                    fill: []
+                                    fillAfter: []
                                 };
                                 const indefiniteData: IndefiniteData = {
                                     ordering: 'sequentially',
                                     repeat: []
-                                };
-                                const fillData: FillAfterData = {
-                                    ordering: '',
-                                    after: []
                                 };
                                 const [indefinite, repeating] = sequential ? $util.partitionArray(items, animate => animate.repeatCount === -1) : [[], items];
                                 if (indefinite.length === 1) {
@@ -697,29 +727,15 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                             }
                                         }
                                         let propertyName: string[] | undefined;
-                                        let values: string[] | (number[] | null[])[] | undefined;
+                                        let values: string[] | number[][] | undefined;
                                         if ($SvgBuild.asAnimateTransform(item)) {
                                             propertyName = getTransformPropertyName(item.type);
-                                            switch (item.type) {
-                                                case SVGTransform.SVG_TRANSFORM_ROTATE:
-                                                    values = $SvgAnimateTransform.toRotateList(item.values);
-                                                    break;
-                                                case SVGTransform.SVG_TRANSFORM_SCALE:
-                                                    values = $SvgAnimateTransform.toScaleList(item.values);
-                                                    break;
-                                                case SVGTransform.SVG_TRANSFORM_TRANSLATE:
-                                                    values = $SvgAnimateTransform.toTranslateList(item.values);
-                                                    break;
-                                            }
-                                            options.valueType = 'floatType';
+                                            values = getTransformValues(item);
                                             transformOrigin = item.transformOrigin;
                                             animateTransform = true;
                                         }
                                         else {
-                                            let attribute: string | undefined = ATTRIBUTE_ANDROID[item.attributeName];
-                                            if (attribute === undefined && getTransformInitialValue(item.attributeName)) {
-                                                attribute = item.attributeName;
-                                            }
+                                            const attribute = getAttributePropertyName(item.attributeName);
                                             switch (options.valueType) {
                                                 case 'intType':
                                                     values = item.values.map(value => $util.convertInt(value).toString());
@@ -934,18 +950,18 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                             }
                                         }
                                         if (values && propertyName) {
-                                            const keyName = index !== 1 ? JSON.stringify(options) : '';
+                                            const keyName = index !== 0 ? JSON.stringify(options) : '';
                                             function getValue(valueIndex: number, propertyIndex: number) {
                                                 if (values) {
                                                     if (Array.isArray(values[valueIndex])) {
                                                         const fromTo = values[valueIndex][propertyIndex];
                                                         if (fromTo !== undefined) {
-                                                            return fromTo !== null ? fromTo.toString() : '';
+                                                            return fromTo.toString();
                                                         }
                                                     }
-                                                    else {
-                                                        let value = values[valueIndex] !== null ? values[valueIndex].toString() : '';
-                                                        if (!value && valueIndex === 0 && item.baseFrom) {
+                                                    else if (values[valueIndex] !== undefined) {
+                                                        let value = values[valueIndex].toString();
+                                                        if (value === '' && valueIndex === 0 && item.baseFrom) {
                                                             value = item.baseFrom;
                                                         }
                                                         return value;
@@ -954,7 +970,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                 return undefined;
                                             }
                                             for (let i = 0; i < propertyName.length; i++) {
-                                                if (!sequential && (!item.fromToType || transformOrigin || supportedKeyFrames && animateTransform)) {
+                                                if (useKeyFrames && (!item.fromToType || transformOrigin || supportedKeyFrames && animateTransform)) {
                                                     if (supportedKeyFrames && options.valueType !== 'pathType') {
                                                         const propertyValues = animatorMap.get(keyName) || [];
                                                         const keyframes: KeyFrame[] = [];
@@ -985,8 +1001,9 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                         });
                                                                     }
                                                                     else {
-                                                                        originX.push({ interpolator: '', fraction: '', value: '' });
-                                                                        originY.push({ interpolator: '', fraction: '', value: '' });
+                                                                        const emptyValue = { interpolator: '', fraction: '', value: '' };
+                                                                        originX.push(emptyValue);
+                                                                        originY.push(emptyValue);
                                                                     }
                                                                 }
                                                             }
@@ -1023,13 +1040,13 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                             ordering: 'sequentially',
                                                             repeating: [],
                                                             indefinite: false,
-                                                            fill: false
+                                                            fillAfter: false
                                                         };
                                                         const translateData: ObjectAnimatorData = {
                                                             ordering: 'sequentially',
                                                             repeating: [],
                                                             indefinite: false,
-                                                            fill: false
+                                                            fillAfter: false
                                                         };
                                                         for (let j = 0; j < item.keyTimes.length - 1; j++) {
                                                             const propertyOptions: TemplateData = {
@@ -1078,9 +1095,11 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                 propertyData.repeating.push(propertyOptions);
                                                             }
                                                         }
-                                                        const fillRepeat = getFillAfter(propertyName[i]);
-                                                        if (fillRepeat) {
-                                                            propertyData.repeating.push(...fillRepeat);
+                                                        if (requireFill) {
+                                                            const fillAfter = getFillAfter(propertyName[i]);
+                                                            if (fillAfter) {
+                                                                propertyData.repeating.push(...fillAfter);
+                                                            }
                                                         }
                                                         if (translateData.repeating.length) {
                                                             setData.AA.push(translateData);
@@ -1097,18 +1116,13 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                     };
                                                     if (Array.isArray(values[0])) {
                                                         const valueTo = values[values.length - 1][i];
-                                                        if (valueTo !== null) {
-                                                            if (values.length > 1) {
-                                                                const from = values[0][i];
-                                                                if (from !== null && from !== valueTo) {
-                                                                    propertyOptions.valueFrom = from.toString();
-                                                                }
+                                                        if (values.length > 1) {
+                                                            const from = values[0][i];
+                                                            if (from !== valueTo) {
+                                                                propertyOptions.valueFrom = from.toString();
                                                             }
-                                                            propertyOptions.valueTo = valueTo.toString();
                                                         }
-                                                        else {
-                                                            continue;
-                                                        }
+                                                        propertyOptions.valueTo = valueTo.toString();
                                                     }
                                                     else {
                                                         let valueFrom: string | undefined;
@@ -1138,9 +1152,11 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                         animatorData.repeating.push(propertyOptions);
                                                     }
                                                 }
-                                                const fillAfter = getFillAfter(propertyName[i]);
-                                                if (fillAfter) {
-                                                    fillData.after.push(...fillAfter);
+                                                if (requireFill) {
+                                                    const fillAfter = getFillAfter(propertyName[i]);
+                                                    if (fillAfter && animatorData.fillAfter) {
+                                                        animatorData.fillAfter.push(...fillAfter);
+                                                    }
                                                 }
                                             }
                                         }
@@ -1149,27 +1165,53 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                 if (indefinite.length) {
                                     const pathArray = animatorData.repeating.length ? indefiniteData.repeat : animatorData.repeating;
                                     for (const item of indefinite) {
-                                        pathArray.push({
-                                            propertyName: 'pathData',
-                                            interpolator: item.duration > 1 ? this.getPathInterpolator(item.keySplines, 0) : '',
-                                            startOffset: item.delay > 0 ? item.delay.toString() : '',
-                                            duration: item.duration.toString(),
-                                            repeatCount: '0',
-                                            valueType: 'pathType',
-                                            valueFrom: item.from,
-                                            valueTo: item.to
-                                        });
+                                        const valueType = getValueType(item.attributeName);
+                                        if (valueType !== undefined) {
+                                            let propertyName: string[] | undefined;
+                                            let valueFrom: string[] | undefined;
+                                            let valueTo: string[] | undefined;
+                                            if ($SvgBuild.asAnimateTransform(item)) {
+                                                propertyName = getTransformPropertyName(item.type);
+                                                const values = getTransformValues(item);
+                                                if (values && values.length) {
+                                                    valueTo = [];
+                                                    if (values.length > 1) {
+                                                        valueFrom = [];
+                                                        for (const value of values[0]) {
+                                                            valueFrom.push(value.toString());
+                                                        }
+                                                    }
+                                                    for (const value of values[values.length - 1]) {
+                                                        valueTo.push(value.toString());
+                                                    }
+                                                }
+                                            }
+                                            else {
+                                                const attribute = getAttributePropertyName(item.attributeName, false);
+                                                if (attribute) {
+                                                    propertyName = [attribute];
+                                                    valueFrom = [item.from];
+                                                    valueTo = [item.to];
+                                                }
+                                            }
+                                            if (propertyName && valueTo) {
+                                                for (let i = 0; i < propertyName.length; i++) {
+                                                    pathArray.push({
+                                                        propertyName: propertyName[i],
+                                                        interpolator: item.duration > 1 ? this.getPathInterpolator(item.keySplines, 0) : '',
+                                                        startOffset: item.delay > 0 ? item.delay.toString() : '',
+                                                        duration: item.duration.toString(),
+                                                        repeatCount: '0',
+                                                        valueType,
+                                                        valueFrom: valueFrom ? valueFrom[i] : '',
+                                                        valueTo: valueTo[i]
+                                                    });
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                                 if (animatorData.repeating.length) {
-                                    if (fillData.after.length) {
-                                        if (animatorData.fill && setData.ordering === 'sequentially') {
-                                            animatorData.fill.push(fillData);
-                                        }
-                                        else {
-                                            animatorData.repeating.push(...fillData.after);
-                                        }
-                                    }
                                     if (animatorData.indefinite && indefiniteData.repeat.length) {
                                         animatorData.indefinite.push(indefiniteData);
                                     }
@@ -1369,7 +1411,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
         if ($util.hasValue(path.clipPath)) {
             const shape = new $SvgShape(path.element);
             shape.build(this.options.excludeFromTransform, partitionTransforms);
-            shape.synchronize();
+            shape.synchronize(this.SYNCHRONIZE_MODE);
             this.createClipPath(shape, clipElement, path.clipPath);
         }
         const baseData: TransformData = {};
@@ -1591,7 +1633,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 if (element) {
                     const g = new $SvgG(element);
                     g.build(this.options.excludeFromTransform, partitionTransforms);
-                    g.synchronize();
+                    g.synchronize(this.SYNCHRONIZE_MODE);
                     g.each((child: $SvgShape) => {
                         if (child.path && child.path.value) {
                             let clipName = getVectorName(child, 'clip_path', array.length > 1 ? index + 1 : -1);

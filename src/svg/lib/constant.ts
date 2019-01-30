@@ -17,6 +17,15 @@ export const enum INSTANCE_TYPE {
     SVG_ANIMATE_TRANSFORM = 8 | 16384 | 65536
 }
 
+export const enum SYNCHRONIZE_MODE {
+    FROMTO_ANIMATE = 2,
+    FROMTO_TRANSFORM = 4,
+    KEYTIME_ANIMATE = 8,
+    KEYTIME_TRANSFORM = 16,
+    IGNORE_ANIMATE = 32,
+    IGNORE_TRANSFORM = 64
+}
+
 export const enum FILL_MODE {
     BACKWARDS = 2,
     FORWARDS = 4,

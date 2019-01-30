@@ -138,6 +138,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public fillMode = 0;
     public alternate = false;
     public end?: number;
+    public animationName?: string;
     public sequential?: NumberValue<string>;
 
     private _repeatCount = 1;
@@ -210,7 +211,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         if (this.element) {
             switch (this.getAttribute('calcMode')) {
                 case 'discrete': {
-                    if (this.fromToType) {
+                    if (this.keyTimes.length === 2 && this.keyTimes[0] === 0) {
                         const keyTimes: number[] = [];
                         const values: string[] = [];
                         for (let i = 0; i < this.keyTimes.length - 1; i++) {
@@ -225,12 +226,6 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                         this.values = values;
                         this.keyTimes = keyTimes;
                         this._keySplines = [KEYSPLINE_NAME['step']];
-                    }
-                    else {
-                        this.from = '';
-                        this.to = '';
-                        this._values = undefined;
-                        this._keyTimes = undefined;
                     }
                     break;
                 }
@@ -253,7 +248,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public convertToValues(keyTimes?: number[]) {
         if (this.to !== '') {
             this.values = [this.from, this.to];
-            this.keyTimes = keyTimes && keyTimes.length === 2 ? keyTimes : [0, 1];
+            this.keyTimes = keyTimes && keyTimes.length === 2 && this.keyTimes[0] === 0 && this.keyTimes[1] <= 1 ? keyTimes : [0, 1];
         }
     }
 
@@ -302,6 +297,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         this._values = value;
         if (this._keyTimes && this._keyTimes.length !== value.length) {
             this._keyTimes = undefined;
+            this._keySplines = undefined;
         }
     }
     get values() {

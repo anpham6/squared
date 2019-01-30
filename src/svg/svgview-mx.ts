@@ -220,6 +220,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             animate.paused = cssData['animation-play-state'][index] === 'paused';
                             animate.delay = convertClockTime(cssData['animation-delay'][index]);
                             animate.duration = convertClockTime(cssData['animation-duration'][index]);
+                            animate.animationName = className;
                             const iterationCount = cssData['animation-iteration-count'][index];
                             const timingFunction = cssData['animation-timing-function'][index];
                             const direction = cssData['animation-direction'][index];
@@ -273,13 +274,13 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 }
                                 keyTimesData.push(keyTimes.pop() as number);
                                 valuesData.push(values.pop() as string);
-                                animate.keyTimes = keyTimesData;
                                 animate.values = valuesData;
+                                animate.keyTimes = keyTimesData;
                                 animate.keySplines = keySplinesData;
                             }
                             else {
-                                animate.keyTimes = keyTimes;
                                 animate.values = values;
+                                animate.keyTimes = keyTimes;
                             }
                             animate.repeatCount = iterationCount !== 'infinite' ? parseFloat(iterationCount) : -1;
                             if (fillMode === 'forwards' || fillMode === 'both') {

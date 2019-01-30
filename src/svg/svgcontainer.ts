@@ -111,7 +111,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         }
     }
 
-    public synchronize(useKeyTime = false) {
+    public synchronize(useKeyTime = 0) {
         this.each(item => item.synchronize(useKeyTime));
     }
 

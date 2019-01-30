@@ -19,7 +19,13 @@
             animation-fill-mode: forwards, none, backwards;
         }
         #rotate {
-            animation: rotate 3s ease-in 0s 3;
+            animation-name: rotate1, rotate2;
+            animation-delay: 3s, 5s;
+            animation-duration: 3s, 6s;
+            animation-iteration-count: infinite, 2;
+            animation-direction: normal, reverse;
+            animation-timing-function: ease-in, ease-out;
+            animation-fill-mode: none, none;
         }
         #opacity-step {
             animation: opacity 5s steps(5, start) forwards;
@@ -55,7 +61,7 @@
                 y: 120;
             }
         }
-        @keyframes rotate {
+        @keyframes rotate1 {
             from {
                 transform: rotate(10deg);
             }
@@ -63,11 +69,24 @@
                 transform: rotate(20deg);
             }
             66% {
-                transform: translate(50px, 50px) rotate(30deg);
-                transform-origin: 10px 10px;
+                transform: rotate(30deg);
             }
             to {
                 transform: rotate(40deg);
+            }
+        }
+        @keyframes rotate2 {
+            from {
+                transform: scale(1.5);
+            }
+            33% {
+                transform: scale(2);
+            }
+            66% {
+                transform: scale(1.5);
+            }
+            to {
+                transform: scale(1);
             }
         }
         @keyframes opacity {

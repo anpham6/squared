@@ -21,9 +21,10 @@ declare global {
         }
 
         interface SvgSynchronize {
-            getAnimateShape(element: SVGGraphicsElement, animation: SvgAnimation[]): SvgAnimate[];
-            getAnimateViewRect(animation: SvgAnimation[]): SvgAnimate[];
-            mergeAnimate(animations: SvgAnimate[], useKeyTime?: boolean, path?: SvgPath): void;
+            getAnimateShape(element: SVGGraphicsElement, animation?: SvgAnimation[]): SvgAnimate[];
+            getAnimateViewRect(animation?: SvgAnimation[]): SvgAnimate[];
+            getAnimateTransform(animation?: SvgAnimation[]): SvgAnimateTransform[];
+            mergeAnimations(animations: SvgAnimate[], transformations: SvgAnimateTransform[], useKeyTime?: number, path?: SvgPath): void;
         }
 
         interface SvgViewRect extends SvgRect, SvgBaseVal {

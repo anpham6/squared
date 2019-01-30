@@ -31,9 +31,9 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewR
         this.setPaint(this.getPathAll());
     }
 
-    public synchronize(useKeyTime = false) {
+    public synchronize(useKeyTime = 0) {
         if (this.animation.length) {
-            this.mergeAnimate(this.getAnimateViewRect(this.animation), useKeyTime);
+            this.mergeAnimations(this.getAnimateViewRect(), this.getAnimateTransform(), useKeyTime);
         }
         super.synchronize(useKeyTime);
     }

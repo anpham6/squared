@@ -7,7 +7,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
     public static toRotateList(values: string[]) {
         const result = values.map(value => {
             if (value === '') {
-                return [null, null, null];
+                return [0, 0, 0];
             }
             else {
                 const segment = SvgBuild.toNumberList(value);
@@ -26,7 +26,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
     public static toScaleList(values: string[]) {
         const result = values.map(value => {
             if (value === '') {
-                return [null, null];
+                return [1, 1];
             }
             else {
                 const segment = SvgBuild.toNumberList(value);
@@ -46,7 +46,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
         let y = 0;
         const result = values.map(value => {
             if (value === '') {
-                return [null, null];
+                return [0, 0];
             }
             else {
                 const segment = SvgBuild.toNumberList(value);
@@ -56,6 +56,22 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                 else if (segment.length === 2) {
                     y = segment[1];
                     return segment;
+                }
+                return [];
+            }
+        });
+        return result.some(item => item.length === 0) ? undefined : result;
+    }
+
+    public static toSkewList(values: string[]) {
+        const result = values.map(value => {
+            if (value === '') {
+                return [0];
+            }
+            else {
+                const segment = SvgBuild.toNumberList(value);
+                if (segment.length === 1) {
+                    return [segment[0]];
                 }
                 return [];
             }
@@ -77,7 +93,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
     }
 
     public expandToValues() {
-        if (this.accumulateSum && this.repeatCount !== -1 && this.keyTimes.length && this.duration > 0) {
+        if (this.additiveSum && this.repeatCount !== -1 && this.keyTimes.length && this.duration > 0) {
             const durationTotal = this.duration * this.repeatCount;
             invalid: {
                 const keyTimes: number[] = [];
@@ -133,7 +149,9 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                                     }
                                 }
                                 if (i < this.repeatCount - 1 && j === this.keyTimes.length - 1) {
-                                    previousValues = currentValues;
+                                    if (this.accumulateSum) {
+                                        previousValues = currentValues;
+                                    }
                                     time--;
                                 }
                                 keyTimes.push(time / durationTotal);
@@ -162,23 +180,30 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
     }
 
     public setType(value: string) {
+        let values: number[][] | undefined;
         switch (value) {
             case 'translate':
                 this.type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
+                values = SvgAnimateTransform.toTranslateList(this.values);
                 break;
             case 'scale':
                 this.type = SVGTransform.SVG_TRANSFORM_SCALE;
+                values = SvgAnimateTransform.toScaleList(this.values);
                 break;
             case 'rotate':
                 this.type = SVGTransform.SVG_TRANSFORM_ROTATE;
+                values = SvgAnimateTransform.toRotateList(this.values);
                 break;
             case 'skewX':
                 this.type = SVGTransform.SVG_TRANSFORM_SKEWX;
+                values = SvgAnimateTransform.toSkewList(this.values);
                 break;
             case 'skewY':
                 this.type = SVGTransform.SVG_TRANSFORM_SKEWY;
+                values = SvgAnimateTransform.toSkewList(this.values);
                 break;
         }
+        this.values = values ? values.map(array => array.join(' ')) : [];
     }
 
     get instanceType() {

@@ -29,6 +29,7 @@ declare global {
             element?: SVGAnimateElement;
             end?: number;
             keySplines?: string[];
+            animationName?: string;
             sequential?: NumberValue<string>;
             readonly fromToType: boolean;
             setCalcMode(name: string): void;
@@ -65,9 +66,10 @@ declare global {
         }
 
         class SvgAnimateTransform implements SvgAnimateTransform {
-            public static toRotateList(values: string[]): (null[] | number[])[] | undefined;
-            public static toScaleList(values: string[]): (null[] | number[])[] | undefined;
-            public static toTranslateList(values: string[]): (null[] | number[])[] | undefined;
+            public static toRotateList(values: string[]): number[][] | undefined;
+            public static toScaleList(values: string[]): number[][] | undefined;
+            public static toTranslateList(values: string[]): number[][] | undefined;
+            public static toSkewList(values: string[]): number[][] | undefined;
             constructor(element?: SVGAnimateTransformElement);
         }
 

@@ -459,14 +459,14 @@ export function minArray(list: number[]): number {
     if (list.length) {
         return Math.min.apply(null, list);
     }
-    return Number.MAX_VALUE;
+    return Number.POSITIVE_INFINITY;
 }
 
 export function maxArray(list: number[]): number {
     if (list.length) {
         return Math.max.apply(null, list);
     }
-    return Number.MAX_VALUE * -1;
+    return Number.NEGATIVE_INFINITY;
 }
 
 export function partitionArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): [T[], T[]] {
