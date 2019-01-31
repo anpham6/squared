@@ -26,6 +26,16 @@ export const enum SYNCHRONIZE_MODE {
     IGNORE_TRANSFORM = 64
 }
 
+export const enum SYNCHRONIZE_STATE {
+    BACKWARDS = 2,
+    INTERRUPTED = 4,
+    COMPLETE = 8,
+    FORWARDS = 16,
+    FREEZE = 32,
+    INVALID = 64,
+    EXCLUDED = 128
+}
+
 export const enum FILL_MODE {
     BACKWARDS = 2,
     FORWARDS = 4,

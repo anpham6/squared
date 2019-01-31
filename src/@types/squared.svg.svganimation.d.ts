@@ -2,8 +2,7 @@ declare global {
     namespace squared.svg {
         interface SvgAnimation {
             attributeName: string;
-            begin: number[];
-            delay: number;
+            begin: number;
             to: string;
             duration: number;
             paused: boolean;
@@ -24,18 +23,20 @@ declare global {
             additiveSum: boolean;
             accumulateSum: boolean;
             fillMode: number;
-            reverse: boolean;
-            alternate: boolean;
-            element?: SVGAnimateElement;
-            end?: number;
-            keySplines?: string[];
-            animationName?: string;
-            sequential?: NumberValue<string>;
             fillBackwards: boolean;
             fillForwards: boolean;
             fillFreeze: boolean;
+            reverse: boolean;
+            alternate: boolean;
+            synchronizeState: number;
+            element?: SVGAnimateElement;
+            end?: number;
+            keySplines?: string[];
+            synchronized?: NumberValue<string>;
+            animationName?: NumberValue<string>;
+            animationSiblings?: SvgAnimate[];
             readonly fromToType: boolean;
-            readonly fillReset: boolean;
+            readonly fillReplace: boolean;
             setCalcMode(name: string): void;
             convertToValues(keyTimes?: number[]): void;
         }

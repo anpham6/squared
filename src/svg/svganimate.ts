@@ -80,11 +80,13 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                         case 'stroke': {
                             const current = <ColorData> currentValue[0];
                             const next = <ColorData> nextValue[0];
-                            const r = $color.convertHex(getSplitValue(current.rgba.r, next.rgba.r, percent));
-                            const g = $color.convertHex(getSplitValue(current.rgba.g, next.rgba.g, percent));
-                            const b = $color.convertHex(getSplitValue(current.rgba.b, next.rgba.b, percent));
+                            const rgb = $color.convertHex(
+                                getSplitValue(current.rgba.r, next.rgba.r, percent),
+                                getSplitValue(current.rgba.g, next.rgba.g, percent),
+                                getSplitValue(current.rgba.b, next.rgba.b, percent)
+                            );
                             const a = $color.convertHex(getSplitValue(current.rgba.a, next.rgba.a, percent));
-                            value.push(`#${r + g + b + (a !== 'FF' ? a : '')}`);
+                            value.push(`#${rgb + (a !== 'FF' ? a : '')}`);
                             break;
                         }
                         case 'points': {
@@ -136,16 +138,18 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public additiveSum = false;
     public accumulateSum = false;
     public fillMode = 0;
+    public synchronizeState = 0;
     public alternate = false;
     public end?: number;
-    public animationName?: string;
-    public sequential?: NumberValue<string>;
+    public animationSiblings?: SvgAnimate[];
+    public synchronized?: NumberValue<string>;
 
     private _repeatCount = 1;
     private _reverse = false;
     private _values: string[] | undefined;
     private _keyTimes: number[] | undefined;
     private _keySplines?: string[];
+    private _animationName?: NumberValue<string>;
 
     constructor(public element?: SVGAnimateElement) {
         super(element);
@@ -187,19 +191,6 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             if (!(this.duration !== -1 && this.repeatDuration !== -1 && this.repeatDuration < this.duration)) {
                 const repeatCount = this.getAttribute('repeatCount');
                 this.repeatCount = repeatCount === 'indefinite' ? -1 : parseFloat(repeatCount);
-            }
-            if (this.begin.length) {
-                const end = this.getAttribute('end');
-                if (end !== '') {
-                    const times = sortNumber(end.split(';').map(value => convertClockTime(value)));
-                    if (times.length && (this.begin.length === 1 || this.begin[this.begin.length - 1] !== this.end || times[0] === 0)) {
-                        this.end = times[0];
-                        this.begin = this.begin.filter(value => value >= 0 && value < times[0]);
-                        if (this.begin.length && this.repeatCount === -1) {
-                            this.repeatCount = this.end / this.duration;
-                        }
-                    }
-                }
             }
             if (element.tagName === 'animate') {
                 this.setCalcMode(this.attributeName);
@@ -264,6 +255,30 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 this.fillMode ^= value;
             }
         }
+    }
+
+    set begin(value) {
+        super.begin = value;
+        if (this.element) {
+            const end = this.getAttribute('end');
+            if (end !== '') {
+                const endTime = sortNumber(end.split(';').map(time => convertClockTime(time)))[0] as number | undefined;
+                if (endTime !== undefined && (this.repeatCount === -1 || this.duration > 0 && endTime < this.duration * this.repeatCount)) {
+                    if (this.begin > endTime) {
+                        this.end = endTime;
+                        if (this.repeatCount === -1) {
+                            this.repeatCount = Math.ceil((this.end - this.begin) / this.duration);
+                        }
+                    }
+                    else {
+                        this.duration = -1;
+                    }
+                }
+            }
+        }
+    }
+    get begin() {
+        return super.begin;
     }
 
     set repeatCount(value) {
@@ -400,8 +415,15 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         return $util.hasBit(this.fillMode, FILL_MODE.FREEZE);
     }
 
-    get fillReset() {
+    get fillReplace() {
         return this.fillMode < FILL_MODE.FORWARDS;
+    }
+
+    set animationName(value) {
+        this._animationName = value;
+    }
+    get animationName() {
+        return this._animationName || { ordinal: Number.NEGATIVE_INFINITY, value: '' };
     }
 
     get instanceType() {

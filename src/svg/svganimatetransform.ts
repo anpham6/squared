@@ -43,7 +43,6 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
     }
 
     public static toTranslateList(values: string[]) {
-        let y = 0;
         const result = values.map(value => {
             if (value === '') {
                 return [0, 0];
@@ -51,10 +50,9 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
             else {
                 const segment = SvgBuild.toNumberList(value);
                 if (segment.length === 1) {
-                    return [segment[0], y];
+                    return [segment[0], 0];
                 }
                 else if (segment.length === 2) {
-                    y = segment[1];
                     return segment;
                 }
                 return [];

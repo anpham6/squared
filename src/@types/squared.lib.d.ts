@@ -6,7 +6,7 @@ declare global {
         namespace color {
             function getColorByName(value: string): Color | undefined;
             function getColorByShade(value: string): Color | undefined;
-            function convertHex(value: string | number, opacity?: number): string;
+            function convertHex(...values: string[] | number[]): string;
             function convertRGBA(value: string): RGBA | undefined;
             function parseRGBA(value: string, opacity?: string): ColorData | undefined;
             function reduceRGBA(value: string, percent: number): ColorData | undefined;

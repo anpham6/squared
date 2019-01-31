@@ -1,5 +1,5 @@
 import { INSTANCE_TYPE } from './lib/constant';
-import { convertClockTime, getTransformInitialValue, sortNumber } from './lib/util';
+import { convertClockTime, getTransformInitialValue } from './lib/util';
 
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
@@ -7,28 +7,19 @@ const $util = squared.lib.util;
 export default class SvgAnimation implements squared.svg.SvgAnimation {
     public attributeName = '';
     public to = '';
-    public begin = [0];
-    public duration = -1;
     public paused = false;
     public element?: SVGAnimationElement;
     public parent?: squared.svg.SvgView | squared.svg.SvgPath;
     public baseFrom?: string;
+
+    private _duration = -1;
+    private _begin = 0;
 
     constructor(element?: SVGAnimationElement) {
         if (element) {
             this.element = element;
             this.setAttribute('attributeName');
             this.setAttribute('to');
-            const begin = this.getAttribute('begin');
-            if (begin === 'indefinite') {
-                this.begin.length = 0;
-            }
-            else if (/^[a-zA-Z]+$/.test(begin)) {
-                this.paused = true;
-            }
-            else if (begin !== '') {
-                this.begin = sortNumber(begin.split(';').map(value => convertClockTime(value)));
-            }
             const dur = this.getAttribute('dur');
             if (dur !== '' && dur !== 'indefinite') {
                 this.duration = convertClockTime(dur);
@@ -59,11 +50,18 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
         return item ? item.value.trim() : '';
     }
 
-    set delay(value) {
-        this.begin[0] = value;
+    set begin(value) {
+        this._begin = value;
     }
-    get delay() {
-        return this.begin[0] || 0;
+    get begin() {
+        return this._begin;
+    }
+
+    set duration(value) {
+        this._duration = Math.round(value);
+    }
+    get duration() {
+        return this._duration;
     }
 
     get instanceType() {

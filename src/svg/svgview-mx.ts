@@ -7,7 +7,7 @@ import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 
 import { KEYSPLINE_NAME } from './lib/constant';
-import { REGEXP_SVG, convertClockTime, getFontSize, getHostDPI, getTransform, getTransformInitialValue, getTransformOrigin, isVisible, setOpacity, setVisible } from './lib/util';
+import { REGEXP_SVG, convertClockTime, getFontSize, getHostDPI, getTransform, getTransformInitialValue, getTransformOrigin, isVisible, setOpacity, setVisible, sortNumber } from './lib/util';
 
 interface AttributeData extends NumberValue<string> {
     transformOrigin?: Point;
@@ -80,6 +80,12 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             const element = companion || this.element;
             const result: SvgAnimation[] = [];
             const animationName = parseAttribute(element, 'animation-name');
+            let groupId = -1;
+            function addAnimation(item: SvgAnimate, begin: number, value = '') {
+                item.begin = begin;
+                item.animationName = { ordinal: groupId, value };
+                result.push(item);
+            }
             if (animationName.length) {
                 const cssData: ObjectMap<string[]> = {};
                 for (const name in ANIMATION_DEFAULT) {
@@ -96,6 +102,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                 animationName.forEach((className, index) => {
                     const keyframes = KEYFRAME_NAME.get(className);
                     if (keyframes) {
+                        groupId++;
                         const attrMap: AttributeMap = {};
                         const keyframeMap: AttributeMap = {};
                         for (const percent in keyframes) {
@@ -217,10 +224,9 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     animate.baseFrom = $util.optionalAsString(element, `${name}.baseVal.value`) || $dom.cssAttribute(element, name);
                                     break;
                             }
+                            addAnimation(animate, convertClockTime(cssData['animation-delay'][index]), className);
                             animate.paused = cssData['animation-play-state'][index] === 'paused';
-                            animate.delay = convertClockTime(cssData['animation-delay'][index]);
                             animate.duration = convertClockTime(cssData['animation-duration'][index]);
-                            animate.animationName = className;
                             const iterationCount = cssData['animation-iteration-count'][index];
                             const timingFunction = cssData['animation-timing-function'][index];
                             const direction = cssData['animation-direction'][index];
@@ -287,30 +293,50 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             animate.fillBackwards = fillMode === 'backwards' || fillMode === 'both';
                             animate.reverse = direction.endsWith('reverse');
                             animate.alternate = (animate.repeatCount === -1 || animate.repeatCount > 1) && direction.startsWith('alternate');
-                            result.push(animate);
                         }
                     }
                 });
+                const siblings = <SvgAnimate[]> result.slice(0);
+                result.forEach((item: SvgAnimate) => item.animationSiblings = siblings.filter(subitem => subitem.attributeName === item.attributeName));
             }
             for (let i = 0; i < element.children.length; i++) {
                 const item = element.children[i];
-                switch (item.tagName) {
-                    case 'set':
-                        result.push(new SvgAnimation(<SVGAnimationElement> item));
-                        break;
-                    case 'animate':
-                        result.push(new SvgAnimate(<SVGAnimateElement> item));
-                        break;
-                    case 'animateTransform':
-                        const animate = new SvgAnimateTransform(<SVGAnimateTransformElement> item);
-                        if (SvgBuild.asShape(this) && this.path) {
-                            animate.transformFrom = this.path.draw(undefined, undefined, true);
+                if (item.tagName === 'set') {
+                    result.push(new SvgAnimation(<SVGAnimationElement> item));
+                }
+                else if (item instanceof SVGAnimateElement) {
+                    const begin = item.attributes.getNamedItem('begin');
+                    if (begin && !/^[a-zA-Z]+$/.test(begin.value.trim())) {
+                        const times = sortNumber(begin.value.split(';').map(value => convertClockTime(value)));
+                        if (times.length) {
+                            switch (item.tagName) {
+                                case 'animate':
+                                    for (const value of times) {
+                                        const animate = new SvgAnimate(<SVGAnimateElement> item);
+                                        groupId++;
+                                        addAnimation(animate, value);
+                                    }
+                                    break;
+                                case 'animateTransform':
+                                    for (const value of times) {
+                                        const animate = new SvgAnimateTransform(<SVGAnimateTransformElement> item);
+                                        if (SvgBuild.asShape(this) && this.path) {
+                                            animate.transformFrom = this.path.draw(undefined, undefined, true);
+                                        }
+                                        groupId++;
+                                        addAnimation(animate, value);
+                                    }
+                                    break;
+                                case 'animateMotion':
+                                    for (const value of times) {
+                                        const animate = new SvgAnimateMotion(<SVGAnimateMotionElement> item);
+                                        groupId++;
+                                        addAnimation(animate, value);
+                                    }
+                                    break;
+                            }
                         }
-                        result.push(animate);
-                        break;
-                    case 'animateMotion':
-                        result.push(new SvgAnimateMotion(<SVGAnimateMotionElement> item));
-                        break;
+                    }
                 }
             }
             result.forEach(item => item.parent = this);

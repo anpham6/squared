@@ -226,7 +226,7 @@ function formatRGBA(rgba: RGBA) {
 }
 
 function convertAlpha(value: string) {
-    return parseFloat(value) < 1 ? convertHex('255', parseFloat(value)) : 'FF';
+    return parseFloat(value) < 1 ? convertHex(255 * parseFloat(value)) : 'FF';
 }
 
 export function getColorByName(value: string) {
@@ -264,13 +264,17 @@ export function getColorByShade(value: string) {
     }
 }
 
-export function convertHex(value: string | number, opacity = 1) {
-    let rgb = (typeof value === 'string' ? parseInt(value) : value) * opacity;
-    if (isNaN(rgb)) {
-        return '00';
+export function convertHex(...values: string[] | number[]) {
+    let result = '';
+    for (const value of values) {
+        let rgb = (typeof value === 'string' ? parseInt(value) : value);
+        if (isNaN(rgb)) {
+            return '';
+        }
+        rgb = Math.max(0, Math.min(rgb, 255));
+        result += HEX_CHAR.charAt((rgb - (rgb % 16)) / 16) + HEX_CHAR.charAt(rgb % 16);
     }
-    rgb = Math.max(0, Math.min(rgb, 255));
-    return HEX_CHAR.charAt((rgb - (rgb % 16)) / 16) + HEX_CHAR.charAt(rgb % 16);
+    return result;
 }
 
 export function convertRGBA(value: string) {
