@@ -65,13 +65,6 @@ declare global {
             resetPaint(): void;
         }
 
-        interface SvgElementTagNameMap extends SVGElementTagNameMap {
-            'animation': SVGAnimationElement;
-            'animate': SVGAnimateElement;
-            'animateTransform': SVGAnimateTransformElement;
-            'animateMotion': SVGAnimateMotionElement;
-        }
-
         class SvgBuild {
             public static asContainer(object: SvgElement): object is SvgGroup;
             public static asElement(object: SvgElement): object is SvgElement;

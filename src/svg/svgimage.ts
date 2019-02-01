@@ -5,7 +5,7 @@ import SvgBuild from './svgbuild';
 import SvgElement from './svgelement';
 
 import { INSTANCE_TYPE } from './lib/constant';
-import { SVG, applyMatrixX, applyMatrixY } from './lib/util';
+import { MATRIX, SVG } from './lib/util';
 
 const $util = squared.lib.util;
 
@@ -42,8 +42,8 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
                 const item = transform[i];
                 const m = item.matrix;
                 const localX = x;
-                x = applyMatrixX(m, localX, y);
-                y = applyMatrixY(m, localX, y);
+                x = MATRIX.applyX(m, localX, y);
+                y = MATRIX.applyY(m, localX, y);
                 switch (item.type) {
                     case SVGTransform.SVG_TRANSFORM_SCALE:
                         width *= m.a;

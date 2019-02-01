@@ -7,7 +7,7 @@ import SvgBuild from './svgbuild';
 import SvgPath from './svgpath';
 
 import { SYNCHRONIZE_MODE, SYNCHRONIZE_STATE, FILL_MODE } from './lib/constant';
-import { SVG, getLeastCommonMultiple, getTransformName, getTransformOrigin, sortNumber, getTransformInitialValue } from './lib/util';
+import { TRANSFORM, SVG, getLeastCommonMultiple, sortNumber } from './lib/util';
 
 type SvgAnimation = squared.svg.SvgAnimation;
 type SvgBaseVal = squared.svg.SvgBaseVal;
@@ -28,17 +28,22 @@ type GroupData = {
 const $util = squared.lib.util;
 
 function insertSplitTimeValue(map: TimelineIndex, insertMap: TimelineIndex, time: number) {
+    let previousTime!: number;
+    let previousValue!: AnimateValue;
     let previous: NumberValue<AnimateValue> | undefined;
     let next: NumberValue<AnimateValue> | undefined;
-    time = getActualTime(time);
     for (const [ordinal, value] of map.entries()) {
-        if (previous && time <= ordinal) {
+        if (time === ordinal) {
+            previous = { ordinal, value };
+            break;
+        }
+        else if (time > previousTime && time < ordinal) {
+            previous = { ordinal: previousTime, value: previousValue };
             next = { ordinal, value };
             break;
         }
-        if (time >= ordinal) {
-            previous = { ordinal, value };
-        }
+        previousTime = ordinal;
+        previousValue = value;
     }
     if (previous && next) {
         setTimelineValue(insertMap, '', time, getSplitValue(time, previous.ordinal, next.ordinal, previous.value, next.value));
@@ -124,7 +129,7 @@ function getPathData(map: KeyTimeMap, path: SvgPath, parent?: SvgContainer) {
         if (points) {
             let value: string | undefined;
             if (path.transformed && path.transformed.length) {
-                points = SvgBuild.applyTransforms(path.transformed, points, getTransformOrigin(path.element));
+                points = SvgBuild.applyTransforms(path.transformed, points, TRANSFORM.origin(path.element));
             }
             if (parent) {
                 parent.refitPoints(points);
@@ -323,11 +328,14 @@ function insertSplitKeyTimeValue(map: TimelineMap, attr: string, interpolatorMap
 
 function setTimelineValue(map: TimelineMap | TimelineIndex, attr: string, time: number, value: AnimateValue, freezeMap?: FreezeMap) {
     const insertMap = <TimelineIndex> (attr === '' ? map : map[attr]);
-    const stored = insertMap.get(time) || insertMap.get(getActualTime(time));
-    if (typeof stored === 'number' && (isNaN(value as number) || Math.round(stored) === Math.round(value as number))) {
-        return time;
+    let stored = insertMap.get(time);
+    if (stored === undefined) {
+        stored = insertMap.get(getActualTime(time));
     }
     if (stored !== value) {
+        if (typeof stored === 'number' && (isNaN(value as number) || Math.round(stored) === Math.round(value as number))) {
+            return time;
+        }
         while (time > 0 && insertMap.has(time)) {
             time++;
         }
@@ -376,11 +384,16 @@ function getDurationMinimum(item: SvgAnimate) {
 }
 
 function getFreezeValue(map: TimelineIndex, time: number) {
+    let lastTime = 0;
     let lastValue: AnimateValue | undefined;
     for (const [freezeTime, value] of map.entries()) {
-        if (time >= freezeTime) {
+        if (time === freezeTime) {
             return value;
         }
+        else if (time > lastTime && time < freezeTime) {
+            return lastValue;
+        }
+        lastTime = freezeTime;
         lastValue = value;
     }
     return lastValue;
@@ -877,7 +890,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                             if (previousItem) {
                                                 resetTransform(previousItem, item.additiveSum, 0);
                                             }
-                                            setFreezeResetValue(getTransformInitialValue((<SvgAnimateTransform> item).type), true);
+                                            setFreezeResetValue(TRANSFORM.typeAsName((<SvgAnimateTransform> item).type), true);
                                         }
                                         let parallel = maxTime !== -1;
                                         complete = true;
@@ -1176,7 +1189,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                     if (transforming) {
                                         type = Array.from(animateTimeRangeMap.values()).pop() as number;
                                         if (value === undefined) {
-                                            value = getTransformInitialValue(type);
+                                            value = TRANSFORM.valueAsInitial(type);
                                         }
                                     }
                                     else if (value === undefined) {
@@ -1226,7 +1239,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                 baseValue = <AnimateValue> Array.from(repeatingMap[attr].values()).pop();
                             }
                             else {
-                                baseValue = SvgBuild.asAnimateTransform(item) ? getTransformInitialValue(item.type) : getBaseValue(attr);
+                                baseValue = SvgBuild.asAnimateTransform(item) ? TRANSFORM.valueAsInitial(item.type) : getBaseValue(attr);
                             }
                             timelineMap[attr] = new Map<number, AnimateValue>();
                             let maxTime = 0;
@@ -1278,7 +1291,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                     }
                     if (repeatingResult || indefiniteResult) {
                         this.removeAnimations(conflicted);
-                        const sequentialName = Array.from(conflicted.map(item => SvgBuild.asAnimateTransform(item) ? getTransformName(item.type) : item.attributeName)).join('-');
+                        const sequentialName = Array.from(conflicted.map(item => SvgBuild.asAnimateTransform(item) ? TRANSFORM.typeAsName(item.type) : item.attributeName)).join('-');
                         const timeRange = Array.from(animateTimeRangeMap.entries());
                         let x = 0;
                         let y = 0;

@@ -254,7 +254,7 @@ function segmentTransforms(element: SVGGraphicsElement, transform: SvgTransform[
         const host: SvgTransform[][] = [];
         const client: SvgTransform[] = [];
         const partition = transform.slice(0).reverse();
-        const rotations = transform[0].css ? [] : $utilS.getTransformRotate(element);
+        const rotations = transform[0].css ? [] : $utilS.TRANSFORM.rotate(element);
         rotations.reverse();
         for (let i = 1; i < partition.length; i++) {
             const item = partition[i];
@@ -1652,7 +1652,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                     for (const type of previousType) {
                         const propertyName = getTransformPropertyName(type);
                         if (propertyName) {
-                            const initialValue = $utilS.getTransformInitialValue(type).split(' ');
+                            const initialValue = $utilS.TRANSFORM.valueAsInitial(type).split(' ');
                             for (let j = 0; j < initialValue.length; j++) {
                                 transformResult.push(createAnimateFromTo(propertyName[j], item.time, initialValue[j], ''));
                             }

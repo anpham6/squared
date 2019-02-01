@@ -1,7 +1,7 @@
 import { SvgPathCommand, SvgPoint, SvgTransform } from './@types/object';
 
 import { INSTANCE_TYPE } from './lib/constant';
-import { applyMatrixX, applyMatrixY, createTransform, getRadiusY, truncateDecimal } from './lib/util';
+import { MATRIX, TRANSFORM, getRadiusY, truncateDecimal } from './lib/util';
 
 type Svg = squared.svg.Svg;
 type SvgAnimate = squared.svg.SvgAnimate;
@@ -154,7 +154,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         const result: SvgTransform[] = [];
         for (let i = 0; i < transform.numberOfItems; i++) {
             const item = transform.getItem(i);
-            result.push(createTransform(item.type, item.matrix, item.angle));
+            result.push(TRANSFORM.create(item.type, item.matrix, item.angle));
         }
         return result;
     }
@@ -223,12 +223,12 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             }
             for (const pt of result) {
                 const x = pt.x;
-                pt.x = applyMatrixX(m, x, pt.y + y1) + x2;
-                pt.y = applyMatrixY(m, x + x1, pt.y) + y2;
+                pt.x = MATRIX.applyX(m, x, pt.y + y1) + x2;
+                pt.y = MATRIX.applyY(m, x + x1, pt.y) + y2;
                 if (item.type === SVGTransform.SVG_TRANSFORM_SCALE && pt.rx !== undefined && pt.ry !== undefined) {
                     const rx = pt.rx;
-                    pt.rx = applyMatrixX(m, rx, pt.ry + y1);
-                    pt.ry = applyMatrixY(m, rx + x1, pt.ry);
+                    pt.rx = MATRIX.applyX(m, rx, pt.ry + y1);
+                    pt.ry = MATRIX.applyY(m, rx + x1, pt.ry);
                 }
             }
         }

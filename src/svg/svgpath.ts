@@ -6,7 +6,7 @@ import SvgElement from './svgelement';
 import SvgBuild from './svgbuild';
 
 import { INSTANCE_TYPE } from './lib/constant';
-import { SVG, getTransform, getTransformOrigin } from './lib/util';
+import { SVG, TRANSFORM } from './lib/util';
 
 export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) implements squared.svg.SvgPath {
     public static build(path: SvgPath, transform: SvgTransform[], exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
@@ -166,7 +166,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     }
 
     public transformPoints(transform: SvgTransform[], points: Point[], center?: Point) {
-        return SvgBuild.applyTransforms(transform, points, getTransformOrigin(this.element), center);
+        return SvgBuild.applyTransforms(transform, points, TRANSFORM.origin(this.element), center);
     }
 
     private init() {
@@ -204,7 +204,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
 
     get transform() {
         if (this._transform === undefined) {
-            this._transform = getTransform(this.element) || SvgBuild.convertTransformList(this.element.transform.baseVal);
+            this._transform = TRANSFORM.parse(this.element) || SvgBuild.convertTransformList(this.element.transform.baseVal);
         }
         return this._transform;
     }

@@ -7,7 +7,7 @@ import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 
 import { KEYSPLINE_NAME } from './lib/constant';
-import { REGEXP_SVG, convertClockTime, getFontSize, getHostDPI, getTransform, getTransformInitialValue, getTransformOrigin, isVisible, setOpacity, setVisible, sortNumber } from './lib/util';
+import { REGEXP_SVG, TRANSFORM, convertClockTime, getFontSize, getHostDPI, isVisible, setOpacity, setVisible, sortNumber } from './lib/util';
 
 interface AttributeData extends NumberValue<string> {
     transformOrigin?: Point;
@@ -73,7 +73,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
 
         public getTransforms(companion?: SVGGraphicsElement) {
             const element = companion || this.element;
-            return getTransform(element) || SvgBuild.convertTransformList(element.transform.baseVal);
+            return TRANSFORM.parse(element) || SvgBuild.convertTransformList(element.transform.baseVal);
         }
 
         public getAnimations(companion?: SVGGraphicsElement) {
@@ -162,12 +162,12 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             function getKeyframeOrigin(ordinal: number) {
                                 const origin = attrMap['transform-origin'] && attrMap['transform-origin'].find(item => item.ordinal === ordinal);
                                 if (origin) {
-                                    return getTransformOrigin(element, origin.value);
+                                    return TRANSFORM.origin(element, origin.value);
                                 }
                                 return undefined;
                             }
                             for (const transform of sortAttribute(attrMap['transform'])) {
-                                const transforms = getTransform(element, transform.value);
+                                const transforms = TRANSFORM.parse(element, transform.value);
                                 if (transforms) {
                                     const origin = getKeyframeOrigin(transform.ordinal);
                                     transforms.forEach(item => {
@@ -251,7 +251,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     case 'translate':
                                         animate = new SvgAnimateTransform();
                                         animate.attributeName = 'transform';
-                                        animate.baseFrom = getTransformInitialValue(name);
+                                        animate.baseFrom = TRANSFORM.valueAsInitial(name);
                                         (<SvgAnimateTransform> animate).setType(name);
                                         break;
                                     default:
