@@ -6,12 +6,18 @@ declare global {
             to: string;
             duration: number;
             paused: boolean;
+            synchronizeState: number;
+            animationName: NumberValue<string>;
             element?: SVGAnimationElement;
             parent?: SvgView | SvgPath;
             baseFrom?: string;
+            readonly isolated: boolean;
             readonly instanceType: number;
             setAttribute(attr: string, equality?: string): void;
             getAttribute(attr: string): string;
+            addState(...values: number[]): void;
+            removeState(...values: number[]): void;
+            hasState(value: number): boolean;
         }
 
         interface SvgAnimate extends SvgAnimation {
@@ -28,13 +34,11 @@ declare global {
             fillFreeze: boolean;
             reverse: boolean;
             alternate: boolean;
-            synchronizeState: number;
             element?: SVGAnimateElement;
             end?: number;
             keySplines?: string[];
-            synchronized?: NumberValue<string>;
-            animationName?: NumberValue<string>;
             animationSiblings?: SvgAnimate[];
+            synchronized?: NumberValue<string>;
             readonly fromToType: boolean;
             readonly fillReplace: boolean;
             setCalcMode(name: string): void;

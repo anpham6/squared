@@ -548,7 +548,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                 }
                             }
                             else {
-                                if ($SvgBuild.asSet(item)) {
+                                if (item.isolated) {
                                     if (ATTRIBUTE_ANDROID[item.attributeName] && $util.hasValue(item.to)) {
                                         together.push(item);
                                     }
@@ -1730,7 +1730,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
     }
 
     private queueAnimations(svg: SvgView, name: string, predicate: IteratorPredicate<SvgAnimation, void>, pathData = '') {
-        const animate = svg.animation.filter(predicate).filter(item => !item.paused && (item.duration > 0 || $SvgBuild.asSet(item)));
+        const animate = svg.animation.filter(predicate).filter(item => !item.paused && (item.duration > 0 || item.isolated));
         if (animate.length) {
             this.ANIMATE_DATA.set(name, {
                 element: svg.element,

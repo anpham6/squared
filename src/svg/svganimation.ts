@@ -6,14 +6,16 @@ const $util = squared.lib.util;
 
 export default class SvgAnimation implements squared.svg.SvgAnimation {
     public attributeName = '';
-    public to = '';
     public paused = false;
+    public synchronizeState = 0;
     public element?: SVGAnimationElement;
     public parent?: squared.svg.SvgView | squared.svg.SvgPath;
     public baseFrom?: string;
 
     private _duration = -1;
     private _begin = 0;
+    private _to = '';
+    private _animationName?: NumberValue<string>;
 
     constructor(element?: SVGAnimationElement) {
         if (element) {
@@ -50,6 +52,26 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
         return item ? item.value.trim() : '';
     }
 
+    public addState(...values: number[]) {
+        for (const value of values) {
+            if (!$util.hasBit(this.synchronizeState, value)) {
+                this.synchronizeState |= value;
+            }
+        }
+    }
+
+    public removeState(...values: number[]) {
+        for (const value of values) {
+            if ($util.hasBit(this.synchronizeState, value)) {
+                this.synchronizeState ^= value;
+            }
+        }
+    }
+
+    public hasState(value: number) {
+        return $util.hasBit(this.synchronizeState, value);
+    }
+
     set begin(value) {
         this._begin = value;
     }
@@ -62,6 +84,24 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
     get duration() {
         return this._duration;
+    }
+
+    set to(value) {
+        this._to = value;
+    }
+    get to() {
+        return this._to;
+    }
+
+    get isolated() {
+        return true;
+    }
+
+    set animationName(value) {
+        this._animationName = value;
+    }
+    get animationName() {
+        return this._animationName || { ordinal: Number.NEGATIVE_INFINITY, value: '' };
     }
 
     get instanceType() {

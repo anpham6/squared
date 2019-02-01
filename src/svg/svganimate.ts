@@ -138,10 +138,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public additiveSum = false;
     public accumulateSum = false;
     public fillMode = 0;
-    public synchronizeState = 0;
     public alternate = false;
     public end?: number;
-    public animationSiblings?: SvgAnimate[];
     public synchronized?: NumberValue<string>;
 
     private _repeatCount = 1;
@@ -149,7 +147,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     private _values: string[] | undefined;
     private _keyTimes: number[] | undefined;
     private _keySplines?: string[];
-    private _animationName?: NumberValue<string>;
+    private _animationSiblings?: SvgAnimate[];
 
     constructor(public element?: SVGAnimateElement) {
         super(element);
@@ -316,6 +314,13 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         return this._repeatCount;
     }
 
+    set to(value) {
+        super.to = value;
+    }
+    get to() {
+        return this.isolated ? this.values[0] : super.to;
+    }
+
     set values(value) {
         this._values = value;
         if (this._keyTimes && this._keyTimes.length !== value.length) {
@@ -394,6 +399,10 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         return this.keyTimes.length === 2 && this.keyTimes[0] === 0 && this.keyTimes[1] === 1;
     }
 
+    get isolated() {
+        return this.element !== undefined && this.duration === 0 && this.keyTimes.length >= 2 && this.keyTimes[0] === 0;
+    }
+
     set fillBackwards(value) {
         this.setFillMode(value, FILL_MODE.BACKWARDS);
     }
@@ -419,11 +428,24 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         return this.fillMode < FILL_MODE.FORWARDS;
     }
 
-    set animationName(value) {
-        this._animationName = value;
+    set animationSiblings(value) {
+        this._animationSiblings = value;
+        if (value && this.fillBackwards) {
+            for (let i = 0, found = false; i < value.length; i++) {
+                if (found) {
+                    if (value[i].begin <= this.begin) {
+                        this.fillBackwards = false;
+                        break;
+                    }
+                }
+                else if (value[i] === this) {
+                    found = true;
+                }
+            }
+        }
     }
-    get animationName() {
-        return this._animationName || { ordinal: Number.NEGATIVE_INFINITY, value: '' };
+    get animationSiblings() {
+        return this._animationSiblings;
     }
 
     get instanceType() {

@@ -79,13 +79,56 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
         public getAnimations(companion?: SVGGraphicsElement) {
             const element = companion || this.element;
             const result: SvgAnimation[] = [];
-            const animationName = parseAttribute(element, 'animation-name');
-            let groupId = -1;
-            function addAnimation(item: SvgAnimate, begin: number, value = '') {
+            let groupId = 0;
+            function addAnimation(item: SvgAnimation, begin: number, value = '') {
+                if (value === '') {
+                    groupId++;
+                }
                 item.begin = begin;
                 item.animationName = { ordinal: groupId, value };
                 result.push(item);
             }
+            for (let i = 0; i < element.children.length; i++) {
+                const item = element.children[i];
+                if (item instanceof SVGAnimationElement) {
+                    const begin = item.attributes.getNamedItem('begin');
+                    if (begin && !/^[a-zA-Z]+$/.test(begin.value.trim())) {
+                        const times = sortNumber(begin.value.split(';').map(value => convertClockTime(value)));
+                        if (times.length) {
+                            if (item.tagName === 'set') {
+                                result.push();
+                            }
+                            switch (item.tagName) {
+                                case 'set':
+                                    for (const time of times) {
+                                        addAnimation(new SvgAnimation(<SVGAnimationElement> item), time);
+                                    }
+                                    break;
+                                case 'animate':
+                                    for (const time of times) {
+                                        addAnimation(new SvgAnimate(<SVGAnimateElement> item), time);
+                                    }
+                                    break;
+                                case 'animateTransform':
+                                    for (const time of times) {
+                                        const animate = new SvgAnimateTransform(<SVGAnimateTransformElement> item);
+                                        if (SvgBuild.asShape(this) && this.path) {
+                                            animate.transformFrom = this.path.draw(undefined, undefined, true);
+                                        }
+                                        addAnimation(animate, time);
+                                    }
+                                    break;
+                                case 'animateMotion':
+                                    for (const time of times) {
+                                        addAnimation(new SvgAnimateMotion(<SVGAnimateMotionElement> item), time);
+                                    }
+                                    break;
+                            }
+                        }
+                    }
+                }
+            }
+            const animationName = parseAttribute(element, 'animation-name');
             if (animationName.length) {
                 const cssData: ObjectMap<string[]> = {};
                 for (const name in ANIMATION_DEFAULT) {
@@ -298,46 +341,6 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                 });
                 const siblings = <SvgAnimate[]> result.slice(0);
                 result.forEach((item: SvgAnimate) => item.animationSiblings = siblings.filter(subitem => subitem.attributeName === item.attributeName));
-            }
-            for (let i = 0; i < element.children.length; i++) {
-                const item = element.children[i];
-                if (item.tagName === 'set') {
-                    result.push(new SvgAnimation(<SVGAnimationElement> item));
-                }
-                else if (item instanceof SVGAnimateElement) {
-                    const begin = item.attributes.getNamedItem('begin');
-                    if (begin && !/^[a-zA-Z]+$/.test(begin.value.trim())) {
-                        const times = sortNumber(begin.value.split(';').map(value => convertClockTime(value)));
-                        if (times.length) {
-                            switch (item.tagName) {
-                                case 'animate':
-                                    for (const value of times) {
-                                        const animate = new SvgAnimate(<SVGAnimateElement> item);
-                                        groupId++;
-                                        addAnimation(animate, value);
-                                    }
-                                    break;
-                                case 'animateTransform':
-                                    for (const value of times) {
-                                        const animate = new SvgAnimateTransform(<SVGAnimateTransformElement> item);
-                                        if (SvgBuild.asShape(this) && this.path) {
-                                            animate.transformFrom = this.path.draw(undefined, undefined, true);
-                                        }
-                                        groupId++;
-                                        addAnimation(animate, value);
-                                    }
-                                    break;
-                                case 'animateMotion':
-                                    for (const value of times) {
-                                        const animate = new SvgAnimateMotion(<SVGAnimateMotionElement> item);
-                                        groupId++;
-                                        addAnimation(animate, value);
-                                    }
-                                    break;
-                            }
-                        }
-                    }
-                }
             }
             result.forEach(item => item.parent = this);
             return result;
