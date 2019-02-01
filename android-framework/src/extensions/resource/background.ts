@@ -510,7 +510,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 BB: [{
                                     CCC: [{
                                         render: [[]],
-                                        value: $SvgBuild.getRect(width, height),
+                                        value: $SvgBuild.drawRect(width, height),
                                         clipElement: false,
                                         fillPattern: [{ gradients: backgroundGradient }]
                                     }],

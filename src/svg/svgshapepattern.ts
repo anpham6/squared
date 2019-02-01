@@ -60,7 +60,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                             item.path.refitBaseValue(x, y);
                             SvgPath.build(<SvgPath> item.path, item.transform, exclusions, residual);
                             item.path.fillOpacity = (parseFloat(item.path.fillOpacity) * parseFloat(this.fillOpacity)).toString();
-                            item.path.clipPath = SvgBuild.getRect(tileWidth, tileHeight, x, y) + (item.path.clipPath !== '' ? `;${item.path.clipPath}` : '');
+                            item.path.clipPath = SvgBuild.drawRect(tileWidth, tileHeight, x, y) + (item.path.clipPath !== '' ? `;${item.path.clipPath}` : '');
                         }
                     });
                     this.append(pattern);

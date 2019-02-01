@@ -11,7 +11,7 @@ declare global {
             element?: SVGAnimationElement;
             parent?: SvgView | SvgPath;
             baseFrom?: string;
-            readonly isolated: boolean;
+            readonly setterType: boolean;
             readonly instanceType: number;
             setAttribute(attr: string, equality?: string): void;
             getAttribute(attr: string): string;

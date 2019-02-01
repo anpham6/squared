@@ -318,7 +318,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         super.to = value;
     }
     get to() {
-        return this.isolated ? this.values[0] : super.to;
+        return this.setterType ? this.values[0] : super.to;
     }
 
     set values(value) {
@@ -399,10 +399,6 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         return this.keyTimes.length === 2 && this.keyTimes[0] === 0 && this.keyTimes[1] === 1;
     }
 
-    get isolated() {
-        return this.element !== undefined && this.duration === 0 && this.keyTimes.length >= 2 && this.keyTimes[0] === 0;
-    }
-
     set fillBackwards(value) {
         this.setFillMode(value, FILL_MODE.BACKWARDS);
     }
@@ -446,6 +442,10 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
     get animationSiblings() {
         return this._animationSiblings;
+    }
+
+    get setterType() {
+        return this.element !== undefined && this.duration === 0 && this.keyTimes.length >= 2 && this.keyTimes[0] === 0;
     }
 
     get instanceType() {

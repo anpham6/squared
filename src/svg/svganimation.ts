@@ -30,7 +30,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
                 this.baseFrom = getTransformInitialValue(this.getAttribute('type'));
             }
             else if (element.parentElement) {
-                this.baseFrom = $util.optionalAsString(element.parentElement, `${this.attributeName}.baseVal.value`) || $dom.cssInheritAttribute(element.parentElement, this.attributeName);
+                this.baseFrom = $util.optionalAsString(element.parentElement, `${this.attributeName}.baseVal.valueAsString`) || $dom.cssInheritAttribute(element.parentElement, this.attributeName);
             }
         }
     }
@@ -93,15 +93,15 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
         return this._to;
     }
 
-    get isolated() {
-        return true;
-    }
-
     set animationName(value) {
         this._animationName = value;
     }
     get animationName() {
         return this._animationName || { ordinal: Number.NEGATIVE_INFINITY, value: '' };
+    }
+
+    get setterType() {
+        return true;
     }
 
     get instanceType() {

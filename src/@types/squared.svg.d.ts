@@ -91,12 +91,12 @@ declare global {
             public static asAnimateTransform(object: SvgAnimation): object is SvgAnimateTransform;
             public static asAnimateMotion(object: SvgAnimation): object is SvgAnimateMotion;
             public static setName(element?: SVGElement): string;
-            public static getLine(x1: number, y1: number, x2?: number, y2?: number): string;
-            public static getCircle(cx: number, cy: number, r: number): string;
-            public static getEllipse(cx: number, cy: number, rx: number, ry?: number): string;
-            public static getRect(width: number, height: number, x?: number, y?: number): string;
-            public static getPolygon(points: Point[] | DOMPoint[]): string;
-            public static getPolyline(points: Point[] | DOMPoint[]): string;
+            public static drawLine(x1: number, y1: number, x2?: number, y2?: number): string;
+            public static drawRect(width: number, height: number, x?: number, y?: number): string;
+            public static drawCircle(cx: number, cy: number, r: number): string;
+            public static drawEllipse(cx: number, cy: number, rx: number, ry?: number, truncate?: boolean): string;
+            public static drawPolygon(points: Point[] | DOMPoint[], truncate?: boolean): string;
+            public static drawPolyline(points: Point[] | DOMPoint[], truncate?: boolean): string;
             public static filterTransforms(transform: SvgTransform[], exclude?: number[]): SvgTransform[];
             public static applyTransforms(transform: SvgTransform[], values: Point[], aspectRatio?: SvgAspectRatio, origin?: Point, center?: Point): SvgPoint[];
             public static getPointCenter(values: Point[]): Point[];

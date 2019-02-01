@@ -106,7 +106,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     if (parent) {
                                         parent.refitPoints(points);
                                     }
-                                    this.clipPath = SvgBuild.getPolygon(points);
+                                    this.clipPath = SvgBuild.drawPolygon(points);
                                     return;
                                 }
                                 case 'polygon': {
@@ -119,7 +119,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     if (parent) {
                                         parent.refitPoints(points);
                                     }
-                                    this.clipPath = SvgBuild.getPolygon(points);
+                                    this.clipPath = SvgBuild.drawPolygon(points);
                                     return;
                                 }
                                 default: {
@@ -147,7 +147,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                             rx = parent.refitSize(rx);
                                             ry = parent.refitSize(ry);
                                         }
-                                        this.clipPath = SvgBuild.getEllipse(cx, cy, rx, ry);
+                                        this.clipPath = SvgBuild.drawEllipse(cx, cy, rx, ry);
                                     }
                                     return;
                                 }

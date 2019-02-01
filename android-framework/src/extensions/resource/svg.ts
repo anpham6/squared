@@ -548,7 +548,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                 }
                             }
                             else {
-                                if (item.isolated) {
+                                if (item.setterType) {
                                     if (ATTRIBUTE_ANDROID[item.attributeName] && $util.hasValue(item.to)) {
                                         together.push(item);
                                     }
@@ -774,7 +774,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                     if (value !== '') {
                                                                         const points = $SvgBuild.convertNumberList($SvgBuild.toNumberList(value));
                                                                         if (points.length) {
-                                                                            values[i] = item.parent && item.parent.element.tagName === 'polygon' ? $SvgBuild.getPolygon(points) : $SvgBuild.getPolyline(points);
+                                                                            values[i] = item.parent && item.parent.element.tagName === 'polygon' ? $SvgBuild.drawPolygon(points) : $SvgBuild.drawPolyline(points);
                                                                         }
                                                                         else {
                                                                             break pathType;
@@ -1730,7 +1730,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
     }
 
     private queueAnimations(svg: SvgView, name: string, predicate: IteratorPredicate<SvgAnimation, void>, pathData = '') {
-        const animate = svg.animation.filter(predicate).filter(item => !item.paused && (item.duration > 0 || item.isolated));
+        const animate = svg.animation.filter(predicate).filter(item => !item.paused && (item.duration > 0 || item.setterType));
         if (animate.length) {
             this.ANIMATE_DATA.set(name, {
                 element: svg.element,

@@ -74,7 +74,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             if (parent) {
                 parent.refitPoints(points);
             }
-            d = SvgBuild.getPolyline(points);
+            d = SvgBuild.drawPolyline(points);
         }
         else if (SVG.circle(element) || SVG.ellipse(element)) {
             let rx: number;
@@ -103,7 +103,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 parent.refitPoints(points);
             }
             const pt = <Required<SvgPoint>> points[0];
-            d = SvgBuild.getEllipse(pt.x, pt.y, pt.rx, pt.ry);
+            d = SvgBuild.drawEllipse(pt.x, pt.y, pt.rx, pt.ry);
         }
         else if (SVG.rect(element)) {
             let x = this.getBaseValue('x');
@@ -127,7 +127,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 if (parent) {
                     parent.refitPoints(points);
                 }
-                d = SvgBuild.getPolygon(points);
+                d = SvgBuild.drawPolygon(points);
             }
             else {
                 if (parent) {
@@ -136,7 +136,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                     width = parent.refitSize(width);
                     height = parent.refitSize(height);
                 }
-                d = SvgBuild.getRect(width, height, x, y);
+                d = SvgBuild.drawRect(width, height, x, y);
             }
         }
         else if (SVG.polygon(element) || SVG.polyline(element)) {
@@ -156,7 +156,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 }
                 parent.refitPoints(points);
             }
-            d = element.tagName === 'polygon' ? SvgBuild.getPolygon(points) : SvgBuild.getPolyline(points);
+            d = element.tagName === 'polygon' ? SvgBuild.drawPolygon(points) : SvgBuild.drawPolyline(points);
         }
         if (!extract) {
             this.value = d;

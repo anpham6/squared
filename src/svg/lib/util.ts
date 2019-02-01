@@ -25,7 +25,7 @@ function convertRadian(angle: number) {
     return angle * Math.PI / 180;
 }
 
-export const SHAPES = {
+const SHAPES = {
     path: 1,
     line: 2,
     rect: 3,
@@ -528,13 +528,18 @@ export function sortNumber(values: number[], descending = false) {
     return descending ? values.sort((a, b) => a > b ? -1 : 1) : values.sort((a, b) => a < b ? -1 : 1);
 }
 
-export function getLeastCommonMultiple(values: number[], minimum = 0, offset?: number[]) {
+export function truncateDecimal(value: number, precision = 4) {
+    return value % 1 !== 0 ? value.toFixed(precision).replace(/(\.\d+?)0+$/, (match, capture) => capture) : value;
+}
+
+export function getLeastCommonMultiple(values: number[], offset?: number[]) {
     if (values.length > 1) {
         const increment = sortNumber(values.slice(0))[0];
+        let minimum = 0;
         if (offset) {
             if (offset.length === values.length) {
                 for (let i = 0; i < offset.length; i++) {
-                    minimum = Math.max(minimum, offset[i] + increment);
+                    minimum = Math.max(minimum, offset[i] + values[i]);
                 }
             }
             else {

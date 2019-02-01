@@ -95,9 +95,6 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                     if (begin && !/^[a-zA-Z]+$/.test(begin.value.trim())) {
                         const times = sortNumber(begin.value.split(';').map(value => convertClockTime(value)));
                         if (times.length) {
-                            if (item.tagName === 'set') {
-                                result.push();
-                            }
                             switch (item.tagName) {
                                 case 'set':
                                     for (const time of times) {
@@ -169,16 +166,16 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 }
                                 return undefined;
                             }
-                            for (const item of sortAttribute(attrMap['transform'])) {
-                                const transforms = getTransform(element, item.value);
+                            for (const transform of sortAttribute(attrMap['transform'])) {
+                                const transforms = getTransform(element, transform.value);
                                 if (transforms) {
-                                    const origin = getKeyframeOrigin(item.ordinal);
-                                    transforms.forEach(transform => {
-                                        const m = transform.matrix;
+                                    const origin = getKeyframeOrigin(transform.ordinal);
+                                    transforms.forEach(item => {
+                                        const m = item.matrix;
                                         let name: string;
                                         let value: string;
                                         let transformOrigin: Point | undefined;
-                                        switch (transform.type) {
+                                        switch (item.type) {
                                             case SVGTransform.SVG_TRANSFORM_TRANSLATE:
                                                 name = 'translate';
                                                 value = `${m.e} ${m.f}`;
@@ -186,7 +183,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                             case SVGTransform.SVG_TRANSFORM_SCALE:
                                                 name = 'scale';
                                                 value = `${m.a} ${m.d}`;
-                                                if (origin && (item.ordinal !== 0 || origin.x !== 0 || origin.y !== 0)) {
+                                                if (origin && (transform.ordinal !== 0 || origin.x !== 0 || origin.y !== 0)) {
                                                     transformOrigin = {
                                                         x: origin.x * (1 - m.a),
                                                         y: origin.y * (1 - m.d)
@@ -195,12 +192,12 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                                 break;
                                             case SVGTransform.SVG_TRANSFORM_ROTATE:
                                                 name = 'rotate';
-                                                value = `${transform.angle} ${origin ? `${origin.x} ${origin.y}` : '0 0'}`;
+                                                value = `${item.angle} ${origin ? `${origin.x} ${origin.y}` : '0 0'}`;
                                                 break;
                                             case SVGTransform.SVG_TRANSFORM_SKEWX:
                                                 name = 'skewX';
-                                                value = transform.angle.toString();
-                                                if (origin && (item.ordinal !== 0 || origin.y !== 0)) {
+                                                value = item.angle.toString();
+                                                if (origin && (transform.ordinal !== 0 || origin.y !== 0)) {
                                                     transformOrigin = {
                                                         x: origin.y * m.c * -1,
                                                         y: 0
@@ -209,8 +206,8 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                                 break;
                                             case SVGTransform.SVG_TRANSFORM_SKEWY:
                                                 name = 'skewY';
-                                                value = transform.angle.toString();
-                                                if (origin && (item.ordinal !== 0 || origin.x !== 0)) {
+                                                value = item.angle.toString();
+                                                if (origin && (transform.ordinal !== 0 || origin.x !== 0)) {
                                                     transformOrigin = {
                                                         x: 0,
                                                         y: origin.x * m.b * -1,
@@ -223,14 +220,14 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                         if (attrMap[name] === undefined) {
                                             attrMap[name] = [];
                                         }
-                                        const previousIndex = attrMap[name].findIndex(subitem => subitem.ordinal === item.ordinal);
+                                        const previousIndex = attrMap[name].findIndex(subitem => subitem.ordinal === transform.ordinal);
                                         if (previousIndex !== -1) {
                                             attrMap[name][previousIndex].value = value;
                                             attrMap[name][previousIndex].transformOrigin = transformOrigin;
                                         }
                                         else {
                                             attrMap[name].push({
-                                                ordinal: item.ordinal,
+                                                ordinal: transform.ordinal,
                                                 value,
                                                 transformOrigin
                                             });
@@ -242,100 +239,103 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         delete attrMap['transform'];
                         delete attrMap['transform-origin'];
                         for (const name in attrMap) {
-                            const animation = attrMap[name];
-                            if (animation.length === 1 && animation[0].ordinal !== 0) {
-                                animation.unshift({ ordinal: 0, value: '' });
-                            }
-                            else {
-                                sortAttribute(animation);
-                            }
-                            let animate: SvgAnimate;
-                            switch (name) {
-                                case 'rotate':
-                                case 'scale':
-                                case 'skewX':
-                                case 'skewY':
-                                case 'translate':
-                                    animate = new SvgAnimateTransform();
-                                    animate.attributeName = 'transform';
-                                    animate.baseFrom = getTransformInitialValue(name);
-                                    (<SvgAnimateTransform> animate).setType(name);
-                                    break;
-                                default:
-                                    animate = new SvgAnimate();
-                                    animate.attributeName = name;
-                                    animate.baseFrom = $util.optionalAsString(element, `${name}.baseVal.value`) || $dom.cssAttribute(element, name);
-                                    break;
-                            }
-                            addAnimation(animate, convertClockTime(cssData['animation-delay'][index]), className);
-                            animate.paused = cssData['animation-play-state'][index] === 'paused';
-                            animate.duration = convertClockTime(cssData['animation-duration'][index]);
-                            const iterationCount = cssData['animation-iteration-count'][index];
-                            const timingFunction = cssData['animation-timing-function'][index];
-                            const direction = cssData['animation-direction'][index];
-                            const fillMode = cssData['animation-fill-mode'][index];
-                            const keyTimes: number[] = [];
-                            const values: string[] = [];
-                            const keySplines: string[] = [];
-                            for (let i = 0; i < animation.length; i++) {
-                                keyTimes.push(animation[i].ordinal);
-                                values.push(animation[i].value);
-                                if (i < animation.length - 1) {
-                                    const spline = keyframeMap['animation-timing-function'] ? keyframeMap['animation-timing-function'].find(item => item.ordinal === animation[i].ordinal) : undefined;
-                                    keySplines.push(spline ? spline.value : timingFunction);
+                            const duration = convertClockTime(cssData['animation-duration'][index]);
+                            if (duration > 0) {
+                                const animation = attrMap[name];
+                                let animate: SvgAnimate;
+                                switch (name) {
+                                    case 'rotate':
+                                    case 'scale':
+                                    case 'skewX':
+                                    case 'skewY':
+                                    case 'translate':
+                                        animate = new SvgAnimateTransform();
+                                        animate.attributeName = 'transform';
+                                        animate.baseFrom = getTransformInitialValue(name);
+                                        (<SvgAnimateTransform> animate).setType(name);
+                                        break;
+                                    default:
+                                        animate = new SvgAnimate();
+                                        animate.attributeName = name;
+                                        animate.baseFrom = $util.optionalAsString(element, `${name}.baseVal.valueAsString`) || $dom.cssAttribute(element, name);
+                                        break;
                                 }
-                                const transformOrigin = animation[i].transformOrigin;
-                                if (transformOrigin && SvgBuild.asAnimateTransform(animate)) {
-                                    if (animate.transformOrigin === undefined) {
-                                        animate.transformOrigin = [];
-                                    }
-                                    animate.transformOrigin[i] = transformOrigin;
+                                const iterationCount = cssData['animation-iteration-count'][index];
+                                const timingFunction = cssData['animation-timing-function'][index];
+                                const direction = cssData['animation-direction'][index];
+                                const fillMode = cssData['animation-fill-mode'][index];
+                                const keyTimes: number[] = [];
+                                const values: string[] = [];
+                                const keySplines: string[] = [];
+                                if (animation.length === 1 && animation[0].ordinal !== 0) {
+                                    animation.unshift({ ordinal: 0, value: animate.baseFrom });
                                 }
-                            }
-                            if (!keySplines.every(spline => spline === 'linear')) {
-                                const keyTimesData: number[] = [];
-                                const valuesData: string[] = [];
-                                const keySplinesData: string[] = [];
-                                for (let i = 0; i < keySplines.length; i++) {
-                                    if (KEYSPLINE_NAME[keySplines[i]]) {
-                                        keySplines[i] = KEYSPLINE_NAME[keySplines[i]];
+                                else {
+                                    sortAttribute(animation);
+                                }
+                                for (let i = 0; i < animation.length; i++) {
+                                    keyTimes.push(animation[i].ordinal);
+                                    values.push(animation[i].value);
+                                    if (i < animation.length - 1) {
+                                        const spline = keyframeMap['animation-timing-function'] && keyframeMap['animation-timing-function'].find(item => item.ordinal === animation[i].ordinal);
+                                        keySplines.push(spline ? spline.value : timingFunction);
                                     }
-                                    else if (keySplines[i].startsWith('step')) {
-                                        if (i === 0 && values[i] === '' && animate.baseFrom) {
-                                            values[i] = animate.baseFrom;
+                                    const transformOrigin = animation[i].transformOrigin;
+                                    if (transformOrigin && SvgBuild.asAnimateTransform(animate)) {
+                                        if (animate.transformOrigin === undefined) {
+                                            animate.transformOrigin = [];
                                         }
-                                        const steps = SvgAnimate.toStepFractionList(name, keySplines[i], i, keyTimes, values, getHostDPI(), getFontSize(element));
-                                        if (steps) {
-                                            keyTimesData.push(...steps[0]);
-                                            valuesData.push(...steps[1]);
-                                            steps[0].forEach(() => keySplinesData.push(KEYSPLINE_NAME['step']));
-                                            continue;
-                                        }
-                                        keySplines[i] = KEYSPLINE_NAME.linear;
+                                        animate.transformOrigin[i] = transformOrigin;
                                     }
-                                    else {
-                                        const match = REGEXP_CUBICBEZIER.exec(keySplines[i]);
-                                        keySplines[i] = match ? `${match[1]} ${match[2]} ${match[3]} ${match[4]}` : KEYSPLINE_NAME.ease;
-                                    }
-                                    keyTimesData.push(keyTimes[i]);
-                                    valuesData.push(values[i]);
-                                    keySplinesData.push(keySplines[i]);
                                 }
-                                keyTimesData.push(keyTimes.pop() as number);
-                                valuesData.push(values.pop() as string);
-                                animate.values = valuesData;
-                                animate.keyTimes = keyTimesData;
-                                animate.keySplines = keySplinesData;
+                                addAnimation(animate, convertClockTime(cssData['animation-delay'][index]), className);
+                                animate.paused = cssData['animation-play-state'][index] === 'paused';
+                                animate.duration = duration;
+                                if (!keySplines.every(spline => spline === 'linear')) {
+                                    const keyTimesData: number[] = [];
+                                    const valuesData: string[] = [];
+                                    const keySplinesData: string[] = [];
+                                    for (let i = 0; i < keySplines.length; i++) {
+                                        if (KEYSPLINE_NAME[keySplines[i]]) {
+                                            keySplines[i] = KEYSPLINE_NAME[keySplines[i]];
+                                        }
+                                        else if (keySplines[i].startsWith('step')) {
+                                            if (i === 0 && values[i] === '' && animate.baseFrom) {
+                                                values[i] = animate.baseFrom;
+                                            }
+                                            const steps = SvgAnimate.toStepFractionList(name, keySplines[i], i, keyTimes, values, getHostDPI(), getFontSize(element));
+                                            if (steps) {
+                                                keyTimesData.push(...steps[0]);
+                                                valuesData.push(...steps[1]);
+                                                steps[0].forEach(() => keySplinesData.push(KEYSPLINE_NAME['step']));
+                                                continue;
+                                            }
+                                            keySplines[i] = KEYSPLINE_NAME.linear;
+                                        }
+                                        else {
+                                            const match = REGEXP_CUBICBEZIER.exec(keySplines[i]);
+                                            keySplines[i] = match ? `${match[1]} ${match[2]} ${match[3]} ${match[4]}` : KEYSPLINE_NAME.ease;
+                                        }
+                                        keyTimesData.push(keyTimes[i]);
+                                        valuesData.push(values[i]);
+                                        keySplinesData.push(keySplines[i]);
+                                    }
+                                    keyTimesData.push(keyTimes.pop() as number);
+                                    valuesData.push(values.pop() as string);
+                                    animate.values = valuesData;
+                                    animate.keyTimes = keyTimesData;
+                                    animate.keySplines = keySplinesData;
+                                }
+                                else {
+                                    animate.values = values;
+                                    animate.keyTimes = keyTimes;
+                                }
+                                animate.repeatCount = iterationCount !== 'infinite' ? parseFloat(iterationCount) : -1;
+                                animate.fillForwards = fillMode === 'forwards' || fillMode === 'both';
+                                animate.fillBackwards = fillMode === 'backwards' || fillMode === 'both';
+                                animate.reverse = direction.endsWith('reverse');
+                                animate.alternate = (animate.repeatCount === -1 || animate.repeatCount > 1) && direction.startsWith('alternate');
                             }
-                            else {
-                                animate.values = values;
-                                animate.keyTimes = keyTimes;
-                            }
-                            animate.repeatCount = iterationCount !== 'infinite' ? parseFloat(iterationCount) : -1;
-                            animate.fillForwards = fillMode === 'forwards' || fillMode === 'both';
-                            animate.fillBackwards = fillMode === 'backwards' || fillMode === 'both';
-                            animate.reverse = direction.endsWith('reverse');
-                            animate.alternate = (animate.repeatCount === -1 || animate.repeatCount > 1) && direction.startsWith('alternate');
                         }
                     }
                 });

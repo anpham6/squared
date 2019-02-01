@@ -1,7 +1,7 @@
 import { SvgPathCommand, SvgPoint, SvgTransform } from './@types/object';
 
 import { INSTANCE_TYPE } from './lib/constant';
-import { applyMatrixX, applyMatrixY, createTransform, getRadiusY } from './lib/util';
+import { applyMatrixX, applyMatrixY, createTransform, getRadiusY, truncateDecimal } from './lib/util';
 
 type Svg = squared.svg.Svg;
 type SvgAnimate = squared.svg.SvgAnimate;
@@ -122,32 +122,32 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         }
     }
 
-    public static getLine(x1: number, y1: number, x2 = 0, y2 = 0) {
+    public static drawLine(x1: number, y1: number, x2 = 0, y2 = 0) {
         return `M${x1},${y1} L${x2},${y2}`;
     }
 
-    public static getCircle(cx: number, cy: number, r: number) {
-        return SvgBuild.getEllipse(cx, cy, r);
-    }
-
-    public static getEllipse(cx: number, cy: number, rx: number, ry?: number) {
-        if (ry === undefined) {
-            ry = rx;
-        }
-        return `M${cx - rx},${cy} a${rx},${ry},0,1,0,${rx * 2},0 a${rx},${ry},0,1,0,-${rx * 2},0`;
-    }
-
-    public static getRect(width: number, height: number, x = 0, y = 0) {
+    public static drawRect(width: number, height: number, x = 0, y = 0) {
         return `M${x},${y} ${x + width},${y} ${x + width},${y + height} ${x},${y + height} Z`;
     }
 
-    public static getPolygon(points: Point[] | DOMPoint[]) {
-        const value = SvgBuild.getPolyline(points);
-        return value !== '' ? value + ' Z' : '';
+    public static drawCircle(cx: number, cy: number, r: number) {
+        return SvgBuild.drawEllipse(cx, cy, r);
     }
 
-    public static getPolyline(points: Point[] | DOMPoint[]) {
-        return points.length ? `M${(points as Point[]).map(pt => `${pt.x},${pt.y}`).join(' ')}` : '';
+    public static drawEllipse(cx: number, cy: number, rx: number, ry?: number, truncate = false) {
+        if (ry === undefined) {
+            ry = rx;
+        }
+        return `M${truncate ? truncateDecimal(cx - rx) : cx - rx},${truncate ? truncateDecimal(cy) : cy} a${rx},${ry},0,1,0,${rx * 2},0 a${rx},${ry},0,1,0,-${rx * 2},0`;
+    }
+
+    public static drawPolygon(points: Point[] | DOMPoint[], truncate = false) {
+        const value = SvgBuild.drawPolyline(points, truncate);
+        return value !== '' ? `${value} Z` : '';
+    }
+
+    public static drawPolyline(points: Point[] | DOMPoint[], truncate = false) {
+        return points.length ? `M${(<Point[]> points).map(pt => `${truncate ? truncateDecimal(pt.x) : pt.x},${truncate ? truncateDecimal(pt.y) : pt.y}`).join(' ')}` : '';
     }
 
     public static convertTransformList(transform: SVGTransformList) {
