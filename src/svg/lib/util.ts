@@ -190,7 +190,7 @@ export const TRANSFORM = {
             }
             return result.filter(item => {
                 if (item) {
-                    item.css = true;
+                    item.fromCSS = true;
                     return true;
                 }
                 return false;

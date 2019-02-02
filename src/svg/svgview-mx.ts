@@ -92,35 +92,36 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                 const item = element.children[i];
                 if (item instanceof SVGAnimationElement) {
                     const begin = item.attributes.getNamedItem('begin');
-                    if (begin && !/^[a-zA-Z]+$/.test(begin.value.trim())) {
-                        const times = sortNumber(begin.value.split(';').map(value => convertClockTime(value)));
-                        if (times.length) {
-                            switch (item.tagName) {
-                                case 'set':
-                                    for (const time of times) {
-                                        addAnimation(new SvgAnimation(<SVGAnimationElement> item), time);
+                    if (begin && /^[a-zA-Z]+$/.test(begin.value.trim())) {
+                        continue;
+                    }
+                    const times = begin ? sortNumber(begin.value.split(';').map(value => convertClockTime(value))) : [0];
+                    if (times.length) {
+                        switch (item.tagName) {
+                            case 'set':
+                                for (const time of times) {
+                                    addAnimation(new SvgAnimation(<SVGAnimationElement> item), time);
+                                }
+                                break;
+                            case 'animate':
+                                for (const time of times) {
+                                    addAnimation(new SvgAnimate(<SVGAnimateElement> item), time);
+                                }
+                                break;
+                            case 'animateTransform':
+                                for (const time of times) {
+                                    const animate = new SvgAnimateTransform(<SVGAnimateTransformElement> item);
+                                    if (SvgBuild.asShape(this) && this.path) {
+                                        animate.transformFrom = this.path.draw(undefined, undefined, true);
                                     }
-                                    break;
-                                case 'animate':
-                                    for (const time of times) {
-                                        addAnimation(new SvgAnimate(<SVGAnimateElement> item), time);
-                                    }
-                                    break;
-                                case 'animateTransform':
-                                    for (const time of times) {
-                                        const animate = new SvgAnimateTransform(<SVGAnimateTransformElement> item);
-                                        if (SvgBuild.asShape(this) && this.path) {
-                                            animate.transformFrom = this.path.draw(undefined, undefined, true);
-                                        }
-                                        addAnimation(animate, time);
-                                    }
-                                    break;
-                                case 'animateMotion':
-                                    for (const time of times) {
-                                        addAnimation(new SvgAnimateMotion(<SVGAnimateMotionElement> item), time);
-                                    }
-                                    break;
-                            }
+                                    addAnimation(animate, time);
+                                }
+                                break;
+                            case 'animateMotion':
+                                for (const time of times) {
+                                    addAnimation(new SvgAnimateMotion(<SVGAnimateMotionElement> item), time);
+                                }
+                                break;
                         }
                     }
                 }
@@ -198,7 +199,10 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                                     name = 'scale';
                                                     value = `${m.a} ${m.d}`;
                                                     if (origin && (transform.ordinal !== 0 || origin.x !== 0 || origin.y !== 0)) {
-                                                        transformOrigin = { x: origin.x * (1 - m.a), y: origin.y * (1 - m.d) };
+                                                        transformOrigin = {
+                                                            x: origin.x * (1 - m.a),
+                                                            y: origin.y * (1 - m.d)
+                                                        };
                                                     }
                                                     break;
                                                 case SVGTransform.SVG_TRANSFORM_ROTATE:
@@ -209,14 +213,20 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                                     name = 'skewX';
                                                     value = item.angle.toString();
                                                     if (origin && (transform.ordinal !== 0 || origin.y !== 0)) {
-                                                        transformOrigin = { x: origin.y * m.c * -1, y: 0 };
+                                                        transformOrigin = {
+                                                            x: origin.y * m.c * -1,
+                                                            y: 0
+                                                        };
                                                     }
                                                     break;
                                                 case SVGTransform.SVG_TRANSFORM_SKEWY:
                                                     name = 'skewY';
                                                     value = item.angle.toString();
                                                     if (origin && (transform.ordinal !== 0 || origin.x !== 0)) {
-                                                        transformOrigin = { x: 0, y: origin.x * m.b * -1, };
+                                                        transformOrigin = {
+                                                            x: 0,
+                                                            y: origin.x * m.b * -1
+                                                        };
                                                     }
                                                     break;
                                                 default:

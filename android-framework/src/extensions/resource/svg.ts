@@ -190,6 +190,10 @@ function createTransformData(transform: SvgTransform[] | null) {
                         result.pivotX = item.origin.x.toString();
                         result.pivotY = item.origin.y.toString();
                     }
+                    else {
+                        result.pivotX = '0';
+                        result.pivotY = '0';
+                    }
                     break;
                 case SVGTransform.SVG_TRANSFORM_TRANSLATE:
                     result.translateX = m.e.toString();
@@ -239,80 +243,88 @@ function getOuterOpacity(target: SvgView) {
     return result;
 }
 
-function partitionTransforms(element: SVGGraphicsElement, transform: SvgTransform[], rx = 1, ry = 1): [SvgTransform[][], SvgTransform[]] {
-    if (transform.length && ($utilS.SVG.circle(element) || $utilS.SVG.ellipse(element))) {
-        const index = transform.findIndex(item => item.type === SVGTransform.SVG_TRANSFORM_ROTATE);
-        if (index !== -1 && (rx !== ry || transform.length > 1 && transform.some(item => item.type === SVGTransform.SVG_TRANSFORM_SCALE && item.matrix.a !== item.matrix.d))) {
-            return segmentTransforms(element, transform);
+function partitionTransforms(element: SVGGraphicsElement, transforms: SvgTransform[], rx = 1, ry = 1): [SvgTransform[][], SvgTransform[]] {
+    if (transforms.length && ($utilS.SVG.circle(element) || $utilS.SVG.ellipse(element))) {
+        const index = transforms.findIndex(item => item.type === SVGTransform.SVG_TRANSFORM_ROTATE);
+        if (index !== -1 && (rx !== ry || transforms.length > 1 && transforms.some(item => item.type === SVGTransform.SVG_TRANSFORM_SCALE && item.matrix.a !== item.matrix.d))) {
+            return segmentTransforms(element, transforms);
         }
     }
-    return [[], transform];
+    return [[], transforms];
 }
 
-function segmentTransforms(element: SVGGraphicsElement, transform: SvgTransform[]): [SvgTransform[][], SvgTransform[]] {
-    if (transform.length) {
+function segmentTransforms(element: SVGGraphicsElement, transforms: SvgTransform[]): [SvgTransform[][], SvgTransform[]] {
+    if (transforms.length) {
         const host: SvgTransform[][] = [];
         const client: SvgTransform[] = [];
-        const partition = transform.slice(0).reverse();
-        const rotations = transform[0].css ? [] : $utilS.TRANSFORM.rotate(element);
-        rotations.reverse();
-        for (let i = 1; i < partition.length; i++) {
-            const item = partition[i];
-            const previous = partition[i - 1];
-            if (item.type === previous.type) {
+        const items = transforms.slice(0).reverse();
+        const rotations = transforms[0].fromCSS ? [] : $utilS.TRANSFORM.rotate(element).reverse();
+        for (let i = 1; i < items.length; i++) {
+            const itemA = items[i];
+            const itemB = items[i - 1];
+            if (itemA.type === itemB.type) {
                 let matrix: SvgMatrix | undefined;
-                switch (item.type) {
+                switch (itemA.type) {
                     case SVGTransform.SVG_TRANSFORM_TRANSLATE:
-                        matrix = $utilS.MATRIX.clone(item.matrix);
-                        matrix.e += previous.matrix.e;
-                        matrix.f += previous.matrix.f;
+                        matrix = $utilS.MATRIX.clone(itemA.matrix);
+                        matrix.e += itemB.matrix.e;
+                        matrix.f += itemB.matrix.f;
                         break;
                     case SVGTransform.SVG_TRANSFORM_SCALE: {
-                        matrix = $utilS.MATRIX.clone(item.matrix);
-                        matrix.a *= previous.matrix.a;
-                        matrix.d *= previous.matrix.d;
+                        matrix = $utilS.MATRIX.clone(itemA.matrix);
+                        matrix.a *= itemB.matrix.a;
+                        matrix.d *= itemB.matrix.d;
                         break;
                     }
                 }
                 if (matrix) {
-                    item.matrix = matrix;
-                    partition.splice(--i, 1);
+                    itemA.matrix = matrix;
+                    items.splice(--i, 1);
                 }
             }
         }
-        for (let i = 0; i < partition.length; i++) {
-            const item = partition[i];
+        const current: SvgTransform[] = [];
+        function restart() {
+            host.push(current.slice(0));
+            current.length = 0;
+        }
+        for (const item of items) {
             switch (item.type) {
                 case SVGTransform.SVG_TRANSFORM_MATRIX:
                 case SVGTransform.SVG_TRANSFORM_SKEWX:
                 case SVGTransform.SVG_TRANSFORM_SKEWY:
                     client.push(item);
                     break;
-                case SVGTransform.SVG_TRANSFORM_SCALE:
-                    host.push([item]);
-                    break;
                 case SVGTransform.SVG_TRANSFORM_TRANSLATE:
-                    if (host.length === 0) {
+                    if (host.length === 0 && current.length === 0) {
                         client.push(item);
                     }
                     else {
-                        host.push([item]);
+                        current.push(item);
+                        restart();
                     }
                     break;
                 case SVGTransform.SVG_TRANSFORM_ROTATE:
                     if (rotations.length) {
-                        const origin = rotations.shift() as SvgPoint;
+                        const origin = <SvgPoint> rotations.shift();
                         if (origin.angle === item.angle) {
                             item.origin = origin;
                         }
                     }
-                    host.push([item]);
+                case SVGTransform.SVG_TRANSFORM_SCALE:
+                    if (current.length) {
+                        restart();
+                    }
+                    current.push(item);
                     break;
             }
         }
+        if (current.length) {
+            host.push(current);
+        }
         return [host.reverse(), client];
     }
-    return [[], transform];
+    return [[], transforms];
 }
 
 function getValueType(attributeName: string) {

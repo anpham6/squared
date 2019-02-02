@@ -54,7 +54,7 @@ export interface SvgTransform {
         y: boolean;
     };
     origin?: Point;
-    css?: boolean;
+    fromCSS?: boolean;
 }
 
 export interface SvgMatrix {

@@ -32,9 +32,8 @@ export const enum SYNCHRONIZE_STATE {
     COMPLETE = 8,
     FORWARDS = 16,
     INDEPENDENT = 32,
-    SETTER = 64,
-    EQUAL_TIME = 128,
-    INVALID = 256
+    EQUAL_TIME = 64,
+    INVALID = 128
 }
 
 export const enum FILL_MODE {

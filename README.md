@@ -63,7 +63,9 @@ Library files are in the /dist folder. A minimum of *three* files are required t
 4. framework (e.g. android)
 5. extensions (e.g. android.widget) - *optional*
 
-There are ES5 minified versions (*.min.js) and ES6 non-minified versions (*.js). ES5 is more compatible with older browsers. ES6 performs better in newer browsers and recommended for development environments.
+Usable combinations: 1-2-4 + 1-2-4-5 + 1-2-3-4-5 + 1-3
+
+There are ES5 minified versions (*.min.js) and ES6 non-minified versions. ES5 is more compatible with older browsers. ES6 performs better in newer browsers and recommended for internal development.
 
 NOTE: Calling "save" or "write" methods before the images have completely loaded can sometimes cause them to be excluded from the generated layout. In these cases you should use the "parseDocument" promise method "then" to set a callback for your commands.
 
