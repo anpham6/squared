@@ -42,20 +42,20 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
 
         public setPaint(d?: string[]) {
             this.resetPaint();
-            this.setAttribute('color', true);
-            this.setColor('fill');
-            this.setAttribute('fill-opacity');
-            this.setAttribute('fill-rule');
-            this.setColor('stroke');
-            this.setAttribute('stroke-opacity');
-            this.setAttribute('stroke-width');
-            this.setAttribute('stroke-linecap');
-            this.setAttribute('stroke-linejoin');
-            this.setAttribute('stroke-miterlimit');
-            this.setAttribute('stroke-dasharray');
-            this.setAttribute('stroke-dashoffset');
-            this.setAttribute('clip-rule');
-            const clipPath = this.getAttribute('clip-path', false, false);
+            this._setAttribute('color', true);
+            this._setColor('fill');
+            this._setAttribute('fill-opacity');
+            this._setAttribute('fill-rule');
+            this._setColor('stroke');
+            this._setAttribute('stroke-opacity');
+            this._setAttribute('stroke-width');
+            this._setAttribute('stroke-linecap');
+            this._setAttribute('stroke-linejoin');
+            this._setAttribute('stroke-miterlimit');
+            this._setAttribute('stroke-dasharray');
+            this._setAttribute('stroke-dashoffset');
+            this._setAttribute('clip-rule');
+            const clipPath = this._getAttribute('clip-path', false, false);
             if (clipPath !== '') {
                 for (const name in CLIPPATH_SHAPE) {
                     const match = CLIPPATH_SHAPE[name].exec(clipPath);
@@ -177,8 +177,8 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             this.clipRule = '';
         }
 
-        private setColor(attr: string) {
-            const value = this.getAttribute(attr);
+        private _setColor(attr: string) {
+            const value = this._getAttribute(attr);
             const match = REGEXP_SVG.URL.exec(value);
             if (match) {
                 this[`${attr}Pattern`] = match[1];
@@ -204,14 +204,14 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             }
         }
 
-        private setAttribute(attr: string, computed = false) {
-            const value = this.getAttribute(attr, computed);
+        private _setAttribute(attr: string, computed = false) {
+            const value = this._getAttribute(attr, computed);
             if (value !== '') {
                 this[$util.convertCamelCase(attr)] = value;
             }
         }
 
-        private getAttribute(attr: string, computed = false, inherited = true) {
+        private _getAttribute(attr: string, computed = false, inherited = true) {
             let value = $dom.cssAttribute(this.element, attr, computed);
             if (inherited && value === '') {
                 if (this.patternParent) {

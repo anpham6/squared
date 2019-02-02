@@ -33,7 +33,7 @@ export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
             this.setBaseValue('height', height);
         }
 
-        private getElement() {
+        private _getElement() {
             switch (this.element.tagName) {
                 case 'svg':
                 case 'use':
@@ -52,7 +52,7 @@ export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
                 return this._x;
             }
             else {
-                const element = this.getElement();
+                const element = this._getElement();
                 if (element) {
                     return element.x.baseVal.value;
                 }
@@ -68,7 +68,7 @@ export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
                 return this._y;
             }
             else {
-                const element = this.getElement();
+                const element = this._getElement();
                 if (element) {
                     return element.y.baseVal.value;
                 }
@@ -84,7 +84,7 @@ export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
                 return this._width;
             }
             else {
-                const element = this.getElement();
+                const element = this._getElement();
                 if (element) {
                     if (hasUnsupportedAccess(element)) {
                         return element.getBoundingClientRect().width;
@@ -105,7 +105,7 @@ export default <T extends Constructor<squared.svg.SvgBaseVal>>(Base: T) => {
                 return this._height;
             }
             else {
-                const element = this.getElement();
+                const element = this._getElement();
                 if (element) {
                     if (hasUnsupportedAccess(element)) {
                         return element.getBoundingClientRect().height;

@@ -1,3 +1,5 @@
+import { SvgAnimationGroup } from './@types/object';
+
 import { INSTANCE_TYPE } from './lib/constant';
 import { TRANSFORM, convertClockTime } from './lib/util';
 
@@ -15,7 +17,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     private _duration = -1;
     private _begin = 0;
     private _to = '';
-    private _animationName?: NumberValue<string>;
+    private _group?: SvgAnimationGroup;
 
     constructor(element?: SVGAnimationElement) {
         if (element) {
@@ -68,8 +70,8 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
         }
     }
 
-    public hasState(value: number) {
-        return $util.hasBit(this.synchronizeState, value);
+    public hasState(...values: number[]) {
+        return values.some(value => $util.hasBit(this.synchronizeState, value));
     }
 
     set begin(value) {
@@ -93,13 +95,14 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
         return this._to;
     }
 
-    set animationName(value) {
-        this._animationName = value;
-    }
-    get animationName() {
-        return this._animationName || { ordinal: Number.NEGATIVE_INFINITY, value: '' };
+    set group(value) {
+        this._group = value;
+     }
+    get group() {
+        return this._group || { id: Number.NEGATIVE_INFINITY, name: '' };
     }
 
+    set setterType(value) {}
     get setterType() {
         return true;
     }

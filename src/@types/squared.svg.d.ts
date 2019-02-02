@@ -98,6 +98,7 @@ declare global {
             public static convertNumberList(values: number[]): Point[];
             public static unbindPathPoints(values: SvgPathCommand[], includeRadius?: boolean): SvgPoint[];
             public static rebindPathPoints(values: SvgPathCommand[], points: SvgPoint[]): SvgPathCommand[];
+            public static toPointList(value: string): Point[];
             public static toNumberList(value: string): number[];
             public static toBoxRect(value: string): BoxRect;
             public static toPathCommandList(value: string): SvgPathCommand[];

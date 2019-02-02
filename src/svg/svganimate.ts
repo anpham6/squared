@@ -1,3 +1,5 @@
+import { SvgAnimationGroupOrder } from './@types/object';
+
 import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 
@@ -144,10 +146,10 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
 
     private _repeatCount = 1;
     private _reverse = false;
+    private _setterType = false;
     private _values: string[] | undefined;
     private _keyTimes: number[] | undefined;
     private _keySplines?: string[];
-    private _animationSiblings?: SvgAnimate[];
 
     constructor(public element?: SVGAnimateElement) {
         super(element);
@@ -241,7 +243,24 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         }
     }
 
-    private setFillMode(mode: boolean, value: number) {
+    public setGroupOrder(value: SvgAnimationGroupOrder[]) {
+        this.group.order = value;
+        if (this.fillBackwards) {
+            for (let i = value.length - 1, found = false; i >= 0; i--) {
+                if (found) {
+                    if (value[i].delay <= this.begin) {
+                        this.fillBackwards = false;
+                        break;
+                    }
+                }
+                else if (value[i].name === this.group.name) {
+                    found = true;
+                }
+            }
+        }
+    }
+
+    private _setFillMode(mode: boolean, value: number) {
         const hasBit = $util.hasBit(this.fillMode, value);
         if (mode) {
             if (!hasBit) {
@@ -318,6 +337,9 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         super.to = value;
     }
     get to() {
+        if (this._setterType) {
+            return this.values[this.values.length - 1] || super.to;
+        }
         return this.setterType ? this.values[0] : super.to;
     }
 
@@ -400,21 +422,21 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
 
     set fillBackwards(value) {
-        this.setFillMode(value, FILL_MODE.BACKWARDS);
+        this._setFillMode(value, FILL_MODE.BACKWARDS);
     }
     get fillBackwards() {
         return $util.hasBit(this.fillMode, FILL_MODE.BACKWARDS);
     }
 
     set fillForwards(value) {
-        this.setFillMode(value, FILL_MODE.FORWARDS);
+        this._setFillMode(value, FILL_MODE.FORWARDS);
     }
     get fillForwards() {
         return $util.hasBit(this.fillMode, FILL_MODE.FORWARDS);
     }
 
     set fillFreeze(value) {
-        this.setFillMode(value, FILL_MODE.FREEZE);
+        this._setFillMode(value, FILL_MODE.FREEZE);
     }
     get fillFreeze() {
         return $util.hasBit(this.fillMode, FILL_MODE.FREEZE);
@@ -424,28 +446,11 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         return this.fillMode < FILL_MODE.FORWARDS;
     }
 
-    set animationSiblings(value) {
-        this._animationSiblings = value;
-        if (value && this.fillBackwards) {
-            for (let i = 0, found = false; i < value.length; i++) {
-                if (found) {
-                    if (value[i].begin <= this.begin) {
-                        this.fillBackwards = false;
-                        break;
-                    }
-                }
-                else if (value[i] === this) {
-                    found = true;
-                }
-            }
-        }
+    set setterType(value) {
+        this._setterType = value;
     }
-    get animationSiblings() {
-        return this._animationSiblings;
-    }
-
     get setterType() {
-        return this.element !== undefined && this.duration === 0 && this.keyTimes.length >= 2 && this.keyTimes[0] === 0;
+        return this._setterType || this.element !== undefined && this.duration === 0 && this.keyTimes.length >= 2 && this.keyTimes[0] === 0;
     }
 
     get instanceType() {

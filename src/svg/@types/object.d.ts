@@ -83,4 +83,19 @@ export interface SvgTransformExclusions {
     image?: number[];
 }
 
+export interface SvgAnimationGroup {
+    id: number;
+    name: string;
+    order?: SvgAnimationGroupOrder[];
+}
+
+export type SvgAnimationGroupOrder = {
+    name: string;
+    paused: boolean;
+    delay: number;
+    duration: number;
+    iterationCount: string;
+    fillMode: string;
+};
+
 export type SvgTransformResidual = (e: SVGGraphicsElement, t: SvgTransform[], rx?: number, ry?: number) => [SvgTransform[][], SvgTransform[]];

@@ -276,10 +276,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         else {
             for (let j = 0; j < values.numberOfItems; j++) {
                 const pt = values.getItem(j);
-                result.push({
-                    x: pt.x,
-                    y: pt.y
-                });
+                result.push({ x: pt.x, y: pt.y });
             }
         }
         return result;
@@ -333,8 +330,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                         const previous = values[i - 1];
                         if (previous && previous.command === 'M') {
                             previous.coordinates.push(...item.coordinates);
-                            values.splice(i, 1);
-                            i--;
+                            values.splice(i--, 1);
                         }
                         item.command = 'M';
                         break;
@@ -403,6 +399,15 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             if (!isNaN(digit)) {
                 result.push(digit);
             }
+        }
+        return result;
+    }
+
+    public static toPointList(value: string) {
+        const result: Point[] = [];
+        for (const coords of value.trim().split(/\s+/)) {
+            const [x, y] = coords.split(',').map(pt => parseFloat(pt));
+            result.push({ x, y });
         }
         return result;
     }

@@ -1,3 +1,5 @@
+import { SvgAnimationGroup, SvgAnimationGroupOrder } from '../svg/@types/object';
+
 declare global {
     namespace squared.svg {
         interface SvgAnimation {
@@ -7,17 +9,17 @@ declare global {
             duration: number;
             paused: boolean;
             synchronizeState: number;
-            animationName: NumberValue<string>;
+            group: SvgAnimationGroup;
+            setterType: boolean;
             element?: SVGAnimationElement;
             parent?: SvgView | SvgPath;
             baseFrom?: string;
-            readonly setterType: boolean;
             readonly instanceType: number;
             setAttribute(attr: string, equality?: string): void;
             getAttribute(attr: string): string;
             addState(...values: number[]): void;
             removeState(...values: number[]): void;
-            hasState(value: number): boolean;
+            hasState(...values: number[]): boolean;
         }
 
         interface SvgAnimate extends SvgAnimation {
@@ -37,11 +39,11 @@ declare global {
             element?: SVGAnimateElement;
             end?: number;
             keySplines?: string[];
-            animationSiblings?: SvgAnimate[];
             synchronized?: NumberValue<string>;
             readonly fromToType: boolean;
             readonly fillReplace: boolean;
             setCalcMode(name: string): void;
+            setGroupOrder(value: SvgAnimationGroupOrder[]): void;
             convertToValues(keyTimes?: number[]): void;
         }
 

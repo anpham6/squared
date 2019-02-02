@@ -490,14 +490,13 @@ export function retainArray<T>(list: T[], predicate: IteratorPredicate<T, any>) 
     list.push(...retain);
 }
 
-export function spliceArray<T>(list: T[], item: T) {
+export function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>) {
     for (let i = 0; i < list.length; i++) {
-        if (list[i] === item) {
-            list.splice(i, 1);
-            return true;
+        if (predicate(list[i], i)) {
+            list.splice(i--, 1);
         }
     }
-    return false;
+    return list;
 }
 
 export function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]) {
