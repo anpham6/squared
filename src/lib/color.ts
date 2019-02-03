@@ -267,9 +267,9 @@ export function getColorByShade(value: string) {
 export function convertHex(...values: string[] | number[]) {
     let result = '';
     for (const value of values) {
-        let rgb = (typeof value === 'string' ? parseInt(value) : value);
+        let rgb = typeof value === 'string' ? parseInt(value) : value;
         if (isNaN(rgb)) {
-            return '';
+            return '00';
         }
         rgb = Math.max(0, Math.min(rgb, 255));
         result += HEX_CHAR.charAt((rgb - (rgb % 16)) / 16) + HEX_CHAR.charAt(rgb % 16);

@@ -1,5 +1,3 @@
-import { SvgMatrix, SvgPoint, SvgTransform } from '../svg/@types/object';
-
 import * as $const from '../svg/lib/constant';
 import * as $util from '../svg/lib/util';
 

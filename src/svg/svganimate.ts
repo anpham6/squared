@@ -248,7 +248,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         if (this.fillBackwards) {
             for (let i = value.length - 1, found = false; i >= 0; i--) {
                 if (found) {
-                    if (value[i].delay <= this.begin) {
+                    if (value[i].fillMode === 'backwards' || value[i].fillMode === 'both') {
                         this.fillBackwards = false;
                         break;
                     }
