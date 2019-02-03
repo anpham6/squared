@@ -490,9 +490,12 @@ export function retainArray<T>(list: T[], predicate: IteratorPredicate<T, any>) 
     list.push(...retain);
 }
 
-export function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>) {
+export function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: (item: T) => void) {
     for (let i = 0; i < list.length; i++) {
         if (predicate(list[i], i)) {
+            if (callback) {
+                callback(list[i]);
+            }
             list.splice(i--, 1);
         }
     }

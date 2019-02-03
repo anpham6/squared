@@ -40,8 +40,9 @@ declare global {
             end?: number;
             keySplines?: string[];
             synchronized?: NumberValue<string>;
-            readonly fromToType: boolean;
             readonly fillReplace: boolean;
+            readonly fromToType: boolean;
+            readonly partialType: boolean;
             setCalcMode(name: string): void;
             setGroupOrder(value: SvgAnimationGroupOrder[]): void;
             convertToValues(keyTimes?: number[]): void;

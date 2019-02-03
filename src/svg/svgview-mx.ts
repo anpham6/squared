@@ -143,23 +143,23 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                 const groupName: SvgAnimate[] = [];
                 const groupOrder: SvgAnimationGroupOrder[] = [];
                 animationName.forEach((keyframe, index) => {
-                    const duration = convertClockTime(cssData['animation-duration'][index]);
-                    if (duration > 0) {
-                        const paused = cssData['animation-play-state'][index] === 'paused';
-                        const delay = convertClockTime(cssData['animation-delay'][index]);
-                        const iterationCount = cssData['animation-iteration-count'][index];
-                        const fillMode = cssData['animation-fill-mode'][index];
-                        const keyframeIndex = `${keyframe}_${index}`;
-                        groupOrder.push({
-                            name: keyframeIndex,
-                            paused,
-                            delay,
-                            duration,
-                            iterationCount,
-                            fillMode
-                        });
-                        const keyframes = KEYFRAME_NAME.get(keyframe);
-                        if (keyframes) {
+                    const keyframes = KEYFRAME_NAME.get(keyframe);
+                    if (keyframes) {
+                        const duration = convertClockTime(cssData['animation-duration'][index]);
+                        if (duration > 0) {
+                            const paused = cssData['animation-play-state'][index] === 'paused';
+                            const delay = convertClockTime(cssData['animation-delay'][index]);
+                            const iterationCount = cssData['animation-iteration-count'][index];
+                            const fillMode = cssData['animation-fill-mode'][index];
+                            const keyframeIndex = `${keyframe}_${index}`;
+                            groupOrder.push({
+                                name: keyframeIndex,
+                                paused,
+                                delay,
+                                duration,
+                                iterationCount,
+                                fillMode
+                            });
                             groupId++;
                             const attrMap: AttributeMap = {};
                             const keyframeMap: AttributeMap = {};
@@ -278,12 +278,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 const keyTimes: number[] = [];
                                 const values: string[] = [];
                                 const keySplines: string[] = [];
-                                if (animation.length === 1 && animation[0].ordinal !== 0) {
-                                    animation.unshift({ ordinal: 0, value: animate.baseFrom });
-                                }
-                                else {
-                                    sortAttribute(animation);
-                                }
+                                sortAttribute(animation);
                                 for (let i = 0; i < animation.length; i++) {
                                     keyTimes.push(animation[i].ordinal);
                                     values.push(animation[i].value);
@@ -346,6 +341,15 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 animate.fillBackwards = fillMode === 'backwards' || fillMode === 'both';
                                 animate.reverse = direction.endsWith('reverse');
                                 animate.alternate = (animate.repeatCount === -1 || animate.repeatCount > 1) && direction.startsWith('alternate');
+                                if ($util.hasValue(animate.baseFrom)) {
+                                    if (animate.keyTimes[0] !== 0) {
+                                        animate.keyTimes.unshift(0);
+                                        animate.values.unshift(animate.baseFrom as string);
+                                        if (animate.keySplines) {
+                                            animate.keySplines.unshift(timingFunction);
+                                        }
+                                    }
+                                }
                                 groupName.push(animate);
                             }
                         }

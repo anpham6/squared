@@ -104,7 +104,7 @@ declare global {
             function maxArray(list: number[]): number;
             function partitionArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): [T[], T[]];
             function retainArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): void;
-            function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): T[];
+            function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: (item: T) => void): T[];
             function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]): T[];
             function flatArray<T>(list: any[]): T[];
             function flatMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[];

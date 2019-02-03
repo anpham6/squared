@@ -397,6 +397,12 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     set reverse(value) {
         if (value !== this._reverse && this.values.length) {
             this.values.reverse();
+            const keyTimes: number[] = [];
+            for (let i = 0; i < this.keyTimes.length; i++) {
+                keyTimes.push(1 - this.keyTimes[i]);
+            }
+            keyTimes.reverse();
+            this.keyTimes = keyTimes;
             if (this._keySplines) {
                 const result: string[] = [];
                 for (let i = this._keySplines.length - 1; i >= 0; i--) {
@@ -415,10 +421,6 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
     get reverse() {
         return this._reverse;
-    }
-
-    get fromToType() {
-        return this.keyTimes.length === 2 && this.keyTimes[0] === 0 && this.keyTimes[1] === 1;
     }
 
     set fillBackwards(value) {
@@ -444,6 +446,14 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
 
     get fillReplace() {
         return this.fillMode < FILL_MODE.FORWARDS;
+    }
+
+    get fromToType() {
+        return this.keyTimes.length === 2 && this.keyTimes[0] === 0 && this.keyTimes[1] === 1;
+    }
+
+    get partialType() {
+        return this.keyTimes.length >= 2 && this.keyTimes[this.keyTimes.length - 1] < 1;
     }
 
     set setterType(value) {

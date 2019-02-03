@@ -27,13 +27,11 @@ export const enum SYNCHRONIZE_MODE {
 }
 
 export const enum SYNCHRONIZE_STATE {
-    BACKWARDS = 2,
-    INTERRUPTED = 4,
+    INTERRUPTED = 2,
+    RESUME = 4,
     COMPLETE = 8,
-    FORWARDS = 16,
-    INDEPENDENT = 32,
-    EQUAL_TIME = 64,
-    INVALID = 128
+    EQUAL_TIME = 16,
+    INVALID = 24
 }
 
 export const enum FILL_MODE {
