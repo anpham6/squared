@@ -14,6 +14,32 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         return path;
     }
 
+    public static getCenter(values: SvgPoint[]): SvgPoint {
+        let minX = values[0].x;
+        let minY = values[0].y;
+        let maxX = minX;
+        let maxY = minY;
+        for (let i = 1; i < values.length; i++) {
+            const pt = values[i];
+            if (pt.x < minX) {
+                minX = pt.x;
+            }
+            else if (pt.x > maxX) {
+                maxX = pt.x;
+            }
+            if (pt.y < minY) {
+                minY = pt.y;
+            }
+            else if (pt.y > maxX) {
+                maxY = pt.y;
+            }
+        }
+        return {
+            x: (minX + maxX) / 2,
+            y: (minY + maxY) / 2
+        };
+    }
+
     public name = '';
     public value = '';
     public transformed: SvgTransform[] | null = null;
@@ -36,9 +62,9 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         if (SVG.path(element)) {
             d = this.getBaseValue('d');
             if (parent && parent.aspectRatio.unit !== 1 || transform && transform.length) {
-                const commands = SvgBuild.toPathCommandList(d);
+                const commands = SvgBuild.getPathCommands(d);
                 if (commands.length) {
-                    let points = SvgBuild.unbindPathPoints(commands);
+                    let points = SvgBuild.getPathPoints(commands);
                     if (points.length) {
                         if (transform && transform.length) {
                             if (typeof residual === 'function') {
@@ -52,7 +78,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                         if (parent) {
                             parent.refitPoints(points);
                         }
-                        d = SvgBuild.fromPathCommandList(SvgBuild.rebindPathPoints(commands, points));
+                        d = SvgBuild.drawPath(SvgBuild.setPathPoints(commands, points));
                     }
                 }
             }
@@ -204,7 +230,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
 
     get transform() {
         if (this._transform === undefined) {
-            this._transform = TRANSFORM.parse(this.element) || SvgBuild.convertTransformList(this.element.transform.baseVal);
+            this._transform = TRANSFORM.parse(this.element) || SvgBuild.convertTransforms(this.element.transform.baseVal);
         }
         return this._transform;
     }

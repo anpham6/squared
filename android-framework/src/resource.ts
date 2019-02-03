@@ -45,7 +45,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                             switch (path.element.tagName) {
                                 case 'path':
                                     if ($SvgBuild) {
-                                        $SvgBuild.toPathCommandList(path.value).forEach(command => points.push(...command.points));
+                                        $SvgBuild.getPathCommands(path.value).forEach(command => points.push(...command.points));
                                     }
                                 case 'polygon':
                                     if ($SvgBuild && path.element instanceof SVGPolygonElement) {

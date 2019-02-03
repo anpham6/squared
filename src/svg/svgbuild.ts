@@ -150,294 +150,34 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return points.length ? `M${(<Point[]> points).map(pt => `${truncate ? truncateDecimal(pt.x) : pt.x},${truncate ? truncateDecimal(pt.y) : pt.y}`).join(' ')}` : '';
     }
 
-    public static convertTransformList(transform: SVGTransformList) {
-        const result: SvgTransform[] = [];
-        for (let i = 0; i < transform.numberOfItems; i++) {
-            const item = transform.getItem(i);
-            result.push(TRANSFORM.create(item.type, item.matrix, item.angle));
-        }
-        return result;
-    }
-
-    public static filterTransforms(transform: SvgTransform[], exclude?: number[]) {
-        return (exclude ? transform.filter(item => !exclude.includes(item.type)) : transform).filter(item => !(item.type === SVGTransform.SVG_TRANSFORM_SCALE && item.matrix.a === 1 && item.matrix.d === 1));
-    }
-
-    public static applyTransforms(transform: SvgTransform[], values: SvgPoint[], origin?: SvgPoint, center?: SvgPoint) {
-        const result = SvgBuild.clonePoints(values);
-        const items = transform.slice(0).reverse();
-        for (const item of items) {
-            const m = item.matrix;
-            let x1 = 0;
-            let y1 = 0;
-            let x2 = 0;
-            let y2 = 0;
-            if (origin) {
-                switch (item.type) {
-                    case SVGTransform.SVG_TRANSFORM_SCALE:
-                        if (item.method.x) {
-                            x2 = origin.x * (1 - m.a);
-                        }
-                        if (item.method.y) {
-                            y2 = origin.y * (1 - m.d);
-                        }
-                        break;
-                    case SVGTransform.SVG_TRANSFORM_SKEWX:
-                        if (item.method.y) {
-                            y1 -= origin.y;
-                        }
-                        break;
-                    case SVGTransform.SVG_TRANSFORM_SKEWY:
-                        if (item.method.x) {
-                            x1 -= origin.x;
-                        }
-                        break;
-                    case SVGTransform.SVG_TRANSFORM_ROTATE:
-                        if (item.method.x) {
-                            x1 -= origin.x;
-                            x2 = origin.x + getRadiusY(item.angle, origin.x);
-                        }
-                        if (item.method.y) {
-                            y1 -= origin.y;
-                            y2 = origin.y + getRadiusY(item.angle, origin.y);
-                        }
-                        break;
-                }
-            }
-            if (center) {
-                switch (item.type) {
-                    case SVGTransform.SVG_TRANSFORM_SCALE:
-                        center.x *= m.a;
-                        center.y *= m.d;
-                        break;
-                    case SVGTransform.SVG_TRANSFORM_ROTATE:
-                        if (item.angle !== 0) {
-                            center.angle = (center.angle || 0) + item.angle;
-                        }
-                        break;
-                    case SVGTransform.SVG_TRANSFORM_TRANSLATE:
-                        center.x += m.e;
-                        center.y += m.f;
-                        break;
-                }
-            }
-            for (const pt of result) {
-                const x = pt.x;
-                pt.x = MATRIX.applyX(m, x, pt.y + y1) + x2;
-                pt.y = MATRIX.applyY(m, x + x1, pt.y) + y2;
-                if (item.type === SVGTransform.SVG_TRANSFORM_SCALE && pt.rx !== undefined && pt.ry !== undefined) {
-                    const rx = pt.rx;
-                    pt.rx = MATRIX.applyX(m, rx, pt.ry + y1);
-                    pt.ry = MATRIX.applyY(m, rx + x1, pt.ry);
-                }
+    public static drawPath(values: SvgPathCommand[]) {
+        let result = '';
+        for (const item of values) {
+            result += (result !== '' ? ' ' : '') + item.command;
+            switch (item.command.toUpperCase()) {
+                case 'M':
+                case 'L':
+                case 'C':
+                case 'S':
+                case 'Q':
+                case 'T':
+                    result += item.coordinates.join(',');
+                    break;
+                case 'H':
+                    result += item.coordinates[0];
+                    break;
+                case 'V':
+                    result += item.coordinates[1];
+                    break;
+                case 'A':
+                    result += `${item.radiusX},${item.radiusY},${item.xAxisRotation},${item.largeArcFlag},${item.sweepFlag},${item.coordinates.join(',')}`;
+                    break;
             }
         }
         return result;
     }
 
-    public static getPointCenter(values: SvgPoint[]): SvgPoint {
-        let minX = values[0].x;
-        let minY = values[0].y;
-        let maxX = minX;
-        let maxY = minY;
-        for (let i = 1; i < values.length; i++) {
-            const pt = values[i];
-            if (pt.x < minX) {
-                minX = pt.x;
-            }
-            else if (pt.x > maxX) {
-                maxX = pt.x;
-            }
-            if (pt.y < minY) {
-                minY = pt.y;
-            }
-            else if (pt.y > maxX) {
-                maxY = pt.y;
-            }
-        }
-        return {
-            x: (minX + maxX) / 2,
-            y: (minY + maxY) / 2
-        };
-    }
-
-    public static clonePoints(values: SvgPoint[] | SVGPointList) {
-        const result: SvgPoint[] = [];
-        if (Array.isArray(values)) {
-            for (const pt of values) {
-                const item: SvgPoint = { x: pt.x, y: pt.y };
-                if (pt.rx !== undefined && pt.ry !== undefined) {
-                    item.rx = pt.rx;
-                    item.ry = pt.ry;
-                }
-                result.push(item);
-            }
-        }
-        else {
-            for (let j = 0; j < values.numberOfItems; j++) {
-                const pt = values.getItem(j);
-                result.push({ x: pt.x, y: pt.y });
-            }
-        }
-        return result;
-    }
-
-    public static convertNumberList(values: number[]) {
-        const result: Point[] = [];
-        for (let i = 0; i < values.length; i += 2) {
-            result.push({
-                x: values[i],
-                y: values[i + 1]
-            });
-        }
-        return result.length % 2 === 0 ? result : [];
-    }
-
-    public static unbindPathPoints(values: SvgPathCommand[], includeRadius = false) {
-        const result: SvgPoint[] = [];
-        let x = 0;
-        let y = 0;
-        for (let i = 0; i < values.length; i++) {
-            const item = values[i];
-            for (let j = 0; j < item.coordinates.length; j += 2) {
-                if (item.relative) {
-                    x += item.coordinates[j];
-                    y += item.coordinates[j + 1];
-                }
-                else {
-                    x = item.coordinates[j];
-                    y = item.coordinates[j + 1];
-                }
-                const pt: SvgPoint = { x, y };
-                if (item.command.toUpperCase() === 'A') {
-                    pt.rx = item.radiusX;
-                    pt.ry = item.radiusY;
-                    if (includeRadius) {
-                        if (item.coordinates[j] >= 0) {
-                            pt.y -= item.radiusY as number;
-                        }
-                        else {
-                            pt.y += item.radiusY as number;
-                        }
-                    }
-                }
-                result.push(pt);
-            }
-            if (item.relative) {
-                switch (item.command) {
-                    case 'h':
-                    case 'v':
-                        const previous = values[i - 1];
-                        if (previous && previous.command === 'M') {
-                            previous.coordinates.push(...item.coordinates);
-                            values.splice(i--, 1);
-                        }
-                        item.command = 'M';
-                        break;
-                    default:
-                        item.command = item.command.toUpperCase();
-                        break;
-                }
-                item.relative = false;
-            }
-        }
-        return result;
-    }
-
-    public static rebindPathPoints(values: SvgPathCommand[], points: SvgPoint[]) {
-        const absolute = points.slice(0);
-        invalidPoint: {
-            for (const item of values) {
-                switch (item.command.toUpperCase()) {
-                    case 'M':
-                    case 'L':
-                    case 'H':
-                    case 'V':
-                    case 'C':
-                    case 'S':
-                    case 'Q':
-                    case 'T': {
-                        for (let i = 0; i < item.coordinates.length; i += 2) {
-                            const pt = absolute.shift();
-                            if (pt) {
-                                item.coordinates[i] = pt.x;
-                                item.coordinates[i + 1] = pt.y;
-                            }
-                            else {
-                                values = [];
-                                break invalidPoint;
-                            }
-                        }
-                        break;
-                    }
-                    case 'A': {
-                        const pt = <SvgPoint> absolute.shift();
-                        if (pt && pt.rx !== undefined && pt.ry !== undefined) {
-                            item.coordinates[0] = pt.x;
-                            item.coordinates[1] = pt.y;
-                            item.radiusX = pt.rx;
-                            item.radiusY = pt.ry;
-                        }
-                        else {
-                            values = [];
-                            break invalidPoint;
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-        return values;
-    }
-
-    public static toNumberList(value: string) {
-        const result: number[] = [];
-        const pattern = /-?[\d.]+/g;
-        let match: RegExpExecArray | null;
-        while ((match = pattern.exec(value)) !== null) {
-            const digit = parseFloat(match[0]);
-            if (!isNaN(digit)) {
-                result.push(digit);
-            }
-        }
-        return result;
-    }
-
-    public static toPointList(value: string) {
-        const result: Point[] = [];
-        for (const coords of value.trim().split(/\s+/)) {
-            const [x, y] = coords.split(',').map(pt => parseFloat(pt));
-            result.push({ x, y });
-        }
-        return result;
-    }
-
-    public static toBoxRect(values: string[]): BoxRect {
-        let top = Number.MAX_VALUE;
-        let right = -Number.MAX_VALUE;
-        let bottom = -Number.MAX_VALUE;
-        let left = Number.MAX_VALUE;
-        for (const value of values) {
-            const points = SvgBuild.unbindPathPoints(SvgBuild.toPathCommandList(value), true);
-            for (const pt of points) {
-                if (pt.y < top) {
-                    top = pt.y;
-                }
-                else if (pt.y > bottom) {
-                    bottom = pt.y;
-                }
-                if (pt.x < left) {
-                    left = pt.x;
-                }
-                else if (pt.x > right) {
-                    right = pt.x;
-                }
-            }
-        }
-        return { top, right, bottom, left };
-    }
-
-    public static toPathCommandList(value: string) {
+    public static getPathCommands(value: string) {
         const result: SvgPathCommand[] = [];
         const pattern = /([A-Za-z])([^A-Za-z]+)?/g;
         let match: RegExpExecArray | null;
@@ -573,30 +313,264 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
-    public static fromPathCommandList(values: SvgPathCommand[]) {
-        let result = '';
-        for (const item of values) {
-            result += (result !== '' ? ' ' : '') + item.command;
-            switch (item.command.toUpperCase()) {
-                case 'M':
-                case 'L':
-                case 'C':
-                case 'S':
-                case 'Q':
-                case 'T':
-                    result += item.coordinates.join(',');
-                    break;
-                case 'H':
-                    result += item.coordinates[0];
-                    break;
-                case 'V':
-                    result += item.coordinates[1];
-                    break;
-                case 'A':
-                    result += `${item.radiusX},${item.radiusY},${item.xAxisRotation},${item.largeArcFlag},${item.sweepFlag},${item.coordinates.join(',')}`;
-                    break;
+    public static getPathPoints(values: SvgPathCommand[], includeRadius = false) {
+        const result: SvgPoint[] = [];
+        let x = 0;
+        let y = 0;
+        for (let i = 0; i < values.length; i++) {
+            const item = values[i];
+            for (let j = 0; j < item.coordinates.length; j += 2) {
+                if (item.relative) {
+                    x += item.coordinates[j];
+                    y += item.coordinates[j + 1];
+                }
+                else {
+                    x = item.coordinates[j];
+                    y = item.coordinates[j + 1];
+                }
+                const pt: SvgPoint = { x, y };
+                if (item.command.toUpperCase() === 'A') {
+                    pt.rx = item.radiusX;
+                    pt.ry = item.radiusY;
+                    if (includeRadius) {
+                        if (item.coordinates[j] >= 0) {
+                            pt.y -= item.radiusY as number;
+                        }
+                        else {
+                            pt.y += item.radiusY as number;
+                        }
+                    }
+                }
+                result.push(pt);
+            }
+            if (item.relative) {
+                switch (item.command) {
+                    case 'h':
+                    case 'v':
+                        const previous = values[i - 1];
+                        if (previous && previous.command === 'M') {
+                            previous.coordinates.push(...item.coordinates);
+                            values.splice(i--, 1);
+                        }
+                        item.command = 'M';
+                        break;
+                    default:
+                        item.command = item.command.toUpperCase();
+                        break;
+                }
+                item.relative = false;
             }
         }
         return result;
+    }
+
+    public static setPathPoints(values: SvgPathCommand[], points: SvgPoint[]) {
+        const absolute = points.slice(0);
+        invalidPoint: {
+            for (const item of values) {
+                switch (item.command.toUpperCase()) {
+                    case 'M':
+                    case 'L':
+                    case 'H':
+                    case 'V':
+                    case 'C':
+                    case 'S':
+                    case 'Q':
+                    case 'T': {
+                        for (let i = 0; i < item.coordinates.length; i += 2) {
+                            const pt = absolute.shift();
+                            if (pt) {
+                                item.coordinates[i] = pt.x;
+                                item.coordinates[i + 1] = pt.y;
+                            }
+                            else {
+                                values = [];
+                                break invalidPoint;
+                            }
+                        }
+                        break;
+                    }
+                    case 'A': {
+                        const pt = <SvgPoint> absolute.shift();
+                        if (pt && pt.rx !== undefined && pt.ry !== undefined) {
+                            item.coordinates[0] = pt.x;
+                            item.coordinates[1] = pt.y;
+                            item.radiusX = pt.rx;
+                            item.radiusY = pt.ry;
+                        }
+                        else {
+                            values = [];
+                            break invalidPoint;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        return values;
+    }
+
+    public static convertTransforms(transform: SVGTransformList) {
+        const result: SvgTransform[] = [];
+        for (let i = 0; i < transform.numberOfItems; i++) {
+            const item = transform.getItem(i);
+            result.push(TRANSFORM.create(item.type, item.matrix, item.angle));
+        }
+        return result;
+    }
+
+    public static filterTransforms(transform: SvgTransform[], exclude?: number[]) {
+        return (exclude ? transform.filter(item => !exclude.includes(item.type)) : transform).filter(item => !(item.type === SVGTransform.SVG_TRANSFORM_SCALE && item.matrix.a === 1 && item.matrix.d === 1));
+    }
+
+    public static applyTransforms(transform: SvgTransform[], values: SvgPoint[], origin?: SvgPoint, center?: SvgPoint) {
+        const result = SvgBuild.clonePoints(values);
+        const items = transform.slice(0).reverse();
+        for (const item of items) {
+            const m = item.matrix;
+            let x1 = 0;
+            let y1 = 0;
+            let x2 = 0;
+            let y2 = 0;
+            if (origin) {
+                switch (item.type) {
+                    case SVGTransform.SVG_TRANSFORM_SCALE:
+                        if (item.method.x) {
+                            x2 = origin.x * (1 - m.a);
+                        }
+                        if (item.method.y) {
+                            y2 = origin.y * (1 - m.d);
+                        }
+                        break;
+                    case SVGTransform.SVG_TRANSFORM_SKEWX:
+                        if (item.method.y) {
+                            y1 -= origin.y;
+                        }
+                        break;
+                    case SVGTransform.SVG_TRANSFORM_SKEWY:
+                        if (item.method.x) {
+                            x1 -= origin.x;
+                        }
+                        break;
+                    case SVGTransform.SVG_TRANSFORM_ROTATE:
+                        if (item.method.x) {
+                            x1 -= origin.x;
+                            x2 = origin.x + getRadiusY(item.angle, origin.x);
+                        }
+                        if (item.method.y) {
+                            y1 -= origin.y;
+                            y2 = origin.y + getRadiusY(item.angle, origin.y);
+                        }
+                        break;
+                }
+            }
+            if (center) {
+                switch (item.type) {
+                    case SVGTransform.SVG_TRANSFORM_SCALE:
+                        center.x *= m.a;
+                        center.y *= m.d;
+                        break;
+                    case SVGTransform.SVG_TRANSFORM_ROTATE:
+                        if (item.angle !== 0) {
+                            center.angle = (center.angle || 0) + item.angle;
+                        }
+                        break;
+                    case SVGTransform.SVG_TRANSFORM_TRANSLATE:
+                        center.x += m.e;
+                        center.y += m.f;
+                        break;
+                }
+            }
+            for (const pt of result) {
+                const x = pt.x;
+                pt.x = MATRIX.applyX(m, x, pt.y + y1) + x2;
+                pt.y = MATRIX.applyY(m, x + x1, pt.y) + y2;
+                if (item.type === SVGTransform.SVG_TRANSFORM_SCALE && pt.rx !== undefined && pt.ry !== undefined) {
+                    const rx = pt.rx;
+                    pt.rx = MATRIX.applyX(m, rx, pt.ry + y1);
+                    pt.ry = MATRIX.applyY(m, rx + x1, pt.ry);
+                }
+            }
+        }
+        return result;
+    }
+
+    public static clonePoints(values: SvgPoint[] | SVGPointList) {
+        const result: SvgPoint[] = [];
+        if (Array.isArray(values)) {
+            for (const pt of values) {
+                const item: SvgPoint = { x: pt.x, y: pt.y };
+                if (pt.rx !== undefined && pt.ry !== undefined) {
+                    item.rx = pt.rx;
+                    item.ry = pt.ry;
+                }
+                result.push(item);
+            }
+        }
+        else {
+            for (let j = 0; j < values.numberOfItems; j++) {
+                const pt = values.getItem(j);
+                result.push({ x: pt.x, y: pt.y });
+            }
+        }
+        return result;
+    }
+
+    public static convertNumbers(values: number[]) {
+        const result: Point[] = [];
+        for (let i = 0; i < values.length; i += 2) {
+            result.push({
+                x: values[i],
+                y: values[i + 1]
+            });
+        }
+        return result.length % 2 === 0 ? result : [];
+    }
+
+    public static toNumberList(value: string) {
+        const result: number[] = [];
+        const pattern = /-?[\d.]+/g;
+        let match: RegExpExecArray | null;
+        while ((match = pattern.exec(value)) !== null) {
+            const digit = parseFloat(match[0]);
+            if (!isNaN(digit)) {
+                result.push(digit);
+            }
+        }
+        return result;
+    }
+
+    public static toPointList(value: string) {
+        const result: Point[] = [];
+        for (const coords of value.trim().split(/\s+/)) {
+            const [x, y] = coords.split(',').map(pt => parseFloat(pt));
+            result.push({ x, y });
+        }
+        return result;
+    }
+
+    public static toBoxRect(values: string[]): BoxRect {
+        let top = Number.MAX_VALUE;
+        let right = -Number.MAX_VALUE;
+        let bottom = -Number.MAX_VALUE;
+        let left = Number.MAX_VALUE;
+        for (const value of values) {
+            const points = SvgBuild.getPathPoints(SvgBuild.getPathCommands(value), true);
+            for (const pt of points) {
+                if (pt.y < top) {
+                    top = pt.y;
+                }
+                else if (pt.y > bottom) {
+                    bottom = pt.y;
+                }
+                if (pt.x < left) {
+                    left = pt.x;
+                }
+                else if (pt.x > right) {
+                    right = pt.x;
+                }
+            }
+        }
+        return { top, right, bottom, left };
     }
 }

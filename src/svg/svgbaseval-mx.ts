@@ -44,7 +44,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
         }
 
         public refitBaseValue(x: number, y: number, scaleX = 1, scaleY = 1) {
-            function setPoints(values: SvgPoint[]) {
+            function adjustPoints(values: SvgPoint[]) {
                 for (const pt of values) {
                     pt.x += x;
                     pt.y += y;
@@ -58,10 +58,10 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                 const value = this._baseVal[attr];
                 if (typeof value === 'string') {
                     if (attr === 'd') {
-                        const commands = SvgBuild.toPathCommandList(value);
-                        const points = SvgBuild.unbindPathPoints(commands);
-                        setPoints(points);
-                        this._baseVal[attr] = SvgBuild.fromPathCommandList(SvgBuild.rebindPathPoints(commands, points));
+                        const commands = SvgBuild.getPathCommands(value);
+                        const points = SvgBuild.getPathPoints(commands);
+                        adjustPoints(points);
+                        this._baseVal[attr] = SvgBuild.drawPath(SvgBuild.setPathPoints(commands, points));
                     }
                 }
                 else if (typeof value === 'number') {
@@ -92,7 +92,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                 }
                 else if (Array.isArray(value)) {
                     if (attr === 'points') {
-                        setPoints(value);
+                        adjustPoints(value);
                     }
                 }
             }

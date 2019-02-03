@@ -90,19 +90,18 @@ declare global {
             public static drawEllipse(cx: number, cy: number, rx: number, ry?: number, truncate?: boolean): string;
             public static drawPolygon(points: Point[] | DOMPoint[], truncate?: boolean): string;
             public static drawPolyline(points: Point[] | DOMPoint[], truncate?: boolean): string;
+            public static drawPath(values: SvgPathCommand[]): string;
+            public static getPathCommands(value: string): SvgPathCommand[];
             public static filterTransforms(transform: SvgTransform[], exclude?: number[]): SvgTransform[];
             public static applyTransforms(transform: SvgTransform[], values: Point[], aspectRatio?: SvgAspectRatio, origin?: Point, center?: Point): SvgPoint[];
-            public static getPointCenter(values: Point[]): Point[];
             public static clonePoints(values: SvgPoint[] | SVGPointList): SvgPoint[];
-            public static convertTransformList(transform: SVGTransformList): SvgTransform[];
-            public static convertNumberList(values: number[]): Point[];
-            public static unbindPathPoints(values: SvgPathCommand[], includeRadius?: boolean): SvgPoint[];
-            public static rebindPathPoints(values: SvgPathCommand[], points: SvgPoint[]): SvgPathCommand[];
+            public static convertTransforms(transform: SVGTransformList): SvgTransform[];
+            public static convertNumbers(values: number[]): Point[];
+            public static getPathPoints(values: SvgPathCommand[], includeRadius?: boolean): SvgPoint[];
+            public static setPathPoints(values: SvgPathCommand[], points: SvgPoint[]): SvgPathCommand[];
             public static toPointList(value: string): Point[];
             public static toNumberList(value: string): number[];
             public static toBoxRect(value: string): BoxRect;
-            public static toPathCommandList(value: string): SvgPathCommand[];
-            public static fromPathCommandList(values: SvgPathCommand[]): string;
         }
     }
 }

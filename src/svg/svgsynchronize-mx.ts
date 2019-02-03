@@ -580,7 +580,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                 }
                             }
                             while (--i >= 0);
-                            group.items = group.items.filter(item => !ignore.includes(item));
+                            $util.spliceArray(group.items, item => !ignore.includes(item));
                             if (group.items.length) {
                                 groupBegin.set(begin, group);
                             }
@@ -623,8 +623,8 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                         const groupBegin = Array.from(groupName[attr].keys());
                         const groupData = Array.from(groupName[attr].values());
                         const backwards: SvgAnimateTransform | undefined = (<SvgAnimateTransform[]> conflicted).filter(item  => item.fillBackwards && item.attributeName === attr).sort((a, b) => a.group.id <= b.group.id ? 1 : -1)[0];
-                        let setterData = setter.filter(item => item.attributeName === attr);
-                        let incomplete: SvgAnimate[] = [];
+                        const incomplete: SvgAnimate[] = [];
+                        const setterData = setter.filter(item => item.attributeName === attr);
                         let maxTime = -1;
                         let actualMaxTime = 0;
                         let baseValue!: AnimateValue;
@@ -648,8 +648,9 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                             }
                             previousTransform = undefined;
                         }
-                        function checkIncomplete() {
-                            incomplete = incomplete.filter(previous => getDurationTotal(previous) <= maxTime);
+                        function checkIncomplete(time?: number) {
+                            const expireTime = time === undefined ? maxTime : time;
+                            $util.spliceArray(incomplete, previous => getDurationTotal(previous) <= expireTime);
                         }
                         function setComplete(item: SvgAnimateTransform, nextBegin?: number) {
                             if (item.fillForwards) {
@@ -666,9 +667,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         $util.spliceArray(incomplete, previous => previous.element !== undefined);
                                     }
                                 }
-                                if (arguments.length === 2) {
-                                    incomplete = incomplete.filter(previous => getDurationTotal(previous) > maxTime);
-                                }
+                                $util.spliceArray(incomplete, previous => getDurationTotal(previous) > maxTime);
                                 if (nextBegin !== undefined) {
                                     let currentMaxTime = maxTime;
                                     const [replaceValue, modified] = checkSetterNextBegin(actualMaxTime, nextBegin);
@@ -885,7 +884,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                     setterInterrupt.addState(SYNCHRONIZE_STATE.EQUAL_TIME);
                                                     break;
                                             }
-                                            setterData = setterData.filter(set => set !== setterInterrupt);
+                                            $util.spliceArray(setterData, set => set !== setterInterrupt);
                                         }
                                     }
                                     let complete = false;
@@ -983,9 +982,11 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                         }
                                                     }
                                                     if (time > maxTime) {
-                                                        checkIncomplete();
-                                                        if (l === item.keyTimes.length - 1 && (k < repeatTotal - 1 || incomplete.length === 0 && item.fillReplace) && !item.accumulateSum) {
-                                                            time--;
+                                                        if (l === item.keyTimes.length - 1) {
+                                                            checkIncomplete(time);
+                                                            if (!item.accumulateSum && (k < repeatTotal - 1 || incomplete.length === 0 && item.fillReplace)) {
+                                                                time--;
+                                                            }
                                                         }
                                                         maxTime = setTimelineValue(repeatingMap[attr], time, value);
                                                         insertInterpolator(repeatingInterpolatorMap, item, maxTime, l, useKeyTime);
@@ -997,6 +998,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                 }
                                             }
                                         }
+                                        checkIncomplete();
                                     }
                                     if (lastValue !== undefined) {
                                         baseValue = lastValue;
@@ -1015,7 +1017,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         else if (item.hasState(SYNCHRONIZE_STATE.INVALID)) {
                                             setTimeRange((<SvgAnimateTransform> setterInterrupt).type, maxTime);
                                         }
-                                        incomplete = incomplete.filter(previous => previous.element === undefined);
+                                        $util.spliceArray(incomplete, previous => previous.element === undefined);
                                     }
                                     if (!item.fillReplace) {
                                         for (let k = 0; k < setterData.length; k++) {
@@ -1070,6 +1072,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                 }
                             }
                             if (incomplete.length) {
+                                checkIncomplete();
                                 sortIncomplete();
                                 for (let i = 0; i < incomplete.length; i++) {
                                     const item = <SvgAnimateTransform> incomplete[i];

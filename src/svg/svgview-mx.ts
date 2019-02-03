@@ -73,7 +73,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
 
         public getTransforms(companion?: SVGGraphicsElement) {
             const element = companion || this.element;
-            return TRANSFORM.parse(element) || SvgBuild.convertTransformList(element.transform.baseVal);
+            return TRANSFORM.parse(element) || SvgBuild.convertTransforms(element.transform.baseVal);
         }
 
         public getAnimations(companion?: SVGGraphicsElement) {

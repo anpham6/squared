@@ -32,8 +32,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 }
                 break;
             case 'points':
-                currentValue = SvgBuild.convertNumberList(SvgBuild.toNumberList(values[index]));
-                nextValue = SvgBuild.convertNumberList(SvgBuild.toNumberList(values[index + 1]));
+                currentValue = SvgBuild.convertNumbers(SvgBuild.toNumberList(values[index]));
+                nextValue = SvgBuild.convertNumbers(SvgBuild.toNumberList(values[index + 1]));
                 break;
             case 'rotate':
             case 'scale':

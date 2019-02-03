@@ -784,7 +784,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                 for (let i = 0; i < values.length; i++) {
                                                                     const value = values[i];
                                                                     if (value !== '') {
-                                                                        const points = $SvgBuild.convertNumberList($SvgBuild.toNumberList(value));
+                                                                        const points = $SvgBuild.convertNumbers($SvgBuild.toNumberList(value));
                                                                         if (points.length) {
                                                                             values[i] = item.parent && item.parent.element.tagName === 'polygon' ? $SvgBuild.drawPolygon(points) : $SvgBuild.drawPolyline(points);
                                                                         }
@@ -798,8 +798,8 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                 for (let i = 0; i < values.length; i++) {
                                                                     const value = values[i];
                                                                     if (value !== '') {
-                                                                        const pathPoints = $SvgBuild.toPathCommandList(group.pathData);
-                                                                        if (pathPoints.length <= 1) {
+                                                                        const commands = $SvgBuild.getPathCommands(group.pathData);
+                                                                        if (commands.length <= 1) {
                                                                             break pathType;
                                                                         }
                                                                         let x: number | undefined;
@@ -859,8 +859,8 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                                 break;
                                                                         }
                                                                         if (x !== undefined || y !== undefined) {
-                                                                            const commandA = pathPoints[0];
-                                                                            const commandB = pathPoints[pathPoints.length - 1];
+                                                                            const commandA = commands[0];
+                                                                            const commandB = commands[commands.length - 1];
                                                                             const pointA = commandA.points[0];
                                                                             const pointB = commandB.points[commandB.points.length - 1];
                                                                             let recalibrate = false;
@@ -899,7 +899,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                                 }
                                                                             }
                                                                             if (recalibrate) {
-                                                                                for (const path of pathPoints) {
+                                                                                for (const path of commands) {
                                                                                     if (!path.relative) {
                                                                                         for (let j = 0, k = 0; j < path.coordinates.length; j += 2, k++) {
                                                                                             const pt = path.points[k];
@@ -917,7 +917,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                             }
                                                                         }
                                                                         else if (rx !== undefined || ry !== undefined) {
-                                                                            for (const path of pathPoints) {
+                                                                            for (const path of commands) {
                                                                                 if (path.command.toUpperCase() === 'A') {
                                                                                     if (rx !== undefined) {
                                                                                         path.radiusX = rx;
@@ -930,7 +930,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                             }
                                                                         }
                                                                         else if (width !== undefined || height !== undefined) {
-                                                                            for (const path of pathPoints) {
+                                                                            for (const path of commands) {
                                                                                 switch (path.command) {
                                                                                     case 'h':
                                                                                         if (width !== undefined) {
@@ -949,7 +949,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                             values[i] = values[i - 1] || group.pathData;
                                                                             continue;
                                                                         }
-                                                                        values[i] = $SvgBuild.fromPathCommandList(pathPoints);
+                                                                        values[i] = $SvgBuild.drawPath(commands);
                                                                     }
                                                                 }
                                                             }

@@ -11,6 +11,7 @@ declare global {
 
         class SvgPath implements SvgPath {
             public static build(path: SvgPath, transform: SvgTransform[], exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual): SvgPath;
+            public static getCenter(values: Point[]): Point[];
             constructor(element: SVGGraphicsElement);
         }
     }
