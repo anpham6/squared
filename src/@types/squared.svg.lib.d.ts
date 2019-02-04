@@ -23,6 +23,7 @@ declare global {
             function getNearestViewBox(element: SVGElement): DOMRect | undefined;
             function sortNumber(values: number[], descending?: boolean): boolean;
             function truncateDecimal(value: number, precision?: number): string;
+            function getSplitValue(value: number, next: number, percent: number): number;
             function getLeastCommonMultiple(values: number[], offset?: number[]): number;
             function getRadiusX(angle: number, radius: number): number;
             function getRadiusY(angle: number, radius: number): number;

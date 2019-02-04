@@ -1,4 +1,4 @@
-/* squared 0.5.1
+/* squared 0.6.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -419,13 +419,13 @@
         if (list.length) {
             return Math.min.apply(null, list);
         }
-        return Number.MAX_VALUE;
+        return Number.POSITIVE_INFINITY;
     }
     function maxArray(list) {
         if (list.length) {
             return Math.max.apply(null, list);
         }
-        return Number.MAX_VALUE * -1;
+        return Number.NEGATIVE_INFINITY;
     }
     function partitionArray(list, predicate) {
         const valid = [];
@@ -446,14 +446,16 @@
         list.length = 0;
         list.push(...retain);
     }
-    function spliceArray(list, item) {
+    function spliceArray(list, predicate, callback) {
         for (let i = 0; i < list.length; i++) {
-            if (list[i] === item) {
-                list.splice(i, 1);
-                return true;
+            if (predicate(list[i], i)) {
+                if (callback) {
+                    callback(list[i]);
+                }
+                list.splice(i--, 1);
             }
         }
-        return false;
+        return list;
     }
     function sortArray(list, ascending, ...attrs) {
         return list.sort((a, b) => {
@@ -584,7 +586,7 @@
             return [];
         }
         contains(item) {
-            return this._children.includes(item);
+            return this._children.indexOf(item) !== -1;
         }
         retain(list) {
             this._children = list;
@@ -598,7 +600,9 @@
             return this;
         }
         each(predicate) {
-            this._children.forEach(predicate);
+            for (let i = 0; i < this._children.length; i++) {
+                predicate(this._children[i], i);
+            }
             return this;
         }
         find(predicate, value) {
@@ -621,6 +625,9 @@
         partition(predicate) {
             return partitionArray(this._children, predicate);
         }
+        splice(predicate, callback) {
+            return spliceArray(this._children, predicate, callback);
+        }
         sort(predicate) {
             this._children.sort(predicate);
             return this;
@@ -633,14 +640,14 @@
         }
         cascade() {
             function cascade(container) {
-                const current = [];
+                const result = [];
                 for (const item of container.children) {
-                    current.push(item);
+                    result.push(item);
                     if (item instanceof Container && item.length) {
-                        current.push(...cascade(item));
+                        result.push(...cascade(item));
                     }
                 }
-                return current;
+                return result;
             }
             return cascade(this);
         }
@@ -872,7 +879,7 @@
         return `rgb${rgba.a < 255 ? 'a' : ''}(${rgba.r}, ${rgba.g}, ${rgba.b}${rgba.a < 255 ? `, ${(rgba.a / 255).toFixed(2)}` : ''})`;
     }
     function convertAlpha$1(value) {
-        return parseFloat(value) < 1 ? convertHex('255', parseFloat(value)) : 'FF';
+        return parseFloat(value) < 1 ? convertHex(255 * parseFloat(value)) : 'FF';
     }
     function getColorByName(value) {
         for (const color in X11_CSS3) {
@@ -907,13 +914,17 @@
             return undefined;
         }
     }
-    function convertHex(value, opacity = 1) {
-        let rgb = (typeof value === 'string' ? parseInt(value) : value) * opacity;
-        if (isNaN(rgb)) {
-            return '00';
+    function convertHex(...values) {
+        let result = '';
+        for (const value of values) {
+            let rgb = typeof value === 'string' ? parseInt(value) : value;
+            if (isNaN(rgb)) {
+                return '00';
+            }
+            rgb = Math.max(0, Math.min(rgb, 255));
+            result += HEX_CHAR.charAt((rgb - (rgb % 16)) / 16) + HEX_CHAR.charAt(rgb % 16);
         }
-        rgb = Math.max(0, Math.min(rgb, 255));
-        return HEX_CHAR.charAt((rgb - (rgb % 16)) / 16) + HEX_CHAR.charAt(rgb % 16);
+        return result;
     }
     function convertRGBA(value) {
         value = value.replace(/#/g, '').trim();
@@ -1363,13 +1374,13 @@
     function cssInheritAttribute(element, attr) {
         let current = element;
         let value = '';
-        do {
+        while (current) {
             value = cssAttribute(current, attr);
             if (value !== '' && value !== 'inherit') {
                 break;
             }
             current = current.parentElement;
-        } while (current);
+        }
         return value;
     }
     function getBackgroundPosition(value, dimension, dpi, fontSize, leftPerspective = false, percent = false) {
@@ -1705,6 +1716,12 @@
         getElementAsNodeAttribute: getElementAsNodeAttribute
     });
 
+    function replaceTemplateSection(data, value) {
+        for (const index in data) {
+            value = value.replace(new RegExp(`\\t*<<${index}>>[\\w\\W]*<<${index}>>`), `{%${index}}`);
+        }
+        return value;
+    }
     function formatPlaceholder(id, symbol = ':') {
         return `{${symbol + id.toString()}}`;
     }
@@ -1767,20 +1784,19 @@
             .replace(/"/g, '&quot;');
     }
     function parseTemplate(value) {
-        const result = { __ROOT__: value };
+        const result = {};
         function parseSection(section) {
-            const pattern = /(\t*<<(\w+)>>)\n[\w\W]*\n*\1/g;
+            const data = {};
+            const pattern = /(\t*<<(\w+)>>)\n*[\w\W]*\n*\1/g;
             let match;
             while ((match = pattern.exec(section)) !== null) {
                 const segment = match[0].replace(new RegExp(`^${match[1]}\\n`), '').replace(new RegExp(`${match[1]}$`), '');
-                for (const index in result) {
-                    result[index] = result[index].replace(match[0], `{%${match[2]}}`);
-                }
-                result[match[2]] = segment;
-                parseSection(segment);
+                data[match[2]] = replaceTemplateSection(parseSection(segment), segment);
             }
+            Object.assign(result, data);
+            return data;
         }
-        parseSection(value);
+        result['__ROOT__'] = replaceTemplateSection(parseSection(value), value);
         return result;
     }
     function createTemplate(value, data, format = false, index) {

@@ -530,6 +530,10 @@ export function truncateDecimal(value: number, precision = 3) {
     return value % 1 !== 0 ? value.toFixed(precision).replace(/(\.\d+?)0+$/, (match, capture) => capture) : value;
 }
 
+export function getSplitValue(value: number, next: number, percent: number) {
+    return value + (next - value) * percent;
+}
+
 export function getLeastCommonMultiple(values: number[], offset?: number[]) {
     if (values.length > 1) {
         const increment = sortNumber(values.slice(0))[0];

@@ -419,14 +419,39 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
-    public static filterTransforms(transform: SvgTransform[], exclude?: number[]) {
-        return (exclude ? transform.filter(item => !exclude.includes(item.type)) : transform).filter(item => !(item.type === SVGTransform.SVG_TRANSFORM_SCALE && item.matrix.a === 1 && item.matrix.d === 1));
+    public static filterTransforms(transforms: SvgTransform[], exclude?: number[]) {
+        const result: SvgTransform[] = [];
+        for (const item of transforms) {
+            if (exclude === undefined || !exclude.includes(item.type)) {
+                switch (item.type) {
+                    case SVGTransform.SVG_TRANSFORM_ROTATE:
+                    case SVGTransform.SVG_TRANSFORM_SKEWX:
+                    case SVGTransform.SVG_TRANSFORM_SKEWY:
+                        if (item.angle === 0) {
+                            continue;
+                        }
+                        break;
+                    case SVGTransform.SVG_TRANSFORM_SCALE:
+                        if (item.matrix.a === 1 && item.matrix.d === 1) {
+                            continue;
+                        }
+                        break;
+                    case SVGTransform.SVG_TRANSFORM_TRANSLATE:
+                        if (item.matrix.e === 0 && item.matrix.f === 0) {
+                            continue;
+                        }
+                        break;
+                }
+                result.push(item);
+            }
+        }
+        return result;
     }
 
-    public static applyTransforms(transform: SvgTransform[], values: SvgPoint[], origin?: SvgPoint, center?: SvgPoint) {
+    public static applyTransforms(transforms: SvgTransform[], values: SvgPoint[], origin?: SvgPoint, center?: SvgPoint) {
+        transforms = transforms.slice(0).reverse();
         const result = SvgBuild.clonePoints(values);
-        const items = transform.slice(0).reverse();
-        for (const item of items) {
+        for (const item of transforms) {
             const m = item.matrix;
             let x1 = 0;
             let y1 = 0;

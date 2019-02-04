@@ -1,4 +1,4 @@
-import { partitionArray } from '../util';
+import { partitionArray, spliceArray } from '../util';
 
 export default class Container<T> implements squared.lib.base.Container<T>, Iterable<T> {
     private _children: T[] = [];
@@ -55,7 +55,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     }
 
     public contains(item: T) {
-        return this._children.includes(item);
+        return this._children.indexOf(item) !== -1;
     }
 
     public retain(list: T[]) {
@@ -73,7 +73,9 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     }
 
     public each(predicate: IteratorPredicate<T, void>) {
-        this._children.forEach(predicate);
+        for (let i = 0; i < this._children.length; i++) {
+            predicate(this._children[i], i);
+        }
         return this;
     }
 
@@ -102,6 +104,10 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return partitionArray(this._children, predicate);
     }
 
+    public splice(predicate: IteratorPredicate<T, boolean>, callback?: (item: T) => void): T[] {
+        return spliceArray(this._children, predicate, callback);
+    }
+
     public sort(predicate: (a: T, b: T) => number) {
         this._children.sort(predicate);
         return this;
@@ -117,14 +123,14 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
 
     public cascade() {
         function cascade(container: Container<T>) {
-            const current: T[] = [];
+            const result: T[] = [];
             for (const item of container.children) {
-                current.push(item);
+                result.push(item);
                 if (item instanceof Container && item.length) {
-                    current.push(...cascade(item));
+                    result.push(...cascade(item));
                 }
             }
-            return current;
+            return result;
         }
         return cascade(this);
     }

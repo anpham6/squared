@@ -16,6 +16,7 @@ declare global {
             filter(predicate: IteratorPredicate<T, void>): T[];
             map<U>(predicate: IteratorPredicate<T, U>): U[];
             flatMap<U>(predicate: IteratorPredicate<T, U>): U[];
+            splice(predicate: IteratorPredicate<T, boolean>, callback?: (item: T) => void): T[];
             partition(predicate: IteratorPredicate<T, boolean>): [T[], T[]];
             every(predicate: IteratorPredicate<T, boolean>): boolean;
             some(predicate: IteratorPredicate<T, boolean>): boolean;

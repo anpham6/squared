@@ -1,4 +1,4 @@
-/* squared.base 0.5.1
+/* squared.base 0.6.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -43,15 +43,15 @@
             const lineHeight = $util.maxArray(list.map(node => node.lineHeight));
             const boundsHeight = $util.maxArray(list.map(node => node.bounds.height));
             return list.filter(item => lineHeight > boundsHeight ? item.lineHeight === lineHeight : item.bounds.height === boundsHeight).sort((a, b) => {
-                if (a.groupParent || a.length > 0 || (!a.baseline && b.baseline)) {
+                if (a.groupParent || a.length || (!a.baseline && b.baseline)) {
                     return 1;
                 }
-                else if (b.groupParent || b.length > 0 || (a.baseline && !b.baseline)) {
+                else if (b.groupParent || b.length || (a.baseline && !b.baseline)) {
                     return -1;
                 }
                 if (!a.imageElement || !b.imageElement) {
                     if (a.multiline || b.multiline) {
-                        if (a.lineHeight && b.lineHeight) {
+                        if (a.lineHeight > 0 && b.lineHeight > 0) {
                             return a.lineHeight <= b.lineHeight ? 1 : -1;
                         }
                         else if (a.fontSize === b.fontSize) {
@@ -3485,10 +3485,13 @@
             }
             else {
                 if (arguments.length >= 2) {
-                    this._styleMap[attr] = $util$8.hasValue(value) ? value : '';
+                    this._styleMap[attr] = value;
                     if (cache) {
                         this.unsetCache(attr);
                     }
+                }
+                else if (this._styleMap[attr] === 'inherit' && this._element) {
+                    return $dom$4.cssInheritAttribute(this._element.parentElement, attr);
                 }
                 return this._styleMap[attr] || this.style && this.style[attr] || '';
             }
@@ -3629,10 +3632,13 @@
                         }
                     case 'none':
                     case 'initial':
+                    case 'unset':
                     case 'normal':
                     case 'transparent':
                     case 'rgba(0, 0, 0, 0)':
                         return false;
+                    case 'inherit':
+                        return this.documentParent.has(attr, checkType, options);
                     default:
                         if (options) {
                             if (options.not) {
@@ -6699,14 +6705,14 @@
                                             }
                                         }
                                         else {
-                                            if (marginTop === 0 && current.length > 0) {
+                                            if (marginTop === 0 && current.length) {
                                                 const topChild = current.firstChild;
                                                 if (topChild && topChild.blockStatic) {
                                                     marginTop = $util$h.convertInt(topChild.cssInitial('marginTop', false, true));
                                                     current = topChild;
                                                 }
                                             }
-                                            if (previousMarginBottom === 0 && previous.length > 0) {
+                                            if (previousMarginBottom === 0 && previous.length) {
                                                 const bottomChild = previous.lastChild;
                                                 if (bottomChild && bottomChild.blockStatic) {
                                                     previousMarginBottom = $util$h.convertInt(bottomChild.cssInitial('marginBottom', false, true));

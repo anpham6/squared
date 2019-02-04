@@ -4,14 +4,10 @@ import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 
 import { FILL_MODE, INSTANCE_TYPE, KEYSPLINE_NAME } from './lib/constant';
-import { convertClockTime, getFontSize, getHostDPI, sortNumber } from './lib/util';
+import { convertClockTime, getFontSize, getHostDPI, getSplitValue, sortNumber } from './lib/util';
 
 const $color = squared.lib.color;
 const $util = squared.lib.util;
-
-function getSplitValue(current: number, next: number, percent: number) {
-    return current + (next - current) * percent;
-}
 
 function invertControlPoint(value: number) {
     return parseFloat((1 - value).toFixed(5));
@@ -370,20 +366,20 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
 
     set keySplines(value) {
-        if (value) {
+        if (value && value.length) {
             const minSegment = this.keyTimes.length - 1;
-            if (minSegment > 0 && value.length >= minSegment && !value.every(spline => spline === '')) {
-                const result: string[] = [];
+            if (value.length >= minSegment && !value.every(spline => spline === '' || spline === KEYSPLINE_NAME.linear)) {
+                const keySplines: string[] = [];
                 for (let i = 0; i < minSegment; i++) {
                     const points = value[i].split(' ').map(pt => parseFloat(pt));
                     if (points.length === 4 && !points.some(pt => isNaN(pt)) && points[0] >= 0 && points[0] <= 1 && points[2] >= 0 && points[2] <= 1) {
-                        result.push(points.join(' '));
+                        keySplines.push(points.join(' '));
                     }
                     else {
-                        result.push(KEYSPLINE_NAME.linear);
+                        keySplines.push(KEYSPLINE_NAME.linear);
                     }
                 }
-                this._keySplines = result;
+                this._keySplines = keySplines;
             }
         }
         else {
@@ -404,17 +400,17 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             keyTimes.reverse();
             this.keyTimes = keyTimes;
             if (this._keySplines) {
-                const result: string[] = [];
+                const keySplines: string[] = [];
                 for (let i = this._keySplines.length - 1; i >= 0; i--) {
                     const points = this._keySplines[i].split(' ').map(pt => parseFloat(pt));
                     if (points.length === 4) {
-                        result.push(`${invertControlPoint(points[2])} ${invertControlPoint(points[3])} ${invertControlPoint(points[0])} ${invertControlPoint(points[1])}`);
+                        keySplines.push(`${invertControlPoint(points[2])} ${invertControlPoint(points[3])} ${invertControlPoint(points[0])} ${invertControlPoint(points[1])}`);
                     }
                     else {
-                        result.push(KEYSPLINE_NAME.linear);
+                        keySplines.push(KEYSPLINE_NAME.linear);
                     }
                 }
-                this._keySplines = result;
+                this._keySplines = keySplines;
             }
             this._reverse = value;
         }
