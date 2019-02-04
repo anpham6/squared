@@ -426,6 +426,18 @@ function getTransformInitialValue(name: string) {
     return undefined;
 }
 
+function createPropertyValue(propertyName: string, valueTo = '0', duration = '0', valueType = 'floatType', valueFrom = '', startOffset = '', repeatCount = '0'): TemplateData {
+    return {
+        propertyName,
+        startOffset,
+        duration,
+        repeatCount,
+        valueType,
+        valueFrom,
+        valueTo
+    };
+}
+
 export default class ResourceSvg<T extends View> extends squared.base.Extension<T> {
     public readonly options: ResourceSvgOptions = {
         excludeFromTransform: {
@@ -626,7 +638,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                     ordering = index === 0 ? '' : 'sequentially';
                                     synchronized = false;
                                     requireFill = true;
-                                    fillBefore = false;
+                                    fillBefore = index > 1 && $SvgBuild.asAnimateTransform(items[0]);
                                     useKeyFrames = true;
                                 }
                                 const animatorData: AnimatorTemplateData = {
@@ -636,15 +648,9 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                     indefinite: [],
                                     fillAfter: []
                                 };
-                                const fillBeforeData: FillTemplateData = {
-                                    values: []
-                                };
-                                const indefiniteData: FillTemplateData = {
-                                    values: []
-                                };
-                                const fillAfterData: FillTemplateData = {
-                                    values: []
-                                };
+                                const fillBeforeData: FillTemplateData = { values: [] };
+                                const indefiniteData: FillTemplateData = { values: [] };
+                                const fillAfterData: FillTemplateData = { values: [] };
                                 const [indefinite, repeating] = synchronized ? $util.partitionArray(items, animate => animate.repeatCount === -1) : [[], items];
                                 if (indefinite.length === 1) {
                                     repeating.push(indefinite[0]);
@@ -674,14 +680,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                             }
                                             const result: TemplateData[] = [];
                                             if ($util.isString(valueTo)) {
-                                                result.push({
-                                                    propertyName,
-                                                    duration: '1',
-                                                    repeatCount: '0',
-                                                    valueType: valueType || '',
-                                                    valueFrom: valueType === 'pathType' ? valueTo : '',
-                                                    valueTo
-                                                });
+                                                result.push(createPropertyValue(propertyName, valueTo, '0', valueType, valueType === 'pathType' ? valueTo : ''));
                                             }
                                             if (transformOrigin) {
                                                 let translateName: string | undefined;
@@ -692,13 +691,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                     translateName = 'translateY';
                                                 }
                                                 if (translateName) {
-                                                    result.push({
-                                                        propertyName: translateName,
-                                                        duration: '1',
-                                                        repeatCount: '0',
-                                                        valueType: 'floatType',
-                                                        valueTo: '0'
-                                                    });
+                                                    result.push(createPropertyValue(translateName));
                                                 }
                                             }
                                             return result;
@@ -721,16 +714,9 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                             }
                                         }
                                         if (valueTo) {
-                                            animatorData.repeating.push({
-                                                propertyName: ATTRIBUTE_ANDROID[item.attributeName],
-                                                propertyValues: false,
-                                                startOffset: item.begin > 0 ? item.begin.toString() : '',
-                                                duration: '1',
-                                                repeatCount: '0',
-                                                valueType: valueType || '',
-                                                valueFrom,
-                                                valueTo
-                                            });
+                                            const valueData = createPropertyValue(ATTRIBUTE_ANDROID[item.attributeName], valueTo, '0', valueType, valueFrom, item.begin > 0 ? item.begin.toString() : '');
+                                            valueData.propertyValues = false;
+                                            animatorData.repeating.push(valueData);
                                         }
                                     }
                                     else if (valueType !== undefined) {
@@ -740,15 +726,6 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                             duration: item.duration.toString(),
                                             repeatCount: item.repeatCount !== -1 ? Math.ceil(item.repeatCount - 1).toString() : '-1'
                                         };
-                                        if (!synchronized) {
-                                            if (item.fillBackwards) {
-                                                options.fillEnabled = 'true';
-                                                options.fillBefore = 'true';
-                                            }
-                                            if (item.alternate) {
-                                                options.repeatMode = 'reverse';
-                                            }
-                                        }
                                         let propertyName: string[] | undefined;
                                         let values: string[] | number[][] | undefined;
                                         let beforeValues: string[] | undefined;
@@ -996,15 +973,13 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                 }
                                                 return undefined;
                                             }
+                                            if (beforeValues && transformOrigin && transformOrigin.length) {
+                                                fillBeforeData.values.push(createPropertyValue('translateX'));
+                                                fillBeforeData.values.push(createPropertyValue('translateY'));
+                                            }
                                             for (let i = 0; i < propertyName.length; i++) {
                                                 if (beforeValues && beforeValues[i]) {
-                                                    fillBeforeData.values.push({
-                                                        propertyName: propertyName[i],
-                                                        duration: '0',
-                                                        repeatCount: '0',
-                                                        valueType,
-                                                        valueTo: beforeValues[i]
-                                                    });
+                                                    fillBeforeData.values.push(createPropertyValue(propertyName[i], beforeValues[i]));
                                                 }
                                                 if (useKeyFrames && (!item.fromToType || transformOrigin || supportedKeyFrames && transforming)) {
                                                     if (supportedKeyFrames && options.valueType !== 'pathType') {
@@ -1050,14 +1025,8 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                 keyframes
                                                             });
                                                             if (originX && originY) {
-                                                                propertyValues.push({
-                                                                    propertyName: 'translateX',
-                                                                    keyframes: originX
-                                                                });
-                                                                propertyValues.push({
-                                                                    propertyName: 'translateY',
-                                                                    keyframes: originY
-                                                                });
+                                                                propertyValues.push({ propertyName: 'translateX', keyframes: originX });
+                                                                propertyValues.push({ propertyName: 'translateY', keyframes: originY });
                                                                 transformOrigin = [];
                                                             }
                                                             if (!animatorMap.has(keyName)) {
@@ -1238,17 +1207,11 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                 }
                                             }
                                             if (propertyName && valueTo) {
+                                                const interpolator = item.duration > 1 ? this.getPathInterpolator(item.keySplines, 0) : '';
                                                 for (let i = 0; i < propertyName.length; i++) {
-                                                    pathArray.push({
-                                                        propertyName: propertyName[i],
-                                                        interpolator: item.duration > 1 ? this.getPathInterpolator(item.keySplines, 0) : '',
-                                                        startOffset: item.begin > 0 ? item.begin.toString() : '',
-                                                        duration: item.duration.toString(),
-                                                        repeatCount: '0',
-                                                        valueType,
-                                                        valueFrom: valueFrom ? valueFrom[i] : '',
-                                                        valueTo: valueTo[i]
-                                                    });
+                                                    const valueData = createPropertyValue(propertyName[i], valueTo[i], item.duration.toString(), valueType, valueFrom ? valueFrom[i] : '', item.begin > 0 ? item.begin.toString() : '');
+                                                    valueData.interpolator = interpolator;
+                                                    pathArray.push(valueData);
                                                 }
                                             }
                                         }
