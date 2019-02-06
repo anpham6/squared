@@ -15,7 +15,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     public baseFrom?: string;
 
     private _duration = -1;
-    private _begin = 0;
+    private _delay = 0;
     private _to = '';
     private _group?: SvgAnimationGroup;
 
@@ -74,11 +74,11 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
         return values.some(value => $util.hasBit(this.synchronizeState, value));
     }
 
-    set begin(value) {
-        this._begin = value;
+    set delay(value) {
+        this._delay = value;
     }
-    get begin() {
-        return this._begin;
+    get delay() {
+        return this._delay;
     }
 
     set duration(value) {

@@ -80,11 +80,11 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             const element = companion || this.element;
             const result: SvgAnimation[] = [];
             let groupId = 0;
-            function addAnimation(item: SvgAnimation, begin: number, value = '') {
+            function addAnimation(item: SvgAnimation, delay: number, value = '') {
                 if (value === '') {
                     groupId++;
                 }
-                item.begin = begin;
+                item.delay = delay;
                 item.group = { id: groupId, name: value };
                 result.push(item);
             }
@@ -309,7 +309,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                             if (i === 0 && values[i] === '' && animate.baseFrom) {
                                                 values[i] = animate.baseFrom;
                                             }
-                                            const steps = SvgAnimate.toStepFractionList(name, keySplines[i], i, keyTimes, values, getHostDPI(), getFontSize(element));
+                                            const steps = SvgAnimate.toStepFractionList(name, keyTimes, values, keySplines[i], i, getHostDPI(), getFontSize(element));
                                             if (steps) {
                                                 keyTimesData.push(...steps[0]);
                                                 valuesData.push(...steps[1]);
@@ -336,11 +336,11 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     animate.values = values;
                                     animate.keyTimes = keyTimes;
                                 }
-                                animate.repeatCount = iterationCount !== 'infinite' ? parseFloat(iterationCount) : -1;
+                                animate.iterationCount = iterationCount !== 'infinite' ? parseFloat(iterationCount) : -1;
                                 animate.fillForwards = fillMode === 'forwards' || fillMode === 'both';
                                 animate.fillBackwards = fillMode === 'backwards' || fillMode === 'both';
                                 animate.reverse = direction.endsWith('reverse');
-                                animate.alternate = (animate.repeatCount === -1 || animate.repeatCount > 1) && direction.startsWith('alternate');
+                                animate.alternate = (animate.iterationCount === -1 || animate.iterationCount > 1) && direction.startsWith('alternate');
                                 if ($util.hasValue(animate.baseFrom)) {
                                     if (animate.keyTimes[0] !== 0) {
                                         animate.keyTimes.unshift(0);

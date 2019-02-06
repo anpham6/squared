@@ -4,7 +4,7 @@ declare global {
     namespace squared.svg {
         interface SvgAnimation {
             attributeName: string;
-            begin: number;
+            delay: number;
             to: string;
             duration: number;
             paused: boolean;
@@ -26,25 +26,25 @@ declare global {
             from: string;
             values: string[];
             keyTimes: number[];
-            repeatCount: number;
-            repeatDuration: number;
-            additiveSum: boolean;
-            accumulateSum: boolean;
+            iterationCount: number;
             fillMode: number;
             fillBackwards: boolean;
             fillForwards: boolean;
             fillFreeze: boolean;
             reverse: boolean;
             alternate: boolean;
+            additiveSum: boolean;
+            accumulateSum: boolean;
             element?: SVGAnimateElement;
-            end?: number;
             keySplines?: string[];
+            end?: number;
             synchronized?: NumberValue<string>;
             readonly fillReplace: boolean;
             readonly fromToType: boolean;
             readonly partialType: boolean;
             setCalcMode(name: string): void;
             setGroupOrder(value: SvgAnimationGroupOrder[]): void;
+            getPartialDuration(iteration?: number): number;
             convertToValues(keyTimes?: number[]): void;
         }
 
@@ -72,7 +72,7 @@ declare global {
         }
 
         class SvgAnimate implements SvgAnimate {
-            public static toStepFractionList(name: string, keySpline: string, index: number, keyTimes: number[], values: string[], dpi?: number, fontSize?: number): [number[], string[]] | undefined;
+            public static toStepFractionList(name: string, keyTimes: number[], values: string[], keySpline: string, index: number, dpi?: number, fontSize?: number): [number[], string[]] | undefined;
             public static toFractionList(value: string, delimiter?: string): number[];
             constructor(element?: SVGAnimateElement);
         }

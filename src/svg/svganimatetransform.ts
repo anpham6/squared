@@ -91,14 +91,14 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
     }
 
     public expandToValues() {
-        if (this.additiveSum && this.repeatCount !== -1 && this.keyTimes.length && this.duration > 0) {
-            const durationTotal = this.duration * this.repeatCount;
+        if (this.additiveSum && this.iterationCount !== -1 && this.keyTimes.length && this.duration > 0) {
+            const durationTotal = this.duration * this.iterationCount;
             invalid: {
                 const keyTimes: number[] = [];
                 const values: string[] = [];
                 const keySplines: string[] = [];
                 let previousValues: number[] | undefined;
-                for (let i = 0; i < this.repeatCount; i++) {
+                for (let i = 0; i < this.iterationCount; i++) {
                     if (i > 0 && this.keySplines) {
                         keySplines.push('');
                     }
@@ -146,7 +146,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                                         currentValues[k] += previousValues[k];
                                     }
                                 }
-                                if (i < this.repeatCount - 1 && j === this.keyTimes.length - 1) {
+                                if (i < this.iterationCount - 1 && j === this.keyTimes.length - 1) {
                                     if (this.accumulateSum) {
                                         previousValues = currentValues;
                                     }
@@ -171,7 +171,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                 this.values = values;
                 this.keySplines = keySplines.length ? keySplines : undefined;
                 this.duration = durationTotal;
-                this.repeatCount = 1;
+                this.iterationCount = 1;
                 this.accumulateSum = false;
             }
         }

@@ -420,13 +420,13 @@ export function convertClockTime(value: string) {
     }
     else {
         if (/-?\d+ms$/.test(value)) {
-            ms = parseInt(value);
+            ms = parseFloat(value);
         }
         else if (/-?\d+s$/.test(value)) {
-            s = parseInt(value);
+            s = parseFloat(value);
         }
         else if (/-?\d+min$/.test(value)) {
-            s = parseInt(value) * 60;
+            s = parseFloat(value) * 60;
         }
         else if (/-?\d+(.\d+)?h$/.test(value)) {
             s = parseFloat(value) * 60 * 60;
