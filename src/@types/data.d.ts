@@ -4,7 +4,7 @@ interface NameValue {
 }
 
 type NumberValue<T> = {
-    ordinal: number;
+    index: number;
     value: T;
 };
 

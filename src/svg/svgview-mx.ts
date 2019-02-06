@@ -59,7 +59,7 @@ function parseAttribute(element: SVGElement, attr: string) {
 }
 
 function sortAttribute(value: NumberValue<string>[]) {
-    return value.sort((a, b) => a.ordinal >= b.ordinal ? 1 : -1);
+    return value.sort((a, b) => a.index >= b.index ? 1 : -1);
 }
 
 export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
@@ -164,18 +164,18 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             const attrMap: AttributeMap = {};
                             const keyframeMap: AttributeMap = {};
                             for (const percent in keyframes) {
-                                const ordinal = parseInt(percent) / 100;
+                                const fraction = parseInt(percent) / 100;
                                 for (const name in keyframes[percent]) {
                                     const map = ANIMATION_DEFAULT[name] ? keyframeMap : attrMap;
                                     if (map[name] === undefined) {
                                         map[name] = [];
                                     }
-                                    map[name].push({ ordinal, value: keyframes[percent][name] });
+                                    map[name].push({ index: fraction, value: keyframes[percent][name] });
                                 }
                             }
                             if (attrMap['transform']) {
-                                function getKeyframeOrigin(ordinal: number) {
-                                    const origin = attrMap['transform-origin'] && attrMap['transform-origin'].find(item => item.ordinal === ordinal);
+                                function getKeyframeOrigin(order: number) {
+                                    const origin = attrMap['transform-origin'] && attrMap['transform-origin'].find(item => item.index === order);
                                     if (origin) {
                                         return TRANSFORM.origin(element, origin.value);
                                     }
@@ -184,7 +184,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 for (const transform of sortAttribute(attrMap['transform'])) {
                                     const transforms = TRANSFORM.parse(element, transform.value);
                                     if (transforms) {
-                                        const origin = getKeyframeOrigin(transform.ordinal);
+                                        const origin = getKeyframeOrigin(transform.index);
                                         transforms.forEach(item => {
                                             const m = item.matrix;
                                             let name: string;
@@ -198,7 +198,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                                 case SVGTransform.SVG_TRANSFORM_SCALE:
                                                     name = 'scale';
                                                     value = `${m.a} ${m.d}`;
-                                                    if (origin && (transform.ordinal !== 0 || origin.x !== 0 || origin.y !== 0)) {
+                                                    if (origin && (transform.index !== 0 || origin.x !== 0 || origin.y !== 0)) {
                                                         transformOrigin = {
                                                             x: origin.x * (1 - m.a),
                                                             y: origin.y * (1 - m.d)
@@ -212,7 +212,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                                 case SVGTransform.SVG_TRANSFORM_SKEWX:
                                                     name = 'skewX';
                                                     value = item.angle.toString();
-                                                    if (origin && (transform.ordinal !== 0 || origin.y !== 0)) {
+                                                    if (origin && (transform.index !== 0 || origin.y !== 0)) {
                                                         transformOrigin = {
                                                             x: origin.y * m.c * -1,
                                                             y: 0
@@ -222,7 +222,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                                 case SVGTransform.SVG_TRANSFORM_SKEWY:
                                                     name = 'skewY';
                                                     value = item.angle.toString();
-                                                    if (origin && (transform.ordinal !== 0 || origin.x !== 0)) {
+                                                    if (origin && (transform.index !== 0 || origin.x !== 0)) {
                                                         transformOrigin = {
                                                             x: 0,
                                                             y: origin.x * m.b * -1
@@ -235,14 +235,14 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                             if (attrMap[name] === undefined) {
                                                 attrMap[name] = [];
                                             }
-                                            const previousIndex = attrMap[name].findIndex(subitem => subitem.ordinal === transform.ordinal);
+                                            const previousIndex = attrMap[name].findIndex(subitem => subitem.index === transform.index);
                                             if (previousIndex !== -1) {
                                                 attrMap[name][previousIndex].value = value;
                                                 attrMap[name][previousIndex].transformOrigin = transformOrigin;
                                             }
                                             else {
                                                 attrMap[name].push({
-                                                    ordinal: transform.ordinal,
+                                                    index: transform.index,
                                                     value,
                                                     transformOrigin
                                                 });
@@ -280,10 +280,10 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 const keySplines: string[] = [];
                                 sortAttribute(animation);
                                 for (let i = 0; i < animation.length; i++) {
-                                    keyTimes.push(animation[i].ordinal);
+                                    keyTimes.push(animation[i].index);
                                     values.push(animation[i].value);
                                     if (i < animation.length - 1) {
-                                        const spline = keyframeMap['animation-timing-function'] && keyframeMap['animation-timing-function'].find(item => item.ordinal === animation[i].ordinal);
+                                        const spline = keyframeMap['animation-timing-function'] && keyframeMap['animation-timing-function'].find(item => item.index === animation[i].index);
                                         keySplines.push(spline ? spline.value : timingFunction);
                                     }
                                     const transformOrigin = animation[i].transformOrigin;

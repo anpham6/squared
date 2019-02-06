@@ -5,7 +5,8 @@ type Nullable<T> = { [P in keyof T]: T[P] | null; };
 
 type Constructor<T> = new(...args: any[]) => T;
 
-type IteratorPredicate<T, U> = (value: T, index: number) => U;
+type IteratorPredicate<T, U> = (item: T, index: number, array?: T[]) => U;
+type IteratorCallback<T> = (value: T, index: number, array?: T[]) => void;
 
 type BindGeneric<T, U> = (target: T, ...args: any[]) => U;
 

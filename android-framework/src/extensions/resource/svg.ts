@@ -613,10 +613,10 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                             togetherTargets.push(together);
                         }
                         for (const item of sequentialMap.values()) {
-                            togetherTargets.push(item.sort((a, b) => a.synchronized && b.synchronized && a.synchronized.ordinal >= b.synchronized.ordinal ? 1 : -1));
+                            togetherTargets.push(item.sort((a, b) => a.synchronized && b.synchronized && a.synchronized.index >= b.synchronized.index ? 1 : -1));
                         }
                         for (const item of transformMap.values()) {
-                            transformTargets.push(item.sort((a, b) => a.synchronized && b.synchronized && a.synchronized.ordinal >= b.synchronized.ordinal ? 1 : -1));
+                            transformTargets.push(item.sort((a, b) => a.synchronized && b.synchronized && a.synchronized.index >= b.synchronized.index ? 1 : -1));
                         }
                         for (const item of isolated) {
                             isolatedTargets.push([[item]]);
