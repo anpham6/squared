@@ -66,6 +66,10 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
     }
 
     private init() {
+        if (this.element.viewBox.baseVal) {
+            this.aspectRatio.x = this.element.viewBox.baseVal.x;
+            this.aspectRatio.y = this.element.viewBox.baseVal.y;
+        }
         [this.element, ...Array.from(this.element.querySelectorAll('defs'))].forEach(item => {
             item.querySelectorAll(':scope > set, :scope > animate, :scope > animateTransform, :scope > animateMotion').forEach((animation: SVGAnimationElement) => {
                 const target = getTargetElement(animation, this.documentRoot ? this.element : undefined);

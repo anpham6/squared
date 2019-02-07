@@ -2,6 +2,8 @@ export interface SvgRect extends Point, Dimension {
 }
 
 export interface SvgAspectRatio extends Point {
+    positionX: number;
+    positionY: number;
     unit: number;
 }
 

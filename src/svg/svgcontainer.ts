@@ -37,6 +37,8 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
     public aspectRatio: SvgAspectRatio = {
         x: 0,
         y: 0,
+        positionX: 0,
+        positionY: 0,
         unit: 1
     };
     public parent?: SvgContainer;
@@ -116,11 +118,11 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
     }
 
     public refitX(value: number) {
-        return value * this.aspectRatio.unit + this.aspectRatio.x;
+        return (value - this.aspectRatio.x) * this.aspectRatio.unit + this.aspectRatio.positionX;
     }
 
     public refitY(value: number) {
-        return value * this.aspectRatio.unit + this.aspectRatio.y;
+        return (value - this.aspectRatio.y) * this.aspectRatio.unit + this.aspectRatio.positionY;
     }
 
     public refitSize(value: number) {
@@ -128,13 +130,12 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
     }
 
     public refitPoints(values: SvgPoint[]) {
-        const aspectRatio = this.aspectRatio;
         for (const pt of values) {
-            pt.x = pt.x * aspectRatio.unit + aspectRatio.x;
-            pt.y = pt.y * aspectRatio.unit + aspectRatio.y;
+            pt.x = this.refitX(pt.x);
+            pt.y = this.refitY(pt.y);
             if (pt.rx !== undefined && pt.ry !== undefined) {
-                pt.rx *= aspectRatio.unit;
-                pt.ry *= aspectRatio.unit;
+                pt.rx *= this.aspectRatio.unit;
+                pt.ry *= this.aspectRatio.unit;
             }
         }
         return values;
@@ -154,29 +155,36 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         return this.viewport || (SvgBuild.asSvg(this) ? this as any : undefined);
     }
 
-    private setAspectRatio(svg: squared.svg.SvgGroup, element?: SVGSVGElement | SVGSymbolElement) {
+    private setAspectRatio(svg: squared.svg.SvgGroup, target?: SVGSVGElement | SVGSymbolElement) {
         const parent = getNearestViewBox(this);
         if (parent) {
             const aspectRatio = svg.aspectRatio;
-            if (element) {
-                const viewBox = element.viewBox.baseVal;
+            if (target) {
+                const viewBox = target.viewBox.baseVal;
                 if (viewBox && viewBox.width > 0 && viewBox.height > 0) {
-                    const ratio = viewBox.width / viewBox.height;
-                    const outerViewBox = parent.viewBox;
-                    const outerRatio = outerViewBox.width / outerViewBox.height;
-                    if (outerRatio > ratio) {
-                        aspectRatio.x = (outerViewBox.width - (outerViewBox.height * viewBox.width / viewBox.height)) / 2;
+                    const widthA = viewBox.width;
+                    const heightA = viewBox.height;
+                    const widthB = parent.viewBox.width;
+                    const heightB = parent.viewBox.height;
+                    const ratio = widthA / heightA;
+                    const nearestRatio = widthB / heightB;
+                    aspectRatio.x = viewBox.x;
+                    aspectRatio.y = viewBox.y;
+                    if (nearestRatio > ratio) {
+                        aspectRatio.positionX += (widthB - (heightB * widthA / heightA)) / 2;
                     }
-                    else if (outerRatio < ratio) {
-                        aspectRatio.y = (outerViewBox.height - (outerViewBox.width * viewBox.height / viewBox.width)) / 2;
+                    else if (nearestRatio < ratio) {
+                        aspectRatio.positionY += (widthB - (widthB * heightA / widthA)) / 2;
                     }
-                    aspectRatio.unit = Math.min(outerViewBox.width / viewBox.width, outerViewBox.height / viewBox.height);
+                    aspectRatio.unit = Math.min(widthB / widthA, heightB / heightA);
                 }
             }
-            aspectRatio.x *= parent.aspectRatio.unit;
-            aspectRatio.x += parent.aspectRatio.x;
-            aspectRatio.y *= parent.aspectRatio.unit;
-            aspectRatio.y += parent.aspectRatio.y;
+            aspectRatio.x += parent.aspectRatio.x * parent.aspectRatio.unit;
+            aspectRatio.y += parent.aspectRatio.y * parent.aspectRatio.unit;
+            aspectRatio.positionX *= parent.aspectRatio.unit;
+            aspectRatio.positionX += parent.aspectRatio.positionX;
+            aspectRatio.positionY *= parent.aspectRatio.unit;
+            aspectRatio.positionY += parent.aspectRatio.positionY;
             aspectRatio.unit *= parent.aspectRatio.unit;
         }
     }
