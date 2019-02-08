@@ -1363,7 +1363,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 }
                 continue;
             }
-            else if ($SvgBuild.asContainer(item)) {
+            else if ($SvgBuild.isContainer(item)) {
                 if (item.visible && item.length) {
                     this.parseVectorData(<SvgGroup> item);
                     DDD.push({ templateName: item.name });

@@ -8,6 +8,8 @@ import SvgBuild from './svgbuild';
 import { INSTANCE_TYPE } from './lib/constant';
 import { SVG, TRANSFORM } from './lib/util';
 
+type SvgContainer = squared.svg.SvgContainer;
+
 export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) implements squared.svg.SvgPath {
     public static build(path: SvgPath, transform: SvgTransform[], exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
         path.draw(SvgBuild.filterTransforms(transform, exclusions && exclusions[path.element.tagName]), residual);
@@ -56,12 +58,13 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         if (!extract) {
             this.transformed = null;
         }
-        const parent = this.parent;
+        const parent = <SvgContainer> this.parent;
         const element = this.element;
+        const requireRefit = !!parent && parent.requireRefit();
         let d = '';
         if (SVG.path(element)) {
             d = this.getBaseValue('d');
-            if (parent && parent.aspectRatio.unit !== 1 || transform && transform.length) {
+            if (transform && transform.length || requireRefit) {
                 const commands = SvgBuild.getPathCommands(d);
                 if (commands.length) {
                     let points = SvgBuild.getPathPoints(commands);
@@ -75,7 +78,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                 this.transformed = transform;
                             }
                         }
-                        if (parent) {
+                        if (requireRefit) {
                             parent.refitPoints(points);
                         }
                         d = SvgBuild.drawPath(SvgBuild.setPathPoints(commands, points));
@@ -97,7 +100,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                     this.transformed = transform;
                 }
             }
-            if (parent) {
+            if (requireRefit) {
                 parent.refitPoints(points);
             }
             d = SvgBuild.drawPolyline(points);
@@ -125,7 +128,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                     this.transformed = transform;
                 }
             }
-            if (parent) {
+            if (requireRefit) {
                 parent.refitPoints(points);
             }
             const pt = <Required<SvgPoint>> points[0];
@@ -150,13 +153,13 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                     points = this.transformPoints(transform, points);
                     this.transformed = transform;
                 }
-                if (parent) {
+                if (requireRefit) {
                     parent.refitPoints(points);
                 }
                 d = SvgBuild.drawPolygon(points);
             }
             else {
-                if (parent) {
+                if (requireRefit) {
                     x = parent.refitX(x);
                     y = parent.refitY(y);
                     width = parent.refitSize(width);
@@ -176,7 +179,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                     this.transformed = transform;
                 }
             }
-            if (parent) {
+            if (requireRefit) {
                 if (this.transformed === null) {
                     points = SvgBuild.clonePoints(points);
                 }

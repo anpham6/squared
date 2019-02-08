@@ -7,6 +7,7 @@ import { REGEXP_SVG, SVG, getTargetElement } from './lib/util';
 
 type Svg = squared.svg.Svg;
 type SvgGroup = squared.svg.SvgGroup;
+type SvgUseSymbol = squared.svg.SvgUseSymbol;
 type SvgView = squared.svg.SvgView;
 
 const $dom = squared.lib.dom;
@@ -14,7 +15,7 @@ const $util = squared.lib.util;
 
 function getNearestViewBox(instance: SvgContainer | undefined) {
     while (instance) {
-        if ((SvgBuild.asSvg(instance) || SvgBuild.asUseSymbol(instance)) && (<SVGSVGElement> instance.element).viewBox.baseVal) {
+        if (instance.hasViewBox()) {
             return instance;
         }
         instance = instance.parent;
@@ -66,12 +67,14 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         }
         this.clear();
         const viewport = this.getViewport();
+        let requireClip = false;
         for (let i = 0; i < element.children.length; i++) {
             const item = element.children[i];
             let svg: SvgView | undefined;
             if (SVG.svg(item)) {
                 svg = new squared.svg.Svg(item, false);
                 this.setAspectRatio(<SvgGroup> svg, item.viewBox.baseVal);
+                requireClip = true;
             }
             else if (SVG.g(item)) {
                 svg = new squared.svg.SvgG(item);
@@ -83,6 +86,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                     if (SVG.symbol(target)) {
                         svg = new squared.svg.SvgUseSymbol(item, target);
                         this.setAspectRatio(<SvgGroup> svg, target.viewBox.baseVal);
+                        requireClip = true;
                     }
                     else if (SVG.image(target)) {
                         svg = new squared.svg.SvgImage(item, target);
@@ -117,11 +121,31 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                 svg.build(exclusions, residual);
             }
         }
+        if (SvgBuild.asSvg(this) && this.documentRoot) {
+            if (this.aspectRatio.x < 0 || this.aspectRatio.y < 0) {
+                this.clipViewBox(this.aspectRatio.x, this.aspectRatio.y, this.aspectRatio.width, this.aspectRatio.height, true);
+            }
+        }
+        else if (requireClip && this.hasViewBox() && (this.aspectRatio.x !== 0 || this.aspectRatio.y !== 0)) {
+            const boxRect = SvgBuild.toBoxRect(this.getPathAll(false));
+            const x = this.refitX(this.aspectRatio.x);
+            const y = this.refitY(this.aspectRatio.y);
+            if (boxRect.left < x || boxRect.top < y) {
+                this.clipViewBox(boxRect.left, boxRect.top, this.refitSize(this.aspectRatio.width), this.refitSize(this.aspectRatio.height));
+            }
+        }
     }
 
-    public clipViewBox(x: number, y: number, width: number, height: number) {
-        if (x < 0 || y < 0) {
+    public hasViewBox(): this is Svg | SvgUseSymbol {
+        return SvgBuild.asSvg(this) && !!this.element.viewBox.baseVal || SvgBuild.asUseSymbol(this) && !!this.symbolElement.viewBox.baseVal;
+    }
+
+    public clipViewBox(x: number, y: number, width: number, height: number, documentRoot = false) {
+        if (documentRoot) {
             this.clipRegion = SvgBuild.drawRect(width - x, height - y, x < 0 ? x * -1 : 0, y < 0 ? y * -1 : 0);
+        }
+        else {
+            this.clipRegion = SvgBuild.drawRect(width, height, x, y);
         }
     }
 
@@ -130,11 +154,11 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
     }
 
     public refitX(value: number) {
-        return this.aspectRatio.unit * (value - this.aspectRatio.x) + this.aspectRatio.position.x - this.aspectRatio.parent.x;
+        return (value - this.aspectRatio.x) * this.aspectRatio.unit - this.aspectRatio.parent.x + this.aspectRatio.position.x;
     }
 
     public refitY(value: number) {
-        return this.aspectRatio.unit * (value - this.aspectRatio.y) + this.aspectRatio.position.y - this.aspectRatio.parent.y;
+        return (value - this.aspectRatio.y) * this.aspectRatio.unit - this.aspectRatio.parent.y + this.aspectRatio.position.y;
     }
 
     public refitSize(value: number) {
@@ -151,6 +175,10 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
             }
         }
         return values;
+    }
+
+    public requireRefit() {
+        return this.aspectRatio.x !== 0 || this.aspectRatio.y !== 0 || this.aspectRatio.position.x !== 0 || this.aspectRatio.position.y !== 0 || this.aspectRatio.parent.x !== 0 || this.aspectRatio.parent.y !== 0 || this.aspectRatio.unit !== 1;
     }
 
     public getPathAll(cascade = true) {
@@ -187,16 +215,13 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                     aspectRatio.unit = Math.min(parentWidth / aspectRatio.width, parentHeight / aspectRatio.height);
                 }
             }
-            aspectRatio.parent.x = parent.aspectRatio.x;
+            aspectRatio.parent.x = parent.aspectRatio.x + parent.aspectRatio.x * (parent.aspectRatio.unit - 1);
             aspectRatio.position.x *= parent.aspectRatio.unit;
-            aspectRatio.position.x += parent.aspectRatio.position.x;
-            aspectRatio.parent.y = parent.aspectRatio.y;
+            aspectRatio.position.x += parent.aspectRatio.position.x - parent.aspectRatio.parent.x;
+            aspectRatio.parent.y = parent.aspectRatio.y + parent.aspectRatio.y * (parent.aspectRatio.unit - 1);
             aspectRatio.position.y *= parent.aspectRatio.unit;
-            aspectRatio.position.y += parent.aspectRatio.position.y;
+            aspectRatio.position.y += parent.aspectRatio.position.y - parent.aspectRatio.parent.y;
             aspectRatio.unit *= parent.aspectRatio.unit;
-            if (aspectRatio.width > 0 && aspectRatio.height > 0) {
-                group.clipViewBox(parent.refitSize(aspectRatio.x) + parent.aspectRatio.x, parent.refitSize(aspectRatio.y) + parent.aspectRatio.y, group.refitSize(aspectRatio.width), group.refitSize(aspectRatio.height));
-            }
         }
     }
 

@@ -16,8 +16,10 @@ declare global {
             refitY(value: number): number;
             refitSize(value: number): number;
             refitPoints(values: SvgPoint[]): SvgPoint[];
+            requireRefit(): boolean;
             getPathAll(cascade?: boolean): string[];
-            clipViewBox(x: number, y: number, width: number, height: number): void;
+            hasViewBox(): boolean;
+            clipViewBox(x: number, y: number, width: number, height: number, documentRoot?: boolean): void;
         }
 
         interface SvgViewRectExtended extends SvgView, SvgViewRect, SvgViewBox, SvgBaseVal, SvgSynchronize {

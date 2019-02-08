@@ -66,8 +66,9 @@ declare global {
         }
 
         class SvgBuild {
-            public static asContainer(object: SvgElement): object is SvgGroup;
-            public static asElement(object: SvgElement): object is SvgElement;
+            public static isContainer(object: SvgElement): object is SvgGroup;
+            public static isElement(object: SvgElement): object is SvgElement;
+            public static isAnimate(object: SvgAnimation): object is SvgAnimate;
             public static asSvg(object: SvgElement): object is Svg;
             public static asG(object: SvgElement): object is SvgG;
             public static asUseSymbol(object: SvgElement): object is SvgUseSymbol;
@@ -77,8 +78,6 @@ declare global {
             public static asShape(object: SvgElement): object is SvgShape;
             public static asImage(object: SvgElement): object is SvgImage;
             public static asUse(object: SvgElement): object is SvgUse;
-            public static asAnimation(object: SvgAnimation): boolean;
-            public static asAnimationAnimate(object: SvgAnimation): object is SvgAnimate;
             public static asSet(object: SvgAnimation): boolean;
             public static asAnimate(object: SvgAnimation): object is SvgAnimate;
             public static asAnimateTransform(object: SvgAnimation): object is SvgAnimateTransform;
@@ -92,10 +91,10 @@ declare global {
             public static drawPolyline(points: Point[] | DOMPoint[], truncate?: boolean): string;
             public static drawPath(values: SvgPathCommand[]): string;
             public static getPathCommands(value: string): SvgPathCommand[];
-            public static filterTransforms(transform: SvgTransform[], exclude?: number[]): SvgTransform[];
-            public static applyTransforms(transform: SvgTransform[], values: Point[], aspectRatio?: SvgAspectRatio, origin?: Point, center?: Point): SvgPoint[];
+            public static filterTransforms(transforms: SvgTransform[], exclude?: number[]): SvgTransform[];
+            public static applyTransforms(transforms: SvgTransform[], values: Point[], aspectRatio?: SvgAspectRatio, origin?: Point, center?: Point): SvgPoint[];
+            public static convertTransforms(transforms: SVGTransformList): SvgTransform[];
             public static clonePoints(values: SvgPoint[] | SVGPointList): SvgPoint[];
-            public static convertTransforms(transform: SVGTransformList): SvgTransform[];
             public static convertNumbers(values: number[]): Point[];
             public static getPathPoints(values: SvgPathCommand[], includeRadius?: boolean): SvgPoint[];
             public static setPathPoints(values: SvgPathCommand[], points: SvgPoint[]): SvgPathCommand[];

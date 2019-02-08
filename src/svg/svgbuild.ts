@@ -24,12 +24,16 @@ const $util = squared.lib.util;
 const NAME_GRAPHICS = new Map<string, number>();
 
 export default class SvgBuild implements squared.svg.SvgBuild {
-    public static asContainer(object: SvgElement): object is SvgGroup {
+    public static isContainer(object: SvgElement): object is SvgGroup {
         return $util.hasBit(object.instanceType, INSTANCE_TYPE.SVG_CONTAINER);
     }
 
-    public static asElement(object: SvgElement): object is SvgElement {
+    public static isElement(object: SvgElement): object is SvgElement {
         return $util.hasBit(object.instanceType, INSTANCE_TYPE.SVG_ELEMENT);
+    }
+
+    public static isAnimate(object: SvgAnimation): object is SvgAnimate {
+        return $util.hasBit(object.instanceType, INSTANCE_TYPE.SVG_ANIMATE);
     }
 
     public static asSvg(object: SvgElement): object is Svg {
@@ -72,24 +76,16 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return object.instanceType === INSTANCE_TYPE.SVG_ANIMATION;
     }
 
-    public static asAnimation(object: SvgAnimation) {
-        return $util.hasBit(object.instanceType, INSTANCE_TYPE.SVG_ANIMATION);
-    }
-
-    public static asAnimationAnimate(object: SvgAnimation): object is SvgAnimate {
-        return $util.hasBit(object.instanceType, INSTANCE_TYPE.SVG_ANIMATE);
-    }
-
     public static asAnimate(object: SvgAnimation): object is SvgAnimate {
         return object.instanceType === INSTANCE_TYPE.SVG_ANIMATE;
     }
 
-    public static asAnimateMotion(object: SvgAnimation): object is SvgAnimateMotion {
-        return object.instanceType === INSTANCE_TYPE.SVG_ANIMATE_MOTION;
-    }
-
     public static asAnimateTransform(object: SvgAnimation): object is SvgAnimateTransform {
         return object.instanceType === INSTANCE_TYPE.SVG_ANIMATE_TRANSFORM;
+    }
+
+    public static asAnimateMotion(object: SvgAnimation): object is SvgAnimateMotion {
+        return object.instanceType === INSTANCE_TYPE.SVG_ANIMATE_MOTION;
     }
 
     public static setName(element?: SVGElement) {
@@ -410,15 +406,6 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return values;
     }
 
-    public static convertTransforms(transform: SVGTransformList) {
-        const result: SvgTransform[] = [];
-        for (let i = 0; i < transform.numberOfItems; i++) {
-            const item = transform.getItem(i);
-            result.push(TRANSFORM.create(item.type, item.matrix, item.angle));
-        }
-        return result;
-    }
-
     public static filterTransforms(transforms: SvgTransform[], exclude?: number[]) {
         const result: SvgTransform[] = [];
         for (const item of transforms) {
@@ -516,6 +503,15 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     pt.ry = MATRIX.applyY(m, rx + x1, pt.ry);
                 }
             }
+        }
+        return result;
+    }
+
+    public static convertTransforms(transform: SVGTransformList) {
+        const result: SvgTransform[] = [];
+        for (let i = 0; i < transform.numberOfItems; i++) {
+            const item = transform.getItem(i);
+            result.push(TRANSFORM.create(item.type, item.matrix, item.angle));
         }
         return result;
     }
