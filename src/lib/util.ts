@@ -241,19 +241,16 @@ export function includes(source: string | undefined, value: string, delimiter = 
     return source ? source.split(delimiter).map(segment => segment.trim()).includes(value) : false;
 }
 
-export function cloneObject(data: {}) {
-    const result = {};
+export function cloneObject(data: {}, destination = {}) {
     for (const attr in data) {
-        if (data.hasOwnProperty(attr)) {
-            if (data && typeof data[attr] === 'object') {
-                result[attr] = cloneObject(data[attr]);
-            }
-            else {
-                result[attr] = data[attr];
-            }
+        if (data && typeof data[attr] === 'object') {
+            destination[attr] = cloneObject(data[attr]);
+        }
+        else {
+            destination[attr] = data[attr];
         }
     }
-    return result;
+    return destination;
 }
 
 export function optional(obj: UndefNull<object>, value: string, type?: string) {
@@ -422,7 +419,7 @@ export function withinFraction(lower: number, upper: number) {
 
 export function assignWhenNull(destination: {}, source: {}) {
     for (const attr in source) {
-        if (!destination.hasOwnProperty(attr)) {
+        if (!hasValue(destination[attr])) {
             destination[attr] = source[attr];
         }
     }

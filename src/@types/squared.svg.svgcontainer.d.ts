@@ -1,4 +1,4 @@
-import { SvgAspectRatio, SvgPoint } from '../svg/@types/object';
+import { SvgAspectRatio, SvgPoint, SvgRect } from '../svg/@types/object';
 
 import Container = squared.lib.base.Container;
 
@@ -7,6 +7,7 @@ declare global {
         type SvgGroup = Svg | SvgG | SvgUseSymbol | SvgPattern | SvgShapePattern | SvgUsePattern;
 
         interface SvgContainer extends Container<SvgView>, SvgElement {
+            clipRegion: string;
             aspectRatio: SvgAspectRatio;
             readonly element: SVGContainerElement;
             readonly instanceType: number;
@@ -15,7 +16,8 @@ declare global {
             refitY(value: number): number;
             refitSize(value: number): number;
             refitPoints(values: SvgPoint[]): SvgPoint[];
-            getPathAll(): string[];
+            getPathAll(cascade?: boolean): string[];
+            clipViewBox(x: number, y: number, width: number, height: number): void;
         }
 
         interface SvgViewRectExtended extends SvgView, SvgViewRect, SvgViewBox, SvgBaseVal, SvgSynchronize {
@@ -46,7 +48,6 @@ declare global {
         }
 
         interface SvgShapePattern extends SvgPattern, SvgPaint {
-            clipRegion: string;
             readonly element: SVGGraphicsElement | SVGUseElement;
             readonly patternElement: SVGPatternElement;
         }

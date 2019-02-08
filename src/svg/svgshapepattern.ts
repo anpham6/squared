@@ -16,8 +16,6 @@ const $util = squared.lib.util;
 export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer))) implements squared.svg.SvgShapePattern {
     public drawRegion?: BoxRect;
 
-    private _clipRegion: string[] = [];
-
     constructor(
         public element: SVGGraphicsElement,
         public readonly patternElement: SVGPatternElement)
@@ -82,18 +80,6 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
             }
             this.drawRegion = boxRect;
         }
-    }
-
-    set clipRegion(value) {
-        if (value !== '') {
-            this._clipRegion.push(value);
-        }
-        else {
-            this._clipRegion.length = 0;
-        }
-    }
-    get clipRegion() {
-        return this._clipRegion.length ? this._clipRegion.join(';') : '';
     }
 
     get instanceType() {

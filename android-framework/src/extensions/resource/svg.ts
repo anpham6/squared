@@ -1385,20 +1385,21 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
             clipGroup,
             BB: []
         };
-        if (this.SVG_INSTANCE !== target) {
+        let groupName = getVectorName(target, 'group');
+        if (target.clipRegion !== '') {
+            this.createClipPath(target, clipGroup, target.clipRegion);
+        }
+        if (this.SVG_INSTANCE === target) {
+            if (clipGroup.length) {
+                group[0].push({ groupName });
+            }
+        }
+        else {
             const [transformHost, transformClient] = segmentTransforms(target.element, target.transform);
-            let groupName: string;
-            if ($SvgBuild.asShapePattern(target) || $SvgBuild.asUsePattern(target)) {
-                this.createClipPath(target, clipGroup, target.clipRegion);
-                groupName = getVectorName(target, 'pattern');
+            if (($SvgBuild.asG(target) || $SvgBuild.asUseSymbol(target)) && $util.hasValue(target.clipPath)) {
+                this.createClipPath(target, clipGroup, target.clipPath);
             }
-            else {
-                if (($SvgBuild.asG(target) || $SvgBuild.asUseSymbol(target)) && $util.hasValue(target.clipPath)) {
-                    this.createClipPath(target, clipGroup, target.clipPath);
-                }
-                groupName = getVectorName(target, 'group');
-            }
-            if (!this.queueAnimations(target, groupName, item => $SvgBuild.asAnimateTransform(item))) {
+            if (!this.queueAnimations(target, groupName, item => $SvgBuild.asAnimateTransform(item)) && clipGroup.length === 0) {
                 groupName = '';
             }
             const baseData: TransformData = {

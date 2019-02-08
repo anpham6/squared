@@ -11,6 +11,7 @@ import { SVG, getTargetElement } from './lib/util';
 
 const $color = squared.lib.color;
 const $dom = squared.lib.dom;
+const $util = squared.lib.util;
 
 function getColorStop(element: SVGGradientElement) {
     const result: ColorStop[] = [];
@@ -66,9 +67,10 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
     }
 
     private init() {
-        if (this.element.viewBox.baseVal) {
-            this.aspectRatio.x = this.element.viewBox.baseVal.x;
-            this.aspectRatio.y = this.element.viewBox.baseVal.y;
+        if (this.documentRoot) {
+            const viewBox = this.element.viewBox.baseVal;
+            $util.cloneObject(viewBox, this.aspectRatio);
+            this.clipViewBox(viewBox.x, viewBox.y, viewBox.width, viewBox.height);
         }
         [this.element, ...Array.from(this.element.querySelectorAll('defs'))].forEach(item => {
             item.querySelectorAll(':scope > set, :scope > animate, :scope > animateTransform, :scope > animateMotion').forEach((animation: SVGAnimationElement) => {
