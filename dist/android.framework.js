@@ -1,4 +1,4 @@
-/* android-framework 0.6.0
+/* android-framework 0.6.1
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -7734,11 +7734,11 @@ var android = (function () {
 			<<propertyValues>>
 			</objectAnimator>
 		<<repeating>>
-		<<indefinite>>
+		<<infinite>>
 			<set android:ordering="sequentially">
 			<<values>><<values>>
 			</set>
-		<<indefinite>>
+		<<infinite>>
 		<<fillAfter>>
 			<set>
 			<<values>>
@@ -8015,10 +8015,10 @@ var android = (function () {
     function isColorType(attributeName) {
         return attributeName === 'fill' || attributeName === 'stroke';
     }
-    function createAnimateFromTo(attributeName, begin, to, from) {
+    function createAnimateFromTo(attributeName, delay, to, from) {
         const result = new $SvgAnimate();
         result.attributeName = attributeName;
-        result.begin = begin;
+        result.delay = delay;
         result.duration = 1;
         result.from = from !== undefined ? from : to;
         result.to = to;
@@ -8077,7 +8077,8 @@ var android = (function () {
             repeatCount,
             valueType,
             valueFrom,
-            valueTo
+            valueTo,
+            propertyValues: false
         };
     }
     class ResourceSvg extends squared.base.Extension {
@@ -8216,7 +8217,7 @@ var android = (function () {
                                         if ($SvgBuild$2.asAnimateTransform(item)) {
                                             item.expandToValues();
                                         }
-                                        if (item.repeatCount === -1) {
+                                        if (item.iterationCount === -1) {
                                             isolated.push(item);
                                         }
                                         else if ((!item.fromToType || $SvgBuild$2.asAnimateTransform(item) && item.transformOrigin) && !(supportedKeyFrames && getValueType(item.attributeName) !== 'pathType')) {
@@ -8235,10 +8236,10 @@ var android = (function () {
                                 togetherTargets.push(together);
                             }
                             for (const item of sequentialMap.values()) {
-                                togetherTargets.push(item.sort((a, b) => a.synchronized && b.synchronized && a.synchronized.ordinal >= b.synchronized.ordinal ? 1 : -1));
+                                togetherTargets.push(item.sort((a, b) => a.synchronized && b.synchronized && a.synchronized.index >= b.synchronized.index ? 1 : -1));
                             }
                             for (const item of transformMap.values()) {
-                                transformTargets.push(item.sort((a, b) => a.synchronized && b.synchronized && a.synchronized.ordinal >= b.synchronized.ordinal ? 1 : -1));
+                                transformTargets.push(item.sort((a, b) => a.synchronized && b.synchronized && a.synchronized.index >= b.synchronized.index ? 1 : -1));
                             }
                             for (const item of isolated) {
                                 isolatedTargets.push([[item]]);
@@ -8260,7 +8261,7 @@ var android = (function () {
                                         synchronized = true;
                                         requireFill = false;
                                         fillBefore = false;
-                                        useKeyFrames = $SvgBuild$2.asAnimateTransform(items[0]);
+                                        useKeyFrames = false;
                                     }
                                     else if (items.every(item => item.synchronized !== undefined && item.synchronized.value === '')) {
                                         ordering = 'sequentially';
@@ -8280,16 +8281,16 @@ var android = (function () {
                                         ordering,
                                         fillBefore: [],
                                         repeating: [],
-                                        indefinite: [],
+                                        infinite: [],
                                         fillAfter: []
                                     };
                                     const fillBeforeData = { values: [] };
-                                    const indefiniteData = { values: [] };
+                                    const infiniteData = { values: [] };
                                     const fillAfterData = { values: [] };
-                                    const [indefinite, repeating] = synchronized ? $util$n.partitionArray(items, animate => animate.repeatCount === -1) : [[], items];
-                                    if (indefinite.length === 1) {
-                                        repeating.push(indefinite[0]);
-                                        indefinite.length = 0;
+                                    const [infinite, repeating] = synchronized ? $util$n.partitionArray(items, animate => animate.iterationCount === -1) : [[], items];
+                                    if (infinite.length === 1) {
+                                        repeating.push(infinite[0]);
+                                        infinite.length = 0;
                                     }
                                     for (const item of repeating) {
                                         const valueType = getValueType(item.attributeName);
@@ -8302,31 +8303,18 @@ var android = (function () {
                                                     valueTo = getTransformInitialValue(propertyName);
                                                 }
                                                 else if (item.parent && $SvgBuild$2.asShape(item.parent) && item.parent.path) {
-                                                    let attr;
-                                                    if (propertyName === 'pathData') {
-                                                        attr = 'value';
-                                                    }
-                                                    else {
-                                                        attr = getPaintAttribute(propertyName);
-                                                    }
-                                                    if (attr !== '') {
-                                                        valueTo = item.parent.path[attr];
-                                                    }
+                                                    valueTo = item.parent.path[propertyName === 'pathData' ? 'value' : getPaintAttribute(propertyName)];
                                                 }
                                                 const result = [];
                                                 if ($util$n.isString(valueTo)) {
                                                     result.push(createPropertyValue(propertyName, valueTo, '0', valueType, valueType === 'pathType' ? valueTo : ''));
                                                 }
                                                 if (transformOrigin) {
-                                                    let translateName;
                                                     if (propertyName.endsWith('X')) {
-                                                        translateName = 'translateX';
+                                                        result.push(createPropertyValue('translateX'));
                                                     }
                                                     else if (propertyName.endsWith('Y')) {
-                                                        translateName = 'translateY';
-                                                    }
-                                                    if (translateName) {
-                                                        result.push(createPropertyValue(translateName));
+                                                        result.push(createPropertyValue('translateY'));
                                                     }
                                                 }
                                                 return result;
@@ -8349,26 +8337,19 @@ var android = (function () {
                                                 }
                                             }
                                             if (valueTo) {
-                                                const valueData = createPropertyValue(ATTRIBUTE_ANDROID[item.attributeName], valueTo, '0', valueType, valueFrom, item.begin > 0 ? item.begin.toString() : '');
-                                                valueData.propertyValues = false;
-                                                animatorData.repeating.push(valueData);
+                                                animatorData.repeating.push(createPropertyValue(ATTRIBUTE_ANDROID[item.attributeName], valueTo, '0', valueType, valueFrom, item.delay > 0 ? item.delay.toString() : ''));
                                             }
                                         }
                                         else if (valueType !== undefined) {
-                                            const options = {
-                                                startOffset: item.begin > 0 ? item.begin.toString() : '',
-                                                valueType,
-                                                duration: item.duration.toString(),
-                                                repeatCount: item.repeatCount !== -1 ? Math.ceil(item.repeatCount - 1).toString() : '-1'
-                                            };
-                                            let propertyName;
+                                            const options = createPropertyValue('', '', item.duration.toString(), valueType, '', item.delay > 0 ? item.delay.toString() : '', item.iterationCount !== -1 ? Math.ceil(item.iterationCount - 1).toString() : '-1');
+                                            let propertyNames;
                                             let values;
                                             let beforeValues;
                                             if ($SvgBuild$2.asAnimateTransform(item)) {
-                                                propertyName = getTransformPropertyName(item.type);
+                                                propertyNames = getTransformPropertyName(item.type);
                                                 values = getTransformValues(item);
-                                                if (fillBefore && propertyName) {
-                                                    beforeValues = propertyName.map(value => getTransformInitialValue(value) || '0');
+                                                if (fillBefore && propertyNames) {
+                                                    beforeValues = propertyNames.map(value => getTransformInitialValue(value) || '0');
                                                 }
                                                 transformOrigin = item.transformOrigin;
                                                 transforming = true;
@@ -8379,13 +8360,13 @@ var android = (function () {
                                                     case 'intType':
                                                         values = item.values.map(value => $util$n.convertInt(value).toString());
                                                         if (attribute) {
-                                                            propertyName = [attribute];
+                                                            propertyNames = [attribute];
                                                         }
                                                         break;
                                                     case 'floatType':
                                                         values = item.values.map(value => $util$n.convertFloat(value).toString());
                                                         if (attribute) {
-                                                            propertyName = [attribute];
+                                                            propertyNames = [attribute];
                                                         }
                                                         break;
                                                     case 'pathType':
@@ -8565,14 +8546,14 @@ var android = (function () {
                                                                         }
                                                                     }
                                                                 }
-                                                                propertyName = ['pathData'];
+                                                                propertyNames = ['pathData'];
                                                             }
                                                         }
                                                         break;
                                                     default:
                                                         if (attribute) {
                                                             values = item.values.slice(0);
-                                                            propertyName = [attribute];
+                                                            propertyNames = [attribute];
                                                             if (isColorType(item.attributeName)) {
                                                                 for (let i = 0; i < values.length; i++) {
                                                                     if (i === 0 && values[i] === '' && item.baseFrom) {
@@ -8588,7 +8569,7 @@ var android = (function () {
                                                         break;
                                                 }
                                             }
-                                            if (values && propertyName) {
+                                            if (values && propertyNames) {
                                                 const keyName = index !== 0 ? JSON.stringify(options) : '';
                                                 function getValue(valueIndex, propertyIndex) {
                                                     if (values) {
@@ -8609,12 +8590,12 @@ var android = (function () {
                                                     return undefined;
                                                 }
                                                 if (beforeValues && transformOrigin && transformOrigin.length) {
-                                                    fillBeforeData.values.push(createPropertyValue('translateX'));
-                                                    fillBeforeData.values.push(createPropertyValue('translateY'));
+                                                    fillBeforeData.values.push(createPropertyValue('translateX'), createPropertyValue('translateY'));
                                                 }
-                                                for (let i = 0; i < propertyName.length; i++) {
-                                                    if (beforeValues && beforeValues[i]) {
-                                                        fillBeforeData.values.push(createPropertyValue(propertyName[i], beforeValues[i]));
+                                                for (let i = 0; i < propertyNames.length; i++) {
+                                                    const propertyName = propertyNames[i];
+                                                    if (beforeValues && beforeValues[i] && fillBeforeData.values.find(before => before.propertyName === propertyName) === undefined) {
+                                                        fillBeforeData.values.push(createPropertyValue(propertyName, beforeValues[i]));
                                                     }
                                                     if (useKeyFrames && (!item.fromToType || transformOrigin || supportedKeyFrames && transforming)) {
                                                         if (supportedKeyFrames && options.valueType !== 'pathType') {
@@ -8655,10 +8636,7 @@ var android = (function () {
                                                                 }
                                                             }
                                                             if (keyframes.length) {
-                                                                propertyValues.push({
-                                                                    propertyName: propertyName[i],
-                                                                    keyframes
-                                                                });
+                                                                propertyValues.push({ propertyName, keyframes });
                                                                 if (originX && originY) {
                                                                     propertyValues.push({ propertyName: 'translateX', keyframes: originX });
                                                                     propertyValues.push({ propertyName: 'translateY', keyframes: originY });
@@ -8677,18 +8655,18 @@ var android = (function () {
                                                                 ordering: 'sequentially',
                                                                 fillBefore: false,
                                                                 repeating: [],
-                                                                indefinite: false,
+                                                                infinite: false,
                                                                 fillAfter: false
                                                             };
                                                             const translateData = {
                                                                 ordering: 'sequentially',
                                                                 fillBefore: false,
                                                                 repeating: [],
-                                                                indefinite: false,
+                                                                infinite: false,
                                                                 fillAfter: false
                                                             };
                                                             for (let j = 0; j < item.keyTimes.length; j++) {
-                                                                const propertyOptions = Object.assign({}, options, { propertyName: propertyName[i], startOffset: j === 0 ? (item.begin + (item.keyTimes[j] > 0 ? item.keyTimes[j] * item.duration : 0)).toString() : '', propertyValues: false });
+                                                                const propertyOptions = Object.assign({}, options, { propertyName, startOffset: j === 0 ? (item.delay + (item.keyTimes[j] > 0 ? item.keyTimes[j] * item.duration : 0)).toString() : '', propertyValues: false });
                                                                 const valueTo = getValue(j, i);
                                                                 if (valueTo) {
                                                                     if (options.valueType === 'pathType') {
@@ -8704,23 +8682,18 @@ var android = (function () {
                                                                     if (transformOrigin && transformOrigin[j]) {
                                                                         let direction;
                                                                         let translateTo = 0;
-                                                                        if (propertyName[i].endsWith('X')) {
+                                                                        if (propertyName.endsWith('X')) {
                                                                             direction = 'translateX';
                                                                             translateTo = transformOrigin[j].x;
                                                                         }
-                                                                        else if (propertyName[i].endsWith('Y')) {
+                                                                        else if (propertyName.endsWith('Y')) {
                                                                             direction = 'translateY';
                                                                             translateTo = transformOrigin[j].y;
                                                                         }
                                                                         if (direction) {
-                                                                            translateData.repeating.push({
-                                                                                propertyName: direction,
-                                                                                interpolator: createPathInterpolator($constS.KEYSPLINE_NAME['step']),
-                                                                                duration: duration.toString(),
-                                                                                repeatCount: '0',
-                                                                                valueType: 'floatType',
-                                                                                valueTo: translateTo.toString()
-                                                                            });
+                                                                            const valueData = createPropertyValue(direction, translateTo.toString(), duration.toString(), 'floatType');
+                                                                            valueData.interpolator = createPathInterpolator($constS.KEYSPLINE_NAME['step']);
+                                                                            translateData.repeating.push(valueData);
                                                                         }
                                                                     }
                                                                     propertyOptions.interpolator = j > 0 ? this.getPathInterpolator(item.keySplines, j - 1) : '';
@@ -8730,7 +8703,7 @@ var android = (function () {
                                                                 }
                                                             }
                                                             if (requireFill) {
-                                                                const fillAfter = getFillAfter(propertyName[i]);
+                                                                const fillAfter = getFillAfter(propertyName);
                                                                 if (fillAfter) {
                                                                     if (fillAfter.length === 1) {
                                                                         propertyData.repeating.push(fillAfter[0]);
@@ -8748,7 +8721,7 @@ var android = (function () {
                                                         }
                                                     }
                                                     else {
-                                                        const propertyOptions = Object.assign({}, options, { propertyName: propertyName[i], interpolator: item.duration > 1 ? this.getPathInterpolator(item.keySplines, 0) : '' });
+                                                        const propertyOptions = Object.assign({}, options, { propertyName, interpolator: item.duration > 1 ? this.getPathInterpolator(item.keySplines, 0) : '', propertyValues: false });
                                                         if (Array.isArray(values[0])) {
                                                             const valueTo = values[values.length - 1][i];
                                                             if (values.length > 1) {
@@ -8783,12 +8756,11 @@ var android = (function () {
                                                             }
                                                         }
                                                         if (propertyOptions.valueTo) {
-                                                            propertyOptions.propertyValues = false;
                                                             animatorData.repeating.push(propertyOptions);
                                                         }
                                                     }
                                                     if (requireFill) {
-                                                        const fillAfter = getFillAfter(propertyName[i]);
+                                                        const fillAfter = getFillAfter(propertyName);
                                                         if (fillAfter) {
                                                             fillAfterData.values.push(...fillAfter);
                                                         }
@@ -8797,9 +8769,9 @@ var android = (function () {
                                             }
                                         }
                                     }
-                                    if (indefinite.length) {
-                                        const pathArray = animatorData.repeating.length ? indefiniteData.values : animatorData.repeating;
-                                        for (const item of indefinite) {
+                                    if (infinite.length) {
+                                        const pathArray = animatorData.repeating.length ? infiniteData.values : animatorData.repeating;
+                                        for (const item of infinite) {
                                             const valueType = getValueType(item.attributeName);
                                             if (valueType !== undefined) {
                                                 let propertyName;
@@ -8832,7 +8804,7 @@ var android = (function () {
                                                 if (propertyName && valueTo) {
                                                     const interpolator = item.duration > 1 ? this.getPathInterpolator(item.keySplines, 0) : '';
                                                     for (let i = 0; i < propertyName.length; i++) {
-                                                        const valueData = createPropertyValue(propertyName[i], valueTo[i], item.duration.toString(), valueType, valueFrom ? valueFrom[i] : '', item.begin > 0 ? item.begin.toString() : '');
+                                                        const valueData = createPropertyValue(propertyName[i], valueTo[i], item.duration.toString(), valueType, valueFrom ? valueFrom[i] : '', item.delay > 0 ? item.delay.toString() : '');
                                                         valueData.interpolator = interpolator;
                                                         pathArray.push(valueData);
                                                     }
@@ -8853,16 +8825,16 @@ var android = (function () {
                                                 break;
                                         }
                                     }
-                                    if (animatorData.indefinite) {
-                                        switch (indefiniteData.values.length) {
+                                    if (animatorData.infinite) {
+                                        switch (infiniteData.values.length) {
                                             case 0:
-                                                animatorData.indefinite = false;
+                                                animatorData.infinite = false;
                                                 break;
                                             case 1:
-                                                animatorData.repeating.push(indefiniteData.values[0]);
+                                                animatorData.repeating.push(infiniteData.values[0]);
                                                 break;
                                             default:
-                                                animatorData.indefinite.push(indefiniteData);
+                                                animatorData.infinite.push(infiniteData);
                                                 break;
                                         }
                                     }
@@ -8879,7 +8851,7 @@ var android = (function () {
                                                 break;
                                         }
                                     }
-                                    if (animatorData.repeating.length || animatorData.indefinite && animatorData.indefinite.length) {
+                                    if (animatorData.repeating.length || animatorData.infinite && animatorData.infinite.length) {
                                         setData.AA.push(animatorData);
                                     }
                                 }
@@ -8936,15 +8908,14 @@ var android = (function () {
                             }
                             imageD.push(data);
                         }
-                        let xml = $xml$9.createTemplate(TEMPLATES$1.LAYER_LIST, {
+                        const xml = $xml$9.formatTemplate($xml$9.createTemplate(TEMPLATES$1.LAYER_LIST, {
                             A: [],
                             B: false,
                             C: [{ src: vectorName }],
                             D: imageD,
                             E: false,
                             F: false
-                        });
-                        xml = $xml$9.formatTemplate(xml);
+                        }));
                         drawable = Resource.getStoredName('drawables', xml);
                         if (drawable === '') {
                             drawable = templateName;
@@ -8999,7 +8970,7 @@ var android = (function () {
                     }
                     continue;
                 }
-                else if ($SvgBuild$2.asContainer(item)) {
+                else if ($SvgBuild$2.isContainer(item)) {
                     if (item.visible && item.length) {
                         this.parseVectorData(item);
                         DDD.push({ templateName: item.name });
@@ -9020,20 +8991,21 @@ var android = (function () {
                 clipGroup,
                 BB: []
             };
-            if (this.SVG_INSTANCE !== target) {
+            let groupName = getVectorName(target, 'group');
+            if (target.clipRegion !== '') {
+                this.createClipPath(target, clipGroup, target.clipRegion);
+            }
+            if (this.SVG_INSTANCE === target) {
+                if (clipGroup.length) {
+                    group[0].push({ groupName });
+                }
+            }
+            else {
                 const [transformHost, transformClient] = segmentTransforms(target.element, target.transform);
-                let groupName;
-                if ($SvgBuild$2.asShapePattern(target) || $SvgBuild$2.asUsePattern(target)) {
-                    this.createClipPath(target, clipGroup, target.clipRegion);
-                    groupName = getVectorName(target, 'pattern');
+                if (($SvgBuild$2.asG(target) || $SvgBuild$2.asUseSymbol(target)) && $util$n.hasValue(target.clipPath)) {
+                    this.createClipPath(target, clipGroup, target.clipPath);
                 }
-                else {
-                    if (($SvgBuild$2.asG(target) || $SvgBuild$2.asUseSymbol(target)) && $util$n.hasValue(target.clipPath)) {
-                        this.createClipPath(target, clipGroup, target.clipPath);
-                    }
-                    groupName = getVectorName(target, 'group');
-                }
-                if (!this.queueAnimations(target, groupName, item => $SvgBuild$2.asAnimateTransform(item))) {
+                if (!this.queueAnimations(target, groupName, item => $SvgBuild$2.asAnimateTransform(item)) && clipGroup.length === 0) {
                     groupName = '';
                 }
                 const baseData = Object.assign({ groupName }, createTransformData(transformClient));
@@ -9178,7 +9150,7 @@ var android = (function () {
             target.animation.forEach(item => {
                 if ($SvgBuild$2.asAnimateTransform(item)) {
                     if (!item.additiveSum && item.transformFrom) {
-                        let time = Math.max(0, item.begin - 1);
+                        let time = Math.max(0, item.delay - 1);
                         replaceMap.set(time, {
                             index,
                             time,
@@ -9186,8 +9158,8 @@ var android = (function () {
                             reset: false,
                             animate: item
                         });
-                        if (item.repeatCount !== -1 && item.fillReplace) {
-                            time = item.begin + item.repeatCount * item.duration;
+                        if (item.iterationCount !== -1 && item.fillReplace) {
+                            time = item.delay + item.iterationCount * item.duration;
                             if (!replaceMap.has(time)) {
                                 replaceMap.set(time, {
                                     index,
@@ -9295,10 +9267,7 @@ var android = (function () {
                                 if (!this.queueAnimations(child, clipName, item => $SvgBuild$2.asAnimate(item) || $SvgBuild$2.asSet(item), child.path.value)) {
                                     clipName = '';
                                 }
-                                clipArray.push({
-                                    clipName,
-                                    clipPathData: child.path.value
-                                });
+                                clipArray.push({ clipName, clipPathData: child.path.value });
                             }
                         });
                     }
@@ -9309,10 +9278,7 @@ var android = (function () {
                     if (!this.queueAnimations(target, clipName, item => ($SvgBuild$2.asAnimate(item) || $SvgBuild$2.asSet(item)) && item.attributeName === 'clip-path', value)) {
                         clipName = '';
                     }
-                    clipArray.push({
-                        clipName,
-                        clipPathData: value
-                    });
+                    clipArray.push({ clipName, clipPathData: value });
                     result++;
                 }
             });

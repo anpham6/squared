@@ -1573,18 +1573,20 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                             }
                         }
                         const keyTimes = sortNumber(Array.from(new Set(keyTimesRepeating)));
-                        for (const attr in repeatingMap) {
-                            if (!repeatingMap[attr].has(0) && baseValueMap[attr] !== undefined) {
-                                const endTime = repeatingMap[attr].keys().next().value - 1;
-                                repeatingMap[attr].set(0, baseValueMap[attr]);
-                                repeatingMap[attr].set(endTime, baseValueMap[attr]);
-                                if (!keyTimes.includes(0)) {
-                                    keyTimes.push(0);
+                        if (path || transforming) {
+                            for (const attr in repeatingMap) {
+                                if (!repeatingMap[attr].has(0) && baseValueMap[attr] !== undefined) {
+                                    const endTime = repeatingMap[attr].keys().next().value - 1;
+                                    repeatingMap[attr].set(0, baseValueMap[attr]);
+                                    repeatingMap[attr].set(endTime, baseValueMap[attr]);
+                                    if (!keyTimes.includes(0)) {
+                                        keyTimes.push(0);
+                                    }
+                                    if (!keyTimes.includes(endTime)) {
+                                        keyTimes.push(endTime);
+                                    }
+                                    sortNumber(keyTimes);
                                 }
-                                if (!keyTimes.includes(endTime)) {
-                                    keyTimes.push(endTime);
-                                }
-                                sortNumber(keyTimes);
                             }
                         }
                         const timelineMap: TimelineMap = {};

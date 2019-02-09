@@ -1,4 +1,4 @@
-/* squared 0.6.0
+/* squared 0.6.1
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -226,19 +226,16 @@
     function includes(source, value, delimiter = ',') {
         return source ? source.split(delimiter).map(segment => segment.trim()).includes(value) : false;
     }
-    function cloneObject(data) {
-        const result = {};
+    function cloneObject(data, destination = {}) {
         for (const attr in data) {
-            if (data.hasOwnProperty(attr)) {
-                if (data && typeof data[attr] === 'object') {
-                    result[attr] = cloneObject(data[attr]);
-                }
-                else {
-                    result[attr] = data[attr];
-                }
+            if (data && typeof data[attr] === 'object') {
+                destination[attr] = cloneObject(data[attr]);
+            }
+            else {
+                destination[attr] = data[attr];
             }
         }
-        return result;
+        return destination;
     }
     function optional(obj, value, type) {
         let valid = false;
@@ -384,7 +381,7 @@
     }
     function assignWhenNull(destination, source) {
         for (const attr in source) {
-            if (!destination.hasOwnProperty(attr)) {
+            if (!hasValue(destination[attr])) {
                 destination[attr] = source[attr];
             }
         }
@@ -448,9 +445,9 @@
     }
     function spliceArray(list, predicate, callback) {
         for (let i = 0; i < list.length; i++) {
-            if (predicate(list[i], i)) {
+            if (predicate(list[i], i, list)) {
                 if (callback) {
-                    callback(list[i]);
+                    callback(list[i], i, list);
                 }
                 list.splice(i--, 1);
             }
