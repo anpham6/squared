@@ -50,8 +50,18 @@ declare global {
         }
 
         interface SvgShapePattern extends SvgPattern, SvgPaint {
+            drawRegion?: BoxRect;
             readonly element: SVGGraphicsElement | SVGUseElement;
             readonly patternElement: SVGPatternElement;
+            readonly patternUnits: number;
+            readonly patternContentUnits: number;
+            readonly patternWidth: number;
+            readonly patternHeight: number;
+            readonly tileWidth: number;
+            readonly tileHeight: number;
+            patternRefitX(value: number): void;
+            patternRefitY(value: number): void;
+            patternRefitPoints(values: SvgPoint[]): void;
         }
 
         interface SvgUsePattern extends SvgShapePattern, SvgViewRect {

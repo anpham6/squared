@@ -5,14 +5,15 @@ import SvgPaint$MX from './svgpaint-mx';
 import SvgElement from './svgelement';
 import SvgBuild from './svgbuild';
 
-import { INSTANCE_TYPE } from './lib/constant';
+import { INSTANCE_TYPE, PATTERN_UNIT } from './lib/constant';
 import { SVG, TRANSFORM } from './lib/util';
 
 type SvgContainer = squared.svg.SvgContainer;
+type SvgShapePattern = squared.svg.SvgShapePattern;
 
 export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) implements squared.svg.SvgPath {
-    public static build(path: SvgPath, transform: SvgTransform[], exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
-        path.draw(SvgBuild.filterTransforms(transform, exclusions && exclusions[path.element.tagName]), residual);
+    public static build(path: SvgPath, transforms: SvgTransform[], exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
+        path.draw(SvgBuild.filterTransforms(transforms, exclusions && exclusions[path.element.tagName]), residual);
         return path;
     }
 
@@ -54,28 +55,33 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         this.init();
     }
 
-    public draw(transform?: SvgTransform[], residual?: SvgTransformResidual, extract = false) {
+    public draw(transforms?: SvgTransform[], residual?: SvgTransformResidual, extract = false) {
         if (!extract) {
             this.transformed = null;
         }
         const parent = <SvgContainer> this.parent;
+        const patternParent = <SvgShapePattern> this.patternParent;
         const element = this.element;
         const requireRefit = !!parent && parent.requireRefit();
+        const requirePatternRefit = !!this.patternParent && this.patternParent.patternContentUnits === PATTERN_UNIT.OBJECT_BOUNDING_BOX;
         let d = '';
         if (SVG.path(element)) {
             d = this.getBaseValue('d');
-            if (transform && transform.length || requireRefit) {
+            if (transforms && transforms.length || requireRefit || requirePatternRefit) {
                 const commands = SvgBuild.getPathCommands(d);
                 if (commands.length) {
                     let points = SvgBuild.getPathPoints(commands);
                     if (points.length) {
-                        if (transform && transform.length) {
+                        if (requirePatternRefit) {
+                            patternParent.patternRefitPoints(points);
+                        }
+                        if (transforms && transforms.length) {
                             if (typeof residual === 'function') {
-                                [this.transformResidual, transform] = residual.call(this, element, transform);
+                                [this.transformResidual, transforms] = residual.call(this, element, transforms);
                             }
-                            if (transform.length) {
-                                points = this.transformPoints(transform, points);
-                                this.transformed = transform;
+                            if (transforms.length) {
+                                points = this.transformPoints(transforms, points);
+                                this.transformed = transforms;
                             }
                         }
                         if (requireRefit) {
@@ -91,13 +97,16 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 { x: this.getBaseValue('x1'), y: this.getBaseValue('y1') },
                 { x: this.getBaseValue('x2'), y: this.getBaseValue('y2') }
             ];
-            if (transform && transform.length) {
+            if (requirePatternRefit) {
+                patternParent.patternRefitPoints(points);
+            }
+            if (transforms && transforms.length) {
                 if (typeof residual === 'function') {
-                    [this.transformResidual, transform] = residual.call(this, element, transform);
+                    [this.transformResidual, transforms] = residual.call(this, element, transforms);
                 }
-                if (transform.length) {
-                    points = this.transformPoints(transform, points);
-                    this.transformed = transform;
+                if (transforms.length) {
+                    points = this.transformPoints(transforms, points);
+                    this.transformed = transforms;
                 }
             }
             if (requireRefit) {
@@ -119,13 +128,16 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             let points: SvgPoint[] = [
                 { x: this.getBaseValue('cx'), y: this.getBaseValue('cy'), rx, ry }
             ];
-            if (transform && transform.length) {
+            if (requirePatternRefit) {
+                patternParent.patternRefitPoints(points);
+            }
+            if (transforms && transforms.length) {
                 if (typeof residual === 'function') {
-                    [this.transformResidual, transform] = residual.call(this, element, transform, rx, ry);
+                    [this.transformResidual, transforms] = residual.call(this, element, transforms, rx, ry);
                 }
-                if (transform.length) {
-                    points = this.transformPoints(transform, points);
-                    this.transformed = transform;
+                if (transforms.length) {
+                    points = this.transformPoints(transforms, points);
+                    this.transformed = transforms;
                 }
             }
             if (requireRefit) {
@@ -139,19 +151,22 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             let y = this.getBaseValue('y');
             let width = this.getBaseValue('width');
             let height = this.getBaseValue('height');
-            if (transform && transform.length) {
+            if (transforms && transforms.length) {
                 let points: SvgPoint[] = [
                     { x, y },
                     { x: x + width, y },
                     { x: x + width, y: y + height },
                     { x, y: y + height }
                 ];
-                if (typeof residual === 'function') {
-                    [this.transformResidual, transform] = residual.call(this, element, transform);
+                if (requirePatternRefit) {
+                    patternParent.patternRefitPoints(points);
                 }
-                if (transform.length) {
-                    points = this.transformPoints(transform, points);
-                    this.transformed = transform;
+                if (typeof residual === 'function') {
+                    [this.transformResidual, transforms] = residual.call(this, element, transforms);
+                }
+                if (transforms.length) {
+                    points = this.transformPoints(transforms, points);
+                    this.transformed = transforms;
                 }
                 if (requireRefit) {
                     parent.refitPoints(points);
@@ -159,6 +174,12 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 d = SvgBuild.drawPolygon(points);
             }
             else {
+                if (requirePatternRefit) {
+                    x = patternParent.patternRefitX(x);
+                    y = patternParent.patternRefitY(y);
+                    width = patternParent.patternRefitX(width);
+                    height = patternParent.patternRefitY(height);
+                }
                 if (requireRefit) {
                     x = parent.refitX(x);
                     y = parent.refitY(y);
@@ -170,13 +191,16 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         }
         else if (SVG.polygon(element) || SVG.polyline(element)) {
             let points: SvgPoint[] = this.getBaseValue('points');
-            if (transform && transform.length) {
+            if (requirePatternRefit) {
+                patternParent.patternRefitPoints(points);
+            }
+            if (transforms && transforms.length) {
                 if (typeof residual === 'function') {
-                    [this.transformResidual, transform] = residual.call(this, element, transform);
+                    [this.transformResidual, transforms] = residual.call(this, element, transforms);
                 }
-                if (transform.length) {
-                    points = this.transformPoints(transform, points);
-                    this.transformed = transform;
+                if (transforms.length) {
+                    points = this.transformPoints(transforms, points);
+                    this.transformed = transforms;
                 }
             }
             if (requireRefit) {
@@ -194,8 +218,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         return d;
     }
 
-    public transformPoints(transform: SvgTransform[], points: Point[], center?: Point) {
-        return SvgBuild.applyTransforms(transform, points, TRANSFORM.origin(this.element), center);
+    public transformPoints(transforms: SvgTransform[], points: Point[], center?: Point) {
+        return SvgBuild.applyTransforms(transforms, points, TRANSFORM.origin(this.element), center);
     }
 
     private init() {

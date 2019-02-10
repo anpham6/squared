@@ -49,7 +49,7 @@
                     <stop offset="5%" stop-color="red"/>
                     <stop offset="95%" stop-color="orange"/>
                 </linearGradient>
-                <pattern id="Pattern" x="0" y="0" width="0.3" height="0.5">
+                <pattern id="Pattern" x="0.1" y="0.2" width="0.3" height="0.5">
                     <rect x="0" y="0" width="50" height="50" fill="skyblue" />
                     <rect x="0" y="0" width="25" height="25" fill="yellow" />
                     <circle cx="25" cy="25" r="20" fill="purple" fill-opacity="0.5" />
@@ -60,16 +60,55 @@
             </defs>
             <g fill="url(#Pattern)">
                 <rect id="rect" x="10" y="10" width="100" height="100" stroke="black" />
-                <use href="#rect" x="80" y="80" fill="url(#Pattern)" stroke="blue">
-                    <!--<animate attributeName="x" values="0; 50" keyTimes="0; 1" begin="0s" dur="10s" repeatCount="1" />
-                    <animate attributeName="y" values="0; 30; 50" keyTimes="0; 0.5; 1" begin="0s" dur="10s" repeatCount="1" />-->
-                </use>
+                <use href="#rect" x="80" y="80" fill="url(#Pattern)" stroke="blue" />
                 <g stroke="white" fill-opacity="0.5">
                     <circle id="circle" cx="50" cy="50" r="50" />
                     <use href="#circle" x="100" y="100" stroke="blue" />
                 </g>
             </g>
-          </svg>
+        </svg>
+        <br /><br />
+        <svg width="200" height="200">
+            <defs>
+                <pattern id="Pattern2" x="10" y="10" width="50" height="50" patternUnits="userSpaceOnUse">
+                    <rect x="0" y="0" width="50" height="50" fill="blue"/>
+                    <rect x="0" y="0" width="25" height="25" fill="yellow"/>
+                    <circle cx="25" cy="25" r="20" fill="green" fill-opacity="0.5"/>
+                </pattern>
+            </defs>
+            <g fill="url(#Pattern2)">
+                <rect id="rect2" x="20" y="20" width="100" height="100" stroke="black" />
+                <use href="#rect2" x="80" y="80" fill="url(#Pattern2)" stroke="blue" />
+            </g>
+        </svg>
+        <br /><br />
+        <svg width="200" height="200">
+            <defs>
+                <pattern id="Pattern3" width=".25" height=".25" patternContentUnits="objectBoundingBox">
+                    <rect x="0" y="0" width=".25" height=".25" fill="blue"/>
+                    <rect x="0" y="0" width=".125" height=".125" fill="yellow"/>
+                    <circle cx=".125" cy=".125" r=".1" fill="green" fill-opacity="0.5"/>
+                </pattern>
+            </defs>
+            <g fill="url(#Pattern3)">
+                <rect id="rect3" x="20" y="20" width="100" height="100" stroke="black" />
+                <use href="#rect3" x="80" y="80" fill="url(#Pattern3)" stroke="blue" />
+            </g>
+        </svg>
+        <br /><br />
+        <svg width="200" height="200">
+            <defs>
+                <pattern id="Pattern4" width="50" height="50" patternUnits="userSpaceOnUse" patternContentUnits="objectBoundingBox">
+                    <rect x="0" y="0" width=".25" height=".25" fill="blue"/>
+                    <rect x="0" y="0" width=".125" height=".125" fill="yellow"/>
+                    <circle cx=".125" cy=".125" r=".1" fill="green" fill-opacity="0.5"/>
+                </pattern>
+            </defs>
+            <g fill="url(#Pattern4)">
+                <rect id="rect4" x="20" y="20" width="100" height="100" stroke="black" />
+                <use href="#rect4" x="80" y="80" fill="url(#Pattern4)" stroke="blue" />
+            </g>
+        </svg>
     </div>
     <!-- END: DEMO -->
 

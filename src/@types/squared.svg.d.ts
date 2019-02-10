@@ -60,7 +60,7 @@ declare global {
             clipPath: string;
             clipRule: string;
             useParent?: SvgUse | SvgUseSymbol;
-            patternParent?: SvgPattern;
+            patternParent?: SvgShapePattern;
             setPaint(d?: string[]): void;
             resetPaint(): void;
         }

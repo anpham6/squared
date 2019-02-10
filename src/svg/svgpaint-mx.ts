@@ -2,7 +2,7 @@ import SvgBuild from './svgbuild';
 
 import { REGEXP_SVG, getFontSize, getHostDPI } from './lib/util';
 
-type SvgPattern = squared.svg.SvgPattern;
+type SvgShapePattern = squared.svg.SvgShapePattern;
 type SvgUse = squared.svg.SvgUse;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
 
@@ -37,7 +37,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
         public clipPath!: string;
         public clipRule!: string;
 
-        public patternParent?: SvgPattern;
+        public patternParent?: SvgShapePattern;
         public useParent?: SvgUse | SvgUseSymbol;
 
         public setPaint(d?: string[]) {

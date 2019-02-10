@@ -41,6 +41,11 @@ export const enum FILL_MODE {
     FREEZE = 8
 }
 
+export const enum PATTERN_UNIT {
+    USER_SPACE_ON_USE = 1,
+    OBJECT_BOUNDING_BOX = 2
+}
+
 export const KEYSPLINE_NAME = {
     'ease': '0.25 0.1 0.25 1',
     'ease-in': '0.42 0 1 1',
