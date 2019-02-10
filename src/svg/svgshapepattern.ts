@@ -53,7 +53,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                     const pattern = new SvgPattern(element, this.patternElement);
                     pattern.build(exclusions, residual);
                     pattern.cascade().forEach(item => {
-                        if (SvgBuild.asShape(item) && item.path) {
+                        if (SvgBuild.isShape(item) && item.path) {
                             item.path.patternParent = this;
                             item.path.refitBaseValue(x, y);
                             SvgPath.build(<SvgPath> item.path, item.transform, exclusions, residual);

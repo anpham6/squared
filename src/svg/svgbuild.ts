@@ -32,6 +32,10 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return $util.hasBit(object.instanceType, INSTANCE_TYPE.SVG_ELEMENT);
     }
 
+    public static isShape(object: SvgElement): object is SvgShape {
+        return $util.hasBit(object.instanceType, INSTANCE_TYPE.SVG_SHAPE);
+    }
+
     public static isAnimate(object: SvgAnimation): object is SvgAnimate {
         return $util.hasBit(object.instanceType, INSTANCE_TYPE.SVG_ANIMATE);
     }
@@ -52,16 +56,12 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return object.instanceType === INSTANCE_TYPE.SVG_PATTERN;
     }
 
-    public static asShapePattern(object: SvgElement): object is SvgShapePattern {
+    public static isShapePattern(object: SvgElement): object is SvgShapePattern {
         return object.instanceType === INSTANCE_TYPE.SVG_SHAPE_PATTERN;
     }
 
     public static asUsePattern(object: SvgElement): object is SvgUsePattern {
         return object.instanceType === INSTANCE_TYPE.SVG_USE_PATTERN;
-    }
-
-    public static asShape(object: SvgElement): object is SvgShape {
-        return $util.hasBit(object.instanceType, INSTANCE_TYPE.SVG_SHAPE);
     }
 
     public static asImage(object: SvgElement): object is SvgImage {

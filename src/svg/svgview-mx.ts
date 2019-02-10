@@ -80,12 +80,12 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             const element = companion || this.element;
             const result: SvgAnimation[] = [];
             let groupId = 0;
-            function addAnimation(item: SvgAnimation, delay: number, value = '') {
-                if (value === '') {
+            function addAnimation(item: SvgAnimation, delay: number, name = '') {
+                if (name === '') {
                     groupId++;
                 }
                 item.delay = delay;
-                item.group = { id: groupId, name: value };
+                item.group = { id: groupId, name };
                 result.push(item);
             }
             for (let i = 0; i < element.children.length; i++) {
@@ -111,7 +111,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             case 'animateTransform':
                                 for (const time of times) {
                                     const animate = new SvgAnimateTransform(<SVGAnimateTransformElement> item);
-                                    if (SvgBuild.asShape(this) && this.path) {
+                                    if (SvgBuild.isShape(this) && this.path) {
                                         animate.transformFrom = this.path.draw(undefined, undefined, true);
                                     }
                                     addAnimation(animate, time);
@@ -197,7 +197,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                                     break;
                                                 case SVGTransform.SVG_TRANSFORM_SCALE:
                                                     name = 'scale';
-                                                    value = `${m.a} ${m.d}`;
+                                                    value = `${m.a} ${m.d} ${origin ? `${origin.x} ${origin.y}` : '0 0'}`;
                                                     if (origin && (transform.index !== 0 || origin.x !== 0 || origin.y !== 0)) {
                                                         transformOrigin = {
                                                             x: origin.x * (1 - m.a),

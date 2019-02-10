@@ -12,7 +12,9 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
             else {
                 const segment = SvgBuild.toNumberList(value);
                 if (segment.length === 1) {
-                    return [segment[0], 0, 0];
+                    segment[1] = 0;
+                    segment[2] = 0;
+                    return segment;
                 }
                 else if (segment.length === 3) {
                     return segment;
@@ -26,14 +28,19 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
     public static toScaleList(values: string[]) {
         const result = values.map(value => {
             if (value === '') {
-                return [1, 1];
+                return [1, 1, 0, 0];
             }
             else {
                 const segment = SvgBuild.toNumberList(value);
                 if (segment.length === 1) {
-                    return [segment[0], segment[0]];
+                    segment[1] = segment[0];
                 }
-                else if (segment.length === 2) {
+                if (segment.length === 2) {
+                    segment[2] = 0;
+                    segment[3] = 0;
+                    return segment;
+                }
+                else if (segment.length === 4) {
                     return segment;
                 }
                 return [];
@@ -50,7 +57,8 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
             else {
                 const segment = SvgBuild.toNumberList(value);
                 if (segment.length === 1) {
-                    return [segment[0], 0];
+                    segment[1] = 0;
+                    return segment;
                 }
                 else if (segment.length === 2) {
                     return segment;
@@ -69,7 +77,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
             else {
                 const segment = SvgBuild.toNumberList(value);
                 if (segment.length === 1) {
-                    return [segment[0]];
+                    return segment;
                 }
                 return [];
             }

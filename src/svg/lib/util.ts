@@ -321,7 +321,7 @@ export const TRANSFORM = {
                 return '0 0 0';
             case 'scale':
             case SVGTransform.SVG_TRANSFORM_SCALE:
-                return '1 1';
+                return '1 1 0 0';
             case 'skewX':
             case 'skewY':
             case SVGTransform.SVG_TRANSFORM_SKEWX:

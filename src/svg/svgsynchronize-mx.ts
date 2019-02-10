@@ -1729,13 +1729,15 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                             const animate = new SvgAnimateTransform();
                                             animate.attributeName = 'transform';
                                             animate.type = entries[0][1].keys().next().value as number;
-                                            animate.transformOrigin = [];
                                             for (let j = 0; j < entries.length; j++) {
                                                 const item = entries[j];
                                                 keySplines.push(interpolatorMap.get(item[0]) || '');
                                                 if (animate.type !== SVGTransform.SVG_TRANSFORM_ROTATE) {
                                                     const transformOrigin = transformOriginMap.get(item[0]);
                                                     if (transformOrigin) {
+                                                        if (animate.transformOrigin === undefined) {
+                                                            animate.transformOrigin = [];
+                                                        }
                                                         animate.transformOrigin[j] = transformOrigin;
                                                     }
                                                 }

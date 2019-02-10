@@ -68,14 +68,14 @@ declare global {
         class SvgBuild {
             public static isContainer(object: SvgElement): object is SvgGroup;
             public static isElement(object: SvgElement): object is SvgElement;
+            public static isShape(object: SvgElement): object is SvgShape;
             public static isAnimate(object: SvgAnimation): object is SvgAnimate;
             public static asSvg(object: SvgElement): object is Svg;
             public static asG(object: SvgElement): object is SvgG;
             public static asUseSymbol(object: SvgElement): object is SvgUseSymbol;
             public static asPattern(object: SvgElement): object is SvgPattern;
-            public static asShapePattern(object: SvgElement): object is SvgShapePattern;
+            public static isShapePattern(object: SvgElement): object is SvgShapePattern;
             public static asUsePattern(object: SvgElement): object is SvgUsePattern;
-            public static asShape(object: SvgElement): object is SvgShape;
             public static asImage(object: SvgElement): object is SvgImage;
             public static asUse(object: SvgElement): object is SvgUse;
             public static asSet(object: SvgAnimation): boolean;
