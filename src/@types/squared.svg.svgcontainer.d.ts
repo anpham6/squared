@@ -59,9 +59,9 @@ declare global {
             readonly patternHeight: number;
             readonly tileWidth: number;
             readonly tileHeight: number;
-            patternRefitX(value: number): void;
-            patternRefitY(value: number): void;
-            patternRefitPoints(values: SvgPoint[]): void;
+            patternRefitX(value: number): number;
+            patternRefitY(value: number): number;
+            patternRefitPoints(values: SvgPoint[]): SvgPoint[];
         }
 
         interface SvgUsePattern extends SvgShapePattern, SvgViewRect {

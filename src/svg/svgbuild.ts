@@ -1,7 +1,7 @@
 import { SvgPathCommand, SvgPoint, SvgTransform } from './@types/object';
 
 import { INSTANCE_TYPE } from './lib/constant';
-import { MATRIX, TRANSFORM, getRadiusY, truncateDecimal } from './lib/util';
+import { MATRIX, TRANSFORM, truncateDecimal } from './lib/util';
 
 type Svg = squared.svg.Svg;
 type SvgAnimate = squared.svg.SvgAnimate;
@@ -467,11 +467,11 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     case SVGTransform.SVG_TRANSFORM_ROTATE:
                         if (item.method.x) {
                             x1 -= origin.x;
-                            x2 = origin.x + getRadiusY(item.angle, origin.x);
+                            x2 = origin.x + MATRIX.distance(item.angle, origin.x);
                         }
                         if (item.method.y) {
                             y1 -= origin.y;
-                            y2 = origin.y + getRadiusY(item.angle, origin.y);
+                            y2 = origin.y + MATRIX.distance(item.angle, origin.y);
                         }
                         break;
                 }

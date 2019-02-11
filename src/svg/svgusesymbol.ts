@@ -1,4 +1,4 @@
-import { SvgTransformExclusions, SvgTransformResidual } from './@types/object';
+import { SvgTransformExclude, SvgTransformResidual } from './@types/object';
 
 import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgPaint$MX from './svgpaint-mx';
@@ -19,9 +19,9 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewR
         super(element);
     }
 
-    public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
+    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual) {
         this.setRect();
-        super.build(exclusions, residual, this.symbolElement);
+        super.build(exclude, residual, this.symbolElement);
         const x = this.getBaseValue('x', 0);
         const y = this.getBaseValue('y', 0);
         if (x !== 0 || y !== 0) {
@@ -32,7 +32,7 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewR
     }
 
     public synchronize(useKeyTime = 0) {
-        if (this.animation.length) {
+        if (this.animations.length) {
             this.mergeAnimations(this.getAnimateViewRect(), this.getAnimateTransform(), useKeyTime);
         }
         super.synchronize(useKeyTime);

@@ -7,10 +7,10 @@ const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 export default class SvgAnimation implements squared.svg.SvgAnimation {
+    public element: SVGAnimationElement | null = null;
     public attributeName = '';
     public paused = false;
     public synchronizeState = 0;
-    public element?: SVGAnimationElement;
     public parent?: squared.svg.SvgView | squared.svg.SvgPath;
     public baseFrom?: string;
 
@@ -24,12 +24,12 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
             this.element = element;
             this.setAttribute('attributeName');
             this.setAttribute('to');
-            const dur = this.getAttribute('dur');
+            const dur = $dom.getNamedItem(element, 'dur');
             if (dur !== '' && dur !== 'indefinite') {
                 this.duration = convertClockTime(dur);
             }
             if (this.attributeName === 'transform') {
-                this.baseFrom = TRANSFORM.valueAsInitial(this.getAttribute('type'));
+                this.baseFrom = TRANSFORM.typeAsValue($dom.getNamedItem(element, 'type'));
             }
             else if (element.parentElement) {
                 this.baseFrom = $util.optionalAsString(element.parentElement, `${this.attributeName}.baseVal.valueAsString`) || $dom.cssInheritAttribute(element.parentElement, this.attributeName);
@@ -38,7 +38,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     public setAttribute(attr: string, equality?: string) {
-        const value = this.getAttribute(attr);
+        const value = $dom.getNamedItem(this.element, attr);
         if (value !== '') {
             if (equality !== undefined) {
                 this[attr + $util.capitalize(equality)] = value === equality;
@@ -47,11 +47,6 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
                 this[attr] = value;
             }
         }
-    }
-
-    public getAttribute(attr: string) {
-        const item = this.element && this.element.attributes.getNamedItem(attr);
-        return item ? item.value.trim() : '';
     }
 
     public addState(...values: number[]) {

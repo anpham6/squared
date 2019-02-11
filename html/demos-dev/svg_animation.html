@@ -11,21 +11,21 @@
         }
         #animate {
             animation-name: zorro1, zorro2, zorro1;
-            animation-delay: 1s, 4s, 15s;
-            animation-duration: 3s, 10s, 5s;
+            animation-delay: 4s, 2s, 3s;
+            animation-duration: 15s, 10s, 5s;
             animation-iteration-count: 1, 1, 1;
             animation-direction: reverse, normal, alternate-reverse;
             animation-timing-function: linear, linear, linear;
-            animation-fill-mode: none, backwards, none;
+            animation-fill-mode: none, forwards, none;
         }
         #rotate {
-            animation-name: rotate1, rotate2, rotate3;
+            animation-name: rotate2;
             animation-delay: 6s, 2s, 3s;
             animation-duration: 3s, 5s, 5s;
             animation-iteration-count: 2, 1, 1;
             animation-direction: alternate-reverse, reverse, normal;
             animation-timing-function: ease-in, ease-out, linear;
-            animation-fill-mode: backwards, forwards, none;
+            animation-fill-mode: none, forwards, none;
         }
         #opacity-step {
             animation: opacity 5s steps(5, start) forwards;
@@ -46,18 +46,15 @@
         @keyframes zorro2 {
             from {
                 x: 75;
-                y: 75;
             }
             33% {
                 x: 150;
-                y: 75;
             }
             66% {
                 x: 75;
             }
             to {
                 x: 150;
-                y: 75;
             }
         }
         @keyframes rotate1 {
@@ -77,15 +74,19 @@
         @keyframes rotate2 {
             from {
                 transform: scale(1);
+                transform-origin: 10px center;
             }
             33% {
                 transform: scale(1.5);
+                transform-origin: 10% bottom;
             }
             66% {
                 transform: scale(2);
+                transform-origin: center 10%;
             }
             to {
                 transform: scale(2.5);
+                transform-origin: center;
             }
         }
         @keyframes rotate3 {

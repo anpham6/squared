@@ -1,4 +1,4 @@
-import { SvgTransformExclusions, SvgTransformResidual } from './@types/object';
+import { SvgTransformExclude, SvgTransformResidual } from './@types/object';
 
 import SvgView$MX from './svgview-mx';
 import SvgAnimation from './svganimation';
@@ -14,11 +14,11 @@ export default class SvgPattern extends SvgView$MX(SvgContainer) implements squa
         super(element);
     }
 
-    public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
-        super.build(exclusions, residual, this.patternElement);
+    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual) {
+        super.build(exclude, residual, this.patternElement);
     }
 
-    get animation(): SvgAnimation[] {
+    get animations(): SvgAnimation[] {
         return [];
     }
 

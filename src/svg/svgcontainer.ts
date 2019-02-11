@@ -1,4 +1,4 @@
-import { SvgAspectRatio, SvgPoint, SvgTransformExclusions, SvgTransformResidual } from './@types/object';
+import { SvgAspectRatio, SvgPoint, SvgTransformExclude, SvgTransformResidual } from './@types/object';
 
 import SvgBuild from './svgbuild';
 
@@ -61,7 +61,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         return super.append(item);
     }
 
-    public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual, element?: Element) {
+    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, element?: Element) {
         if (element === undefined) {
             element = this.element;
         }
@@ -118,7 +118,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
             }
             if (svg) {
                 this.append(svg, viewport);
-                svg.build(exclusions, residual);
+                svg.build(exclude, residual);
             }
         }
         if (SvgBuild.asSvg(this) && this.documentRoot) {

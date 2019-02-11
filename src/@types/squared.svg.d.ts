@@ -8,8 +8,8 @@ declare global {
             visible: boolean;
             transformed: SvgTransform[] | null;
             translationOffset?: Point;
-            readonly transform: SvgTransform[];
-            readonly animation: SvgAnimation[];
+            readonly transforms: SvgTransform[];
+            readonly animations: SvgAnimation[];
             getTransforms(companion?: SVGGraphicsElement): SvgTransform[];
             getAnimations(companion?: SVGGraphicsElement): SvgAnimation[];
         }

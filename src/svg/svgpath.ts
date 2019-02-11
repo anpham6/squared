@@ -1,19 +1,22 @@
-import { SvgPoint, SvgTransform, SvgTransformExclusions, SvgTransformResidual } from './@types/object';
+import { SvgPoint, SvgTransform, SvgTransformExclude, SvgTransformResidual } from './@types/object';
 
 import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgPaint$MX from './svgpaint-mx';
 import SvgElement from './svgelement';
 import SvgBuild from './svgbuild';
 
-import { INSTANCE_TYPE, PATTERN_UNIT } from './lib/constant';
+import { INSTANCE_TYPE, REGION_UNIT } from './lib/constant';
 import { SVG, TRANSFORM } from './lib/util';
 
 type SvgContainer = squared.svg.SvgContainer;
 type SvgShapePattern = squared.svg.SvgShapePattern;
 
 export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) implements squared.svg.SvgPath {
-    public static build(path: SvgPath, transforms: SvgTransform[], exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
-        path.draw(SvgBuild.filterTransforms(transforms, exclusions && exclusions[path.element.tagName]), residual);
+    public static build(path: SvgPath, transforms: SvgTransform[], exclude?: SvgTransformExclude, residual?: SvgTransformResidual) {
+        if (exclude && exclude[path.element.tagName]) {
+            transforms = SvgBuild.filterTransforms(transforms, exclude[path.element.tagName]);
+        }
+        path.draw(transforms, residual);
         return path;
     }
 
@@ -48,7 +51,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     public transformed: SvgTransform[] | null = null;
     public transformResidual?: SvgTransform[][];
 
-    private _transform?: SvgTransform[];
+    private _transforms?: SvgTransform[];
 
     constructor(public readonly element: SVGGraphicsElement) {
         super(element);
@@ -63,7 +66,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         const patternParent = <SvgShapePattern> this.patternParent;
         const element = this.element;
         const requireRefit = !!parent && parent.requireRefit();
-        const requirePatternRefit = !!this.patternParent && this.patternParent.patternContentUnits === PATTERN_UNIT.OBJECT_BOUNDING_BOX;
+        const requirePatternRefit = !!this.patternParent && this.patternParent.patternContentUnits === REGION_UNIT.OBJECT_BOUNDING_BOX;
         let d = '';
         if (SVG.path(element)) {
             d = this.getBaseValue('d');
@@ -255,11 +258,11 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         }
     }
 
-    get transform() {
-        if (this._transform === undefined) {
-            this._transform = TRANSFORM.parse(this.element) || SvgBuild.convertTransforms(this.element.transform.baseVal);
+    get transforms() {
+        if (this._transforms === undefined) {
+            this._transforms = SvgBuild.filterTransforms(TRANSFORM.parse(this.element) || SvgBuild.convertTransforms(this.element.transform.baseVal));
         }
-        return this._transform;
+        return this._transforms;
     }
 
     get instanceType() {

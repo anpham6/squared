@@ -1,12 +1,12 @@
-import { SvgTransformExclusions } from '../../../src/svg/@types/object';
+import { SvgTransformExclude } from '../../../src/svg/@types/object';
 
 export interface ConstraintGuidelineOptions {
     circlePosition: boolean;
 }
 
 export interface ResourceSvgOptions {
-    excludeFromTransform: SvgTransformExclusions;
-    vectorAnimateInterpolator: string;
+    transformExclude: SvgTransformExclude;
+    animateInterpolator: string;
 }
 
 export interface ResourceBackgroundOptions {

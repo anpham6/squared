@@ -76,15 +76,8 @@ export function convertCamelCase(value: string, char = '-') {
     return value;
 }
 
-export function convertWord(value: string, replaceDash = false) {
-    if (value) {
-        value = value.replace(/[^\w]/g, '_').trim();
-        if (replaceDash) {
-            value = value.replace(/-/g, '_');
-        }
-        return value;
-    }
-    return '';
+export function convertWord(value: string, includeDash = false) {
+    return value ? (includeDash ? value.replace(/[^a-zA-Z\d]+/g, '_') : value.replace(/[^\w]+/g, '_')).trim() : '';
 }
 
 export function convertInt(value: string) {
@@ -95,7 +88,15 @@ export function convertFloat(value: string) {
     return value && parseFloat(value) || 0;
 }
 
-export function convertPX(value: string, dpi: number, fontSize: number): string {
+export function convertRadian(angle: number) {
+    return angle * Math.PI / 180;
+}
+
+export function convertPercent(value: number, precision = 0) {
+    return value < 1 ? `${precision === 0 ? Math.round(value * 100) : parseFloat((value * 100).toFixed(precision))}%` : `100%`;
+}
+
+export function convertPX(value: string, dpi: number, fontSize: number) {
     if (value) {
         if (isNumber(value)) {
             return `${value}px`;
@@ -145,8 +146,13 @@ export function convertPX(value: string, dpi: number, fontSize: number): string 
     return '0px';
 }
 
-export function convertPercent(value: number, precision = 0) {
-    return value < 1 ? `${precision === 0 ? Math.round(value * 100) : parseFloat((value * 100).toFixed(precision))}%` : `100%`;
+export function convertPercentPX(value: string, dimension: number, dpi: number, fontSize: number, percent = false) {
+    if (percent) {
+        return isPercent(value) ? convertFloat(value) / 100 : parseFloat(convertPX(value, dpi, fontSize)) / dimension;
+    }
+    else {
+        return isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseFloat(convertPX(value, dpi, fontSize));
+    }
 }
 
 export function convertAlpha(value: number) {

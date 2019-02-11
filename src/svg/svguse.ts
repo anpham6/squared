@@ -1,4 +1,4 @@
-import { SvgTransformExclusions, SvgTransformResidual } from './@types/object';
+import { SvgTransformExclude, SvgTransformResidual } from './@types/object';
 
 import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgPaint$MX from './svgpaint-mx';
@@ -9,8 +9,8 @@ import SvgShape from './svgshape';
 import { INSTANCE_TYPE } from './lib/constant';
 
 export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgShape))) implements squared.svg.SvgUse {
-    private __get_transform = false;
-    private __get_animation = false;
+    private __get_transforms = false;
+    private __get_animations = false;
 
     constructor(
         public readonly element: SVGUseElement,
@@ -25,34 +25,34 @@ export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(Svg
         this.path.useParent = this;
     }
 
-    public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
-        super.build(exclusions, residual);
+    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual) {
+        super.build(exclude, residual);
         this.setPaint(this.path ? [this.path.value] : undefined);
     }
 
     public synchronize(useKeyTime = 0) {
-        if (this.animation.length) {
+        if (this.animations.length) {
             this.mergeAnimations(this.getAnimateViewRect(), this.getAnimateTransform(), useKeyTime);
         }
         super.synchronize(useKeyTime, this.shapeElement);
     }
 
-    get transform() {
-        const transform = super.transform;
-        if (!this.__get_transform) {
-            transform.push(...this.getTransforms(this.shapeElement));
-            this.__get_transform = true;
+    get transforms() {
+        const transforms = super.transforms;
+        if (!this.__get_transforms) {
+            transforms.push(...this.getTransforms(this.shapeElement));
+            this.__get_transforms = true;
         }
-        return transform;
+        return transforms;
     }
 
-    get animation() {
-        const animation = super.animation;
-        if (!this.__get_animation) {
-            animation.push(...this.getAnimations(this.shapeElement));
-            this.__get_animation = true;
+    get animations() {
+        const animations = super.animations;
+        if (!this.__get_animations) {
+            animations.push(...this.getAnimations(this.shapeElement));
+            this.__get_animations = true;
         }
-        return animation;
+        return animations;
     }
 
     get instanceType() {

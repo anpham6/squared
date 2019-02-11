@@ -16,6 +16,14 @@ const $xml = squared.lib.xml;
 
 const STORED = $Resource.STORED as ResourceStoredMapAndroid;
 
+function getDistanceToX(angle: number, length: number) {
+    return length * Math.sin($util.convertRadian(angle));
+}
+
+function getDistanceToY(angle: number, length: number) {
+    return length * Math.cos($util.convertRadian(angle)) * -1;
+}
+
 function getRadiusPercent(value: string) {
     return $util.isPercent(value) ? parseInt(value) / 100 : 0.5;
 }
@@ -131,13 +139,10 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                         if (hasStop) {
                             const x = Math.round(node.bounds.width / 2);
                             const y = Math.round(node.bounds.height / 2);
-                            const util = squared.svg.lib.util;
-                            if (util) {
-                                gradient.startX = Math.round(util.getRadiusX(linear.angle + 180, x) + x).toString();
-                                gradient.startY = Math.round(util.getRadiusY(linear.angle + 180, y) + y).toString();
-                                gradient.endX = Math.round(util.getRadiusX(linear.angle, x) + x).toString();
-                                gradient.endY = Math.round(util.getRadiusY(linear.angle, y) + y).toString();
-                            }
+                            gradient.startX = Math.round(getDistanceToX(linear.angle + 180, x) + x).toString();
+                            gradient.startY = Math.round(getDistanceToY(linear.angle + 180, y) + y).toString();
+                            gradient.endX = Math.round(getDistanceToX(linear.angle, x) + x).toString();
+                            gradient.endY = Math.round(getDistanceToY(linear.angle, y) + y).toString();
                         }
                         else {
                             gradient.angle = (Math.floor(linear.angle / 45) * 45).toString();

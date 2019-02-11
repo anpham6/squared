@@ -72,7 +72,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             const height = boxRect.bottom - boxRect.top;
                             const parent = this.parent;
                             function convertUnit(value: string, index: number) {
-                                return $dom.convertClientUnit(value, index === 0 ? width : height, dpi, fontSize);
+                                return $util.convertPercentPX(value, index === 0 ? width : height, dpi, fontSize);
                             }
                             switch (name) {
                                 case 'inset': {

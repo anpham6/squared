@@ -1,4 +1,4 @@
-import { SvgPoint, SvgTransformExclusions, SvgTransformResidual } from './@types/object';
+import { SvgPoint, SvgTransformExclude, SvgTransformResidual } from './@types/object';
 
 import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgPaint$MX from './svgpaint-mx';
@@ -9,7 +9,8 @@ import SvgShape from './svgshape';
 import SvgPath from './svgpath';
 import SvgPattern from './svgpattern';
 
-import { INSTANCE_TYPE, PATTERN_UNIT } from './lib/constant';
+import { INSTANCE_TYPE, REGION_UNIT } from './lib/constant';
+import { TRANSFORM } from './lib/util';
 
 const $util = squared.lib.util;
 
@@ -23,6 +24,8 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
     public readonly patternUnits: number;
     public readonly patternContentUnits: number;
 
+    private __get_transforms = false;
+
     constructor(
         public element: SVGGraphicsElement,
         public readonly patternElement: SVGPatternElement)
@@ -30,15 +33,15 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
         super(element);
         const units = this.patternElement.attributes.getNamedItem('patternUnits');
         const contentUnits = this.patternElement.attributes.getNamedItem('patternContentUnits');
-        this.patternUnits = units && units.value === 'userSpaceOnUse' ? PATTERN_UNIT.USER_SPACE_ON_USE : PATTERN_UNIT.OBJECT_BOUNDING_BOX;
-        this.patternContentUnits = contentUnits && contentUnits.value === 'objectBoundingBox' ? PATTERN_UNIT.OBJECT_BOUNDING_BOX : PATTERN_UNIT.USER_SPACE_ON_USE;
+        this.patternUnits = units && units.value === 'userSpaceOnUse' ? REGION_UNIT.USER_SPACE_ON_USE : REGION_UNIT.OBJECT_BOUNDING_BOX;
+        this.patternContentUnits = contentUnits && contentUnits.value === 'objectBoundingBox' ? REGION_UNIT.OBJECT_BOUNDING_BOX : REGION_UNIT.USER_SPACE_ON_USE;
     }
 
-    public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual, element?: SVGGraphicsElement) {
+    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, element?: SVGGraphicsElement) {
         if (element === undefined) {
             element = this.element;
         }
-        const path = SvgPath.build(new SvgPath(element), this.transform, exclusions);
+        const path = SvgPath.build(new SvgPath(element), [], exclude);
         if (path.value) {
             this.clipRegion = path.value;
             if (path.clipPath) {
@@ -47,7 +50,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
             const d = [path.value];
             this.setPaint(d);
             this.drawRegion = SvgBuild.toBoxRect(d);
-            const boundingBox = this.patternUnits === PATTERN_UNIT.OBJECT_BOUNDING_BOX;
+            const boundingBox = this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX;
             const patternWidth = this.patternWidth;
             const patternHeight = this.patternHeight;
             const tileWidth = this.tileWidth;
@@ -74,21 +77,21 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                 do {
                     const x = boundingX + i * tileWidth - offsetX;
                     const pattern = new SvgPattern(element, this.patternElement);
-                    pattern.build(exclusions, residual);
-                    pattern.cascade().forEach(item => {
+                    pattern.build(exclude, residual);
+                    for (const item of pattern.cascade()) {
                         if (SvgBuild.isShape(item) && item.path) {
                             item.path.patternParent = this;
-                            if (this.patternContentUnits === PATTERN_UNIT.OBJECT_BOUNDING_BOX) {
+                            if (this.patternContentUnits === REGION_UNIT.OBJECT_BOUNDING_BOX) {
                                 item.path.refitBaseValue(x / patternWidth, y / patternHeight);
                             }
                             else {
                                 item.path.refitBaseValue(x, y);
                             }
-                            SvgPath.build(<SvgPath> item.path, item.transform, exclusions, residual);
+                            SvgPath.build(<SvgPath> item.path, item.transforms, exclude, residual);
                             item.path.fillOpacity = (parseFloat(item.path.fillOpacity) * parseFloat(this.fillOpacity)).toString();
                             item.path.clipPath = SvgBuild.drawRect(tileWidth, tileHeight, x, y) + (item.path.clipPath !== '' ? `;${item.path.clipPath}` : '');
                         }
-                    });
+                    }
                     this.append(pattern);
                     remainingWidth -= tileWidth;
                     i++;
@@ -110,15 +113,15 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
     }
 
     public patternRefitX(value: number) {
-        return this.patternContentUnits === PATTERN_UNIT.OBJECT_BOUNDING_BOX && this.drawRegion ? value * this.patternWidth : value;
+        return this.drawRegion ? value * this.patternWidth : value;
     }
 
     public patternRefitY(value: number) {
-        return this.patternContentUnits === PATTERN_UNIT.OBJECT_BOUNDING_BOX && this.drawRegion ? value * this.patternHeight : value;
+        return this.drawRegion ? value * this.patternHeight : value;
     }
 
     public patternRefitPoints(values: SvgPoint[]) {
-        if (this.patternContentUnits === PATTERN_UNIT.OBJECT_BOUNDING_BOX) {
+        if (this.drawRegion) {
             const x = this.patternWidth;
             const y = this.patternHeight;
             for (const pt of values) {
@@ -137,6 +140,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                 }
             }
         }
+        return values;
     }
 
     get patternWidth() {
@@ -147,9 +151,48 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
         return this.drawRegion ? this.drawRegion.bottom - this.drawRegion.top : 0;
     }
 
+    get transforms() {
+        if (!this.__get_transforms) {
+            const transforms = SvgBuild.convertTransforms(this.patternElement.patternTransform.baseVal);
+            if (transforms.length) {
+                const origin = {
+                    x: this.patternWidth / 2,
+                    y: this.patternHeight / 2,
+                };
+                const rotateOrigin = TRANSFORM.rotateOrigin(this.patternElement, 'patternTransform');
+                for (const item of transforms) {
+                    switch (item.type) {
+                        case SVGTransform.SVG_TRANSFORM_TRANSLATE:
+                            break;
+                        case SVGTransform.SVG_TRANSFORM_ROTATE:
+                            while (rotateOrigin.length) {
+                                const pt = <SvgPoint> rotateOrigin.shift();
+                                if (pt.angle === item.angle) {
+                                    item.origin = {
+                                        x: pt.x + origin.x,
+                                        y: pt.y + origin.y
+                                    };
+                                    break;
+                                }
+                            }
+                            if (item.origin) {
+                                continue;
+                            }
+                        default:
+                            item.origin = origin;
+                            break;
+                    }
+                }
+                super.transforms.push(...SvgBuild.filterTransforms(transforms));
+            }
+            this.__get_transforms = true;
+        }
+        return super.transforms;
+    }
+
     get offsetX() {
         let value: number | undefined;
-        if (this.patternUnits === PATTERN_UNIT.OBJECT_BOUNDING_BOX) {
+        if (this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX) {
             value = this.patternWidth * getPercent(this.patternElement.x.baseVal.valueAsString);
         }
         return value || this.patternElement.x.baseVal.value;
@@ -157,7 +200,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
 
     get offsetY() {
         let value: number | undefined;
-        if (this.patternUnits === PATTERN_UNIT.OBJECT_BOUNDING_BOX) {
+        if (this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX) {
             value = this.patternHeight * getPercent(this.patternElement.y.baseVal.valueAsString);
         }
         return value || this.patternElement.y.baseVal.value;
@@ -165,7 +208,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
 
     get tileWidth() {
         let value: number | undefined;
-        if (this.patternUnits === PATTERN_UNIT.OBJECT_BOUNDING_BOX) {
+        if (this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX) {
             value = this.patternWidth * getPercent(this.patternElement.width.baseVal.valueAsString);
         }
         return value || this.patternElement.width.baseVal.value;
@@ -173,7 +216,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
 
     get tileHeight() {
         let value: number | undefined;
-        if (this.patternUnits === PATTERN_UNIT.OBJECT_BOUNDING_BOX) {
+        if (this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX) {
             value = this.patternHeight * getPercent(this.patternElement.height.baseVal.valueAsString);
         }
         return value || this.patternElement.height.baseVal.value;

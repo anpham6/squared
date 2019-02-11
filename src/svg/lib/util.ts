@@ -58,6 +58,9 @@ export const MATRIX = {
     applyY(matrix: SvgMatrix | DOMMatrix, x: number, y: number) {
         return matrix.b * x + matrix.d * y + matrix.f;
     },
+    distance(angle: number, value: number) {
+        return value * Math.cos(convertRadian(angle)) * -1;
+    },
     clone(matrix: SvgMatrix | DOMMatrix) {
         return {
             a: matrix.a,
@@ -225,11 +228,10 @@ export const TRANSFORM = {
         return undefined;
     },
     origin(element: SVGElement, value?: string) {
-        const result: Nullable<Point> = {
-            x: null,
-            y: null
-        };
-        value = value || $dom.cssAttribute(element, 'transform-origin');
+        if (value === undefined) {
+            value = $dom.cssAttribute(element, 'transform-origin');
+        }
+        const result: Nullable<Point> = { x: null, y: null };
         if (value !== '') {
             const viewBox = getNearestViewBox(element);
             let width!: number;
@@ -240,7 +242,7 @@ export const TRANSFORM = {
             }
             else {
                 const parent = element.parentElement;
-                if (parent instanceof SVGGraphicsElement && parent.viewportElement && (SVG.svg(parent.viewportElement) || SVG.symbol(parent.viewportElement)) && parent.viewportElement.viewBox) {
+                if (parent instanceof SVGGraphicsElement && parent.viewportElement && (SVG.svg(parent.viewportElement) || SVG.symbol(parent.viewportElement))) {
                     width = parent.viewportElement.viewBox.baseVal.width;
                     height = parent.viewportElement.viewBox.baseVal.height;
                 }
@@ -298,24 +300,42 @@ export const TRANSFORM = {
         result.y = result.y || 0;
         return <Point> result;
     },
-    rotate(element: SVGElement): SvgPoint[] {
+    rotateOrigin(element: SVGElement, attr = 'transform'): SvgPoint[] {
+        const value = $dom.getNamedItem(element, attr);
         const result: SvgPoint[] = [];
-        const transform = element.attributes.getNamedItem('transform');
-        if (transform) {
+        if (value !== '') {
             const pattern = /rotate\((-?[\d.]+),?\s*(-?[\d.]+),?\s*(-?[\d.]+)\)/g;
             let match: RegExpExecArray | null;
-            while ((match = pattern.exec(transform.value)) !== null) {
-                result.push({
-                    angle: parseFloat(match[1]),
-                    x: parseFloat(match[2]),
-                    y: parseFloat(match[3])
-                });
+            while ((match = pattern.exec(value)) !== null) {
+                const angle = parseFloat(match[1]);
+                if (angle !== 0) {
+                    result.push({
+                        angle,
+                        x: parseFloat(match[2]),
+                        y: parseFloat(match[3])
+                    });
+                }
             }
         }
-        return result.length ? result : [{ angle: 0, x: 0, y: 0 }];
+        return result;
     },
-    valueAsInitial(value: string | number) {
-        switch (value) {
+    typeAsName(type: number) {
+        switch (type) {
+            case SVGTransform.SVG_TRANSFORM_ROTATE:
+                return 'rotate';
+            case SVGTransform.SVG_TRANSFORM_SCALE:
+                return 'scale';
+            case SVGTransform.SVG_TRANSFORM_SKEWX:
+                return 'skewX';
+            case SVGTransform.SVG_TRANSFORM_SKEWY:
+                return 'skewY';
+            case SVGTransform.SVG_TRANSFORM_TRANSLATE:
+                return 'translate';
+        }
+        return '';
+    },
+    typeAsValue(type: string | number) {
+        switch (type) {
             case 'rotate':
             case SVGTransform.SVG_TRANSFORM_ROTATE:
                 return '0 0 0';
@@ -330,21 +350,6 @@ export const TRANSFORM = {
             case 'translate':
             case SVGTransform.SVG_TRANSFORM_TRANSLATE:
                 return '0 0';
-        }
-        return '';
-    },
-    typeAsName(value: number) {
-        switch (value) {
-            case SVGTransform.SVG_TRANSFORM_ROTATE:
-                return 'rotate';
-            case SVGTransform.SVG_TRANSFORM_SCALE:
-                return 'scale';
-            case SVGTransform.SVG_TRANSFORM_SKEWX:
-                return 'skewX';
-            case SVGTransform.SVG_TRANSFORM_SKEWY:
-                return 'skewY';
-            case SVGTransform.SVG_TRANSFORM_TRANSLATE:
-                return 'translate';
         }
         return '';
     }
@@ -408,7 +413,7 @@ export function getHostDPI() {
     return $util.optionalAsNumber(squared, 'settings.resolutionDPI') || 96;
 }
 
-export function getFontSize(element: SVGElement) {
+export function getFontSize(element: SVGElement | null) {
     return parseInt($dom.getStyle(element).fontSize || '16');
 }
 
@@ -481,9 +486,9 @@ export function setOpacity(element: SVGGraphicsElement, value: string) {
 }
 
 export function getTargetElement(element: Element, rootElement?: SVGElement) {
-    const href = element.attributes.getNamedItem('href');
-    if (href && href.value.charAt(0) === '#') {
-        const id = href.value.substring(1);
+    const value = $dom.getNamedItem(element, 'href');
+    if (value.charAt(0) === '#') {
+        const id = value.substring(1);
         let parent: SVGElement | HTMLElement | null;
         if (rootElement === undefined) {
             parent = element.parentElement;
@@ -513,8 +518,8 @@ export function getTargetElement(element: Element, rootElement?: SVGElement) {
 
 export function getNearestViewBox(element: SVGElement) {
     let current = element.parentElement;
-    while (current && current instanceof SVGElement) {
-        if (SVG.svg(current) || SVG.symbol(current) && current.viewBox && current.viewBox.baseVal.width > 0 && current.viewBox.baseVal.height > 0) {
+    while (current) {
+        if ((SVG.svg(current) || SVG.symbol(current)) && current.viewBox && current.viewBox.baseVal.width > 0 && current.viewBox.baseVal.height > 0) {
             return current.viewBox.baseVal;
         }
         current = current.parentElement;
@@ -569,12 +574,4 @@ export function getLeastCommonMultiple(values: number[], offset?: number[]) {
         return result;
     }
     return values[0];
-}
-
-export function getRadiusX(angle: number, radius: number) {
-    return radius * Math.sin(convertRadian(angle));
-}
-
-export function getRadiusY(angle: number, radius: number) {
-    return radius * Math.cos(convertRadian(angle)) * -1;
 }

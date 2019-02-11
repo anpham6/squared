@@ -1,4 +1,4 @@
-import { SvgAnimationGroupOrder } from './@types/object';
+import { SvgAnimateAttribute } from './@types/object';
 
 import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
@@ -7,6 +7,7 @@ import { FILL_MODE, INSTANCE_TYPE, KEYSPLINE_NAME } from './lib/constant';
 import { convertClockTime, getFontSize, getHostDPI, getSplitValue, sortNumber } from './lib/util';
 
 const $color = squared.lib.color;
+const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 function invertControlPoint(value: number) {
@@ -147,11 +148,11 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     private _keySplines?: string[];
     private _repeatDuration = -1;
 
-    constructor(public element?: SVGAnimateElement) {
+    constructor(element?: SVGAnimateElement) {
         super(element);
         if (element) {
-            const values = this.getAttribute('values');
-            const keyTimes = this.duration !== -1 ? SvgAnimate.toFractionList(this.getAttribute('keyTimes')) : [];
+            const values = $dom.getNamedItem(element, 'values');
+            const keyTimes = this.duration !== -1 ? SvgAnimate.toFractionList($dom.getNamedItem(element, 'keyTimes')) : [];
             if (values !== '') {
                 this.values = $util.flatMap(values.split(';'), value => value.trim());
                 if (this.values.length > 1 && keyTimes.length === this.values.length) {
@@ -165,9 +166,9 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 }
             }
             else {
-                this.from = this.getAttribute('from');
+                this.from = $dom.getNamedItem(element, 'from');
                 if (this.to === '') {
-                    const by = this.getAttribute('by');
+                    const by = $dom.getNamedItem(element, 'by');
                     if ($util.isNumber(by)) {
                         if (this.from === '' && this.baseFrom) {
                             this.from = this.baseFrom;
@@ -180,11 +181,11 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 this.convertToValues(keyTimes);
             }
             this.setAttribute('additive', 'sum');
-            const repeatDur = this.getAttribute('repeatDur');
+            const repeatDur = $dom.getNamedItem(element, 'repeatDur');
             if (repeatDur !== '' && repeatDur !== 'indefinite') {
                 this._repeatDuration = convertClockTime(repeatDur);
             }
-            const repeatCount = this.getAttribute('repeatCount');
+            const repeatCount = $dom.getNamedItem(element, 'repeatCount');
             this.iterationCount = repeatCount === 'indefinite' ? -1 : parseFloat(repeatCount);
             if (element.tagName === 'animate') {
                 this.setCalcMode(this.attributeName);
@@ -193,40 +194,38 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
 
     public setCalcMode(name: string) {
-        if (this.element) {
-            switch (this.getAttribute('calcMode')) {
-                case 'discrete': {
-                    if (this.keyTimes.length === 2 && this.keyTimes[0] === 0) {
-                        const keyTimes: number[] = [];
-                        const values: string[] = [];
-                        for (let i = 0; i < this.keyTimes.length - 1; i++) {
-                            const result = SvgAnimate.toStepFractionList(name, this.keyTimes, this.values, 'step-end', i, getHostDPI(), getFontSize(this.element));
-                            if (result) {
-                                keyTimes.push(...result[0]);
-                                values.push(...result[1]);
-                            }
+        switch ($dom.getNamedItem(this.element, 'calcMode')) {
+            case 'discrete': {
+                if (this.keyTimes.length === 2 && this.keyTimes[0] === 0) {
+                    const keyTimes: number[] = [];
+                    const values: string[] = [];
+                    for (let i = 0; i < this.keyTimes.length - 1; i++) {
+                        const result = SvgAnimate.toStepFractionList(name, this.keyTimes, this.values, 'step-end', i, getHostDPI(), getFontSize(this.element));
+                        if (result) {
+                            keyTimes.push(...result[0]);
+                            values.push(...result[1]);
                         }
-                        keyTimes.push(this.keyTimes.pop() as number);
-                        values.push(this.values.pop() as string);
-                        this.values = values;
-                        this.keyTimes = keyTimes;
-                        this._keySplines = [KEYSPLINE_NAME['step']];
                     }
-                    break;
+                    keyTimes.push(this.keyTimes.pop() as number);
+                    values.push(this.values.pop() as string);
+                    this.values = values;
+                    this.keyTimes = keyTimes;
+                    this._keySplines = [KEYSPLINE_NAME['step']];
                 }
-                case 'spline':
-                    this.keySplines = $util.flatMap(this.getAttribute('keySplines').split(';'), value => value.trim());
-                case 'linear':
-                    if (this.keyTimes[0] !== 0 && this.keyTimes[this.keyTimes.length - 1] !== 1) {
-                        const keyTimes: number[] = [];
-                        for (let i = 0; i < this.values.length; i++) {
-                            keyTimes.push(i / (this.values.length - 1));
-                        }
-                        this._keyTimes = keyTimes;
-                        this._keySplines = undefined;
-                    }
-                    break;
+                break;
             }
+            case 'spline':
+                this.keySplines = $util.flatMap($dom.getNamedItem(this.element, 'keySplines').split(';'), value => value.trim());
+            case 'linear':
+                if (this.keyTimes[0] !== 0 && this.keyTimes[this.keyTimes.length - 1] !== 1) {
+                    const keyTimes: number[] = [];
+                    for (let i = 0; i < this.values.length; i++) {
+                        keyTimes.push(i / (this.values.length - 1));
+                    }
+                    this._keyTimes = keyTimes;
+                    this._keySplines = undefined;
+                }
+                break;
         }
     }
 
@@ -237,7 +236,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         }
     }
 
-    public setGroupOrder(value: SvgAnimationGroupOrder[]) {
+    public setGroupOrder(value: SvgAnimateAttribute[]) {
         this.group.order = value;
         if (this.fillBackwards) {
             for (let i = value.length - 1, found = false; i >= 0; i--) {
@@ -274,20 +273,18 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
 
     set delay(value) {
         super.delay = value;
-        if (this.element) {
-            const end = this.getAttribute('end');
-            if (end !== '') {
-                const endTime = sortNumber(end.split(';').map(time => convertClockTime(time)))[0] as number | undefined;
-                if (endTime !== undefined && (this.iterationCount === -1 || this.duration > 0 && endTime < this.duration * this.iterationCount)) {
-                    if (this.delay > endTime) {
-                        this.end = endTime;
-                        if (this.iterationCount === -1) {
-                            this.iterationCount = Math.ceil((this.end - this.delay) / this.duration);
-                        }
+        const end = $dom.getNamedItem(this.element, 'end');
+        if (end !== '') {
+            const endTime = sortNumber(end.split(';').map(time => convertClockTime(time)))[0] as number | undefined;
+            if (endTime !== undefined && (this.iterationCount === -1 || this.duration > 0 && endTime < this.duration * this.iterationCount)) {
+                if (this.delay > endTime) {
+                    this.end = endTime;
+                    if (this.iterationCount === -1) {
+                        this.iterationCount = Math.ceil((this.end - this.delay) / this.duration);
                     }
-                    else {
-                        this.duration = -1;
-                    }
+                }
+                else {
+                    this.duration = -1;
                 }
             }
         }
@@ -309,14 +306,12 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
 
     set iterationCount(value) {
         this._iterationCount = isNaN(value) ? 1 : value;
-        if (this.element) {
-            this.fillFreeze = this.iterationCount !== -1 && this.getAttribute('fill') === 'freeze';
-            if (this.iterationCount !== 1) {
-                this.setAttribute('accumulate', 'sum');
-            }
-            else {
-                this.accumulateSum = false;
-            }
+        this.fillFreeze = this.iterationCount !== -1 && $dom.getNamedItem(this.element, 'fill') === 'freeze';
+        if (this.iterationCount !== 1) {
+            this.setAttribute('accumulate', 'sum');
+        }
+        else {
+            this.accumulateSum = false;
         }
     }
     get iterationCount() {

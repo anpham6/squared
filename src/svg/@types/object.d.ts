@@ -74,7 +74,7 @@ export interface SvgPoint extends Point {
     angle?: number;
 }
 
-export interface SvgTransformExclusions {
+export interface SvgTransformExclude {
     path?: number[];
     line?: number[];
     rect?: number[];
@@ -85,19 +85,19 @@ export interface SvgTransformExclusions {
     image?: number[];
 }
 
+export type SvgTransformResidual = (e: SVGGraphicsElement, t: SvgTransform[], rx?: number, ry?: number) => [SvgTransform[][], SvgTransform[]];
+
 export interface SvgAnimationGroup {
     id: number;
     name: string;
-    order?: SvgAnimationGroupOrder[];
+    order?: SvgAnimateAttribute[];
 }
 
-export type SvgAnimationGroupOrder = {
+export interface SvgAnimateAttribute {
     name: string;
     paused: boolean;
     delay: number;
     duration: number;
     iterationCount: string;
     fillMode: string;
-};
-
-export type SvgTransformResidual = (e: SVGGraphicsElement, t: SvgTransform[], rx?: number, ry?: number) => [SvgTransform[][], SvgTransform[]];
+}

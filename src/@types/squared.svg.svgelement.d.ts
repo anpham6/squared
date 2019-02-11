@@ -1,4 +1,4 @@
-import { SvgTransformExclusions, SvgTransformResidual } from '../svg/@types/object';
+import { SvgTransformExclude, SvgTransformResidual } from '../svg/@types/object';
 
 declare global {
     namespace squared.svg {
@@ -7,7 +7,7 @@ declare global {
             parent?: SvgContainer;
             readonly element: SVGGraphicsElement;
             readonly instanceType: number;
-            build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual, element?: Element): void;
+            build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, element?: Element): void;
             synchronize(useKeyTime?: number): void;
         }
 

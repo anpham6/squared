@@ -1,4 +1,4 @@
-import { SvgTransformExclusions, SvgTransformResidual } from './@types/object';
+import { SvgTransformExclude, SvgTransformResidual } from './@types/object';
 
 import SvgPaint$MX from './svgpaint-mx';
 import SvgView$MX from './svgview-mx';
@@ -11,8 +11,8 @@ export default class SvgG extends SvgPaint$MX(SvgView$MX(SvgContainer)) implemen
         super(element);
     }
 
-    public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
-        super.build(exclusions, residual);
+    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual) {
+        super.build(exclude, residual);
         this.setPaint(this.getPathAll());
     }
 

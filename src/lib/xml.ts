@@ -14,6 +14,8 @@ function replaceTemplateSection(data: StringMap, value: string) {
     return value;
 }
 
+const TEMPLATE_ROOT = '__ROOT__';
+
 export function formatPlaceholder(id: string | number, symbol = ':') {
     return `{${symbol + id.toString()}}`;
 }
@@ -94,81 +96,81 @@ export function parseTemplate(value: string) {
         Object.assign(result, data);
         return data;
     }
-    result['__ROOT__'] = replaceTemplateSection(parseSection(value), value);
+    result[TEMPLATE_ROOT] = replaceTemplateSection(parseSection(value), value);
     return result;
 }
 
 export function createTemplate(value: StringMap | string, data: ExternalData, format = false, index?: string) {
-    let output: string = index === undefined ? value['__ROOT__'] : value[index];
+    if (index === undefined) {
+        index = TEMPLATE_ROOT;
+    }
+    let output: string = value[index] || '';
     for (const attr in data) {
-        const unknown = data[attr];
-        let result: string | false = '';
-        let hash = '';
-        if (unknown === undefined || unknown === null) {
+        if (data[attr] === undefined || data[attr] === null) {
             continue;
         }
-        else if (Array.isArray(unknown)) {
-            hash = '%';
-            if (Array.isArray(unknown[0])) {
-                function partial(section: string) {
-                    return `(\\t*##${attr}-${section}##\\s*\\n)([\\w\\W]*?\\s*\\n)(\\t*##${attr}-${section}##\\s*\\n)`;
-                }
-                const match = new RegExp(partial('start') + `([\\w\\W]*?)` + partial('end')).exec(output);
-                if (match) {
-                    let tagStart = '';
-                    let tagEnd = '';
-                    const depth = (unknown[0] as any[][]).length;
-                    const guard = Object.assign({}, value);
-                    for (let i = 0; i < depth; i++) {
-                        const key = `${index}_${attr}_${i}`;
-                        guard[key] = match[2];
-                        tagStart += createTemplate(guard, unknown[0][i], format, key);
-                        tagEnd = match[6] + tagEnd;
+        else {
+            const unknown = data[attr];
+            let result: string | false = '';
+            let hash = '';
+            if (Array.isArray(unknown)) {
+                hash = '%';
+                if (Array.isArray(unknown[0])) {
+                    function partial(section: string) {
+                        return `((\\t*##${attr}-${section}##\\s*\\n)([\\w\\W]*?\\s*\\n)(\\t*##${attr}-${section}##\\s*\\n))`;
                     }
-                    output = output
-                                .replace(match[2], tagStart).replace(match[6], tagEnd)
-                                .replace(match[1], '').replace(match[3], '')
-                                .replace(new RegExp(`\\t*${match[5]}`), '').replace(new RegExp(`\\t*${match[7]}`), '');
+                    const match = new RegExp(partial('start') + `([\\w\\W]*?)` + partial('end')).exec(output);
+                    if (match) {
+                        const depth = (unknown[0] as any[][]).length;
+                        const guard = Object.assign({}, value);
+                        let tagStart = '';
+                        let tagEnd = '';
+                        for (let i = 0; i < depth; i++) {
+                            const key = `${index}_${attr}_${i}`;
+                            guard[key] = match[3];
+                            tagStart += createTemplate(guard, unknown[0][i], format, key);
+                            tagEnd = match[8] + tagEnd;
+                        }
+                        output = output.replace(match[1], tagStart).replace(match[6], tagEnd);
+                    }
+                    else {
+                        result = false;
+                    }
                 }
-                else {
+                else if (unknown.length === 0 || typeof unknown[0] !== 'object') {
                     result = false;
                 }
-            }
-            else if (unknown.length === 0 || typeof unknown[0] !== 'object') {
-                result = false;
+                else {
+                    for (let i = 0; i < unknown.length; i++) {
+                        result += createTemplate(value, unknown[i], format, attr.toString());
+                    }
+                    if (result === '') {
+                        result = false;
+                    }
+                    else {
+                        result = trimEnd(result, '\n');
+                    }
+                }
             }
             else {
-                for (let i = 0; i < unknown.length; i++) {
-                    result += createTemplate(value, unknown[i], format, attr.toString());
+                hash = '[&~]';
+                result = typeof unknown === 'boolean' ? '' : unknown.toString();
+            }
+            if (!result) {
+                if (new RegExp(`{&${attr}}`).test(output)) {
+                    return '';
                 }
-                if (result === '') {
-                    result = false;
-                }
-                else {
-                    result = trimEnd(result, '\n');
+                else if (hash === '%') {
+                    output = output.replace(new RegExp(`[ \\t]*{%${attr}}\\n*`), '');
                 }
             }
-        }
-        else {
-            hash = '[&~]';
-            result = typeof unknown === 'boolean' ? '' : unknown.toString();
-        }
-        if (!result) {
-            if (new RegExp(`{&${attr}}`).test(output)) {
-                return '';
+            else if (result !== '') {
+                output = output.replace(new RegExp(`{${hash + attr}}`), result);
             }
-            else if (hash === '%') {
-                output = output.replace(new RegExp(`[ \\t]*{%${attr}}\\n*`), '');
-            }
-        }
-        else if (result !== '') {
-            output = output.replace(new RegExp(`{${hash + attr}}`), result);
         }
     }
-    if (index === undefined) {
-        output = output
-            .replace(/\n*\t*{%\w+}\n+/g, '\n')
-            .replace(/\n\n/g, '\n').trim();
+    if (index === TEMPLATE_ROOT) {
+        output = output.replace(/\n*\t*{%\w+}\n+/g, '\n').replace(/\n\n/g, '\n').trim();
         if (format) {
             output = formatTemplate(output);
         }

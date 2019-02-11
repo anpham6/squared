@@ -27,7 +27,6 @@ declare global {
             function getDOMRect(element: Element): DOMRect;
             function createElement(parent: Element | null, block?: boolean): HTMLElement;
             function removeElementsByClassName(className: string): void;
-            function convertClientUnit(value: string, dimension: number, dpi: number, fontSize: number, percent?: boolean): number;
             function getRangeClientRect(element: Element): TextDimension;
             function assignBounds(bounds: RectDimension | DOMRect): RectDimension;
             function getStyle(element: Element | null, cache?: boolean): CSSStyleDeclaration;
@@ -38,6 +37,7 @@ declare global {
             function cssInline(element: Element, attr: string): string;
             function cssAttribute(element: Element, attr: string, computed?: boolean): string;
             function cssInheritAttribute(element: Element | null, attr: string): string;
+            function getNamedItem(element: Element | null, attr: string): string;
             function getBackgroundPosition(value: string, dimension: RectDimension, dpi: number, fontSize: number, leftPerspective?: boolean, percent?: boolean): RectPosition;
             function getFirstChildElement(elements: Element | null, lineBreak?: boolean): Element | null;
             function getLastChildElement(elements: Element | null, lineBreak?: boolean): Element | null;
@@ -62,11 +62,13 @@ declare global {
             function capitalize(value: string, upper?: boolean): string;
             function convertUnderscore(value: string): string;
             function convertCamelCase(value: string, char?: string): string;
-            function convertWord(value: string, replaceDash?: boolean): string;
+            function convertWord(value: string, includeDash?: boolean): string;
             function convertInt(value: string): number;
             function convertFloat(value: string): number;
-            function convertPX(value: string, dpi: number, fontSize: number): string;
+            function convertRadian(angle: number): number;
             function convertPercent(value: number, precision?: number): string;
+            function convertPX(value: string, dpi: number, fontSize: number): string;
+            function convertPercentPX(value: string, dimension: number, dpi: number, fontSize: number, percent?: boolean): number;
             function convertAlpha(value: number): string;
             function convertRoman(value: number): string;
             function convertEnum(value: number, base: {}, derived: {}): string;

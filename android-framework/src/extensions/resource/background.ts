@@ -227,8 +227,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     backgroundImage.push(...stored.backgroundImage);
                     for (let i = 0; i < backgroundImage.length; i++) {
                         if (backgroundImage[i] && backgroundImage[i] !== 'none') {
-                            backgroundDimensions.push(Resource.ASSETS.images.get($dom.cssResolveUrl(backgroundImage[i])));
                             backgroundImage[i] = Resource.addImageUrl(backgroundImage[i]);
+                            backgroundDimensions[i] = Resource.ASSETS.images.get($dom.cssResolveUrl(backgroundImage[i]));
                             const postionX = backgroundPositionX[i] || backgroundPositionX[i - 1];
                             const postionY = backgroundPositionY[i] || backgroundPositionY[i - 1];
                             backgroundPosition[i] = `${checkBackgroundPosition(postionX, postionY, 'left')} ${checkBackgroundPosition(postionY, postionX, 'top')}`;
@@ -667,12 +667,12 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             !node.hasBit('excludeProcedure', $enum.NODE_PROCEDURE.AUTOFIT))
                         {
                             const sizeParent: ImageAsset = { width: 0, height: 0 };
-                            backgroundDimensions.forEach(item => {
+                            for (const item of backgroundDimensions) {
                                 if (item) {
                                     sizeParent.width = Math.max(sizeParent.width, item.width);
                                     sizeParent.height = Math.max(sizeParent.height, item.height);
                                 }
-                            });
+                            }
                             if (sizeParent.width === 0) {
                                 let current = node;
                                 while (current && !current.documentBody) {
@@ -689,13 +689,13 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 }
                             }
                             if (!node.has('width', $enum.CSS_STANDARD.UNIT)) {
-                                const width = node.bounds.width + (!node.is(CONTAINER_NODE.LINE) ? node.borderLeftWidth + node.borderRightWidth : 0);
+                                const width = node.bounds.width + (node.is(CONTAINER_NODE.LINE) ? 0 : node.borderLeftWidth + node.borderRightWidth);
                                 if (sizeParent.width === 0 || (width > 0 && width < sizeParent.width)) {
                                     node.css('width', $util.formatPX(width), true);
                                 }
                             }
                             if (!node.has('height', $enum.CSS_STANDARD.UNIT)) {
-                                const height = node.bounds.height + (!node.is(CONTAINER_NODE.LINE) ? node.borderTopWidth + node.borderBottomWidth : 0);
+                                const height = node.bounds.height + (node.is(CONTAINER_NODE.LINE) ? 0 : node.borderTopWidth + node.borderBottomWidth);
                                 if (sizeParent.height === 0 || (height > 0 && height < sizeParent.height)) {
                                     node.css('height', $util.formatPX(height), true);
                                     if (node.marginTop < 0) {

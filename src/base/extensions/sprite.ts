@@ -26,8 +26,8 @@ export default abstract class Sprite<T extends Node> extends Extension<T> {
                 if (image) {
                     const dpi = node.dpi;
                     const fontSize = node.fontSize;
-                    const width = $dom.convertClientUnit(node.has('width') ? node.css('width') : node.css('minWidth'), node.bounds.width, dpi, fontSize);
-                    const height = $dom.convertClientUnit(node.has('height') ? node.css('width') : node.css('minHeight'), node.bounds.height, dpi, fontSize);
+                    const width = $util.convertPercentPX(node.has('width') ? node.css('width') : node.css('minWidth'), node.bounds.width, dpi, fontSize);
+                    const height = $util.convertPercentPX(node.has('height') ? node.css('width') : node.css('minHeight'), node.bounds.height, dpi, fontSize);
                     const position = $dom.getBackgroundPosition(`${node.css('backgroundPositionX')} ${node.css('backgroundPositionY')}`, node.bounds, dpi, fontSize);
                     if (position.left <= 0 && position.top <= 0 && image.width > width && image.height > height) {
                         image.position = { x: position.left, y: position.top };

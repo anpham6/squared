@@ -213,7 +213,7 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                     }
                 }
                 columns = columns.filter((item, index) => {
-                    if (item && item.length > 0) {
+                    if (item && item.length) {
                         columnEnd.push(columnRight[index]);
                         return true;
                     }

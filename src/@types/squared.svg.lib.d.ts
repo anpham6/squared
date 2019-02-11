@@ -15,7 +15,7 @@ declare global {
             export import SVG = $util.SVG;
             export import TRANSFORM = $util.TRANSFORM;
             function getHostDPI(): number;
-            function getFontSize(element: SVGElement): number;
+            function getFontSize(element: SVGElement | null): number;
             function convertClockTime(value: string): number;
             function isVisible(element: Element): boolean;
             function setVisible(element: SVGGraphicsElement, value: boolean): void;
@@ -25,8 +25,6 @@ declare global {
             function truncateDecimal(value: number, precision?: number): string;
             function getSplitValue(value: number, next: number, percent: number): number;
             function getLeastCommonMultiple(values: number[], offset?: number[]): number;
-            function getRadiusX(angle: number, radius: number): number;
-            function getRadiusY(angle: number, radius: number): number;
         }
     }
 }

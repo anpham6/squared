@@ -1,4 +1,4 @@
-import { REGEXP_PATTERN, capitalize, convertCamelCase, convertFloat, convertPX, flatMap, formatPercent, formatPX, hasBit, isPercent, isString, maxArray, minArray, resolvePath, withinFraction } from './util';
+import { REGEXP_PATTERN, capitalize, convertCamelCase, convertPercentPX, convertPX, flatMap, formatPercent, formatPX, hasBit, isPercent, isString, maxArray, minArray, resolvePath, withinFraction } from './util';
 
 type T = squared.base.Node;
 
@@ -232,15 +232,6 @@ export function removeElementsByClassName(className: string) {
     Array.from(document.getElementsByClassName(className)).forEach(element => element.parentElement && element.parentElement.removeChild(element));
 }
 
-export function convertClientUnit(value: string, dimension: number, dpi: number, fontSize: number, percent = false) {
-    if (percent) {
-        return isPercent(value) ? convertFloat(value) / 100 : (parseFloat(convertPX(value, dpi, fontSize)) / dimension);
-    }
-    else {
-        return isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseFloat(convertPX(value, dpi, fontSize));
-    }
-}
-
 export function getRangeClientRect(element: Element): TextDimension {
     const range = document.createRange();
     range.selectNodeContents(element);
@@ -370,16 +361,9 @@ export function cssInline(element: Element, attr: string) {
 }
 
 export function cssAttribute(element: Element, attr: string, computed = false) {
-    const name = convertCamelCase(attr);
     const node = getElementAsNode<T>(element);
-    let value = node && node.cssInitial(name) || cssInline(element, name);
-    if (!value) {
-        const item = element.attributes.getNamedItem(attr);
-        if (item) {
-            value = item.value.trim();
-        }
-    }
-    return value || computed && getStyle(element)[name] as string || '';
+    const name = convertCamelCase(attr);
+    return node && node.cssInitial(name) || cssInline(element, name) || getNamedItem(element, attr) || computed && getStyle(element)[name] as string || '';
 }
 
 export function cssInheritAttribute(element: Element | null, attr: string) {
@@ -393,6 +377,16 @@ export function cssInheritAttribute(element: Element | null, attr: string) {
         current = current.parentElement;
     }
     return value;
+}
+
+export function getNamedItem(element: Element | null, attr: string) {
+    if (element) {
+        const item = element.attributes.getNamedItem(attr);
+        if (item) {
+            return item.value.trim();
+        }
+    }
+    return '';
 }
 
 export function getBackgroundPosition(value: string, dimension: RectDimension, dpi: number, fontSize: number, leftPerspective = false, percent = false) {
@@ -418,7 +412,7 @@ export function getBackgroundPosition(value: string, dimension: RectDimension, d
                     break;
                 case 1:
                 case 3:
-                    const clientXY = convertClientUnit(position, index === 1 ? dimension.width : dimension.height, dpi, fontSize, percent);
+                    const clientXY = convertPercentPX(position, index === 1 ? dimension.width : dimension.height, dpi, fontSize, percent);
                     if (index === 1) {
                         if (leftPerspective) {
                             if (result.horizontal === 'right') {
@@ -474,7 +468,7 @@ export function getBackgroundPosition(value: string, dimension: RectDimension, d
             const offsetParent = index === 0 ? dimension.width : dimension.height;
             const direction = index === 0 ? 'left' : 'top';
             const original = index === 0 ? 'originalX' : 'originalY';
-            const clientXY = convertClientUnit(position, offsetParent, dpi, fontSize, percent);
+            const clientXY = convertPercentPX(position, offsetParent, dpi, fontSize, percent);
             if (isPercent(position)) {
                 result[direction] = clientXY;
                 result[original] = position;

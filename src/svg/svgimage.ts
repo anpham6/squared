@@ -13,8 +13,8 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
     public rotateAngle?: number;
     public readonly imageElement: SVGImageElement | null = null;
 
-    private __get_transform = false;
-    private __get_animation = false;
+    private __get_transforms = false;
+    private __get_animations = false;
 
     constructor(
         public readonly element: SVGImageElement | SVGUseElement,
@@ -31,15 +31,15 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
     }
 
     public extract(exclude?: number[]) {
-        const transform = SvgBuild.filterTransforms(this.transform, exclude);
+        const transforms = exclude ? SvgBuild.filterTransforms(this.transforms, exclude) : this.transforms;
         let x = this.x;
         let y = this.y;
         let width = this.width;
         let height = this.height;
-        if (transform.length) {
-            transform.reverse();
-            for (let i = 0; i < transform.length; i++) {
-                const item = transform[i];
+        if (transforms.length) {
+            transforms.reverse();
+            for (let i = 0; i < transforms.length; i++) {
+                const item = transforms[i];
                 const m = item.matrix;
                 const localX = x;
                 x = MATRIX.applyX(m, localX, y);
@@ -73,7 +73,7 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
                         break;
                 }
             }
-            this.transformed = transform;
+            this.transformed = transforms;
         }
         if (this.parent) {
             x = this.parent.refitX(x);
@@ -143,26 +143,26 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
         return '';
     }
 
-    get transform() {
-        const transform = super.transform;
-        if (!this.__get_transform) {
+    get transforms() {
+        const transforms = super.transforms;
+        if (!this.__get_transforms) {
             if (this.imageElement) {
-                transform.push(...this.getTransforms(this.imageElement));
+                transforms.push(...this.getTransforms(this.imageElement));
             }
-            this.__get_transform = true;
+            this.__get_transforms = true;
         }
-        return transform;
+        return transforms;
     }
 
-    get animation() {
-        const animation = super.animation;
-        if (!this.__get_animation) {
+    get animations() {
+        const animations = super.animations;
+        if (!this.__get_animations) {
             if (this.imageElement) {
-                animation.push(...this.getAnimations(this.imageElement));
+                animations.push(...this.getAnimations(this.imageElement));
             }
-            this.__get_animation = true;
+            this.__get_animations = true;
         }
-        return animation;
+        return animations;
     }
 
     get instanceType() {

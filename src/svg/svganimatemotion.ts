@@ -3,6 +3,7 @@ import SvgAnimate from './svganimate';
 import { INSTANCE_TYPE } from './lib/constant';
 import { SVG, getTargetElement } from './lib/util';
 
+const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.SvgAnimateMotion {
@@ -13,11 +14,11 @@ export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.
     public rotateAutoReverse = false;
     public keyPoints?: number[];
 
-    constructor(public element?: SVGAnimateMotionElement) {
+    constructor(element?: SVGAnimateMotionElement) {
         super(element);
         if (element) {
             this.setAttribute('path');
-            const rotate = this.getAttribute('rotate');
+            const rotate = $dom.getNamedItem(element, 'rotate');
             switch (rotate) {
                 case 'auto':
                     this.rotateAuto = true;
@@ -30,7 +31,7 @@ export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.
                     break;
             }
             if (this.keyTimes.length) {
-                const keyPoints = this.getAttribute('keyPoints');
+                const keyPoints = $dom.getNamedItem(element, 'keyPoints');
                 if (keyPoints !== '') {
                     const points = SvgAnimate.toFractionList(keyPoints);
                     if (points.length === this.keyTimes.length) {

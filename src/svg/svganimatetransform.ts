@@ -3,6 +3,8 @@ import SvgBuild from './svgbuild';
 
 import { INSTANCE_TYPE } from './lib/constant';
 
+const $dom = squared.lib.dom;
+
 export default class SvgAnimateTransform extends SvgAnimate implements squared.svg.SvgAnimateTransform {
     public static toRotateList(values: string[]) {
         const result = values.map(value => {
@@ -89,10 +91,10 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
     public transformFrom?: string;
     public transformOrigin?: Point[];
 
-    constructor(public element?: SVGAnimateTransformElement) {
+    constructor(element?: SVGAnimateTransformElement) {
         super(element);
         if (element) {
-            const type = this.getAttribute('type');
+            const type = $dom.getNamedItem(element, 'type');
             this.setType(type);
             this.setCalcMode(type);
         }

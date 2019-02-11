@@ -1,4 +1,4 @@
-import { SvgTransformExclusions, SvgTransformResidual } from './@types/object';
+import { SvgTransformExclude, SvgTransformResidual } from './@types/object';
 
 import SvgSynchronize$MX from './svgsynchronize-mx';
 import SvgView$MX from './svgview-mx';
@@ -23,15 +23,15 @@ export default class SvgShape extends SvgSynchronize$MX(SvgView$MX(SvgElement)) 
         this.path = new SvgPath(this.element);
     }
 
-    public build(exclusions?: SvgTransformExclusions, residual?: SvgTransformResidual) {
+    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual) {
         if (this.path) {
             this.path.parent = this.parent;
-            SvgPath.build(this.path, this.transform, exclusions, residual);
+            SvgPath.build(this.path, this.transforms, exclude, residual);
         }
     }
 
     public synchronize(useKeyTime = 0, element?: SVGGraphicsElement) {
-        if (this.path && this.animation.length) {
+        if (this.path && this.animations.length) {
             this.mergeAnimations(this.getAnimateShape(element || this.element), element ? [] : this.getAnimateTransform(), useKeyTime, this.path);
         }
     }

@@ -1,4 +1,4 @@
-import { SvgPoint, SvgAnimationGroupOrder } from './@types/object';
+import { SvgAnimateAttribute, SvgPoint } from './@types/object';
 
 import SvgAnimate from './svganimate';
 import SvgAnimateTransform from './svganimatetransform';
@@ -515,7 +515,7 @@ function getDurationMinimum(item: SvgAnimate) {
     return Math.min(item.delay + item.duration * (item.iterationCount !== -1 ? item.iterationCount : 1), item.end || Number.POSITIVE_INFINITY);
 }
 
-function getDurationGroupOrder(item: SvgAnimationGroupOrder) {
+function getDurationGroupOrder(item: SvgAnimateAttribute) {
     return item.iterationCount === 'infinite' ? Number.POSITIVE_INFINITY : item.delay + item.duration * parseInt(item.iterationCount);
 }
 
@@ -565,12 +565,12 @@ function getIterationStart(time: number, delay: number, duration: number) {
 
 export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
     return class extends Base implements squared.svg.SvgSynchronize {
-        public getAnimateShape(element: SVGGraphicsElement, animation?: SvgAnimation[]) {
-            if (animation === undefined) {
-                animation = this.animation;
+        public getAnimateShape(element: SVGGraphicsElement, animations?: SvgAnimation[]) {
+            if (animations === undefined) {
+                animations = this.animations;
             }
             const result: SvgAnimate[] = [];
-            for (const item of animation as SvgAnimate[]) {
+            for (const item of animations as SvgAnimate[]) {
                 if (playableAnimation(item)) {
                     switch (item.attributeName) {
                         case 'r':
@@ -613,12 +613,12 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
             return result;
         }
 
-        public getAnimateViewRect(animation?: SvgAnimation[]) {
-            if (animation === undefined) {
-                animation = this.animation;
+        public getAnimateViewRect(animations?: SvgAnimation[]) {
+            if (animations === undefined) {
+                animations = this.animations;
             }
             const result: SvgAnimate[] = [];
-            for (const item of animation as SvgAnimate[]) {
+            for (const item of animations as SvgAnimate[]) {
                 if (playableAnimation(item)) {
                     switch (item.attributeName) {
                         case 'x':
@@ -631,11 +631,11 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
             return result;
         }
 
-        public getAnimateTransform(animation?: SvgAnimation[]) {
-            if (animation === undefined) {
-                animation = this.animation;
+        public getAnimateTransform(animations?: SvgAnimation[]) {
+            if (animations === undefined) {
+                animations = this.animations;
             }
-            return <SvgAnimateTransform[]> animation.filter(item => SvgBuild.asAnimateTransform(item) && item.duration > 0);
+            return <SvgAnimateTransform[]> animations.filter(item => SvgBuild.asAnimateTransform(item) && item.duration > 0);
         }
 
         public mergeAnimations(animations: SvgAnimation[], transformations: SvgAnimateTransform[], useKeyTime = 0, path?: SvgPath) {
@@ -950,7 +950,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                         function resetTransform(additiveSum: boolean, resetTime: number, value?: string) {
                             if (previousTransform && !additiveSum) {
                                 if (value === undefined) {
-                                    value = TRANSFORM.valueAsInitial(previousTransform.type);
+                                    value = TRANSFORM.typeAsValue(previousTransform.type);
                                 }
                                 maxTime = setTimelineValue(repeatingMap[attr], resetTime, value);
                                 if (resetTime !== maxTime) {
@@ -1002,10 +1002,10 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         }
                                         else if (item.group.id < backwards.group.id && (backwards.fillForwards || getDurationTotal(item) <= durationTotal)) {
                                             if (item.fillForwards) {
-                                                removeable.push(item);
                                                 item.setterType = true;
                                                 setterData.push(item);
                                             }
+                                            removeable.push(item);
                                             continue;
                                         }
                                     }
@@ -1199,7 +1199,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                 resetTransform(item.additiveSum, Math.max(delay - 1, maxTime));
                                                 startTime = maxTime + 1;
                                             }
-                                            setFreezeResetValue(item.type, TRANSFORM.valueAsInitial(item.type), true);
+                                            setFreezeResetValue(item.type, TRANSFORM.typeAsValue(item.type), true);
                                         }
                                         let parallel = groupDelay[i] === Number.POSITIVE_INFINITY || (maxTime !== -1 || item.hasState(SYNCHRONIZE_STATE.BACKWARDS)) && !(i === 0 && j === 0);
                                         complete = true;
@@ -1496,7 +1496,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                 else {
                                     if (transforming) {
                                         type = Array.from(animateTimeRangeMap.values()).pop() as number;
-                                        value = TRANSFORM.valueAsInitial(type);
+                                        value = TRANSFORM.typeAsValue(type);
                                     }
                                     else {
                                         value = this._getBaseValue(attr, path);
@@ -1885,7 +1885,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
 
         private _removeAnimations(values: SvgAnimation[]) {
             if (values.length) {
-                $util.retainArray(this.animation, (item: SvgAnimation) => !values.includes(item));
+                $util.retainArray(this.animations, (item: SvgAnimation) => !values.includes(item));
             }
         }
 
@@ -1895,7 +1895,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
             }
             item.from = item.values[0];
             item.to = item.values[item.values.length - 1];
-            this.animation.push(item);
+            this.animations.push(item);
         }
 
         private _getBaseValue(attr: string, path?: SvgPath) {

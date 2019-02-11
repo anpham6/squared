@@ -1,8 +1,9 @@
-import { SvgAnimationGroup, SvgAnimationGroupOrder } from '../svg/@types/object';
+import { SvgAnimateAttribute, SvgAnimationGroup } from '../svg/@types/object';
 
 declare global {
     namespace squared.svg {
         interface SvgAnimation {
+            element: SVGAnimationElement | null;
             attributeName: string;
             delay: number;
             to: string;
@@ -11,18 +12,17 @@ declare global {
             synchronizeState: number;
             group: SvgAnimationGroup;
             setterType: boolean;
-            element?: SVGAnimationElement;
             parent?: SvgView | SvgPath;
             baseFrom?: string;
             readonly instanceType: number;
             setAttribute(attr: string, equality?: string): void;
-            getAttribute(attr: string): string;
             addState(...values: number[]): void;
             removeState(...values: number[]): void;
             hasState(...values: number[]): boolean;
         }
 
         interface SvgAnimate extends SvgAnimation {
+            element: SVGAnimateElement | null;
             from: string;
             values: string[];
             keyTimes: number[];
@@ -35,7 +35,6 @@ declare global {
             alternate: boolean;
             additiveSum: boolean;
             accumulateSum: boolean;
-            element?: SVGAnimateElement;
             keySplines?: string[];
             end?: number;
             synchronized?: NumberValue<string>;
@@ -43,14 +42,14 @@ declare global {
             readonly fromToType: boolean;
             readonly partialType: boolean;
             setCalcMode(name: string): void;
-            setGroupOrder(value: SvgAnimationGroupOrder[]): void;
+            setGroupOrder(value: SvgAnimateAttribute[]): void;
             getPartialDuration(iteration?: number): number;
             convertToValues(keyTimes?: number[]): void;
         }
 
         interface SvgAnimateTransform extends SvgAnimate {
+            element: SVGAnimateTransformElement | null;
             type: number;
-            element?: SVGAnimateTransformElement;
             transformFrom?: string;
             transformOrigin?: Point[];
             setType(value: string): void;
@@ -58,12 +57,12 @@ declare global {
         }
 
         interface SvgAnimateMotion extends SvgAnimate {
+            element: SVGAnimateMotionElement | null;
             path: string;
             rotate: number;
             rotateAuto: boolean;
             rotateAutoReverse: boolean;
             mpath: SVGGraphicsElement | null;
-            element?: SVGAnimateMotionElement;
             keyPoints?: number[];
         }
 
