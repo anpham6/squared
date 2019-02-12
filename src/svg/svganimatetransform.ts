@@ -87,7 +87,6 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
         return result.some(item => item.length === 0) ? undefined : result;
     }
 
-    public type = 0;
     public transformFrom?: string;
     public transformOrigin?: Point[];
 

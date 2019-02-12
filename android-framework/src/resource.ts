@@ -28,6 +28,18 @@ function getRadiusPercent(value: string) {
     return $util.isPercent(value) ? parseInt(value) / 100 : 0.5;
 }
 
+function getTileMode(value: number) {
+    switch (value) {
+        case SVGGradientElement.SVG_SPREADMETHOD_PAD:
+            return 'clamp';
+        case SVGGradientElement.SVG_SPREADMETHOD_REFLECT:
+            return 'mirror';
+        case SVGGradientElement.SVG_SPREADMETHOD_REPEAT:
+            return 'repeat';
+    }
+    return '';
+}
+
 export default class Resource<T extends View> extends squared.base.Resource<T> implements android.base.Resource<T> {
     public static createBackgroundGradient<T extends View>(node: T, gradients: Gradient[], path?: squared.svg.SvgPath) {
         const result: BackgroundGradient[] = [];
@@ -106,6 +118,9 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                                 gradient.centerX = (cx + cxDiameter * cxPercent).toString();
                                 gradient.centerY = (cy + cyDiameter * cyPercent).toString();
                                 gradient.gradientRadius = (((cxDiameter + cyDiameter) / 2) * ($util.isPercent(radial.rAsString) ? (parseInt(radial.rAsString) / 100) : 1)).toString();
+                                if (radial.spreadMethod) {
+                                    gradient.tileMode = getTileMode(radial.spreadMethod);
+                                }
                             }
                         }
                     }
@@ -130,6 +145,9 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                         gradient.startY = linear.y1.toString();
                         gradient.endX = linear.x2.toString();
                         gradient.endY = linear.y2.toString();
+                        if (linear.spreadMethod) {
+                            gradient.tileMode = getTileMode(linear.spreadMethod);
+                        }
                     }
                     else {
                         const linear = <LinearGradient> item;

@@ -132,6 +132,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         return result.length > 1 && result[0] === 0 && result.some(percent => percent !== -1) ? result : [];
     }
 
+    public type = 0;
     public from = '';
     public fillMode = 0;
     public alternate = false;
@@ -236,8 +237,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         }
     }
 
-    public setGroupOrder(value: SvgAnimateAttribute[]) {
-        this.group.order = value;
+    public setGroupSiblings(value: SvgAnimateAttribute[]) {
+        this.group.siblings = value;
         if (this.fillBackwards) {
             for (let i = value.length - 1, found = false; i >= 0; i--) {
                 if (found) {
@@ -329,7 +330,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
     get to() {
         if (this._setterType) {
-            return this.values[this.values.length - 1] || super.to;
+            return this.valueTo || super.to;
         }
         return this.setterType ? this.values[0] : super.to;
     }
@@ -346,6 +347,14 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             this._values = [];
         }
         return this._values;
+    }
+
+    get valueTo() {
+        return this.values[this.values.length - 1] || '';
+    }
+
+    get valueFrom() {
+        return this.values[0] || '';
     }
 
     set keyTimes(value) {

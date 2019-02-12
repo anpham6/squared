@@ -9,6 +9,7 @@ export interface SvgAspectRatio extends SvgRect {
 
 export interface SvgGradient extends Gradient {
     element: SVGGradientElement;
+    spreadMethod?: number;
 }
 
 export interface SvgLinearGradient extends SvgGradient {
@@ -28,11 +29,13 @@ export interface SvgRadialGradient extends SvgGradient {
     r: number;
     fx: number;
     fy: number;
+    fr: number;
     cxAsString: string;
     cyAsString: string;
     rAsString: string;
     fxAsString: string;
     fyAsString: string;
+    frAsString: string;
 }
 
 export interface SvgPathCommand {
@@ -90,11 +93,12 @@ export type SvgTransformResidual = (e: SVGGraphicsElement, t: SvgTransform[], rx
 export interface SvgAnimationGroup {
     id: number;
     name: string;
-    order?: SvgAnimateAttribute[];
+    siblings?: SvgAnimateAttribute[];
 }
 
 export interface SvgAnimateAttribute {
     name: string;
+    attributes: string[];
     paused: boolean;
     delay: number;
     duration: number;

@@ -237,26 +237,34 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                     case 'borderRight':
                     case 'borderBottom':
                     case 'borderLeft': {
-                        let cssColor = node.css(`${attr}Color`);
-                        switch (cssColor.toLowerCase()) {
+                        let borderColor = node.css(`${attr}Color`);
+                        switch (borderColor.toLowerCase()) {
                             case 'initial':
-                                cssColor = '#000000';
+                                borderColor = '#000000';
                                 break;
                             case 'inherit':
                             case 'currentcolor':
-                                cssColor = $dom.cssInherit(node.element, `${attr}Color`);
+                                borderColor = $dom.cssInherit(node.element, `${attr}Color`);
                                 break;
                         }
-                        let width = node.css(`${attr}Width`) || '1px';
                         const style = node.css(`${attr}Style`) || 'none';
-                        if (style === 'inset' && width === '0px') {
-                            width = '1px';
+                        let width = node.css(`${attr}Width`) || '1px';
+                        let color: ColorData | undefined;
+                        switch (style) {
+                            case 'none':
+                                break;
+                            case 'inset':
+                                if (width === '0px') {
+                                    width = '1px';
+                                }
+                            default:
+                                color = $color.parseRGBA(borderColor, node.css('opacity'));
+                                break;
                         }
-                        const color = $color.parseRGBA(cssColor, node.css('opacity'));
                         boxStyle[attr] = <BorderAttribute> {
                             width,
                             style,
-                            color: style !== 'none' && color ? color.valueRGBA : ''
+                            color: color ? color.valueRGBA : ''
                         };
                         break;
                     }
@@ -268,14 +276,14 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                             node.css('borderBottomRightRadius')
                         ];
                         if (top === right && right === bottom && bottom === left) {
-                            boxStyle.borderRadius = $util.convertInt(top) === 0 ? undefined : [top];
+                            boxStyle.borderRadius = $util.convertInt(top) > 0 ? [top] : undefined;
                         }
                         else {
                             boxStyle.borderRadius = [top, right, bottom, left];
                         }
                         break;
                     }
-                    case 'backgroundColor': {
+                    case 'backgroundColor':
                         if (!node.has('backgroundColor') && (value === node.cssParent('backgroundColor', false, true) || node.documentParent.visible && $dom.cssFromParent(node.element, 'backgroundColor'))) {
                             boxStyle.backgroundColor = '';
                         }
@@ -284,9 +292,8 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                             boxStyle.backgroundColor = color ? color.valueRGBA : '';
                         }
                         break;
-                    }
                     case 'background':
-                    case 'backgroundImage': {
+                    case 'backgroundImage':
                         if (value !== 'none' && !node.hasBit('excludeResource', NODE_RESOURCE.IMAGE_SOURCE)) {
                             const gradients: Gradient[] = [];
                             const opacity = node.css('opacity');
@@ -395,14 +402,12 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                             }
                         }
                         break;
-                    }
                     case 'backgroundSize':
                     case 'backgroundRepeat':
                     case 'backgroundPositionX':
-                    case 'backgroundPositionY': {
+                    case 'backgroundPositionY':
                         boxStyle[attr] = value;
                         break;
-                    }
                 }
             }
             const borderTop = JSON.stringify(boxStyle.borderTop);

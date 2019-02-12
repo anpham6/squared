@@ -141,7 +141,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                     cssData[name] = values;
                 }
                 const groupName: SvgAnimate[] = [];
-                const groupOrder: SvgAnimateAttribute[] = [];
+                const groupSiblings: SvgAnimateAttribute[] = [];
                 for (let i = 0; i < animationName.length; i++) {
                     const keyframes = KEYFRAME_NAME.get(animationName[i]);
                     const duration = convertClockTime(cssData['animation-duration'][i]);
@@ -151,8 +151,10 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         const iterationCount = cssData['animation-iteration-count'][i];
                         const fillMode = cssData['animation-fill-mode'][i];
                         const keyframeIndex = `${animationName[i]}_${i}`;
-                        groupOrder.push({
+                        const attributes: string[] = [];
+                        groupSiblings.push({
                             name: keyframeIndex,
+                            attributes,
                             paused,
                             delay,
                             duration,
@@ -253,6 +255,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         delete attrMap['transform'];
                         delete attrMap['transform-origin'];
                         for (const name in attrMap) {
+                            attributes.push(name);
                             const animation = attrMap[name];
                             let animate: SvgAnimate;
                             switch (name) {
@@ -335,27 +338,25 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 animate.values = values;
                                 animate.keyTimes = keyTimes;
                             }
+                            if (animate.keyTimes[0] !== 0 && $util.isString(animate.baseFrom)) {
+                                animate.keyTimes.unshift(0);
+                                animate.values.unshift(animate.baseFrom);
+                                if (animate.keySplines) {
+                                    animate.keySplines.unshift(timingFunction);
+                                }
+                            }
                             animate.iterationCount = iterationCount !== 'infinite' ? parseFloat(iterationCount) : -1;
                             animate.fillForwards = fillMode === 'forwards' || fillMode === 'both';
                             animate.fillBackwards = fillMode === 'backwards' || fillMode === 'both';
                             animate.reverse = direction.endsWith('reverse');
                             animate.alternate = (animate.iterationCount === -1 || animate.iterationCount > 1) && direction.startsWith('alternate');
-                            if ($util.hasValue(animate.baseFrom)) {
-                                if (animate.keyTimes[0] !== 0) {
-                                    animate.keyTimes.unshift(0);
-                                    animate.values.unshift(animate.baseFrom as string);
-                                    if (animate.keySplines) {
-                                        animate.keySplines.unshift(timingFunction);
-                                    }
-                                }
-                            }
                             groupName.push(animate);
                         }
                     }
                 }
-                groupOrder.reverse();
+                groupSiblings.reverse();
                 for (const item of groupName) {
-                    item.setGroupOrder(groupOrder);
+                    item.setGroupSiblings(groupSiblings);
                 }
             }
             for (const item of result) {

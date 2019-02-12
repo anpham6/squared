@@ -31,7 +31,7 @@ function getColorStop(element: SVGGradientElement) {
 function getBaseValue(element: SVGGradientElement, ...attrs: string[]) {
     const result: ObjectMap<string | number> = {};
     for (const attr of attrs) {
-        if (element[attr]) {
+        if (element[attr] && element[attr].baseVal) {
             result[attr] = element[attr].baseVal.value;
             result[`${attr}AsString`] = element[attr].baseVal.valueAsString;
         }
@@ -94,6 +94,7 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
                         this.definitions.gradient.set(id, {
                             element: definition,
                             type: 'linear',
+                            spreadMethod: definition.spreadMethod.baseVal,
                             colorStop: getColorStop(definition),
                             ...getBaseValue(definition, 'x1', 'x2', 'y1', 'y2')
                         });
@@ -102,8 +103,9 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
                         this.definitions.gradient.set(id, {
                             element: definition,
                             type: 'radial',
+                            spreadMethod: definition.spreadMethod.baseVal,
                             colorStop: getColorStop(definition),
-                            ...getBaseValue(definition, 'cx', 'cy', 'r', 'fx', 'fy')
+                            ...getBaseValue(definition, 'cx', 'cy', 'r', 'fx', 'fy', 'fr')
                         });
                     }
                 }

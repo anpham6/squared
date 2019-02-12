@@ -10,13 +10,13 @@
             padding: 10px;
         }
         #animate {
-            animation-name: zorro1, zorro2, zorro1;
-            animation-delay: 4s, 2s, 3s;
-            animation-duration: 15s, 10s, 5s;
-            animation-iteration-count: 1, 1, 1;
+            animation-name: zorro1, zorro2, zorro1, zorro2, zorro2;
+            animation-delay: 4s, 2s, 1s;
+            animation-duration: 7s, 10s, 5s;
+            animation-iteration-count: 3, 2, 3;
             animation-direction: reverse, normal, alternate-reverse;
             animation-timing-function: linear, linear, linear;
-            animation-fill-mode: none, forwards, none;
+            animation-fill-mode: none, none, none, none;
         }
         #rotate {
             animation-name: rotate2;
@@ -36,7 +36,6 @@
         @keyframes zorro1 {
             from {
                 x: 150;
-                y: 0;
             }
             to {
                 x: 0;
@@ -46,15 +45,17 @@
         @keyframes zorro2 {
             from {
                 x: 75;
+                y: 75;
             }
             33% {
                 x: 150;
             }
             66% {
-                x: 75;
+                x: 0;
             }
             to {
-                x: 150;
+                x: 75;
+                y: 75;
             }
         }
         @keyframes rotate1 {
@@ -159,6 +160,10 @@
                 <animate attributeName="y" values="0; 100;" keyTimes="0; 1" begin="1s" dur="3s" repeatCount="indefinite" />
                 <animate attributeName="y" values="0; 50;" keyTimes="0; 1" begin="0s" dur="10s" repeatCount="1" />
                 <animate attributeName="y" values="100; 0;" keyTimes="0; 1" begin="2s" dur="5s" repeatCount="1" />
+                <animate attributeName="width" from="1" to="5" begin="2s" dur="5s" additive="sum" accumulate="sum" repeatCount="10" />
+                <animate attributeName="height" from="1" to="5" begin="4s" dur="5s" additive="sum" accumulate="sum" repeatCount="10" />
+                <animate attributeName="x" values="0; 50;" keyTimes="0; 1" begin="0s" dur="10s" repeatCount="indefinite" />
+                <animate attributeName="x" values="0; 50;" keyTimes="0; 1" begin="10s" dur="10s" repeatCount="5" />
             </rect>
             <rect id="rotate" x="50" y="50" width="30" height="20" fill="red" />
             <rect id="opacity-step" x="25" y="25" width="30" height="20" fill="blue" style="fill-opacity: 0;" />

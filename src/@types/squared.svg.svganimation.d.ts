@@ -23,6 +23,7 @@ declare global {
 
         interface SvgAnimate extends SvgAnimation {
             element: SVGAnimateElement | null;
+            type: number;
             from: string;
             values: string[];
             keyTimes: number[];
@@ -38,18 +39,19 @@ declare global {
             keySplines?: string[];
             end?: number;
             synchronized?: NumberValue<string>;
+            readonly valueTo: string;
+            readonly valueFrom: string;
             readonly fillReplace: boolean;
             readonly fromToType: boolean;
             readonly partialType: boolean;
             setCalcMode(name: string): void;
-            setGroupOrder(value: SvgAnimateAttribute[]): void;
+            setGroupSiblings(value: SvgAnimateAttribute[]): void;
             getPartialDuration(iteration?: number): number;
             convertToValues(keyTimes?: number[]): void;
         }
 
         interface SvgAnimateTransform extends SvgAnimate {
             element: SVGAnimateTransformElement | null;
-            type: number;
             transformFrom?: string;
             transformOrigin?: Point[];
             setType(value: string): void;
