@@ -23,7 +23,7 @@ declare global {
             function newRectDimension(): RectDimension;
             function newBoxModel(): BoxModel;
             function hasVisibleRect(element: Element, checkViewport?: boolean): boolean;
-            function withinViewportOrigin(bounds: ClientRect | DOMRect): boolean;
+            function withinViewport(bounds: ClientRect | DOMRect): boolean;
             function getDOMRect(element: Element): DOMRect;
             function createElement(parent: Element | null, block?: boolean): HTMLElement;
             function removeElementsByClassName(className: string): void;
@@ -44,7 +44,7 @@ declare global {
             function hasFreeFormText(element: Element, whiteSpace?: boolean): boolean;
             function isPlainText(element: Element, whiteSpace?: boolean): boolean;
             function hasLineBreak(element: Element | null, lineBreak?: boolean, trimString?: boolean): boolean;
-            function isLineBreak(element: Element, excluded?: boolean): boolean;
+            function isLineBreak(element: Element | null, excluded?: boolean): boolean;
             function getElementsBetween(elementStart: Element | null, elementEnd: Element, whiteSpace?: boolean, asNode?: boolean): Element[];
             function getPreviousElementSibling(element: Element | null): Element | null;
             function getNextElementSibling(element: Element | null): Element | null;
@@ -59,6 +59,7 @@ declare global {
 
         namespace util {
             export import REGEXP_PATTERN = $util.REGEXP_PATTERN;
+            export import REGEXP_STRING = $util.REGEXP_STRING;
             function capitalize(value: string, upper?: boolean): string;
             function convertUnderscore(value: string): string;
             function convertCamelCase(value: string, char?: string): string;
@@ -67,6 +68,7 @@ declare global {
             function convertFloat(value: string): number;
             function convertRadian(angle: number): number;
             function convertPercent(value: number, precision?: number): string;
+            function convertAngle(value: string, unit?: string): number;
             function convertPX(value: string, dpi: number, fontSize: number): string;
             function convertPercentPX(value: string, dimension: number, dpi: number, fontSize: number, percent?: boolean): number;
             function convertAlpha(value: number): string;

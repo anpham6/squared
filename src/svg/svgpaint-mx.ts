@@ -10,12 +10,12 @@ const $color = squared.lib.color;
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
-const CLIPPATH_SHAPE: ObjectMap<RegExp> = {
+const REGEXP_CLIPPATH: ObjectMap<RegExp> = {
     url: REGEXP_SVG.URL,
-    inset: new RegExp(`inset\\(${REGEXP_SVG.LENGTH}\\s?${REGEXP_SVG.LENGTH}?\\s?${REGEXP_SVG.LENGTH}?\\s?${REGEXP_SVG.LENGTH}?\\)`),
+    inset: new RegExp(`inset\\(${$util.REGEXP_STRING.LENGTH}\\s?${$util.REGEXP_STRING.LENGTH}?\\s?${$util.REGEXP_STRING.LENGTH}?\\s?${$util.REGEXP_STRING.LENGTH}?\\)`),
     polygon: /polygon\(([^)]+)\)/,
-    circle: new RegExp(`circle\\(${REGEXP_SVG.LENGTH}(?: at ${REGEXP_SVG.LENGTH} ${REGEXP_SVG.LENGTH})?\\)`),
-    ellipse: new RegExp(`ellipse\\(${REGEXP_SVG.LENGTH} ${REGEXP_SVG.LENGTH}(?: at ${REGEXP_SVG.LENGTH} ${REGEXP_SVG.LENGTH})?\\)`),
+    circle: new RegExp(`circle\\(${$util.REGEXP_STRING.LENGTH}(?: at ${$util.REGEXP_STRING.LENGTH} ${$util.REGEXP_STRING.LENGTH})?\\)`),
+    ellipse: new RegExp(`ellipse\\(${$util.REGEXP_STRING.LENGTH} ${$util.REGEXP_STRING.LENGTH}(?: at ${$util.REGEXP_STRING.LENGTH} ${$util.REGEXP_STRING.LENGTH})?\\)`),
 };
 
 export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
@@ -57,8 +57,8 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             this._setAttribute('clip-rule');
             const clipPath = this._getAttribute('clip-path', false, false);
             if (clipPath !== '') {
-                for (const name in CLIPPATH_SHAPE) {
-                    const match = CLIPPATH_SHAPE[name].exec(clipPath);
+                for (const name in REGEXP_CLIPPATH) {
+                    const match = REGEXP_CLIPPATH[name].exec(clipPath);
                     if (match) {
                         if (name === 'url') {
                             this.clipPath = match[1];

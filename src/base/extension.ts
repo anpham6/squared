@@ -9,7 +9,12 @@ const $util = squared.lib.util;
 export default abstract class Extension<T extends Node> implements squared.base.Extension<T> {
     public static findNestedByName(element: Element | null, name: string) {
         if ($dom.hasComputedStyle(element)) {
-            return Array.from(element.children).find((item: HTMLElement) => $util.includes(item.dataset.use, name)) as HTMLElement || null;
+            for (let i = 0; i < element.children.length; i++) {
+                const item = <HTMLElement> element.children[i];
+                if ($util.includes(item.dataset.use, name)) {
+                    return item;
+                }
+            }
         }
         return null;
     }

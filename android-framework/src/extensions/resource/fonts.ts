@@ -198,7 +198,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             style[tag] = {};
             layout[tag] = {};
             const count = nameMap[tag].length;
-            let sorted = groupMap[tag].filter(item => Object.keys(item).length).sort((a, b) => {
+            let sorted = groupMap[tag].filter(item => Object.keys(item).length > 0).sort((a, b) => {
                 let maxA = 0;
                 let maxB = 0;
                 let countA = 0;
@@ -359,10 +359,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 attrs.split(';').forEach(value => {
                     const match = $util.REGEXP_PATTERN.ATTRIBUTE.exec(value);
                     if (match) {
-                        items.push({
-                            name: match[1],
-                            value: match[2]
-                        });
+                        items.push({ name: match[1], value: match[2] });
                     }
                 });
                 styleData.push({

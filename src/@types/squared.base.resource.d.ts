@@ -19,7 +19,7 @@ declare global {
             public static KEY_NAME: string;
             public static ASSETS: ResourceAssetMap;
             public static STORED: ResourceStoredMap;
-            public static generateId(section: string, name: string, start: number): string;
+            public static generateId(section: string, name: string, start?: number): string;
             public static getStoredName(asset: string, value: any): string;
             public static insertStoredAsset(asset: string, name: string, value: any): string;
             public static isBorderVisible(border: BorderAttribute | undefined): boolean;

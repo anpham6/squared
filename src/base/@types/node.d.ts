@@ -94,3 +94,6 @@ interface LinearGradient extends Gradient {
 interface RadialGradient extends Gradient {
     position: string[];
 }
+
+interface ConicGradient extends LinearGradient, RadialGradient {
+}

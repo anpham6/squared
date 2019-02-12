@@ -28,7 +28,7 @@ const ANIMATION_DEFAULT: StringMap = {
     'animation-fill-mode': 'none',
     'animation-timing-function': 'ease'
 };
-const REGEXP_CUBICBEZIER = new RegExp(`cubic-bezier\\(${REGEXP_SVG.ZERO_ONE}, ${REGEXP_SVG.DECIMAL}, ${REGEXP_SVG.ZERO_ONE}, ${REGEXP_SVG.DECIMAL}\\)`);
+const REGEXP_CUBICBEZIER = new RegExp(`cubic-bezier\\(${REGEXP_SVG.ZERO_ONE}, ${$util.REGEXP_STRING.DECIMAL}, ${REGEXP_SVG.ZERO_ONE}, ${$util.REGEXP_STRING.DECIMAL}\\)`);
 
 function parseAttribute(element: SVGElement, attr: string) {
     let value = $dom.cssAttribute(element, attr);

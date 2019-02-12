@@ -1,4 +1,4 @@
-import { LinearGradient, RadialGradient } from '../../src/base/@types/node';
+import { ConicGradient, LinearGradient, RadialGradient } from '../../src/base/@types/node';
 import { ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from './@types/application';
 import { BackgroundGradient } from './@types/node';
 import { SvgLinearGradient, SvgRadialGradient } from '../../src/svg/@types/object';
@@ -31,15 +31,20 @@ function getRadiusPercent(value: string) {
 export default class Resource<T extends View> extends squared.base.Resource<T> implements android.base.Resource<T> {
     public static createBackgroundGradient<T extends View>(node: T, gradients: Gradient[], path?: squared.svg.SvgPath) {
         const result: BackgroundGradient[] = [];
-        const hasStop = node.svgElement || gradients.some(item => item.colorStop.filter(stop => parseInt(stop.offset) > 0).length > 0);
         for (const item of gradients) {
-            const gradient: BackgroundGradient = {
-                type: item.type,
-                startColor: !hasStop ? Resource.addColor(item.colorStop[0].color) : '',
-                centerColor: !hasStop && item.colorStop.length > 2 ? Resource.addColor(item.colorStop[1].color) : '',
-                endColor: !hasStop ? Resource.addColor(item.colorStop[item.colorStop.length - 1].color) : '',
-                colorStops: []
-            };
+            const gradient: BackgroundGradient = { type: item.type, colorStops: [] };
+            let hasStop: boolean;
+            if (!node.svgElement && parseFloat(item.colorStop[0].offset) === 0 && ['100%', '360'].includes(item.colorStop[item.colorStop.length - 1].offset) && (item.colorStop.length === 2 || item.colorStop.length === 3 && ['50%', '180'].includes(item.colorStop[1].offset))) {
+                gradient.startColor = Resource.addColor(item.colorStop[0].color);
+                gradient.endColor = Resource.addColor(item.colorStop[item.colorStop.length - 1].color) ;
+                if (item.colorStop.length === 3) {
+                    gradient.centerColor = Resource.addColor(item.colorStop[1].color);
+                }
+                hasStop = false;
+            }
+            else {
+                hasStop = true;
+            }
             switch (item.type) {
                 case 'radial':
                     if (node.svgElement) {
@@ -105,24 +110,16 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                         }
                     }
                     else {
-                        const radial = <RadialGradient> item;
-                        let boxPosition: RectPosition | undefined;
-                        if (radial.position && radial.position.length > 1) {
-                            boxPosition = $dom.getBackgroundPosition(radial.position[1], node.bounds, node.dpi, node.fontSize, true, !hasStop);
-                        }
+                        const position = $dom.getBackgroundPosition((<RadialGradient> item).position[0], node.bounds, node.dpi, node.fontSize, true, !hasStop);
                         if (hasStop) {
                             gradient.gradientRadius = node.bounds.width.toString();
-                            if (boxPosition) {
-                                gradient.centerX = boxPosition.left.toString();
-                                gradient.centerY = boxPosition.top.toString();
-                            }
+                            gradient.centerX = position.left.toString();
+                            gradient.centerY = position.top.toString();
                         }
                         else {
                             gradient.gradientRadius = $util.formatPX(node.bounds.width);
-                            if (boxPosition) {
-                                gradient.centerX = $util.convertPercent(boxPosition.left);
-                                gradient.centerY = $util.convertPercent(boxPosition.top);
-                            }
+                            gradient.centerX = $util.convertPercent(position.left);
+                            gradient.centerY = $util.convertPercent(position.top);
                         }
                     }
                     break;
@@ -149,32 +146,41 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                         }
                     }
                     break;
+                case 'conic':
+                    if (!node.svgElement) {
+                        gradient.type = 'sweep';
+                        const position = $dom.getBackgroundPosition((<ConicGradient> item).position[0], node.bounds, node.dpi, node.fontSize, true, !hasStop);
+                        if (hasStop) {
+                            gradient.centerX = position.left.toString();
+                            gradient.centerY = position.top.toString();
+                        }
+                        else {
+                            gradient.centerX = $util.convertPercent(position.left);
+                            gradient.centerY = $util.convertPercent(position.top);
+                        }
+                        break;
+                    }
+                default:
+                    return result;
             }
             if (hasStop) {
                 for (let i = 0; i < item.colorStop.length; i++) {
                     const stop = item.colorStop[i];
                     const color = `@color/${Resource.addColor(stop.color)}`;
                     let offset = parseInt(stop.offset);
-                    if (i === 0) {
-                        if (!node.svgElement && offset !== 0) {
-                            gradient.colorStops.push({
-                                color,
-                                offset: '0',
-                                opacity: stop.opacity
-                            });
-                        }
+                    if (gradient.type === 'sweep') {
+                        offset *= 100 / 360;
                     }
-                    else if (offset === 0) {
-                        if (i < item.colorStop.length - 1) {
-                            offset = Math.round((parseInt(item.colorStop[i - 1].offset) + parseInt(item.colorStop[i + 1].offset)) / 2);
-                        }
-                        else {
-                            offset = 100;
-                        }
+                    else if (!node.svgElement && i === 0 && offset !== 0) {
+                        gradient.colorStops.push({
+                            color,
+                            offset: '0',
+                            opacity: stop.opacity
+                        });
                     }
                     gradient.colorStops.push({
                         color,
-                        offset: (offset / 100).toFixed(2),
+                        offset: (offset / 100).toFixed(offset > 0 && offset < 100 ? 2 : 0),
                         opacity: stop.opacity
                     });
                 }
@@ -320,7 +326,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                     name = `__symbol${Math.ceil(Math.random() * 100000)}`;
                 }
                 if (STORED.strings.has(name)) {
-                    name = Resource.generateId('string', name, 1);
+                    name = Resource.generateId('string', name);
                 }
                 STORED.strings.set(name, value);
             }
@@ -416,7 +422,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                         name = shade.name;
                     }
                     else {
-                        name = Resource.generateId('color', shade.name, 1);
+                        name = Resource.generateId('color', shade.name);
                     }
                     STORED.colors.set(argb, name);
                 }

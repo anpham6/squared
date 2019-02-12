@@ -8,23 +8,6 @@ function setAttribute(element: SVGElement, attr: string, value: string) {
     element.setAttribute(attr, value);
 }
 
-function convertAngle(value: string, unit = 'deg') {
-    let angle = parseFloat(value);
-    switch (unit) {
-        case 'turn':
-            angle *= 360;
-            break;
-        case 'rad':
-            angle *= 180 / Math.PI;
-            break;
-    }
-    return angle;
-}
-
-function convertRadian(angle: number) {
-    return angle * Math.PI / 180;
-}
-
 const SHAPES = {
     path: 1,
     line: 2,
@@ -37,18 +20,15 @@ const SHAPES = {
 
 export const REGEXP_SVG = {
     URL: /url\("?(#.*?)"?\)/,
-    ZERO_ONE: '(0(?:\\.\\d+)?|1(?:\\.0+)?)',
-    DECIMAL: '(-?[\\d.]+)',
-    LENGTH: '(-?[\\d.]+(?:[a-z]{2,}|%)?)',
-    DEGREE: '(?:(-?[\\d.]+)(deg|rad|turn))'
+    ZERO_ONE: '(0(?:\\.\\d+)?|1(?:\\.0+)?)'
 };
 
 const REGEXP_TRANSFORM = {
-    MATRIX: `(matrix(?:3d)?)\\(${REGEXP_SVG.DECIMAL}, ${REGEXP_SVG.DECIMAL}, ${REGEXP_SVG.DECIMAL}, ${REGEXP_SVG.DECIMAL}, ${REGEXP_SVG.DECIMAL}, ${REGEXP_SVG.DECIMAL}(?:, ${REGEXP_SVG.DECIMAL})?(?:, ${REGEXP_SVG.DECIMAL})?(?:, ${REGEXP_SVG.DECIMAL})?(?:, ${REGEXP_SVG.DECIMAL})?(?:, ${REGEXP_SVG.DECIMAL})?(?:, ${REGEXP_SVG.DECIMAL})?(?:, ${REGEXP_SVG.DECIMAL})?(?:, ${REGEXP_SVG.DECIMAL})?(?:, ${REGEXP_SVG.DECIMAL})?(?:, ${REGEXP_SVG.DECIMAL})?\\)`,
-    ROTATE: `(rotate[XY]?)\\(${REGEXP_SVG.DEGREE}\\)`,
-    SKEW: `(skew[XY]?)\\(${REGEXP_SVG.DEGREE}(?:, ${REGEXP_SVG.DEGREE})?\\)`,
-    SCALE: `(scale[XY]?)\\(${REGEXP_SVG.DECIMAL}(?:, ${REGEXP_SVG.DECIMAL})?\\)`,
-    TRANSLATE: `(translate[XY]?)\\(${REGEXP_SVG.LENGTH}(?:, ${REGEXP_SVG.LENGTH})?\\)`
+    MATRIX: `(matrix(?:3d)?)\\(${$util.REGEXP_STRING.DECIMAL}, ${$util.REGEXP_STRING.DECIMAL}, ${$util.REGEXP_STRING.DECIMAL}, ${$util.REGEXP_STRING.DECIMAL}, ${$util.REGEXP_STRING.DECIMAL}, ${$util.REGEXP_STRING.DECIMAL}(?:, ${$util.REGEXP_STRING.DECIMAL})?(?:, ${$util.REGEXP_STRING.DECIMAL})?(?:, ${$util.REGEXP_STRING.DECIMAL})?(?:, ${$util.REGEXP_STRING.DECIMAL})?(?:, ${$util.REGEXP_STRING.DECIMAL})?(?:, ${$util.REGEXP_STRING.DECIMAL})?(?:, ${$util.REGEXP_STRING.DECIMAL})?(?:, ${$util.REGEXP_STRING.DECIMAL})?(?:, ${$util.REGEXP_STRING.DECIMAL})?(?:, ${$util.REGEXP_STRING.DECIMAL})?\\)`,
+    ROTATE: `(rotate[XY]?)\\(${$util.REGEXP_STRING.DEGREE}\\)`,
+    SKEW: `(skew[XY]?)\\(${$util.REGEXP_STRING.DEGREE}(?:, ${$util.REGEXP_STRING.DEGREE})?\\)`,
+    SCALE: `(scale[XY]?)\\(${$util.REGEXP_STRING.DECIMAL}(?:, ${$util.REGEXP_STRING.DECIMAL})?\\)`,
+    TRANSLATE: `(translate[XY]?)\\(${$util.REGEXP_STRING.LENGTH}(?:, ${$util.REGEXP_STRING.LENGTH})?\\)`
 };
 
 export const MATRIX = {
@@ -59,7 +39,7 @@ export const MATRIX = {
         return matrix.b * x + matrix.d * y + matrix.f;
     },
     distance(angle: number, value: number) {
-        return value * Math.cos(convertRadian(angle)) * -1;
+        return value * Math.cos($util.convertRadian(angle)) * -1;
     },
     clone(matrix: SvgMatrix | DOMMatrix) {
         return {
@@ -72,7 +52,7 @@ export const MATRIX = {
         };
     },
     rotate(angle: number): SvgMatrix {
-        const r = convertRadian(angle);
+        const r = $util.convertRadian(angle);
         const a = Math.cos(r);
         const b = Math.sin(r);
         return {
@@ -87,8 +67,8 @@ export const MATRIX = {
     skew(x = 0, y = 0): SvgMatrix {
         return {
             a: 1,
-            b: Math.tan(convertRadian(y)),
-            c: Math.tan(convertRadian(x)),
+            b: Math.tan($util.convertRadian(y)),
+            c: Math.tan($util.convertRadian(x)),
             d: 1,
             e: 0,
             f: 0
@@ -136,7 +116,7 @@ export const TRANSFORM = {
                     const isX = match[1].endsWith('X');
                     const isY = match[1].endsWith('Y');
                     if (match[1].startsWith('rotate')) {
-                        const angle = convertAngle(match[2], match[3]);
+                        const angle = $util.convertAngle(match[2], match[3]);
                         const matrix = MATRIX.rotate(angle);
                         if (isX) {
                             matrix.a = 1;
@@ -151,8 +131,8 @@ export const TRANSFORM = {
                         result[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_ROTATE, matrix, angle, !isX, !isY);
                     }
                     else if (match[1].startsWith('skew')) {
-                        const x = isY ? 0 : convertAngle(match[2], match[3]);
-                        const y = isY ? convertAngle(match[2], match[3]) : (match[4] && match[5] ? convertAngle(match[4], match[5]) : 0);
+                        const x = isY ? 0 : $util.convertAngle(match[2], match[3]);
+                        const y = isY ? $util.convertAngle(match[2], match[3]) : (match[4] && match[5] ? $util.convertAngle(match[4], match[5]) : 0);
                         const matrix = MATRIX.skew(x, y);
                         if (isX) {
                             result[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWX, matrix, x, true, false);

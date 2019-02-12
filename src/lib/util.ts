@@ -40,12 +40,19 @@ function compareObject(obj1: {}, obj2: {}, attr: string, numeric: boolean) {
     return [current1, current2];
 }
 
-export const REGEXP_PATTERN = {
+export const REGEXP_PATTERN: ObjectMap<RegExp> = {
     URL: /url\("?(.*?)"?\)/,
     URI: /^[A-Za-z]+:\/\//,
     UNIT: /^(?:\s*(-?[\d.]+)(px|em|ch|pc|pt|vw|vh|vmin|vmax|mm|cm|in))+$/,
     ATTRIBUTE: /([^\s]+)="([^"]+)"/
 };
+
+export const REGEXP_STRING: StringMap = {
+    DECIMAL: '(-?[\\d.]+)',
+    LENGTH: '(-?[\\d.]+(?:[a-z]{2,}|%)?)'
+};
+
+REGEXP_STRING.DEGREE = REGEXP_STRING.DECIMAL + '(deg|rad|turn|grad)';
 
 export function capitalize(value: string, upper = true) {
     if (value !== '') {
@@ -90,6 +97,21 @@ export function convertFloat(value: string) {
 
 export function convertRadian(angle: number) {
     return angle * Math.PI / 180;
+}
+
+export function convertAngle(value: string, unit = 'deg') {
+    let angle = parseFloat(value);
+    switch (unit) {
+        case 'rad':
+            angle *= 180 / Math.PI;
+            break;
+        case 'grad':
+            angle /= 400;
+        case 'turn':
+            angle *= 360;
+            break;
+    }
+    return angle;
 }
 
 export function convertPercent(value: number, precision = 0) {
@@ -228,7 +250,7 @@ export function isNumber(value: string | number): value is number {
 }
 
 export function isString(value: any): value is string {
-    return typeof value === 'string' && value !== '';
+    return typeof value === 'string' && value.trim() !== '';
 }
 
 export function isArray<T>(value: any): value is Array<T> {

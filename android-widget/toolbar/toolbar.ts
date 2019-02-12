@@ -65,7 +65,8 @@ export default class Toolbar<T extends $View> extends squared.base.Extension<T> 
         const collapsingToolbarChildren: T[] = [];
         let depth = target ? 0 : parent.renderDepth + 1;
         let children = node.filter(item => !item.positioned).length;
-        Array.from(element.children).forEach((item: HTMLElement) => {
+        for (let i = 0; i < element.children.length; i++) {
+            const item = <HTMLElement> element.children[i];
             if (item.tagName === 'IMG') {
                 if ($util.hasValue(item.dataset.navigationIcon)) {
                     const result = $Resource.addImageSrcSet(<HTMLImageElement> item, $constA.PREFIX_ANDROID.MENU);
@@ -104,7 +105,7 @@ export default class Toolbar<T extends $View> extends squared.base.Extension<T> 
                     }
                 }
             }
-        });
+        }
         const hasCollapsingToolbar = options.hasOwnProperty('collapsingToolbar') || collapsingToolbarChildren.length;
         const hasAppBar = options.hasOwnProperty('appBar') || appBarChildren.length || hasCollapsingToolbar;
         let appBarOverlay = '';

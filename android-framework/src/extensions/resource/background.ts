@@ -506,7 +506,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             viewportHeight: height.toString(),
                             alpha: '',
                             A: [{
-                                group: [[]],
+                                region: [[]],
+                                clipRegion: false,
+                                path: [[]],
+                                clipPath: false,
                                 BB: [{
                                     CCC: [{
                                         render: [[]],

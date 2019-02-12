@@ -25,10 +25,10 @@ export interface ViewAttribute {
 
 export interface BackgroundGradient {
     type: string;
-    startColor: string;
-    endColor: string;
-    centerColor: string;
     colorStops: ColorStop[];
+    startColor?: string;
+    endColor?: string;
+    centerColor?: string;
     angle?: string;
     startX?: string;
     startY?: string;

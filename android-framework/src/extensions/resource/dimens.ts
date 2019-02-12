@@ -7,13 +7,13 @@ const $util = squared.lib.util;
 
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 
-function getResourceKey(dimens: Map<string, string>, key: string, value: string) {
-    for (const [storedKey, storedvalue] of dimens.entries()) {
-        if (storedKey.startsWith(key) && value === storedvalue) {
-            return storedKey;
+function getResourceName(map: Map<string, string>, name: string, value: string) {
+    for (const [storedName, storedValue] of map.entries()) {
+        if (storedName.startsWith(name) && value === storedValue) {
+            return storedName;
         }
     }
-    return dimens.has(key) && dimens.get(key) !== value ? Resource.generateId('dimen', key, 1) : key;
+    return map.has(name) && map.get(name) !== value ? Resource.generateId('dimen', name) : name;
 }
 
 function getAttributeName(value: string) {
@@ -52,7 +52,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
             const group = groups[tagName];
             for (const name in group) {
                 const [namespace, attr, value] = name.split(',');
-                const key = getResourceKey(STORED.dimens, `${getDisplayName(tagName)}_${getAttributeName(attr)}`, value);
+                const key = getResourceName(STORED.dimens, `${getDisplayName(tagName)}_${getAttributeName(attr)}`, value);
                 group[name].forEach(node => node[namespace](attr, `@dimen/${key}`));
                 STORED.dimens.set(key, value);
             }
@@ -67,7 +67,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
             while ((match = pattern.exec(content)) !== null) {
                 const controlName = /^[\s\n]+<([\w\-.]+)[\s\n]/.exec(match[0]);
                 if (controlName) {
-                    const key = getResourceKey(STORED.dimens, `${getDisplayName(controlName[1]).toLowerCase()}_${getAttributeName(match[2])}`, match[3]);
+                    const key = getResourceName(STORED.dimens, `${getDisplayName(controlName[1]).toLowerCase()}_${getAttributeName(match[2])}`, match[3]);
                     STORED.dimens.set(key, match[3]);
                     content = content.replace(match[0], match[0].replace(match[3], `@dimen/${key}`));
                 }

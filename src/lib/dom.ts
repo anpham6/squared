@@ -594,10 +594,12 @@ export function hasLineBreak(element: Element | null, lineBreak = false, trimStr
     return false;
 }
 
-export function isLineBreak(element: Element, excluded = true) {
-    const node = getElementAsNode<T>(element);
-    if (node) {
-        return node.tagName === 'BR' || excluded && node.excluded && node.blockStatic;
+export function isLineBreak(element: Element | null, excluded = true) {
+    if (element) {
+        const node = getElementAsNode<T>(element);
+        if (node) {
+            return node.tagName === 'BR' || excluded && node.excluded && node.blockStatic;
+        }
     }
     return false;
 }
@@ -666,10 +668,10 @@ export function hasComputedStyle(element: UndefNull<Element>): element is HTMLEl
 
 export function hasVisibleRect(element: Element, checkViewport = false) {
     const bounds = element.getBoundingClientRect();
-    return bounds.width !== 0 && bounds.height !== 0 && (!checkViewport || withinViewportOrigin(bounds));
+    return bounds.width !== 0 && bounds.height !== 0 && (!checkViewport || withinViewport(bounds));
 }
 
-export function withinViewportOrigin(bounds: ClientRect | DOMRect) {
+export function withinViewport(bounds: ClientRect | DOMRect) {
     return !(bounds.left < 0 && bounds.top < 0 && Math.abs(bounds.left) >= bounds.width && Math.abs(bounds.top) >= bounds.height);
 }
 
