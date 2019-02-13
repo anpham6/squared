@@ -1,7 +1,6 @@
 import { ResourceStoredMapAndroid } from '../../@types/application';
 
 import Resource from '../../resource';
-import View from '../../view';
 
 const $util = squared.lib.util;
 
@@ -24,7 +23,7 @@ function getDisplayName(value: string) {
     return $util.lastIndexOf(value, '.');
 }
 
-export default class ResourceDimens<T extends View> extends squared.base.Extension<T> {
+export default class ResourceDimens<T extends android.base.View> extends squared.base.Extension<T> {
     public readonly eventOnly = true;
 
     public afterProcedure() {

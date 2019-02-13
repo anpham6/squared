@@ -3,7 +3,6 @@ import { ExtensionResult } from '../../src/base/@types/application';
 import { WIDGET_NAME } from '../lib/constant';
 
 import $Resource = android.base.Resource;
-import $View = android.base.View;
 
 type ToolbarThemeData = {
     target: boolean;
@@ -20,7 +19,7 @@ const $constA = android.lib.constant;
 const $enumA = android.lib.enumeration;
 const $utilA = android.lib.util;
 
-export default class Toolbar<T extends $View> extends squared.base.Extension<T> {
+export default class Toolbar<T extends android.base.View> extends squared.base.Extension<T> {
     constructor(
         name: string,
         framework: number,
@@ -207,7 +206,7 @@ export default class Toolbar<T extends $View> extends squared.base.Extension<T> 
             else {
                 $util.defaultWhenNull(appBarOptions, 'android', 'theme', '@style/ThemeOverlay.AppCompat.Dark.ActionBar');
             }
-            appBarNode = this.createPlaceholder(application.nextId, node, appBarChildren) as T;
+            appBarNode = this.createPlaceholder(node, appBarChildren);
             appBarNode.parent = node.parent;
             appBarNode.controlId = $utilA.stripId(appBarOptions.android.id);
             appBarNode.setControlType($constA.SUPPORT_ANDROID.APPBAR, $enumA.CONTAINER_NODE.BLOCK);
@@ -230,7 +229,7 @@ export default class Toolbar<T extends $View> extends squared.base.Extension<T> 
                 }
                 $util.defaultWhenNull(collapsingToolbarOptions, 'app', 'layout_scrollFlags', 'scroll|exitUntilCollapsed');
                 $util.defaultWhenNull(collapsingToolbarOptions, 'app', 'toolbarId', node.documentId);
-                collapsingToolbarNode = this.createPlaceholder(application.nextId, node, collapsingToolbarChildren) as T;
+                collapsingToolbarNode = this.createPlaceholder(node, collapsingToolbarChildren);
                 collapsingToolbarNode.parent = appBarNode;
                 if (collapsingToolbarNode) {
                     collapsingToolbarNode.each(item => item.dataset.target = (collapsingToolbarNode as T).controlId);
@@ -312,12 +311,8 @@ export default class Toolbar<T extends $View> extends squared.base.Extension<T> 
         $Resource.addTheme(options, optionsActionBar, optionsAppBar, optionsPopup);
     }
 
-    private createPlaceholder(nextId: number, node: T, children: T[]) {
-        const placeholder = new $View(
-            nextId,
-            $dom.createElement(node.actualParent ? node.actualParent.element : null, node.block),
-            this.application.controllerHandler.afterInsertNode
-        );
+    private createPlaceholder(node: T, children: T[]) {
+        const placeholder = this.application.createNode($dom.createElement(node.actualParent ? node.actualParent.element : null, node.block));
         placeholder.inherit(node, 'base');
         placeholder.exclude({ resource: $enum.NODE_RESOURCE.ALL });
         placeholder.positioned = true;

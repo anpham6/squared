@@ -58,11 +58,7 @@ export default class Fixed<T extends View> extends squared.base.Extension<T> {
     }
 
     public processNode(node: T, parent: T): ExtensionResult<T> {
-        const container = new View(
-            this.application.nextId,
-            $dom.createElement(node.element, node.block),
-            this.application.controllerHandler.afterInsertNode
-        ) as T;
+        const container = this.application.createNode($dom.createElement(node.element, node.block));
         container.inherit(node, 'initial', 'base');
         container.exclude({
             procedure: $enum.NODE_PROCEDURE.NONPOSITIONAL,

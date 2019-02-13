@@ -1,7 +1,5 @@
 import { ExtensionResult } from '../../../../src/base/@types/application';
 
-import View from '../../view';
-
 import { AXIS_ANDROID, CONTAINER_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
@@ -13,7 +11,7 @@ const $xml = squared.lib.xml;
 
 const RADIO_GROUP = 'RadioGroup';
 
-export default class ScrollView<T extends View> extends squared.base.Extension<T> {
+export default class ScrollView<T extends android.base.View> extends squared.base.Extension<T> {
     public condition(node: T) {
         const element = <HTMLInputElement> node.element;
         return element.tagName === 'INPUT' && element.type === 'radio' && $util.hasValue(element.name);

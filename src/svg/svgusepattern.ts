@@ -19,12 +19,12 @@ export default class SvgUsePattern extends SvgSynchronize$MX(SvgViewRect$MX(SvgS
         super.build(exclude, residual, this.shapeElement);
     }
 
-    public synchronize(useKeyTime = 0) {
+    public synchronize(keyTimeMode = 0) {
         const [animations, transformations] = [this.animations.filter(item => this.validateBaseValue(item.attributeName, 0) === undefined || item.attributeName === 'x' || item.attributeName === 'y'), this.getAnimateTransform()];
         if (animations.length || transformations.length) {
-            this.mergeAnimations(this.getAnimateViewRect(animations), transformations, useKeyTime);
+            this.mergeAnimations(this.getAnimateViewRect(animations), transformations, keyTimeMode);
         }
-        super.synchronize(useKeyTime);
+        super.synchronize(keyTimeMode);
     }
 
     get instanceType() {

@@ -49,10 +49,7 @@ export default abstract class Extension<T extends Node> implements squared.base.
     }
 
     public require(name: string, preload = false) {
-        this.dependencies.push({
-            name,
-            preload
-        });
+        this.dependencies.push({ name, preload });
     }
 
     public included(element: HTMLElement) {

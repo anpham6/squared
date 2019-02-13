@@ -3,7 +3,6 @@ import { ExtensionResult } from '../../src/base/@types/application';
 import { WIDGET_NAME } from '../lib/constant';
 
 import $Resource = android.base.Resource;
-import $View = android.base.View;
 
 const $enum = squared.base.lib.enumeration;
 const $color = squared.lib.color;
@@ -12,7 +11,7 @@ const $constA = android.lib.constant;
 const $enumA = android.lib.enumeration;
 const $utilA = android.lib.util;
 
-export default class FloatingActionButton<T extends $View> extends squared.base.Extension<T> {
+export default class FloatingActionButton<T extends android.base.View> extends squared.base.Extension<T> {
     public is(node: T) {
         const element = <HTMLInputElement> node.element;
         return super.is(node) && (element.tagName !== 'INPUT' || ['button', 'file', 'image', 'reset', 'search', 'submit'].includes(element.type));

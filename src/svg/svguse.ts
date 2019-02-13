@@ -30,11 +30,11 @@ export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(Svg
         this.setPaint(this.path ? [this.path.value] : undefined);
     }
 
-    public synchronize(useKeyTime = 0) {
+    public synchronize(keyTimeMode = 0) {
         if (this.animations.length) {
-            this.mergeAnimations(this.getAnimateViewRect(), this.getAnimateTransform(), useKeyTime);
+            this.mergeAnimations(this.getAnimateViewRect(), this.getAnimateTransform(), keyTimeMode);
         }
-        super.synchronize(useKeyTime, this.shapeElement);
+        super.synchronize(keyTimeMode, this.shapeElement);
     }
 
     get transforms() {

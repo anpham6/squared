@@ -42,19 +42,19 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
 
         public setPaint(d?: string[]) {
             this.resetPaint();
-            this._setAttribute('color', true);
+            this.setAttribute('color', true);
             this._setColor('fill');
-            this._setAttribute('fill-opacity');
-            this._setAttribute('fill-rule');
+            this.setAttribute('fill-opacity');
+            this.setAttribute('fill-rule');
             this._setColor('stroke');
-            this._setAttribute('stroke-opacity');
-            this._setAttribute('stroke-width');
-            this._setAttribute('stroke-linecap');
-            this._setAttribute('stroke-linejoin');
-            this._setAttribute('stroke-miterlimit');
-            this._setAttribute('stroke-dasharray');
-            this._setAttribute('stroke-dashoffset');
-            this._setAttribute('clip-rule');
+            this.setAttribute('stroke-opacity');
+            this.setAttribute('stroke-width');
+            this.setAttribute('stroke-linecap');
+            this.setAttribute('stroke-linejoin');
+            this.setAttribute('stroke-miterlimit');
+            this.setAttribute('stroke-dasharray');
+            this.setAttribute('stroke-dashoffset');
+            this.setAttribute('clip-rule');
             const clipPath = this._getAttribute('clip-path', false, false);
             if (clipPath !== '') {
                 for (const name in REGEXP_CLIPPATH) {
@@ -158,6 +158,13 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             }
         }
 
+        public setAttribute(attr: string, computed = false) {
+            const value = this._getAttribute(attr, computed);
+            if ($util.isString(value)) {
+                this[$util.convertCamelCase(attr)] = value;
+            }
+        }
+
         public resetPaint() {
             this.fill = 'black';
             this.fillPattern = '';
@@ -204,16 +211,9 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             }
         }
 
-        private _setAttribute(attr: string, computed = false) {
-            const value = this._getAttribute(attr, computed);
-            if (value !== '') {
-                this[$util.convertCamelCase(attr)] = value;
-            }
-        }
-
         private _getAttribute(attr: string, computed = false, inherited = true) {
             let value = $dom.cssAttribute(this.element, attr, computed);
-            if (inherited && value === '') {
+            if (inherited && !$util.isString(value)) {
                 if (this.patternParent) {
                     switch (attr) {
                         case 'fill-opacity':
@@ -229,7 +229,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                     if ($util.isString(value)) {
                         break;
                     }
-                    current = current['parent'];
+                    current = current.parent;
                 }
             }
             return value;

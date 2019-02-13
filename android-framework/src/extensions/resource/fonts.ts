@@ -404,10 +404,9 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     }
                 }
             }
-            const tagData = <AttributeMap> layout[tag];
-            if (tagData) {
-                for (const attr in tagData) {
-                    for (const id of tagData[attr]) {
+            if (layout[tag]) {
+                for (const attr in layout[tag]) {
+                    for (const id of layout[tag][attr]) {
                         if (nodeMap[id] === undefined) {
                             nodeMap[id] = { styles: [], attrs: [] };
                         }

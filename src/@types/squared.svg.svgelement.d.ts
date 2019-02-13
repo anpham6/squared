@@ -8,14 +8,14 @@ declare global {
             readonly element: SVGGraphicsElement;
             readonly instanceType: number;
             build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, element?: Element): void;
-            synchronize(useKeyTime?: number): void;
+            synchronize(keyTimeMode?: number): void;
         }
 
         interface SvgShape extends SvgElement, SvgView, SvgSynchronize {
             path?: SvgPath;
             readonly element: SVGShapeElement | SVGUseElement;
             setPath(): void;
-            synchronize(useKeyTime?: number, element?: SVGGraphicsElement): void;
+            synchronize(keyTimeMode?: number, element?: SVGGraphicsElement): void;
         }
 
         interface SvgImage extends SvgElement, SvgView, SvgViewRect, SvgBaseVal, SvgTransformable {
@@ -27,7 +27,7 @@ declare global {
         interface SvgUse extends SvgShape, SvgViewRect, SvgBaseVal, SvgPaint {
             readonly element: SVGUseElement;
             shapeElement: SVGGraphicsElement;
-            synchronize(useKeyTime?: number, element?: SVGGraphicsElement): void;
+            synchronize(keyTimeMode?: number, element?: SVGGraphicsElement): void;
         }
 
         class SvgElement implements SvgElement {

@@ -36,6 +36,7 @@ declare global {
             addRenderQueue(id: string, template: string): void;
             addImagePreload(element: HTMLImageElement): void;
             saveRenderPosition(parent: T, required: boolean): void;
+            createNode(element: Element): T;
             toString(): string;
         }
 

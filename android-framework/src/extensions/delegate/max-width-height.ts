@@ -1,14 +1,12 @@
 import { ExtensionResult } from '../../../../src/base/@types/application';
 
-import View from '../../view';
-
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import $Layout = squared.base.Layout;
 
 const $enum = squared.base.lib.enumeration;
 
-export default class MaxWidthHeight<T extends View> extends squared.base.Extension<T> {
+export default class MaxWidthHeight<T extends android.base.View> extends squared.base.Extension<T> {
     public condition(node: T) {
         return !node.textElement && !node.imageElement && !node.svgElement && (node.has('maxWidth') || node.has('maxHeight'));
     }

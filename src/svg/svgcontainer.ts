@@ -23,13 +23,16 @@ function getNearestViewBox(instance: SvgContainer | undefined) {
     return undefined;
 }
 
-function getFillPattern(element: SVGGraphicsElement, viewport?: Svg) {
-    if (viewport) {
-        const value = $dom.cssInheritAttribute(element, 'fill');
-        if (value !== '') {
-            const match = REGEXP_SVG.URL.exec(value);
-            if (match) {
-                return viewport.definitions.pattern.get(match[1]);
+function getFillPattern(element: SVGGraphicsElement, viewport?: Svg): SVGPatternElement | undefined {
+    const match = REGEXP_SVG.URL.exec($dom.cssInheritAttribute(element, 'fill'));
+    if (match) {
+        if (viewport && viewport.definitions.pattern.has(match[1])) {
+            return viewport.definitions.pattern.get(match[1]);
+        }
+        else {
+            const target = document.getElementById(match[1].substring(1));
+            if (target instanceof SVGPatternElement) {
+                return target;
             }
         }
     }
@@ -149,8 +152,8 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         }
     }
 
-    public synchronize(useKeyTime = 0) {
-        this.each(item => item.synchronize(useKeyTime));
+    public synchronize(keyTimeMode = 0) {
+        this.each(item => item.synchronize(keyTimeMode));
     }
 
     public refitX(value: number) {
@@ -202,15 +205,15 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
             if (viewBox) {
                 $util.cloneObject(viewBox, aspectRatio);
                 if (aspectRatio.width > 0 && aspectRatio.height > 0) {
+                    const ratio = aspectRatio.width / aspectRatio.height;
                     const parentWidth = parent.aspectRatio.width || parent.viewBox.width;
                     const parentHeight = parent.aspectRatio.height || parent.viewBox.height;
-                    const ratioA = aspectRatio.width / aspectRatio.height;
-                    const ratioB = parentWidth / parentHeight;
-                    if (ratioB > ratioA) {
-                        aspectRatio.position.x = (parentWidth - (parentHeight * ratioA)) / 2;
+                    const parentRatio = parentWidth / parentHeight;
+                    if (parentRatio > ratio) {
+                        aspectRatio.position.x = (parentWidth - (parentHeight * ratio)) / 2;
                     }
-                    else if (ratioB < ratioA) {
-                        aspectRatio.position.y = (parentHeight - (parentWidth * (1 / ratioA))) / 2;
+                    else if (parentRatio < ratio) {
+                        aspectRatio.position.y = (parentHeight - (parentWidth * (1 / ratio))) / 2;
                     }
                     aspectRatio.unit = Math.min(parentWidth / aspectRatio.width, parentHeight / aspectRatio.height);
                 }

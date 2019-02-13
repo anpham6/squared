@@ -213,11 +213,11 @@ It is sometimes necessary to append elements into other containers when trying t
 </LinearLayout>
 ```
 
-Using "target" into a ConstraintLayout or RelativeLayout view will not include automatic positioning.
+Using "target" into a ConstraintLayout or RelativeLayout container will not include automatic positioning.
 
 ### ANDROID: Public System Methods
 
-You can use the "system.customize" method to create default settings for the specific controls which are applied after a view is rendered.
+You can use the "system.customize" method to change the default settings for the specific controls which are applied when a view is rendered.
 
 ```javascript
 system.customize(build: number, widget: string, options: {}) // global attributes applied to specific views
@@ -348,7 +348,7 @@ The attributes "android-include" and "android-include-end" can only be applied t
 
 ### ANDROID: SVG animations with CSS/SMIL
 
-Only the layout and resources in XML are generated with squared which can be viewed on the Android device/emulator without any Java/Kotlin backend code. To play animations you also have to "start" the animation with some backend code in MainActivity.java.
+Only the XML based layout and resource files are generated with squared which can be viewed on the Android device/emulator without any Java/Kotlin backend code. To play animations you also have to "start" the animation in MainActivity.java.
 
 ```javascript
     android.widget.ImageView imageView1 = findViewById(R.id.imageview_1);

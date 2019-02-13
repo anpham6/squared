@@ -1,7 +1,5 @@
 import { ExtensionResult } from '../../../../src/base/@types/application';
 
-import View from '../../view';
-
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import $Layout = squared.base.Layout;
@@ -9,7 +7,7 @@ import $Layout = squared.base.Layout;
 const $enum = squared.base.lib.enumeration;
 const $util = squared.lib.util;
 
-export default class Percent<T extends View> extends squared.base.Extension<T> {
+export default class Percent<T extends android.base.View> extends squared.base.Extension<T> {
     public condition(node: T, parent: T) {
         return parent.layoutVertical && !node.documentBody && node.pageFlow && !node.imageElement && node.has('width', $enum.CSS_STANDARD.PERCENT, { not: '100%' });
     }

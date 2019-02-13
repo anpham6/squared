@@ -1,14 +1,13 @@
 import { ResourceStringsOptions } from '../../@types/extension';
 
 import Resource from '../../resource';
-import View from '../../view';
 
 const $enum = squared.base.lib.enumeration;
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
-export default class ResourceStrings<T extends View> extends squared.base.Extension<T> {
+export default class ResourceStrings<T extends android.base.View> extends squared.base.Extension<T> {
     public readonly options: ResourceStringsOptions = {
         numberResourceValue: false
     };

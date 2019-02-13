@@ -2,7 +2,8 @@ import { ExtensionResult } from '../../src/base/@types/application';
 import { ViewAttribute } from '../../android-framework/src/@types/node';
 
 import $Resource = android.base.Resource;
-import $View = android.base.View;
+
+type View = android.base.View;
 
 const $const = squared.base.lib.constant;
 const $enum = squared.base.lib.enumeration;
@@ -50,7 +51,7 @@ const VALIDATE_GROUP = {
 
 const NAMESPACE_APP = ['showAsAction', 'actionViewClass', 'actionProviderClass'];
 
-function hasInputType(node: $View, value: string) {
+function hasInputType(node: View, value: string) {
     return node.some(item => (<HTMLInputElement> item.element).type === value);
 }
 
@@ -71,7 +72,7 @@ function getTitle(element: HTMLElement) {
         return element.title;
     }
     else {
-        for (const node of $util.flatMap(Array.from(element.childNodes), (item: Element) => $dom.getElementAsNode(item) as $View)) {
+        for (const node of $util.flatMap(Array.from(element.childNodes), (item: Element) => $dom.getElementAsNode(item) as View)) {
             if (node.textElement) {
                 return node.textContent.trim();
             }
@@ -80,7 +81,7 @@ function getTitle(element: HTMLElement) {
     return '';
 }
 
-export default class Menu<T extends $View> extends squared.base.Extension<T> {
+export default class Menu<T extends View> extends squared.base.Extension<T> {
     constructor(
         name: string,
         framework: number,

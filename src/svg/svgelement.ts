@@ -14,7 +14,7 @@ export default class SvgElement implements squared.svg.SvgElement {
     }
 
     public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, element?: Element) {}
-    public synchronize(useKeyTime?: number) {}
+    public synchronize(keyTimeMode?: number) {}
 
     get instanceType() {
         return INSTANCE_TYPE.SVG_ELEMENT;

@@ -11,18 +11,14 @@ export default `<?xml version="1.0" encoding="utf-8"?>
 		<<fillBefore>>
 		<<repeating>>
 			<objectAnimator
-				android:propertyName="{~propertyName}"
+				android:propertyName="{&propertyName}"
+				android:interpolator="{~interpolator}"
 				android:valueType="{~valueType}"
 				android:valueFrom="{~valueFrom}"
 				android:valueTo="{~valueTo}"
 				android:startOffset="{~startOffset}"
-				android:duration="{~duration}"
-				android:repeatCount="{&repeatCount}"
-				android:repeatMode="{~repeatMode}"
-				android:interpolator="{~interpolator}"
-				android:fillAfter="{~fillAfter}"
-				android:fillBefore="{~fillBefore}"
-				android:fillEnabled="{~fillEnabled}">
+				android:duration="{&duration}"
+				android:repeatCount="{&repeatCount}">
 			<<propertyValues>>
 				<propertyValuesHolder android:propertyName="{&propertyName}">
 				<<keyframes>>
@@ -42,13 +38,13 @@ export default `<?xml version="1.0" encoding="utf-8"?>
 			<<values>>
 				<objectAnimator
 					android:propertyName="{&propertyName}"
-					android:valueType="{~valueType}"
 					android:interpolator="{~interpolator}"
+					android:valueType="{~valueType}"
 					android:valueFrom="{~valueFrom}"
 					android:valueTo="{&valueTo}"
 					android:startOffset="{~startOffset}"
-					android:duration="{~duration}"
-					android:repeatCount="{~repeatCount}" />
+					android:duration="{&duration}"
+					android:repeatCount="{&repeatCount}" />
 			<<values>>
 			</set>
 		<<fillAfter>>

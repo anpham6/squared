@@ -1,12 +1,10 @@
-import View from '../view';
-
 import { CONTAINER_ANDROID } from '../lib/constant';
 
 const $enum = squared.base.lib.enumeration;
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
-export default class <T extends View> extends squared.base.extensions.Accessibility<T> {
+export default class <T extends android.base.View> extends squared.base.extensions.Accessibility<T> {
     public readonly eventOnly = true;
 
     public afterBaseLayout() {

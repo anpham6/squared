@@ -3,7 +3,6 @@ import { ExtensionResult } from '../../src/base/@types/application';
 import { WIDGET_NAME } from '../lib/constant';
 
 import $Resource = android.base.Resource;
-import $View = android.base.View;
 
 const $enum = squared.base.lib.enumeration;
 const $dom = squared.lib.dom;
@@ -11,7 +10,7 @@ const $constA = android.lib.constant;
 const $enumA = android.lib.enumeration;
 const $utilA = android.lib.util;
 
-export default class Coordinator<T extends $View> extends squared.base.Extension<T> {
+export default class Coordinator<T extends android.base.View> extends squared.base.Extension<T> {
     public processNode(node: T, parent: T): ExtensionResult<T> {
         const controller = this.application.controllerHandler;
         const options = $utilA.createViewAttribute(node.element ? this.options[node.element.id] : undefined);

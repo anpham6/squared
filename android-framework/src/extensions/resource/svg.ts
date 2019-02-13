@@ -23,12 +23,12 @@ import $SvgAnimate = squared.svg.SvgAnimate;
 import $SvgAnimateTransform = squared.svg.SvgAnimateTransform;
 import $SvgBuild = squared.svg.SvgBuild;
 import $SvgG = squared.svg.SvgG;
-import $SvgPath = squared.svg.SvgPath;
 import $SvgShape = squared.svg.SvgShape;
 
 type SvgAnimation = squared.svg.SvgAnimation;
 type SvgGroup = squared.svg.SvgGroup;
 type SvgImage = squared.svg.SvgImage;
+type SvgPath = squared.svg.SvgPath;
 type SvgView = squared.svg.SvgView;
 
 interface AnimatedTargetData extends TemplateDataAA {
@@ -64,7 +64,7 @@ interface FillTemplateData extends SetOrdering, ExternalData {
     values: PropertyValue[];
 }
 
-interface PathTemplateData extends Partial<$SvgPath> {
+interface PathTemplateData extends Partial<SvgPath> {
     name: string;
     render: TransformData[][];
     clipElement: StringMap[];
@@ -1272,7 +1272,12 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                     drawable = vectorName;
                 }
                 if (drawable !== '') {
-                    node.android('src', `@drawable/${drawable}`);
+                    if (node.localSettings.targetAPI >= BUILD_ANDROID.LOLLIPOP) {
+                        node.android('src', `@drawable/${drawable}`);
+                    }
+                    else {
+                        node.app('srcCompat', `@drawable/${drawable}`);
+                    }
                 }
                 if (!node.hasWidth) {
                     node.android('layout_width', 'wrap_content');
@@ -1384,7 +1389,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
         return result;
     }
 
-    private createPath(target: $SvgShape, path: $SvgPath) {
+    private createPath(target: $SvgShape, path: SvgPath) {
         const render: TransformData[][] = [[]];
         const clipElement: StringMap[] = [];
         const result: PathTemplateData = {

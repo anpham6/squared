@@ -468,6 +468,10 @@ export default class Application<T extends Node> implements squared.base.Applica
         }
     }
 
+    public createNode(element: Element) {
+        return new this.nodeConstructor(this.nextId, element, this.controllerHandler.afterInsertNode);
+    }
+
     public toString() {
         return this._views.length ? this._views[0].content : '';
     }

@@ -24,7 +24,7 @@ declare global {
             getAnimateShape(element: SVGGraphicsElement, animation?: SvgAnimation[]): SvgAnimate[];
             getAnimateViewRect(animation?: SvgAnimation[]): SvgAnimate[];
             getAnimateTransform(animation?: SvgAnimation[]): SvgAnimateTransform[];
-            mergeAnimations(animations: SvgAnimate[], transformations: SvgAnimateTransform[], useKeyTime?: number, path?: SvgPath): void;
+            mergeAnimations(animations: SvgAnimate[], transformations: SvgAnimateTransform[], keyTimeMode?: number, path?: SvgPath): void;
         }
 
         interface SvgViewRect extends SvgRect, SvgBaseVal {
@@ -62,6 +62,7 @@ declare global {
             useParent?: SvgUse | SvgUseSymbol;
             patternParent?: SvgShapePattern;
             setPaint(d?: string[]): void;
+            setAttribute(attr: string, computed?: boolean): void;
             resetPaint(): void;
         }
 

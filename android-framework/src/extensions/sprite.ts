@@ -1,7 +1,6 @@
 import { ImageAsset, ExtensionResult } from '../../../src/base/@types/application';
 
 import Resource from '../resource';
-import View from '../view';
 
 import { CONTAINER_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
@@ -12,17 +11,13 @@ const $const = squared.base.lib.constant;
 const $enum = squared.base.lib.enumeration;
 const $util = squared.lib.util;
 
-export default class <T extends View> extends squared.base.extensions.Sprite<T> {
+export default class <T extends android.base.View> extends squared.base.extensions.Sprite<T> {
     public processNode(node: T, parent: T): ExtensionResult<T> {
         const mainData = <ImageAsset> node.data($const.EXT_NAME.SPRITE, 'mainData');
         let container: T | undefined;
         let output = '';
         if (mainData && mainData.uri && mainData.position) {
-            container = new View(
-                this.application.nextId,
-                <HTMLElement> node.element,
-                this.application.controllerHandler.afterInsertNode
-            ) as T;
+            container = this.application.createNode(<HTMLElement> node.element);
             container.inherit(node, 'initial', 'base', 'styleMap');
             container.setControlType(CONTAINER_ANDROID.FRAME);
             container.exclude({

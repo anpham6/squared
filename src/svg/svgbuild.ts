@@ -540,10 +540,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     public static convertNumbers(values: number[]) {
         const result: Point[] = [];
         for (let i = 0; i < values.length; i += 2) {
-            result.push({
-                x: values[i],
-                y: values[i + 1]
-            });
+            result.push({ x: values[i], y: values[i + 1] });
         }
         return result.length % 2 === 0 ? result : [];
     }

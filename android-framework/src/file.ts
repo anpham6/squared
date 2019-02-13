@@ -138,16 +138,10 @@ export default class File<T extends View> extends squared.base.File<T> implement
         const data: TemplateDataA = { A: [] };
         this.stored.strings = new Map([...this.stored.strings.entries()].sort(caseInsensitive));
         if (this.appName !== '' && !this.stored.strings.has('app_name')) {
-            data.A.push({
-                name: 'app_name',
-                value: this.appName
-            });
+            data.A.push({ name: 'app_name', value: this.appName });
         }
         for (const [name, value] of this.stored.strings.entries()) {
-            data.A.push({
-                name,
-                value
-            });
+            data.A.push({ name, value });
         }
         result.push(
             replaceTab(
@@ -168,10 +162,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             const data: TemplateDataA = { A: [] };
             this.stored.arrays = new Map([...this.stored.arrays.entries()].sort());
             for (const [name, values] of this.stored.arrays.entries()) {
-                data.A.push({
-                    name,
-                    AA: values.map(value => ({ value }))
-                });
+                data.A.push({ name, AA: values.map(value => ({ value })) });
             }
             result.push(
                 replaceTab(
@@ -232,10 +223,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             const data: TemplateDataA = { A: [] };
             this.stored.colors = new Map([...this.stored.colors.entries()].sort());
             for (const [name, value] of this.stored.colors.entries()) {
-                data.A.push({
-                    name,
-                    value
-                });
+                data.A.push({ name, value });
             }
             result.push(
                 replaceTab(
@@ -265,10 +253,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                         data.A.push(<ExternalData> style);
                     }
                 }
-                files.push({
-                    filename: 'res/values/styles.xml',
-                    data
-                });
+                files.push({ filename: 'res/values/styles.xml', data });
             }
             const appTheme: ObjectMap<boolean> = {};
             for (const [filename, theme] of this.stored.themes.entries()) {
@@ -276,10 +261,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 for (const [themeName, themeData] of theme.entries()) {
                     const items: StringMap[] = [];
                     for (const name in themeData.items) {
-                        items.push({
-                            name,
-                            value: themeData.items[name]
-                        });
+                        items.push({ name, value: themeData.items[name] });
                     }
                     if (!appTheme[filename] || themeName !== 'AppTheme' || items.length) {
                         data.A.push({
@@ -321,10 +303,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             const data: TemplateDataA = { A: [] };
             this.stored.dimens = new Map([...this.stored.dimens.entries()].sort());
             for (const [name, value] of this.stored.dimens.entries()) {
-                data.A.push({
-                    name,
-                    value
-                });
+                data.A.push({ name, value });
             }
             result.push(
                 replaceTab(

@@ -31,11 +31,11 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewR
         this.setPaint(this.getPathAll());
     }
 
-    public synchronize(useKeyTime = 0) {
+    public synchronize(keyTimeMode = 0) {
         if (this.animations.length) {
-            this.mergeAnimations(this.getAnimateViewRect(), this.getAnimateTransform(), useKeyTime);
+            this.mergeAnimations(this.getAnimateViewRect(), this.getAnimateTransform(), keyTimeMode);
         }
-        super.synchronize(useKeyTime);
+        super.synchronize(keyTimeMode);
     }
 
     get viewBox() {

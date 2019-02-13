@@ -3,7 +3,6 @@ import { ExtensionResult } from '../../src/base/@types/application';
 import { WIDGET_NAME } from '../lib/constant';
 
 import $Resource = android.base.Resource;
-import $View = android.base.View;
 
 const $enum = squared.base.lib.enumeration;
 const $const = squared.base.lib.constant;
@@ -13,7 +12,7 @@ const $constA = android.lib.constant;
 const $enumA = android.lib.enumeration;
 const $utilA = android.lib.util;
 
-export default class Drawer<T extends $View> extends squared.base.Extension<T> {
+export default class Drawer<T extends android.base.View> extends squared.base.Extension<T> {
     constructor(
         name: string,
         framework: number,

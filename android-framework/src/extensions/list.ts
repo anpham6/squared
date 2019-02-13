@@ -170,11 +170,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     else {
                         options.android.text = mainData.ordinal;
                     }
-                    const companion = new View(
-                        this.application.nextId,
-                        $dom.createElement(node.actualParent ? node.actualParent.element : null),
-                        this.application.controllerHandler.afterInsertNode
-                    ) as T;
+                    const companion = this.application.createNode($dom.createElement(node.actualParent ? node.actualParent.element : null));
                     companion.tagName = `${node.tagName}_ORDINAL`;
                     companion.inherit(node, 'textStyle');
                     if (mainData.ordinal !== '' && !/[A-Za-z\d]+\./.test(mainData.ordinal) && companion.toInt('fontSize') > 12) {

@@ -1,8 +1,7 @@
 import { ExtensionResult } from '../../../src/base/@types/application';
 import { GridCellData, GridData } from '../../../src/base/@types/extension';
 
-import View from '../view';
-
+type View = android.base.View;
 import { CONTAINER_NODE } from '../lib/enumeration';
 
 import $Layout = squared.base.Layout;

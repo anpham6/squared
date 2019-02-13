@@ -79,13 +79,13 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
         public getAnimations(companion?: SVGGraphicsElement) {
             const element = companion || this.element;
             const result: SvgAnimation[] = [];
-            let groupId = 0;
+            let id = 0;
             function addAnimation(item: SvgAnimation, delay: number, name = '') {
                 if (name === '') {
-                    groupId++;
+                    id++;
                 }
                 item.delay = delay;
-                item.group = { id: groupId, name };
+                item.group = { id, name };
                 result.push(item);
             }
             for (let i = 0; i < element.children.length; i++) {
@@ -129,6 +129,8 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             const animationName = parseAttribute(element, 'animation-name');
             if (animationName.length) {
                 const cssData: ObjectMap<string[]> = {};
+                const groupName: SvgAnimate[] = [];
+                const groupSiblings: SvgAnimateAttribute[] = [];
                 for (const name in ANIMATION_DEFAULT) {
                     const values = parseAttribute(element, name);
                     if (values.length === 0) {
@@ -140,12 +142,13 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                     values.length = animationName.length;
                     cssData[name] = values;
                 }
-                const groupName: SvgAnimate[] = [];
-                const groupSiblings: SvgAnimateAttribute[] = [];
                 for (let i = 0; i < animationName.length; i++) {
                     const keyframes = KEYFRAME_NAME.get(animationName[i]);
                     const duration = convertClockTime(cssData['animation-duration'][i]);
                     if (keyframes && duration > 0) {
+                        id++;
+                        const attrMap: AttributeMap = {};
+                        const keyframeMap: AttributeMap = {};
                         const paused = cssData['animation-play-state'][i] === 'paused';
                         const delay = convertClockTime(cssData['animation-delay'][i]);
                         const iterationCount = cssData['animation-iteration-count'][i];
@@ -161,9 +164,6 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             iterationCount,
                             fillMode
                         });
-                        groupId++;
-                        const attrMap: AttributeMap = {};
-                        const keyframeMap: AttributeMap = {};
                         for (const percent in keyframes) {
                             const fraction = parseInt(percent) / 100;
                             for (const name in keyframes[percent]) {

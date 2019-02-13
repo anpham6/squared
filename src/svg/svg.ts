@@ -28,7 +28,7 @@ function getColorStop(element: SVGGradientElement) {
     return result;
 }
 
-function getBaseValue(element: SVGGradientElement, ...attrs: string[]) {
+function getBaseValue(element: SVGElement, ...attrs: string[]) {
     const result: ObjectMap<string | number> = {};
     for (const attr of attrs) {
         if (element[attr] && element[attr].baseVal) {
@@ -59,11 +59,11 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
         super.build(exclude, residual);
     }
 
-    public synchronize(useKeyTime = 0) {
+    public synchronize(keyTimeMode = 0) {
         if (!this.documentRoot && this.animations.length) {
-            this.mergeAnimations(this.getAnimateViewRect(), this.getAnimateTransform(), useKeyTime);
+            this.mergeAnimations(this.getAnimateViewRect(), this.getAnimateTransform(), keyTimeMode);
         }
-        super.synchronize(useKeyTime);
+        super.synchronize(keyTimeMode);
     }
 
     private init() {
@@ -72,40 +72,40 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
             $util.cloneObject(viewBox, this.aspectRatio);
         }
         [this.element, ...Array.from(this.element.querySelectorAll('defs'))].forEach(item => {
-            item.querySelectorAll(':scope > set, :scope > animate, :scope > animateTransform, :scope > animateMotion').forEach((animation: SVGAnimationElement) => {
-                const target = getTargetElement(animation, this.documentRoot ? this.element : undefined);
+            item.querySelectorAll(':scope > set, :scope > animate, :scope > animateTransform, :scope > animateMotion').forEach((element: SVGAnimationElement) => {
+                const target = getTargetElement(element, this.documentRoot ? this.element : undefined);
                 if (target) {
-                    if (animation.parentElement) {
-                        animation.parentElement.removeChild(animation);
+                    if (element.parentElement) {
+                        element.parentElement.removeChild(element);
                     }
-                    target.appendChild(animation);
+                    target.appendChild(element);
                 }
             });
-            item.querySelectorAll('clipPath, pattern, linearGradient, radialGradient').forEach((definition: SVGElement) => {
-                if (definition.id) {
-                    const id = `#${definition.id}`;
-                    if (SVG.clipPath(definition)) {
-                        this.definitions.clipPath.set(id, definition);
+            item.querySelectorAll('clipPath, pattern, linearGradient, radialGradient').forEach((element: SVGElement) => {
+                if (element.id) {
+                    const id = `#${element.id}`;
+                    if (SVG.clipPath(element)) {
+                        this.definitions.clipPath.set(id, element);
                     }
-                    else if (SVG.pattern(definition)) {
-                        this.definitions.pattern.set(id, definition);
+                    else if (SVG.pattern(element)) {
+                        this.definitions.pattern.set(id, element);
                     }
-                    else if (SVG.linearGradient(definition)) {
+                    else if (SVG.linearGradient(element)) {
                         this.definitions.gradient.set(id, {
-                            element: definition,
                             type: 'linear',
-                            spreadMethod: definition.spreadMethod.baseVal,
-                            colorStop: getColorStop(definition),
-                            ...getBaseValue(definition, 'x1', 'x2', 'y1', 'y2')
+                            element,
+                            spreadMethod: element.spreadMethod.baseVal,
+                            colorStop: getColorStop(element),
+                            ...getBaseValue(element, 'x1', 'x2', 'y1', 'y2')
                         });
                     }
-                    else if (SVG.radialGradient(definition)) {
+                    else if (SVG.radialGradient(element)) {
                         this.definitions.gradient.set(id, {
-                            element: definition,
                             type: 'radial',
-                            spreadMethod: definition.spreadMethod.baseVal,
-                            colorStop: getColorStop(definition),
-                            ...getBaseValue(definition, 'cx', 'cy', 'r', 'fx', 'fy', 'fr')
+                            element,
+                            spreadMethod: element.spreadMethod.baseVal,
+                            colorStop: getColorStop(element),
+                            ...getBaseValue(element, 'cx', 'cy', 'r', 'fx', 'fy', 'fr')
                         });
                     }
                 }
