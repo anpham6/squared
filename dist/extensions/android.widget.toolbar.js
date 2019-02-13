@@ -1,4 +1,4 @@
-/* android.widget 0.5.0
+/* android.widget 0.6.2
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -7,7 +7,6 @@ this.android.widget.toolbar = (function () {
     'use strict';
 
     var $Resource = android.base.Resource;
-    var $View = android.base.View;
     const $const = squared.base.lib.constant;
     const $enum = squared.base.lib.enumeration;
     const $dom = squared.lib.dom;
@@ -54,7 +53,8 @@ this.android.widget.toolbar = (function () {
             const collapsingToolbarChildren = [];
             let depth = target ? 0 : parent.renderDepth + 1;
             let children = node.filter(item => !item.positioned).length;
-            Array.from(element.children).forEach((item) => {
+            for (let i = 0; i < element.children.length; i++) {
+                const item = element.children[i];
                 if (item.tagName === 'IMG') {
                     if ($util.hasValue(item.dataset.navigationIcon)) {
                         const result = $Resource.addImageSrcSet(item, $constA.PREFIX_ANDROID.MENU);
@@ -93,7 +93,7 @@ this.android.widget.toolbar = (function () {
                         }
                     }
                 }
-            });
+            }
             const hasCollapsingToolbar = options.hasOwnProperty('collapsingToolbar') || collapsingToolbarChildren.length;
             const hasAppBar = options.hasOwnProperty('appBar') || appBarChildren.length || hasCollapsingToolbar;
             let appBarOverlay = '';
@@ -181,7 +181,7 @@ this.android.widget.toolbar = (function () {
                 else {
                     $util.defaultWhenNull(appBarOptions, 'android', 'theme', '@style/ThemeOverlay.AppCompat.Dark.ActionBar');
                 }
-                appBarNode = this.createPlaceholder(application.nextId, node, appBarChildren);
+                appBarNode = this.createPlaceholder(node, appBarChildren);
                 appBarNode.parent = node.parent;
                 appBarNode.controlId = $utilA.stripId(appBarOptions.android.id);
                 appBarNode.setControlType($constA.SUPPORT_ANDROID.APPBAR, $enumA.CONTAINER_NODE.BLOCK);
@@ -196,7 +196,7 @@ this.android.widget.toolbar = (function () {
                     }
                     $util.defaultWhenNull(collapsingToolbarOptions, 'app', 'layout_scrollFlags', 'scroll|exitUntilCollapsed');
                     $util.defaultWhenNull(collapsingToolbarOptions, 'app', 'toolbarId', node.documentId);
-                    collapsingToolbarNode = this.createPlaceholder(application.nextId, node, collapsingToolbarChildren);
+                    collapsingToolbarNode = this.createPlaceholder(node, collapsingToolbarChildren);
                     collapsingToolbarNode.parent = appBarNode;
                     if (collapsingToolbarNode) {
                         collapsingToolbarNode.each(item => item.dataset.target = collapsingToolbarNode.controlId);
@@ -266,8 +266,8 @@ this.android.widget.toolbar = (function () {
             $util.defaultWhenNull(optionsPopup, 'parent', themeData.popupOverlay || 'ThemeOverlay.AppCompat.Light');
             $Resource.addTheme(options, optionsActionBar, optionsAppBar, optionsPopup);
         }
-        createPlaceholder(nextId, node, children) {
-            const placeholder = new $View(nextId, $dom.createElement(node.actualParent ? node.actualParent.element : null, node.block), this.application.controllerHandler.afterInsertNode);
+        createPlaceholder(node, children) {
+            const placeholder = this.application.createNode($dom.createElement(node.actualParent ? node.actualParent.element : null, node.block));
             placeholder.inherit(node, 'base');
             placeholder.exclude({ resource: $enum.NODE_RESOURCE.ALL });
             placeholder.positioned = true;

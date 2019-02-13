@@ -51,6 +51,7 @@ interface GroupTemplateData extends TemplateDataAA {
 
 interface SetTemplateData extends SetOrdering, TemplateDataAA {
     AA: AnimatorTemplateData[];
+    BB: TogetherTemplateData[];
 }
 
 interface AnimatorTemplateData extends SetOrdering, TemplateDataAAA {
@@ -62,6 +63,10 @@ interface AnimatorTemplateData extends SetOrdering, TemplateDataAAA {
 
 interface FillTemplateData extends SetOrdering, ExternalData {
     values: PropertyValue[];
+}
+
+interface TogetherTemplateData extends SetOrdering, ExternalData {
+    together: PropertyValue[];
 }
 
 interface PathTemplateData extends Partial<SvgPath> {
@@ -108,7 +113,7 @@ interface PropertyValue {
     valueFrom?: string;
     valueTo?: string;
     interpolator?: string;
-    propertyValues?: PropertyValueHolder[] | boolean;
+    propertyValues: PropertyValueHolder[] | boolean;
 }
 
 type FillReplace = {
@@ -125,7 +130,7 @@ const $constS = squared.svg.lib.constant;
 const $utilS = squared.svg.lib.util;
 
 const TEMPLATES: ObjectMap<StringMap> = {};
-const STORED = Resource.STORED as ResourceStoredMapAndroid;
+const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 
 const INTERPOLATOR_ANDROID = {
     accelerate_decelerate: '@android:anim/accelerate_decelerate_interpolator',
@@ -272,7 +277,7 @@ function partitionTransforms(element: SVGGraphicsElement, transforms: SvgTransfo
     return [[], transforms];
 }
 
-function segmentTransforms(element: SVGGraphicsElement, transforms: SvgTransform[]): [SvgTransform[][], SvgTransform[]] {
+function segmentTransforms(element: SVGGraphicsElement, transforms: SvgTransform[], ignoreClient = false): [SvgTransform[][], SvgTransform[]] {
     if (transforms.length) {
         const host: SvgTransform[][] = [];
         const client: SvgTransform[] = [];
@@ -315,7 +320,7 @@ function segmentTransforms(element: SVGGraphicsElement, transforms: SvgTransform
                     client.push(item);
                     break;
                 case SVGTransform.SVG_TRANSFORM_TRANSLATE:
-                    if (host.length === 0 && current.length === 0) {
+                    if (!ignoreClient && host.length === 0 && current.length === 0) {
                         client.push(item);
                     }
                     else {
@@ -516,11 +521,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 svg.build(this.options.transformExclude, partitionTransforms);
                 svg.synchronize(this.SYNCHRONIZE_MODE);
                 this.parseVectorData(svg);
-                this.queueAnimations(
-                    svg,
-                    svg.name,
-                    item => item.attributeName === 'opacity'
-                );
+                this.queueAnimations(svg, svg.name, item => item.attributeName === 'opacity');
                 const templateName = $util.convertWord(`${node.tagName}_${node.controlId}_viewbox`, true).toLowerCase();
                 const getFilename = (prefix = '', suffix = '') => {
                     return templateName + (prefix !== '' ? `_${prefix}` : '') + (this.IMAGE_DATA.length ? '_vector' : '') + (suffix !== '' ? `_${suffix.toLowerCase()}` : '');
@@ -637,7 +638,8 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                         [togetherTargets, transformTargets, ...isolatedTargets].forEach((targets, index) => {
                             const setData: SetTemplateData = {
                                 ordering: index === 0 ? '' : 'sequentially',
-                                AA: []
+                                AA: [],
+                                BB: []
                             };
                             animatorMap.clear();
                             for (const items of targets) {
@@ -677,6 +679,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                 const fillBeforeData: FillTemplateData = { values: [] };
                                 const infiniteData: FillTemplateData = { values: [] };
                                 const fillAfterData: FillTemplateData = { values: [] };
+                                const togetherData: TogetherTemplateData = { together: [] };
                                 const [infinite, repeating] = synchronized ? $util.partitionArray(items, animate => animate.iterationCount === -1) : [[], items];
                                 if (infinite.length === 1) {
                                     repeating.push(infinite[0]);
@@ -727,7 +730,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                             }
                                         }
                                         if (valueTo) {
-                                            animatorData.repeating.push(createPropertyValue(ATTRIBUTE_ANDROID[item.attributeName], valueTo, '0', valueType, valueFrom, item.delay > 0 ? item.delay.toString() : ''));
+                                            togetherData.together.push(createPropertyValue(ATTRIBUTE_ANDROID[item.attributeName], valueTo, '0', valueType, valueFrom, item.delay > 0 ? item.delay.toString() : ''));
                                         }
                                     }
                                     else if (valueType !== undefined) {
@@ -1195,11 +1198,18 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                             break;
                                     }
                                 }
-                                if (animatorData.repeating.length || animatorData.infinite && animatorData.infinite.length) {
+                                if (index === 0 && !animatorData.fillBefore && !animatorData.infinite && !animatorData.fillAfter && animatorData.repeating.every(repeat => repeat.propertyValues === false)) {
+                                    togetherData.together.push(...animatorData.repeating);
+                                    animatorData.repeating.length = 0;
+                                }
+                                else if (animatorData.repeating.length || animatorData.infinite && animatorData.infinite.length) {
                                     setData.AA.push(animatorData);
                                 }
+                                if (togetherData.together.length) {
+                                    setData.BB.push(togetherData);
+                                }
                             }
-                            if ($util.isArray(setData.AA)) {
+                            if (setData.AA.length || setData.BB.length) {
                                 targetSetData.A.push(setData);
                             }
                         });
@@ -1363,10 +1373,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
         }
         if (target !== this.SVG_INSTANCE) {
             const baseData: TransformData = {};
-            const [transformHost, transformClient] = segmentTransforms(target.element, target.transforms);
-            if (transformClient.length) {
-                Object.assign(baseData, createTransformData(transformClient));
-            }
+            const [transformHost] = segmentTransforms(target.element, target.transforms, true);
             const groupName = getVectorName(target, 'animate');
             if (($SvgBuild.asG(target) || $SvgBuild.asUseSymbol(target)) && $util.hasValue(target.clipPath) && this.createClipPath(target, clipPath, target.clipPath)) {
                 baseData.groupName = groupName;

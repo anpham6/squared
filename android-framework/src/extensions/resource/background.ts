@@ -223,27 +223,22 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 const backgroundPosition: string[] = [];
                 const backgroundPositionX = stored.backgroundPositionX.split(',').map(value => value.trim());
                 const backgroundPositionY = stored.backgroundPositionY.split(',').map(value => value.trim());
-                if ($util.isArray(stored.backgroundImage) && !node.hasBit('excludeResource', $enum.NODE_RESOURCE.IMAGE_SOURCE)) {
-                    backgroundImage.push(...stored.backgroundImage);
-                    for (let i = 0; i < backgroundImage.length; i++) {
-                        if (backgroundImage[i] && backgroundImage[i] !== 'none') {
-                            backgroundImage[i] = Resource.addImageUrl(backgroundImage[i]);
-                            backgroundDimensions[i] = Resource.ASSETS.images.get($dom.cssResolveUrl(backgroundImage[i]));
-                            const postionX = backgroundPositionX[i] || backgroundPositionX[i - 1];
-                            const postionY = backgroundPositionY[i] || backgroundPositionY[i - 1];
-                            backgroundPosition[i] = `${checkBackgroundPosition(postionX, postionY, 'left')} ${checkBackgroundPosition(postionY, postionX, 'top')}`;
-                        }
-                        else {
-                            backgroundImage[i] = '';
-                            backgroundRepeat[i] = '';
-                            backgroundPosition[i] = '';
+                if (!node.hasBit('excludeResource', $enum.NODE_RESOURCE.IMAGE_SOURCE)) {
+                    if (stored.backgroundImage) {
+                        for (let i = 0; i < stored.backgroundImage.length; i++) {
+                            const value = stored.backgroundImage[i];
+                            const x = backgroundPositionX[i] || backgroundPositionX[i - 1];
+                            const y = backgroundPositionY[i] || backgroundPositionY[i - 1];
+                            backgroundImage[i] = Resource.addImageUrl(value);
+                            backgroundDimensions[i] = Resource.ASSETS.images.get($dom.cssResolveUrl(value));
+                            backgroundPosition[i] = `${checkBackgroundPosition(x, y, 'left')} ${checkBackgroundPosition(y, x, 'top')}`;
                         }
                     }
-                }
-                else if (stored.backgroundGradient) {
-                    const gradients = Resource.createBackgroundGradient(node, stored.backgroundGradient);
-                    if (gradients.length) {
-                        backgroundGradient.push(gradients[0] as BackgroundGradient & TemplateDataAA);
+                    else if (stored.backgroundGradient) {
+                        const gradients = Resource.createBackgroundGradient(node, stored.backgroundGradient);
+                        if (gradients.length) {
+                            backgroundGradient.push(gradients[0] as BackgroundGradient & TemplateDataAA);
+                        }
                     }
                 }
                 const companion = node.companion;
@@ -259,10 +254,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     Resource.isBorderVisible(stored.borderRight) ||
                     Resource.isBorderVisible(stored.borderBottom) ||
                     Resource.isBorderVisible(stored.borderLeft) ||
-                    stored.borderRadius
+                    stored.borderRadius !== undefined
                 );
-                const hasBackgroundImage = backgroundImage.filter(value => value).length;
-                if (hasBorder || hasBackgroundImage || backgroundGradient.length) {
+                if (hasBorder || backgroundImage.length || backgroundGradient.length) {
                     const borders: BorderAttribute[] = [
                         stored.borderTop,
                         stored.borderRight,
@@ -283,190 +277,187 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     let data: TemplateDataA;
                     let resourceName = '';
                     for (let i = 0; i < backgroundImage.length; i++) {
-                        if (backgroundImage[i] !== '') {
-                            const image = backgroundDimensions[i];
-                            const boxPosition = $dom.getBackgroundPosition(backgroundPosition[i], node.bounds, node.dpi, node.fontSize);
-                            let gravity = (() => {
-                                if (boxPosition.horizontal === 'center' && boxPosition.vertical === 'center') {
-                                    return 'center';
-                                }
-                                return `${boxPosition.horizontal === 'center' ? 'center_horizontal' : boxPosition.horizontal}|${boxPosition.vertical === 'center' ? 'center_vertical' : boxPosition.vertical}`;
-                            })();
-                            let width = '';
-                            let height = '';
-                            let tileMode = '';
-                            let tileModeX = '';
-                            let tileModeY = '';
-                            const imageRepeat = !image || image.width < node.bounds.width || image.height < node.bounds.height;
-                            switch (backgroundRepeat[i]) {
-                                case 'repeat-x':
-                                    if (imageRepeat) {
-                                        tileModeX = 'repeat';
-                                    }
-                                    break;
-                                case 'repeat-y':
-                                    if (imageRepeat) {
-                                        tileModeY = 'repeat';
-                                    }
-                                    break;
-                                case 'no-repeat':
-                                    tileMode = 'disabled';
-                                    break;
-                                case 'repeat':
-                                    if (imageRepeat) {
-                                        tileMode = 'repeat';
-                                    }
-                                    break;
+                        const image = backgroundDimensions[i];
+                        const boxPosition = $dom.getBackgroundPosition(backgroundPosition[i], node.bounds, node.dpi, node.fontSize);
+                        let gravity = (() => {
+                            if (boxPosition.horizontal === 'center' && boxPosition.vertical === 'center') {
+                                return 'center';
                             }
-                            if (gravity !== '' && image && image.width > 0 && image.height > 0 && node.renderChildren.length === 0) {
-                                if (tileModeY === 'repeat') {
-                                    let tileWidth = 0;
-                                    if (node.hasWidth) {
-                                        tileWidth = node.width + node.paddingLeft + node.paddingRight;
-                                    }
-                                    else {
-                                        tileWidth = node.bounds.width - (node.borderLeftWidth + node.borderRightWidth);
-                                    }
-                                    if (image.width < tileWidth) {
-                                        const layoutWidth = $util.convertInt(node.android('layout_width'));
-                                        if (gravity.indexOf('left') !== -1) {
-                                            boxPosition.right = tileWidth - image.width;
-                                            if (node.hasWidth && tileWidth > layoutWidth) {
-                                                node.android('layout_width', $util.formatPX(node.bounds.width));
-                                            }
-                                        }
-                                        else if (gravity.indexOf('right') !== -1) {
-                                            boxPosition.left = tileWidth - image.width;
-                                            if (node.hasWidth && tileWidth > layoutWidth) {
-                                                node.android('layout_width', $util.formatPX(node.bounds.width));
-                                            }
-                                        }
-                                        else if (gravity === 'center' || gravity.indexOf('center_horizontal') !== -1) {
-                                            boxPosition.left = Math.floor((tileWidth - image.width) / 2);
-                                            width = $util.formatPX(image.width);
-                                            if (node.hasWidth && tileWidth > layoutWidth) {
-                                                node.android('layout_width', $util.formatPX(node.bounds.width));
-                                            }
-                                        }
-                                    }
+                            return `${boxPosition.horizontal === 'center' ? 'center_horizontal' : boxPosition.horizontal}|${boxPosition.vertical === 'center' ? 'center_vertical' : boxPosition.vertical}`;
+                        })();
+                        let width = '';
+                        let height = '';
+                        let tileMode = '';
+                        let tileModeX = '';
+                        let tileModeY = '';
+                        const imageRepeat = !image || image.width < node.bounds.width || image.height < node.bounds.height;
+                        switch (backgroundRepeat[i]) {
+                            case 'repeat-x':
+                                if (imageRepeat) {
+                                    tileModeX = 'repeat';
                                 }
-                                if (tileModeX === 'repeat') {
-                                    let tileHeight = 0;
-                                    if (node.hasHeight) {
-                                        tileHeight = node.height + node.paddingTop + node.paddingBottom;
-                                    }
-                                    else {
-                                        tileHeight = node.bounds.height - (node.borderTopWidth + node.borderBottomWidth);
-                                    }
-                                    if (image.height < tileHeight) {
-                                        const layoutHeight = $util.convertInt(node.android('layout_height'));
-                                        if (gravity.indexOf('top') !== -1) {
-                                            boxPosition.bottom = tileHeight - image.height;
-                                            if (!node.hasHeight && tileHeight > layoutHeight) {
-                                                node.android('layout_height', $util.formatPX(node.bounds.height));
-                                            }
-                                        }
-                                        else if (gravity.indexOf('bottom') !== -1) {
-                                            boxPosition.top = tileHeight - image.height;
-                                            if (!node.hasHeight && tileHeight > layoutHeight) {
-                                                node.android('layout_height', $util.formatPX(node.bounds.height));
-                                            }
-                                        }
-                                        else if (gravity === 'center' || gravity.indexOf('center_vertical') !== -1) {
-                                            boxPosition.top = Math.floor((tileHeight - image.height) / 2);
-                                            height = $util.formatPX(image.height);
-                                            if (!node.hasHeight && tileHeight > layoutHeight) {
-                                                node.android('layout_height', $util.formatPX(node.bounds.height));
-                                            }
-                                        }
-                                    }
+                                break;
+                            case 'repeat-y':
+                                if (imageRepeat) {
+                                    tileModeY = 'repeat';
                                 }
-                            }
-                            if (hasBackgroundImage) {
-                                if (node.of(CONTAINER_NODE.IMAGE, $enum.NODE_ALIGNMENT.SINGLE) && backgroundPosition.length === 1) {
-                                    node.android('src', `@drawable/${backgroundImage[0]}`);
-                                    if (boxPosition.left > 0) {
-                                        node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, boxPosition.left);
-                                    }
-                                    if (boxPosition.top > 0) {
-                                        node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, boxPosition.top);
-                                    }
-                                    let scaleType = '';
-                                    switch (gravity) {
-                                        case 'left|top':
-                                        case 'left|center_vertical':
-                                        case 'left|bottom':
-                                            scaleType = 'fitStart';
-                                            break;
-                                        case 'right|top':
-                                        case 'right|center_vertical':
-                                        case 'right|bottom':
-                                            scaleType = 'fitEnd';
-                                            break;
-                                        case 'center':
-                                        case 'center_horizontal|top':
-                                        case 'center_horizontal|bottom':
-                                            scaleType = 'center';
-                                            break;
-                                    }
-                                    node.android('scaleType', scaleType);
-                                    if (!hasBorder) {
-                                        return;
-                                    }
-                                    backgroundImage.length = 0;
+                                break;
+                            case 'no-repeat':
+                                tileMode = 'disabled';
+                                break;
+                            case 'repeat':
+                                if (imageRepeat) {
+                                    tileMode = 'repeat';
+                                }
+                                break;
+                        }
+                        if (gravity !== '' && image && image.width > 0 && image.height > 0 && node.renderChildren.length === 0) {
+                            if (tileModeY === 'repeat') {
+                                let tileWidth = 0;
+                                if (node.hasWidth) {
+                                    tileWidth = node.width + node.paddingLeft + node.paddingRight;
                                 }
                                 else {
-                                    const imageData: BackgroundImage = {
-                                        top: boxPosition.top !== 0 ? $util.formatPX(boxPosition.top) : '',
-                                        right: boxPosition.right !== 0 ? $util.formatPX(boxPosition.right) : '',
-                                        bottom: boxPosition.bottom !== 0 ? $util.formatPX(boxPosition.bottom) : '',
-                                        left: boxPosition.left !== 0 ? $util.formatPX(boxPosition.left) : '',
-                                        width,
-                                        height,
-                                        bitmap: []
-                                    };
-                                    if (!(backgroundSize[i] === 'auto' || backgroundSize[i] === 'auto auto' || backgroundSize[i] === 'initial')) {
-                                        switch (backgroundSize[i]) {
-                                            case 'cover':
-                                            case 'contain':
-                                            case '100% 100%':
-                                                width = '';
-                                                height = '';
-                                                tileMode = '';
-                                                tileModeX = '';
-                                                tileModeY = '';
-                                                gravity = '';
-                                                break;
-                                            default:
-                                                const dimensions = backgroundSize[i].split(' ');
-                                                if (dimensions[0] === '100%') {
-                                                    tileModeX = '';
-                                                }
-                                                else if (dimensions[1] === '100%') {
-                                                    tileModeY = '';
-                                                }
-                                                dimensions.forEach((value, index) => {
-                                                    if (value !== 'auto' && value !== '100%') {
-                                                        imageData[index === 0 ? 'width' : 'height'] = node.convertPX(backgroundSize[i], index === 0, false);
-                                                    }
-                                                });
-                                                break;
+                                    tileWidth = node.bounds.width - (node.borderLeftWidth + node.borderRightWidth);
+                                }
+                                if (image.width < tileWidth) {
+                                    const layoutWidth = $util.convertInt(node.android('layout_width'));
+                                    if (gravity.indexOf('left') !== -1) {
+                                        boxPosition.right = tileWidth - image.width;
+                                        if (node.hasWidth && tileWidth > layoutWidth) {
+                                            node.android('layout_width', $util.formatPX(node.bounds.width));
                                         }
                                     }
-                                    if (gravity !== '' || tileMode !== '' || tileModeX !== '' || tileModeY !== '') {
-                                        imageData.bitmap.push({
-                                            src: backgroundImage[i],
-                                            gravity,
-                                            tileMode,
-                                            tileModeX,
-                                            tileModeY,
-                                        });
-                                        imagesD.push(imageData);
+                                    else if (gravity.indexOf('right') !== -1) {
+                                        boxPosition.left = tileWidth - image.width;
+                                        if (node.hasWidth && tileWidth > layoutWidth) {
+                                            node.android('layout_width', $util.formatPX(node.bounds.width));
+                                        }
                                     }
-                                    else {
-                                        imageData.src = backgroundImage[i];
-                                        imagesE.push(imageData);
+                                    else if (gravity === 'center' || gravity.indexOf('center_horizontal') !== -1) {
+                                        boxPosition.left = Math.floor((tileWidth - image.width) / 2);
+                                        width = $util.formatPX(image.width);
+                                        if (node.hasWidth && tileWidth > layoutWidth) {
+                                            node.android('layout_width', $util.formatPX(node.bounds.width));
+                                        }
                                     }
+                                }
+                            }
+                            if (tileModeX === 'repeat') {
+                                let tileHeight = 0;
+                                if (node.hasHeight) {
+                                    tileHeight = node.height + node.paddingTop + node.paddingBottom;
+                                }
+                                else {
+                                    tileHeight = node.bounds.height - (node.borderTopWidth + node.borderBottomWidth);
+                                }
+                                if (image.height < tileHeight) {
+                                    const layoutHeight = $util.convertInt(node.android('layout_height'));
+                                    if (gravity.indexOf('top') !== -1) {
+                                        boxPosition.bottom = tileHeight - image.height;
+                                        if (!node.hasHeight && tileHeight > layoutHeight) {
+                                            node.android('layout_height', $util.formatPX(node.bounds.height));
+                                        }
+                                    }
+                                    else if (gravity.indexOf('bottom') !== -1) {
+                                        boxPosition.top = tileHeight - image.height;
+                                        if (!node.hasHeight && tileHeight > layoutHeight) {
+                                            node.android('layout_height', $util.formatPX(node.bounds.height));
+                                        }
+                                    }
+                                    else if (gravity === 'center' || gravity.indexOf('center_vertical') !== -1) {
+                                        boxPosition.top = Math.floor((tileHeight - image.height) / 2);
+                                        height = $util.formatPX(image.height);
+                                        if (!node.hasHeight && tileHeight > layoutHeight) {
+                                            node.android('layout_height', $util.formatPX(node.bounds.height));
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if (backgroundImage.length) {
+                            if (node.of(CONTAINER_NODE.IMAGE, $enum.NODE_ALIGNMENT.SINGLE) && backgroundImage.length === 1) {
+                                if (boxPosition.left > 0) {
+                                    node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, boxPosition.left);
+                                }
+                                if (boxPosition.top > 0) {
+                                    node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, boxPosition.top);
+                                }
+                                let scaleType = '';
+                                switch (gravity) {
+                                    case 'left|top':
+                                    case 'left|center_vertical':
+                                    case 'left|bottom':
+                                        scaleType = 'fitStart';
+                                        break;
+                                    case 'right|top':
+                                    case 'right|center_vertical':
+                                    case 'right|bottom':
+                                        scaleType = 'fitEnd';
+                                        break;
+                                    case 'center':
+                                    case 'center_horizontal|top':
+                                    case 'center_horizontal|bottom':
+                                        scaleType = 'center';
+                                        break;
+                                }
+                                node.android('scaleType', scaleType);
+                                node.android('src', `@drawable/${backgroundImage[0]}`);
+                                if (!hasBorder) {
+                                    return;
+                                }
+                            }
+                            else {
+                                const imageData: BackgroundImage = {
+                                    top: boxPosition.top !== 0 ? $util.formatPX(boxPosition.top) : '',
+                                    right: boxPosition.right !== 0 ? $util.formatPX(boxPosition.right) : '',
+                                    bottom: boxPosition.bottom !== 0 ? $util.formatPX(boxPosition.bottom) : '',
+                                    left: boxPosition.left !== 0 ? $util.formatPX(boxPosition.left) : '',
+                                    width,
+                                    height,
+                                    bitmap: []
+                                };
+                                if (!(backgroundSize[i] === 'auto' || backgroundSize[i] === 'auto auto' || backgroundSize[i] === 'initial')) {
+                                    switch (backgroundSize[i]) {
+                                        case 'cover':
+                                        case 'contain':
+                                        case '100% 100%':
+                                            width = '';
+                                            height = '';
+                                            tileMode = '';
+                                            tileModeX = '';
+                                            tileModeY = '';
+                                            gravity = '';
+                                            break;
+                                        default:
+                                            const dimensions = backgroundSize[i].split(' ');
+                                            if (dimensions[0] === '100%') {
+                                                tileModeX = '';
+                                            }
+                                            else if (dimensions[1] === '100%') {
+                                                tileModeY = '';
+                                            }
+                                            dimensions.forEach((value, index) => {
+                                                if (value !== 'auto' && value !== '100%') {
+                                                    imageData[index === 0 ? 'width' : 'height'] = node.convertPX(backgroundSize[i], index === 0, false);
+                                                }
+                                            });
+                                            break;
+                                    }
+                                }
+                                if (gravity !== '' || tileMode !== '' || tileModeX !== '' || tileModeY !== '') {
+                                    imageData.bitmap.push({
+                                        src: backgroundImage[i],
+                                        gravity,
+                                        tileMode,
+                                        tileModeX,
+                                        tileModeY,
+                                    });
+                                    imagesD.push(imageData);
+                                }
+                                else {
+                                    imageData.src = backgroundImage[i];
+                                    imagesE.push(imageData);
                                 }
                             }
                         }
@@ -534,7 +525,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     const border = stored.border;
                     if (border && !(border.style === 'double' && parseInt(border.width) > 2 || (border.style === 'groove' || border.style === 'ridge') && parseInt(border.width) > 1)) {
                         const stroke = getShapeAttribute(stored, 'stroke') || [];
-                        if (!hasBackgroundImage && backgroundGradient.length <= 1 && !vectorGradient) {
+                        if (backgroundImage.length === 0 && backgroundGradient.length <= 1 && !vectorGradient) {
                             if (borderRadius && borderRadius[0]['radius'] === undefined) {
                                 borderRadius[0]['radius'] = '1px';
                             }
@@ -660,7 +651,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                     }
                     node.android('background', `@drawable/${resourceName}`, false);
-                    if (hasBackgroundImage) {
+                    if (backgroundImage.length) {
                         node.data('RESOURCE', 'backgroundImage', true);
                         if (this.options.autoSizeBackgroundImage &&
                             !node.documentRoot &&

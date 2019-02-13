@@ -407,10 +407,10 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     get userSettings() {
-        return this.resource.userSettings as UserSettingsAndroid;
+        return <UserSettingsAndroid> this.resource.userSettings;
     }
 
     get stored() {
-        return this.resource.stored as ResourceStoredMapAndroid;
+        return <ResourceStoredMapAndroid> this.resource.stored;
     }
 }

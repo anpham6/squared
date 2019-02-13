@@ -27,11 +27,9 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                             if (i === 0) {
                                 style = value;
                             }
-                            else {
-                                if (style === '' || value !== style) {
-                                    valid = false;
-                                    return true;
-                                }
+                            else if (style === '' || value !== style) {
+                                valid = false;
+                                return true;
                             }
                             found = true;
                         }

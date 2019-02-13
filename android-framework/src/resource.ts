@@ -7,6 +7,8 @@ import View from './view';
 
 import { RESERVED_JAVA } from './lib/constant';
 
+type SvgPath = squared.svg.SvgPath;
+
 const $Resource = squared.base.Resource;
 const $SvgBuild = squared.svg && squared.svg.SvgBuild;
 const $color = squared.lib.color;
@@ -14,7 +16,7 @@ const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
-const STORED = $Resource.STORED as ResourceStoredMapAndroid;
+const STORED = <ResourceStoredMapAndroid> $Resource.STORED;
 
 function getDistanceToX(angle: number, length: number) {
     return length * Math.sin($util.convertRadian(angle));
@@ -41,7 +43,7 @@ function getTileMode(value: number) {
 }
 
 export default class Resource<T extends View> extends squared.base.Resource<T> implements android.base.Resource<T> {
-    public static createBackgroundGradient<T extends View>(node: T, gradients: Gradient[], path?: squared.svg.SvgPath) {
+    public static createBackgroundGradient<T extends View>(node: T, gradients: Gradient[], path?: SvgPath) {
         const result: BackgroundGradient[] = [];
         for (const item of gradients) {
             const gradient: BackgroundGradient = { type: item.type, colorStops: [] };

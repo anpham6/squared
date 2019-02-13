@@ -1,4 +1,4 @@
-/* squared.svg 0.6.1
+/* squared.svg 0.6.2
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -13,21 +13,6 @@
         element.style[attr] = value;
         element.setAttribute(attr, value);
     }
-    function convertAngle(value, unit = 'deg') {
-        let angle = parseFloat(value);
-        switch (unit) {
-            case 'turn':
-                angle *= 360;
-                break;
-            case 'rad':
-                angle *= 180 / Math.PI;
-                break;
-        }
-        return angle;
-    }
-    function convertRadian(angle) {
-        return angle * Math.PI / 180;
-    }
     const SHAPES = {
         path: 1,
         line: 2,
@@ -39,17 +24,14 @@
     };
     const REGEXP_SVG = {
         URL: /url\("?(#.*?)"?\)/,
-        ZERO_ONE: '(0(?:\\.\\d+)?|1(?:\\.0+)?)',
-        DECIMAL: '(-?[\\d.]+)',
-        LENGTH: '(-?[\\d.]+(?:[a-z]{2,}|%)?)',
-        DEGREE: '(?:(-?[\\d.]+)(deg|rad|turn))'
+        ZERO_ONE: '(0(?:\\.\\d+)?|1(?:\\.0+)?)'
     };
     const REGEXP_TRANSFORM = {
-        MATRIX: `(matrix(?:3d)?)\\(${REGEXP_SVG.DECIMAL}, ${REGEXP_SVG.DECIMAL}, ${REGEXP_SVG.DECIMAL}, ${REGEXP_SVG.DECIMAL}, ${REGEXP_SVG.DECIMAL}, ${REGEXP_SVG.DECIMAL}(?:, ${REGEXP_SVG.DECIMAL})?(?:, ${REGEXP_SVG.DECIMAL})?(?:, ${REGEXP_SVG.DECIMAL})?(?:, ${REGEXP_SVG.DECIMAL})?(?:, ${REGEXP_SVG.DECIMAL})?(?:, ${REGEXP_SVG.DECIMAL})?(?:, ${REGEXP_SVG.DECIMAL})?(?:, ${REGEXP_SVG.DECIMAL})?(?:, ${REGEXP_SVG.DECIMAL})?(?:, ${REGEXP_SVG.DECIMAL})?\\)`,
-        ROTATE: `(rotate[XY]?)\\(${REGEXP_SVG.DEGREE}\\)`,
-        SKEW: `(skew[XY]?)\\(${REGEXP_SVG.DEGREE}(?:, ${REGEXP_SVG.DEGREE})?\\)`,
-        SCALE: `(scale[XY]?)\\(${REGEXP_SVG.DECIMAL}(?:, ${REGEXP_SVG.DECIMAL})?\\)`,
-        TRANSLATE: `(translate[XY]?)\\(${REGEXP_SVG.LENGTH}(?:, ${REGEXP_SVG.LENGTH})?\\)`
+        MATRIX: `(matrix(?:3d)?)\\(${$util.REGEXP_STRING.DECIMAL}, ${$util.REGEXP_STRING.DECIMAL}, ${$util.REGEXP_STRING.DECIMAL}, ${$util.REGEXP_STRING.DECIMAL}, ${$util.REGEXP_STRING.DECIMAL}, ${$util.REGEXP_STRING.DECIMAL}(?:, ${$util.REGEXP_STRING.DECIMAL})?(?:, ${$util.REGEXP_STRING.DECIMAL})?(?:, ${$util.REGEXP_STRING.DECIMAL})?(?:, ${$util.REGEXP_STRING.DECIMAL})?(?:, ${$util.REGEXP_STRING.DECIMAL})?(?:, ${$util.REGEXP_STRING.DECIMAL})?(?:, ${$util.REGEXP_STRING.DECIMAL})?(?:, ${$util.REGEXP_STRING.DECIMAL})?(?:, ${$util.REGEXP_STRING.DECIMAL})?(?:, ${$util.REGEXP_STRING.DECIMAL})?\\)`,
+        ROTATE: `(rotate[XY]?)\\(${$util.REGEXP_STRING.DEGREE}\\)`,
+        SKEW: `(skew[XY]?)\\(${$util.REGEXP_STRING.DEGREE}(?:, ${$util.REGEXP_STRING.DEGREE})?\\)`,
+        SCALE: `(scale[XY]?)\\(${$util.REGEXP_STRING.DECIMAL}(?:, ${$util.REGEXP_STRING.DECIMAL})?\\)`,
+        TRANSLATE: `(translate[XY]?)\\(${$util.REGEXP_STRING.LENGTH}(?:, ${$util.REGEXP_STRING.LENGTH})?\\)`
     };
     const MATRIX = {
         applyX(matrix, x, y) {
@@ -57,6 +39,9 @@
         },
         applyY(matrix, x, y) {
             return matrix.b * x + matrix.d * y + matrix.f;
+        },
+        distance(angle, value) {
+            return value * Math.cos($util.convertRadian(angle)) * -1;
         },
         clone(matrix) {
             return {
@@ -69,7 +54,7 @@
             };
         },
         rotate(angle) {
-            const r = convertRadian(angle);
+            const r = $util.convertRadian(angle);
             const a = Math.cos(r);
             const b = Math.sin(r);
             return {
@@ -84,8 +69,8 @@
         skew(x = 0, y = 0) {
             return {
                 a: 1,
-                b: Math.tan(convertRadian(y)),
-                c: Math.tan(convertRadian(x)),
+                b: Math.tan($util.convertRadian(y)),
+                c: Math.tan($util.convertRadian(x)),
                 d: 1,
                 e: 0,
                 f: 0
@@ -132,7 +117,7 @@
                         const isX = match[1].endsWith('X');
                         const isY = match[1].endsWith('Y');
                         if (match[1].startsWith('rotate')) {
-                            const angle = convertAngle(match[2], match[3]);
+                            const angle = $util.convertAngle(match[2], match[3]);
                             const matrix = MATRIX.rotate(angle);
                             if (isX) {
                                 matrix.a = 1;
@@ -147,8 +132,8 @@
                             result[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_ROTATE, matrix, angle, !isX, !isY);
                         }
                         else if (match[1].startsWith('skew')) {
-                            const x = isY ? 0 : convertAngle(match[2], match[3]);
-                            const y = isY ? convertAngle(match[2], match[3]) : (match[4] && match[5] ? convertAngle(match[4], match[5]) : 0);
+                            const x = isY ? 0 : $util.convertAngle(match[2], match[3]);
+                            const y = isY ? $util.convertAngle(match[2], match[3]) : (match[4] && match[5] ? $util.convertAngle(match[4], match[5]) : 0);
                             const matrix = MATRIX.skew(x, y);
                             if (isX) {
                                 result[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWX, matrix, x, true, false);
@@ -224,11 +209,10 @@
             return undefined;
         },
         origin(element, value) {
-            const result = {
-                x: null,
-                y: null
-            };
-            value = value || $dom.cssAttribute(element, 'transform-origin');
+            if (value === undefined) {
+                value = $dom.cssAttribute(element, 'transform-origin');
+            }
+            const result = { x: null, y: null };
             if (value !== '') {
                 const viewBox = getNearestViewBox(element);
                 let width;
@@ -239,7 +223,7 @@
                 }
                 else {
                     const parent = element.parentElement;
-                    if (parent instanceof SVGGraphicsElement && parent.viewportElement && (SVG.svg(parent.viewportElement) || SVG.symbol(parent.viewportElement)) && parent.viewportElement.viewBox) {
+                    if (parent instanceof SVGGraphicsElement && parent.viewportElement && (SVG.svg(parent.viewportElement) || SVG.symbol(parent.viewportElement))) {
                         width = parent.viewportElement.viewBox.baseVal.width;
                         height = parent.viewportElement.viewBox.baseVal.height;
                     }
@@ -297,43 +281,27 @@
             result.y = result.y || 0;
             return result;
         },
-        rotate(element) {
+        rotateOrigin(element, attr = 'transform') {
+            const value = $dom.getNamedItem(element, attr);
             const result = [];
-            const transform = element.attributes.getNamedItem('transform');
-            if (transform) {
+            if (value !== '') {
                 const pattern = /rotate\((-?[\d.]+),?\s*(-?[\d.]+),?\s*(-?[\d.]+)\)/g;
                 let match;
-                while ((match = pattern.exec(transform.value)) !== null) {
-                    result.push({
-                        angle: parseFloat(match[1]),
-                        x: parseFloat(match[2]),
-                        y: parseFloat(match[3])
-                    });
+                while ((match = pattern.exec(value)) !== null) {
+                    const angle = parseFloat(match[1]);
+                    if (angle !== 0) {
+                        result.push({
+                            angle,
+                            x: parseFloat(match[2]),
+                            y: parseFloat(match[3])
+                        });
+                    }
                 }
             }
-            return result.length ? result : [{ angle: 0, x: 0, y: 0 }];
+            return result;
         },
-        valueAsInitial(value) {
-            switch (value) {
-                case 'rotate':
-                case SVGTransform.SVG_TRANSFORM_ROTATE:
-                    return '0 0 0';
-                case 'scale':
-                case SVGTransform.SVG_TRANSFORM_SCALE:
-                    return '1 1';
-                case 'skewX':
-                case 'skewY':
-                case SVGTransform.SVG_TRANSFORM_SKEWX:
-                case SVGTransform.SVG_TRANSFORM_SKEWY:
-                    return '0';
-                case 'translate':
-                case SVGTransform.SVG_TRANSFORM_TRANSLATE:
-                    return '0 0';
-            }
-            return '';
-        },
-        typeAsName(value) {
-            switch (value) {
+        typeAsName(type) {
+            switch (type) {
                 case SVGTransform.SVG_TRANSFORM_ROTATE:
                     return 'rotate';
                 case SVGTransform.SVG_TRANSFORM_SCALE:
@@ -344,6 +312,25 @@
                     return 'skewY';
                 case SVGTransform.SVG_TRANSFORM_TRANSLATE:
                     return 'translate';
+            }
+            return '';
+        },
+        typeAsValue(type) {
+            switch (type) {
+                case 'rotate':
+                case SVGTransform.SVG_TRANSFORM_ROTATE:
+                    return '0 0 0';
+                case 'scale':
+                case SVGTransform.SVG_TRANSFORM_SCALE:
+                    return '1 1 0 0';
+                case 'skewX':
+                case 'skewY':
+                case SVGTransform.SVG_TRANSFORM_SKEWX:
+                case SVGTransform.SVG_TRANSFORM_SKEWY:
+                    return '0';
+                case 'translate':
+                case SVGTransform.SVG_TRANSFORM_TRANSLATE:
+                    return '0 0';
             }
             return '';
         }
@@ -472,9 +459,9 @@
         }
     }
     function getTargetElement(element, rootElement) {
-        const href = element.attributes.getNamedItem('href');
-        if (href && href.value.charAt(0) === '#') {
-            const id = href.value.substring(1);
+        const value = $dom.getNamedItem(element, 'href');
+        if (value.charAt(0) === '#') {
+            const id = value.substring(1);
             let parent;
             if (rootElement === undefined) {
                 parent = element.parentElement;
@@ -503,8 +490,8 @@
     }
     function getNearestViewBox(element) {
         let current = element.parentElement;
-        while (current && current instanceof SVGElement) {
-            if (SVG.svg(current) || SVG.symbol(current) && current.viewBox && current.viewBox.baseVal.width > 0 && current.viewBox.baseVal.height > 0) {
+        while (current) {
+            if ((SVG.svg(current) || SVG.symbol(current)) && current.viewBox && current.viewBox.baseVal.width > 0 && current.viewBox.baseVal.height > 0) {
                 return current.viewBox.baseVal;
             }
             current = current.parentElement;
@@ -556,12 +543,6 @@
         }
         return values[0];
     }
-    function getRadiusX(angle, radius) {
-        return radius * Math.sin(convertRadian(angle));
-    }
-    function getRadiusY(angle, radius) {
-        return radius * Math.cos(convertRadian(angle)) * -1;
-    }
 
     var util = /*#__PURE__*/Object.freeze({
         REGEXP_SVG: REGEXP_SVG,
@@ -579,9 +560,7 @@
         sortNumber: sortNumber,
         truncateDecimal: truncateDecimal,
         getSplitValue: getSplitValue,
-        getLeastCommonMultiple: getLeastCommonMultiple,
-        getRadiusX: getRadiusX,
-        getRadiusY: getRadiusY
+        getLeastCommonMultiple: getLeastCommonMultiple
     });
 
     const $util$1 = squared.lib.util;
@@ -592,6 +571,9 @@
         }
         static isElement(object) {
             return $util$1.hasBit(object.instanceType, 4 /* SVG_ELEMENT */);
+        }
+        static isShape(object) {
+            return $util$1.hasBit(object.instanceType, 2052 /* SVG_SHAPE */);
         }
         static isAnimate(object) {
             return $util$1.hasBit(object.instanceType, 16392 /* SVG_ANIMATE */);
@@ -608,14 +590,11 @@
         static asPattern(object) {
             return object.instanceType === 130 /* SVG_PATTERN */;
         }
-        static asShapePattern(object) {
+        static isShapePattern(object) {
             return object.instanceType === 258 /* SVG_SHAPE_PATTERN */;
         }
         static asUsePattern(object) {
             return object.instanceType === 514 /* SVG_USE_PATTERN */;
-        }
-        static asShape(object) {
-            return $util$1.hasBit(object.instanceType, 2052 /* SVG_SHAPE */);
         }
         static asImage(object) {
             return object.instanceType === 4100 /* SVG_IMAGE */;
@@ -1002,11 +981,11 @@
                         case SVGTransform.SVG_TRANSFORM_ROTATE:
                             if (item.method.x) {
                                 x1 -= origin.x;
-                                x2 = origin.x + getRadiusY(item.angle, origin.x);
+                                x2 = origin.x + MATRIX.distance(item.angle, origin.x);
                             }
                             if (item.method.y) {
                                 y1 -= origin.y;
-                                y2 = origin.y + getRadiusY(item.angle, origin.y);
+                                y2 = origin.y + MATRIX.distance(item.angle, origin.y);
                             }
                             break;
                     }
@@ -1072,10 +1051,7 @@
         static convertNumbers(values) {
             const result = [];
             for (let i = 0; i < values.length; i += 2) {
-                result.push({
-                    x: values[i],
-                    y: values[i + 1]
-                });
+                result.push({ x: values[i], y: values[i + 1] });
             }
             return result.length % 2 === 0 ? result : [];
         }
@@ -1249,6 +1225,7 @@
     const $util$2 = squared.lib.util;
     class SvgAnimation {
         constructor(element) {
+            this.element = null;
             this.attributeName = '';
             this.paused = false;
             this.synchronizeState = 0;
@@ -1259,12 +1236,12 @@
                 this.element = element;
                 this.setAttribute('attributeName');
                 this.setAttribute('to');
-                const dur = this.getAttribute('dur');
+                const dur = $dom$2.getNamedItem(element, 'dur');
                 if (dur !== '' && dur !== 'indefinite') {
                     this.duration = convertClockTime(dur);
                 }
                 if (this.attributeName === 'transform') {
-                    this.baseFrom = TRANSFORM.valueAsInitial(this.getAttribute('type'));
+                    this.baseFrom = TRANSFORM.typeAsValue($dom$2.getNamedItem(element, 'type'));
                 }
                 else if (element.parentElement) {
                     this.baseFrom = $util$2.optionalAsString(element.parentElement, `${this.attributeName}.baseVal.valueAsString`) || $dom$2.cssInheritAttribute(element.parentElement, this.attributeName);
@@ -1272,7 +1249,7 @@
             }
         }
         setAttribute(attr, equality) {
-            const value = this.getAttribute(attr);
+            const value = $dom$2.getNamedItem(this.element, attr);
             if (value !== '') {
                 if (equality !== undefined) {
                     this[attr + $util$2.capitalize(equality)] = value === equality;
@@ -1281,10 +1258,6 @@
                     this[attr] = value;
                 }
             }
-        }
-        getAttribute(attr) {
-            const item = this.element && this.element.attributes.getNamedItem(attr);
-            return item ? item.value.trim() : '';
         }
         addState(...values) {
             for (const value of values) {
@@ -1350,6 +1323,7 @@
     });
 
     const $color = squared.lib.color;
+    const $dom$3 = squared.lib.dom;
     const $util$3 = squared.lib.util;
     function invertControlPoint(value) {
         return parseFloat((1 - value).toFixed(5));
@@ -1357,7 +1331,7 @@
     class SvgAnimate extends SvgAnimation {
         constructor(element) {
             super(element);
-            this.element = element;
+            this.type = 0;
             this.from = '';
             this.fillMode = 0;
             this.alternate = false;
@@ -1368,8 +1342,8 @@
             this._setterType = false;
             this._repeatDuration = -1;
             if (element) {
-                const values = this.getAttribute('values');
-                const keyTimes = this.duration !== -1 ? SvgAnimate.toFractionList(this.getAttribute('keyTimes')) : [];
+                const values = $dom$3.getNamedItem(element, 'values');
+                const keyTimes = this.duration !== -1 ? SvgAnimate.toFractionList($dom$3.getNamedItem(element, 'keyTimes')) : [];
                 if (values !== '') {
                     this.values = $util$3.flatMap(values.split(';'), value => value.trim());
                     if (this.values.length > 1 && keyTimes.length === this.values.length) {
@@ -1383,9 +1357,9 @@
                     }
                 }
                 else {
-                    this.from = this.getAttribute('from');
+                    this.from = $dom$3.getNamedItem(element, 'from');
                     if (this.to === '') {
-                        const by = this.getAttribute('by');
+                        const by = $dom$3.getNamedItem(element, 'by');
                         if ($util$3.isNumber(by)) {
                             if (this.from === '' && this.baseFrom) {
                                 this.from = this.baseFrom;
@@ -1398,11 +1372,11 @@
                     this.convertToValues(keyTimes);
                 }
                 this.setAttribute('additive', 'sum');
-                const repeatDur = this.getAttribute('repeatDur');
+                const repeatDur = $dom$3.getNamedItem(element, 'repeatDur');
                 if (repeatDur !== '' && repeatDur !== 'indefinite') {
                     this._repeatDuration = convertClockTime(repeatDur);
                 }
-                const repeatCount = this.getAttribute('repeatCount');
+                const repeatCount = $dom$3.getNamedItem(element, 'repeatCount');
                 this.iterationCount = repeatCount === 'indefinite' ? -1 : parseFloat(repeatCount);
                 if (element.tagName === 'animate') {
                     this.setCalcMode(this.attributeName);
@@ -1521,40 +1495,38 @@
             return result.length > 1 && result[0] === 0 && result.some(percent => percent !== -1) ? result : [];
         }
         setCalcMode(name) {
-            if (this.element) {
-                switch (this.getAttribute('calcMode')) {
-                    case 'discrete': {
-                        if (this.keyTimes.length === 2 && this.keyTimes[0] === 0) {
-                            const keyTimes = [];
-                            const values = [];
-                            for (let i = 0; i < this.keyTimes.length - 1; i++) {
-                                const result = SvgAnimate.toStepFractionList(name, this.keyTimes, this.values, 'step-end', i, getHostDPI(), getFontSize(this.element));
-                                if (result) {
-                                    keyTimes.push(...result[0]);
-                                    values.push(...result[1]);
-                                }
+            switch ($dom$3.getNamedItem(this.element, 'calcMode')) {
+                case 'discrete': {
+                    if (this.keyTimes.length === 2 && this.keyTimes[0] === 0) {
+                        const keyTimes = [];
+                        const values = [];
+                        for (let i = 0; i < this.keyTimes.length - 1; i++) {
+                            const result = SvgAnimate.toStepFractionList(name, this.keyTimes, this.values, 'step-end', i, getHostDPI(), getFontSize(this.element));
+                            if (result) {
+                                keyTimes.push(...result[0]);
+                                values.push(...result[1]);
                             }
-                            keyTimes.push(this.keyTimes.pop());
-                            values.push(this.values.pop());
-                            this.values = values;
-                            this.keyTimes = keyTimes;
-                            this._keySplines = [KEYSPLINE_NAME['step']];
                         }
-                        break;
+                        keyTimes.push(this.keyTimes.pop());
+                        values.push(this.values.pop());
+                        this.values = values;
+                        this.keyTimes = keyTimes;
+                        this._keySplines = [KEYSPLINE_NAME['step']];
                     }
-                    case 'spline':
-                        this.keySplines = $util$3.flatMap(this.getAttribute('keySplines').split(';'), value => value.trim());
-                    case 'linear':
-                        if (this.keyTimes[0] !== 0 && this.keyTimes[this.keyTimes.length - 1] !== 1) {
-                            const keyTimes = [];
-                            for (let i = 0; i < this.values.length; i++) {
-                                keyTimes.push(i / (this.values.length - 1));
-                            }
-                            this._keyTimes = keyTimes;
-                            this._keySplines = undefined;
-                        }
-                        break;
+                    break;
                 }
+                case 'spline':
+                    this.keySplines = $util$3.flatMap($dom$3.getNamedItem(this.element, 'keySplines').split(';'), value => value.trim());
+                case 'linear':
+                    if (this.keyTimes[0] !== 0 && this.keyTimes[this.keyTimes.length - 1] !== 1) {
+                        const keyTimes = [];
+                        for (let i = 0; i < this.values.length; i++) {
+                            keyTimes.push(i / (this.values.length - 1));
+                        }
+                        this._keyTimes = keyTimes;
+                        this._keySplines = undefined;
+                    }
+                    break;
             }
         }
         convertToValues(keyTimes) {
@@ -1563,8 +1535,8 @@
                 this.keyTimes = keyTimes && keyTimes.length === 2 && this.keyTimes[0] === 0 && this.keyTimes[1] <= 1 ? keyTimes : [0, 1];
             }
         }
-        setGroupOrder(value) {
-            this.group.order = value;
+        setGroupSiblings(value) {
+            this.group.siblings = value;
             if (this.fillBackwards) {
                 for (let i = value.length - 1, found = false; i >= 0; i--) {
                     if (found) {
@@ -1597,20 +1569,18 @@
         }
         set delay(value) {
             super.delay = value;
-            if (this.element) {
-                const end = this.getAttribute('end');
-                if (end !== '') {
-                    const endTime = sortNumber(end.split(';').map(time => convertClockTime(time)))[0];
-                    if (endTime !== undefined && (this.iterationCount === -1 || this.duration > 0 && endTime < this.duration * this.iterationCount)) {
-                        if (this.delay > endTime) {
-                            this.end = endTime;
-                            if (this.iterationCount === -1) {
-                                this.iterationCount = Math.ceil((this.end - this.delay) / this.duration);
-                            }
+            const end = $dom$3.getNamedItem(this.element, 'end');
+            if (end !== '') {
+                const endTime = sortNumber(end.split(';').map(time => convertClockTime(time)))[0];
+                if (endTime !== undefined && (this.iterationCount === -1 || this.duration > 0 && endTime < this.duration * this.iterationCount)) {
+                    if (this.delay > endTime) {
+                        this.end = endTime;
+                        if (this.iterationCount === -1) {
+                            this.iterationCount = Math.ceil((this.end - this.delay) / this.duration);
                         }
-                        else {
-                            this.duration = -1;
-                        }
+                    }
+                    else {
+                        this.duration = -1;
                     }
                 }
             }
@@ -1630,14 +1600,12 @@
         }
         set iterationCount(value) {
             this._iterationCount = isNaN(value) ? 1 : value;
-            if (this.element) {
-                this.fillFreeze = this.iterationCount !== -1 && this.getAttribute('fill') === 'freeze';
-                if (this.iterationCount !== 1) {
-                    this.setAttribute('accumulate', 'sum');
-                }
-                else {
-                    this.accumulateSum = false;
-                }
+            this.fillFreeze = this.iterationCount !== -1 && $dom$3.getNamedItem(this.element, 'fill') === 'freeze';
+            if (this.iterationCount !== 1) {
+                this.setAttribute('accumulate', 'sum');
+            }
+            else {
+                this.accumulateSum = false;
             }
         }
         get iterationCount() {
@@ -1654,7 +1622,7 @@
         }
         get to() {
             if (this._setterType) {
-                return this.values[this.values.length - 1] || super.to;
+                return this.valueTo || super.to;
             }
             return this.setterType ? this.values[0] : super.to;
         }
@@ -1670,6 +1638,12 @@
                 this._values = [];
             }
             return this._values;
+        }
+        get valueTo() {
+            return this.values[this.values.length - 1] || '';
+        }
+        get valueFrom() {
+            return this.values[0] || '';
         }
         set keyTimes(value) {
             if (value.every(fraction => fraction >= 0 && fraction <= 1) && (this._values === undefined || this._values.length === value.length)) {
@@ -1772,17 +1746,8 @@
         }
     }
 
+    const $dom$4 = squared.lib.dom;
     class SvgAnimateTransform extends SvgAnimate {
-        constructor(element) {
-            super(element);
-            this.element = element;
-            this.type = 0;
-            if (element) {
-                const type = this.getAttribute('type');
-                this.setType(type);
-                this.setCalcMode(type);
-            }
-        }
         static toRotateList(values) {
             const result = values.map(value => {
                 if (value === '') {
@@ -1791,7 +1756,9 @@
                 else {
                     const segment = SvgBuild.toNumberList(value);
                     if (segment.length === 1) {
-                        return [segment[0], 0, 0];
+                        segment[1] = 0;
+                        segment[2] = 0;
+                        return segment;
                     }
                     else if (segment.length === 3) {
                         return segment;
@@ -1804,14 +1771,19 @@
         static toScaleList(values) {
             const result = values.map(value => {
                 if (value === '') {
-                    return [1, 1];
+                    return [1, 1, 0, 0];
                 }
                 else {
                     const segment = SvgBuild.toNumberList(value);
                     if (segment.length === 1) {
-                        return [segment[0], segment[0]];
+                        segment[1] = segment[0];
                     }
-                    else if (segment.length === 2) {
+                    if (segment.length === 2) {
+                        segment[2] = 0;
+                        segment[3] = 0;
+                        return segment;
+                    }
+                    else if (segment.length === 4) {
                         return segment;
                     }
                     return [];
@@ -1827,7 +1799,8 @@
                 else {
                     const segment = SvgBuild.toNumberList(value);
                     if (segment.length === 1) {
-                        return [segment[0], 0];
+                        segment[1] = 0;
+                        return segment;
                     }
                     else if (segment.length === 2) {
                         return segment;
@@ -1845,12 +1818,20 @@
                 else {
                     const segment = SvgBuild.toNumberList(value);
                     if (segment.length === 1) {
-                        return [segment[0]];
+                        return segment;
                     }
                     return [];
                 }
             });
             return result.some(item => item.length === 0) ? undefined : result;
+        }
+        constructor(element) {
+            super(element);
+            if (element) {
+                const type = $dom$4.getNamedItem(element, 'type');
+                this.setType(type);
+                this.setCalcMode(type);
+            }
         }
         expandToValues() {
             if (this.additiveSum && this.iterationCount !== -1 && this.keyTimes.length && this.duration > 0) {
@@ -1995,11 +1976,11 @@
             setTimelineValue(insertMap, time, previous.value);
         }
     }
-    function convertToFraction(entries) {
-        const timeTotal = entries[entries.length - 1][0];
+    function convertToFraction(values) {
+        const timeTotal = values[values.length - 1][0];
         const previousFractions = new Set();
-        for (let i = 0; i < entries.length; i++) {
-            let fraction = entries[i][0] / timeTotal;
+        for (let i = 0; i < values.length; i++) {
+            let fraction = values[i][0] / timeTotal;
             if (fraction > 0) {
                 for (let j = 7;; j++) {
                     const value = parseFloat(fraction.toString().substring(0, j));
@@ -2009,10 +1990,10 @@
                     }
                 }
             }
-            entries[i][0] = fraction;
+            values[i][0] = fraction;
             previousFractions.add(fraction);
         }
-        return entries;
+        return values;
     }
     function convertToAnimateValue(value) {
         if (typeof value === 'string') {
@@ -2143,11 +2124,11 @@
     function getEllipsePoints(values) {
         return [{ x: values[0], y: values[1], rx: values[2], ry: values[values.length - 1] }];
     }
-    function createKeyTimeMap(map, keyTimes, freezeResetMap) {
+    function createKeyTimeMap(map, keyTimes, forwardMap) {
         const result = new Map();
         for (const keyTime of keyTimes) {
             const values = new Map();
-            for (const attr in (freezeResetMap || map)) {
+            for (const attr in (forwardMap || map)) {
                 let value;
                 if (map[attr]) {
                     value = map[attr].get(keyTime);
@@ -2155,8 +2136,8 @@
                         value = getFreezeValue(map[attr], keyTime);
                     }
                 }
-                else if (freezeResetMap) {
-                    value = freezeResetMap[attr].value;
+                else if (forwardMap) {
+                    value = forwardMap[attr].value;
                 }
                 if (value !== undefined) {
                     values.set(attr, value);
@@ -2246,7 +2227,7 @@
         }
         return previousValue;
     }
-    function insertSplitValue(item, baseValue, keyTimes, values, keySplines, delay, iteration, time, useKeyTime, timelineMap, interpolatorMap, transformOriginMap) {
+    function insertSplitValue(item, baseValue, keyTimes, values, keySplines, delay, iteration, time, keyTimeMode, timelineMap, interpolatorMap, transformOriginMap) {
         let actualTime;
         if (delay < 0) {
             actualTime = time - delay;
@@ -2277,7 +2258,7 @@
             value = getItemValue(item, baseValue, values, iteration, nextIndex);
         }
         time = setTimelineValue(timelineMap, time, value);
-        insertInterpolator(item, time, keySplines, nextIndex, useKeyTime, interpolatorMap, transformOriginMap);
+        insertInterpolator(item, time, keySplines, nextIndex, keyTimeMode, interpolatorMap, transformOriginMap);
         return [time, value];
     }
     function appendPartialKeyTimes(item, startTime, maxThreadTime, baseValue, queued) {
@@ -2386,8 +2367,8 @@
         }
         return time;
     }
-    function insertInterpolator(item, time, keySplines, index, useKeyTime, map, transformOriginMap) {
-        if (!isKeyTimeFormat(SvgBuild.asAnimateTransform(item), useKeyTime)) {
+    function insertInterpolator(item, time, keySplines, index, keyTimeMode, map, transformOriginMap) {
+        if (!isKeyTimeFormat(SvgBuild.asAnimateTransform(item), keyTimeMode)) {
             if (index === 0) {
                 return;
             }
@@ -2406,11 +2387,11 @@
             map.set(time, item.transformOrigin[index]);
         }
     }
-    function isKeyTimeFormat(transforming, useKeyTime) {
-        return $util$4.hasBit(useKeyTime, transforming ? 32 /* KEYTIME_TRANSFORM */ : 4 /* KEYTIME_ANIMATE */);
+    function isKeyTimeFormat(transforming, keyTimeMode) {
+        return $util$4.hasBit(keyTimeMode, transforming ? 32 /* KEYTIME_TRANSFORM */ : 4 /* KEYTIME_ANIMATE */);
     }
-    function isFromToFormat(transforming, useKeyTime) {
-        return $util$4.hasBit(useKeyTime, transforming ? 16 /* FROMTO_TRANSFORM */ : 2 /* FROMTO_ANIMATE */);
+    function isFromToFormat(transforming, keyTimeMode) {
+        return $util$4.hasBit(keyTimeMode, transforming ? 16 /* FROMTO_TRANSFORM */ : 2 /* FROMTO_ANIMATE */);
     }
     function playableAnimation(item) {
         return !item.paused && (item.element && item.duration !== -1 || item.keyTimes && item.keyTimes.length > 1 && item.duration > 0);
@@ -2468,12 +2449,12 @@
     }
     var SvgSynchronize$MX = (Base) => {
         return class extends Base {
-            getAnimateShape(element, animation) {
-                if (animation === undefined) {
-                    animation = this.animation;
+            getAnimateShape(element, animations) {
+                if (animations === undefined) {
+                    animations = this.animations;
                 }
                 const result = [];
-                for (const item of animation) {
+                for (const item of animations) {
                     if (playableAnimation(item)) {
                         switch (item.attributeName) {
                             case 'r':
@@ -2515,12 +2496,12 @@
                 }
                 return result;
             }
-            getAnimateViewRect(animation) {
-                if (animation === undefined) {
-                    animation = this.animation;
+            getAnimateViewRect(animations) {
+                if (animations === undefined) {
+                    animations = this.animations;
                 }
                 const result = [];
-                for (const item of animation) {
+                for (const item of animations) {
                     if (playableAnimation(item)) {
                         switch (item.attributeName) {
                             case 'x':
@@ -2532,19 +2513,18 @@
                 }
                 return result;
             }
-            getAnimateTransform(animation) {
-                if (animation === undefined) {
-                    animation = this.animation;
+            getAnimateTransform(animations) {
+                if (animations === undefined) {
+                    animations = this.animations;
                 }
-                return animation.filter(item => SvgBuild.asAnimateTransform(item) && item.duration > 0);
+                return animations.filter(item => SvgBuild.asAnimateTransform(item) && item.duration > 0);
             }
-            mergeAnimations(animations, transformations, useKeyTime = 0, path) {
+            mergeAnimations(animations, transformations, keyTimeMode = 0, path) {
                 [animations, transformations].forEach((mergeable, index) => {
                     const transforming = index === 1;
-                    if (mergeable.length === 0 || index === 0 && $util$4.hasBit(useKeyTime, 8 /* IGNORE_ANIMATE */) || transforming && $util$4.hasBit(useKeyTime, 64 /* IGNORE_TRANSFORM */)) {
+                    if (mergeable.length === 0 || index === 0 && $util$4.hasBit(keyTimeMode, 8 /* IGNORE_ANIMATE */) || transforming && $util$4.hasBit(keyTimeMode, 64 /* IGNORE_TRANSFORM */)) {
                         return;
                     }
-                    const freezeResetMap = {};
                     const staggered = [];
                     const setter = [];
                     {
@@ -2558,7 +2538,7 @@
                                 const timeA = getDurationTotal(itemA);
                                 for (let j = 0; j < mergeable.length; j++) {
                                     const itemB = mergeable[j];
-                                    if (i !== j && itemA.attributeName === itemB.attributeName && itemA.group.id < itemB.group.id && !itemB.partialType) {
+                                    if (i !== j && itemA.attributeName === itemB.attributeName && itemA.group.id < itemB.group.id && itemA.fillReplace && !itemB.partialType) {
                                         if (itemB.setterType) {
                                             if (itemA.delay === itemB.delay) {
                                                 excluded[i] = itemA;
@@ -2582,7 +2562,7 @@
                         for (let i = 0; i < mergeable.length; i++) {
                             const item = excluded[i];
                             if (item) {
-                                if (item.fillForwards) {
+                                if (!item.fillReplace) {
                                     item.setterType = true;
                                     setter.push(item);
                                 }
@@ -2599,8 +2579,8 @@
                     if (index === 0 && staggered.length + setter.length > 0 || transforming && (staggered.length + setter.length > 1 || staggered.length === 1 && (staggered[0].alternate || staggered[0].end !== undefined))) {
                         const groupActive = new Set(staggered.map(item => item.group.name));
                         for (const item of staggered) {
-                            if (item.group.order) {
-                                $util$4.spliceArray(item.group.order, subitem => !groupActive.has(subitem.name));
+                            if (item.group.siblings) {
+                                $util$4.spliceArray(item.group.siblings, subitem => !groupActive.has(subitem.name));
                             }
                         }
                         const groupName = {};
@@ -2634,9 +2614,9 @@
                         const infiniteMap = {};
                         const infiniteInterpolatorMap = new Map();
                         const infiniteTransformOriginMap = transforming ? new Map() : undefined;
-                        const animateTimeRangeMap = new Map();
                         const baseValueMap = {};
-                        const freezeMap = {};
+                        const forwardMap = {};
+                        const animateTimeRangeMap = new Map();
                         let repeatingResult;
                         let repeatingAsInfinite;
                         let infiniteResult;
@@ -2674,21 +2654,9 @@
                                 item.addState(16 /* COMPLETE */);
                                 previousComplete = item;
                                 if (item.fillForwards) {
-                                    freezeMap[attr] = item;
-                                    setFreezeResetValue(item.type, baseValue);
-                                    $util$4.spliceArray(setterData, set => set.group.id < item.group.id || set.delay < actualMaxTime);
-                                    incomplete.length = 0;
-                                    if (nextDelay !== undefined) {
-                                        for (const group of groupData) {
-                                            for (const next of group) {
-                                                if (next.group.id < item.group.id) {
-                                                    next.addState(16 /* COMPLETE */);
-                                                }
-                                            }
-                                        }
-                                    }
-                                    if (item.group.order) {
-                                        for (const previous of item.group.order) {
+                                    setFreezeValue(actualMaxTime, baseValue, item.type, item);
+                                    if (item.group.siblings) {
+                                        for (const previous of item.group.siblings) {
                                             if (previous.name === item.group.name) {
                                                 return true;
                                             }
@@ -2700,21 +2668,12 @@
                                 }
                                 else {
                                     if (item.fillFreeze) {
-                                        freezeMap[attr] = item;
-                                        setFreezeResetValue(item.type, baseValue);
-                                        $util$4.spliceArray(incomplete, previous => previous.element !== undefined);
-                                        for (const group of groupData) {
-                                            for (const next of group) {
-                                                if (next.group.id < item.group.id && next.delay <= item.delay) {
-                                                    next.addState(16 /* COMPLETE */);
-                                                }
-                                            }
-                                        }
+                                        setFreezeValue(actualMaxTime, baseValue, item.type, item);
                                     }
                                     if (nextDelay !== undefined) {
                                         let currentMaxTime = maxTime;
                                         const replaceValue = checkSetterDelay(actualMaxTime, actualMaxTime + 1);
-                                        if (item.fillReplace && replaceValue !== undefined && nextDelay > actualMaxTime && incomplete.length === 0) {
+                                        if (replaceValue !== undefined && item.fillReplace && nextDelay > actualMaxTime && incomplete.length === 0) {
                                             currentMaxTime = setTimelineValue(repeatingMap[attr], currentMaxTime, replaceValue);
                                             if (transforming) {
                                                 setTimeRange(item.type, currentMaxTime);
@@ -2734,7 +2693,6 @@
                                 if (value === undefined) {
                                     value = item.to;
                                 }
-                                freezeMap[attr] = item;
                                 return setTimelineValue(repeatingMap[attr], time, transforming ? value : convertToAnimateValue(value));
                             }
                             function sortSetterData(item) {
@@ -2754,12 +2712,15 @@
                                 }
                             }
                             function checkSetterDelay(delayTime, endTime) {
-                                let replaceValue = freezeResetMap[attr] && freezeResetMap[attr].value;
+                                let replaceValue = forwardMap[attr] && forwardMap[attr].value;
                                 $util$4.spliceArray(setterData, set => set.delay >= delayTime && set.delay < endTime, (set) => {
                                     if (set.element) {
-                                        removeIncompleteSMIL();
+                                        removeIncomplete();
                                     }
-                                    setFreezeResetValue(set.type, set.to, incomplete.length === 0);
+                                    if (incomplete.length === 0) {
+                                        baseValue = set.to;
+                                    }
+                                    setFreezeValue(set.delay, set.to, set.type, set);
                                     if (set.delay === delayTime) {
                                         replaceValue = transforming ? set.to : convertToAnimateValue(set.to);
                                     }
@@ -2772,11 +2733,10 @@
                             }
                             function checkIncomplete(delayIndex, itemIndex) {
                                 if (incomplete.length) {
-                                    const expired = [];
                                     $util$4.spliceArray(incomplete, previous => getDurationTotal(previous) <= actualMaxTime, previous => {
                                         previous.addState(16 /* COMPLETE */);
                                         if (previous.fillForwards) {
-                                            expired.push(...incomplete.filter(item => item.group.id < previous.group.id));
+                                            setFreezeValue(getDurationTotal(previous), previous.valueTo, previous.type, previous);
                                             if (delayIndex !== undefined && itemIndex !== undefined) {
                                                 for (let i = delayIndex; i < groupDelay.length; i++) {
                                                     if (i !== delayIndex) {
@@ -2792,9 +2752,6 @@
                                             }
                                         }
                                     });
-                                    if (expired.length) {
-                                        $util$4.spliceArray(incomplete, previous => expired.includes(previous), previous => previous.addState(16 /* COMPLETE */));
-                                    }
                                 }
                             }
                             function queueIncomplete(item) {
@@ -2805,39 +2762,52 @@
                             }
                             function sortIncomplete() {
                                 incomplete.sort((a, b) => {
-                                    if (a.group.order && b.group.order) {
-                                        return a.group.id > b.group.id ? -1 : 1;
+                                    if (a.element && b.element && a.delay !== b.delay) {
+                                        return a.delay < b.delay ? 1 : -1;
                                     }
-                                    else if (a.element && b.element === undefined) {
-                                        return 1;
-                                    }
-                                    else if (a.element === undefined && b.element) {
-                                        return -1;
-                                    }
-                                    else if (a.delay === b.delay) {
-                                        return a.group.id > b.group.id ? -1 : 1;
-                                    }
-                                    return a.delay < b.delay ? 1 : -1;
+                                    return a.group.id <= b.group.id ? 1 : -1;
                                 });
                             }
-                            function removeIncompleteSMIL() {
-                                $util$4.spliceArray(incomplete, previous => previous.element !== undefined);
+                            function removeIncomplete(item) {
+                                if (item) {
+                                    $util$4.spliceArray(incomplete, previous => previous === item);
+                                }
+                                else {
+                                    $util$4.spliceArray(incomplete, previous => previous.element !== undefined);
+                                }
                             }
-                            function setFreezeResetValue(type, value, includeBase = false) {
+                            function setFreezeValue(time, value, type = 0, item) {
                                 if (!transforming) {
                                     value = convertToAnimateValue(value);
                                 }
-                                if (value !== '') {
-                                    freezeResetMap[attr] = { index: type || 0, value };
-                                    if (includeBase) {
-                                        baseValue = value;
+                                if (value !== '' && (forwardMap[attr] === undefined || time >= forwardMap[attr].time)) {
+                                    forwardMap[attr] = {
+                                        time,
+                                        value,
+                                        index: type
+                                    };
+                                }
+                                if (item && SvgBuild.asAnimate(item) && !item.fillReplace) {
+                                    if (item.fillForwards) {
+                                        $util$4.spliceArray(setterData, set => set.group.id < item.group.id || set.delay < time);
+                                        incomplete.length = 0;
+                                        for (const group of groupData) {
+                                            for (const next of group) {
+                                                if (next.group.id < item.group.id) {
+                                                    next.addState(16 /* COMPLETE */);
+                                                }
+                                            }
+                                        }
+                                    }
+                                    else if (item.fillFreeze) {
+                                        removeIncomplete();
                                     }
                                 }
                             }
                             function resetTransform(additiveSum, resetTime, value) {
                                 if (previousTransform && !additiveSum) {
                                     if (value === undefined) {
-                                        value = TRANSFORM.valueAsInitial(previousTransform.type);
+                                        value = TRANSFORM.typeAsValue(previousTransform.type);
                                     }
                                     maxTime = setTimelineValue(repeatingMap[attr], resetTime, value);
                                     if (resetTime !== maxTime) {
@@ -2846,11 +2816,11 @@
                                 }
                                 previousTransform = undefined;
                             }
-                            function removeInvalid(item) {
+                            function removeInvalid(items) {
                                 for (let i = 0; i < groupDelay.length; i++) {
-                                    if (item) {
+                                    if (items.length) {
                                         for (let j = 0; j < groupData[i].length; j++) {
-                                            if (groupData[i][j].attributeName === item.attributeName && groupData[i][j].group.id <= item.group.id) {
+                                            if (items.includes(groupData[i][j])) {
                                                 groupData[i].splice(j--, 1);
                                             }
                                         }
@@ -2889,10 +2859,10 @@
                                             }
                                             else if (item.group.id < backwards.group.id && (backwards.fillForwards || getDurationTotal(item) <= durationTotal)) {
                                                 if (item.fillForwards) {
-                                                    removeable.push(item);
                                                     item.setterType = true;
                                                     setterData.push(item);
                                                 }
+                                                removeable.push(item);
                                                 continue;
                                             }
                                         }
@@ -2902,22 +2872,15 @@
                                         }
                                     }
                                 }
-                                if (removeable.length) {
-                                    for (const item of removeable) {
-                                        removeInvalid(item);
-                                    }
-                                }
-                                else {
-                                    removeInvalid();
-                                }
+                                removeInvalid(removeable);
                                 backwards.addState(2 /* BACKWARDS */);
                             }
                             if (!transforming) {
-                                if (freezeResetMap[attr] === undefined) {
-                                    setFreezeResetValue(0, baseValueMap[attr]);
+                                if (forwardMap[attr] === undefined) {
+                                    setFreezeValue(0, baseValueMap[attr], 0);
                                 }
                                 if (baseValue === undefined) {
-                                    baseValue = freezeResetMap[attr].value;
+                                    baseValue = forwardMap[attr].value;
                                 }
                             }
                             sortSetterData();
@@ -2927,7 +2890,7 @@
                                     const fillForwards = SvgBuild.asAnimate(set) && set.fillForwards;
                                     if (set.delay < groupDelay[0] && (backwards === undefined || fillForwards)) {
                                         if (backwards && fillForwards) {
-                                            setFreezeResetValue(set.type, set.to);
+                                            setFreezeValue(set.delay, set.to, set.type);
                                         }
                                         else {
                                             const previousTime = set.delay - 1;
@@ -2998,14 +2961,14 @@
                                             actualMaxTime = delay;
                                         }
                                         nextDelayTime = undefined;
-                                        if (item.group.order && item.group.order.length > 1) {
+                                        if (item.group.siblings && item.group.siblings.length > 1) {
                                             let checkDelay = true;
-                                            for (const order of item.group.order) {
+                                            for (const order of item.group.siblings) {
                                                 if (order.name === item.group.name) {
                                                     checkDelay = false;
                                                     break;
                                                 }
-                                                else if (!order.paused && actualMaxTime <= order.delay) {
+                                                else if (!order.paused && actualMaxTime <= order.delay && order.attributes.includes(attr)) {
                                                     break;
                                                 }
                                             }
@@ -3014,7 +2977,7 @@
                                                     for (let k = i + 1; k < groupDelay.length; k++) {
                                                         for (let l = 0; l < groupData[k].length; l++) {
                                                             const next = groupData[k][l];
-                                                            if (next.group.order) {
+                                                            if (next.group.siblings) {
                                                                 nextDelayTime = next.delay;
                                                                 break nextDelay;
                                                             }
@@ -3052,8 +3015,8 @@
                                             if (setterInterrupt) {
                                                 switch (setterInterrupt.delay) {
                                                     case actualMaxTime:
-                                                        setFreezeResetValue(setterInterrupt.type, setterInterrupt.to, true);
                                                         baseValue = setterInterrupt.to;
+                                                        setFreezeValue(actualMaxTime, baseValue, setterInterrupt.type, setterInterrupt);
                                                         if (setterInterrupt.group.id > item.group.id) {
                                                             if (transforming && previousTransform) {
                                                                 resetTransform(item.additiveSum, Math.max(delay - 1, maxTime));
@@ -3082,7 +3045,8 @@
                                                     resetTransform(item.additiveSum, Math.max(delay - 1, maxTime));
                                                     startTime = maxTime + 1;
                                                 }
-                                                setFreezeResetValue(item.type, TRANSFORM.valueAsInitial(item.type), true);
+                                                baseValue = TRANSFORM.typeAsValue(item.type);
+                                                setFreezeValue(actualMaxTime, baseValue, item.type);
                                             }
                                             let parallel = groupDelay[i] === Number.POSITIVE_INFINITY || (maxTime !== -1 || item.hasState(2 /* BACKWARDS */)) && !(i === 0 && j === 0);
                                             complete = true;
@@ -3147,7 +3111,7 @@
                                                             }
                                                             else {
                                                                 function setSplitValue(splitTime) {
-                                                                    [maxTime, lastValue] = insertSplitValue(item, baseValue, keyTimes, values, keySplines, delay, k, splitTime, useKeyTime, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
+                                                                    [maxTime, lastValue] = insertSplitValue(item, baseValue, keyTimes, values, keySplines, delay, k, splitTime, keyTimeMode, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
                                                                 }
                                                                 if (delay < 0 && maxTime === -1) {
                                                                     if (time > 0) {
@@ -3187,7 +3151,7 @@
                                                                         else {
                                                                             actualMaxTime = time;
                                                                             if (k > 0 && l === 0 && item.accumulateSum) {
-                                                                                insertInterpolator(item, time, keySplines, l, useKeyTime, repeatingInterpolatorMap, repeatingTransformOriginMap);
+                                                                                insertInterpolator(item, time, keySplines, l, keyTimeMode, repeatingInterpolatorMap, repeatingTransformOriginMap);
                                                                                 maxTime = time;
                                                                                 continue;
                                                                             }
@@ -3198,11 +3162,11 @@
                                                             }
                                                         }
                                                         if (time > maxTime) {
-                                                            if (l === keyTimes.length - 1 && (k < iterationTotal - 1 || item.fillReplace && value !== freezeResetMap[attr].value) && !item.accumulateSum) {
+                                                            if (l === keyTimes.length - 1 && (k < iterationTotal - 1 || item.fillReplace && value !== forwardMap[attr].value) && !item.accumulateSum) {
                                                                 time--;
                                                             }
                                                             maxTime = setTimelineValue(repeatingMap[attr], time, value);
-                                                            insertInterpolator(item, maxTime, keySplines, l, useKeyTime, repeatingInterpolatorMap, repeatingTransformOriginMap);
+                                                            insertInterpolator(item, maxTime, keySplines, l, keyTimeMode, repeatingInterpolatorMap, repeatingTransformOriginMap);
                                                             lastValue = value;
                                                         }
                                                         if (!complete || iterationFraction === -1) {
@@ -3225,18 +3189,18 @@
                                                 lastValue = setterInterrupt.to;
                                                 maxTime = setSetterValue(setterInterrupt, setterInterrupt.delay, lastValue);
                                                 actualMaxTime = setterInterrupt.delay;
-                                                setFreezeResetValue(setterInterrupt.type, lastValue);
+                                                setFreezeValue(actualMaxTime, lastValue, setterInterrupt.type, setterInterrupt);
                                             }
                                             else if (item.hasState(64 /* INVALID */)) {
-                                                setTimeRange(setterInterrupt.type, maxTime);
+                                                setTimeRange(maxTime, setterInterrupt.type);
                                             }
-                                            removeIncompleteSMIL();
+                                            removeIncomplete();
                                             complete = true;
                                         }
                                         $util$4.spliceArray(setterData, set => set.delay >= actualStartTime && set.delay <= actualMaxTime, (set) => {
-                                            setFreezeResetValue(set.type, set.to);
+                                            setFreezeValue(set.delay, set.to, set.type, set);
                                             if (set.element) {
-                                                removeIncompleteSMIL();
+                                                removeIncomplete();
                                             }
                                         });
                                         if (infinite) {
@@ -3261,8 +3225,12 @@
                                                 if (groupDelay[k] < actualMaxTime) {
                                                     for (let l = 0; l < groupData[k].length; l++) {
                                                         const next = groupData[k][l];
-                                                        if (getDurationTotal(next) > actualMaxTime && !next.hasState(4 /* INTERRUPTED */, 16 /* COMPLETE */, 64 /* INVALID */)) {
+                                                        const durationNext = getDurationTotal(next);
+                                                        if (durationNext > actualMaxTime && !next.hasState(4 /* INTERRUPTED */, 16 /* COMPLETE */, 64 /* INVALID */)) {
                                                             queueIncomplete(next);
+                                                        }
+                                                        else if (!next.fillReplace) {
+                                                            setFreezeValue(durationNext, next.valueTo, next.type, next);
                                                         }
                                                     }
                                                     groupDelay[k] = Number.POSITIVE_INFINITY;
@@ -3275,6 +3243,7 @@
                                                 if (resume) {
                                                     resume.removeState(4 /* INTERRUPTED */, 2 /* BACKWARDS */);
                                                     resume.addState(8 /* RESUME */);
+                                                    removeIncomplete(resume);
                                                     delay = resume.delay;
                                                     groupData[i] = [resume];
                                                     j = -1;
@@ -3319,13 +3288,13 @@
                                                 for (let k = 0; k < keyTimes.length; k++) {
                                                     let time = getItemTime(delay, duration, keyTimes, j, k);
                                                     if (!joined && time >= maxTime) {
-                                                        [maxTime, baseValue] = insertSplitValue(item, baseValue, keyTimes, values, keySplines, delay, j, maxTime, useKeyTime, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
+                                                        [maxTime, baseValue] = insertSplitValue(item, baseValue, keyTimes, values, keySplines, delay, j, maxTime, keyTimeMode, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
                                                         joined = true;
                                                     }
                                                     if (joined) {
                                                         if (time >= maxThreadTime) {
                                                             if (maxThreadTime > maxTime) {
-                                                                [maxTime, baseValue] = insertSplitValue(item, baseValue, keyTimes, values, keySplines, delay, j, maxThreadTime, useKeyTime, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
+                                                                [maxTime, baseValue] = insertSplitValue(item, baseValue, keyTimes, values, keySplines, delay, j, maxThreadTime, keyTimeMode, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
                                                                 actualMaxTime = maxThreadTime;
                                                             }
                                                         }
@@ -3336,7 +3305,7 @@
                                                             }
                                                             baseValue = getItemValue(item, baseValue, values, j, k);
                                                             maxTime = setTimelineValue(repeatingMap[attr], time, baseValue);
-                                                            insertInterpolator(item, maxTime, keySplines, k, useKeyTime, repeatingInterpolatorMap, repeatingTransformOriginMap);
+                                                            insertInterpolator(item, maxTime, keySplines, k, keyTimeMode, repeatingInterpolatorMap, repeatingTransformOriginMap);
                                                         }
                                                     }
                                                 }
@@ -3367,14 +3336,14 @@
                                 if (previousComplete && previousComplete.fillReplace && infiniteMap[attr] === undefined) {
                                     let type;
                                     let value;
-                                    if (freezeResetMap[attr]) {
-                                        type = freezeResetMap[attr].index;
-                                        value = freezeResetMap[attr].value;
+                                    if (forwardMap[attr]) {
+                                        type = forwardMap[attr].index;
+                                        value = forwardMap[attr].value;
                                     }
                                     else {
                                         if (transforming) {
                                             type = Array.from(animateTimeRangeMap.values()).pop();
-                                            value = TRANSFORM.valueAsInitial(type);
+                                            value = TRANSFORM.typeAsValue(type);
                                         }
                                         else {
                                             value = this._getBaseValue(attr, path);
@@ -3427,7 +3396,7 @@
                                                 for (let j = 0; j < item.keyTimes.length; j++) {
                                                     let time = getItemTime(delay, item.duration, item.keyTimes, i, j);
                                                     if (!joined && time >= maxTime) {
-                                                        [maxTime, baseValue] = insertSplitValue(item, baseValue, item.keyTimes, item.values, item.keySplines, delay, i, maxTime, useKeyTime, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
+                                                        [maxTime, baseValue] = insertSplitValue(item, baseValue, item.keyTimes, item.values, item.keySplines, delay, i, maxTime, keyTimeMode, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
                                                         keyTimesRepeating.push(maxTime);
                                                         joined = true;
                                                     }
@@ -3437,7 +3406,7 @@
                                                         }
                                                         baseValue = getItemValue(item, baseValue, item.values, i, j);
                                                         maxTime = setTimelineValue(repeatingMap[attr], time, baseValue);
-                                                        insertInterpolator(item, time, item.keySplines, j, useKeyTime, repeatingInterpolatorMap, repeatingTransformOriginMap);
+                                                        insertInterpolator(item, time, item.keySplines, j, keyTimeMode, repeatingInterpolatorMap, repeatingTransformOriginMap);
                                                         keyTimesRepeating.push(maxTime);
                                                     }
                                                 }
@@ -3508,7 +3477,7 @@
                                         }
                                         baseValue = getItemValue(item, baseValue, item.values, i, j);
                                         maxTime = setTimelineValue(timelineMap[attr], time, baseValue);
-                                        insertInterpolator(item, maxTime, item.keySplines, j, useKeyTime, infiniteInterpolatorMap, infiniteTransformOriginMap);
+                                        insertInterpolator(item, maxTime, item.keySplines, j, keyTimeMode, infiniteInterpolatorMap, infiniteTransformOriginMap);
                                         keyTimes.push(maxTime);
                                     }
                                 } while (maxTime < maxDuration && ++i);
@@ -3539,7 +3508,7 @@
                                     }
                                 }
                             }
-                            infiniteResult = createKeyTimeMap(timelineMap, keyTimes, freezeResetMap);
+                            infiniteResult = createKeyTimeMap(timelineMap, keyTimes, forwardMap);
                         }
                         if (repeatingResult || infiniteResult) {
                             this._removeAnimations(staggered);
@@ -3550,7 +3519,7 @@
                                     const repeating = result === repeatingResult;
                                     const interpolatorMap = repeating ? repeatingInterpolatorMap : infiniteInterpolatorMap;
                                     const transformOriginMap = (repeating ? repeatingTransformOriginMap : infiniteTransformOriginMap);
-                                    if (isKeyTimeFormat(transforming, useKeyTime)) {
+                                    if (isKeyTimeFormat(transforming, keyTimeMode)) {
                                         const keySplines = [];
                                         if (transforming) {
                                             const transformMap = [];
@@ -3605,13 +3574,15 @@
                                                 const animate = new SvgAnimateTransform();
                                                 animate.attributeName = 'transform';
                                                 animate.type = entries[0][1].keys().next().value;
-                                                animate.transformOrigin = [];
                                                 for (let j = 0; j < entries.length; j++) {
                                                     const item = entries[j];
                                                     keySplines.push(interpolatorMap.get(item[0]) || '');
                                                     if (animate.type !== SVGTransform.SVG_TRANSFORM_ROTATE) {
                                                         const transformOrigin = transformOriginMap.get(item[0]);
                                                         if (transformOrigin) {
+                                                            if (animate.transformOrigin === undefined) {
+                                                                animate.transformOrigin = [];
+                                                            }
                                                             animate.transformOrigin[j] = transformOrigin;
                                                         }
                                                     }
@@ -3675,7 +3646,7 @@
                                             this._insertAnimate(object, repeating);
                                         }
                                     }
-                                    else if (isFromToFormat(transforming, useKeyTime)) {
+                                    else if (isFromToFormat(transforming, keyTimeMode)) {
                                         const entries = Array.from(result.entries());
                                         for (let i = 0; i < entries.length - 1; i++) {
                                             const [keyTimeFrom, dataFrom] = entries[i];
@@ -3758,16 +3729,16 @@
             }
             _removeAnimations(values) {
                 if (values.length) {
-                    $util$4.retainArray(this.animation, (item) => !values.includes(item));
+                    $util$4.retainArray(this.animations, (item) => !values.includes(item));
                 }
             }
             _insertAnimate(item, repeating) {
                 if (!repeating) {
                     item.iterationCount = -1;
                 }
-                item.from = item.values[0];
-                item.to = item.values[item.values.length - 1];
-                this.animation.push(item);
+                item.from = item.valueFrom;
+                item.to = item.valueTo;
+                this.animations.push(item);
             }
             _getBaseValue(attr, path) {
                 let value;
@@ -3781,11 +3752,11 @@
         };
     };
 
+    const $dom$5 = squared.lib.dom;
     const $util$5 = squared.lib.util;
     class SvgAnimateMotion extends SvgAnimate {
         constructor(element) {
             super(element);
-            this.element = element;
             this.path = '';
             this.mpath = null;
             this.rotate = 0;
@@ -3793,7 +3764,7 @@
             this.rotateAutoReverse = false;
             if (element) {
                 this.setAttribute('path');
-                const rotate = this.getAttribute('rotate');
+                const rotate = $dom$5.getNamedItem(element, 'rotate');
                 switch (rotate) {
                     case 'auto':
                         this.rotateAuto = true;
@@ -3806,7 +3777,7 @@
                         break;
                 }
                 if (this.keyTimes.length) {
-                    const keyPoints = this.getAttribute('keyPoints');
+                    const keyPoints = $dom$5.getNamedItem(element, 'keyPoints');
                     if (keyPoints !== '') {
                         const points = SvgAnimate.toFractionList(keyPoints);
                         if (points.length === this.keyTimes.length) {
@@ -3831,9 +3802,9 @@
         }
     }
 
-    const $dom$3 = squared.lib.dom;
+    const $dom$6 = squared.lib.dom;
     const $util$6 = squared.lib.util;
-    const KEYFRAME_NAME = $dom$3.getKeyframeRules();
+    const KEYFRAME_NAME = $dom$6.getKeyframeRules();
     const ANIMATION_DEFAULT = {
         'animation-delay': '0s',
         'animation-duration': '0s',
@@ -3843,9 +3814,9 @@
         'animation-fill-mode': 'none',
         'animation-timing-function': 'ease'
     };
-    const REGEXP_CUBICBEZIER = new RegExp(`cubic-bezier\\(${REGEXP_SVG.ZERO_ONE}, ${REGEXP_SVG.DECIMAL}, ${REGEXP_SVG.ZERO_ONE}, ${REGEXP_SVG.DECIMAL}\\)`);
+    const REGEXP_CUBICBEZIER = new RegExp(`cubic-bezier\\(${REGEXP_SVG.ZERO_ONE}, ${$util$6.REGEXP_STRING.DECIMAL}, ${REGEXP_SVG.ZERO_ONE}, ${$util$6.REGEXP_STRING.DECIMAL}\\)`);
     function parseAttribute(element, attr) {
-        let value = $dom$3.cssAttribute(element, attr);
+        let value = $dom$6.cssAttribute(element, attr);
         if (attr === 'animation-timing-function') {
             const result = [];
             while (value !== '') {
@@ -3882,18 +3853,18 @@
             }
             getTransforms(companion) {
                 const element = companion || this.element;
-                return TRANSFORM.parse(element) || SvgBuild.convertTransforms(element.transform.baseVal);
+                return SvgBuild.filterTransforms(TRANSFORM.parse(element) || SvgBuild.convertTransforms(element.transform.baseVal));
             }
             getAnimations(companion) {
                 const element = companion || this.element;
                 const result = [];
-                let groupId = 0;
-                function addAnimation(item, delay, value = '') {
-                    if (value === '') {
-                        groupId++;
+                let id = 0;
+                function addAnimation(item, delay, name = '') {
+                    if (name === '') {
+                        id++;
                     }
                     item.delay = delay;
-                    item.group = { id: groupId, name: value };
+                    item.group = { id, name };
                     result.push(item);
                 }
                 for (let i = 0; i < element.children.length; i++) {
@@ -3919,7 +3890,7 @@
                                 case 'animateTransform':
                                     for (const time of times) {
                                         const animate = new SvgAnimateTransform(item);
-                                        if (SvgBuild.asShape(this) && this.path) {
+                                        if (SvgBuild.isShape(this) && this.path) {
                                             animate.transformFrom = this.path.draw(undefined, undefined, true);
                                         }
                                         addAnimation(animate, time);
@@ -3937,6 +3908,8 @@
                 const animationName = parseAttribute(element, 'animation-name');
                 if (animationName.length) {
                     const cssData = {};
+                    const groupName = [];
+                    const groupSiblings = [];
                     for (const name in ANIMATION_DEFAULT) {
                         const values = parseAttribute(element, name);
                         if (values.length === 0) {
@@ -3948,224 +3921,221 @@
                         values.length = animationName.length;
                         cssData[name] = values;
                     }
-                    const groupName = [];
-                    const groupOrder = [];
-                    animationName.forEach((keyframe, index) => {
-                        const keyframes = KEYFRAME_NAME.get(keyframe);
-                        if (keyframes) {
-                            const duration = convertClockTime(cssData['animation-duration'][index]);
-                            if (duration > 0) {
-                                const paused = cssData['animation-play-state'][index] === 'paused';
-                                const delay = convertClockTime(cssData['animation-delay'][index]);
-                                const iterationCount = cssData['animation-iteration-count'][index];
-                                const fillMode = cssData['animation-fill-mode'][index];
-                                const keyframeIndex = `${keyframe}_${index}`;
-                                groupOrder.push({
-                                    name: keyframeIndex,
-                                    paused,
-                                    delay,
-                                    duration,
-                                    iterationCount,
-                                    fillMode
-                                });
-                                groupId++;
-                                const attrMap = {};
-                                const keyframeMap = {};
-                                for (const percent in keyframes) {
-                                    const fraction = parseInt(percent) / 100;
-                                    for (const name in keyframes[percent]) {
-                                        const map = ANIMATION_DEFAULT[name] ? keyframeMap : attrMap;
-                                        if (map[name] === undefined) {
-                                            map[name] = [];
-                                        }
-                                        map[name].push({ index: fraction, value: keyframes[percent][name] });
+                    for (let i = 0; i < animationName.length; i++) {
+                        const keyframes = KEYFRAME_NAME.get(animationName[i]);
+                        const duration = convertClockTime(cssData['animation-duration'][i]);
+                        if (keyframes && duration > 0) {
+                            id++;
+                            const attrMap = {};
+                            const keyframeMap = {};
+                            const paused = cssData['animation-play-state'][i] === 'paused';
+                            const delay = convertClockTime(cssData['animation-delay'][i]);
+                            const iterationCount = cssData['animation-iteration-count'][i];
+                            const fillMode = cssData['animation-fill-mode'][i];
+                            const keyframeIndex = `${animationName[i]}_${i}`;
+                            const attributes = [];
+                            groupSiblings.push({
+                                name: keyframeIndex,
+                                attributes,
+                                paused,
+                                delay,
+                                duration,
+                                iterationCount,
+                                fillMode
+                            });
+                            for (const percent in keyframes) {
+                                const fraction = parseInt(percent) / 100;
+                                for (const name in keyframes[percent]) {
+                                    const map = ANIMATION_DEFAULT[name] ? keyframeMap : attrMap;
+                                    if (map[name] === undefined) {
+                                        map[name] = [];
                                     }
-                                }
-                                if (attrMap['transform']) {
-                                    function getKeyframeOrigin(order) {
-                                        const origin = attrMap['transform-origin'] && attrMap['transform-origin'].find(item => item.index === order);
-                                        if (origin) {
-                                            return TRANSFORM.origin(element, origin.value);
-                                        }
-                                        return undefined;
-                                    }
-                                    for (const transform of sortAttribute(attrMap['transform'])) {
-                                        const transforms = TRANSFORM.parse(element, transform.value);
-                                        if (transforms) {
-                                            const origin = getKeyframeOrigin(transform.index);
-                                            transforms.forEach(item => {
-                                                const m = item.matrix;
-                                                let name;
-                                                let value;
-                                                let transformOrigin;
-                                                switch (item.type) {
-                                                    case SVGTransform.SVG_TRANSFORM_TRANSLATE:
-                                                        name = 'translate';
-                                                        value = `${m.e} ${m.f}`;
-                                                        break;
-                                                    case SVGTransform.SVG_TRANSFORM_SCALE:
-                                                        name = 'scale';
-                                                        value = `${m.a} ${m.d}`;
-                                                        if (origin && (transform.index !== 0 || origin.x !== 0 || origin.y !== 0)) {
-                                                            transformOrigin = {
-                                                                x: origin.x * (1 - m.a),
-                                                                y: origin.y * (1 - m.d)
-                                                            };
-                                                        }
-                                                        break;
-                                                    case SVGTransform.SVG_TRANSFORM_ROTATE:
-                                                        name = 'rotate';
-                                                        value = `${item.angle} ${origin ? `${origin.x} ${origin.y}` : '0 0'}`;
-                                                        break;
-                                                    case SVGTransform.SVG_TRANSFORM_SKEWX:
-                                                        name = 'skewX';
-                                                        value = item.angle.toString();
-                                                        if (origin && (transform.index !== 0 || origin.y !== 0)) {
-                                                            transformOrigin = {
-                                                                x: origin.y * m.c * -1,
-                                                                y: 0
-                                                            };
-                                                        }
-                                                        break;
-                                                    case SVGTransform.SVG_TRANSFORM_SKEWY:
-                                                        name = 'skewY';
-                                                        value = item.angle.toString();
-                                                        if (origin && (transform.index !== 0 || origin.x !== 0)) {
-                                                            transformOrigin = {
-                                                                x: 0,
-                                                                y: origin.x * m.b * -1
-                                                            };
-                                                        }
-                                                        break;
-                                                    default:
-                                                        return;
-                                                }
-                                                if (attrMap[name] === undefined) {
-                                                    attrMap[name] = [];
-                                                }
-                                                const previousIndex = attrMap[name].findIndex(subitem => subitem.index === transform.index);
-                                                if (previousIndex !== -1) {
-                                                    attrMap[name][previousIndex].value = value;
-                                                    attrMap[name][previousIndex].transformOrigin = transformOrigin;
-                                                }
-                                                else {
-                                                    attrMap[name].push({
-                                                        index: transform.index,
-                                                        value,
-                                                        transformOrigin
-                                                    });
-                                                }
-                                            });
-                                        }
-                                    }
-                                }
-                                delete attrMap['transform'];
-                                delete attrMap['transform-origin'];
-                                for (const name in attrMap) {
-                                    const animation = attrMap[name];
-                                    let animate;
-                                    switch (name) {
-                                        case 'rotate':
-                                        case 'scale':
-                                        case 'skewX':
-                                        case 'skewY':
-                                        case 'translate':
-                                            animate = new SvgAnimateTransform();
-                                            animate.attributeName = 'transform';
-                                            animate.baseFrom = TRANSFORM.valueAsInitial(name);
-                                            animate.setType(name);
-                                            break;
-                                        default:
-                                            animate = new SvgAnimate();
-                                            animate.attributeName = name;
-                                            animate.baseFrom = $util$6.optionalAsString(element, `${name}.baseVal.valueAsString`) || $dom$3.cssAttribute(element, name);
-                                            break;
-                                    }
-                                    const timingFunction = cssData['animation-timing-function'][index];
-                                    const direction = cssData['animation-direction'][index];
-                                    const keyTimes = [];
-                                    const values = [];
-                                    const keySplines = [];
-                                    sortAttribute(animation);
-                                    for (let i = 0; i < animation.length; i++) {
-                                        keyTimes.push(animation[i].index);
-                                        values.push(animation[i].value);
-                                        if (i < animation.length - 1) {
-                                            const spline = keyframeMap['animation-timing-function'] && keyframeMap['animation-timing-function'].find(item => item.index === animation[i].index);
-                                            keySplines.push(spline ? spline.value : timingFunction);
-                                        }
-                                        const transformOrigin = animation[i].transformOrigin;
-                                        if (transformOrigin && SvgBuild.asAnimateTransform(animate)) {
-                                            if (animate.transformOrigin === undefined) {
-                                                animate.transformOrigin = [];
-                                            }
-                                            animate.transformOrigin[i] = transformOrigin;
-                                        }
-                                    }
-                                    addAnimation(animate, delay, keyframeIndex);
-                                    animate.paused = paused;
-                                    animate.duration = duration;
-                                    if (!keySplines.every(spline => spline === 'linear')) {
-                                        const keyTimesData = [];
-                                        const valuesData = [];
-                                        const keySplinesData = [];
-                                        for (let i = 0; i < keySplines.length; i++) {
-                                            if (KEYSPLINE_NAME[keySplines[i]]) {
-                                                keySplines[i] = KEYSPLINE_NAME[keySplines[i]];
-                                            }
-                                            else if (keySplines[i].startsWith('step')) {
-                                                if (i === 0 && values[i] === '' && animate.baseFrom) {
-                                                    values[i] = animate.baseFrom;
-                                                }
-                                                const steps = SvgAnimate.toStepFractionList(name, keyTimes, values, keySplines[i], i, getHostDPI(), getFontSize(element));
-                                                if (steps) {
-                                                    keyTimesData.push(...steps[0]);
-                                                    valuesData.push(...steps[1]);
-                                                    steps[0].forEach(() => keySplinesData.push(KEYSPLINE_NAME['step']));
-                                                    continue;
-                                                }
-                                                keySplines[i] = KEYSPLINE_NAME.linear;
-                                            }
-                                            else {
-                                                const match = REGEXP_CUBICBEZIER.exec(keySplines[i]);
-                                                keySplines[i] = match ? `${match[1]} ${match[2]} ${match[3]} ${match[4]}` : KEYSPLINE_NAME.ease;
-                                            }
-                                            keyTimesData.push(keyTimes[i]);
-                                            valuesData.push(values[i]);
-                                            keySplinesData.push(keySplines[i]);
-                                        }
-                                        keyTimesData.push(keyTimes.pop());
-                                        valuesData.push(values.pop());
-                                        animate.values = valuesData;
-                                        animate.keyTimes = keyTimesData;
-                                        animate.keySplines = keySplinesData;
-                                    }
-                                    else {
-                                        animate.values = values;
-                                        animate.keyTimes = keyTimes;
-                                    }
-                                    animate.iterationCount = iterationCount !== 'infinite' ? parseFloat(iterationCount) : -1;
-                                    animate.fillForwards = fillMode === 'forwards' || fillMode === 'both';
-                                    animate.fillBackwards = fillMode === 'backwards' || fillMode === 'both';
-                                    animate.reverse = direction.endsWith('reverse');
-                                    animate.alternate = (animate.iterationCount === -1 || animate.iterationCount > 1) && direction.startsWith('alternate');
-                                    if ($util$6.hasValue(animate.baseFrom)) {
-                                        if (animate.keyTimes[0] !== 0) {
-                                            animate.keyTimes.unshift(0);
-                                            animate.values.unshift(animate.baseFrom);
-                                            if (animate.keySplines) {
-                                                animate.keySplines.unshift(timingFunction);
-                                            }
-                                        }
-                                    }
-                                    groupName.push(animate);
+                                    map[name].push({ index: fraction, value: keyframes[percent][name] });
                                 }
                             }
+                            if (attrMap['transform']) {
+                                function getKeyframeOrigin(order) {
+                                    const origin = attrMap['transform-origin'] && attrMap['transform-origin'].find(item => item.index === order);
+                                    if (origin) {
+                                        return TRANSFORM.origin(element, origin.value);
+                                    }
+                                    return undefined;
+                                }
+                                for (const transform of sortAttribute(attrMap['transform'])) {
+                                    const transforms = TRANSFORM.parse(element, transform.value);
+                                    if (transforms) {
+                                        const origin = getKeyframeOrigin(transform.index);
+                                        transforms.forEach(item => {
+                                            const m = item.matrix;
+                                            let name;
+                                            let value;
+                                            let transformOrigin;
+                                            switch (item.type) {
+                                                case SVGTransform.SVG_TRANSFORM_TRANSLATE:
+                                                    name = 'translate';
+                                                    value = `${m.e} ${m.f}`;
+                                                    break;
+                                                case SVGTransform.SVG_TRANSFORM_SCALE:
+                                                    name = 'scale';
+                                                    value = `${m.a} ${m.d} ${origin ? `${origin.x} ${origin.y}` : '0 0'}`;
+                                                    if (origin && (transform.index !== 0 || origin.x !== 0 || origin.y !== 0)) {
+                                                        transformOrigin = {
+                                                            x: origin.x * (1 - m.a),
+                                                            y: origin.y * (1 - m.d)
+                                                        };
+                                                    }
+                                                    break;
+                                                case SVGTransform.SVG_TRANSFORM_ROTATE:
+                                                    name = 'rotate';
+                                                    value = `${item.angle} ${origin ? `${origin.x} ${origin.y}` : '0 0'}`;
+                                                    break;
+                                                case SVGTransform.SVG_TRANSFORM_SKEWX:
+                                                    name = 'skewX';
+                                                    value = item.angle.toString();
+                                                    if (origin && (transform.index !== 0 || origin.y !== 0)) {
+                                                        transformOrigin = {
+                                                            x: origin.y * m.c * -1,
+                                                            y: 0
+                                                        };
+                                                    }
+                                                    break;
+                                                case SVGTransform.SVG_TRANSFORM_SKEWY:
+                                                    name = 'skewY';
+                                                    value = item.angle.toString();
+                                                    if (origin && (transform.index !== 0 || origin.x !== 0)) {
+                                                        transformOrigin = {
+                                                            x: 0,
+                                                            y: origin.x * m.b * -1
+                                                        };
+                                                    }
+                                                    break;
+                                                default:
+                                                    return;
+                                            }
+                                            if (attrMap[name] === undefined) {
+                                                attrMap[name] = [];
+                                            }
+                                            const previousIndex = attrMap[name].findIndex(subitem => subitem.index === transform.index);
+                                            if (previousIndex !== -1) {
+                                                attrMap[name][previousIndex].value = value;
+                                                attrMap[name][previousIndex].transformOrigin = transformOrigin;
+                                            }
+                                            else {
+                                                attrMap[name].push({
+                                                    index: transform.index,
+                                                    value,
+                                                    transformOrigin
+                                                });
+                                            }
+                                        });
+                                    }
+                                }
+                            }
+                            delete attrMap['transform'];
+                            delete attrMap['transform-origin'];
+                            for (const name in attrMap) {
+                                attributes.push(name);
+                                const animation = attrMap[name];
+                                let animate;
+                                switch (name) {
+                                    case 'rotate':
+                                    case 'scale':
+                                    case 'skewX':
+                                    case 'skewY':
+                                    case 'translate':
+                                        animate = new SvgAnimateTransform();
+                                        animate.attributeName = 'transform';
+                                        animate.baseFrom = TRANSFORM.typeAsValue(name);
+                                        animate.setType(name);
+                                        break;
+                                    default:
+                                        animate = new SvgAnimate();
+                                        animate.attributeName = name;
+                                        animate.baseFrom = $util$6.optionalAsString(element, `${name}.baseVal.valueAsString`) || $dom$6.cssAttribute(element, name);
+                                        break;
+                                }
+                                const timingFunction = cssData['animation-timing-function'][i];
+                                const direction = cssData['animation-direction'][i];
+                                const keyTimes = [];
+                                const values = [];
+                                const keySplines = [];
+                                sortAttribute(animation);
+                                for (let j = 0; j < animation.length; j++) {
+                                    keyTimes.push(animation[j].index);
+                                    values.push(animation[j].value);
+                                    if (j < animation.length - 1) {
+                                        const spline = keyframeMap['animation-timing-function'] && keyframeMap['animation-timing-function'].find(item => item.index === animation[j].index);
+                                        keySplines.push(spline ? spline.value : timingFunction);
+                                    }
+                                    const transformOrigin = animation[j].transformOrigin;
+                                    if (transformOrigin && SvgBuild.asAnimateTransform(animate)) {
+                                        if (animate.transformOrigin === undefined) {
+                                            animate.transformOrigin = [];
+                                        }
+                                        animate.transformOrigin[j] = transformOrigin;
+                                    }
+                                }
+                                addAnimation(animate, delay, keyframeIndex);
+                                animate.paused = paused;
+                                animate.duration = duration;
+                                if (!keySplines.every(spline => spline === 'linear')) {
+                                    const keyTimesData = [];
+                                    const valuesData = [];
+                                    const keySplinesData = [];
+                                    for (let j = 0; j < keySplines.length; j++) {
+                                        if (KEYSPLINE_NAME[keySplines[j]]) {
+                                            keySplines[j] = KEYSPLINE_NAME[keySplines[j]];
+                                        }
+                                        else if (keySplines[j].startsWith('step')) {
+                                            if (j === 0 && values[j] === '' && animate.baseFrom) {
+                                                values[j] = animate.baseFrom;
+                                            }
+                                            const steps = SvgAnimate.toStepFractionList(name, keyTimes, values, keySplines[j], j, getHostDPI(), getFontSize(element));
+                                            if (steps) {
+                                                keyTimesData.push(...steps[0]);
+                                                valuesData.push(...steps[1]);
+                                                steps[0].forEach(() => keySplinesData.push(KEYSPLINE_NAME['step']));
+                                                continue;
+                                            }
+                                            keySplines[j] = KEYSPLINE_NAME.linear;
+                                        }
+                                        else {
+                                            const match = REGEXP_CUBICBEZIER.exec(keySplines[j]);
+                                            keySplines[j] = match ? `${match[1]} ${match[2]} ${match[3]} ${match[4]}` : KEYSPLINE_NAME.ease;
+                                        }
+                                        keyTimesData.push(keyTimes[j]);
+                                        valuesData.push(values[j]);
+                                        keySplinesData.push(keySplines[j]);
+                                    }
+                                    keyTimesData.push(keyTimes.pop());
+                                    valuesData.push(values.pop());
+                                    animate.values = valuesData;
+                                    animate.keyTimes = keyTimesData;
+                                    animate.keySplines = keySplinesData;
+                                }
+                                else {
+                                    animate.values = values;
+                                    animate.keyTimes = keyTimes;
+                                }
+                                if (animate.keyTimes[0] !== 0 && $util$6.isString(animate.baseFrom)) {
+                                    animate.keyTimes.unshift(0);
+                                    animate.values.unshift(animate.baseFrom);
+                                    if (animate.keySplines) {
+                                        animate.keySplines.unshift(timingFunction);
+                                    }
+                                }
+                                animate.iterationCount = iterationCount !== 'infinite' ? parseFloat(iterationCount) : -1;
+                                animate.fillForwards = fillMode === 'forwards' || fillMode === 'both';
+                                animate.fillBackwards = fillMode === 'backwards' || fillMode === 'both';
+                                animate.reverse = direction.endsWith('reverse');
+                                animate.alternate = (animate.iterationCount === -1 || animate.iterationCount > 1) && direction.startsWith('alternate');
+                                groupName.push(animate);
+                            }
                         }
-                    });
-                    groupOrder.reverse();
+                    }
+                    groupSiblings.reverse();
                     for (const item of groupName) {
-                        item.setGroupOrder(groupOrder);
+                        item.setGroupSiblings(groupSiblings);
                     }
                 }
                 for (const item of result) {
@@ -4182,17 +4152,17 @@
                 }
                 return this._name;
             }
-            get transform() {
-                if (this._transform === undefined) {
-                    this._transform = this.getTransforms();
+            get transforms() {
+                if (this._transforms === undefined) {
+                    this._transforms = this.getTransforms();
                 }
-                return this._transform;
+                return this._transforms;
             }
-            get animation() {
-                if (this._animation === undefined) {
-                    this._animation = this.getAnimations();
+            get animations() {
+                if (this._animations === undefined) {
+                    this._animations = this.getAnimations();
                 }
-                return this._animation;
+                return this._animations;
             }
             set visible(value) {
                 setVisible(this.element, value);
@@ -4204,16 +4174,16 @@
                 setOpacity(this.element, value);
             }
             get opacity() {
-                return $dom$3.cssAttribute(this.element, 'opacity') || '1';
+                return $dom$6.cssAttribute(this.element, 'opacity') || '1';
             }
         };
     };
 
-    const $dom$4 = squared.lib.dom;
+    const $dom$7 = squared.lib.dom;
     function hasUnsupportedAccess(element) {
         const domElement = element.parentElement instanceof HTMLElement;
-        return element.tagName === 'svg' && ($dom$4.isUserAgent(4 /* SAFARI */) && !domElement ||
-            $dom$4.isUserAgent(16 /* FIREFOX */) && domElement);
+        return element.tagName === 'svg' && ($dom$7.isUserAgent(4 /* SAFARI */) && !domElement ||
+            $dom$7.isUserAgent(16 /* FIREFOX */) && domElement);
     }
     var SvgViewRect$MX = (Base) => {
         return class extends Base {
@@ -4317,7 +4287,7 @@
         };
     };
 
-    const $dom$5 = squared.lib.dom;
+    const $dom$8 = squared.lib.dom;
     const $util$7 = squared.lib.util;
     function getNearestViewBox$1(instance) {
         while (instance) {
@@ -4329,12 +4299,15 @@
         return undefined;
     }
     function getFillPattern(element, viewport) {
-        if (viewport) {
-            const value = $dom$5.cssInheritAttribute(element, 'fill');
-            if (value !== '') {
-                const match = REGEXP_SVG.URL.exec(value);
-                if (match) {
-                    return viewport.definitions.pattern.get(match[1]);
+        const match = REGEXP_SVG.URL.exec($dom$8.cssInheritAttribute(element, 'fill'));
+        if (match) {
+            if (viewport && viewport.definitions.pattern.has(match[1])) {
+                return viewport.definitions.pattern.get(match[1]);
+            }
+            else {
+                const target = document.getElementById(match[1].substring(1));
+                if (target instanceof SVGPatternElement) {
+                    return target;
                 }
             }
         }
@@ -4360,7 +4333,7 @@
             item.viewport = viewport || this.getViewport();
             return super.append(item);
         }
-        build(exclusions, residual, element) {
+        build(exclude, residual, element) {
             if (element === undefined) {
                 element = this.element;
             }
@@ -4417,7 +4390,7 @@
                 }
                 if (svg) {
                     this.append(svg, viewport);
-                    svg.build(exclusions, residual);
+                    svg.build(exclude, residual);
                 }
             }
             if (SvgBuild.asSvg(this) && this.documentRoot) {
@@ -4445,8 +4418,8 @@
                 this.clipRegion = SvgBuild.drawRect(width, height, x, y);
             }
         }
-        synchronize(useKeyTime = 0) {
-            this.each(item => item.synchronize(useKeyTime));
+        synchronize(keyTimeMode = 0) {
+            this.each(item => item.synchronize(keyTimeMode));
         }
         refitX(value) {
             return (value - this.aspectRatio.x) * this.aspectRatio.unit - this.aspectRatio.parent.x + this.aspectRatio.position.x;
@@ -4474,7 +4447,7 @@
         getPathAll(cascade = true) {
             const result = [];
             for (const item of (cascade ? this.cascade() : this)) {
-                if (SvgBuild.asShape(item) && item.path && item.path.value) {
+                if (SvgBuild.isShape(item) && item.path && item.path.value) {
                     result.push(item.path.value);
                 }
             }
@@ -4490,15 +4463,15 @@
                 if (viewBox) {
                     $util$7.cloneObject(viewBox, aspectRatio);
                     if (aspectRatio.width > 0 && aspectRatio.height > 0) {
+                        const ratio = aspectRatio.width / aspectRatio.height;
                         const parentWidth = parent.aspectRatio.width || parent.viewBox.width;
                         const parentHeight = parent.aspectRatio.height || parent.viewBox.height;
-                        const ratioA = aspectRatio.width / aspectRatio.height;
-                        const ratioB = parentWidth / parentHeight;
-                        if (ratioB > ratioA) {
-                            aspectRatio.position.x = (parentWidth - (parentHeight * ratioA)) / 2;
+                        const parentRatio = parentWidth / parentHeight;
+                        if (parentRatio > ratio) {
+                            aspectRatio.position.x = (parentWidth - (parentHeight * ratio)) / 2;
                         }
-                        else if (ratioB < ratioA) {
-                            aspectRatio.position.y = (parentHeight - (parentWidth * (1 / ratioA))) / 2;
+                        else if (parentRatio < ratio) {
+                            aspectRatio.position.y = (parentHeight - (parentWidth * (1 / ratio))) / 2;
                         }
                         aspectRatio.unit = Math.min(parentWidth / aspectRatio.width, parentHeight / aspectRatio.height);
                     }
@@ -4529,16 +4502,16 @@
     }
 
     const $color$1 = squared.lib.color;
-    const $dom$6 = squared.lib.dom;
+    const $dom$9 = squared.lib.dom;
     const $util$8 = squared.lib.util;
     function getColorStop(element) {
         const result = [];
         Array.from(element.getElementsByTagName('stop')).forEach(item => {
-            const color = $color$1.parseRGBA($dom$6.cssAttribute(item, 'stop-color'), $dom$6.cssAttribute(item, 'stop-opacity'));
+            const color = $color$1.parseRGBA($dom$9.cssAttribute(item, 'stop-color'), $dom$9.cssAttribute(item, 'stop-opacity'));
             if (color) {
                 result.push({
                     color: color.valueRGBA,
-                    offset: $dom$6.cssAttribute(item, 'offset'),
+                    offset: $dom$9.cssAttribute(item, 'offset'),
                     opacity: color.alpha
                 });
             }
@@ -4548,7 +4521,7 @@
     function getBaseValue(element, ...attrs) {
         const result = {};
         for (const attr of attrs) {
-            if (element[attr]) {
+            if (element[attr] && element[attr].baseVal) {
                 result[attr] = element[attr].baseVal.value;
                 result[`${attr}AsString`] = element[attr].baseVal.valueAsString;
             }
@@ -4567,15 +4540,15 @@
             };
             this.init();
         }
-        build(exclusions, residual) {
+        build(exclude, residual) {
             this.setRect();
-            super.build(exclusions, residual);
+            super.build(exclude, residual);
         }
-        synchronize(useKeyTime = 0) {
-            if (!this.documentRoot && this.animation.length) {
-                this.mergeAnimations(this.getAnimateViewRect(), this.getAnimateTransform(), useKeyTime);
+        synchronize(keyTimeMode = 0) {
+            if (!this.documentRoot && this.animations.length) {
+                this.mergeAnimations(this.getAnimateViewRect(), this.getAnimateTransform(), keyTimeMode);
             }
-            super.synchronize(useKeyTime);
+            super.synchronize(keyTimeMode);
         }
         init() {
             if (this.documentRoot) {
@@ -4583,29 +4556,29 @@
                 $util$8.cloneObject(viewBox, this.aspectRatio);
             }
             [this.element, ...Array.from(this.element.querySelectorAll('defs'))].forEach(item => {
-                item.querySelectorAll(':scope > set, :scope > animate, :scope > animateTransform, :scope > animateMotion').forEach((animation) => {
-                    const target = getTargetElement(animation, this.documentRoot ? this.element : undefined);
+                item.querySelectorAll(':scope > set, :scope > animate, :scope > animateTransform, :scope > animateMotion').forEach((element) => {
+                    const target = getTargetElement(element, this.documentRoot ? this.element : undefined);
                     if (target) {
-                        if (animation.parentElement) {
-                            animation.parentElement.removeChild(animation);
+                        if (element.parentElement) {
+                            element.parentElement.removeChild(element);
                         }
-                        target.appendChild(animation);
+                        target.appendChild(element);
                     }
                 });
-                item.querySelectorAll('clipPath, pattern, linearGradient, radialGradient').forEach((definition) => {
-                    if (definition.id) {
-                        const id = `#${definition.id}`;
-                        if (SVG.clipPath(definition)) {
-                            this.definitions.clipPath.set(id, definition);
+                item.querySelectorAll('clipPath, pattern, linearGradient, radialGradient').forEach((element) => {
+                    if (element.id) {
+                        const id = `#${element.id}`;
+                        if (SVG.clipPath(element)) {
+                            this.definitions.clipPath.set(id, element);
                         }
-                        else if (SVG.pattern(definition)) {
-                            this.definitions.pattern.set(id, definition);
+                        else if (SVG.pattern(element)) {
+                            this.definitions.pattern.set(id, element);
                         }
-                        else if (SVG.linearGradient(definition)) {
-                            this.definitions.gradient.set(id, Object.assign({ element: definition, type: 'linear', colorStop: getColorStop(definition) }, getBaseValue(definition, 'x1', 'x2', 'y1', 'y2')));
+                        else if (SVG.linearGradient(element)) {
+                            this.definitions.gradient.set(id, Object.assign({ type: 'linear', element, spreadMethod: element.spreadMethod.baseVal, colorStop: getColorStop(element) }, getBaseValue(element, 'x1', 'x2', 'y1', 'y2')));
                         }
-                        else if (SVG.radialGradient(definition)) {
-                            this.definitions.gradient.set(id, Object.assign({ element: definition, type: 'radial', colorStop: getColorStop(definition) }, getBaseValue(definition, 'cx', 'cy', 'r', 'fx', 'fy')));
+                        else if (SVG.radialGradient(element)) {
+                            this.definitions.gradient.set(id, Object.assign({ type: 'radial', element, spreadMethod: element.spreadMethod.baseVal, colorStop: getColorStop(element) }, getBaseValue(element, 'cx', 'cy', 'r', 'fx', 'fy', 'fr')));
                         }
                     }
                 });
@@ -4616,7 +4589,7 @@
                 return this.element.viewBox.baseVal;
             }
             else {
-                return $dom$6.getDOMRect(this.element);
+                return $dom$9.getDOMRect(this.element);
             }
         }
         get instanceType() {
@@ -4628,44 +4601,44 @@
         constructor(element) {
             this.element = element;
         }
-        build(exclusions, residual, element) { }
-        synchronize(useKeyTime) { }
+        build(exclude, residual, element) { }
+        synchronize(keyTimeMode) { }
         get instanceType() {
             return 4 /* SVG_ELEMENT */;
         }
     }
 
     const $color$2 = squared.lib.color;
-    const $dom$7 = squared.lib.dom;
+    const $dom$a = squared.lib.dom;
     const $util$9 = squared.lib.util;
-    const CLIPPATH_SHAPE = {
+    const REGEXP_CLIPPATH = {
         url: REGEXP_SVG.URL,
-        inset: new RegExp(`inset\\(${REGEXP_SVG.LENGTH}\\s?${REGEXP_SVG.LENGTH}?\\s?${REGEXP_SVG.LENGTH}?\\s?${REGEXP_SVG.LENGTH}?\\)`),
+        inset: new RegExp(`inset\\(${$util$9.REGEXP_STRING.LENGTH}\\s?${$util$9.REGEXP_STRING.LENGTH}?\\s?${$util$9.REGEXP_STRING.LENGTH}?\\s?${$util$9.REGEXP_STRING.LENGTH}?\\)`),
         polygon: /polygon\(([^)]+)\)/,
-        circle: new RegExp(`circle\\(${REGEXP_SVG.LENGTH}(?: at ${REGEXP_SVG.LENGTH} ${REGEXP_SVG.LENGTH})?\\)`),
-        ellipse: new RegExp(`ellipse\\(${REGEXP_SVG.LENGTH} ${REGEXP_SVG.LENGTH}(?: at ${REGEXP_SVG.LENGTH} ${REGEXP_SVG.LENGTH})?\\)`),
+        circle: new RegExp(`circle\\(${$util$9.REGEXP_STRING.LENGTH}(?: at ${$util$9.REGEXP_STRING.LENGTH} ${$util$9.REGEXP_STRING.LENGTH})?\\)`),
+        ellipse: new RegExp(`ellipse\\(${$util$9.REGEXP_STRING.LENGTH} ${$util$9.REGEXP_STRING.LENGTH}(?: at ${$util$9.REGEXP_STRING.LENGTH} ${$util$9.REGEXP_STRING.LENGTH})?\\)`),
     };
     var SvgPaint$MX = (Base) => {
         return class extends Base {
             setPaint(d) {
                 this.resetPaint();
-                this._setAttribute('color', true);
+                this.setAttribute('color', true);
                 this._setColor('fill');
-                this._setAttribute('fill-opacity');
-                this._setAttribute('fill-rule');
+                this.setAttribute('fill-opacity');
+                this.setAttribute('fill-rule');
                 this._setColor('stroke');
-                this._setAttribute('stroke-opacity');
-                this._setAttribute('stroke-width');
-                this._setAttribute('stroke-linecap');
-                this._setAttribute('stroke-linejoin');
-                this._setAttribute('stroke-miterlimit');
-                this._setAttribute('stroke-dasharray');
-                this._setAttribute('stroke-dashoffset');
-                this._setAttribute('clip-rule');
+                this.setAttribute('stroke-opacity');
+                this.setAttribute('stroke-width');
+                this.setAttribute('stroke-linecap');
+                this.setAttribute('stroke-linejoin');
+                this.setAttribute('stroke-miterlimit');
+                this.setAttribute('stroke-dasharray');
+                this.setAttribute('stroke-dashoffset');
+                this.setAttribute('clip-rule');
                 const clipPath = this._getAttribute('clip-path', false, false);
                 if (clipPath !== '') {
-                    for (const name in CLIPPATH_SHAPE) {
-                        const match = CLIPPATH_SHAPE[name].exec(clipPath);
+                    for (const name in REGEXP_CLIPPATH) {
+                        const match = REGEXP_CLIPPATH[name].exec(clipPath);
                         if (match) {
                             if (name === 'url') {
                                 this.clipPath = match[1];
@@ -4679,7 +4652,7 @@
                                 const height = boxRect.bottom - boxRect.top;
                                 const parent = this.parent;
                                 function convertUnit(value, index) {
-                                    return $dom$7.convertClientUnit(value, index === 0 ? width : height, dpi, fontSize);
+                                    return $util$9.convertPercentPX(value, index === 0 ? width : height, dpi, fontSize);
                                 }
                                 switch (name) {
                                     case 'inset': {
@@ -4764,6 +4737,12 @@
                     }
                 }
             }
+            setAttribute(attr, computed = false) {
+                const value = this._getAttribute(attr, computed);
+                if ($util$9.isString(value)) {
+                    this[$util$9.convertCamelCase(attr)] = value;
+                }
+            }
             resetPaint() {
                 this.fill = 'black';
                 this.fillPattern = '';
@@ -4797,7 +4776,7 @@
                             this[attr] = '';
                             break;
                         case 'currentcolor':
-                            color = $color$2.parseRGBA(this.color || $dom$7.cssAttribute(this.element, attr, true));
+                            color = $color$2.parseRGBA(this.color || $dom$a.cssAttribute(this.element, attr, true));
                             break;
                         default:
                             color = $color$2.parseRGBA(value);
@@ -4808,15 +4787,9 @@
                     }
                 }
             }
-            _setAttribute(attr, computed = false) {
-                const value = this._getAttribute(attr, computed);
-                if (value !== '') {
-                    this[$util$9.convertCamelCase(attr)] = value;
-                }
-            }
             _getAttribute(attr, computed = false, inherited = true) {
-                let value = $dom$7.cssAttribute(this.element, attr, computed);
-                if (inherited && value === '') {
+                let value = $dom$a.cssAttribute(this.element, attr, computed);
+                if (inherited && !$util$9.isString(value)) {
                     if (this.patternParent) {
                         switch (attr) {
                             case 'fill-opacity':
@@ -4828,11 +4801,11 @@
                     }
                     let current = this.useParent || this.parent;
                     while (current) {
-                        value = $dom$7.cssAttribute(current.element, attr);
+                        value = $dom$a.cssAttribute(current.element, attr);
                         if ($util$9.isString(value)) {
                             break;
                         }
-                        current = current['parent'];
+                        current = current.parent;
                     }
                 }
                 return value;
@@ -4845,8 +4818,8 @@
             super(element);
             this.element = element;
         }
-        build(exclusions, residual) {
-            super.build(exclusions, residual);
+        build(exclude, residual) {
+            super.build(exclude, residual);
             this.setPaint(this.getPathAll());
         }
         get instanceType() {
@@ -4860,8 +4833,8 @@
             super(element);
             this.element = element;
             this.imageElement = null;
-            this.__get_transform = false;
-            this.__get_animation = false;
+            this.__get_transforms = false;
+            this.__get_animations = false;
             if (imageElement) {
                 this.imageElement = imageElement;
             }
@@ -4870,15 +4843,15 @@
             this.setRect();
         }
         extract(exclude) {
-            const transform = SvgBuild.filterTransforms(this.transform, exclude);
+            const transforms = exclude ? SvgBuild.filterTransforms(this.transforms, exclude) : this.transforms;
             let x = this.x;
             let y = this.y;
             let width = this.width;
             let height = this.height;
-            if (transform.length) {
-                transform.reverse();
-                for (let i = 0; i < transform.length; i++) {
-                    const item = transform[i];
+            if (transforms.length) {
+                transforms.reverse();
+                for (let i = 0; i < transforms.length; i++) {
+                    const item = transforms[i];
                     const m = item.matrix;
                     const localX = x;
                     x = MATRIX.applyX(m, localX, y);
@@ -4912,7 +4885,7 @@
                             break;
                     }
                 }
-                this.transformed = transform;
+                this.transformed = transforms;
             }
             if (this.parent) {
                 x = this.parent.refitX(x);
@@ -4976,25 +4949,25 @@
             }
             return '';
         }
-        get transform() {
-            const transform = super.transform;
-            if (!this.__get_transform) {
+        get transforms() {
+            const transforms = super.transforms;
+            if (!this.__get_transforms) {
                 if (this.imageElement) {
-                    transform.push(...this.getTransforms(this.imageElement));
+                    transforms.push(...this.getTransforms(this.imageElement));
                 }
-                this.__get_transform = true;
+                this.__get_transforms = true;
             }
-            return transform;
+            return transforms;
         }
-        get animation() {
-            const animation = super.animation;
-            if (!this.__get_animation) {
+        get animations() {
+            const animations = super.animations;
+            if (!this.__get_animations) {
                 if (this.imageElement) {
-                    animation.push(...this.getAnimations(this.imageElement));
+                    animations.push(...this.getAnimations(this.imageElement));
                 }
-                this.__get_animation = true;
+                this.__get_animations = true;
             }
-            return animation;
+            return animations;
         }
         get instanceType() {
             return 4100 /* SVG_IMAGE */;
@@ -5010,8 +4983,11 @@
             this.transformed = null;
             this.init();
         }
-        static build(path, transform, exclusions, residual) {
-            path.draw(SvgBuild.filterTransforms(transform, exclusions && exclusions[path.element.tagName]), residual);
+        static build(path, transforms, exclude, residual) {
+            if (exclude && exclude[path.element.tagName]) {
+                transforms = SvgBuild.filterTransforms(transforms, exclude[path.element.tagName]);
+            }
+            path.draw(transforms, residual);
             return path;
         }
         static getCenter(values) {
@@ -5039,28 +5015,33 @@
                 y: (minY + maxY) / 2
             };
         }
-        draw(transform, residual, extract = false) {
+        draw(transforms, residual, extract = false) {
             if (!extract) {
                 this.transformed = null;
             }
             const parent = this.parent;
+            const patternParent = this.patternParent;
             const element = this.element;
             const requireRefit = !!parent && parent.requireRefit();
+            const requirePatternRefit = !!this.patternParent && this.patternParent.patternContentUnits === 2 /* OBJECT_BOUNDING_BOX */;
             let d = '';
             if (SVG.path(element)) {
                 d = this.getBaseValue('d');
-                if (transform && transform.length || requireRefit) {
+                if (transforms && transforms.length || requireRefit || requirePatternRefit) {
                     const commands = SvgBuild.getPathCommands(d);
                     if (commands.length) {
                         let points = SvgBuild.getPathPoints(commands);
                         if (points.length) {
-                            if (transform && transform.length) {
+                            if (requirePatternRefit) {
+                                patternParent.patternRefitPoints(points);
+                            }
+                            if (transforms && transforms.length) {
                                 if (typeof residual === 'function') {
-                                    [this.transformResidual, transform] = residual.call(this, element, transform);
+                                    [this.transformResidual, transforms] = residual.call(this, element, transforms);
                                 }
-                                if (transform.length) {
-                                    points = this.transformPoints(transform, points);
-                                    this.transformed = transform;
+                                if (transforms.length) {
+                                    points = this.transformPoints(transforms, points);
+                                    this.transformed = transforms;
                                 }
                             }
                             if (requireRefit) {
@@ -5076,13 +5057,16 @@
                     { x: this.getBaseValue('x1'), y: this.getBaseValue('y1') },
                     { x: this.getBaseValue('x2'), y: this.getBaseValue('y2') }
                 ];
-                if (transform && transform.length) {
+                if (requirePatternRefit) {
+                    patternParent.patternRefitPoints(points);
+                }
+                if (transforms && transforms.length) {
                     if (typeof residual === 'function') {
-                        [this.transformResidual, transform] = residual.call(this, element, transform);
+                        [this.transformResidual, transforms] = residual.call(this, element, transforms);
                     }
-                    if (transform.length) {
-                        points = this.transformPoints(transform, points);
-                        this.transformed = transform;
+                    if (transforms.length) {
+                        points = this.transformPoints(transforms, points);
+                        this.transformed = transforms;
                     }
                 }
                 if (requireRefit) {
@@ -5104,13 +5088,16 @@
                 let points = [
                     { x: this.getBaseValue('cx'), y: this.getBaseValue('cy'), rx, ry }
                 ];
-                if (transform && transform.length) {
+                if (requirePatternRefit) {
+                    patternParent.patternRefitPoints(points);
+                }
+                if (transforms && transforms.length) {
                     if (typeof residual === 'function') {
-                        [this.transformResidual, transform] = residual.call(this, element, transform, rx, ry);
+                        [this.transformResidual, transforms] = residual.call(this, element, transforms, rx, ry);
                     }
-                    if (transform.length) {
-                        points = this.transformPoints(transform, points);
-                        this.transformed = transform;
+                    if (transforms.length) {
+                        points = this.transformPoints(transforms, points);
+                        this.transformed = transforms;
                     }
                 }
                 if (requireRefit) {
@@ -5124,19 +5111,22 @@
                 let y = this.getBaseValue('y');
                 let width = this.getBaseValue('width');
                 let height = this.getBaseValue('height');
-                if (transform && transform.length) {
+                if (transforms && transforms.length) {
                     let points = [
                         { x, y },
                         { x: x + width, y },
                         { x: x + width, y: y + height },
                         { x, y: y + height }
                     ];
-                    if (typeof residual === 'function') {
-                        [this.transformResidual, transform] = residual.call(this, element, transform);
+                    if (requirePatternRefit) {
+                        patternParent.patternRefitPoints(points);
                     }
-                    if (transform.length) {
-                        points = this.transformPoints(transform, points);
-                        this.transformed = transform;
+                    if (typeof residual === 'function') {
+                        [this.transformResidual, transforms] = residual.call(this, element, transforms);
+                    }
+                    if (transforms.length) {
+                        points = this.transformPoints(transforms, points);
+                        this.transformed = transforms;
                     }
                     if (requireRefit) {
                         parent.refitPoints(points);
@@ -5144,6 +5134,12 @@
                     d = SvgBuild.drawPolygon(points);
                 }
                 else {
+                    if (requirePatternRefit) {
+                        x = patternParent.patternRefitX(x);
+                        y = patternParent.patternRefitY(y);
+                        width = patternParent.patternRefitX(width);
+                        height = patternParent.patternRefitY(height);
+                    }
                     if (requireRefit) {
                         x = parent.refitX(x);
                         y = parent.refitY(y);
@@ -5155,13 +5151,16 @@
             }
             else if (SVG.polygon(element) || SVG.polyline(element)) {
                 let points = this.getBaseValue('points');
-                if (transform && transform.length) {
+                if (requirePatternRefit) {
+                    patternParent.patternRefitPoints(points);
+                }
+                if (transforms && transforms.length) {
                     if (typeof residual === 'function') {
-                        [this.transformResidual, transform] = residual.call(this, element, transform);
+                        [this.transformResidual, transforms] = residual.call(this, element, transforms);
                     }
-                    if (transform.length) {
-                        points = this.transformPoints(transform, points);
-                        this.transformed = transform;
+                    if (transforms.length) {
+                        points = this.transformPoints(transforms, points);
+                        this.transformed = transforms;
                     }
                 }
                 if (requireRefit) {
@@ -5178,8 +5177,8 @@
             }
             return d;
         }
-        transformPoints(transform, points, center) {
-            return SvgBuild.applyTransforms(transform, points, TRANSFORM.origin(this.element), center);
+        transformPoints(transforms, points, center) {
+            return SvgBuild.applyTransforms(transforms, points, TRANSFORM.origin(this.element), center);
         }
         init() {
             const element = this.element;
@@ -5213,11 +5212,11 @@
                 this.setBaseValue('points', SvgBuild.clonePoints(element.points));
             }
         }
-        get transform() {
-            if (this._transform === undefined) {
-                this._transform = TRANSFORM.parse(this.element) || SvgBuild.convertTransforms(this.element.transform.baseVal);
+        get transforms() {
+            if (this._transforms === undefined) {
+                this._transforms = SvgBuild.filterTransforms(TRANSFORM.parse(this.element) || SvgBuild.convertTransforms(this.element.transform.baseVal));
             }
-            return this._transform;
+            return this._transforms;
         }
         get instanceType() {
             return 1028 /* SVG_PATH */;
@@ -5230,10 +5229,10 @@
             this.element = element;
             this.patternElement = patternElement;
         }
-        build(exclusions, residual) {
-            super.build(exclusions, residual, this.patternElement);
+        build(exclude, residual) {
+            super.build(exclude, residual, this.patternElement);
         }
-        get animation() {
+        get animations() {
             return [];
         }
         get instanceType() {
@@ -5251,15 +5250,15 @@
         setPath() {
             this.path = new SvgPath(this.element);
         }
-        build(exclusions, residual) {
+        build(exclude, residual) {
             if (this.path) {
                 this.path.parent = this.parent;
-                SvgPath.build(this.path, this.transform, exclusions, residual);
+                SvgPath.build(this.path, this.transforms, exclude, residual);
             }
         }
-        synchronize(useKeyTime = 0, element) {
-            if (this.path && this.animation.length) {
-                this.mergeAnimations(this.getAnimateShape(element || this.element), element ? [] : this.getAnimateTransform(), useKeyTime, this.path);
+        synchronize(keyTimeMode = 0, element) {
+            if (this.path && this.animations.length) {
+                this.mergeAnimations(this.getAnimateShape(element || this.element), element ? [] : this.getAnimateTransform(), keyTimeMode, this.path);
             }
         }
         set path(value) {
@@ -5277,17 +5276,25 @@
     }
 
     const $util$b = squared.lib.util;
+    function getPercent(value) {
+        return $util$b.isPercent(value) ? parseFloat(value) / 100 : parseFloat(value);
+    }
     class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer))) {
         constructor(element, patternElement) {
             super(element);
             this.element = element;
             this.patternElement = patternElement;
+            this.__get_transforms = false;
+            const units = this.patternElement.attributes.getNamedItem('patternUnits');
+            const contentUnits = this.patternElement.attributes.getNamedItem('patternContentUnits');
+            this.patternUnits = units && units.value === 'userSpaceOnUse' ? 1 /* USER_SPACE_ON_USE */ : 2 /* OBJECT_BOUNDING_BOX */;
+            this.patternContentUnits = contentUnits && contentUnits.value === 'objectBoundingBox' ? 2 /* OBJECT_BOUNDING_BOX */ : 1 /* USER_SPACE_ON_USE */;
         }
-        build(exclusions, residual, element) {
+        build(exclude, residual, element) {
             if (element === undefined) {
                 element = this.element;
             }
-            const path = SvgPath.build(new SvgPath(element), this.transform, exclusions);
+            const path = SvgPath.build(new SvgPath(element), [], exclude);
             if (path.value) {
                 this.clipRegion = path.value;
                 if (path.clipPath) {
@@ -5295,38 +5302,55 @@
                 }
                 const d = [path.value];
                 this.setPaint(d);
-                const boxRect = SvgBuild.toBoxRect(d);
-                const widthAsString = this.patternElement.width.baseVal.valueAsString;
-                const heightAsString = this.patternElement.height.baseVal.valueAsString;
-                const widthAsPercent = $util$b.isPercent(widthAsString) ? parseInt(widthAsString) / 100 : parseFloat(widthAsString);
-                const heightAsPercent = $util$b.isPercent(heightAsString) ? parseInt(heightAsString) / 100 : parseFloat(heightAsString);
-                const tileWidth = (boxRect.right - boxRect.left) * widthAsPercent;
-                const tileHeight = (boxRect.bottom - boxRect.top) * heightAsPercent;
-                let height = 1;
+                this.drawRegion = SvgBuild.toBoxRect(d);
+                const boundingBox = this.patternUnits === 2 /* OBJECT_BOUNDING_BOX */;
+                const patternWidth = this.patternWidth;
+                const patternHeight = this.patternHeight;
+                const tileWidth = this.tileWidth;
+                const tileHeight = this.tileHeight;
+                const boundingX = boundingBox ? this.drawRegion.left : 0;
+                const boundingY = boundingBox ? this.drawRegion.top : 0;
+                let offsetX = this.offsetX % tileWidth;
+                let offsetY = this.offsetY % tileHeight;
+                let width = this.drawRegion.right - (boundingBox ? this.drawRegion.left : 0);
+                let remainingHeight = this.drawRegion.bottom - (boundingBox ? this.drawRegion.top : 0);
                 let j = 0;
-                while (height > 0) {
-                    const y = boxRect.top + j * tileHeight;
-                    let width = 1;
+                if (offsetX !== 0) {
+                    offsetX = tileWidth - offsetX;
+                    width += tileWidth;
+                }
+                if (offsetY !== 0) {
+                    offsetY = tileHeight - offsetY;
+                    remainingHeight += tileHeight;
+                }
+                while (remainingHeight > 0) {
+                    const y = boundingY + j * tileHeight - offsetY;
+                    let remainingWidth = width;
                     let i = 0;
                     do {
-                        const x = boxRect.left + i * tileWidth;
+                        const x = boundingX + i * tileWidth - offsetX;
                         const pattern = new SvgPattern(element, this.patternElement);
-                        pattern.build(exclusions, residual);
-                        pattern.cascade().forEach(item => {
-                            if (SvgBuild.asShape(item) && item.path) {
+                        pattern.build(exclude, residual);
+                        for (const item of pattern.cascade()) {
+                            if (SvgBuild.isShape(item) && item.path) {
                                 item.path.patternParent = this;
-                                item.path.refitBaseValue(x, y);
-                                SvgPath.build(item.path, item.transform, exclusions, residual);
+                                if (this.patternContentUnits === 2 /* OBJECT_BOUNDING_BOX */) {
+                                    item.path.refitBaseValue(x / patternWidth, y / patternHeight);
+                                }
+                                else {
+                                    item.path.refitBaseValue(x, y);
+                                }
+                                SvgPath.build(item.path, item.transforms, exclude, residual);
                                 item.path.fillOpacity = (parseFloat(item.path.fillOpacity) * parseFloat(this.fillOpacity)).toString();
                                 item.path.clipPath = SvgBuild.drawRect(tileWidth, tileHeight, x, y) + (item.path.clipPath !== '' ? `;${item.path.clipPath}` : '');
                             }
-                        });
+                        }
                         this.append(pattern);
-                        width -= widthAsPercent;
+                        remainingWidth -= tileWidth;
                         i++;
-                    } while (width > 0);
+                    } while (remainingWidth > 0);
                     j++;
-                    height -= heightAsPercent;
+                    remainingHeight -= tileHeight;
                 }
                 if (this.stroke !== '' && parseFloat(this.strokeWidth) > 0) {
                     path.fill = '';
@@ -5337,8 +5361,102 @@
                     shape.path = path;
                     this.append(shape);
                 }
-                this.drawRegion = boxRect;
             }
+        }
+        patternRefitX(value) {
+            return this.drawRegion ? value * this.patternWidth : value;
+        }
+        patternRefitY(value) {
+            return this.drawRegion ? value * this.patternHeight : value;
+        }
+        patternRefitPoints(values) {
+            if (this.drawRegion) {
+                const x = this.patternWidth;
+                const y = this.patternHeight;
+                for (const pt of values) {
+                    pt.x *= x;
+                    pt.y *= y;
+                    if (pt.rx !== undefined && pt.ry !== undefined) {
+                        if (pt.rx === pt.ry) {
+                            const minXY = Math.min(x, y);
+                            pt.rx *= minXY;
+                            pt.ry *= minXY;
+                        }
+                        else {
+                            pt.rx *= x;
+                            pt.ry *= y;
+                        }
+                    }
+                }
+            }
+            return values;
+        }
+        get patternWidth() {
+            return this.drawRegion ? this.drawRegion.right - this.drawRegion.left : 0;
+        }
+        get patternHeight() {
+            return this.drawRegion ? this.drawRegion.bottom - this.drawRegion.top : 0;
+        }
+        get transforms() {
+            if (!this.__get_transforms) {
+                const transforms = SvgBuild.convertTransforms(this.patternElement.patternTransform.baseVal);
+                if (transforms.length) {
+                    const rotateOrigin = TRANSFORM.rotateOrigin(this.patternElement, 'patternTransform');
+                    const x = this.patternWidth / 2;
+                    const y = this.patternHeight / 2;
+                    for (const item of transforms) {
+                        switch (item.type) {
+                            case SVGTransform.SVG_TRANSFORM_TRANSLATE:
+                                break;
+                            case SVGTransform.SVG_TRANSFORM_ROTATE:
+                                while (rotateOrigin.length) {
+                                    const pt = rotateOrigin.shift();
+                                    if (pt.angle === item.angle) {
+                                        item.origin = { x: x + pt.x, y: y + pt.y };
+                                        break;
+                                    }
+                                }
+                                if (item.origin) {
+                                    break;
+                                }
+                            default:
+                                item.origin = { x, y };
+                                break;
+                        }
+                    }
+                    super.transforms.push(...SvgBuild.filterTransforms(transforms));
+                }
+                this.__get_transforms = true;
+            }
+            return super.transforms;
+        }
+        get offsetX() {
+            let value;
+            if (this.patternUnits === 2 /* OBJECT_BOUNDING_BOX */) {
+                value = this.patternWidth * getPercent(this.patternElement.x.baseVal.valueAsString);
+            }
+            return value || this.patternElement.x.baseVal.value;
+        }
+        get offsetY() {
+            let value;
+            if (this.patternUnits === 2 /* OBJECT_BOUNDING_BOX */) {
+                value = this.patternHeight * getPercent(this.patternElement.y.baseVal.valueAsString);
+            }
+            return value || this.patternElement.y.baseVal.value;
+        }
+        get tileWidth() {
+            let value;
+            if (this.patternUnits === 2 /* OBJECT_BOUNDING_BOX */) {
+                value = this.patternWidth * getPercent(this.patternElement.width.baseVal.valueAsString);
+            }
+            return value || this.patternElement.width.baseVal.value;
+        }
+        get tileHeight() {
+            let value;
+            if (this.patternUnits === 2 /* OBJECT_BOUNDING_BOX */) {
+                value = this.patternHeight * getPercent(this.patternElement.height.baseVal.valueAsString);
+            }
+            return value || this.patternElement.height.baseVal.value;
         }
         get instanceType() {
             return 258 /* SVG_SHAPE_PATTERN */;
@@ -5350,39 +5468,39 @@
             super(element, false);
             this.element = element;
             this.shapeElement = shapeElement;
-            this.__get_transform = false;
-            this.__get_animation = false;
+            this.__get_transforms = false;
+            this.__get_animations = false;
             this.setPath();
         }
         setPath() {
             this.path = new SvgPath(this.shapeElement);
             this.path.useParent = this;
         }
-        build(exclusions, residual) {
-            super.build(exclusions, residual);
+        build(exclude, residual) {
+            super.build(exclude, residual);
             this.setPaint(this.path ? [this.path.value] : undefined);
         }
-        synchronize(useKeyTime = 0) {
-            if (this.animation.length) {
-                this.mergeAnimations(this.getAnimateViewRect(), this.getAnimateTransform(), useKeyTime);
+        synchronize(keyTimeMode = 0) {
+            if (this.animations.length) {
+                this.mergeAnimations(this.getAnimateViewRect(), this.getAnimateTransform(), keyTimeMode);
             }
-            super.synchronize(useKeyTime, this.shapeElement);
+            super.synchronize(keyTimeMode, this.shapeElement);
         }
-        get transform() {
-            const transform = super.transform;
-            if (!this.__get_transform) {
-                transform.push(...this.getTransforms(this.shapeElement));
-                this.__get_transform = true;
+        get transforms() {
+            const transforms = super.transforms;
+            if (!this.__get_transforms) {
+                transforms.push(...this.getTransforms(this.shapeElement));
+                this.__get_transforms = true;
             }
-            return transform;
+            return transforms;
         }
-        get animation() {
-            const animation = super.animation;
-            if (!this.__get_animation) {
-                animation.push(...this.getAnimations(this.shapeElement));
-                this.__get_animation = true;
+        get animations() {
+            const animations = super.animations;
+            if (!this.__get_animations) {
+                animations.push(...this.getAnimations(this.shapeElement));
+                this.__get_animations = true;
             }
-            return animation;
+            return animations;
         }
         get instanceType() {
             return 10244 /* SVG_USE */;
@@ -5395,31 +5513,31 @@
             this.element = element;
             this.shapeElement = shapeElement;
         }
-        build(exclusions, residual) {
-            super.build(exclusions, residual, this.shapeElement);
+        build(exclude, residual) {
+            super.build(exclude, residual, this.shapeElement);
         }
-        synchronize(useKeyTime = 0) {
-            const [animations, transformations] = [this.animation.filter(item => this.validateBaseValue(item.attributeName, 0) === undefined || item.attributeName === 'x' || item.attributeName === 'y'), this.getAnimateTransform()];
+        synchronize(keyTimeMode = 0) {
+            const [animations, transformations] = [this.animations.filter(item => this.validateBaseValue(item.attributeName, 0) === undefined || item.attributeName === 'x' || item.attributeName === 'y'), this.getAnimateTransform()];
             if (animations.length || transformations.length) {
-                this.mergeAnimations(this.getAnimateViewRect(animations), transformations, useKeyTime);
+                this.mergeAnimations(this.getAnimateViewRect(animations), transformations, keyTimeMode);
             }
-            super.synchronize(useKeyTime);
+            super.synchronize(keyTimeMode);
         }
         get instanceType() {
             return 514 /* SVG_USE_PATTERN */;
         }
     }
 
-    const $dom$8 = squared.lib.dom;
+    const $dom$b = squared.lib.dom;
     class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer))))) {
         constructor(element, symbolElement) {
             super(element);
             this.element = element;
             this.symbolElement = symbolElement;
         }
-        build(exclusions, residual) {
+        build(exclude, residual) {
             this.setRect();
-            super.build(exclusions, residual, this.symbolElement);
+            super.build(exclude, residual, this.symbolElement);
             const x = this.getBaseValue('x', 0);
             const y = this.getBaseValue('y', 0);
             if (x !== 0 || y !== 0) {
@@ -5428,18 +5546,18 @@
             }
             this.setPaint(this.getPathAll());
         }
-        synchronize(useKeyTime = 0) {
-            if (this.animation.length) {
-                this.mergeAnimations(this.getAnimateViewRect(), this.getAnimateTransform(), useKeyTime);
+        synchronize(keyTimeMode = 0) {
+            if (this.animations.length) {
+                this.mergeAnimations(this.getAnimateViewRect(), this.getAnimateTransform(), keyTimeMode);
             }
-            super.synchronize(useKeyTime);
+            super.synchronize(keyTimeMode);
         }
         get viewBox() {
             if (this.symbolElement.viewBox.baseVal) {
                 return this.symbolElement.viewBox.baseVal;
             }
             else {
-                return $dom$8.getDOMRect(this.element);
+                return $dom$b.getDOMRect(this.element);
             }
         }
         get instanceType() {

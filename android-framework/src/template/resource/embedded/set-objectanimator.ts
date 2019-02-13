@@ -11,7 +11,7 @@ export default `<?xml version="1.0" encoding="utf-8"?>
 		<<fillBefore>>
 		<<repeating>>
 			<objectAnimator
-				android:propertyName="{&propertyName}"
+				android:propertyName="{~propertyName}"
 				android:interpolator="{~interpolator}"
 				android:valueType="{~valueType}"
 				android:valueFrom="{~valueFrom}"
@@ -50,6 +50,19 @@ export default `<?xml version="1.0" encoding="utf-8"?>
 		<<fillAfter>>
 		</set>
 	<<AA>>
+	<<BB>>
+		<<together>>
+		<objectAnimator
+			android:propertyName="{&propertyName}"
+			android:interpolator="{~interpolator}"
+			android:valueType="{~valueType}"
+			android:valueFrom="{~valueFrom}"
+			android:valueTo="{&valueTo}"
+			android:startOffset="{~startOffset}"
+			android:duration="{&duration}"
+			android:repeatCount="{&repeatCount}" />
+		<<together>>
+	<<BB>>
 	</set>
 <<A>>
 </set>`;

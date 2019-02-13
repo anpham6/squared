@@ -489,6 +489,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                         this.documentBody ||
                         !!parent && (
                             parent.documentBody ||
+                            parent.has('width', $enum.CSS_STANDARD.PERCENT) ||
                             parent.blockStatic && (this.singleChild || this.alignedVertically(this.previousSiblings()))
                         )
                     ) ||

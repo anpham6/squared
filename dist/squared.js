@@ -1,4 +1,4 @@
-/* squared 0.6.1
+/* squared 0.6.2
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -53,6 +53,11 @@
         UNIT: /^(?:\s*(-?[\d.]+)(px|em|ch|pc|pt|vw|vh|vmin|vmax|mm|cm|in))+$/,
         ATTRIBUTE: /([^\s]+)="([^"]+)"/
     };
+    const REGEXP_STRING = {
+        DECIMAL: '(-?[\\d.]+)',
+        LENGTH: '(-?[\\d.]+(?:[a-z]{2,}|%)?)'
+    };
+    REGEXP_STRING.DEGREE = REGEXP_STRING.DECIMAL + '(deg|rad|turn|grad)';
     function capitalize(value, upper = true) {
         if (value !== '') {
             if (upper) {
@@ -79,21 +84,34 @@
         }
         return value;
     }
-    function convertWord(value, replaceDash = false) {
-        if (value) {
-            value = value.replace(/[^\w]/g, '_').trim();
-            if (replaceDash) {
-                value = value.replace(/-/g, '_');
-            }
-            return value;
-        }
-        return '';
+    function convertWord(value, includeDash = false) {
+        return value ? (includeDash ? value.replace(/[^a-zA-Z\d]+/g, '_') : value.replace(/[^\w]+/g, '_')).trim() : '';
     }
     function convertInt(value) {
         return value && parseInt(value) || 0;
     }
     function convertFloat(value) {
         return value && parseFloat(value) || 0;
+    }
+    function convertRadian(angle) {
+        return angle * Math.PI / 180;
+    }
+    function convertAngle(value, unit = 'deg') {
+        let angle = parseFloat(value);
+        switch (unit) {
+            case 'rad':
+                angle *= 180 / Math.PI;
+                break;
+            case 'grad':
+                angle /= 400;
+            case 'turn':
+                angle *= 360;
+                break;
+        }
+        return angle;
+    }
+    function convertPercent(value, precision = 0) {
+        return value < 1 ? `${precision === 0 ? Math.round(value * 100) : parseFloat((value * 100).toFixed(precision))}%` : `100%`;
     }
     function convertPX(value, dpi, fontSize) {
         if (value) {
@@ -144,8 +162,13 @@
         }
         return '0px';
     }
-    function convertPercent(value, precision = 0) {
-        return value < 1 ? `${precision === 0 ? Math.round(value * 100) : parseFloat((value * 100).toFixed(precision))}%` : `100%`;
+    function convertPercentPX(value, dimension, dpi, fontSize, percent = false) {
+        if (percent) {
+            return isPercent(value) ? convertFloat(value) / 100 : parseFloat(convertPX(value, dpi, fontSize)) / dimension;
+        }
+        else {
+            return isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseFloat(convertPX(value, dpi, fontSize));
+        }
     }
     function convertAlpha(value) {
         let result = '';
@@ -212,7 +235,7 @@
         return typeof value === 'number' || /^-?\d+(\.\d+)?$/.test(value.trim());
     }
     function isString(value) {
-        return typeof value === 'string' && value !== '';
+        return typeof value === 'string' && value.trim() !== '';
     }
     function isArray(value) {
         return Array.isArray(value) && value.length > 0;
@@ -483,14 +506,18 @@
 
     var util = /*#__PURE__*/Object.freeze({
         REGEXP_PATTERN: REGEXP_PATTERN,
+        REGEXP_STRING: REGEXP_STRING,
         capitalize: capitalize,
         convertUnderscore: convertUnderscore,
         convertCamelCase: convertCamelCase,
         convertWord: convertWord,
         convertInt: convertInt,
         convertFloat: convertFloat,
-        convertPX: convertPX,
+        convertRadian: convertRadian,
+        convertAngle: convertAngle,
         convertPercent: convertPercent,
+        convertPX: convertPX,
+        convertPercentPX: convertPercentPX,
         convertAlpha: convertAlpha,
         convertRoman: convertRoman,
         convertEnum: convertEnum,
@@ -1228,14 +1255,6 @@
     function removeElementsByClassName(className) {
         Array.from(document.getElementsByClassName(className)).forEach(element => element.parentElement && element.parentElement.removeChild(element));
     }
-    function convertClientUnit(value, dimension, dpi, fontSize, percent = false) {
-        if (percent) {
-            return isPercent(value) ? convertFloat(value) / 100 : (parseFloat(convertPX(value, dpi, fontSize)) / dimension);
-        }
-        else {
-            return isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseFloat(convertPX(value, dpi, fontSize));
-        }
-    }
     function getRangeClientRect(element) {
         const range = document.createRange();
         range.selectNodeContents(element);
@@ -1357,16 +1376,9 @@
         return value || '';
     }
     function cssAttribute(element, attr, computed = false) {
-        const name = convertCamelCase(attr);
         const node = getElementAsNode(element);
-        let value = node && node.cssInitial(name) || cssInline(element, name);
-        if (!value) {
-            const item = element.attributes.getNamedItem(attr);
-            if (item) {
-                value = item.value.trim();
-            }
-        }
-        return value || computed && getStyle(element)[name] || '';
+        const name = convertCamelCase(attr);
+        return node && node.cssInitial(name) || cssInline(element, name) || getNamedItem(element, attr) || computed && getStyle(element)[name] || '';
     }
     function cssInheritAttribute(element, attr) {
         let current = element;
@@ -1379,6 +1391,15 @@
             current = current.parentElement;
         }
         return value;
+    }
+    function getNamedItem(element, attr) {
+        if (element) {
+            const item = element.attributes.getNamedItem(attr);
+            if (item) {
+                return item.value.trim();
+            }
+        }
+        return '';
     }
     function getBackgroundPosition(value, dimension, dpi, fontSize, leftPerspective = false, percent = false) {
         const result = {
@@ -1403,7 +1424,7 @@
                         break;
                     case 1:
                     case 3:
-                        const clientXY = convertClientUnit(position, index === 1 ? dimension.width : dimension.height, dpi, fontSize, percent);
+                        const clientXY = convertPercentPX(position, index === 1 ? dimension.width : dimension.height, dpi, fontSize, percent);
                         if (index === 1) {
                             if (leftPerspective) {
                                 if (result.horizontal === 'right') {
@@ -1459,7 +1480,7 @@
                 const offsetParent = index === 0 ? dimension.width : dimension.height;
                 const direction = index === 0 ? 'left' : 'top';
                 const original = index === 0 ? 'originalX' : 'originalY';
-                const clientXY = convertClientUnit(position, offsetParent, dpi, fontSize, percent);
+                const clientXY = convertPercentPX(position, offsetParent, dpi, fontSize, percent);
                 if (isPercent(position)) {
                     result[direction] = clientXY;
                     result[original] = position;
@@ -1580,9 +1601,11 @@
         return false;
     }
     function isLineBreak(element, excluded = true) {
-        const node = getElementAsNode(element);
-        if (node) {
-            return node.tagName === 'BR' || excluded && node.excluded && node.blockStatic;
+        if (element) {
+            const node = getElementAsNode(element);
+            if (node) {
+                return node.tagName === 'BR' || excluded && node.excluded && node.blockStatic;
+            }
         }
         return false;
     }
@@ -1646,9 +1669,9 @@
     }
     function hasVisibleRect(element, checkViewport = false) {
         const bounds = element.getBoundingClientRect();
-        return bounds.width !== 0 && bounds.height !== 0 && (!checkViewport || withinViewportOrigin(bounds));
+        return bounds.width !== 0 && bounds.height !== 0 && (!checkViewport || withinViewport(bounds));
     }
-    function withinViewportOrigin(bounds) {
+    function withinViewport(bounds) {
         return !(bounds.left < 0 && bounds.top < 0 && Math.abs(bounds.left) >= bounds.width && Math.abs(bounds.top) >= bounds.height);
     }
     function setElementCache(element, attr, data) {
@@ -1682,7 +1705,6 @@
         getDOMRect: getDOMRect,
         createElement: createElement,
         removeElementsByClassName: removeElementsByClassName,
-        convertClientUnit: convertClientUnit,
         getRangeClientRect: getRangeClientRect,
         assignBounds: assignBounds,
         getStyle: getStyle,
@@ -1693,6 +1715,7 @@
         cssInline: cssInline,
         cssAttribute: cssAttribute,
         cssInheritAttribute: cssInheritAttribute,
+        getNamedItem: getNamedItem,
         getBackgroundPosition: getBackgroundPosition,
         getFirstChildElement: getFirstChildElement,
         getLastChildElement: getLastChildElement,
@@ -1705,7 +1728,7 @@
         getNextElementSibling: getNextElementSibling,
         hasComputedStyle: hasComputedStyle,
         hasVisibleRect: hasVisibleRect,
-        withinViewportOrigin: withinViewportOrigin,
+        withinViewport: withinViewport,
         setElementCache: setElementCache,
         getElementCache: getElementCache,
         deleteElementCache: deleteElementCache,
@@ -1719,6 +1742,7 @@
         }
         return value;
     }
+    const TEMPLATE_ROOT = '__ROOT__';
     function formatPlaceholder(id, symbol = ':') {
         return `{${symbol + id.toString()}}`;
     }
@@ -1793,80 +1817,80 @@
             Object.assign(result, data);
             return data;
         }
-        result['__ROOT__'] = replaceTemplateSection(parseSection(value), value);
+        result[TEMPLATE_ROOT] = replaceTemplateSection(parseSection(value), value);
         return result;
     }
     function createTemplate(value, data, format = false, index) {
-        let output = index === undefined ? value['__ROOT__'] : value[index];
+        if (index === undefined) {
+            index = TEMPLATE_ROOT;
+        }
+        let output = value[index] || '';
         for (const attr in data) {
-            const unknown = data[attr];
-            let result = '';
-            let hash = '';
-            if (unknown === undefined || unknown === null) {
+            if (data[attr] === undefined || data[attr] === null) {
                 continue;
             }
-            else if (Array.isArray(unknown)) {
-                hash = '%';
-                if (Array.isArray(unknown[0])) {
-                    function partial(section) {
-                        return `(\\t*##${attr}-${section}##\\s*\\n)([\\w\\W]*?\\s*\\n)(\\t*##${attr}-${section}##\\s*\\n)`;
-                    }
-                    const match = new RegExp(partial('start') + `([\\w\\W]*?)` + partial('end')).exec(output);
-                    if (match) {
-                        let tagStart = '';
-                        let tagEnd = '';
-                        const depth = unknown[0].length;
-                        const guard = Object.assign({}, value);
-                        for (let i = 0; i < depth; i++) {
-                            const key = `${index}_${attr}_${i}`;
-                            guard[key] = match[2];
-                            tagStart += createTemplate(guard, unknown[0][i], format, key);
-                            tagEnd = match[6] + tagEnd;
+            else {
+                const unknown = data[attr];
+                let result = '';
+                let hash = '';
+                if (Array.isArray(unknown)) {
+                    hash = '%';
+                    if (Array.isArray(unknown[0])) {
+                        function partial(section) {
+                            return `((\\t*##${attr}-${section}##\\s*\\n)([\\w\\W]*?\\s*\\n)(\\t*##${attr}-${section}##\\s*\\n))`;
                         }
-                        output = output
-                            .replace(match[2], tagStart).replace(match[6], tagEnd)
-                            .replace(match[1], '').replace(match[3], '')
-                            .replace(new RegExp(`\\t*${match[5]}`), '').replace(new RegExp(`\\t*${match[7]}`), '');
+                        const match = new RegExp(partial('start') + `([\\w\\W]*?)` + partial('end')).exec(output);
+                        if (match) {
+                            const depth = unknown[0].length;
+                            const guard = Object.assign({}, value);
+                            let tagStart = '';
+                            let tagEnd = '';
+                            for (let i = 0; i < depth; i++) {
+                                const key = `${index}_${attr}_${i}`;
+                                guard[key] = match[3];
+                                tagStart += createTemplate(guard, unknown[0][i], format, key);
+                                tagEnd = match[8] + tagEnd;
+                            }
+                            output = output.replace(match[1], tagStart).replace(match[6], tagEnd);
+                        }
+                        else {
+                            result = false;
+                        }
                     }
-                    else {
+                    else if (unknown.length === 0 || typeof unknown[0] !== 'object') {
                         result = false;
                     }
-                }
-                else if (unknown.length === 0 || typeof unknown[0] !== 'object') {
-                    result = false;
+                    else {
+                        for (let i = 0; i < unknown.length; i++) {
+                            result += createTemplate(value, unknown[i], format, attr.toString());
+                        }
+                        if (result === '') {
+                            result = false;
+                        }
+                        else {
+                            result = trimEnd(result, '\n');
+                        }
+                    }
                 }
                 else {
-                    for (let i = 0; i < unknown.length; i++) {
-                        result += createTemplate(value, unknown[i], format, attr.toString());
+                    hash = '[&~]';
+                    result = typeof unknown === 'boolean' ? '' : unknown.toString();
+                }
+                if (!result) {
+                    if (new RegExp(`{&${attr}}`).test(output)) {
+                        return '';
                     }
-                    if (result === '') {
-                        result = false;
-                    }
-                    else {
-                        result = trimEnd(result, '\n');
+                    else if (hash === '%') {
+                        output = output.replace(new RegExp(`[ \\t]*{%${attr}}\\n*`), '');
                     }
                 }
-            }
-            else {
-                hash = '[&~]';
-                result = typeof unknown === 'boolean' ? '' : unknown.toString();
-            }
-            if (!result) {
-                if (new RegExp(`{&${attr}}`).test(output)) {
-                    return '';
+                else if (result !== '') {
+                    output = output.replace(new RegExp(`{${hash + attr}}`), result);
                 }
-                else if (hash === '%') {
-                    output = output.replace(new RegExp(`[ \\t]*{%${attr}}\\n*`), '');
-                }
-            }
-            else if (result !== '') {
-                output = output.replace(new RegExp(`{${hash + attr}}`), result);
             }
         }
-        if (index === undefined) {
-            output = output
-                .replace(/\n*\t*{%\w+}\n+/g, '\n')
-                .replace(/\n\n/g, '\n').trim();
+        if (index === TEMPLATE_ROOT) {
+            output = output.replace(/\n*\t*{%\w+}\n+/g, '\n').replace(/\n\n/g, '\n').trim();
             if (format) {
                 output = formatTemplate(output);
             }
