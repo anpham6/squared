@@ -1,6 +1,4 @@
-import { EnvironmentSettings } from '../../../src/base/@types/application';
-
-export interface LocalSettings extends EnvironmentSettings {
+export interface LocalSettings {
     targetAPI: number;
     supportRTL: boolean;
     constraintPercentAccuracy?: number;

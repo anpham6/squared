@@ -18,11 +18,6 @@ const SHAPES = {
     polygon: 7
 };
 
-export const REGEXP_SVG = {
-    URL: /url\("?(#.*?)"?\)/,
-    ZERO_ONE: '(0(?:\\.\\d+)?|1(?:\\.0+)?)'
-};
-
 const REGEXP_TRANSFORM = {
     MATRIX: `(matrix(?:3d)?)\\(${$util.REGEXP_STRING.DECIMAL}, ${$util.REGEXP_STRING.DECIMAL}, ${$util.REGEXP_STRING.DECIMAL}, ${$util.REGEXP_STRING.DECIMAL}, ${$util.REGEXP_STRING.DECIMAL}, ${$util.REGEXP_STRING.DECIMAL}(?:, ${$util.REGEXP_STRING.DECIMAL})?(?:, ${$util.REGEXP_STRING.DECIMAL})?(?:, ${$util.REGEXP_STRING.DECIMAL})?(?:, ${$util.REGEXP_STRING.DECIMAL})?(?:, ${$util.REGEXP_STRING.DECIMAL})?(?:, ${$util.REGEXP_STRING.DECIMAL})?(?:, ${$util.REGEXP_STRING.DECIMAL})?(?:, ${$util.REGEXP_STRING.DECIMAL})?(?:, ${$util.REGEXP_STRING.DECIMAL})?(?:, ${$util.REGEXP_STRING.DECIMAL})?\\)`,
     ROTATE: `(rotate[XY]?)\\(${$util.REGEXP_STRING.DEGREE}\\)`,
@@ -154,10 +149,9 @@ export const TRANSFORM = {
                         result[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SCALE, matrix, 0, !isY, !isX);
                     }
                     else if (match[1].startsWith('translate')) {
-                        const dpi = getHostDPI();
                         const fontSize = getFontSize(element);
-                        const arg1 = parseFloat($util.convertPX(match[2], dpi, fontSize));
-                        const arg2 = (!isX && match[3] ? parseFloat($util.convertPX(match[3], dpi, fontSize)) : 0);
+                        const arg1 = parseFloat($util.convertPX(match[2], fontSize));
+                        const arg2 = (!isX && match[3] ? parseFloat($util.convertPX(match[3], fontSize)) : 0);
                         const x = isY ? 0 : arg1;
                         const y = isY ? arg1 : arg2;
                         const matrix = MATRIX.translate(x, y);
@@ -262,7 +256,7 @@ export const TRANSFORM = {
                                 position = '50%';
                             }
                             if ($util.isUnit(position)) {
-                                result[attr] = parseInt(position.endsWith('px') ? position : $util.convertPX(position, getHostDPI(), getFontSize(element)));
+                                result[attr] = parseInt(position.endsWith('px') ? position : $util.convertPX(position, getFontSize(element)));
                             }
                             else if ($util.isPercent(position)) {
                                 result[attr] = (attr === 'x' ? width : height) * (parseInt(position) / 100);
@@ -389,10 +383,6 @@ export const SVG = {
     }
 };
 
-export function getHostDPI() {
-    return $util.optionalAsNumber(squared, 'settings.resolutionDPI') || 96;
-}
-
 export function getFontSize(element: SVGElement | null) {
     return parseInt($dom.getStyle(element).fontSize || '16');
 }
@@ -463,6 +453,11 @@ export function setOpacity(element: SVGGraphicsElement, value: string) {
         element.style.opacity = opacity.toString();
         element.setAttribute('opacity', opacity.toString());
     }
+}
+
+export function getAttributeUrl(value: string) {
+    const match = /url\("?(#.+?)"?\)/.exec(value);
+    return match ? match[1] : '';
 }
 
 export function getTargetElement(element: Element, rootElement?: SVGElement) {

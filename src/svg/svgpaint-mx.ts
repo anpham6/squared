@@ -1,6 +1,6 @@
 import SvgBuild from './svgbuild';
 
-import { REGEXP_SVG, getFontSize, getHostDPI } from './lib/util';
+import { getAttributeUrl, getFontSize } from './lib/util';
 
 type SvgShapePattern = squared.svg.SvgShapePattern;
 type SvgUse = squared.svg.SvgUse;
@@ -11,7 +11,7 @@ const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 const REGEXP_CLIPPATH: ObjectMap<RegExp> = {
-    url: REGEXP_SVG.URL,
+    url: $util.REGEXP_PATTERN.URL,
     inset: new RegExp(`inset\\(${$util.REGEXP_STRING.LENGTH}\\s?${$util.REGEXP_STRING.LENGTH}?\\s?${$util.REGEXP_STRING.LENGTH}?\\s?${$util.REGEXP_STRING.LENGTH}?\\)`),
     polygon: /polygon\(([^)]+)\)/,
     circle: new RegExp(`circle\\(${$util.REGEXP_STRING.LENGTH}(?: at ${$util.REGEXP_STRING.LENGTH} ${$util.REGEXP_STRING.LENGTH})?\\)`),
@@ -43,10 +43,10 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
         public setPaint(d?: string[]) {
             this.resetPaint();
             this.setAttribute('color', true);
-            this._setColor('fill');
+            this.setAttribute('fill');
             this.setAttribute('fill-opacity');
             this.setAttribute('fill-rule');
-            this._setColor('stroke');
+            this.setAttribute('stroke');
             this.setAttribute('stroke-opacity');
             this.setAttribute('stroke-width');
             this.setAttribute('stroke-linecap');
@@ -55,7 +55,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             this.setAttribute('stroke-dasharray');
             this.setAttribute('stroke-dashoffset');
             this.setAttribute('clip-rule');
-            const clipPath = this._getAttribute('clip-path', false, false);
+            const clipPath = this.getAttribute('clip-path', false, false);
             if (clipPath !== '') {
                 for (const name in REGEXP_CLIPPATH) {
                     const match = REGEXP_CLIPPATH[name].exec(clipPath);
@@ -65,14 +65,13 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             return;
                         }
                         else if (d && d.length) {
-                            const dpi = getHostDPI();
                             const fontSize = getFontSize(this.element);
                             const boxRect = SvgBuild.toBoxRect(d);
                             const width = boxRect.right - boxRect.left;
                             const height = boxRect.bottom - boxRect.top;
                             const parent = this.parent;
                             function convertUnit(value: string, index: number) {
-                                return $util.convertPercentPX(value, index === 0 ? width : height, dpi, fontSize);
+                                return $util.convertPercentPX(value, index === 0 ? width : height, fontSize);
                             }
                             switch (name) {
                                 case 'inset': {
@@ -159,59 +158,43 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
         }
 
         public setAttribute(attr: string, computed = false) {
-            const value = this._getAttribute(attr, computed);
+            const value = this.getAttribute(attr, computed);
             if ($util.isString(value)) {
-                this[$util.convertCamelCase(attr)] = value;
-            }
-        }
-
-        public resetPaint() {
-            this.fill = 'black';
-            this.fillPattern = '';
-            this.fillOpacity = '1';
-            this.fillRule = 'nonzero';
-            this.stroke = '';
-            this.strokeWidth = '1';
-            this.strokePattern = '';
-            this.strokeOpacity = '1';
-            this.strokeLinecap = 'butt';
-            this.strokeLinejoin = 'miter';
-            this.strokeMiterlimit = '4';
-            this.strokeDashArray = '';
-            this.strokeDashOffset = '0';
-            this.color = '';
-            this.clipPath = '';
-            this.clipRule = '';
-        }
-
-        private _setColor(attr: string) {
-            const value = this._getAttribute(attr);
-            const match = REGEXP_SVG.URL.exec(value);
-            if (match) {
-                this[`${attr}Pattern`] = match[1];
-            }
-            else if (value !== '') {
-                let color: ColorData | undefined;
-                switch (value.toLowerCase()) {
-                    case 'none':
-                    case 'transparent':
-                    case 'rgba(0, 0, 0, 0)':
-                        this[attr] = '';
-                        break;
-                    case 'currentcolor':
-                        color = $color.parseRGBA(this.color || $dom.cssAttribute(this.element, attr, true));
+                switch (value) {
+                    case 'fill':
+                    case 'stroke':
+                        const url = getAttributeUrl(value);
+                        if (url !== '') {
+                            this[`${attr}Pattern`] = url;
+                        }
+                        else {
+                            let color: ColorData | undefined;
+                            switch (value.toLowerCase()) {
+                                case 'none':
+                                case 'transparent':
+                                case 'rgba(0, 0, 0, 0)':
+                                    this[attr] = '';
+                                    break;
+                                case 'currentcolor':
+                                    color = $color.parseRGBA(this.color || $dom.cssAttribute(this.element, attr, true));
+                                    break;
+                                default:
+                                    color = $color.parseRGBA(value);
+                                    break;
+                            }
+                            if (color) {
+                                this[attr] = color.valueRGB;
+                            }
+                        }
                         break;
                     default:
-                        color = $color.parseRGBA(value);
+                        this[$util.convertCamelCase(attr)] = value;
                         break;
-                }
-                if (color) {
-                    this[attr] = color.valueRGB;
                 }
             }
         }
 
-        private _getAttribute(attr: string, computed = false, inherited = true) {
+        public getAttribute(attr: string, computed = false, inherited = true) {
             let value = $dom.cssAttribute(this.element, attr, computed);
             if (inherited && !$util.isString(value)) {
                 if (this.patternParent) {
@@ -233,6 +216,25 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                 }
             }
             return value;
+        }
+
+        public resetPaint() {
+            this.fill = 'black';
+            this.fillPattern = '';
+            this.fillOpacity = '1';
+            this.fillRule = 'nonzero';
+            this.stroke = '';
+            this.strokeWidth = '1';
+            this.strokePattern = '';
+            this.strokeOpacity = '1';
+            this.strokeLinecap = 'butt';
+            this.strokeLinejoin = 'miter';
+            this.strokeMiterlimit = '4';
+            this.strokeDashArray = '';
+            this.strokeDashOffset = '0';
+            this.color = '';
+            this.clipPath = '';
+            this.clipRule = '';
         }
     };
 };

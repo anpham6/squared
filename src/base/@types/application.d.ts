@@ -1,8 +1,4 @@
-export interface EnvironmentSettings {
-    resolutionDPI: number;
-}
-
-export interface UserSettings extends EnvironmentSettings {
+export interface UserSettings {
     builtInExtensions: string[];
     preloadImages: boolean;
     supportNegativeLeftTop: boolean;

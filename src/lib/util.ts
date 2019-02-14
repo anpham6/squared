@@ -40,8 +40,8 @@ function compareObject(obj1: {}, obj2: {}, attr: string, numeric: boolean) {
     return [current1, current2];
 }
 
-export const REGEXP_PATTERN: ObjectMap<RegExp> = {
-    URL: /url\("?(.*?)"?\)/,
+export const REGEXP_PATTERN = {
+    URL: /url\("?(.+?)"?\)/,
     URI: /^[A-Za-z]+:\/\//,
     UNIT: /^(?:\s*(-?[\d.]+)(px|em|ch|pc|pt|vw|vh|vmin|vmax|mm|cm|in))+$/,
     ATTRIBUTE: /([^\s]+)="([^"]+)"/
@@ -53,6 +53,10 @@ export const REGEXP_STRING: StringMap = {
 };
 
 REGEXP_STRING.DEGREE = REGEXP_STRING.DECIMAL + '(deg|rad|turn|grad)';
+
+export function getDeviceDPI() {
+    return window.devicePixelRatio * 96;
+}
 
 export function capitalize(value: string, upper = true) {
     if (value !== '') {
@@ -118,7 +122,7 @@ export function convertPercent(value: number, precision = 0) {
     return value < 1 ? `${precision === 0 ? Math.round(value * 100) : parseFloat((value * 100).toFixed(precision))}%` : `100%`;
 }
 
-export function convertPX(value: string, dpi: number, fontSize: number) {
+export function convertPX(value: string, fontSize?: number) {
     if (value) {
         if (isNumber(value)) {
             return `${value}px`;
@@ -159,7 +163,7 @@ export function convertPX(value: string, dpi: number, fontSize: number) {
                 case 'cm':
                     result /= 2.54;
                 case 'in':
-                    result *= dpi || 96;
+                    result *= getDeviceDPI();
                     break;
             }
             return `${result}px`;
@@ -168,12 +172,12 @@ export function convertPX(value: string, dpi: number, fontSize: number) {
     return '0px';
 }
 
-export function convertPercentPX(value: string, dimension: number, dpi: number, fontSize: number, percent = false) {
+export function convertPercentPX(value: string, dimension: number, fontSize?: number, percent = false) {
     if (percent) {
-        return isPercent(value) ? convertFloat(value) / 100 : parseFloat(convertPX(value, dpi, fontSize)) / dimension;
+        return isPercent(value) ? convertFloat(value) / 100 : parseFloat(convertPX(value, fontSize)) / dimension;
     }
     else {
-        return isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseFloat(convertPX(value, dpi, fontSize));
+        return isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseFloat(convertPX(value, fontSize));
     }
 }
 

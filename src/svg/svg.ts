@@ -95,7 +95,7 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
                             type: 'linear',
                             element,
                             spreadMethod: element.spreadMethod.baseVal,
-                            colorStop: getColorStop(element),
+                            colorStops: getColorStop(element),
                             ...getBaseValue(element, 'x1', 'x2', 'y1', 'y2')
                         });
                     }
@@ -104,7 +104,7 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
                             type: 'radial',
                             element,
                             spreadMethod: element.spreadMethod.baseVal,
-                            colorStop: getColorStop(element),
+                            colorStops: getColorStop(element),
                             ...getBaseValue(element, 'cx', 'cy', 'r', 'fx', 'fy', 'fr')
                         });
                     }

@@ -73,7 +73,7 @@ declare global {
         }
 
         class SvgAnimate implements SvgAnimate {
-            public static toStepFractionList(name: string, keyTimes: number[], values: string[], keySpline: string, index: number, dpi?: number, fontSize?: number): [number[], string[]] | undefined;
+            public static toStepFractionList(name: string, keyTimes: number[], values: string[], keySpline: string, index: number, fontSize?: number): [number[], string[]] | undefined;
             public static toFractionList(value: string, delimiter?: string): number[];
             constructor(element?: SVGAnimateElement);
         }

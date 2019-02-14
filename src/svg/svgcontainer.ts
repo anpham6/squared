@@ -3,7 +3,7 @@ import { SvgAspectRatio, SvgPoint, SvgTransformExclude, SvgTransformResidual } f
 import SvgBuild from './svgbuild';
 
 import { INSTANCE_TYPE } from './lib/constant';
-import { REGEXP_SVG, SVG, getTargetElement } from './lib/util';
+import { SVG, getAttributeUrl, getTargetElement } from './lib/util';
 
 type Svg = squared.svg.Svg;
 type SvgGroup = squared.svg.SvgGroup;
@@ -24,13 +24,13 @@ function getNearestViewBox(instance: SvgContainer | undefined) {
 }
 
 function getFillPattern(element: SVGGraphicsElement, viewport?: Svg): SVGPatternElement | undefined {
-    const match = REGEXP_SVG.URL.exec($dom.cssInheritAttribute(element, 'fill'));
-    if (match) {
-        if (viewport && viewport.definitions.pattern.has(match[1])) {
-            return viewport.definitions.pattern.get(match[1]);
+    const value = getAttributeUrl($dom.cssInheritAttribute(element, 'fill'));
+    if (value !== '') {
+        if (viewport && viewport.definitions.pattern.has(value)) {
+            return viewport.definitions.pattern.get(value);
         }
         else {
-            const target = document.getElementById(match[1].substring(1));
+            const target = document.getElementById(value.substring(1));
             if (target instanceof SVGPatternElement) {
                 return target;
             }

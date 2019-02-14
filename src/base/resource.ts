@@ -13,8 +13,8 @@ const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
-const REGEX_COLORSTOP = `(?:\\s*(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[a-zA-Z\\d]{3,}|[a-z]+)\\s*(\\d+%|${$util.REGEXP_STRING.DEGREE})?,?\\s*)`;
-const REGEX_POSITION = /(.+?)?\s*at (.+?)$/;
+const REGEXP_COLORSTOP = `(?:\\s*(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[a-zA-Z\\d]{3,}|[a-z]+)\\s*(\\d+%|${$util.REGEXP_STRING.DEGREE})?,?\\s*)`;
+const REGEXP_POSITION = /(.+?)?\s*at (.+?)$/;
 
 function replaceExcluded<T extends Node>(element: HTMLElement, attr: string) {
     let result: string = element[attr];
@@ -29,7 +29,7 @@ function replaceExcluded<T extends Node>(element: HTMLElement, attr: string) {
 
 function getColorStops(value: string, opacity: string, conic = false) {
     const result: ColorStop[] = [];
-    const pattern = new RegExp(REGEX_COLORSTOP, 'g');
+    const pattern = new RegExp(REGEXP_COLORSTOP, 'g');
     let match: RegExpExecArray | null;
     while ((match = pattern.exec(value)) !== null) {
         const color = $color.parseRGBA(match[1], opacity);
@@ -79,6 +79,11 @@ function getColorStops(value: string, opacity: string, conic = false) {
             }
         }
         previousIncrement = parseInt(item.offset);
+    }
+    if (conic && previousIncrement < 360 || !conic && previousIncrement < 100) {
+        const colorFill = Object.assign({}, result[result.length - 1]);
+        colorFill.offset = conic ? '360' : '100%';
+        result.push(colorFill);
     }
     return result;
 }
@@ -297,7 +302,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         if (value !== 'none' && !node.hasBit('excludeResource', NODE_RESOURCE.IMAGE_SOURCE)) {
                             const gradients: Gradient[] = [];
                             const opacity = node.css('opacity');
-                            let pattern = new RegExp(`(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|circle|ellipse|closest-side|closest-corner|farthest-side|farthest-corner)?(?:\\s*at [\\w %]+)?),?\\s*(${REGEX_COLORSTOP}+)\\)`, 'g');
+                            let pattern = new RegExp(`(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|circle|ellipse|closest-side|closest-corner|farthest-side|farthest-corner)?(?:\\s*at [\\w %]+)?),?\\s*(${REGEXP_COLORSTOP}+)\\)`, 'g');
                             let match: RegExpExecArray | null;
                             while ((match = pattern.exec(value)) !== null) {
                                 let gradient!: Gradient;
@@ -330,7 +335,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                                         return parseAngle(match[2]);
                                                 }
                                             })(),
-                                            colorStop: getColorStops(match[3], opacity)
+                                            colorStops: getColorStops(match[3], opacity)
                                         };
                                         break;
                                     }
@@ -340,7 +345,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                             position: (() => {
                                                 const result = ['center', 'ellipse'];
                                                 if (match[2]) {
-                                                    const position = REGEX_POSITION.exec(match[2]);
+                                                    const position = REGEXP_POSITION.exec(match[2]);
                                                     if (position) {
                                                         if (position[1]) {
                                                             switch (position[1]) {
@@ -361,7 +366,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                                 }
                                                 return result;
                                             })(),
-                                            colorStop: getColorStops(match[3], opacity)
+                                            colorStops: getColorStops(match[3], opacity)
                                         };
                                         break;
                                     }
@@ -371,19 +376,19 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                             angle: parseAngle(match[2]),
                                             position: (() => {
                                                 if (match[2]) {
-                                                    const position = REGEX_POSITION.exec(match[2]);
+                                                    const position = REGEXP_POSITION.exec(match[2]);
                                                     if (position) {
                                                         return [position[2]];
                                                     }
                                                 }
                                                 return ['center'];
                                             })(),
-                                            colorStop: getColorStops(match[3], opacity, true)
+                                            colorStops: getColorStops(match[3], opacity, true)
                                         };
                                         break;
                                     }
                                 }
-                                if (gradient.colorStop.length > 1) {
+                                if (gradient.colorStops.length > 1) {
                                     gradients.push(gradient);
                                 }
                             }

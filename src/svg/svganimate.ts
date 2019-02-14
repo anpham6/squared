@@ -4,7 +4,7 @@ import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 
 import { FILL_MODE, INSTANCE_TYPE, KEYSPLINE_NAME } from './lib/constant';
-import { convertClockTime, getFontSize, getHostDPI, getSplitValue, sortNumber } from './lib/util';
+import { convertClockTime, getFontSize, getSplitValue, sortNumber } from './lib/util';
 
 const $color = squared.lib.color;
 const $dom = squared.lib.dom;
@@ -15,7 +15,7 @@ function invertControlPoint(value: number) {
 }
 
 export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgAnimate {
-    public static toStepFractionList(name: string, keyTimes: number[], values: string[], keySpline: string, index: number, dpi = 96, fontSize = 16): [number[], string[]] | undefined {
+    public static toStepFractionList(name: string, keyTimes: number[], values: string[], keySpline: string, index: number, fontSize = 16): [number[], string[]] | undefined {
         let currentValue: any[] | undefined;
         let nextValue: any[] | undefined;
         switch (name) {
@@ -43,13 +43,13 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                     currentValue = [parseFloat(values[index])];
                 }
                 else if ($util.isUnit(values[index])) {
-                    currentValue = [parseFloat($util.convertPX(values[index], dpi, fontSize))];
+                    currentValue = [parseFloat($util.convertPX(values[index], fontSize))];
                 }
                 if ($util.isNumber(values[index + 1])) {
                     nextValue = [parseFloat(values[index + 1])];
                 }
                 else if ($util.isUnit(values[index + 1])) {
-                    nextValue = [parseFloat($util.convertPX(values[index + 1], dpi, fontSize))];
+                    nextValue = [parseFloat($util.convertPX(values[index + 1], fontSize))];
                 }
                 break;
         }
@@ -201,7 +201,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                     const keyTimes: number[] = [];
                     const values: string[] = [];
                     for (let i = 0; i < this.keyTimes.length - 1; i++) {
-                        const result = SvgAnimate.toStepFractionList(name, this.keyTimes, this.values, 'step-end', i, getHostDPI(), getFontSize(this.element));
+                        const result = SvgAnimate.toStepFractionList(name, this.keyTimes, this.values, 'step-end', i, getFontSize(this.element));
                         if (result) {
                             keyTimes.push(...result[0]);
                             values.push(...result[1]);
@@ -398,8 +398,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         if (value !== this._reverse && this.values.length) {
             this.values.reverse();
             const keyTimes: number[] = [];
-            for (let i = 0; i < this.keyTimes.length; i++) {
-                keyTimes.push(1 - this.keyTimes[i]);
+            for (const keyTime of this.keyTimes) {
+                keyTimes.push(1 - keyTime);
             }
             keyTimes.reverse();
             this.keyTimes = keyTimes;

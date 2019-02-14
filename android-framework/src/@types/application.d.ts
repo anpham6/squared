@@ -2,6 +2,7 @@ import { ResourceStoredMap, UserSettings } from '../../../src/base/@types/applic
 
 export interface UserSettingsAndroid extends UserSettings {
     targetAPI: number;
+    resolutionDPI: number;
     supportRTL: boolean;
     ellipsisOnTextOverflow: boolean;
     collapseUnattributedElements: boolean;

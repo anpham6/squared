@@ -48,11 +48,11 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
         for (const item of gradients) {
             const gradient: BackgroundGradient = { type: item.type, colorStops: [] };
             let hasStop: boolean;
-            if (!node.svgElement && parseFloat(item.colorStop[0].offset) === 0 && ['100%', '360'].includes(item.colorStop[item.colorStop.length - 1].offset) && (item.colorStop.length === 2 || item.colorStop.length === 3 && ['50%', '180'].includes(item.colorStop[1].offset))) {
-                gradient.startColor = Resource.addColor(item.colorStop[0].color);
-                gradient.endColor = Resource.addColor(item.colorStop[item.colorStop.length - 1].color) ;
-                if (item.colorStop.length === 3) {
-                    gradient.centerColor = Resource.addColor(item.colorStop[1].color);
+            if (!node.svgElement && parseFloat(item.colorStops[0].offset) === 0 && ['100%', '360'].includes(item.colorStops[item.colorStops.length - 1].offset) && (item.colorStops.length === 2 || item.colorStops.length === 3 && ['50%', '180'].includes(item.colorStops[1].offset))) {
+                gradient.startColor = Resource.addColor(item.colorStops[0].color);
+                gradient.endColor = Resource.addColor(item.colorStops[item.colorStops.length - 1].color) ;
+                if (item.colorStops.length === 3) {
+                    gradient.centerColor = Resource.addColor(item.colorStops[1].color);
                 }
                 hasStop = false;
             }
@@ -127,7 +127,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                         }
                     }
                     else {
-                        const position = $dom.getBackgroundPosition((<RadialGradient> item).position[0], node.bounds, node.dpi, node.fontSize, true, !hasStop);
+                        const position = $dom.getBackgroundPosition((<RadialGradient> item).position[0], node.bounds, node.fontSize, true, !hasStop);
                         if (hasStop) {
                             gradient.gradientRadius = node.bounds.width.toString();
                             gradient.centerX = position.left.toString();
@@ -169,7 +169,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                 case 'conic':
                     if (!node.svgElement) {
                         gradient.type = 'sweep';
-                        const position = $dom.getBackgroundPosition((<ConicGradient> item).position[0], node.bounds, node.dpi, node.fontSize, true, !hasStop);
+                        const position = $dom.getBackgroundPosition((<ConicGradient> item).position[0], node.bounds, node.fontSize, true, !hasStop);
                         if (hasStop) {
                             gradient.centerX = position.left.toString();
                             gradient.centerY = position.top.toString();
@@ -184,8 +184,8 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                     return result;
             }
             if (hasStop) {
-                for (let i = 0; i < item.colorStop.length; i++) {
-                    const stop = item.colorStop[i];
+                for (let i = 0; i < item.colorStops.length; i++) {
+                    const stop = item.colorStops[i];
                     const color = `@color/${Resource.addColor(stop.color)}`;
                     let offset = parseInt(stop.offset);
                     if (gradient.type === 'sweep') {
@@ -361,7 +361,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
         if (srcset !== '') {
             const filepath = element.src.substring(0, element.src.lastIndexOf('/') + 1);
             srcset.split(',').forEach(value => {
-                const match = /^(.*?)\s*(\d+\.?\d*x)?$/.exec(value.trim());
+                const match = /^(.+?)\s*(\d+\.?\d*x)?$/.exec(value.trim());
                 if (match) {
                     if (!$util.hasValue(match[2])) {
                         match[2] = '1x';

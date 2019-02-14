@@ -1,4 +1,3 @@
-import { EnvironmentSettings } from '../base/@types/application';
 import { AutoMargin, Support, VisibleStyle } from '../base/@types/node';
 
 import Container = squared.lib.base.Container;
@@ -34,7 +33,7 @@ declare global {
             renderParent?: Node;
             companion?: Node;
             renderAs?: Node;
-            readonly localSettings: EnvironmentSettings;
+            readonly localSettings: {};
             readonly excludeSection: number;
             readonly excludeProcedure: number;
             readonly excludeResource: number;

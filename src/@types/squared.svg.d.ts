@@ -35,7 +35,7 @@ declare global {
             setBaseValue(attr: string, value?: any): boolean;
             getBaseValue(attr: string, defaultValue?: any): any;
             refitBaseValue(x: number, y: number, scaleX?: number, scaleY?: number): void;
-            validateBaseValue(attr: string, value?: any): boolean | undefined;
+            verifyBaseValue(attr: string, value?: any): boolean | undefined;
         }
 
         interface SvgViewBox {
@@ -63,6 +63,7 @@ declare global {
             patternParent?: SvgShapePattern;
             setPaint(d?: string[]): void;
             setAttribute(attr: string, computed?: boolean): void;
+            getAttribute(attr: string, computed?: boolean, inherited?: boolean): string;
             resetPaint(): void;
         }
 

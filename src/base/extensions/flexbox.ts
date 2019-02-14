@@ -9,6 +9,8 @@ import NodeList from '../nodelist';
 import { EXT_NAME } from '../lib/constant';
 import { NODE_ALIGNMENT } from '../lib/enumeration';
 
+const $util = squared.lib.util;
+
 export default abstract class Flexbox<T extends Node> extends Extension<T> {
     public static createDataAttribute<T extends Node>(node: T, children: T[]): FlexboxData<T> {
         const flex = node.flexbox;
@@ -47,7 +49,7 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
             function setDirection(align: string, sort: string, size: string) {
                 const map = new Map<number, T[]>();
                 pageFlow.sort((a, b) => {
-                    if (a.linear[align] !== b.linear[align]) {
+                    if (!$util.withinFraction(a.linear[align], b.linear[align])) {
                         return a.linear[align] < b.linear[align] ? -1 : 1;
                     }
                     return a.linear[sort] >= b.linear[sort] ? 1 : -1;

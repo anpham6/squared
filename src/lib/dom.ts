@@ -131,7 +131,7 @@ export function getKeyframeRules(): CSSRuleData {
                     if (item instanceof CSSKeyframesRule) {
                         const map: ObjectMap<StringMap> = {};
                         Array.from(item.cssRules).forEach(keyframe => {
-                            const match = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.*?)\s*}/.exec(keyframe.cssText);
+                            const match = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/.exec(keyframe.cssText);
                             if (match) {
                                 const keyText = (keyframe['keyText'] as string || match[1].trim()).split(',').map(percent => percent.trim());
                                 const properties = flatMap(match[2].split(';'), percent => percent.trim());
@@ -389,7 +389,7 @@ export function getNamedItem(element: Element | null, attr: string) {
     return '';
 }
 
-export function getBackgroundPosition(value: string, dimension: RectDimension, dpi: number, fontSize: number, leftPerspective = false, percent = false) {
+export function getBackgroundPosition(value: string, dimension: RectDimension, fontSize?: number, leftPerspective = false, percent = false) {
     const result: RectPosition = {
         top: 0,
         left: 0,
@@ -412,7 +412,7 @@ export function getBackgroundPosition(value: string, dimension: RectDimension, d
                     break;
                 case 1:
                 case 3:
-                    const clientXY = convertPercentPX(position, index === 1 ? dimension.width : dimension.height, dpi, fontSize, percent);
+                    const clientXY = convertPercentPX(position, index === 1 ? dimension.width : dimension.height, fontSize, percent);
                     if (index === 1) {
                         if (leftPerspective) {
                             if (result.horizontal === 'right') {
@@ -420,7 +420,7 @@ export function getBackgroundPosition(value: string, dimension: RectDimension, d
                                     result.originalX = formatPercent(100 - parseInt(position));
                                 }
                                 else {
-                                    result.originalX = formatPX(dimension.width - parseInt(convertPX(position, dpi, fontSize)));
+                                    result.originalX = formatPX(dimension.width - parseInt(convertPX(position, fontSize)));
                                 }
                                 result.right = clientXY;
                                 result.left = percent ? 1 - clientXY : dimension.width - clientXY;
@@ -443,7 +443,7 @@ export function getBackgroundPosition(value: string, dimension: RectDimension, d
                                     result.originalY = formatPercent(100 - parseInt(position));
                                 }
                                 else {
-                                    result.originalY = formatPX(dimension.height - parseInt(convertPX(position, dpi, fontSize)));
+                                    result.originalY = formatPX(dimension.height - parseInt(convertPX(position, fontSize)));
                                 }
                                 result.bottom = clientXY;
                                 result.top = percent ? 1 - clientXY : dimension.height - clientXY;
@@ -468,7 +468,7 @@ export function getBackgroundPosition(value: string, dimension: RectDimension, d
             const offsetParent = index === 0 ? dimension.width : dimension.height;
             const direction = index === 0 ? 'left' : 'top';
             const original = index === 0 ? 'originalX' : 'originalY';
-            const clientXY = convertPercentPX(position, offsetParent, dpi, fontSize, percent);
+            const clientXY = convertPercentPX(position, offsetParent, fontSize, percent);
             if (isPercent(position)) {
                 result[direction] = clientXY;
                 result[original] = position;

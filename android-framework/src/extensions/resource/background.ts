@@ -278,7 +278,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     let resourceName = '';
                     for (let i = 0; i < backgroundImage.length; i++) {
                         const image = backgroundDimensions[i];
-                        const boxPosition = $dom.getBackgroundPosition(backgroundPosition[i], node.bounds, node.dpi, node.fontSize);
+                        const boxPosition = $dom.getBackgroundPosition(backgroundPosition[i], node.bounds, node.fontSize);
                         let gravity = (() => {
                             if (boxPosition.horizontal === 'center' && boxPosition.vertical === 'center') {
                                 return 'center';

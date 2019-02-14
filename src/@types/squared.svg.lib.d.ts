@@ -13,8 +13,6 @@ declare global {
             export import MATRIX = $util.MATRIX;
             export import SVG = $util.SVG;
             export import TRANSFORM = $util.TRANSFORM;
-            export import REGEXP_SVG = $util.REGEXP_SVG;
-            function getHostDPI(): number;
             function getFontSize(element: SVGElement | null): number;
             function convertClockTime(value: string): number;
             function isVisible(element: Element): boolean;

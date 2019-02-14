@@ -54,6 +54,21 @@ function checkPositionStatic<T extends Node>(node: T, parent?: T) {
     return false;
 }
 
+function compareRange(operation: string, value: number, range: number) {
+    switch (operation) {
+        case '<=':
+            return value <= range;
+        case '<':
+            return value < range;
+        case '>=':
+            return value >= range;
+        case '>':
+            return value > range;
+        default:
+            return value === range;
+    }
+}
+
 export default class Application<T extends Node> implements squared.base.Application<T> {
     public controllerHandler: Controller<T>;
     public resourceHandler: Resource<T>;
@@ -1490,6 +1505,9 @@ export default class Application<T extends Node> implements squared.base.Applica
                         output = $xml.replacePlaceholder(output, data.node.id, this.renderNode(layout));
                     }
                 }
+                else {
+                    floatgroup = undefined;
+                }
                 ((Array.isArray(item[0]) ? item : [item]) as T[][]).forEach(segment => {
                     let basegroup = data.node;
                     if (floatgroup && floating.includes(segment)) {
@@ -1762,120 +1780,221 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     private setStyleMap() {
-        const dpi = this.userSettings.resolutionDPI;
-        const clientFirefox = $dom.isUserAgent($dom.USER_AGENT.FIREFOX);
-        let warning = false;
-        for (let i = 0; i < document.styleSheets.length; i++) {
-            const styleSheet = <CSSStyleSheet> document.styleSheets[i];
-            if (styleSheet.cssRules) {
-                for (let j = 0; j < styleSheet.cssRules.length; j++) {
-                    const item = styleSheet.cssRules[j];
-                    try {
-                        if (item instanceof CSSStyleRule) {
-                            const attrRule = new Set<string>();
-                            Array.from(item.style).forEach(value => attrRule.add($util.convertCamelCase(value)));
-                            Array.from(document.querySelectorAll(item.selectorText)).forEach((element: HTMLElement) => {
-                                const attrs = new Set(attrRule);
-                                Array.from(element.style).forEach(value => attrs.add($util.convertCamelCase(value)));
-                                const style = $dom.getStyle(element);
-                                const fontSize = parseInt($util.convertPX(style.fontSize || '16px', dpi, 0));
-                                const styleMap: StringMap = {};
-                                for (const attr of attrs) {
-                                    if (element.style[attr]) {
-                                        styleMap[attr] = element.style[attr];
-                                    }
-                                    else {
-                                        const value: string = item.style[attr];
-                                        if (value !== 'initial') {
-                                            const computedValue = style[attr] || '';
-                                            if (value === computedValue) {
-                                                styleMap[attr] = value;
+        violation: {
+            for (let i = 0; i < document.styleSheets.length; i++) {
+                const item = <CSSStyleSheet> document.styleSheets[i];
+                if (item.cssRules) {
+                    for (let j = 0; j < item.cssRules.length; j++) {
+                        const rule = item.cssRules[j];
+                        try {
+                            switch (rule.type) {
+                                case CSSRule.STYLE_RULE:
+                                    this.applyStyleRule(<CSSStyleRule> rule);
+                                    break;
+                                case CSSRule.MEDIA_RULE:
+                                    const patternA = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
+                                    let matchA: RegExpExecArray | null;
+                                    let statement = false;
+                                    while (!statement && ((matchA = patternA.exec((<CSSConditionRule> rule).conditionText)) !== null)) {
+                                        const negate = matchA[1] === 'not';
+                                        const patternB = /\(([a-z\-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
+                                        let matchB: RegExpExecArray | null;
+                                        let valid = false;
+                                        while (!statement && (matchB = patternB.exec(matchA[2])) !== null) {
+                                            const attr = matchB[1];
+                                            let operation: string;
+                                            if (matchB[1].startsWith('min')) {
+                                                operation = '>=';
+                                            }
+                                            else if (matchB[1].startsWith('max')) {
+                                                operation = '<=';
                                             }
                                             else {
-                                                switch (attr) {
-                                                    case 'backgroundColor':
-                                                    case 'borderTopColor':
-                                                    case 'borderRightColor':
-                                                    case 'borderBottomColor':
-                                                    case 'borderLeftColor':
-                                                    case 'color':
-                                                    case 'fontSize':
-                                                    case 'fontWeight':
-                                                        styleMap[attr] = computedValue || value;
-                                                        break;
-                                                    case 'width':
-                                                    case 'height':
-                                                    case 'minWidth':
-                                                    case 'maxWidth':
-                                                    case 'minHeight':
-                                                    case 'maxHeight':
-                                                    case 'lineHeight':
-                                                    case 'verticalAlign':
-                                                    case 'textIndent':
-                                                    case 'columnGap':
-                                                    case 'top':
-                                                    case 'right':
-                                                    case 'bottom':
-                                                    case 'left':
-                                                    case 'marginTop':
-                                                    case 'marginRight':
-                                                    case 'marginBottom':
-                                                    case 'marginLeft':
-                                                    case 'paddingTop':
-                                                    case 'paddingRight':
-                                                    case 'paddingBottom':
-                                                    case 'paddingLeft':
-                                                        styleMap[attr] = /^[A-Za-z\-]+$/.test(value) || $util.isPercent(value) ? value : $util.convertPX(value, dpi, fontSize);
-                                                        break;
-                                                    default:
-                                                        if (styleMap[attr] === undefined) {
-                                                            styleMap[attr] = value;
-                                                        }
-                                                        break;
-                                                }
+                                                operation = matchA[2];
+                                            }
+                                            const value = matchB[3];
+                                            switch (attr) {
+                                                case 'aspect-ratio':
+                                                case 'min-aspect-ratio':
+                                                case 'max-aspect-ratio':
+                                                    const [width, height] = value.split('/').map(ratio => parseInt(ratio));
+                                                    valid = compareRange(operation, window.innerWidth / window.innerHeight, width / height);
+                                                    break;
+                                                case 'width':
+                                                case 'min-width':
+                                                case 'max-width':
+                                                case 'height':
+                                                case 'min-height':
+                                                case 'max-height':
+                                                    valid = compareRange(operation, attr.indexOf('width') !== -1 ? window.innerWidth : window.innerHeight, parseFloat($util.convertPX(value, $util.convertInt($dom.getStyle(document.body).fontSize || '16'))));
+                                                    break;
+                                                case 'orientation':
+                                                    valid = value === 'portrait' && window.innerWidth <= window.innerHeight || value === 'landscape' && window.innerWidth > window.innerHeight;
+                                                    break;
+                                                case 'resolution':
+                                                case 'min-resolution':
+                                                case 'max-resolution':
+                                                    let resolution = parseFloat(value);
+                                                    if (value.endsWith('dpcm')) {
+                                                        resolution *= 2.54;
+                                                    }
+                                                    else if (value.endsWith('dppx') || value.endsWith('x')) {
+                                                        resolution *= 96;
+                                                    }
+                                                    valid = compareRange(operation, $util.getDeviceDPI(), resolution);
+                                                    break;
+                                                case 'grid':
+                                                    valid = value === '0';
+                                                    break;
+                                                case 'color':
+                                                    valid = value === undefined || $util.convertInt(value) > 0;
+                                                    break;
+                                                case 'min-color':
+                                                    valid = $util.convertInt(value) <= screen.colorDepth / 3;
+                                                    break;
+                                                case 'max-color':
+                                                    valid = $util.convertInt(value) >= screen.colorDepth / 3;
+                                                    break;
+                                                case 'color-index':
+                                                case 'min-color-index':
+                                                case 'monochrome':
+                                                case 'min-monochrome':
+                                                    valid = value === '0';
+                                                    break;
+                                                case 'max-color-index':
+                                                case 'max-monochrome':
+                                                    valid = $util.convertInt(value) >= 0;
+                                                    break;
+                                                default:
+                                                    valid = false;
+                                                    break;
+                                            }
+                                            if (!valid) {
+                                                break;
                                             }
                                         }
-                                    }
-                                }
-                                if (this.userSettings.preloadImages && $util.hasValue(styleMap.backgroundImage) && styleMap.backgroundImage !== 'initial') {
-                                    styleMap.backgroundImage.split(',').map(value => value.trim()).forEach(value => {
-                                        const uri = $dom.cssResolveUrl(value);
-                                        if (uri !== '' && !this.session.image.has(uri)) {
-                                            this.session.image.set(uri, { width: 0, height: 0, uri });
+                                        if (!negate && valid || negate && !valid) {
+                                            statement = true;
                                         }
-                                    });
-                                }
-                                if (clientFirefox && styleMap.display === undefined) {
-                                    switch (element.tagName) {
-                                        case 'INPUT':
-                                        case 'TEXTAREA':
-                                        case 'SELECT':
-                                        case 'BUTTON':
-                                            styleMap.display = 'inline-block';
-                                            break;
                                     }
-                                }
-                                const data = $dom.getElementCache(element, 'styleMap');
-                                if (data) {
-                                    Object.assign(data, styleMap);
-                                }
-                                else {
-                                    $dom.setElementCache(element, 'style', style);
-                                    $dom.setElementCache(element, 'styleMap', styleMap);
-                                }
-                            });
+                                    if (statement) {
+                                        const items = (<CSSMediaRule> rule).cssRules;
+                                        for (let k = 0; k < items.length; k++) {
+                                            this.applyStyleRule(<CSSStyleRule> items[k]);
+                                        }
+                                    }
+                                    break;
+                            }
                         }
-                    }
-                    catch (error) {
-                        if (!warning) {
-                            alert('External CSS files cannot be parsed with Chrome 64+ when loading HTML pages directly from your hard drive [file://]. ' +
-                                  'Either use a local web server [http://], embed your CSS into a &lt;style&gt; element, or use a different browser. ' +
+                        catch (error) {
+                            alert('External CSS files cannot be parsed with some browsers when loading HTML pages directly from your hard drive. ' +
+                                  'Either use a local web server, embed your CSS into a <style> element, or you can also try a different browser. ' +
                                   'See the README for more detailed instructions.\n\n' +
-                                  `${styleSheet.href}\n\n${error}`);
-                            warning = true;
+                                  `${item.href}\n\n${error}`);
+                            break violation;
                         }
                     }
                 }
+            }
+        }
+    }
+
+    private applyStyleRule(item: CSSStyleRule) {
+        const clientFirefox = $dom.isUserAgent($dom.USER_AGENT.FIREFOX);
+        const common = new Set<string>();
+        for (const attr of Array.from(item.style)) {
+            common.add($util.convertCamelCase(attr));
+        }
+        for (const element of Array.from(document.querySelectorAll(item.selectorText)) as HTMLElement[]) {
+            const applied = new Set(common);
+            for (const attr of Array.from(element.style)) {
+                applied.add($util.convertCamelCase(attr));
+            }
+            const style = $dom.getStyle(element);
+            const fontSize = parseInt($util.convertPX(style.fontSize || '16px', 0));
+            const styleMap: StringMap = {};
+            for (const attr of applied) {
+                if (element.style[attr]) {
+                    styleMap[attr] = element.style[attr];
+                }
+                else {
+                    const value: string = item.style[attr];
+                    if (value !== 'initial') {
+                        const computedValue = style[attr] || '';
+                        if (value === computedValue) {
+                            styleMap[attr] = value;
+                        }
+                        else {
+                            switch (attr) {
+                                case 'backgroundColor':
+                                case 'borderTopColor':
+                                case 'borderRightColor':
+                                case 'borderBottomColor':
+                                case 'borderLeftColor':
+                                case 'color':
+                                case 'fontSize':
+                                case 'fontWeight':
+                                    styleMap[attr] = computedValue || value;
+                                    break;
+                                case 'width':
+                                case 'height':
+                                case 'minWidth':
+                                case 'maxWidth':
+                                case 'minHeight':
+                                case 'maxHeight':
+                                case 'lineHeight':
+                                case 'verticalAlign':
+                                case 'textIndent':
+                                case 'columnGap':
+                                case 'top':
+                                case 'right':
+                                case 'bottom':
+                                case 'left':
+                                case 'marginTop':
+                                case 'marginRight':
+                                case 'marginBottom':
+                                case 'marginLeft':
+                                case 'paddingTop':
+                                case 'paddingRight':
+                                case 'paddingBottom':
+                                case 'paddingLeft':
+                                    styleMap[attr] = /^[A-Za-z\-]+$/.test(value) || $util.isPercent(value) ? value : $util.convertPX(value, fontSize);
+                                    break;
+                                default:
+                                    if (styleMap[attr] === undefined) {
+                                        styleMap[attr] = value;
+                                    }
+                                    break;
+                            }
+                        }
+                    }
+                }
+            }
+            if (this.userSettings.preloadImages && $util.hasValue(styleMap.backgroundImage) && styleMap.backgroundImage !== 'initial') {
+                styleMap.backgroundImage.split(',').map(value => value.trim()).forEach(value => {
+                    const uri = $dom.cssResolveUrl(value);
+                    if (uri !== '' && !this.session.image.has(uri)) {
+                        this.session.image.set(uri, { width: 0, height: 0, uri });
+                    }
+                });
+            }
+            if (clientFirefox && styleMap.display === undefined) {
+                switch (element.tagName) {
+                    case 'INPUT':
+                    case 'TEXTAREA':
+                    case 'SELECT':
+                    case 'BUTTON':
+                        styleMap.display = 'inline-block';
+                        break;
+                }
+            }
+            const data = $dom.getElementCache(element, 'styleMap');
+            if (data) {
+                Object.assign(data, styleMap);
+            }
+            else {
+                $dom.setElementCache(element, 'style', style);
+                $dom.setElementCache(element, 'styleMap', styleMap);
             }
         }
     }

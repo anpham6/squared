@@ -10,7 +10,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
 
         public setBaseValue(attr: string, value?: any) {
             if (value !== undefined) {
-                if (this.validateBaseValue(attr, value)) {
+                if (this.verifyBaseValue(attr, value)) {
                     this._baseVal[attr] = value;
                     return true;
                 }
@@ -98,7 +98,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             }
         }
 
-        public validateBaseValue(attr: string, value?: any) {
+        public verifyBaseValue(attr: string, value?: any) {
             switch (attr) {
                 case 'd':
                     return typeof value === 'string';

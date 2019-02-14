@@ -2,7 +2,7 @@ import { CachedValue } from '../../src/base/@types/node';
 import { Constraint, LocalSettings } from './@types/node';
 
 import { AXIS_ANDROID, CONTAINER_ANDROID, ELEMENT_ANDROID, LAYOUT_ANDROID, RESERVED_JAVA } from './lib/constant';
-import { BUILD_ANDROID, CONTAINER_NODE, DENSITY_ANDROID } from './lib/enumeration';
+import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
 import { calculateBias, replaceRTL, stripId, validateString } from './lib/util';
 
 import { API_ANDROID, DEPRECATED_ANDROID, FunctionResult } from './customizations';
@@ -60,7 +60,6 @@ export default (Base: Constructor<squared.base.Node>) => {
         private _containerType = 0;
         private _localSettings: LocalSettings = {
             targetAPI: BUILD_ANDROID.LATEST,
-            resolutionDPI: DENSITY_ANDROID.MDPI,
             supportRTL: false
         };
         private __android: StringMap = {};
@@ -1060,13 +1059,9 @@ export default (Base: Constructor<squared.base.Node>) => {
             return false;
         }
 
-        get dpi() {
-            return this.localSettings.resolutionDPI;
-        }
-
         get fontSize() {
             if (this._fontSize === 0) {
-                this._fontSize = parseInt($util.convertPX(this.css('fontSize'), this.dpi, 0)) || 16;
+                this._fontSize = parseInt($util.convertPX(this.css('fontSize'), 0)) || 16;
             }
             return this._fontSize;
         }

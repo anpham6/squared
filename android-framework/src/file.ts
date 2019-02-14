@@ -21,7 +21,7 @@ const $xml = squared.lib.xml;
 
 function parseImageDetails(files: string[]) {
     const result: FileAsset[] = [];
-    const pattern = /^<!-- image: (.+) -->\n<!-- filename: (.+)\/(.*?\.\w+) -->$/;
+    const pattern = /^<!-- image: (.+) -->\n<!-- filename: (.+)\/(.+?\.\w+) -->$/;
     for (const xml of files) {
         const match = pattern.exec(xml);
         if (match) {
@@ -38,7 +38,7 @@ function parseImageDetails(files: string[]) {
 
 function parseFileDetails(files: string[]) {
     const result: FileAsset[] = [];
-    const pattern = /^[\w\W]*?(<!-- filename: (.+)\/(.*?\.xml) -->)$/;
+    const pattern = /^[\w\W]*?(<!-- filename: (.+)\/(.+?\.xml) -->)$/;
     for (const xml of files) {
         const match = pattern.exec(xml);
         if (match) {

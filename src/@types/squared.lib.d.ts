@@ -38,7 +38,7 @@ declare global {
             function cssAttribute(element: Element, attr: string, computed?: boolean): string;
             function cssInheritAttribute(element: Element | null, attr: string): string;
             function getNamedItem(element: Element | null, attr: string): string;
-            function getBackgroundPosition(value: string, dimension: RectDimension, dpi: number, fontSize: number, leftPerspective?: boolean, percent?: boolean): RectPosition;
+            function getBackgroundPosition(value: string, dimension: RectDimension, fontSize?: number, leftPerspective?: boolean, percent?: boolean): RectPosition;
             function getFirstChildElement(elements: Element | null, lineBreak?: boolean): Element | null;
             function getLastChildElement(elements: Element | null, lineBreak?: boolean): Element | null;
             function hasFreeFormText(element: Element, whiteSpace?: boolean): boolean;
@@ -60,6 +60,7 @@ declare global {
         namespace util {
             export import REGEXP_PATTERN = $util.REGEXP_PATTERN;
             export import REGEXP_STRING = $util.REGEXP_STRING;
+            function getDeviceDPI(): number;
             function capitalize(value: string, upper?: boolean): string;
             function convertUnderscore(value: string): string;
             function convertCamelCase(value: string, char?: string): string;
@@ -69,8 +70,8 @@ declare global {
             function convertRadian(angle: number): number;
             function convertPercent(value: number, precision?: number): string;
             function convertAngle(value: string, unit?: string): number;
-            function convertPX(value: string, dpi: number, fontSize: number): string;
-            function convertPercentPX(value: string, dimension: number, dpi: number, fontSize: number, percent?: boolean): number;
+            function convertPX(value: string, fontSize?: number): string;
+            function convertPercentPX(value: string, dimension: number, fontSize?: number, percent?: boolean): number;
             function convertAlpha(value: number): string;
             function convertRoman(value: number): string;
             function convertEnum(value: number, base: {}, derived: {}): string;
@@ -100,6 +101,7 @@ declare global {
             function lastIndexOf(value: string, char?: string): string;
             function searchObject(obj: StringMap, value: string | StringMap): any[][];
             function hasValue<T>(value: T): value is T;
+            function compareRange(operation: string, range: number, value: number): boolean;
             function withinRange(a: number, b: number, offset?: number): boolean;
             function withinFraction(lower: number, upper: number): boolean;
             function assignWhenNull(destination: {}, source: {}): void;

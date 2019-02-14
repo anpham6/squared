@@ -7,7 +7,7 @@ import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 
 import { KEYSPLINE_NAME } from './lib/constant';
-import { REGEXP_SVG, TRANSFORM, convertClockTime, getFontSize, getHostDPI, isVisible, setOpacity, setVisible, sortNumber } from './lib/util';
+import { TRANSFORM, convertClockTime, getFontSize, isVisible, setOpacity, setVisible, sortNumber } from './lib/util';
 
 interface AttributeData extends NumberValue<string> {
     transformOrigin?: Point;
@@ -28,7 +28,8 @@ const ANIMATION_DEFAULT: StringMap = {
     'animation-fill-mode': 'none',
     'animation-timing-function': 'ease'
 };
-const REGEXP_CUBICBEZIER = new RegExp(`cubic-bezier\\(${REGEXP_SVG.ZERO_ONE}, ${$util.REGEXP_STRING.DECIMAL}, ${REGEXP_SVG.ZERO_ONE}, ${$util.REGEXP_STRING.DECIMAL}\\)`);
+const REGEXP_0_1 = '(0(?:\\.\\d+)?|1(?:\\.0+)?)';
+const REGEXP_CUBICBEZIER = new RegExp(`cubic-bezier\\(${REGEXP_0_1}, ${$util.REGEXP_STRING.DECIMAL}, ${REGEXP_0_1}, ${$util.REGEXP_STRING.DECIMAL}\\)`);
 
 function parseAttribute(element: SVGElement, attr: string) {
     let value = $dom.cssAttribute(element, attr);
@@ -311,7 +312,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                         if (j === 0 && values[j] === '' && animate.baseFrom) {
                                             values[j] = animate.baseFrom;
                                         }
-                                        const steps = SvgAnimate.toStepFractionList(name, keyTimes, values, keySplines[j], j, getHostDPI(), getFontSize(element));
+                                        const steps = SvgAnimate.toStepFractionList(name, keyTimes, values, keySplines[j], j, getFontSize(element));
                                         if (steps) {
                                             keyTimesData.push(...steps[0]);
                                             valuesData.push(...steps[1]);

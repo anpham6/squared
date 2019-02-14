@@ -7,7 +7,7 @@ import View from './view';
 import ViewGroup from './viewgroup';
 
 import { AXIS_ANDROID, BOX_ANDROID, CONTAINER_ANDROID, XMLNS_ANDROID } from './lib/constant';
-import { BUILD_ANDROID, CONTAINER_NODE, DENSITY_ANDROID } from './lib/enumeration';
+import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
 import { createViewAttribute, getXmlNs, replaceTab, replaceUnit } from './lib/util';
 
 import BASE_TMPL from './template/base';
@@ -1842,7 +1842,6 @@ export default class Controller<T extends View> extends squared.base.Controller<
         return (target: T) => {
             target.localSettings = {
                 targetAPI: settings.targetAPI !== undefined ? settings.targetAPI : BUILD_ANDROID.LATEST,
-                resolutionDPI: settings.resolutionDPI !== undefined ? settings.resolutionDPI : DENSITY_ANDROID.MDPI,
                 supportRTL: settings.supportRTL !== undefined ? settings.supportRTL : true,
                 constraintPercentAccuracy: this.localSettings.constraint.percentAccuracy,
                 customizationsOverwritePrivilege: settings.customizationsOverwritePrivilege !== undefined ? settings.customizationsOverwritePrivilege : true

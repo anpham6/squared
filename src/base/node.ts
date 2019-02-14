@@ -1,4 +1,3 @@
-import { EnvironmentSettings } from './@types/application';
 import { CachedValue, InitialData, Support } from './@types/node';
 
 import Extension from './extension';
@@ -27,7 +26,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public style: CSSStyleDeclaration;
     public companion?: T;
 
-    public abstract readonly localSettings: EnvironmentSettings;
+    public abstract readonly localSettings: {};
     public abstract readonly renderChildren: T[];
 
     protected _cached: CachedValue<T> = {};
@@ -84,7 +83,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public abstract set containerType(value: number);
     public abstract get containerType(): number;
     public abstract get documentId(): string;
-    public abstract get dpi(): number;
     public abstract get fontSize(): number;
     public abstract get support(): Support;
 
@@ -541,7 +539,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public convertPX(value: string, horizontal = true, parent = true) {
-        return this.convertPercent(value, horizontal, parent) || $util.convertPX(value, this.dpi, this.fontSize);
+        return this.convertPercent(value, horizontal, parent) || $util.convertPX(value, this.fontSize);
     }
 
     public convertPercent(value: string, horizontal: boolean, parent = true) {

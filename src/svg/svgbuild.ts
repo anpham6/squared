@@ -187,7 +187,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             }
             match[2] = (match[2] || '').trim();
             const coordinates = SvgBuild.toNumberList(match[2]);
-            const previous = result[result.length - 1] as SvgPathCommand | undefined;
+            const previous: SvgPathCommand | undefined = result[result.length - 1];
             const previousCommand = previous ? previous.command.toUpperCase() : '';
             let previousPoint = previous ? previous.points[previous.points.length - 1] : undefined;
             let radiusX: number | undefined;
@@ -232,7 +232,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     }
                 case 'Z':
                     if (result.length) {
-                        coordinates.push(...result[0].coordinates.slice(0, 2));
+                        coordinates[0] = result[0].coordinates[0];
+                        coordinates[1] = result[0].coordinates[1];
                         match[1] = 'Z';
                         break;
                     }
