@@ -511,8 +511,14 @@ export function sortNumber(values: number[], descending = false) {
     return descending ? values.sort((a, b) => a > b ? -1 : 1) : values.sort((a, b) => a < b ? -1 : 1);
 }
 
-export function truncateDecimal(value: number, precision = 3) {
-    return value % 1 !== 0 ? value.toFixed(precision).replace(/(\.\d+?)0+$/, (match, capture) => capture) : value;
+export function truncateString(value: string, precision = 3) {
+    let result = value;
+    const pattern = new RegExp(`(\\d+\\.\\d{${precision}})\\d+`, 'g');
+    let match: RegExpExecArray | null;
+    while ((match = pattern.exec(value)) !== null) {
+        result = result.replace(match[0], match[1]);
+    }
+    return result;
 }
 
 export function getSplitValue(value: number, next: number, percent: number) {

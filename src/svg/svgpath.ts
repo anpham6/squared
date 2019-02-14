@@ -90,7 +90,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                         if (requireRefit) {
                             parent.refitPoints(points);
                         }
-                        d = SvgBuild.drawPath(SvgBuild.setPathPoints(commands, points));
+                        d = SvgBuild.drawPath(SvgBuild.setPathPoints(commands, points), this.transformed !== undefined);
                     }
                 }
             }
@@ -115,7 +115,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             if (requireRefit) {
                 parent.refitPoints(points);
             }
-            d = SvgBuild.drawPolyline(points);
+            d = SvgBuild.drawPolyline(points, this.transformed !== undefined);
         }
         else if (SVG.circle(element) || SVG.ellipse(element)) {
             let rx: number;
@@ -147,7 +147,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 parent.refitPoints(points);
             }
             const pt = <Required<SvgPoint>> points[0];
-            d = SvgBuild.drawEllipse(pt.x, pt.y, pt.rx, pt.ry);
+            d = SvgBuild.drawEllipse(pt.x, pt.y, pt.rx, pt.ry, this.transformed !== undefined);
         }
         else if (SVG.rect(element)) {
             let x = this.getBaseValue('x');
@@ -174,7 +174,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 if (requireRefit) {
                     parent.refitPoints(points);
                 }
-                d = SvgBuild.drawPolygon(points);
+                d = SvgBuild.drawPolygon(points, true);
             }
             else {
                 if (requirePatternRefit) {
@@ -212,7 +212,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 }
                 parent.refitPoints(points);
             }
-            d = element.tagName === 'polygon' ? SvgBuild.drawPolygon(points) : SvgBuild.drawPolyline(points);
+            d = SVG.polygon(element) ? SvgBuild.drawPolygon(points, this.transformed !== undefined) : SvgBuild.drawPolyline(points, this.transformed !== undefined);
         }
         if (!extract) {
             this.value = d;

@@ -84,13 +84,13 @@ declare global {
             public static asAnimateTransform(object: SvgAnimation): object is SvgAnimateTransform;
             public static asAnimateMotion(object: SvgAnimation): object is SvgAnimateMotion;
             public static setName(element?: SVGElement): string;
-            public static drawLine(x1: number, y1: number, x2?: number, y2?: number): string;
-            public static drawRect(width: number, height: number, x?: number, y?: number): string;
-            public static drawCircle(cx: number, cy: number, r: number): string;
+            public static drawLine(x1: number, y1: number, x2?: number, y2?: number, truncate?: boolean): string;
+            public static drawRect(width: number, height: number, x?: number, y?: number, truncate?: boolean): string;
+            public static drawCircle(cx: number, cy: number, r: number, truncate?: boolean): string;
             public static drawEllipse(cx: number, cy: number, rx: number, ry?: number, truncate?: boolean): string;
             public static drawPolygon(points: Point[] | DOMPoint[], truncate?: boolean): string;
             public static drawPolyline(points: Point[] | DOMPoint[], truncate?: boolean): string;
-            public static drawPath(values: SvgPathCommand[]): string;
+            public static drawPath(values: SvgPathCommand[], truncate?: boolean): string;
             public static getPathCommands(value: string): SvgPathCommand[];
             public static filterTransforms(transforms: SvgTransform[], exclude?: number[]): SvgTransform[];
             public static applyTransforms(transforms: SvgTransform[], values: Point[], aspectRatio?: SvgAspectRatio, origin?: Point, center?: Point): SvgPoint[];

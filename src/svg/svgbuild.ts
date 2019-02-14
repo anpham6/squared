@@ -1,7 +1,7 @@
 import { SvgPathCommand, SvgPoint, SvgTransform } from './@types/object';
 
 import { INSTANCE_TYPE } from './lib/constant';
-import { MATRIX, TRANSFORM, truncateDecimal } from './lib/util';
+import { MATRIX, TRANSFORM, truncateString } from './lib/util';
 
 type Svg = squared.svg.Svg;
 type SvgAnimate = squared.svg.SvgAnimate;
@@ -118,35 +118,38 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         }
     }
 
-    public static drawLine(x1: number, y1: number, x2 = 0, y2 = 0) {
-        return `M${x1},${y1} L${x2},${y2}`;
+    public static drawLine(x1: number, y1: number, x2 = 0, y2 = 0, truncate = false) {
+        const result = `M${x1},${y1} L${x2},${y2}`;
+        return truncate ? truncateString(result) : result;
     }
 
-    public static drawRect(width: number, height: number, x = 0, y = 0) {
-        return `M${x},${y} ${x + width},${y} ${x + width},${y + height} ${x},${y + height} Z`;
+    public static drawRect(width: number, height: number, x = 0, y = 0, truncate = false) {
+        const result = `M${x},${y} ${x + width},${y} ${x + width},${y + height} ${x},${y + height} Z`;
+        return truncate ? truncateString(result) : result;
     }
 
-    public static drawCircle(cx: number, cy: number, r: number) {
-        return SvgBuild.drawEllipse(cx, cy, r);
+    public static drawCircle(cx: number, cy: number, r: number, truncate = false) {
+        return SvgBuild.drawEllipse(cx, cy, r, r, truncate);
     }
 
     public static drawEllipse(cx: number, cy: number, rx: number, ry?: number, truncate = false) {
         if (ry === undefined) {
             ry = rx;
         }
-        return `M${truncate ? truncateDecimal(cx - rx) : cx - rx},${truncate ? truncateDecimal(cy) : cy} a${rx},${ry},0,1,0,${rx * 2},0 a${rx},${ry},0,1,0,-${rx * 2},0`;
+        const result = `M${cx - rx},${cy} a${rx},${ry},0,1,0,${rx * 2},0 a${rx},${ry},0,1,0,-${rx * 2},0`;
+        return truncate ? truncateString(result) : result;
     }
 
     public static drawPolygon(points: Point[] | DOMPoint[], truncate = false) {
-        const value = SvgBuild.drawPolyline(points, truncate);
-        return value !== '' ? `${value} Z` : '';
+        return points.length ? `${SvgBuild.drawPolyline(points, truncate)} Z` : '';
     }
 
     public static drawPolyline(points: Point[] | DOMPoint[], truncate = false) {
-        return points.length ? `M${(<Point[]> points).map(pt => `${truncate ? truncateDecimal(pt.x) : pt.x},${truncate ? truncateDecimal(pt.y) : pt.y}`).join(' ')}` : '';
+        const result = points.length ? `M${(<Point[]> points).map(pt => `${pt.x},${pt.y}`).join(' ')}` : '';
+        return truncate ? truncateString(result) : result;
     }
 
-    public static drawPath(values: SvgPathCommand[]) {
+    public static drawPath(values: SvgPathCommand[], truncate = false) {
         let result = '';
         for (const item of values) {
             result += (result !== '' ? ' ' : '') + item.command;
@@ -170,7 +173,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     break;
             }
         }
-        return result;
+        return truncate ? truncateString(result) : result;
     }
 
     public static getPathCommands(value: string) {
