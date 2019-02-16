@@ -23,6 +23,42 @@ const $xml = squared.lib.xml;
 
 const GUIDELINE_AXIS = [AXIS_ANDROID.HORIZONTAL, AXIS_ANDROID.VERTICAL];
 
+function createColumnLayout<T extends View>(partition: T[][], horizontal: boolean) {
+    for (const segment of partition) {
+        const rowStart = segment[0];
+        const rowEnd = segment[segment.length - 1];
+        rowStart.anchor(horizontal ? 'left' : 'top', 'parent');
+        rowEnd.anchor(horizontal ? 'right' : 'bottom', 'parent');
+        for (let i = 0; i < segment.length; i++) {
+            const chain = segment[i];
+            const previous = segment[i - 1] as T | undefined;
+            const next = segment[i + 1] as T | undefined;
+            if (horizontal) {
+                chain.app('layout_constraintVertical_bias', '0');
+            }
+            else {
+                if (i > 0) {
+                    chain.anchor('left', rowStart.documentId);
+                }
+            }
+            if (next) {
+                chain.anchor(horizontal ? 'rightLeft' : 'bottomTop', next.documentId);
+            }
+            if (previous) {
+                chain.anchor(horizontal ? 'leftRight' : 'topBottom', previous.documentId);
+            }
+            Controller.setConstraintDimension(chain);
+            chain.anchored = true;
+        }
+        if (horizontal) {
+            rowStart.app('layout_constraintHorizontal_chainStyle', 'spread_inside');
+        }
+        else {
+            rowStart.app('layout_constraintVertical_chainStyle', 'packed');
+        }
+    }
+}
+
 function sortHorizontalFloat<T extends View>(list: T[]) {
     if (list.some(node => node.floating)) {
         const result = list.slice(0).sort((a, b) => {
@@ -206,11 +242,11 @@ function parseAttributes<T extends View>(node: T) {
 
 function combineAttributes<T extends View>(node: T, depth: number) {
     const indent = $util.repeat(depth);
-    let result = '';
+    let output = '';
     for (const value of node.combine()) {
-        result += `\n${indent + value}`;
+        output += `\n${indent + value}`;
     }
-    return result;
+    return output;
 }
 
 export default class Controller<T extends View> extends squared.base.Controller<T> implements android.base.Controller<T> {
@@ -585,14 +621,16 @@ export default class Controller<T extends View> extends squared.base.Controller<
         if (layout.floated.size === 2 || layout.cleared.size || layout.some(node => node.pageFlow && node.autoMargin.horizontal)) {
             return true;
         }
-        if (sibling.length) {
+        else if (sibling.length) {
             if (layout.floated.has('right')) {
                 return true;
             }
-            else if (!this.userSettings.floatOverlapDisabled && layout.floated.has('left')) {
-                const flowIndex = $util.minArray(sibling.map(node => node.siblingIndex));
-                const floatMap = floating.map(node => node.siblingIndex);
-                return floatMap.some(value => value < flowIndex) && sibling.some(node => node.blockStatic);
+            else if (!this.userSettings.floatOverlapDisabled && layout.floated.has('left') && sibling.some(node => node.blockStatic)) {
+                let flowIndex = Number.POSITIVE_INFINITY;
+                for (const node of sibling) {
+                    flowIndex = Math.min(flowIndex, node.siblingIndex);
+                }
+                return floating.map(node => node.siblingIndex).some(value => value < flowIndex);
             }
         }
         return false;
@@ -606,9 +644,16 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     public checkConstraintHorizontal(layout: $Layout<T>) {
+        let sameHeight = true;
+        for (let i = 1; i < layout.length; i++) {
+            if (layout.children[i - 1].bounds.height !== layout.children[i].bounds.height) {
+                sameHeight = false;
+                break;
+            }
+        }
         return (
+            !sameHeight &&
             !layout.parent.hasHeight &&
-            new Set(layout.map(node => node.bounds.height)).size !== 1 &&
             layout.some(node => node.verticalAlign === 'bottom') &&
             layout.every(node => node.inlineVertical && (node.baseline || node.verticalAlign === 'bottom'))
         );
@@ -631,62 +676,65 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     }
                     else if (node.layoutConstraint) {
                         const [pageFlow, absolute] = $util.partitionArray(children, item => item.pageFlow);
-                        const bottomParent = Math.max(absolute.length ? $util.maxArray(node.renderChildren.map(item => item.linear.bottom)) : 0, node.box.bottom);
-                        for (const item of absolute) {
-                            if (!item.positionAuto && (item.documentParent === item.absoluteParent || item.position === 'fixed')) {
-                                if (item.hasWidth && item.autoMargin.horizontal) {
-                                    if (item.has('left') && item.autoMargin.right) {
-                                        item.anchor('left', 'parent');
-                                        item.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, item.left);
-                                    }
-                                    else if (item.has('right') && item.autoMargin.left) {
-                                        item.anchor('right', 'parent');
-                                        item.modifyBox($enum.BOX_STANDARD.MARGIN_RIGHT, item.right);
-                                    }
-                                    else {
-                                        item.anchorParent(AXIS_ANDROID.HORIZONTAL);
-                                        item.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, item.left);
-                                        item.modifyBox($enum.BOX_STANDARD.MARGIN_RIGHT, item.right);
-                                    }
-                                }
-                                else {
-                                    if (item.has('left')) {
-                                        item.anchor('left', 'parent');
-                                        item.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, adjustDocumentRootOffset(item.left, node, 'Left'));
-                                    }
-                                    if (item.has('right') && (!item.hasWidth || !item.has('left'))) {
-                                        item.anchor('right', 'parent');
-                                        item.modifyBox($enum.BOX_STANDARD.MARGIN_RIGHT, adjustDocumentRootOffset(item.right, node, 'Right'));
-                                    }
-                                }
-                                if (item.hasHeight && item.autoMargin.vertical) {
-                                    if (item.has('top') && item.autoMargin.bottom) {
-                                        item.anchor('top', 'parent');
-                                        item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, item.top);
-                                    }
-                                    else if (item.has('bottom') && item.autoMargin.top) {
-                                        item.anchor('bottom', 'parent');
-                                        item.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, item.bottom);
+                        let bottomParent = node.box.bottom;
+                        if (absolute.length) {
+                            node.each(item => bottomParent = Math.max(bottomParent, item.linear.bottom), true);
+                            for (const item of absolute) {
+                                if (!item.positionAuto && (item.documentParent === item.absoluteParent || item.position === 'fixed')) {
+                                    if (item.hasWidth && item.autoMargin.horizontal) {
+                                        if (item.has('left') && item.autoMargin.right) {
+                                            item.anchor('left', 'parent');
+                                            item.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, item.left);
+                                        }
+                                        else if (item.has('right') && item.autoMargin.left) {
+                                            item.anchor('right', 'parent');
+                                            item.modifyBox($enum.BOX_STANDARD.MARGIN_RIGHT, item.right);
+                                        }
+                                        else {
+                                            item.anchorParent(AXIS_ANDROID.HORIZONTAL);
+                                            item.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, item.left);
+                                            item.modifyBox($enum.BOX_STANDARD.MARGIN_RIGHT, item.right);
+                                        }
                                     }
                                     else {
-                                        item.anchorParent(AXIS_ANDROID.VERTICAL);
-                                        item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, item.top);
-                                        item.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, item.bottom);
+                                        if (item.has('left')) {
+                                            item.anchor('left', 'parent');
+                                            item.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, adjustDocumentRootOffset(item.left, node, 'Left'));
+                                        }
+                                        if (item.has('right') && (!item.hasWidth || !item.has('left'))) {
+                                            item.anchor('right', 'parent');
+                                            item.modifyBox($enum.BOX_STANDARD.MARGIN_RIGHT, adjustDocumentRootOffset(item.right, node, 'Right'));
+                                        }
                                     }
+                                    if (item.hasHeight && item.autoMargin.vertical) {
+                                        if (item.has('top') && item.autoMargin.bottom) {
+                                            item.anchor('top', 'parent');
+                                            item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, item.top);
+                                        }
+                                        else if (item.has('bottom') && item.autoMargin.top) {
+                                            item.anchor('bottom', 'parent');
+                                            item.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, item.bottom);
+                                        }
+                                        else {
+                                            item.anchorParent(AXIS_ANDROID.VERTICAL);
+                                            item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, item.top);
+                                            item.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, item.bottom);
+                                        }
+                                    }
+                                    else {
+                                        if (item.has('top')) {
+                                            const reset = node.valueBox($enum.BOX_STANDARD.PADDING_TOP);
+                                            item.anchor('top', 'parent');
+                                            item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, adjustDocumentRootOffset(item.top, node, 'Top', reset[0] === 1));
+                                        }
+                                        if (item.has('bottom') && (!item.hasHeight || !item.has('top'))) {
+                                            const reset = node.valueBox($enum.BOX_STANDARD.PADDING_BOTTOM);
+                                            item.anchor('bottom', 'parent');
+                                            item.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, adjustDocumentRootOffset(item.bottom, node, 'Bottom', reset[0] === 1));
+                                        }
+                                    }
+                                    item.positioned = true;
                                 }
-                                else {
-                                    if (item.has('top')) {
-                                        const reset = node.valueBox($enum.BOX_STANDARD.PADDING_TOP);
-                                        item.anchor('top', 'parent');
-                                        item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, adjustDocumentRootOffset(item.top, node, 'Top', reset[0] === 1));
-                                    }
-                                    if (item.has('bottom') && (!item.hasHeight || !item.has('top'))) {
-                                        const reset = node.valueBox($enum.BOX_STANDARD.PADDING_BOTTOM);
-                                        item.anchor('bottom', 'parent');
-                                        item.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, adjustDocumentRootOffset(item.bottom, node, 'Bottom', reset[0] === 1));
-                                    }
-                                }
-                                item.positioned = true;
                             }
                         }
                         if (node.layoutHorizontal) {
@@ -1302,17 +1350,10 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     }
                 }
                 else {
-                    const floating: number[] = [];
-                    renderParent.each((item: T) => {
-                        if (item.float === 'left' && item.siblingIndex < node.siblingIndex) {
-                            floating.push(item.linear.right);
-                        }
-                    });
-                    if (floating.length) {
-                        const floatStart = $util.maxArray(floating);
-                        if (children.some(item => item.linear.left === floatStart)) {
-                            return node.box.right - floatStart;
-                        }
+                    let floatStart = Number.NEGATIVE_INFINITY;
+                    $util.captureMap(renderParent.children, item => item.float === 'left' && item.siblingIndex < node.siblingIndex, item => floatStart = Math.max(floatStart, item.linear.right));
+                    if (floatStart !== Number.NEGATIVE_INFINITY && children.some(item => item.linear.left === floatStart)) {
+                        return node.box.right - floatStart;
                     }
                 }
             }
@@ -1607,6 +1648,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         const columnCount = node.toInt('columnCount');
         const perRowCount = Math.ceil(children.length / Math.min(columnCount, children.length));
         const columns: T[][] = [];
+        let totalGap = 0;
         for (let i = 0, j = 0; i < children.length; i++) {
             const item = children[i];
             if (i % perRowCount === 0) {
@@ -1618,9 +1660,11 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 }
             }
             columns[j].push(item);
+            if (item.length) {
+                totalGap += $util.maxArray(item.map(child => child.marginLeft + child.marginRight));
+            }
         }
         const columnGap = $util.convertInt(node.css('columnGap')) || 16;
-        const totalGap = columns.map(column => $util.maxArray(column.map(item => item.marginLeft + item.marginRight))).reduce((a, b) => a + b, 0);
         const percentGap = Math.max(((totalGap + (columnGap * (columnCount - 1))) / node.box.width) / columnCount, 0.01);
         const chainHorizontal: T[][] = [];
         const chainVertical: T[][] = [];
@@ -1648,42 +1692,8 @@ export default class Controller<T extends View> extends squared.base.Controller<
             chainVertical.push(column);
         }
         chainHorizontal.push(columnStart);
-        [chainHorizontal, chainVertical].forEach((partition, index) => {
-            const horizontal = index === 0;
-            for (const segment of partition) {
-                const rowStart = segment[0];
-                const rowEnd = segment[segment.length - 1];
-                rowStart.anchor(horizontal ? 'left' : 'top', 'parent');
-                rowEnd.anchor(horizontal ? 'right' : 'bottom', 'parent');
-                for (let i = 0; i < segment.length; i++) {
-                    const chain = segment[i];
-                    const previous = segment[i - 1] as T | undefined;
-                    const next = segment[i + 1] as T | undefined;
-                    if (horizontal) {
-                        chain.app('layout_constraintVertical_bias', '0');
-                    }
-                    else {
-                        if (i > 0) {
-                            chain.anchor('left', rowStart.documentId);
-                        }
-                    }
-                    if (next) {
-                        chain.anchor(horizontal ? 'rightLeft' : 'bottomTop', next.documentId);
-                    }
-                    if (previous) {
-                        chain.anchor(horizontal ? 'leftRight' : 'topBottom', previous.documentId);
-                    }
-                    Controller.setConstraintDimension(chain);
-                    chain.anchored = true;
-                }
-                if (horizontal) {
-                    rowStart.app('layout_constraintHorizontal_chainStyle', 'spread_inside');
-                }
-                else {
-                    rowStart.app('layout_constraintVertical_chainStyle', 'packed');
-                }
-            }
-        });
+        createColumnLayout(chainHorizontal, true);
+        createColumnLayout(chainVertical, false);
     }
 
     protected processConstraintChain(node: T, children: T[], bottomParent: number) {

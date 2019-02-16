@@ -64,7 +64,7 @@ declare global {
             function capitalize(value: string, upper?: boolean): string;
             function convertUnderscore(value: string): string;
             function convertCamelCase(value: string, char?: string): string;
-            function convertWord(value: string, includeDash?: boolean): string;
+            function convertWord(value: string, dash?: boolean): string;
             function convertInt(value: string): number;
             function convertFloat(value: string): number;
             function convertRadian(angle: number): number;
@@ -109,14 +109,15 @@ declare global {
             function defaultWhenNull(options: {}, ...attrs: string[]): void;
             function minArray(list: number[]): number;
             function maxArray(list: number[]): number;
-            function partitionArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): [T[], T[]];
-            function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>): T[];
             function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]): T[];
             function flatArray<T>(list: any[]): T[];
+            function partitionArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): [T[], T[]];
+            function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>): T[];
             function flatMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[];
             function filterMap<T, U>(list: T[], predicate: IteratorPredicate<T, boolean>, mapping: IteratorPredicate<T, U>): U[];
             function replaceMap<T>(list: T[], predicate: IteratorPredicate<T, T>): T[];
             function joinMap<T>(list: T[], predicate: IteratorPredicate<T, string>, char?: string): string;
+            function captureMap<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, void>): void;
         }
 
         namespace xml {

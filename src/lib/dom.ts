@@ -263,8 +263,8 @@ export function getRangeClientRect(element: Element): TextDimension {
         let maxBottom = bounds.bottom;
         for (let i = 1 ; i < domRect.length; i++) {
             const rect = domRect[i];
-            top.add(rect.top);
-            bottom.add(rect.bottom);
+            top.add(Math.round(rect.top));
+            bottom.add(Math.round(rect.bottom));
             minTop = Math.min(minTop, rect.top);
             maxBottom = Math.min(maxBottom, rect.bottom);
             bounds.width += rect.width;

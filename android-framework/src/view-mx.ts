@@ -23,6 +23,8 @@ function checkTextAlign(value: string) {
         case 'initial':
         case 'inherit':
             return '';
+        case 'center':
+            return 'center_horizontal';
         default:
             return value;
     }
@@ -322,11 +324,11 @@ export default (Base: Constructor<squared.base.Node>) => {
 
         public combine(...objs: string[]) {
             const result: string[] = [];
-            for (const name of this._namespaces.values()) {
-                const obj: StringMap = this[`__${name}`];
-                if (objs.length === 0 || objs.includes(name)) {
+            for (const value of this._namespaces) {
+                const obj: StringMap = this[`__${value}`];
+                if (objs.length === 0 || objs.includes(value)) {
                     for (const attr in obj) {
-                        result.push(name !== '_' ? `${name}:${attr}="${obj[attr]}"` : `${attr}="${obj[attr]}"`);
+                        result.push((value !== '_' ? `${value}:` : '') + `${attr}="${obj[attr]}"`);
                     }
                 }
             }
@@ -353,7 +355,7 @@ export default (Base: Constructor<squared.base.Node>) => {
             const node = new View(id || this.id, this.element);
             Object.assign(node.localSettings, this.localSettings);
             node.tagName = this.tagName;
-            if (id) {
+            if (id !== undefined) {
                 node.setControlType(this.controlName, this.containerType);
             }
             else {
@@ -376,14 +378,14 @@ export default (Base: Constructor<squared.base.Node>) => {
             if (attributes) {
                 Object.assign(node.unsafe('boxReset'), this._boxReset);
                 Object.assign(node.unsafe('boxAdjustment'), this._boxAdjustment);
-                for (const name of this._namespaces.values()) {
-                    const obj: StringMap = this[`__${name}`];
+                for (const value of this._namespaces) {
+                    const obj: StringMap = this[`__${value}`];
                     for (const attr in obj) {
-                        if (name === 'android' && attr === 'id') {
-                            node.attr(name, attr, node.documentId);
+                        if (value === 'android' && attr === 'id') {
+                            node.attr(value, attr, node.documentId);
                         }
                         else {
-                            node.attr(name, attr, obj[attr]);
+                            node.attr(value, attr, obj[attr]);
                         }
                     }
                 }
@@ -669,14 +671,25 @@ export default (Base: Constructor<squared.base.Node>) => {
                         textAlign = textAlignParent;
                     }
                 }
-                if (!this.layoutConstraint) {
+                if (textAlign !== '' && !this.layoutConstraint) {
                     this.mergeGravity('gravity', textAlign);
                 }
             }
         }
 
         public mergeGravity(attr: string, ...alignment: string[]) {
-            const direction = new Set([...this.android(attr).split('|'), ...alignment.map(value => this.localizeString(value))]);
+            const direction = new Set<string>();
+            const previousValue = this.android(attr);
+            if (previousValue !== '') {
+                for (const value of previousValue.split('|')) {
+                    direction.add(value.trim());
+                }
+            }
+            for (const value of alignment) {
+                if (value !== '') {
+                    direction.add(this.localizeString(value.trim()));
+                }
+            }
             let result = '';
             switch (direction.size) {
                 case 0:
@@ -927,7 +940,8 @@ export default (Base: Constructor<squared.base.Node>) => {
                             this.android('baselineAlignedChildIndex', children.indexOf(baseline).toString());
                         }
                     }
-                    const lineHeight = Math.max(this.lineHeight, $util.maxArray(this.renderChildren.map(node => node.lineHeight)));
+                    let lineHeight = this.lineHeight;
+                    this.each(node => lineHeight = Math.max(lineHeight, node.lineHeight), true);
                     if (lineHeight > 0) {
                         this.applyLineHeight(lineHeight);
                     }

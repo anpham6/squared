@@ -213,10 +213,12 @@ export function formatTemplate(value: string, closeEmpty = true, char = '\t') {
                     }
                 }
             }
-            line.tag.trim().split('\n').forEach((partial, index) => {
-                const depth = previous + (index > 0 ? 1 : 0);
+            let firstLine = true;
+            for (const partial of line.tag.trim().split('\n')) {
+                const depth = previous + (firstLine ? 0 : 1);
                 result += (depth > 0 ? repeat(depth, char) : '') + partial.trim() + '\n';
-            });
+                firstLine = false;
+            }
         }
         else {
             result += line.tag + '\n';

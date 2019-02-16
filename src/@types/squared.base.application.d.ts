@@ -4,6 +4,7 @@ declare global {
     namespace squared.base {
         interface Application<T extends Node> {
             framework: number;
+            appName: string;
             controllerHandler: Controller<T>;
             resourceHandler: Resource<T>;
             extensionManager: ExtensionManager<T>;
@@ -11,7 +12,6 @@ declare global {
             userSettings: UserSettings;
             initialized: boolean;
             closed: boolean;
-            appName: string;
             readonly builtInExtensions: ObjectMap<Extension<T>>;
             readonly session: AppSession<T, NodeList<T>>;
             readonly parseElements: Set<Element>;
@@ -26,7 +26,7 @@ declare global {
             reset(): void;
             finalize(): void;
             saveAllToDisk(): void;
-            parseDocument(...elements: Undefined<string | Element>[]): FunctionMap<void>;
+            parseDocument(...elements: (string | HTMLElement)[]): FunctionMap<void>;
             renderNode(layout: Layout<T>): string;
             renderLayout(layout: Layout<T>): string;
             addLayoutFile(filename: string, content: string, pathname?: string, documentRoot?: boolean): void;

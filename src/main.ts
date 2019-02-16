@@ -13,8 +13,8 @@ type Extension = squared.base.Extension<T>;
 
 let main: Application | undefined;
 let framework: AppFramework<T> | undefined;
-let settings = {} as UserSettings;
-let system = {} as FunctionMap<any>;
+let settings = <UserSettings> {};
+let system = <FunctionMap<any>> {};
 
 const extensionsAsync = new Set<Extension>();
 const optionsAsync = new Map<string, ExternalData>();

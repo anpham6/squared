@@ -545,6 +545,29 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
+    public static minMaxPoints(values: Point[]) {
+        let minX = values[0].x;
+        let maxX = values[0].x;
+        let minY = values[0].y;
+        let maxY = values[0].y;
+        for (let i = 1; i < values.length; i++) {
+            const pt = values[i];
+            if (pt.x < minX) {
+                minX = pt.x;
+            }
+            else if (pt.x > maxX) {
+                maxX = pt.x;
+            }
+            if (pt.y < minY) {
+                minY = pt.y;
+            }
+            else if (pt.y > maxY) {
+                maxY = pt.y;
+            }
+        }
+        return [minX, minY, maxX, maxY];
+    }
+
     public static convertNumbers(values: number[]) {
         const result: Point[] = [];
         for (let i = 0; i < values.length; i += 2) {

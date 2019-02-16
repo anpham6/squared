@@ -97,6 +97,7 @@ declare global {
             public static applyTransforms(transforms: SvgTransform[], values: Point[], aspectRatio?: SvgAspectRatio, origin?: Point, center?: Point): SvgPoint[];
             public static convertTransforms(transforms: SVGTransformList): SvgTransform[];
             public static clonePoints(values: SvgPoint[] | SVGPointList): SvgPoint[];
+            public static minMaxPoints(values: Point[]): number[];
             public static convertNumbers(values: number[]): Point[];
             public static getPathPoints(values: SvgPathCommand[], includeRadius?: boolean): SvgPoint[];
             public static setPathPoints(values: SvgPathCommand[], points: SvgPoint[]): SvgPathCommand[];

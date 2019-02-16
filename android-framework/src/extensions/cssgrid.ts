@@ -37,7 +37,14 @@ function getGridSize<T extends View>(mainData: CssGridData<T>, direction: string
     let result = 0;
     for (let i = 0; i < mainData[direction].count; i++) {
         const value = mainData[direction].unit[i];
-        result += value.endsWith('px') ? parseInt(value) : $util.minArray(mainData.rowData[i].map(item => item && item.length ? item[0].bounds[dimension] : 0));
+        if (value.endsWith('px')) {
+            result += parseInt(value);
+        }
+        else {
+            let size = 0;
+            $util.captureMap(mainData.rowData[i] as T[][], item => item && item.length > 0, item => size = Math.min(size, item[0].bounds[dimension]));
+            result += size;
+        }
     }
     result += (mainData[direction].count - 1) * mainData[direction].gap;
     result = node[dimension] - result;

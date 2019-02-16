@@ -918,7 +918,8 @@ export default class Application<T extends Node> implements squared.base.Applica
                                                         !previousSiblings.some(node => node.lineBreak && !cleared.has(node)) &&
                                                         cleared.get(item) !== 'both')
                                                     {
-                                                        const floatBottom = $util.maxArray($util.filterMap(horizontal, node => node.floating, node => node.linear.bottom));
+                                                        let floatBottom = Number.NEGATIVE_INFINITY;
+                                                        $util.captureMap(horizontal, node => node.floating, node => floatBottom = Math.max(floatBottom, node.linear.bottom));
                                                         if (!item.floating || item.linear.top < floatBottom) {
                                                             const floated = NodeList.floated(horizontal);
                                                             if (cleared.has(item)) {
@@ -1291,9 +1292,9 @@ export default class Application<T extends Node> implements squared.base.Applica
             let pendingFloat = 0;
             for (let i = 0; i < data.length; i++) {
                 const node = data.item(i) as T;
-                const clear = data.cleared.get(node);
-                if (clear && ($util.hasBit(pendingFloat, clear === 'right' ? 4 : 2) || pendingFloat !== 0 && clear === 'both')) {
-                    switch (clear) {
+                const direction = data.cleared.get(node);
+                if (direction && ($util.hasBit(pendingFloat, direction === 'right' ? 4 : 2) || pendingFloat !== 0 && direction === 'both')) {
+                    switch (direction) {
                         case 'left':
                             if ($util.hasBit(pendingFloat, 2)) {
                                 pendingFloat ^= 2;
@@ -1508,9 +1509,11 @@ export default class Application<T extends Node> implements squared.base.Applica
             let floatgroup: T | undefined;
             for (let i = 0; i < layerIndex.length; i++) {
                 const item = layerIndex[i];
+                let segments: T[][];
                 if (Array.isArray(item[0])) {
+                    segments = item as T[][];
                     const grouping: T[] = [];
-                    for (const segment of (item as T[][])) {
+                    for (const segment of segments) {
                         grouping.push(...segment);
                     }
                     grouping.sort(NodeList.siblingIndex);
@@ -1519,8 +1522,8 @@ export default class Application<T extends Node> implements squared.base.Applica
                         data.node,
                         floatgroup,
                         0,
-                        ((item as T[][]).some(segment => segment === rightSub || segment === rightAbove) ? NODE_ALIGNMENT.RIGHT : 0),
-                        item.length
+                        segments.some(segment => segment === rightSub || segment === rightAbove) ? NODE_ALIGNMENT.RIGHT : 0,
+                        segments.length
                     );
                     let vertical: LayoutType | undefined;
                     if (settings.floatOverlapDisabled) {
@@ -1540,9 +1543,10 @@ export default class Application<T extends Node> implements squared.base.Applica
                     }
                 }
                 else {
+                    segments = [item as T[]];
                     floatgroup = undefined;
                 }
-                for (const segment of ((Array.isArray(item[0]) ? item : [item]) as T[][])) {
+                for (const segment of segments) {
                     let basegroup = data.node;
                     if (floatgroup && floating.includes(segment)) {
                         basegroup = floatgroup;
@@ -1578,17 +1582,29 @@ export default class Application<T extends Node> implements squared.base.Applica
                         const vertical = this.controllerHandler.containerTypeVertical;
                         const targeted = target.of(vertical.containerType, vertical.alignmentType) ? target.children : [target];
                         if (leftAbove.length) {
-                            const marginRight = $util.maxArray(leftAbove.map(subitem => subitem.linear.right));
-                            const boundsLeft = $util.minArray(segment.map(subitem => subitem.bounds.left));
-                            for (const subitem of targeted) {
-                                subitem.modifyBox(BOX_STANDARD.PADDING_LEFT, marginRight - boundsLeft);
+                            let marginRight = Number.NEGATIVE_INFINITY;
+                            let boundsLeft = Number.POSITIVE_INFINITY;
+                            for (const child of leftAbove) {
+                                marginRight = Math.max(marginRight, child.linear.right);
+                            }
+                            for (const child of segment) {
+                                boundsLeft = Math.min(boundsLeft, child.bounds.left);
+                            }
+                            for (const child of targeted) {
+                                child.modifyBox(BOX_STANDARD.PADDING_LEFT, marginRight - boundsLeft);
                             }
                         }
                         if (rightAbove.length) {
-                            const marginLeft = $util.minArray(rightAbove.map(subitem => subitem.linear.left));
-                            const boundsRight = $util.maxArray(segment.map(subitem => subitem.bounds.right));
-                            for (const subitem of targeted) {
-                                subitem.modifyBox(BOX_STANDARD.PADDING_RIGHT, boundsRight - marginLeft);
+                            let marginLeft = Number.POSITIVE_INFINITY;
+                            let boundsRight = Number.NEGATIVE_INFINITY;
+                            for (const child of rightAbove) {
+                                marginLeft = Math.min(marginLeft, child.linear.left);
+                            }
+                            for (const child of segment) {
+                                boundsRight = Math.max(boundsRight, child.bounds.right);
+                            }
+                            for (const child of targeted) {
+                                child.modifyBox(BOX_STANDARD.PADDING_RIGHT, boundsRight - marginLeft);
                             }
                         }
                     }
@@ -1793,10 +1809,7 @@ export default class Application<T extends Node> implements squared.base.Applica
 
     protected conditionElement(element: Element) {
         if ($dom.hasComputedStyle(element)) {
-            if (element instanceof SVGGraphicsElement && element.tagName !== 'svg') {
-                return false;
-            }
-            else if ($dom.hasVisibleRect(element, true) || $util.hasValue(element.dataset.use)) {
+            if ($dom.hasVisibleRect(element, true) || $util.hasValue(element.dataset.use)) {
                 return true;
             }
             else {

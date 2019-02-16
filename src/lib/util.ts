@@ -72,27 +72,27 @@ export function capitalize(value: string, upper = true) {
 
 export function convertUnderscore(value: string) {
     value = value.charAt(0).toLowerCase() + value.substring(1);
-    const matchArray = value.match(/([a-z][A-Z])/g);
-    if (matchArray) {
-        for (const match of matchArray) {
-            value = value.replace(match, `${match[0]}_${match[1].toLowerCase()}`);
+    const match = value.match(/([a-z][A-Z])/g);
+    if (match) {
+        for (const capture of match) {
+            value = value.replace(capture, `${capture[0]}_${capture[1].toLowerCase()}`);
         }
     }
     return value;
 }
 
 export function convertCamelCase(value: string, char = '-') {
-    const matchArray = value.replace(new RegExp(`^${char}+`), '').match(new RegExp(`(${char}[a-z])`, 'g'));
-    if (matchArray) {
-        for (const match of matchArray) {
-            value = value.replace(match, match[1].toUpperCase());
+    const match = value.replace(new RegExp(`^${char}+`), '').match(new RegExp(`(${char}[a-z])`, 'g'));
+    if (match) {
+        for (const capture of match) {
+            value = value.replace(capture, capture[1].toUpperCase());
         }
     }
     return value;
 }
 
-export function convertWord(value: string, includeDash = false) {
-    return value ? (includeDash ? value.replace(/[^a-zA-Z\d]+/g, '_') : value.replace(/[^\w]+/g, '_')).trim() : '';
+export function convertWord(value: string, dash = false) {
+    return value ? (dash ? value.replace(/[^a-zA-Z\d]+/g, '_') : value.replace(/[^\w]+/g, '_')).trim() : '';
 }
 
 export function convertInt(value: string) {
@@ -518,6 +518,31 @@ export function maxArray(list: number[]): number {
     return Number.NEGATIVE_INFINITY;
 }
 
+export function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]) {
+    return list.sort((a, b) => {
+        for (const attr of attrs) {
+            const result = compareObject(a, b, attr, true);
+            if (result && result[0] !== result[1]) {
+                if (ascending) {
+                    return result[0] > result[1] ? 1 : -1;
+                }
+                else {
+                    return result[0] < result[1] ? 1 : -1;
+                }
+            }
+        }
+        return 0;
+    });
+}
+
+export function flatArray<T>(list: any[]): T[] {
+    let current = list;
+    while (current.some(item => Array.isArray(item))) {
+        current = [].concat.apply([], current.filter(item => item));
+    }
+    return current;
+}
+
 export function partitionArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): [T[], T[]] {
     const valid: T[] = [];
     const invalid: T[] = [];
@@ -545,31 +570,6 @@ export function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolea
     return list;
 }
 
-export function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]) {
-    return list.sort((a, b) => {
-        for (const attr of attrs) {
-            const result = compareObject(a, b, attr, true);
-            if (result && result[0] !== result[1]) {
-                if (ascending) {
-                    return result[0] > result[1] ? 1 : -1;
-                }
-                else {
-                    return result[0] < result[1] ? 1 : -1;
-                }
-            }
-        }
-        return 0;
-    });
-}
-
-export function flatArray<T>(list: any[]): T[] {
-    let current = list;
-    while (current.some(item => Array.isArray(item))) {
-        current = [].concat.apply([], current.filter(item => item));
-    }
-    return current;
-}
-
 export function flatMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[] {
     const result: U[] = [];
     for (let i = 0; i < list.length; i++) {
@@ -581,11 +581,11 @@ export function flatMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[
     return result;
 }
 
-export function filterMap<T, U>(list: T[], predicate: IteratorPredicate<T, boolean>, mapping: IteratorPredicate<T, U>): U[] {
+export function filterMap<T, U>(list: T[], predicate: IteratorPredicate<T, boolean>, mapper: IteratorPredicate<T, U>): U[] {
     const result: U[] = [];
     for (let i = 0; i < list.length; i++) {
         if (predicate(list[i], i, list)) {
-            result.push(mapping(list[i], i, list));
+            result.push(mapper(list[i], i, list));
         }
     }
     return result;
@@ -607,4 +607,12 @@ export function joinMap<T>(list: T[], predicate: IteratorPredicate<T, string>, c
         }
     }
     return result.substring(0, result.length - char.length);
+}
+
+export function captureMap<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, void>) {
+    for (let i = 0; i < list.length; i++) {
+        if (predicate(list[i], i, list)) {
+            callback(list[i], i, list);
+        }
+    }
 }

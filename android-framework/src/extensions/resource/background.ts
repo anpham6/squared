@@ -46,7 +46,7 @@ const TEMPLATES = {
 };
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 
-function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = false): StringMap {
+function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = false): string {
     const result = {
         solid: `android:color="@color/${border.color}"`,
         groove: '',
@@ -265,13 +265,18 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         stored.borderBottom,
                         stored.borderLeft
                     ];
-                    const borderFiltered: BorderAttribute[] = [];
                     const borderVisible: boolean[] = [];
+                    const borderStyle = new Set<string>();
+                    const borderWidth = new Set<string>();
+                    let borderData: BorderAttribute | undefined;
                     for (let i = 0; i < borders.length; i++) {
-                        borderVisible[i] = Resource.isBorderVisible(borders[i]);
+                        const item = borders[i];
+                        borderVisible[i] = Resource.isBorderVisible(item);
                         if (borderVisible[i]) {
-                            borders[i].color = Resource.addColor(borders[i].color);
-                            borderFiltered.push(borders[i]);
+                            item.color = Resource.addColor(item.color);
+                            borderStyle.add(getBorderStyle(item));
+                            borderWidth.add(item.width);
+                            borderData = item;
                         }
                     }
                     const imagesE: BackgroundImage[] = [];
@@ -561,14 +566,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             E: imagesE.length ? imagesE : false,
                             F: []
                         };
-                        const borderWidth = new Set(borderFiltered.map(item => item.width));
-                        const borderStyle = new Set(borderFiltered.map(item => getBorderStyle(item)));
-                        const borderData = borderFiltered[0];
                         const visibleAll = borderVisible[1] && borderVisible[2];
                         function getHideWidth(value: number) {
                             return value + (visibleAll ? 0 : value === 1 ? 1 : 2);
                         }
-                        if (borderWidth.size === 1 && borderStyle.size === 1 && !(borderData.style === 'groove' || borderData.style === 'ridge')) {
+                        if (borderStyle.size === 1 && borderWidth.size === 1 && borderData && !(borderData.style === 'groove' || borderData.style === 'ridge')) {
                             const width = parseInt(borderData.width);
                             if (borderData.style === 'double' && width > 2) {
                                 insertDoubleBorder.apply(null, [

@@ -70,78 +70,8 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
             const chainVertical: T[][] = [];
             const basicHorizontal: T[] = [];
             const basicVertical: T[] = [];
-            if (mainData.wrap) {
-                let previous: T[] | undefined;
-                node.each((item: T) => {
-                    if (item.hasAlign($enum.NODE_ALIGNMENT.SEGMENTED)) {
-                        const pageFlow = item.renderChildren.filter(child => child.pageFlow) as T[];
-                        if (mainData.rowDirection) {
-                            item.android('layout_width', 'match_parent');
-                            if (item.hasHeight) {
-                                item.android('layout_height', '0px');
-                                item.app('layout_constraintVertical_weight', '1');
-                            }
-                            chainHorizontal.push(pageFlow);
-                            basicVertical.push(item);
-                        }
-                        else {
-                            item.android('layout_height', 'match_parent');
-                            chainVertical.push(pageFlow);
-                            if (previous) {
-                                let largest = previous[0];
-                                for (let j = 1; j < previous.length; j++) {
-                                    if (previous[j].linear.right > largest.linear.right) {
-                                        largest = previous[j];
-                                    }
-                                }
-                                const offset = item.linear.left - largest.actualRight();
-                                if (offset > 0) {
-                                    item.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, offset);
-                                }
-                                item.constraint.horizontal = true;
-                            }
-                            basicHorizontal.push(item);
-                            previous = pageFlow;
-                        }
-                    }
-                    if (node.is(CONTAINER_NODE.LINEAR)) {
-                        if (mainData.columnDirection && mainData.wrapReverse) {
-                            node.mergeGravity('gravity', 'right');
-                        }
-                    }
-                    else {
-                        if (basicVertical.length) {
-                            chainVertical.push(basicVertical);
-                        }
-                        if (basicHorizontal.length) {
-                            chainHorizontal.push(basicHorizontal);
-                        }
-                    }
-                });
-            }
-            else {
-                if (mainData.rowDirection) {
-                    if (mainData.directionReverse) {
-                        chainHorizontal[0] = mainData.children.reverse();
-                    }
-                    else {
-                        chainHorizontal[0] = mainData.children;
-                    }
-                }
-                else {
-                    if (!node.hasHeight) {
-                        node.android('layout_height', 'match_parent');
-                    }
-                    if (mainData.directionReverse) {
-                        chainVertical[0] = mainData.children.reverse();
-                    }
-                    else {
-                        chainVertical[0] = mainData.children;
-                    }
-                }
-            }
-            [chainHorizontal, chainVertical].forEach((partition, index) => {
-                const horizontal = index === 0;
+            const createFlexLayout = (partition: T[][], horizontal: boolean) => {
+                const index = horizontal ? 0 : 1;
                 const inverse = horizontal ? 1 : 0;
                 for (const segment of partition) {
                     const HW = CHAIN_MAP.widthHeight[inverse];
@@ -150,7 +80,8 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     const TL = CHAIN_MAP.leftTop[inverse];
                     const RB = CHAIN_MAP.rightBottom[index];
                     const BR = CHAIN_MAP.rightBottom[inverse];
-                    const maxSize = $util.maxArray(segment.map(item => item.flexElement ? 0 : item.bounds[HW.toLowerCase()]));
+                    let maxSize = Number.NEGATIVE_INFINITY;
+                    $util.captureMap(segment, item => !item.flexElement, item => maxSize = Math.max(maxSize, item.bounds[HW.toLowerCase()]));
                     let baseline: T | undefined;
                     for (let i = 0; i < segment.length; i++) {
                         const chain = segment[i];
@@ -268,7 +199,83 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         chainStart.app(`layout_constraint${HV}_bias`, mainData.directionReverse ? '1' : '0', false);
                     }
                 }
-            });
+            };
+            if (mainData.wrap) {
+                let previous: T[] | undefined;
+                node.each((item: T) => {
+                    if (item.hasAlign($enum.NODE_ALIGNMENT.SEGMENTED)) {
+                        const pageFlow = item.renderChildren.filter(child => child.pageFlow) as T[];
+                        if (mainData.rowDirection) {
+                            item.android('layout_width', 'match_parent');
+                            if (item.hasHeight) {
+                                item.android('layout_height', '0px');
+                                item.app('layout_constraintVertical_weight', '1');
+                            }
+                            chainHorizontal.push(pageFlow);
+                            basicVertical.push(item);
+                        }
+                        else {
+                            item.android('layout_height', 'match_parent');
+                            chainVertical.push(pageFlow);
+                            if (previous) {
+                                let largest = previous[0];
+                                for (let j = 1; j < previous.length; j++) {
+                                    if (previous[j].linear.right > largest.linear.right) {
+                                        largest = previous[j];
+                                    }
+                                }
+                                const offset = item.linear.left - largest.actualRight();
+                                if (offset > 0) {
+                                    item.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, offset);
+                                }
+                                item.constraint.horizontal = true;
+                            }
+                            basicHorizontal.push(item);
+                            previous = pageFlow;
+                        }
+                    }
+                    if (node.is(CONTAINER_NODE.LINEAR)) {
+                        if (mainData.columnDirection && mainData.wrapReverse) {
+                            node.mergeGravity('gravity', 'right');
+                        }
+                    }
+                    else {
+                        if (basicVertical.length) {
+                            chainVertical.push(basicVertical);
+                        }
+                        if (basicHorizontal.length) {
+                            chainHorizontal.push(basicHorizontal);
+                        }
+                    }
+                });
+            }
+            else {
+                if (mainData.rowDirection) {
+                    if (mainData.directionReverse) {
+                        chainHorizontal[0] = mainData.children.reverse();
+                    }
+                    else {
+                        chainHorizontal[0] = mainData.children;
+                    }
+                }
+                else {
+                    if (!node.hasHeight) {
+                        node.android('layout_height', 'match_parent');
+                    }
+                    if (mainData.directionReverse) {
+                        chainVertical[0] = mainData.children.reverse();
+                    }
+                    else {
+                        chainVertical[0] = mainData.children;
+                    }
+                }
+            }
+            if (chainHorizontal.length) {
+                createFlexLayout(chainHorizontal, true);
+            }
+            if (chainVertical.length) {
+                createFlexLayout(chainVertical, false);
+            }
         }
     }
 }

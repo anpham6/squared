@@ -97,19 +97,21 @@ export default abstract class Table<T extends Node> extends Extension<T> {
         const rowWidth: number[] = [];
         const mapBounds: number[] = [];
         const tableFilled: T[][] = [];
-        let columnIndex: number[] = new Array(table.length).fill(0);
+        let rowCount = table.length;
+        let columnIndex: number[] = new Array(rowCount).fill(0);
+        let columnCount = 0;
         let mapWidth: string[] = [];
         let multiline = 0;
-        for (let i = 0; i < table.length; i++) {
+        for (let i = 0; i < rowCount; i++) {
             const tr = table[i];
             rowWidth[i] = horizontal;
             tableFilled[i] = [];
             tr.each((td: T, j) => {
                 const element = <HTMLTableCellElement> td.element;
                 for (let k = 0; k < element.rowSpan - 1; k++)  {
-                    const l = (i + 1) + k;
-                    if (columnIndex[l] !== undefined) {
-                        columnIndex[l] += element.colSpan;
+                    const col = (i + 1) + k;
+                    if (columnIndex[col] !== undefined) {
+                        columnIndex[col] += element.colSpan;
                     }
                 }
                 if (!td.visibleStyle.backgroundImage && !td.visibleStyle.backgroundColor) {
@@ -192,6 +194,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                 }, '', true);
                 columnIndex[i] += element.colSpan;
             });
+            columnCount = Math.max(columnCount, columnIndex[i]);
         }
         if (node.has('width', CSS_STANDARD.UNIT) && mapWidth.some(value => $util.isPercent(value))) {
             mapWidth = mapWidth.map((value, index) => {
@@ -253,8 +256,6 @@ export default abstract class Table<T extends Node> extends Extension<T> {
         if (multiline || (mainData.layoutType === LAYOUT_TABLE.STRETCH && !node.hasWidth)) {
             mainData.expand = true;
         }
-        const columnCount = $util.maxArray(columnIndex);
-        let rowCount = table.length;
         const caption = node.find(item => item.tagName === 'CAPTION') as T | undefined;
         node.clear();
         if (caption) {

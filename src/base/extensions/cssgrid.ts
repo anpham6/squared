@@ -30,7 +30,7 @@ const REGEXP_PARTIAL: StringMap = {
 
 const PATTERN_GRID: ObjectMap<RegExp> = {
     UNIT: new RegExp(`^(${REGEXP_PARTIAL.UNIT})$`),
-    NAMED: new RegExp(`\\s*(repeat\\((auto-fit|auto-fill|[0-9]+), (.+)\\)|${REGEXP_PARTIAL.NAMED}|${REGEXP_PARTIAL.MINMAX}|${REGEXP_PARTIAL.FIT_CONTENT}|${REGEXP_PARTIAL.UNIT})\\s*`),
+    NAMED: new RegExp(`\\s*(repeat\\((auto-fit|auto-fill|[0-9]+), (.+)\\)|${REGEXP_PARTIAL.NAMED}|${REGEXP_PARTIAL.MINMAX}|${REGEXP_PARTIAL.FIT_CONTENT}|${REGEXP_PARTIAL.UNIT})\\s*`, 'g'),
     REPEAT: new RegExp(`\\s*(${REGEXP_PARTIAL.NAMED}|${REGEXP_PARTIAL.MINMAX}|${REGEXP_PARTIAL.FIT_CONTENT}|${REGEXP_PARTIAL.UNIT})\\s*`, 'g'),
 };
 
@@ -143,29 +143,13 @@ export default class CssGrid<T extends Node> extends Extension<T> {
         [node.cssInitial('gridTemplateRows', true), node.cssInitial('gridTemplateColumns', true), node.css('gridAutoRows'), node.css('gridAutoColumns')].forEach((value, index) => {
             if (value && value !== 'none' && value !== 'auto') {
                 let i = 1;
-                let match: RegExpMatchArray | null;
-                while ((match = PATTERN_GRID.NAMED.exec(value)) !== null) {
+                let matchA: RegExpMatchArray | null;
+                while ((matchA = PATTERN_GRID.NAMED.exec(value)) !== null) {
                     if (index < 2) {
                         const data = mainData[index === 0 ? 'row' : 'column'];
-                        if (match[1].startsWith('repeat')) {
-                            let replaced = false;
-                            for (let j = match[0].indexOf('(') + 1, k = 1; j < match[0].length; j++) {
-                                const char = match[0][j];
-                                if (char === '(') {
-                                    k++;
-                                }
-                                else if (char === ')') {
-                                    k--;
-                                    if (k === 0) {
-                                        value = value.substring(j + 1);
-                                        match[3] = match[3].substring(0, match[3].length - value.length);
-                                        replaced = true;
-                                        break;
-                                    }
-                                }
-                            }
+                        if (matchA[1].startsWith('repeat')) {
                             let iterations = 1;
-                            switch (match[2]) {
+                            switch (matchA[2]) {
                                 case 'auto-fit':
                                     data.autoFit = true;
                                     break;
@@ -173,28 +157,28 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                                     data.autoFill = true;
                                     break;
                                 default:
-                                    iterations = $util.convertInt(match[3]);
+                                    iterations = $util.convertInt(matchA[3]);
                                     break;
                             }
                             if (iterations > 0) {
-                                let matchRepeat: RegExpMatchArray | null;
                                 const repeating: RepeatItem[] = [];
-                                while ((matchRepeat = PATTERN_GRID.REPEAT.exec(match[3])) !== null) {
-                                    let matchPartial: RegExpMatchArray | null;
-                                    if ((matchPartial = new RegExp(REGEXP_PARTIAL.NAMED).exec(matchRepeat[1])) !== null) {
-                                        if (data.name[matchPartial[1]] === undefined) {
-                                            data.name[matchPartial[1]] = [];
+                                let matchB: RegExpMatchArray | null;
+                                while ((matchB = PATTERN_GRID.REPEAT.exec(matchA[3])) !== null) {
+                                    let matchC: RegExpMatchArray | null;
+                                    if ((matchC = new RegExp(REGEXP_PARTIAL.NAMED).exec(matchB[1])) !== null) {
+                                        if (data.name[matchC[1]] === undefined) {
+                                            data.name[matchC[1]] = [];
                                         }
-                                        repeating.push({ name: matchPartial[1] });
+                                        repeating.push({ name: matchC[1] });
                                     }
-                                    else if ((matchPartial = new RegExp(REGEXP_PARTIAL.MINMAX).exec(matchRepeat[1])) !== null) {
-                                        repeating.push({ unit: convertUnit(node, matchPartial[2]), unitMin: convertUnit(node, matchPartial[1]) });
+                                    else if ((matchC = new RegExp(REGEXP_PARTIAL.MINMAX).exec(matchB[1])) !== null) {
+                                        repeating.push({ unit: convertUnit(node, matchC[2]), unitMin: convertUnit(node, matchC[1]) });
                                     }
-                                    else if ((matchPartial = new RegExp(REGEXP_PARTIAL.FIT_CONTENT).exec(matchRepeat[1])) !== null) {
-                                        repeating.push({ unit: convertUnit(node, matchPartial[1]), unitMin: '0px' });
+                                    else if ((matchC = new RegExp(REGEXP_PARTIAL.FIT_CONTENT).exec(matchB[1])) !== null) {
+                                        repeating.push({ unit: convertUnit(node, matchC[1]), unitMin: '0px' });
                                     }
-                                    else if ((matchPartial = new RegExp(REGEXP_PARTIAL.UNIT).exec(matchRepeat[1])) !== null) {
-                                        repeating.push({ unit: convertUnit(node, matchPartial[0]) });
+                                    else if ((matchC = new RegExp(REGEXP_PARTIAL.UNIT).exec(matchB[1])) !== null) {
+                                        repeating.push({ unit: convertUnit(node, matchC[0]) });
                                     }
                                 }
                                 if (repeating.length) {
@@ -213,39 +197,35 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                                     }
                                 }
                             }
-                            if (replaced) {
-                                continue;
-                            }
                         }
-                        else if (match[1].charAt(0) === '[') {
-                            if (data.name[match[4]] === undefined) {
-                                data.name[match[4]] = [];
+                        else if (matchA[1].charAt(0) === '[') {
+                            if (data.name[matchA[4]] === undefined) {
+                                data.name[matchA[4]] = [];
                             }
-                            data.name[match[4]].push(i);
+                            data.name[matchA[4]].push(i);
                         }
-                        else if (match[1].startsWith('minmax')) {
-                            data.unit.push(convertUnit(node, match[6]));
-                            data.unitMin.push(convertUnit(node, match[5]));
+                        else if (matchA[1].startsWith('minmax')) {
+                            data.unit.push(convertUnit(node, matchA[6]));
+                            data.unitMin.push(convertUnit(node, matchA[5]));
                             data.repeat.push(false);
                             i++;
                         }
-                        else if (match[1].startsWith('fit-content')) {
-                            data.unit.push(convertUnit(node, match[7]));
+                        else if (matchA[1].startsWith('fit-content')) {
+                            data.unit.push(convertUnit(node, matchA[7]));
                             data.unitMin.push('0px');
                             data.repeat.push(false);
                             i++;
                         }
-                        else if (PATTERN_GRID.UNIT.test(match[1])) {
-                            data.unit.push(convertUnit(node, match[1]));
+                        else if (PATTERN_GRID.UNIT.test(matchA[1])) {
+                            data.unit.push(convertUnit(node, matchA[1]));
                             data.unitMin.push('');
                             data.repeat.push(false);
                             i++;
                         }
                     }
                     else {
-                        mainData[index === 2 ? 'row' : 'column'].auto.push(node.convertPX(match[1]));
+                        mainData[index === 2 ? 'row' : 'column'].auto.push(node.convertPX(matchA[1]));
                     }
-                    value = value.replace(match[0], '');
                 }
             }
         });
@@ -403,7 +383,7 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                         }
                     }
                 }
-                if (placement.some(value => !value)) {
+                if (!placement[0] || !placement[1] || !placement[2] || !placement[3]) {
                     function setPlacement(value: string, position: number) {
                         if ($util.isNumber(value)) {
                             placement[position] = parseInt(value);
@@ -464,12 +444,7 @@ export default class CssGrid<T extends Node> extends Extension<T> {
             for (let i = 0; i < gridPosition.length; i++) {
                 const item = gridPosition[i];
                 if (item) {
-                    data.count = $util.maxArray([
-                        data.count,
-                        horizontal ? item.columnSpan : item.rowSpan,
-                        item.placement[horizontal ? 1 : 0] || 0,
-                        (item.placement[horizontal ? 3 : 2] || 0) - 1
-                    ]);
+                    data.count = Math.max(data.count, horizontal ? item.columnSpan : item.rowSpan, item.placement[horizontal ? 1 : 0] || 0, (item.placement[horizontal ? 3 : 2] || 0) - 1);
                 }
             }
             if (data.autoFill || data.autoFit) {

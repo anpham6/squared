@@ -163,8 +163,7 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                     columnRight[i] = i === 0 ? 0 : columnRight[i - 1];
                     for (let j = 0; j < nextAxisX.length; j++) {
                         const nextX = nextAxisX[j];
-                        const [left, right] = [nextX.linear.left, nextX.linear.right];
-                        if (i === 0 || left >= columnRight[i - 1]) {
+                        if (i === 0 || nextX.linear.left >= columnRight[i - 1]) {
                             if (columns[i] === undefined) {
                                 columns[i] = [];
                             }
@@ -184,18 +183,28 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                         else {
                             const current = columns.length - 1;
                             if (columns[current]) {
-                                const minLeft = $util.minArray(columns[current].map(item => item.linear.left));
-                                const maxRight = $util.maxArray(columns[current].map(item => item.linear.right));
-                                if (left > minLeft && right > maxRight) {
-                                    const filtered = columns.filter(item => item);
+                                let minLeft = columns[current][0].linear.left;
+                                let maxRight = columns[current][0].linear.right;
+                                for (let k = 1; k < columns[current].length; k++) {
+                                    minLeft = Math.min(minLeft, columns[current][k].linear.left);
+                                    maxRight = Math.max(maxRight, columns[current][k].linear.right);
+                                }
+                                if (nextX.linear.left > minLeft && nextX.linear.right > maxRight) {
                                     const index = getRowIndex(columns, nextX);
-                                    if (index !== -1 && filtered[filtered.length - 1][index] === undefined) {
-                                        columns[current].length = 0;
+                                    if (index !== -1) {
+                                        for (let k = columns.length - 1; k >= 0; k--) {
+                                            if (columns[k]) {
+                                                if (columns[k][index] === undefined) {
+                                                    columns[current].length = 0;
+                                                }
+                                                break;
+                                            }
+                                        }
                                     }
                                 }
                             }
                         }
-                        columnRight[i] = Math.max(right, columnRight[i]);
+                        columnRight[i] = Math.max(nextX.linear.right, columnRight[i]);
                     }
                 }
                 for (let i = 0, j = -1; i < columnRight.length; i++) {

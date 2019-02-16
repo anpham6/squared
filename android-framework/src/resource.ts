@@ -62,7 +62,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
             switch (item.type) {
                 case 'radial':
                     if (node.svgElement) {
-                        if (path) {
+                        if (path && $SvgBuild) {
                             const radial = <SvgRadialGradient> item;
                             const points: Point[] = [];
                             let cx: number | undefined;
@@ -71,28 +71,19 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                             let cyDiameter: number | undefined;
                             switch (path.element.tagName) {
                                 case 'path':
-                                    if ($SvgBuild) {
-                                        for (const command of $SvgBuild.getPathCommands(path.value)) {
-                                            points.push(...command.points);
-                                        }
+                                    for (const command of $SvgBuild.getPathCommands(path.value)) {
+                                        points.push(...command.points);
                                     }
                                 case 'polygon':
-                                    if ($SvgBuild && path.element instanceof SVGPolygonElement) {
+                                    if (path.element instanceof SVGPolygonElement) {
                                         points.push(...$SvgBuild.clonePoints(path.element.points));
                                     }
                                     if (!points.length) {
                                         break;
                                     }
-                                    const pointsX: number[] = [];
-                                    const pointsY: number[] = [];
-                                    for (const pt of points) {
-                                        pointsX.push(pt.x);
-                                        pointsY.push(pt.y);
-                                    }
-                                    cx = $util.minArray(pointsX);
-                                    cy = $util.minArray(pointsY);
-                                    cxDiameter = $util.maxArray(pointsX) - cx;
-                                    cyDiameter = $util.maxArray(pointsY) - cy;
+                                    [cx, cy, cxDiameter, cyDiameter] = $SvgBuild.minMaxPoints(points);
+                                    cxDiameter -= cx;
+                                    cyDiameter -= cy;
                                     break;
                                 case 'rect':
                                     const rect = <SVGRectElement> path.element;

@@ -966,11 +966,9 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                         for (let j = 0; j < item.keyTimes.length; j++) {
                                                             const value = getValue(j, i);
                                                             if (value !== undefined) {
-                                                                const fraction = item.keyTimes[j] === 0 && value === '' ? '' : item.keyTimes[j].toString();
-                                                                const interpolator = j > 0 && value !== '' ? this.getPathInterpolator(item.keySplines, j - 1) : '';
                                                                 keyframes.push({
-                                                                    interpolator,
-                                                                    fraction,
+                                                                    interpolator: j > 0 && value !== '' && propertyName !== 'pivotX' && propertyName !== 'pivotY' ? this.getPathInterpolator(item.keySplines, j - 1) : '',
+                                                                    fraction: item.keyTimes[j] === 0 && value === '' ? '' : item.keyTimes[j].toString(),
                                                                     value
                                                                 });
                                                             }
@@ -1198,7 +1196,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                             break;
                                     }
                                 }
-                                if (index === 0 && animatorData.ordering !== 'sequentially' && !animatorData.fillBefore && !animatorData.infinite && !animatorData.fillAfter && animatorData.repeating.every(repeat => repeat.propertyValues === false)) {
+                                if (setData.ordering !== 'sequentially' && ordering !== 'sequentially' && animatorData.repeating.length && !animatorData.fillBefore && !animatorData.infinite && !animatorData.fillAfter && animatorData.repeating.every(repeat => repeat.propertyValues === false || Array.isArray(repeat.propertyValues) && repeat.propertyValues.length === 0)) {
                                     togetherData.together.push(...animatorData.repeating);
                                     animatorData.repeating.length = 0;
                                 }
