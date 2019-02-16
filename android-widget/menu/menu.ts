@@ -61,19 +61,20 @@ function parseDataSet(validator: ObjectMap<RegExp>, element: HTMLElement, option
         if (value && validator[attr]) {
             const match = value.match(validator[attr]);
             if (match) {
-                options[NAMESPACE_APP.includes(attr) ? 'app' : 'android'][attr] = Array.from(new Set(match)).join('|');
+                options[NAMESPACE_APP.includes(attr) ? 'app' : 'android'][attr] = match.join('|');
             }
         }
     }
 }
 
-function getTitle(element: HTMLElement) {
+function getTitle<T extends View>(element: HTMLElement) {
     if (element.title !== '') {
         return element.title;
     }
     else {
-        for (const node of $util.flatMap(Array.from(element.childNodes), (item: Element) => $dom.getElementAsNode(item) as View)) {
-            if (node.textElement) {
+        for (let i = 0; i < element.childNodes.length; i++) {
+            const node = $dom.getElementAsNode<T>(<Element> element.childNodes[i]);
+            if (node && node.textElement) {
                 return node.textContent.trim();
             }
         }
@@ -96,19 +97,27 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
         if (this.included(element)) {
             let valid = false;
             if (element.children.length) {
+                valid = true;
                 const tagName = element.children[0].tagName;
-                valid = Array.from(element.children).every(item => item.tagName === tagName);
-                let current = element.parentElement;
-                while (current) {
-                    if (current.tagName === 'NAV' && this.application.parseElements.has(current)) {
+                for (let i = 1; i < element.children.length; i++) {
+                    if (element.children[i].tagName !== tagName) {
                         valid = false;
                         break;
                     }
-                    current = current.parentElement;
+                }
+                if (valid) {
+                    let current = element.parentElement;
+                    while (current) {
+                        if (current.tagName === 'NAV' && this.application.parseElements.has(current)) {
+                            valid = false;
+                            break;
+                        }
+                        current = current.parentElement;
+                    }
                 }
             }
             if (valid) {
-                Array.from(element.querySelectorAll('NAV')).forEach((item: HTMLElement) => {
+                element.querySelectorAll('NAV').forEach((item: HTMLElement) => {
                     if ($dom.getStyle(element).display === 'none') {
                         $dom.setElementCache(item, 'squaredExternalDisplay', 'none');
                         item.style.display = 'block';
@@ -133,7 +142,9 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
             resource: $enum.NODE_RESOURCE.ALL
         });
         const output = this.application.controllerHandler.renderNodeStatic(VIEW_NAVIGATION.MENU, 0, {}, '', '', node, true);
-        node.cascade().forEach(item => this.subscribersChild.add(item as T));
+        for (const item of node.cascade()) {
+            this.subscribersChild.add(item as T);
+        }
         return { output, complete: true };
     }
 
@@ -221,7 +232,7 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
     public postBaseLayout(node: T) {
         const element = <HTMLElement> node.element;
         if (this.included(element)) {
-            Array.from(element.querySelectorAll('NAV')).forEach((item: HTMLElement) => {
+            element.querySelectorAll('NAV').forEach((item: HTMLElement) => {
                 const display = $dom.getElementCache(item, 'squaredExternalDisplay');
                 if (display) {
                     item.style.display = display;

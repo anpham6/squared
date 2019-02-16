@@ -8,7 +8,7 @@ const $util = squared.lib.util;
 
 export default abstract class Accessibility<T extends Node> extends Extension<T> {
     public afterInit() {
-        for (const node of this.application.processing.cache.elements) {
+        for (const node of this.application.processing.cache) {
             const element = <HTMLInputElement> node.element;
             if (element && element.tagName === 'INPUT' && !node.hasBit('excludeProcedure', NODE_PROCEDURE.ACCESSIBILITY)) {
                 switch (element.type) {

@@ -3,8 +3,6 @@ import Container = squared.lib.base.Container;
 declare global {
     namespace squared.base {
         interface NodeList<T extends Node> extends Container<T> {
-            readonly visible: T[];
-            readonly elements: T[];
             readonly nextId: number;
             afterAppend?: (node: T) => void;
             append(node: T, delegate?: boolean): this;

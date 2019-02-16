@@ -20,7 +20,6 @@ declare global {
             readonly viewData: FileAsset[];
             readonly sessionData: SessionData<NodeList<T>>;
             readonly nextId: number;
-            readonly rendered: T[];
             readonly size: number;
             registerController(handler: Controller<T>): void;
             registerResource(handler: Resource<T>): void;

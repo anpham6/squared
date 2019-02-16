@@ -1,4 +1,4 @@
-import { repeat, trimEnd } from './util';
+import { joinMap, repeat, trimEnd } from './util';
 
 type XMLTagData = {
     tag: string;
@@ -21,15 +21,15 @@ export function formatPlaceholder(id: string | number, symbol = ':') {
 }
 
 export function replacePlaceholder(value: string, id: string | number, content: string, before = false) {
-    const placeholder = typeof id === 'number' ? formatPlaceholder(id) : id;
-    return value.replace(placeholder, (before ? placeholder : '') + content + (before ? '' : placeholder));
+    const hash = typeof id === 'number' ? formatPlaceholder(id) : id;
+    return value.replace(hash, (before ? hash : '') + content + (before ? '' : hash));
 }
 
-export function replaceIndent(value: string, depth: number, leadingPattern: RegExp) {
+export function replaceIndent(value: string, depth: number, pattern: RegExp) {
     if (depth >= 0) {
         let indent = -1;
-        return value.split('\n').map(line => {
-            const match = leadingPattern.exec(line);
+        return joinMap(value.split('\n'), line => {
+            const match = pattern.exec(line);
             if (match) {
                 if (indent === -1) {
                     indent = match[2].length;
@@ -37,8 +37,7 @@ export function replaceIndent(value: string, depth: number, leadingPattern: RegE
                 return match[1] + repeat(depth + (match[2].length - indent)) + match[3];
             }
             return line;
-        })
-        .join('\n');
+        });
     }
     return value;
 }
@@ -46,17 +45,16 @@ export function replaceIndent(value: string, depth: number, leadingPattern: RegE
 export function replaceTab(value: string, spaces = 4, preserve = false) {
     if (spaces > 0) {
         if (preserve) {
-            value = value.split('\n').map(line => {
+            return joinMap(value.split('\n'), line => {
                 const match = line.match(/^(\t+)(.*)$/);
                 if (match) {
                     return ' '.repeat(spaces * match[1].length) + match[2];
                 }
                 return line;
-            })
-            .join('\n');
+            });
         }
         else {
-            value = value.replace(/\t/g, ' '.repeat(spaces));
+            return value.replace(/\t/g, ' '.repeat(spaces));
         }
     }
     return value;
@@ -106,10 +104,7 @@ export function createTemplate(value: StringMap | string, data: ExternalData, fo
     }
     let output: string = value[index] || '';
     for (const attr in data) {
-        if (data[attr] === undefined || data[attr] === null) {
-            continue;
-        }
-        else {
+        if (data[attr] !== undefined && data[attr] !== null) {
             const unknown = data[attr];
             let result: string | false = '';
             let hash = '';

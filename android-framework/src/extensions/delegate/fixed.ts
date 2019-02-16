@@ -42,10 +42,24 @@ export default class Fixed<T extends View> extends squared.base.Extension<T> {
     public condition(node: T) {
         const fixed = getFixedNodes(node);
         if (fixed.length) {
-            const top = fixed.filter(item => item.has('top') && item.top >= 0).map(item => item.top);
-            const right = fixed.filter(item => item.has('right') && item.right >= 0).map(item => item.right);
-            const bottom = fixed.filter(item => item.has('bottom') && item.bottom >= 0).map(item => item.bottom);
-            const left = fixed.filter(item => item.has('left') && item.left >= 0).map(item => item.left);
+            const top: number[] = [];
+            const right: number[] = [];
+            const bottom: number[] = [];
+            const left: number[] = [];
+            for (const item of fixed) {
+                if (item.has('top') && item.top >= 0) {
+                    top.push(item.top);
+                }
+                if (item.has('right') && item.right >= 0) {
+                    right.push(item.right);
+                }
+                if (item.has('bottom') && item.bottom >= 0) {
+                    bottom.push(item.bottom);
+                }
+                if (item.has('left') && item.left >= 0) {
+                    left.push(item.left);
+                }
+            }
             return (
                 withinBoxRegion(top, node.paddingTop + (node.documentBody ? node.marginTop : 0)) ||
                 withinBoxRegion(right, node.paddingRight + (node.documentBody ? node.marginRight : 0)) ||
@@ -70,14 +84,16 @@ export default class Fixed<T extends View> extends squared.base.Extension<T> {
             ...$util.sortArray(normal, true, 'zIndex', 'id'),
             ...$util.sortArray(nested, true, 'zIndex', 'id')
         ] as T[];
-        node.duplicate().forEach((item: T) => {
-            if (!children.includes(item)) {
+        for (const item of node.duplicate()) {
+            if (!children.includes(item as T)) {
                 item.parent = container;
             }
-        });
+        }
         container.parent = node;
         this.application.processing.cache.append(container);
-        children.forEach((item, index) => item.siblingIndex = index);
+        for (let i = 0; i < children.length; i++) {
+            children[i].siblingIndex = i;
+        }
         node.sort($NodeList.siblingIndex);
         node.resetBox($enum.BOX_STANDARD.PADDING | (node.documentBody ? $enum.BOX_STANDARD.MARGIN : 0), container, true);
         node.companion = container;

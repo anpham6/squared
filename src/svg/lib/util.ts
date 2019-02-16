@@ -103,7 +103,7 @@ export const TRANSFORM = {
     parse(element: SVGElement, value?: string): SvgTransform[] | undefined {
         const transform = value === undefined ? $dom.cssInline(element, 'transform') : value;
         if (transform !== '') {
-            const result: SvgTransform[] = [];
+            const ordered: SvgTransform[] = [];
             for (const name in REGEXP_TRANSFORM) {
                 const pattern = new RegExp(REGEXP_TRANSFORM[name], 'g');
                 let match: RegExpExecArray | null = null;
@@ -123,22 +123,22 @@ export const TRANSFORM = {
                             matrix.c = 0;
                             matrix.d = 1;
                         }
-                        result[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_ROTATE, matrix, angle, !isX, !isY);
+                        ordered[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_ROTATE, matrix, angle, !isX, !isY);
                     }
                     else if (match[1].startsWith('skew')) {
                         const x = isY ? 0 : $util.convertAngle(match[2], match[3]);
                         const y = isY ? $util.convertAngle(match[2], match[3]) : (match[4] && match[5] ? $util.convertAngle(match[4], match[5]) : 0);
                         const matrix = MATRIX.skew(x, y);
                         if (isX) {
-                            result[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWX, matrix, x, true, false);
+                            ordered[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWX, matrix, x, true, false);
                         }
                         else if (isY) {
-                            result[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWY, matrix, y, false, true);
+                            ordered[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWY, matrix, y, false, true);
                         }
                         else {
-                            result[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWX, { ...matrix, b: 0 }, x, true, false);
+                            ordered[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWX, { ...matrix, b: 0 }, x, true, false);
                             if (y !== 0) {
-                                result[match.index + 1] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWY, { ...matrix, c: 0 }, y, false, true);
+                                ordered[match.index + 1] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWY, { ...matrix, c: 0 }, y, false, true);
                             }
                         }
                     }
@@ -146,7 +146,7 @@ export const TRANSFORM = {
                         const x = isY ? undefined : parseFloat(match[2]);
                         const y = isY ? parseFloat(match[2]) : (!isX && match[3] ? parseFloat(match[3]) : x);
                         const matrix = MATRIX.scale(x, isX ? undefined : y);
-                        result[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SCALE, matrix, 0, !isY, !isX);
+                        ordered[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SCALE, matrix, 0, !isY, !isX);
                     }
                     else if (match[1].startsWith('translate')) {
                         const fontSize = getFontSize(element);
@@ -155,23 +155,22 @@ export const TRANSFORM = {
                         const x = isY ? 0 : arg1;
                         const y = isY ? arg1 : arg2;
                         const matrix = MATRIX.translate(x, y);
-                        result[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_TRANSLATE, matrix, 0);
+                        ordered[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_TRANSLATE, matrix, 0);
                     }
                     else if (match[1].startsWith('matrix')) {
                         const matrix = TRANSFORM.matrix(element, value);
                         if (matrix) {
-                            result[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_MATRIX, matrix);
+                            ordered[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_MATRIX, matrix);
                         }
                     }
                 }
             }
-            return result.filter(item => {
-                if (item) {
-                    item.fromCSS = true;
-                    return true;
-                }
-                return false;
+            const result: SvgTransform[] = [];
+            ordered.forEach(item => {
+                item.fromCSS = true;
+                result.push(item);
             });
+            return result;
         }
         return undefined;
     },
@@ -231,23 +230,7 @@ export const TRANSFORM = {
                 }
             }
             let positions = value.split(' ');
-            if (positions.length === 1) {
-                positions.push('center');
-            }
-            positions = positions.slice(0, 2);
-            if (positions.includes('left')) {
-                result.x = 0;
-            }
-            else if (positions.includes('right')) {
-                result.x = width;
-            }
-            if (positions.includes('top')) {
-                result.y = 0;
-            }
-            else if (positions.includes('bottom')) {
-                result.y = height;
-            }
-            ['x', 'y'].forEach(attr => {
+            function setPosition(attr: string) {
                 if (result[attr] === null) {
                     for (let i = 0; i < positions.length; i++) {
                         let position = positions[i];
@@ -268,7 +251,25 @@ export const TRANSFORM = {
                         }
                     }
                 }
-            });
+            }
+            if (positions.length === 1) {
+                positions.push('center');
+            }
+            positions = positions.slice(0, 2);
+            if (positions.includes('left')) {
+                result.x = 0;
+            }
+            else if (positions.includes('right')) {
+                result.x = width;
+            }
+            if (positions.includes('top')) {
+                result.y = 0;
+            }
+            else if (positions.includes('bottom')) {
+                result.y = height;
+            }
+            setPosition('x');
+            setPosition('y');
         }
         result.x = result.x || 0;
         result.y = result.y || 0;
@@ -475,9 +476,10 @@ export function getTargetElement(element: Element, rootElement?: SVGElement) {
             parent = rootElement;
         }
         if (parent) {
-            for (const target of Array.from(parent.querySelectorAll('*'))) {
-                if (target.id === id && target instanceof SVGElement) {
-                    return target;
+            const elements = parent.querySelectorAll('*');
+            for (let i = 0; i < elements.length; i++) {
+                if (elements[i].id === id && elements[i] instanceof SVGElement) {
+                    return elements[i];
                 }
             }
         }

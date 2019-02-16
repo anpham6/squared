@@ -72,7 +72,7 @@ function setContentSpacing<T extends View>(mainData: CssGridData<T>, node: T, al
             case 'space-around': {
                 const marginSize = Math.floor(sizeTotal / (itemCount * 2));
                 for (let i = 0; i < itemCount; i++) {
-                    new Set<T>($util.flatArray(rowData[i])).forEach(item => {
+                    for (const item of new Set<T>($util.flatArray(rowData[i]))) {
                         if (!adjusted.has(item)) {
                             item.modifyBox(MARGIN_START, marginSize);
                             if (i < itemCount - 1) {
@@ -83,7 +83,7 @@ function setContentSpacing<T extends View>(mainData: CssGridData<T>, node: T, al
                         else {
                             item.cssPX(dimension, marginSize * 2);
                         }
-                    });
+                    }
                 }
                 data.normal = false;
                 break;
@@ -92,7 +92,7 @@ function setContentSpacing<T extends View>(mainData: CssGridData<T>, node: T, al
                 const marginSize = Math.floor(sizeTotal / ((itemCount - 1) * 2));
                 const rowLast = $util.flatArray(rowData[itemCount - 1]);
                 for (let i = 0; i < itemCount; i++) {
-                    new Set<T>($util.flatArray(rowData[i])).forEach(item => {
+                    for (const item of new Set<T>($util.flatArray(rowData[i]))) {
                         if (!adjusted.has(item)) {
                             if (i > 0) {
                                 item.modifyBox(MARGIN_START, marginSize);
@@ -105,7 +105,7 @@ function setContentSpacing<T extends View>(mainData: CssGridData<T>, node: T, al
                         else {
                             item.cssPX(dimension, marginSize * 2);
                         }
-                    });
+                    }
                 }
                 data.normal = false;
                 break;
@@ -115,7 +115,7 @@ function setContentSpacing<T extends View>(mainData: CssGridData<T>, node: T, al
                 const rowLast = $util.flatArray(rowData[itemCount - 1]);
                 for (let i = 0; i < itemCount; i++) {
                     const marginMiddle = Math.floor(marginSize / 2);
-                    new Set<T>($util.flatArray(rowData[i])).forEach(item => {
+                    for (const item of new Set<T>($util.flatArray(rowData[i]))) {
                         if (!adjusted.has(item)) {
                             item.modifyBox(MARGIN_START, i === 0 ? marginSize : marginMiddle);
                             if (i < itemCount - 1 && !rowLast.some(cell => cell === item)) {
@@ -126,7 +126,7 @@ function setContentSpacing<T extends View>(mainData: CssGridData<T>, node: T, al
                         else {
                             item.cssPX(dimension, marginSize);
                         }
-                    });
+                    }
                 }
                 data.normal = false;
                 break;

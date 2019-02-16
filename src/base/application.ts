@@ -14,12 +14,16 @@ const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
+const PREALIGN_DIRECTION = ['top', 'right', 'bottom', 'left'];
+
 function prioritizeExtensions<T extends Node>(documentRoot: HTMLElement, element: HTMLElement, extensions: Extension<T>[]) {
     const tagged: string[] = [];
     let current: HTMLElement | null = element;
     do {
         if (current.dataset.use) {
-            tagged.push(...current.dataset.use.split(',').map(value => value.trim()));
+            for (const value of current.dataset.use.split(',')) {
+                tagged.push(value.trim());
+            }
         }
         current = current !== documentRoot ? current.parentElement : null;
     }
@@ -36,7 +40,9 @@ function prioritizeExtensions<T extends Node>(documentRoot: HTMLElement, element
                 untagged.push(ext);
             }
         }
-        return [...result.filter(item => item), ...untagged];
+        $util.spliceArray(result, item => item === undefined);
+        result.push(...untagged);
+        return result;
     }
     else {
         return extensions;
@@ -248,7 +254,7 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
         };
         if (this.userSettings.preloadImages) {
-            Array.from(this.parseElements).forEach(element => {
+            for (const element of this.parseElements) {
                 element.querySelectorAll('svg image').forEach((image: SVGImageElement) => {
                     const uri = $util.resolvePath(image.href.baseVal);
                     this.session.image.set(uri, {
@@ -257,7 +263,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         uri
                     });
                 });
-            });
+            }
             for (const image of this.session.image.values()) {
                 if (image.width === 0 && image.height === 0 && image.uri) {
                     const imageElement = document.createElement('img');
@@ -275,7 +281,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         }
         const images: HTMLImageElement[] = [];
         for (const element of this.parseElements) {
-            Array.from(element.querySelectorAll('IMG')).forEach((image: HTMLImageElement) => {
+            element.querySelectorAll('IMG').forEach((image: HTMLImageElement) => {
                 if (image.tagName === 'IMG') {
                     if (image.complete) {
                         this.addImagePreload(image);
@@ -494,8 +500,12 @@ export default class Application<T extends Node> implements squared.base.Applica
     protected createCache(documentRoot: HTMLElement) {
         const elements = (() => {
             if (documentRoot === document.body) {
-                let i = 0;
-                return document.querySelectorAll(Array.from(document.body.childNodes).some((item: Element) => this.conditionElement(item) && ++i > 1) ? 'body, body *' : 'body *');
+                for (let i = 0, j = 0; i < document.body.childNodes.length; i++) {
+                    if (this.conditionElement(<Element> document.body.childNodes[i]) && ++j > 1) {
+                        return document.querySelectorAll('body, body *');
+                    }
+                }
+                return document.querySelectorAll('body *');
             }
             else {
                 return documentRoot.querySelectorAll('*');
@@ -505,7 +515,8 @@ export default class Application<T extends Node> implements squared.base.Applica
         this.processing.cache.clear();
         this.processing.excluded.clear();
         this.processing.node = null;
-        for (const ext of this.extensions) {
+        const extensions = Array.from(this.extensions);
+        for (const ext of extensions) {
             ext.beforeInit(documentRoot);
         }
         const rootNode = this.insertNode(documentRoot);
@@ -519,9 +530,9 @@ export default class Application<T extends Node> implements squared.base.Applica
             return false;
         }
         const localSettings = this.controllerHandler.localSettings;
-        for (const element of Array.from(elements) as HTMLElement[]) {
+        elements.forEach((element: HTMLElement) => {
             if (!this.parseElements.has(element)) {
-                prioritizeExtensions(documentRoot, element, Array.from(this.extensions)).some(item => item.init(element));
+                prioritizeExtensions(documentRoot, element, extensions).some(item => item.init(element));
                 if (!this.parseElements.has(element) && !(localSettings.unsupported.tagName.has(element.tagName) || element.tagName === 'INPUT' && localSettings.unsupported.tagName.has(`${element.tagName}:${(<HTMLInputElement> element).type}`))) {
                     let valid = true;
                     let current = element.parentElement;
@@ -537,13 +548,13 @@ export default class Application<T extends Node> implements squared.base.Applica
                     }
                 }
             }
-        }
+        });
         if (this.processing.cache.length) {
             for (const node of this.processing.cache) {
                 if (node.htmlElement && node.tagName !== 'SELECT') {
                     const plainText: Element[] = [];
                     let valid = false;
-                    Array.from((<HTMLElement> node.element).childNodes).forEach((element: Element) => {
+                    (<HTMLElement> node.element).childNodes.forEach((element: Element) => {
                         if (element.nodeName === '#text') {
                             plainText.push(element);
                         }
@@ -555,7 +566,9 @@ export default class Application<T extends Node> implements squared.base.Applica
                         }
                     });
                     if (valid) {
-                        plainText.forEach(element => this.insertNode(element, node));
+                        for (const element of plainText) {
+                            this.insertNode(element, node);
+                        }
                     }
                 }
             }
@@ -577,12 +590,12 @@ export default class Application<T extends Node> implements squared.base.Applica
                         }
                     }
                     if (node.positionRelative && !node.positionStatic) {
-                        ['top', 'right', 'bottom', 'left'].forEach(attr => {
+                        for (const attr of PREALIGN_DIRECTION) {
                             if (node.has(attr)) {
                                 reset[attr] = node.css(attr);
                                 element.style[attr] = 'auto';
                             }
-                        });
+                        }
                     }
                     if (element.dir === 'rtl') {
                         element.dir = 'ltr';
@@ -688,7 +701,7 @@ export default class Application<T extends Node> implements squared.base.Applica
             for (const node of this.processing.cache) {
                 if (node.htmlElement && node.length) {
                     let i = 0;
-                    Array.from((<HTMLElement> node.element).childNodes).forEach((element: Element) => {
+                    (<HTMLElement> node.element).childNodes.forEach((element: Element) => {
                         const item = $dom.getElementAsNode<T>(element);
                         if (item && !item.excluded && (item.pageFlow || item.documentParent === node)) {
                             item.siblingIndex = i++;
@@ -696,7 +709,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                     });
                     const layers: Array<T[]> = [];
                     node.each((item: T) => {
-                        if (item.siblingIndex === Number.MAX_VALUE) {
+                        if (item.siblingIndex === Number.POSITIVE_INFINITY) {
                             for (const adjacent of node.children) {
                                 if (adjacent.actualChildren.includes(item) || item.ascend().some(child => adjacent.cascade().includes(child))) {
                                     let index = -1;
@@ -725,7 +738,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                 return a.zIndex < b.zIndex ? -1 : 1;
                             });
                             node.each((item: T) => {
-                                if (item.siblingIndex !== Number.MAX_VALUE && item.siblingIndex >= j) {
+                                if (item.siblingIndex >= j && item.siblingIndex !== Number.POSITIVE_INFINITY) {
                                     item.siblingIndex += order.length;
                                 }
                             });
@@ -739,7 +752,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 node.saveAsInitial();
             }
             $util.sortArray(this.processing.cache.children, true, 'depth', 'id');
-            for (const ext of this.extensions) {
+            for (const ext of extensions) {
                 ext.afterInit(documentRoot);
             }
             return true;
@@ -750,8 +763,13 @@ export default class Application<T extends Node> implements squared.base.Applica
     protected setBaseLayout() {
         const settings = this.userSettings;
         const localSettings = this.controllerHandler.localSettings;
+        const extensions: Extension<T>[] = [];
+        for (const item of this.extensions) {
+            if (!item.eventOnly) {
+                extensions.push(item);
+            }
+        }
         const documentRoot = this.processing.node as T;
-        const extensions = Array.from(this.extensions).filter(item => !item.eventOnly);
         const mapY = new Map<number, Map<number, T>>();
         let baseTemplate = localSettings.baseTemplate;
         let empty = true;
@@ -772,9 +790,11 @@ export default class Application<T extends Node> implements squared.base.Applica
         }
         setMapY(-1, 0, documentRoot.parent as T);
         let maxDepth = 0;
-        for (const node of this.processing.cache.visible) {
-            setMapY(node.depth, node.id, node);
-            maxDepth = Math.max(node.depth, maxDepth);
+        for (const node of this.processing.cache) {
+            if (node.visible) {
+                setMapY(node.depth, node.id, node);
+                maxDepth = Math.max(node.depth, maxDepth);
+            }
         }
         for (let i = 0; i < maxDepth; i++) {
             mapY.set((i * -1) - 2, new Map<number, T>());
@@ -782,10 +802,10 @@ export default class Application<T extends Node> implements squared.base.Applica
         this.processing.cache.afterAppend = (node: T) => {
             deleteMapY(node.id);
             setMapY((node.depth * -1) - 2, node.id, node);
-            node.cascade().forEach((item: T) => {
+            for (const item of node.cascade()) {
                 deleteMapY(item.id);
-                setMapY((item.depth * -1) - 2, item.id, item);
-            });
+                setMapY((item.depth * -1) - 2, item.id, item as T);
+            }
         };
         for (const depth of mapY.values()) {
             this.processing.depthMap.clear();
@@ -808,8 +828,17 @@ export default class Application<T extends Node> implements squared.base.Applica
                         if (this.parseElements.has(element) && !nodeY.documentRoot && !nodeY.documentBody) {
                             continue;
                         }
-                        else if (nodeY.length === 0 && element.children.length && Array.from(element.children).every(item => this.parseElements.has(<HTMLElement> item))) {
-                            nodeY.inlineText = false;
+                        else if (nodeY.length === 0 && element.children.length) {
+                            let valid = true;
+                            for (let i = 0; i < element.children.length; i++) {
+                                if (!this.parseElements.has(<HTMLElement> element.children[i])) {
+                                    valid = false;
+                                    break;
+                                }
+                            }
+                            if (valid) {
+                                nodeY.inlineText = false;
+                            }
                         }
                     }
                     const extendable = nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE);
@@ -889,7 +918,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                                         !previousSiblings.some(node => node.lineBreak && !cleared.has(node)) &&
                                                         cleared.get(item) !== 'both')
                                                     {
-                                                        const floatBottom = $util.maxArray(horizontal.filter(node => node.floating).map(node => node.linear.bottom));
+                                                        const floatBottom = $util.maxArray($util.filterMap(horizontal, node => node.floating, node => node.linear.bottom));
                                                         if (!item.floating || item.linear.top < floatBottom) {
                                                             const floated = NodeList.floated(horizontal);
                                                             if (cleared.has(item)) {
@@ -1069,24 +1098,26 @@ export default class Application<T extends Node> implements squared.base.Applica
                 }
             }
             for (const [id, templates] of this.processing.depthMap.entries()) {
-                const renderPosition = this._renderPosition.get(id);
+                const position = this._renderPosition.get(id);
                 let children: T[] | undefined;
-                if (renderPosition) {
-                    children = this.controllerHandler.sortRenderPosition(renderPosition.parent, renderPosition.children);
+                if (position) {
+                    children = this.controllerHandler.sortRenderPosition(position.parent, position.children);
                 }
                 else if (id !== 0) {
                     const parent = this.processing.cache.find('id', id);
-                    children = parent ? this.controllerHandler.sortRenderPosition(parent, parent.children as T[]) : [];
+                    if (parent) {
+                        children = this.controllerHandler.sortRenderPosition(parent, parent.children as T[]);
+                    }
                 }
                 if (children && children.length) {
                     const sorted = new Map<string, string>();
-                    children.forEach(node => {
+                    for (const node of children) {
                         const key = node.renderPositionId;
                         const result = templates.get(key) || (node.companion ? templates.get(node.companion.renderPositionId) : null);
                         if (result) {
                             sorted.set(key, result);
                         }
-                    });
+                    }
                     if (sorted.size === templates.size) {
                         this.processing.depthMap.set(id, sorted);
                     }
@@ -1097,9 +1128,9 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
             for (const [id, templates] of this.processing.depthMap.entries()) {
                 for (const [key, view] of templates.entries()) {
-                    const placeholder = $xml.formatPlaceholder(key.indexOf('^') !== -1 ? key : id);
-                    if (baseTemplate.indexOf(placeholder) !== -1) {
-                        baseTemplate = $xml.replacePlaceholder(baseTemplate, placeholder, view);
+                    const hash = $xml.formatPlaceholder(key.indexOf('^') !== -1 ? key : id);
+                    if (baseTemplate.indexOf(hash) !== -1) {
+                        baseTemplate = $xml.replacePlaceholder(baseTemplate, hash, view);
                         empty = false;
                     }
                     else {
@@ -1113,7 +1144,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 documentRoot.dataset.layoutName,
                 !empty ? baseTemplate : '',
                 $util.trimString($util.trimNull(documentRoot.dataset.pathname), '/'),
-                documentRoot.renderExtension.size > 0 && Array.from(documentRoot.renderExtension).some(item => item.documentRoot)
+                documentRoot.renderExtension.size > 0 && $util.hasInSet(documentRoot.renderExtension, item => item.documentRoot)
             );
         }
         if (empty && documentRoot.renderExtension.size === 0) {
@@ -1475,10 +1506,13 @@ export default class Application<T extends Node> implements squared.base.Applica
         if (layerIndex.length) {
             const floating = [inlineAbove, leftAbove, leftBelow, rightAbove, rightBelow];
             let floatgroup: T | undefined;
-            layerIndex.forEach((item, index) => {
+            for (let i = 0; i < layerIndex.length; i++) {
+                const item = layerIndex[i];
                 if (Array.isArray(item[0])) {
                     const grouping: T[] = [];
-                    (item as T[][]).forEach(segment => grouping.push(...segment));
+                    for (const segment of (item as T[][])) {
+                        grouping.push(...segment);
+                    }
                     grouping.sort(NodeList.siblingIndex);
                     floatgroup = this.controllerHandler.createNodeGroup(grouping[0], grouping, data.node);
                     const layout = new Layout(
@@ -1508,7 +1542,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 else {
                     floatgroup = undefined;
                 }
-                ((Array.isArray(item[0]) ? item : [item]) as T[][]).forEach(segment => {
+                for (const segment of ((Array.isArray(item[0]) ? item : [item]) as T[][])) {
                     let basegroup = data.node;
                     if (floatgroup && floating.includes(segment)) {
                         basegroup = floatgroup;
@@ -1537,7 +1571,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                     else if (segment.length) {
                         target = segment[0];
                         target.alignmentType |= NODE_ALIGNMENT.SINGLE;
-                        target.renderPosition = index;
+                        target.renderPosition = i;
                         output = $xml.replacePlaceholder(output, basegroup.id, $xml.formatPlaceholder(target.renderPositionId));
                     }
                     if (!settings.floatOverlapDisabled && target && segment === inlineAbove && segment.some(subitem => subitem.blockStatic && !subitem.hasWidth)) {
@@ -1546,16 +1580,20 @@ export default class Application<T extends Node> implements squared.base.Applica
                         if (leftAbove.length) {
                             const marginRight = $util.maxArray(leftAbove.map(subitem => subitem.linear.right));
                             const boundsLeft = $util.minArray(segment.map(subitem => subitem.bounds.left));
-                            targeted.forEach(subitem => subitem.modifyBox(BOX_STANDARD.PADDING_LEFT, marginRight - boundsLeft));
+                            for (const subitem of targeted) {
+                                subitem.modifyBox(BOX_STANDARD.PADDING_LEFT, marginRight - boundsLeft);
+                            }
                         }
                         if (rightAbove.length) {
                             const marginLeft = $util.minArray(rightAbove.map(subitem => subitem.linear.left));
                             const boundsRight = $util.maxArray(segment.map(subitem => subitem.bounds.right));
-                            targeted.forEach(subitem => subitem.modifyBox(BOX_STANDARD.PADDING_RIGHT, boundsRight - marginLeft));
+                            for (const subitem of targeted) {
+                                subitem.modifyBox(BOX_STANDARD.PADDING_RIGHT, boundsRight - marginLeft);
+                            }
                         }
                     }
-                });
-            });
+                }
+            }
         }
         return output;
     }
@@ -1691,7 +1729,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         basegroup.init();
                         layout.itemCount = children.length;
                         xml += this.renderNode(layout);
-                        children.forEach(node => {
+                        for (const node of children) {
                             if (data.contains(node) || node.length === 0) {
                                 xml = $xml.replacePlaceholder(xml, basegroup.id, $xml.formatPlaceholder(node.id));
                             }
@@ -1706,7 +1744,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                 );
                                 xml = $xml.replacePlaceholder(xml, basegroup.id, this.renderNode(layoutSegment));
                             }
-                        });
+                        }
                     }
                 }
             }
@@ -1716,10 +1754,10 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     protected insertNode(element: Element, parent?: T) {
-        let node: T | null = null;
+        let node: T | undefined;
         if (element.nodeName.charAt(0) === '#' && element.nodeName === '#text') {
             if ($dom.isPlainText(element, true) || $dom.cssParent(element, 'whiteSpace', 'pre', 'pre-wrap')) {
-                node = new this.nodeConstructor(this.nextId, element, this.controllerHandler.afterInsertNode);
+                node = this.createNode(element);
                 if (parent) {
                     node.inherit(parent, 'textStyle');
                 }
@@ -1736,15 +1774,15 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
         }
         else if (element.parentElement instanceof HTMLElement) {
-            const nodeConstructor = new this.nodeConstructor(this.nextId, element, this.controllerHandler.afterInsertNode);
+            node = this.createNode(element);
             if (!this.controllerHandler.localSettings.unsupported.excluded.has(element.tagName) && this.conditionElement(element)) {
-                node = nodeConstructor;
                 node.setExclusions();
             }
             else {
-                nodeConstructor.visible = false;
-                nodeConstructor.excluded = true;
-                this.processing.excluded.append(nodeConstructor);
+                node.visible = false;
+                node.excluded = true;
+                this.processing.excluded.append(node);
+                return undefined;
             }
         }
         if (node) {
@@ -1771,7 +1809,14 @@ export default class Application<T extends Node> implements squared.base.Applica
                     }
                     current = current.parentElement;
                 }
-                return valid && Array.from(element.children).some((item: Element) => $dom.hasVisibleRect(item, true));
+                if (valid) {
+                    for (let i = 0; i < element.children.length; i++) {
+                        if ($dom.hasVisibleRect(<Element> element.children[i], true)) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
             }
         }
         else {
@@ -1905,7 +1950,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         for (const attr of Array.from(item.style)) {
             common.add($util.convertCamelCase(attr));
         }
-        for (const element of Array.from(document.querySelectorAll(item.selectorText)) as HTMLElement[]) {
+        document.querySelectorAll(item.selectorText).forEach((element: HTMLElement) => {
             const applied = new Set(common);
             for (const attr of Array.from(element.style)) {
                 applied.add($util.convertCamelCase(attr));
@@ -1971,12 +2016,12 @@ export default class Application<T extends Node> implements squared.base.Applica
                 }
             }
             if (this.userSettings.preloadImages && $util.hasValue(styleMap.backgroundImage) && styleMap.backgroundImage !== 'initial') {
-                styleMap.backgroundImage.split(',').map(value => value.trim()).forEach(value => {
-                    const uri = $dom.cssResolveUrl(value);
+                for (const value of styleMap.backgroundImage.split(',')) {
+                    const uri = $dom.cssResolveUrl(value.trim());
                     if (uri !== '' && !this.session.image.has(uri)) {
                         this.session.image.set(uri, { width: 0, height: 0, uri });
                     }
-                });
+                }
             }
             if (clientFirefox && styleMap.display === undefined) {
                 switch (element.tagName) {
@@ -1996,7 +2041,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 $dom.setElementCache(element, 'style', style);
                 $dom.setElementCache(element, 'styleMap', styleMap);
             }
-        }
+        });
     }
 
     set appName(value) {

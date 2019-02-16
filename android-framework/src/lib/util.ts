@@ -88,5 +88,5 @@ export function replaceRTL(value: string, rtl = true, api = BUILD_ANDROID.OREO) 
 }
 
 export function getXmlNs(...values: string[]) {
-    return $util.flatMap(values, namespace => XMLNS_ANDROID[namespace] ? `xmlns:${namespace}="${XMLNS_ANDROID[namespace]}"` : '').join(' ');
+    return $util.joinMap(values, namespace => XMLNS_ANDROID[namespace] ? `xmlns:${namespace}="${XMLNS_ANDROID[namespace]}"` : '', ' ');
 }

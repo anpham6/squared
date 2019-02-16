@@ -77,6 +77,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         case 'y2':
                         case 'y':
                             this._baseVal[attr] += y;
+                            break;
                         case 'r':
                             this._baseVal[attr] *= Math.min(scaleX, scaleY);
                             break;
@@ -84,8 +85,8 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         case 'width':
                             this._baseVal[attr] *= scaleX;
                             break;
-                        case 'height':
                         case 'ry':
+                        case 'height':
                             this._baseVal[attr] *= scaleY;
                             break;
                     }

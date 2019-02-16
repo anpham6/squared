@@ -323,8 +323,8 @@ export default class CssGrid<T extends Node> extends Extension<T> {
             });
         }
         else {
-            node.css('gridTemplateAreas').split(/"[\s\n]+"/).map(value => $util.trimString(value.trim(), '"')).forEach((value, i) => {
-                value.split(' ').forEach((area, j) => {
+            node.css('gridTemplateAreas').split(/"[\s\n]+"/).forEach((template, i) => {
+                $util.trimString(template.trim(), '"').split(' ').forEach((area, j) => {
                     if (area !== '.') {
                         if (mainData.templateAreas[area] === undefined) {
                             mainData.templateAreas[area] = {
@@ -403,7 +403,7 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                         }
                     }
                 }
-                if (placement.filter(value => value).length < 4) {
+                if (placement.some(value => !value)) {
                     function setPlacement(value: string, position: number) {
                         if ($util.isNumber(value)) {
                             placement[position] = parseInt(value);
@@ -627,7 +627,9 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                 mainData.column.count = Math.max(row.length, mainData.column.count);
                 for (const column of row) {
                     if (column) {
-                        column.forEach(item => mainData.children.add(item));
+                        for (const item of column) {
+                            mainData.children.add(item);
+                        }
                     }
                 }
             }
@@ -636,9 +638,9 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                 const modified = new Set<T>();
                 for (let i = 0; i < mainData.row.count; i++) {
                     for (let j = 0; j < mainData.column.count; j++) {
-                        const column = mainData.rowData[i][j];
+                        const column = mainData.rowData[i][j] as T[];
                         if (column) {
-                            column.forEach((item: T) => {
+                            for (const item of column) {
                                 if (item && !modified.has(item)) {
                                     const cellData = <CssGridCellData> item.data(EXT_NAME.CSS_GRID, 'cellData');
                                     const x = j + (cellData ? cellData.columnSpan - 1 : 0);
@@ -651,7 +653,7 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                                     }
                                     modified.add(item);
                                 }
-                            });
+                            }
                         }
                     }
                 }

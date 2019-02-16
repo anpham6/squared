@@ -27,7 +27,9 @@ export default class BottomNavigation<T extends android.base.View> extends squar
         for (let i = 5; i < node.length; i++) {
             const item = node.item(i) as T;
             item.hide();
-            item.cascade().forEach(child => child.hide());
+            for (const child of item.cascade()) {
+                child.hide();
+            }
         }
         node.setControlType($constA.SUPPORT_ANDROID.BOTTOM_NAVIGATION, $enumA.CONTAINER_NODE.BLOCK);
         node.exclude({ resource: $enum.NODE_RESOURCE.ASSET });
@@ -40,7 +42,9 @@ export default class BottomNavigation<T extends android.base.View> extends squar
             'wrap_content',
             node
         );
-        node.cascade().forEach(item => this.subscribersChild.add(item as T));
+        for (const item of node.cascade()) {
+            this.subscribersChild.add(item as T);
+        }
         this.setStyleTheme();
         return { output, complete: true };
     }

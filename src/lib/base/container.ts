@@ -1,12 +1,10 @@
-import { partitionArray, spliceArray } from '../util';
+import { flatMap, partitionArray, spliceArray } from '../util';
 
 export default class Container<T> implements squared.lib.base.Container<T>, Iterable<T> {
-    private _children: T[] = [];
+    private _children: T[];
 
     constructor(children?: T[]) {
-        if (Array.isArray(children)) {
-            this.retain(children);
-        }
+        this._children = children || [];
     }
 
     public [Symbol.iterator]() {
@@ -74,7 +72,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
 
     public each(predicate: IteratorPredicate<T, void>) {
         for (let i = 0; i < this._children.length; i++) {
-            predicate(this._children[i], i);
+            predicate(this._children[i], i, this._children);
         }
         return this;
     }
@@ -96,18 +94,6 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return this._children.map(predicate);
     }
 
-    public flatMap<U>(predicate: IteratorPredicate<T, U>): U[] {
-        return this._children.map(predicate).filter(item => item);
-    }
-
-    public partition(predicate: IteratorPredicate<T, boolean>): [T[], T[]] {
-        return partitionArray(this._children, predicate);
-    }
-
-    public splice(predicate: IteratorPredicate<T, boolean>, callback?: (item: T) => void): T[] {
-        return spliceArray(this._children, predicate, callback);
-    }
-
     public sort(predicate: (a: T, b: T) => number) {
         this._children.sort(predicate);
         return this;
@@ -119,6 +105,18 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
 
     public some(predicate: IteratorPredicate<T, boolean>) {
         return this._children.some(predicate);
+    }
+
+    public flatMap<U>(predicate: IteratorPredicate<T, U>): U[] {
+        return flatMap(this._children, predicate);
+    }
+
+    public partition(predicate: IteratorPredicate<T, boolean>): [T[], T[]] {
+        return partitionArray(this._children, predicate);
+    }
+
+    public splice(predicate: IteratorPredicate<T, boolean>, callback?: (item: T) => void): T[] {
+        return spliceArray(this._children, predicate, callback);
     }
 
     public cascade() {

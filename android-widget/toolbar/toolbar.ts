@@ -32,13 +32,13 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
 
     public init(element: HTMLElement) {
         if (this.included(element)) {
-            Array.from(element.children).some((item: HTMLElement) => {
+            for (let i = 0; i < element.children.length; i++) {
+                const item = <HTMLElement> element.children[i];
                 if (item.tagName === 'NAV' && !$util.includes(item.dataset.use, $const.EXT_NAME.EXTERNAL)) {
                     item.dataset.use = ($util.hasValue(item.dataset.use) ? `${item.dataset.use}, ` : '') + $const.EXT_NAME.EXTERNAL;
-                    return true;
+                    break;
                 }
-                return false;
-            });
+            }
             if (element.dataset.target) {
                 const target = document.getElementById(element.dataset.target);
                 if (target && element.parentElement !== target && !$util.includes(target.dataset.use, WIDGET_NAME.COORDINATOR)) {
@@ -316,11 +316,11 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         placeholder.inherit(node, 'base');
         placeholder.exclude({ resource: $enum.NODE_RESOURCE.ALL });
         placeholder.positioned = true;
-        let siblingIndex = Number.MAX_VALUE;
-        children.forEach(item => {
+        let siblingIndex = Number.POSITIVE_INFINITY;
+        for (const item of children) {
             siblingIndex = Math.min(siblingIndex, item.siblingIndex);
             item.parent = placeholder;
-        });
+        }
         placeholder.siblingIndex = siblingIndex;
         return placeholder;
     }

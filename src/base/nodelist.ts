@@ -29,11 +29,16 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
             list = baseline;
         }
         if (text) {
-            list = list.filter(item => item.element && !item.imageElement);
+            $util.spliceArray(list, item => item.imageElement || !item.naturalElement);
         }
-        const lineHeight = $util.maxArray(list.map(node => node.lineHeight));
-        const boundsHeight = $util.maxArray(list.map(node => node.bounds.height));
-        return list.filter(item => lineHeight > boundsHeight ? item.lineHeight === lineHeight : item.bounds.height === boundsHeight).sort((a, b) => {
+        let lineHeight = 0;
+        let boundsHeight = 0;
+        for (const item of list) {
+            lineHeight = Math.max(lineHeight, item.lineHeight);
+            boundsHeight = Math.max(boundsHeight, item.bounds.height);
+        }
+        $util.spliceArray(list, item => lineHeight > boundsHeight ? item.lineHeight !== lineHeight : !$util.withinFraction(item.bounds.height, boundsHeight));
+        return list.sort((a, b) => {
             if (a.groupParent || a.length || (!a.baseline && b.baseline)) {
                 return 1;
             }
@@ -86,7 +91,13 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
     }
 
     public static floated<T extends Node>(list: T[]) {
-        return new Set(list.map(node => node.float).filter(value => value !== 'none'));
+        const result = new Set<string>();
+        for (const node of list) {
+            if (node.floating) {
+                result.add(node.float);
+            }
+        }
+        return result;
     }
 
     public static cleared<T extends Node>(list: T[], parent = true) {
@@ -118,23 +129,20 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
         }
         const result = new Map<T, string>();
         const floated = new Set<string>();
-        const previous: ObjectMap<Null<T>> = {
-            left: null,
-            right: null
-        };
+        const previous: ObjectMap<Null<T>> = { left: null, right: null };
         for (const node of list) {
             if (node.pageFlow) {
                 const clear = node.css('clear');
                 if (floated.size) {
                     const previousFloat = clear === 'both' ? [previous.left, previous.right]
-                        : clear === 'left' ? [previous.left, null]
-                        : clear === 'right' ? [null, previous.right] : [];
-                    previousFloat.forEach(item => {
+                                        : clear === 'left' ? [previous.left, null]
+                                        : clear === 'right' ? [null, previous.right] : [];
+                    for (const item of previousFloat) {
                         if (item && !node.floating && node.linear.top > item.linear.bottom && floated.has(item.float)) {
                             floated.delete(item.float);
                             previous[item.float] = null;
                         }
-                    });
+                    }
                     if (clear === 'both') {
                         result.set(node, floated.size === 2 ? 'both' : floated.values().next().value);
                         floated.clear();
@@ -180,10 +188,22 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                             return false;
                         }
                     }
-                    const boxLeft = $util.minArray(nodes.map(node => node.linear.left));
-                    const boxRight = $util.maxArray(nodes.map(node => node.linear.right));
-                    const floatLeft =  $util.maxArray(nodes.filter(node => node.float === 'left').map(node => node.linear.right));
-                    const floatRight =  $util.minArray(nodes.filter(node => node.float === 'right').map(node => node.linear.left));
+                    let boxLeft = Number.POSITIVE_INFINITY;
+                    let boxRight = Number.NEGATIVE_INFINITY;
+                    let floatLeft = Number.NEGATIVE_INFINITY;
+                    let floatRight = Number.POSITIVE_INFINITY;
+                    for (const node of nodes) {
+                        boxLeft = Math.min(boxLeft, node.linear.left);
+                        boxRight = Math.max(boxRight, node.linear.right);
+                        if (node.floating) {
+                            if (node.float === 'left') {
+                                floatLeft = Math.max(floatLeft, node.linear.right);
+                            }
+                            else {
+                                floatRight = Math.min(floatRight, node.linear.left);
+                            }
+                        }
+                    }
                     for (let i = 0, j = 0, k = 0, l = 0, m = 0; i < nodes.length; i++) {
                         const item = nodes[i];
                         if (Math.floor(item.linear.left) <= boxLeft) {
@@ -308,14 +328,6 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
         this._currentId = 0;
         this.clear();
         return this;
-    }
-
-    get visible() {
-        return this.children.filter(node => node.visible);
-    }
-
-    get elements() {
-        return this.children.filter(node => node.visible && node.styleElement);
     }
 
     get nextId() {

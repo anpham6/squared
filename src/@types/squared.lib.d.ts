@@ -45,7 +45,7 @@ declare global {
             function isPlainText(element: Element, whiteSpace?: boolean): boolean;
             function hasLineBreak(element: Element | null, lineBreak?: boolean, trimString?: boolean): boolean;
             function isLineBreak(element: Element | null, excluded?: boolean): boolean;
-            function getElementsBetween(elementStart: Element | null, elementEnd: Element, whiteSpace?: boolean, asNode?: boolean): Element[];
+            function getElementsBetween(elementStart: Element | null, elementEnd: Element, whiteSpace?: boolean): Element[];
             function getPreviousElementSibling(element: Element | null): Element | null;
             function getNextElementSibling(element: Element | null): Element | null;
             function hasComputedStyle(element: UndefNull<Element>): element is HTMLElement;
@@ -101,6 +101,7 @@ declare global {
             function lastIndexOf(value: string, char?: string): string;
             function searchObject(obj: StringMap, value: string | StringMap): any[][];
             function hasValue<T>(value: T): value is T;
+            function hasInSet<T>(list: Set<T>, condition: (x: T) => boolean): boolean;
             function compareRange(operation: string, range: number, value: number): boolean;
             function withinRange(a: number, b: number, offset?: number): boolean;
             function withinFraction(lower: number, upper: number): boolean;
@@ -109,17 +110,19 @@ declare global {
             function minArray(list: number[]): number;
             function maxArray(list: number[]): number;
             function partitionArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): [T[], T[]];
-            function retainArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): void;
-            function spliceArray<T, U = boolean>(list: T[], predicate: IteratorPredicate<T, U>, callback?: IteratorCallback<T>): T[];
+            function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>): T[];
             function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]): T[];
             function flatArray<T>(list: any[]): T[];
             function flatMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[];
+            function filterMap<T, U>(list: T[], predicate: IteratorPredicate<T, boolean>, mapping: IteratorPredicate<T, U>): U[];
+            function replaceMap<T>(list: T[], predicate: IteratorPredicate<T, T>): T[];
+            function joinMap<T>(list: T[], predicate: IteratorPredicate<T, string>, char?: string): string;
         }
 
         namespace xml {
             function formatPlaceholder(id: string | number, symbol?: string): string;
             function replacePlaceholder(value: string, id: string | number, content: string, before?: boolean): string;
-            function replaceIndent(value: string, depth: number, leadingPattern: RegExp): string;
+            function replaceIndent(value: string, depth: number, pattern: RegExp): string;
             function replaceTab(value: string, spaces?: number, preserve?: boolean): string;
             function replaceEntity(value: string): string;
             function replaceCharacter(value: string): string;

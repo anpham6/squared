@@ -54,6 +54,7 @@ export interface CachedValue<T> {
     autoMargin?: AutoMargin;
     visibleStyle?: VisibleStyle;
     support?: Support;
+    extensions?: string[];
 }
 
 export interface VisibleStyle {

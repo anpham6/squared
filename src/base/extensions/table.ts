@@ -28,6 +28,8 @@ export default abstract class Table<T extends Node> extends Extension<T> {
     }
 
     public processNode(node: T): ExtensionResult<T> {
+        const mainData = Table.createDataAttribute();
+        const table: T[] = [];
         function setAutoWidth(td: T) {
             td.data(EXT_NAME.TABLE, 'percent', `${Math.round((td.bounds.width / node.bounds.width) * 100)}%`);
             td.data(EXT_NAME.TABLE, 'expand', true);
@@ -35,28 +37,41 @@ export default abstract class Table<T extends Node> extends Extension<T> {
         function setBoundsWidth(td: T) {
             td.css('width', $util.formatPX(td.bounds.width), true);
         }
-        const mainData = Table.createDataAttribute();
-        const table: T[] = [];
-        const thead = node.filter(item => item.tagName === 'THEAD');
-        const tbody = node.filter(item => item.tagName === 'TBODY');
-        const tfoot = node.filter(item => item.tagName === 'TFOOT');
-        const colgroup = node.element ? Array.from(node.element.children).find(element => element.tagName === 'COLGROUP') : undefined;
-        if (thead.length) {
-            thead[0].cascade().filter(item => item.tagName === 'TH' || item.tagName === 'TD').forEach(item => item.inherit(thead[0], 'styleMap'));
-            table.push(...thead[0].children as T[]);
-            thead.forEach(item => item.hide());
+        function inheritStyles(section: T[]) {
+            if (section.length) {
+                for (const item of section[0].cascade()) {
+                    if (item.tagName === 'TH' || item.tagName === 'TD') {
+                        item.inherit(section[0], 'styleMap');
+                    }
+                }
+                table.push(...section[0].children as T[]);
+                for (const item of section) {
+                    item.hide();
+                }
+            }
         }
-        if (tbody.length) {
-            tbody.forEach(item => {
-                table.push(...item.children as T[]);
-                item.hide();
-            });
+        const thead: T[] = [];
+        const tbody: T[] = [];
+        const tfoot: T[] = [];
+        node.each((item: T) => {
+            switch (item.tagName) {
+                case 'THEAD':
+                    thead.push(item);
+                    break;
+                case 'TBODY':
+                    tbody.push(item);
+                    break;
+                case 'TFOOT':
+                    tfoot.push(item);
+                    break;
+            }
+        });
+        inheritStyles(thead);
+        for (const section of tbody) {
+            table.push(...section.children as T[]);
+            section.hide();
         }
-        if (tfoot.length) {
-            tfoot[0].cascade().filter(item => item.tagName === 'TH' || item.tagName === 'TD').forEach(item => item.inherit(tfoot[0], 'styleMap'));
-            table.push(...tfoot[0].children as T[]);
-            tfoot.forEach(item => item.hide());
-        }
+        inheritStyles(tfoot);
         const layoutFixed = node.css('tableLayout') === 'fixed';
         const borderCollapse = node.css('borderCollapse') === 'collapse';
         const [horizontal, vertical] = borderCollapse ? [0, 0] : node.css('borderSpacing').split(' ').map(value => parseInt(value));
@@ -78,6 +93,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
         }
         const spacingWidth = $util.formatPX(horizontal > 1 ? Math.round(horizontal / 2) : horizontal);
         const spacingHeight = $util.formatPX(vertical > 1 ? Math.round(vertical / 2) : vertical);
+        const colgroup = node.element && node.element.querySelector('COLGROUP');
         const rowWidth: number[] = [];
         const mapBounds: number[] = [];
         const tableFilled: T[][] = [];
@@ -88,8 +104,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
             const tr = table[i];
             rowWidth[i] = horizontal;
             tableFilled[i] = [];
-            for (let j = 0; j < tr.length; j++) {
-                const td = tr.item(j) as T;
+            tr.each((td: T, j) => {
                 const element = <HTMLTableCellElement> td.element;
                 for (let k = 0; k < element.rowSpan - 1; k++)  {
                     const l = (i + 1) + k;
@@ -176,7 +191,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                     marginLeft: columnIndex[i] === 0 ? '0px' : spacingWidth
                 }, '', true);
                 columnIndex[i] += element.colSpan;
-            }
+            });
         }
         if (node.has('width', CSS_STANDARD.UNIT) && mapWidth.some(value => $util.isPercent(value))) {
             mapWidth = mapWidth.map((value, index) => {
@@ -208,7 +223,9 @@ export default abstract class Table<T extends Node> extends Extension<T> {
             else if (width > node.width) {
                 node.css('width', 'auto', true);
                 if (!layoutFixed) {
-                    node.cascade().forEach(item => item.css('width', 'auto', true));
+                    for (const item of node.cascade()) {
+                        item.css('width', 'auto', true);
+                    }
                 }
             }
         }

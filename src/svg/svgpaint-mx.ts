@@ -160,7 +160,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
         public setAttribute(attr: string, computed = false) {
             const value = this.getAttribute(attr, computed);
             if ($util.isString(value)) {
-                switch (value) {
+                switch (attr) {
                     case 'fill':
                     case 'stroke':
                         const url = getAttributeUrl(value);

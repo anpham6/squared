@@ -145,7 +145,9 @@ function getShapeAttribute(boxStyle: BoxStyle, name: string, direction = -1, has
                 }
                 else if (boxStyle.borderRadius.length > 1) {
                     const result = {};
-                    boxStyle.borderRadius.forEach((value, index) => result[`${['topLeft', 'topRight', 'bottomRight', 'bottomLeft'][index]}Radius`] = value);
+                    for (let i = 0; i < boxStyle.borderRadius.length; i++) {
+                        result[`${['topLeft', 'topRight', 'bottomRight', 'bottomLeft'][i]}Radius`] = boxStyle.borderRadius[i];
+                    }
                     return [result];
                 }
             }
@@ -210,7 +212,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
     public readonly eventOnly = true;
 
     public afterResources() {
-        this.application.processing.cache.duplicate().sort(a => !a.visible ? -1 : 0).forEach(node => {
+        for (const node of this.application.processing.cache.duplicate().sort(a => !a.visible ? -1 : 0)) {
             const stored: BoxStyle = node.data(Resource.KEY_NAME, 'boxStyle');
             if (stored && !node.hasBit('excludeResource', $enum.NODE_RESOURCE.BOX_STYLE)) {
                 stored.backgroundColor = Resource.addColor(stored.backgroundColor);
@@ -265,13 +267,13 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     ];
                     const borderFiltered: BorderAttribute[] = [];
                     const borderVisible: boolean[] = [];
-                    borders.forEach((item, index) => {
-                        borderVisible[index] = Resource.isBorderVisible(item);
-                        if (borderVisible[index]) {
-                            item.color = Resource.addColor(item.color);
-                            borderFiltered.push(item);
+                    for (let i = 0; i < borders.length; i++) {
+                        borderVisible[i] = Resource.isBorderVisible(borders[i]);
+                        if (borderVisible[i]) {
+                            borders[i].color = Resource.addColor(borders[i].color);
+                            borderFiltered.push(borders[i]);
                         }
-                    });
+                    }
                     const imagesE: BackgroundImage[] = [];
                     const imagesD: BackgroundImage[] = [];
                     let data: TemplateDataA;
@@ -437,11 +439,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                             else if (dimensions[1] === '100%') {
                                                 tileModeY = '';
                                             }
-                                            dimensions.forEach((value, index) => {
-                                                if (value !== 'auto' && value !== '100%') {
-                                                    imageData[index === 0 ? 'width' : 'height'] = node.convertPX(backgroundSize[i], index === 0, false);
+                                            for (let j = 0; j < dimensions.length; j++) {
+                                                if (dimensions[j] !== 'auto' && dimensions[j] !== '100%') {
+                                                    imageData[j === 0 ? 'width' : 'height'] = node.convertPX(backgroundSize[i], j === 0, false);
                                                 }
-                                            });
+                                            }
                                             break;
                                     }
                                 }
@@ -707,6 +709,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     node.android('background', `@color/${stored.backgroundColor}`, false);
                 }
             }
-        });
+        }
     }
 }

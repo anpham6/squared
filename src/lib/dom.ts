@@ -1,6 +1,8 @@
-import { REGEXP_PATTERN, capitalize, convertCamelCase, convertPercentPX, convertPX, flatMap, formatPercent, formatPX, hasBit, isPercent, isString, maxArray, minArray, resolvePath, withinFraction } from './util';
+import { REGEXP_PATTERN, capitalize, convertCamelCase, convertPercentPX, convertPX, formatPercent, formatPX, hasBit, isPercent, isString, resolvePath, spliceArray, withinFraction } from './util';
 
 type T = squared.base.Node;
+
+const REGEXP_KEYFRAMERULE = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
 
 export const enum USER_AGENT {
     CHROME = 2,
@@ -122,42 +124,44 @@ export function isUserAgent(value: string | number) {
 
 export function getKeyframeRules(): CSSRuleData {
     const result = new Map<string, ObjectMap<StringMap>>();
-    for (let i = 0; i < document.styleSheets.length; i++) {
-        const styleSheet = <CSSStyleSheet> document.styleSheets[i];
-        if (styleSheet.cssRules) {
-            for (let j = 0; j < styleSheet.cssRules.length; j++) {
-                const item = styleSheet.cssRules[j];
-                try {
-                    if (item instanceof CSSKeyframesRule) {
-                        const map: ObjectMap<StringMap> = {};
-                        Array.from(item.cssRules).forEach(keyframe => {
-                            const match = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/.exec(keyframe.cssText);
-                            if (match) {
-                                const keyText = (keyframe['keyText'] as string || match[1].trim()).split(',').map(percent => percent.trim());
-                                const properties = flatMap(match[2].split(';'), percent => percent.trim());
-                                for (let percent of keyText) {
-                                    switch (percent) {
-                                        case 'from':
-                                            percent = '0%';
-                                            break;
-                                        case 'to':
-                                            percent = '100%';
-                                            break;
-                                    }
-                                    map[percent] = {};
-                                    for (const property of properties) {
-                                        const [name, value] = property.split(':').map(values => values.trim());
-                                        if (name !== '' && value !== '') {
-                                            map[percent][name] = value;
+    violation: {
+        for (let i = 0; i < document.styleSheets.length; i++) {
+            const styleSheet = <CSSStyleSheet> document.styleSheets[i];
+            if (styleSheet.cssRules) {
+                for (let j = 0; j < styleSheet.cssRules.length; j++) {
+                    try {
+                        const item = <CSSKeyframesRule> styleSheet.cssRules[j];
+                        if (item.type === 7) {
+                            const map: ObjectMap<StringMap> = {};
+                            for (let k = 0; k < item.cssRules.length; k++) {
+                                const match = REGEXP_KEYFRAMERULE.exec(item.cssRules[k].cssText);
+                                if (match) {
+                                    for (let percent of (item.cssRules[k]['keyText'] as string || match[1].trim()).split(',')) {
+                                        percent = percent.trim();
+                                        switch (percent) {
+                                            case 'from':
+                                                percent = '0%';
+                                                break;
+                                            case 'to':
+                                                percent = '100%';
+                                                break;
+                                        }
+                                        map[percent] = {};
+                                        for (const property of match[2].split(';')) {
+                                            const [name, value] = property.split(':');
+                                            if (value) {
+                                                map[percent][name.trim()] = value.trim();
+                                            }
                                         }
                                     }
                                 }
                             }
-                        });
-                        result.set(item.name, map);
+                            result.set(item.name, map);
+                        }
                     }
-                }
-                catch {
+                    catch {
+                        break violation;
+                    }
                 }
             }
         }
@@ -229,30 +233,47 @@ export function createElement(parent: Element | null, block = false) {
 }
 
 export function removeElementsByClassName(className: string) {
-    Array.from(document.getElementsByClassName(className)).forEach(element => element.parentElement && element.parentElement.removeChild(element));
+    const elements = document.getElementsByClassName(className);
+    for (let i = 0; i < elements.length; i++) {
+        const element = elements[i];
+        if (element.parentElement) {
+            element.parentElement.removeChild(element);
+        }
+    }
 }
 
 export function getRangeClientRect(element: Element): TextDimension {
     const range = document.createRange();
     range.selectNodeContents(element);
-    const domRect = Array.from(range.getClientRects()).filter(item => !(Math.round(item.width) === 0 && withinFraction(item.left, item.right)));
+    const clientRects = range.getClientRects();
+    const domRect: ClientRect[] = [];
+    for (let i = 0; i < clientRects.length; i++) {
+        const item = <ClientRect> clientRects.item(i);
+        if (!(Math.round(item.width) === 0 && withinFraction(item.left, item.right))) {
+            domRect.push(item);
+        }
+    }
     let bounds: RectDimension = newRectDimension();
     let multiline = 0;
     if (domRect.length) {
         bounds = assignBounds(domRect[0]);
         const top = new Set([bounds.top]);
         const bottom = new Set([bounds.bottom]);
+        let minTop = bounds.top;
+        let maxBottom = bounds.bottom;
         for (let i = 1 ; i < domRect.length; i++) {
             const rect = domRect[i];
             top.add(rect.top);
             bottom.add(rect.bottom);
+            minTop = Math.min(minTop, rect.top);
+            maxBottom = Math.min(maxBottom, rect.bottom);
             bounds.width += rect.width;
             bounds.right = Math.max(rect.right, bounds.right);
             bounds.height = Math.max(rect.height, bounds.height);
         }
         if (top.size > 1 && bottom.size > 1) {
-            bounds.top = minArray(Array.from(top));
-            bounds.bottom = maxArray(Array.from(bottom));
+            bounds.top = minTop;
+            bounds.bottom = maxBottom;
             if (domRect[domRect.length - 1].top >= domRect[0].bottom && element.textContent && (element.textContent.trim() !== '' || /^\s*\n/.test(element.textContent))) {
                 multiline = domRect.length - 1;
             }
@@ -402,8 +423,9 @@ export function getBackgroundPosition(value: string, dimension: RectDimension, f
     };
     const orientation = value === 'center' ? ['center', 'center'] : value.split(' ');
     if (orientation.length === 4) {
-        orientation.forEach((position, index) => {
-            switch (index) {
+        for (let i = 0; i < orientation.length; i++) {
+            const position = orientation[i];
+            switch (i) {
                 case 0:
                     result.horizontal = position;
                     break;
@@ -412,8 +434,8 @@ export function getBackgroundPosition(value: string, dimension: RectDimension, f
                     break;
                 case 1:
                 case 3:
-                    const clientXY = convertPercentPX(position, index === 1 ? dimension.width : dimension.height, fontSize, percent);
-                    if (index === 1) {
+                    const clientXY = convertPercentPX(position, i === 1 ? dimension.width : dimension.height, fontSize, percent);
+                    if (i === 1) {
                         if (leftPerspective) {
                             if (result.horizontal === 'right') {
                                 if (isPercent(position)) {
@@ -461,13 +483,24 @@ export function getBackgroundPosition(value: string, dimension: RectDimension, f
                     }
                     break;
             }
-        });
+        }
     }
     else if (orientation.length === 2) {
-        orientation.forEach((position, index) => {
-            const offsetParent = index === 0 ? dimension.width : dimension.height;
-            const direction = index === 0 ? 'left' : 'top';
-            const original = index === 0 ? 'originalX' : 'originalY';
+        for (let i = 0; i < orientation.length; i++) {
+            const position = orientation[i];
+            let offsetParent: number;
+            let direction: string;
+            let original: string;
+            if (i === 0) {
+                offsetParent = dimension.width;
+                direction = 'left';
+                original = 'originalX';
+            }
+            else {
+                offsetParent = dimension.height;
+                direction = 'top';
+                original = 'originalY';
+            }
             const clientXY = convertPercentPX(position, offsetParent, fontSize, percent);
             if (isPercent(position)) {
                 result[direction] = clientXY;
@@ -475,7 +508,7 @@ export function getBackgroundPosition(value: string, dimension: RectDimension, f
             }
             else {
                 if (/^[a-z]+$/.test(position)) {
-                    result[index === 0 ? 'horizontal' : 'vertical'] = position;
+                    result[i === 0 ? 'horizontal' : 'vertical'] = position;
                     if (leftPerspective) {
                         switch (position) {
                             case 'left':
@@ -499,7 +532,7 @@ export function getBackgroundPosition(value: string, dimension: RectDimension, f
                     result[original] = position;
                 }
             }
-        });
+        }
     }
     return result;
 }
@@ -529,24 +562,25 @@ export function getLastChildElement(element: Element | null, lineBreak = false) 
 }
 
 export function hasFreeFormText(element: Element, whiteSpace = true) {
-    function findFreeForm(elements: any[]): boolean {
-        return elements.some((child: Element) => {
+    function findFreeForm(elements: NodeListOf<ChildNode> | Element[]): boolean {
+        for (let i = 0; i < elements.length; i++) {
+            const child = <Element> elements[i];
             if (child.nodeName === '#text') {
                 if (isPlainText(child, whiteSpace) || cssParent(child, 'whiteSpace', 'pre', 'pre-wrap') && child.textContent && child.textContent !== '') {
                     return true;
                 }
             }
-            else if (findFreeForm(Array.from(child.childNodes))) {
+            else if (findFreeForm(child.childNodes)) {
                 return true;
             }
-            return false;
-        });
+        }
+        return false;
     }
     if (element.nodeName === '#text') {
         return findFreeForm([element]);
     }
     else {
-        return findFreeForm(Array.from(element.childNodes));
+        return findFreeForm(element.childNodes);
     }
 }
 
@@ -582,8 +616,12 @@ export function hasLineBreak(element: Element | null, lineBreak = false, trimStr
         if (trimString) {
             value = value.trim();
         }
-        if (element.children && Array.from(element.children).some((item: Element) => item.tagName === 'BR')) {
-            return true;
+        if (element.children) {
+            for (let i = 0; i < element.children.length; i++) {
+                if (element.children[i].tagName === 'BR') {
+                    return true;
+                }
+            }
         }
         else if (!lineBreak && /\n/.test(value)) {
             const node = getElementAsNode<T>(element);
@@ -604,28 +642,28 @@ export function isLineBreak(element: Element | null, excluded = true) {
     return false;
 }
 
-export function getElementsBetween(elementStart: Element | null, elementEnd: Element, whiteSpace = false, asNode = false) {
+export function getElementsBetween(elementStart: Element | null, elementEnd: Element, whiteSpace = false) {
     if (!elementStart || elementStart.parentElement === elementEnd.parentElement) {
         const parent = elementEnd.parentElement;
         if (parent) {
-            const elements = Array.from(parent.childNodes) as Element[];
-            const indexStart = elementStart ? elements.findIndex(element => element === elementStart) : 0;
-            const indexEnd = elements.findIndex(element => element === elementEnd);
-            if (indexStart !== -1 && indexEnd !== -1 && indexStart !== indexEnd) {
-                let result = elements.slice(Math.min(indexStart, indexEnd) + 1, Math.max(indexStart, indexEnd));
+            let startIndex = elementStart ? -1 : 0;
+            let endIndex = -1;
+            const elements = <Element[]> Array.from(parent.childNodes);
+            for (let i = 0; i < elements.length; i++) {
+                if (elements[i] === elementStart) {
+                    startIndex = i;
+                }
+                if (elements[i] === elementEnd) {
+                    endIndex = i;
+                }
+            }
+            if (startIndex !== -1 && endIndex !== -1 && startIndex !== endIndex) {
+                const result = elements.slice(Math.min(startIndex, endIndex) + 1, Math.max(startIndex, endIndex));
                 if (whiteSpace) {
-                    result = result.filter(element => element.nodeName !== '#comment');
+                    spliceArray(result, element => element.nodeName === '#comment');
                 }
                 else {
-                    result = result.filter(element => {
-                        if (element.nodeName.charAt(0) === '#') {
-                            return isPlainText(element);
-                        }
-                        return true;
-                    });
-                }
-                if (asNode) {
-                    result = result.filter(element => getElementAsNode<T>(element));
+                    spliceArray(result, element => element.nodeName.charAt(0) === '#' && !isPlainText(element));
                 }
                 return result;
             }

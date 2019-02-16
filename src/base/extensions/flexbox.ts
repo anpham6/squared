@@ -33,7 +33,7 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
 
     public processNode(node: T): ExtensionResult<T> {
         const controller = this.application.controllerHandler;
-        const pageFlow = node.children.filter(item => item.pageFlow) as T[];
+        const pageFlow = node.filter(item => item.pageFlow) as T[];
         const mainData = Flexbox.createDataAttribute(node, pageFlow);
         if (node.cssTry('display', 'block')) {
             for (const item of pageFlow) {

@@ -32,7 +32,12 @@ export default abstract class ExtensionManager<T extends Node> implements square
     }
 
     public retrieve(name: string) {
-        return Array.from(this.application.extensions).find(item => item.name === name) || null;
+        for (const ext of this.application.extensions) {
+            if (ext.name === name) {
+                return ext;
+            }
+        }
+        return null;
     }
 
     public optionValue(name: string, attr: string) {

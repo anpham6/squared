@@ -1,4 +1,3 @@
-import { FileAsset } from '../../src/base/@types/application';
 import { StyleAttribute } from '../src/@types/application';
 import { ViewAttribute } from '../src/@types/node';
 

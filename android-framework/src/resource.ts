@@ -72,7 +72,9 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                             switch (path.element.tagName) {
                                 case 'path':
                                     if ($SvgBuild) {
-                                        $SvgBuild.getPathCommands(path.value).forEach(command => points.push(...command.points));
+                                        for (const command of $SvgBuild.getPathCommands(path.value)) {
+                                            points.push(...command.points);
+                                        }
                                     }
                                 case 'polygon':
                                     if ($SvgBuild && path.element instanceof SVGPolygonElement) {
@@ -256,7 +258,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
 
     public static getOptionArray(element: HTMLSelectElement) {
         const stringArray: string[] = [];
-        let numberArray: string[] | null = [];
+        let numberArray: string[] | undefined = [];
         let i = -1;
         while (++i < element.children.length) {
             const item = <HTMLOptionElement> element.children[i];
@@ -268,7 +270,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                 else {
                     if (numberArray && numberArray.length) {
                         i = -1;
-                        numberArray = null;
+                        numberArray = undefined;
                         continue;
                     }
                     if (value !== '') {
@@ -277,7 +279,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                 }
             }
         }
-        return [stringArray.length ? stringArray : null, numberArray && numberArray.length ? numberArray : null];
+        return [stringArray.length ? stringArray : undefined, numberArray && numberArray.length ? numberArray : undefined];
     }
 
     public static addTheme(...values: Required<StyleAttribute>[]) {
@@ -360,7 +362,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
         const srcset = element.srcset.trim();
         if (srcset !== '') {
             const filepath = element.src.substring(0, element.src.lastIndexOf('/') + 1);
-            srcset.split(',').forEach(value => {
+            for (const value of srcset.split(',')) {
                 const match = /^(.+?)\s*(\d+\.?\d*x)?$/.exec(value.trim());
                 if (match) {
                     if (!$util.hasValue(match[2])) {
@@ -388,7 +390,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                             break;
                     }
                 }
-            });
+            }
         }
         if (images.mdpi === undefined) {
             images.mdpi = element.src;

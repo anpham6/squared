@@ -5,6 +5,7 @@ import Resource from '../../resource';
 const $util = squared.lib.util;
 
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
+const NAMESPACE_ATTR = ['android', 'app'];
 
 function getResourceName(map: Map<string, string>, name: string, value: string) {
     for (const [storedName, storedValue] of map.entries()) {
@@ -28,31 +29,35 @@ export default class ResourceDimens<T extends android.base.View> extends squared
 
     public afterProcedure() {
         const groups: ObjectMapNested<T[]> = {};
-        for (const node of this.application.session.cache.visible) {
-            const tagName = node.tagName.toLowerCase();
-            if (groups[tagName] === undefined) {
-                groups[tagName] = {};
-            }
-            ['android', 'app'].forEach(namespace => {
-                const obj = node.namespace(namespace);
-                for (const attr in obj) {
-                    const value = obj[attr].trim();
-                    if (/^-?[\d.]+(px|dp|sp)$/.test(value)) {
-                        const dimen = `${namespace},${attr},${value}`;
-                        if (groups[tagName][dimen] === undefined) {
-                            groups[tagName][dimen] = [];
+        for (const node of this.application.session.cache) {
+            if (node.visible) {
+                const tagName = node.tagName.toLowerCase();
+                if (groups[tagName] === undefined) {
+                    groups[tagName] = {};
+                }
+                for (const namespace of NAMESPACE_ATTR) {
+                    const obj = node.namespace(namespace);
+                    for (const attr in obj) {
+                        const value = obj[attr].trim();
+                        if (/^-?[\d.]+(px|dp|sp)$/.test(value)) {
+                            const dimen = `${namespace},${attr},${value}`;
+                            if (groups[tagName][dimen] === undefined) {
+                                groups[tagName][dimen] = [];
+                            }
+                            groups[tagName][dimen].push(node);
                         }
-                        groups[tagName][dimen].push(node);
                     }
                 }
-            });
+            }
         }
         for (const tagName in groups) {
             const group = groups[tagName];
             for (const name in group) {
                 const [namespace, attr, value] = name.split(',');
                 const key = getResourceName(STORED.dimens, `${getDisplayName(tagName)}_${getAttributeName(attr)}`, value);
-                group[name].forEach(node => node[namespace](attr, `@dimen/${key}`));
+                for (const node of group[name]) {
+                    node[namespace](attr, `@dimen/${key}`);
+                }
                 STORED.dimens.set(key, value);
             }
         }

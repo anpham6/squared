@@ -55,7 +55,9 @@ export default class ScrollView<T extends android.base.View> extends squared.bas
                 item.parent = container;
                 item.siblingIndex = index;
             });
-            pending.forEach(item => item.hide());
+            for (const item of pending) {
+                item.hide();
+            }
             container.android('orientation', $NodeList.linearX(children) ? AXIS_ANDROID.HORIZONTAL : AXIS_ANDROID.VERTICAL);
             container.render(target ? container : parent);
             this.subscribers.add(container);

@@ -145,7 +145,11 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static drawPolyline(points: Point[] | DOMPoint[], truncate = false) {
-        const result = points.length ? `M${(<Point[]> points).map(pt => `${pt.x},${pt.y}`).join(' ')}` : '';
+        let result = 'M';
+        for (const pt of points) {
+            result += `${pt.x},${pt.y} `;
+        }
+        result = result.substring(0, result.length - 1);
         return truncate ? truncateString(result) : result;
     }
 
@@ -572,10 +576,10 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static toBoxRect(values: string[]): BoxRect {
-        let top = Number.MAX_VALUE;
-        let right = -Number.MAX_VALUE;
-        let bottom = -Number.MAX_VALUE;
-        let left = Number.MAX_VALUE;
+        let top = Number.POSITIVE_INFINITY;
+        let right = Number.NEGATIVE_INFINITY;
+        let bottom = Number.NEGATIVE_INFINITY;
+        let left = Number.POSITIVE_INFINITY;
         for (const value of values) {
             const points = SvgBuild.getPathPoints(SvgBuild.getPathCommands(value), true);
             for (const pt of points) {

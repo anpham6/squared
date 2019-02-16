@@ -47,7 +47,13 @@ export default class Guideline<T extends android.base.View> extends squared.base
                 alignParent.set(item, alignment);
             });
             if (this.options.circlePosition) {
-                const leftTop = Array.from(alignParent.values()).some(value => value.length === 2);
+                let leftTop = false;
+                for (const value of alignParent.values()) {
+                    if (value.length === 2) {
+                        leftTop = true;
+                        break;
+                    }
+                }
                 let anchor: T | undefined;
                 for (const [item, alignment] of alignParent.entries()) {
                     if (leftTop) {

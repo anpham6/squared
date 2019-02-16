@@ -1,4 +1,4 @@
-import { SvgAspectRatio, SvgPoint, SvgRect } from '../svg/@types/object';
+import { SvgAspectRatio, SvgPoint } from '../svg/@types/object';
 
 import Container = squared.lib.base.Container;
 

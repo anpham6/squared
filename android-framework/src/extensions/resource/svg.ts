@@ -245,12 +245,12 @@ function getViewport(element: SVGGraphicsElement) {
 function getParentOffset(element: SVGGraphicsElement, baseElement: SVGGraphicsElement) {
     let x = 0;
     let y = 0;
-    getViewport(element).forEach(parent => {
+    for (const parent of getViewport(element)) {
         if (($utilS.SVG.svg(parent) || $utilS.SVG.use(parent)) && parent !== baseElement) {
             x += parent.x.baseVal.value;
             y += parent.y.baseVal.value;
         }
-    });
+    }
     return { x, y };
 }
 
@@ -1198,7 +1198,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                             break;
                                     }
                                 }
-                                if (index === 0 && !animatorData.fillBefore && !animatorData.infinite && !animatorData.fillAfter && animatorData.repeating.every(repeat => repeat.propertyValues === false)) {
+                                if (index === 0 && animatorData.ordering !== 'sequentially' && !animatorData.fillBefore && !animatorData.infinite && !animatorData.fillAfter && animatorData.repeating.every(repeat => repeat.propertyValues === false)) {
                                     togetherData.together.push(...animatorData.repeating);
                                     animatorData.repeating.length = 0;
                                 }
@@ -1405,6 +1405,42 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
             clipElement,
             fillPattern: false
         };
+        const setColorPattern = (attr: string, checkPattern = false) => {
+            if (checkPattern) {
+                const pattern = `${attr}Pattern`;
+                const value = result[pattern];
+                if (value) {
+                    const gradient = this.SVG_INSTANCE.definitions.gradient.get(value);
+                    if (gradient) {
+                        switch (path.element.tagName) {
+                            case 'path':
+                                if (!/[zZ]\s*$/.test(path.value)) {
+                                    break;
+                                }
+                            case 'rect':
+                            case 'polygon':
+                            case 'polyline':
+                            case 'circle':
+                            case 'ellipse': {
+                                const gradients = Resource.createBackgroundGradient(this.NODE_INSTANCE, [gradient], path);
+                                if (gradients.length) {
+                                    result[attr] = '';
+                                    result[pattern] = [{ gradients }];
+                                    this.NAMESPACE_AAPT = true;
+                                    return;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    result[pattern] = false;
+                }
+            }
+            const colorName = Resource.addColor(result[attr]);
+            if (colorName !== '') {
+                result[attr] = `@color/${colorName}`;
+            }
+        };
         if ($SvgBuild.asUse(target) && $util.hasValue(target.clipPath)) {
             this.createClipPath(target, clipElement, target.clipPath);
         }
@@ -1478,40 +1514,8 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 result[attr] = value;
             }
         }
-        ['fill', 'stroke'].forEach(attr => {
-            const pattern = `${attr}Pattern`;
-            const value = result[pattern];
-            if (value) {
-                const gradient = this.SVG_INSTANCE.definitions.gradient.get(value);
-                if (gradient) {
-                    switch (path.element.tagName) {
-                        case 'path':
-                            if (!/[zZ]\s*$/.test(path.value)) {
-                                break;
-                            }
-                        case 'rect':
-                        case 'polygon':
-                        case 'polyline':
-                        case 'circle':
-                        case 'ellipse': {
-                            const gradients = Resource.createBackgroundGradient(this.NODE_INSTANCE, [gradient], path);
-                            if (gradients.length) {
-                                result[attr] = '';
-                                result[pattern] = [{ gradients }];
-                                this.NAMESPACE_AAPT = true;
-                                return;
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
-            const colorName = Resource.addColor(result[attr]);
-            if (colorName !== '') {
-                result[attr] = `@color/${colorName}`;
-            }
-            result[pattern] = false;
-        });
+        setColorPattern('fill', true);
+        setColorPattern('stroke');
         const replaceMap = new Map<number, FillReplace>();
         const transformResult: $SvgAnimate[] = [];
         const replaceResult: $SvgAnimate[] = [];
@@ -1655,15 +1659,17 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
         return result > 0;
     }
 
-    private queueAnimations(svg: SvgView, name: string, predicate: IteratorPredicate<SvgAnimation, void>, pathData = '') {
-        const animate = svg.animations.filter(predicate).filter(item => !item.paused && (item.duration > 0 || item.setterType));
-        if (animate.length) {
-            this.ANIMATE_DATA.set(name, {
-                element: svg.element,
-                animate,
-                pathData
-            });
-            return true;
+    private queueAnimations(svg: SvgView, name: string, predicate: IteratorPredicate<SvgAnimation, boolean>, pathData = '') {
+        if (svg.animations.length) {
+            const animate = svg.animations.filter((item, index, array) => !item.paused && (item.duration > 0 || item.setterType) && predicate(item, index, array));
+            if (animate.length) {
+                this.ANIMATE_DATA.set(name, {
+                    element: svg.element,
+                    animate,
+                    pathData
+                });
+                return true;
+            }
         }
         return false;
     }

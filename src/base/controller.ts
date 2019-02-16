@@ -83,21 +83,21 @@ export default abstract class Controller<T extends Node> implements squared.base
 
     public getEnclosingTag(controlName: string, id: number, depth: number, xml = '') {
         const indent = $util.repeat(Math.max(0, depth));
-        let output = `{<${id}}`;
+        let result = `{<${id}}`;
         if (xml !== '') {
-            output += indent + `<${controlName}${depth === 0 ? '{#0}' : ''}{@${id}}>\n` +
+            result += indent + `<${controlName}${depth === 0 ? '{#0}' : ''}{@${id}}>\n` +
                                xml +
                       indent + `</${controlName}>\n`;
         }
         else {
-            output += indent + `<${controlName}${depth === 0 ? '{#0}' : ''}{@${id}} />\n`;
+            result += indent + `<${controlName}${depth === 0 ? '{#0}' : ''}{@${id}} />\n`;
         }
-        output += `{>${id}}`;
-        return output;
+        result += `{>${id}}`;
+        return result;
     }
 
     public removePlaceholders(value: string) {
-        return value.replace(/{[<:@#>]\d+(\^\d+)?}/g, '').trim();
+        return value.replace(/{[<:@#>]\d+(\^\d+)?}\n?/g, '').trim();
     }
 
     public replaceIndent(value: string, depth: number, cache: T[]) {

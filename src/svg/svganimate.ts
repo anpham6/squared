@@ -460,7 +460,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         this._setterType = value;
     }
     get setterType() {
-        return this._setterType || this.element !== undefined && this.duration === 0 && this.keyTimes.length >= 2 && this.keyTimes[0] === 0;
+        return this._setterType || this.element !== null && this.duration === 0 && this.keyTimes.length >= 2 && this.keyTimes[0] === 0;
     }
 
     get instanceType() {

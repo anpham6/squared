@@ -8,12 +8,12 @@ const $dom = squared.lib.dom;
 export default abstract class NodeGroup extends Node {
     public init() {
         if (this.length) {
-            let siblingIndex = Number.MAX_VALUE;
+            let siblingIndex = Number.POSITIVE_INFINITY;
             for (const item of this.children) {
                 siblingIndex = Math.min(siblingIndex, item.siblingIndex);
                 item.parent = this;
             }
-            if (this.siblingIndex === Number.MAX_VALUE) {
+            if (this.siblingIndex === Number.POSITIVE_INFINITY) {
                 this.siblingIndex = siblingIndex;
             }
             if (this.parent) {

@@ -8,9 +8,9 @@ export default class <T extends android.base.View> extends squared.base.extensio
     public readonly eventOnly = true;
 
     public afterBaseLayout() {
-        for (const node of this.application.processing.cache.elements) {
+        for (const node of this.application.processing.cache) {
             const element = <HTMLElement> node.element;
-            if (element && !node.hasBit('excludeProcedure', $enum.NODE_PROCEDURE.ACCESSIBILITY)) {
+            if (element && node.visible && !node.hasBit('excludeProcedure', $enum.NODE_PROCEDURE.ACCESSIBILITY)) {
                 switch (node.controlName) {
                     case CONTAINER_ANDROID.EDIT:
                         if (!node.companion) {

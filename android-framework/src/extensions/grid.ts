@@ -143,7 +143,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
             node.modifyBox($enum.BOX_STANDARD.PADDING_BOTTOM, mainData.paddingBottom);
             node.modifyBox($enum.BOX_STANDARD.PADDING_LEFT, mainData.paddingLeft);
         }
-        if (!node.hasWidth && $util.withinFraction(node.box.right, $util.maxArray(node.renderChildren.filter(item => item.inlineFlow || !item.blockStatic).map(item => item.linear.right)))) {
+        if (!node.hasWidth && $util.withinFraction(node.box.right, $util.maxArray($util.filterMap(node.renderChildren, item => item.inlineFlow || !item.blockStatic, item => item.linear.right)))) {
             node.android('layout_width', 'wrap_content');
         }
     }

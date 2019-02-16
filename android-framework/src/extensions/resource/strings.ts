@@ -4,7 +4,6 @@ import Resource from '../../resource';
 
 const $enum = squared.base.lib.enumeration;
 const $dom = squared.lib.dom;
-const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
 export default class ResourceStrings<T extends android.base.View> extends squared.base.Extension<T> {
@@ -20,19 +19,20 @@ export default class ResourceStrings<T extends android.base.View> extends square
                 const element = node.element;
                 if (element && element.tagName === 'SELECT') {
                     const [stringArray, numberArray] = Resource.getOptionArray(<HTMLSelectElement> element);
-                    const result: string[] = [];
+                    let result: string[] | undefined;
                     if (!this.options.numberResourceValue && numberArray && numberArray.length) {
-                        result.push(...numberArray);
+                        result = numberArray;
                     }
                     else {
-                        result.push(
-                            ...$util.flatMap(stringArray || numberArray || [], value => {
+                        result = stringArray || numberArray;
+                        if (result) {
+                            result = result.map(value => {
                                 value = Resource.addString($xml.replaceCharacter(value), '', this.options.numberResourceValue);
                                 return value !== '' ? `@string/${value}` : '';
-                            })
-                        );
+                            });
+                        }
                     }
-                    if (result.length) {
+                    if (result && result.length) {
                         const arrayValue = result.join('-');
                         let arrayName = '';
                         for (const [storedName, storedResult] of Resource.STORED.arrays.entries()) {

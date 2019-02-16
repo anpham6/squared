@@ -84,7 +84,9 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                                 group.push(item);
                                             }
                                         }
-                                        deleteIds.forEach(value => templates.delete(value));
+                                        for (const value of deleteIds) {
+                                            templates.delete(value);
+                                        }
                                     }
                                 }
                                 if (content.size) {
@@ -100,13 +102,17 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                             }
                                         }
                                     }
-                                    let xml = Array.from(content.values()).join('');
+                                    let xml = '';
+                                    for (const value of content.values()) {
+                                        xml += value;
+                                    }
                                     if (merge) {
                                         xml = controller.getEnclosingTag('merge', 0, 0, xml);
                                     }
                                     else if (!openData.item.documentRoot) {
-                                        const placeholder = $xml.formatPlaceholder(openData.item.id, '@');
-                                        xml = xml.replace(placeholder, `{#0}${placeholder}`);
+                                        const hash = $xml.formatPlaceholder(openData.item.id, '@');
+                                        xml = xml.replace(hash, `{#0}${hash}`);
+                                        openData.item.documentRoot = true;
                                     }
                                     this.application.addIncludeFile(openData.name, xml);
                                 }

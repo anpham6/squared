@@ -15,16 +15,17 @@ const $util = squared.lib.util;
 
 function getColorStop(element: SVGGradientElement) {
     const result: ColorStop[] = [];
-    Array.from(element.getElementsByTagName('stop')).forEach(item => {
-        const color = $color.parseRGBA($dom.cssAttribute(item, 'stop-color'), $dom.cssAttribute(item, 'stop-opacity'));
+    const stops = element.getElementsByTagName('stop');
+    for (let i = 0; i < stops.length; i++) {
+        const color = $color.parseRGBA($dom.cssAttribute(stops[i], 'stop-color'), $dom.cssAttribute(stops[i], 'stop-opacity'));
         if (color) {
             result.push({
                 color: color.valueRGBA,
-                offset: $dom.cssAttribute(item, 'offset'),
+                offset: $dom.cssAttribute(stops[i], 'offset'),
                 opacity: color.alpha
             });
         }
-    });
+    }
     return result;
 }
 
@@ -70,10 +71,8 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
         if (this.documentRoot) {
             const viewBox = this.element.viewBox.baseVal;
             $util.cloneObject(viewBox, this.aspectRatio);
-        }
-        [this.element, ...Array.from(this.element.querySelectorAll('defs'))].forEach(item => {
-            item.querySelectorAll(':scope > set, :scope > animate, :scope > animateTransform, :scope > animateMotion').forEach((element: SVGAnimationElement) => {
-                const target = getTargetElement(element, this.documentRoot ? this.element : undefined);
+            this.element.querySelectorAll('set, animate, animateTransform, animateMotion').forEach((element: SVGAnimationElement) => {
+                const target = getTargetElement(element, this.element);
                 if (target) {
                     if (element.parentElement) {
                         element.parentElement.removeChild(element);
@@ -81,35 +80,40 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
                     target.appendChild(element);
                 }
             });
-            item.querySelectorAll('clipPath, pattern, linearGradient, radialGradient').forEach((element: SVGElement) => {
-                if (element.id) {
-                    const id = `#${element.id}`;
-                    if (SVG.clipPath(element)) {
-                        this.definitions.clipPath.set(id, element);
-                    }
-                    else if (SVG.pattern(element)) {
-                        this.definitions.pattern.set(id, element);
-                    }
-                    else if (SVG.linearGradient(element)) {
-                        this.definitions.gradient.set(id, {
-                            type: 'linear',
-                            element,
-                            spreadMethod: element.spreadMethod.baseVal,
-                            colorStops: getColorStop(element),
-                            ...getBaseValue(element, 'x1', 'x2', 'y1', 'y2')
-                        });
-                    }
-                    else if (SVG.radialGradient(element)) {
-                        this.definitions.gradient.set(id, {
-                            type: 'radial',
-                            element,
-                            spreadMethod: element.spreadMethod.baseVal,
-                            colorStops: getColorStop(element),
-                            ...getBaseValue(element, 'cx', 'cy', 'r', 'fx', 'fy', 'fr')
-                        });
-                    }
+        }
+        this.setDefinitions(this.element);
+        this.element.querySelectorAll('defs').forEach(element => this.setDefinitions(element));
+    }
+
+    private setDefinitions(item: SVGElement) {
+        item.querySelectorAll('clipPath, pattern, linearGradient, radialGradient').forEach((element: SVGElement) => {
+            if (element.id) {
+                const id = `#${element.id}`;
+                if (SVG.clipPath(element)) {
+                    this.definitions.clipPath.set(id, element);
                 }
-            });
+                else if (SVG.pattern(element)) {
+                    this.definitions.pattern.set(id, element);
+                }
+                else if (SVG.linearGradient(element)) {
+                    this.definitions.gradient.set(id, {
+                        type: 'linear',
+                        element,
+                        spreadMethod: element.spreadMethod.baseVal,
+                        colorStops: getColorStop(element),
+                        ...getBaseValue(element, 'x1', 'x2', 'y1', 'y2')
+                    });
+                }
+                else if (SVG.radialGradient(element)) {
+                    this.definitions.gradient.set(id, {
+                        type: 'radial',
+                        element,
+                        spreadMethod: element.spreadMethod.baseVal,
+                        colorStops: getColorStop(element),
+                        ...getBaseValue(element, 'cx', 'cy', 'r', 'fx', 'fy', 'fr')
+                    });
+                }
+            }
         });
     }
 

@@ -14,66 +14,72 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
 
     public afterProcedure() {
         const styles: ObjectMap<string[]> = {};
-        for (const node of this.application.session.cache.visible) {
-            const children = node.renderChildren;
-            if (node.controlId && children.length > 1) {
-                const attrMap = new Map<string, number>();
-                let style = '';
-                let valid = true;
-                for (let i = 0; i < children.length; i++) {
-                    let found = false;
-                    children[i].combine('_', 'android').some(value => {
-                        if (value.startsWith('style=')) {
-                            if (i === 0) {
-                                style = value;
+        for (const node of this.application.session.cache) {
+            if (node.visible) {
+                const children = node.renderChildren;
+                if (node.controlId && children.length > 1) {
+                    const attrMap = new Map<string, number>();
+                    let style = '';
+                    let valid = true;
+                    for (let i = 0; i < children.length; i++) {
+                        let found = false;
+                        children[i].combine('_', 'android').some(value => {
+                            if (value.startsWith('style=')) {
+                                if (i === 0) {
+                                    style = value;
+                                }
+                                else if (style === '' || value !== style) {
+                                    valid = false;
+                                    return true;
+                                }
+                                found = true;
                             }
-                            else if (style === '' || value !== style) {
-                                valid = false;
-                                return true;
+                            else {
+                                attrMap.set(value, (attrMap.get(value) || 0) + 1);
                             }
-                            found = true;
-                        }
-                        else {
-                            attrMap.set(value, (attrMap.get(value) || 0) + 1);
-                        }
-                        return false;
-                    });
-                    if (!valid || (style !== '' && !found)) {
-                        valid = false;
-                        break;
-                    }
-                }
-                if (valid) {
-                    for (const [attr, value] of attrMap.entries()) {
-                        if (value !== children.length) {
-                            attrMap.delete(attr);
+                            return false;
+                        });
+                        if (!valid || (style !== '' && !found)) {
+                            valid = false;
+                            break;
                         }
                     }
-                    if (attrMap.size > 1) {
-                        if (style !== '') {
-                            style = $util.trimString(style.substring(style.indexOf('/') + 1), '"');
-                        }
-                        const common: string[] = [];
-                        for (const attr of attrMap.keys()) {
-                            const match = attr.match(/(\w+):(\w+)="([^"]+)"/);
-                            if (match) {
-                                children.forEach(item => item.delete(match[1], match[2]));
-                                common.push(match[0]);
+                    if (valid) {
+                        for (const [attr, value] of attrMap.entries()) {
+                            if (value !== children.length) {
+                                attrMap.delete(attr);
                             }
                         }
-                        common.sort();
-                        let name = '';
-                        for (const index in styles) {
-                            if (styles[index].join(';') === common.join(';')) {
-                                name = index;
-                                break;
+                        if (attrMap.size > 1) {
+                            if (style !== '') {
+                                style = $util.trimString(style.substring(style.indexOf('/') + 1), '"');
+                            }
+                            const common: string[] = [];
+                            for (const attr of attrMap.keys()) {
+                                const match = attr.match(/(\w+):(\w+)="([^"]+)"/);
+                                if (match) {
+                                    for (const item of children) {
+                                        item.delete(match[1], match[2]);
+                                    }
+                                    common.push(match[0]);
+                                }
+                            }
+                            common.sort();
+                            let name = '';
+                            for (const index in styles) {
+                                if (styles[index].join(';') === common.join(';')) {
+                                    name = index;
+                                    break;
+                                }
+                            }
+                            if (!(name !== '' && style !== '' && name.startsWith(`${style}.`))) {
+                                name = $util.convertCamelCase((style !== '' ? `${style}.` : '') + $util.capitalize(node.controlId), '_');
+                                styles[name] = common;
+                            }
+                            for (const item of children) {
+                                item.attr('_', 'style', `@style/${name}`);
                             }
                         }
-                        if (!(name !== '' && style !== '' && name.startsWith(`${style}.`))) {
-                            name = $util.convertCamelCase((style !== '' ? `${style}.` : '') + $util.capitalize(node.controlId), '_');
-                            styles[name] = common;
-                        }
-                        children.forEach(item => item.attr('_', 'style', `@style/${name}`));
                     }
                 }
             }

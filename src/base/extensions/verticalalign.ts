@@ -18,8 +18,8 @@ export default class VerticalAlign<T extends Node> extends Extension<T> {
 
     public processNode(node: T): ExtensionResult<T> {
         const belowBaseline: T[] = [];
-        let aboveBaseline: T[] = [];
-        let minTop = Number.MAX_VALUE;
+        const aboveBaseline: T[] = [];
+        let minTop = Number.POSITIVE_INFINITY;
         node.each((item: T) => {
             if (item.inlineVertical && item.linear.top <= minTop) {
                 if (item.linear.top < minTop) {
@@ -48,7 +48,7 @@ export default class VerticalAlign<T extends Node> extends Extension<T> {
             }
         }
         else {
-            aboveBaseline = aboveBaseline.filter(item => $util.isUnit(item.verticalAlign) && $util.convertInt(item.verticalAlign) > 0);
+            $util.spliceArray(aboveBaseline, item => !($util.isUnit(item.verticalAlign) && $util.convertInt(item.verticalAlign) > 0));
         }
         if (aboveBaseline.length) {
             node.data(EXT_NAME.VERTICAL_ALIGN, 'mainData', <VerticalAlignData<T>> {

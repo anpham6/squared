@@ -220,206 +220,208 @@ export default abstract class Resource<T extends Node> implements squared.base.R
     }
 
     public setBoxStyle() {
-        for (const node of this.cache.elements) {
-            const boxStyle: Nullable<BoxStyle> = {
-                background: null,
-                borderTop: null,
-                borderRight: null,
-                borderBottom: null,
-                borderLeft: null,
-                borderRadius: null,
-                backgroundColor: null,
-                backgroundSize: null,
-                backgroundImage: null,
-                backgroundRepeat: null,
-                backgroundPositionX: null,
-                backgroundPositionY: null
-            };
-            for (const attr in boxStyle) {
-                const value = node.css(attr);
-                switch (attr) {
-                    case 'borderTop':
-                    case 'borderRight':
-                    case 'borderBottom':
-                    case 'borderLeft': {
-                        let borderColor = node.css(`${attr}Color`);
-                        switch (borderColor.toLowerCase()) {
-                            case 'initial':
-                                borderColor = '#000000';
-                                break;
-                            case 'inherit':
-                            case 'currentcolor':
-                                borderColor = $dom.cssInherit(node.element, `${attr}Color`);
-                                break;
-                        }
-                        const style = node.css(`${attr}Style`) || 'none';
-                        let width = node.css(`${attr}Width`) || '1px';
-                        let color: ColorData | undefined;
-                        switch (style) {
-                            case 'none':
-                                break;
-                            case 'inset':
-                                if (width === '0px') {
-                                    width = '1px';
-                                }
-                            default:
-                                color = $color.parseRGBA(borderColor, node.css('opacity'));
-                                break;
-                        }
-                        boxStyle[attr] = <BorderAttribute> {
-                            width,
-                            style,
-                            color: color ? color.valueRGBA : ''
-                        };
-                        break;
-                    }
-                    case 'borderRadius': {
-                        const [top, right, bottom, left] = [
-                            node.css('borderTopLeftRadius'),
-                            node.css('borderTopRightRadius'),
-                            node.css('borderBottomLeftRadius'),
-                            node.css('borderBottomRightRadius')
-                        ];
-                        if (top === right && right === bottom && bottom === left) {
-                            boxStyle.borderRadius = $util.convertInt(top) > 0 ? [top] : undefined;
-                        }
-                        else {
-                            boxStyle.borderRadius = [top, right, bottom, left];
-                        }
-                        break;
-                    }
-                    case 'backgroundColor':
-                        if (!node.has('backgroundColor') && (value === node.cssParent('backgroundColor', false, true) || node.documentParent.visible && $dom.cssFromParent(node.element, 'backgroundColor'))) {
-                            boxStyle.backgroundColor = '';
-                        }
-                        else {
-                            const color = $color.parseRGBA(value, node.css('opacity'));
-                            boxStyle.backgroundColor = color ? color.valueRGBA : '';
-                        }
-                        break;
-                    case 'background':
-                    case 'backgroundImage':
-                        if (value !== 'none' && !node.hasBit('excludeResource', NODE_RESOURCE.IMAGE_SOURCE)) {
-                            const gradients: Gradient[] = [];
-                            const opacity = node.css('opacity');
-                            let pattern = new RegExp(`(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|circle|ellipse|closest-side|closest-corner|farthest-side|farthest-corner)?(?:\\s*at [\\w %]+)?),?\\s*(${REGEXP_COLORSTOP}+)\\)`, 'g');
-                            let match: RegExpExecArray | null;
-                            while ((match = pattern.exec(value)) !== null) {
-                                let gradient!: Gradient;
-                                switch (match[1]) {
-                                    case 'linear': {
-                                        if (match[2] === undefined) {
-                                            match[2] = 'to bottom';
-                                        }
-                                        gradient = <LinearGradient> {
-                                            type: 'linear',
-                                            angle: (() => {
-                                                switch (match[2]) {
-                                                    case 'to top':
-                                                        return 0;
-                                                    case 'to right top':
-                                                        return 45;
-                                                    case 'to right':
-                                                        return 90;
-                                                    case 'to right bottom':
-                                                        return 135;
-                                                    case 'to bottom':
-                                                        return 180;
-                                                    case 'to left bottom':
-                                                        return 225;
-                                                    case 'to left':
-                                                        return 270;
-                                                    case 'to left top':
-                                                        return 315;
-                                                    default:
-                                                        return parseAngle(match[2]);
-                                                }
-                                            })(),
-                                            colorStops: getColorStops(match[3], opacity)
-                                        };
-                                        break;
-                                    }
-                                    case 'radial': {
-                                        gradient = <RadialGradient> {
-                                            type: 'radial',
-                                            position: (() => {
-                                                const result = ['center', 'ellipse'];
-                                                if (match[2]) {
-                                                    const position = REGEXP_POSITION.exec(match[2]);
-                                                    if (position) {
-                                                        if (position[1]) {
-                                                            switch (position[1]) {
-                                                                case 'ellipse':
-                                                                case 'circle':
-                                                                case 'closest-side':
-                                                                case 'closest-corner':
-                                                                case 'farthest-side':
-                                                                case 'farthest-corner':
-                                                                    result[1] = position[1];
-                                                                    break;
-                                                            }
-                                                        }
-                                                        if (position[2]) {
-                                                            result[0] = position[2];
-                                                        }
-                                                    }
-                                                }
-                                                return result;
-                                            })(),
-                                            colorStops: getColorStops(match[3], opacity)
-                                        };
-                                        break;
-                                    }
-                                    case 'conic': {
-                                        gradient = <ConicGradient> {
-                                            type: 'conic',
-                                            angle: parseAngle(match[2]),
-                                            position: (() => {
-                                                if (match[2]) {
-                                                    const position = REGEXP_POSITION.exec(match[2]);
-                                                    if (position) {
-                                                        return [position[2]];
-                                                    }
-                                                }
-                                                return ['center'];
-                                            })(),
-                                            colorStops: getColorStops(match[3], opacity, true)
-                                        };
-                                        break;
-                                    }
-                                }
-                                if (gradient.colorStops.length > 1) {
-                                    gradients.push(gradient);
-                                }
+        for (const node of this.cache) {
+            if (node.visible && node.styleElement) {
+                const boxStyle: Nullable<BoxStyle> = {
+                    background: null,
+                    borderTop: null,
+                    borderRight: null,
+                    borderBottom: null,
+                    borderLeft: null,
+                    borderRadius: null,
+                    backgroundColor: null,
+                    backgroundSize: null,
+                    backgroundImage: null,
+                    backgroundRepeat: null,
+                    backgroundPositionX: null,
+                    backgroundPositionY: null
+                };
+                for (const attr in boxStyle) {
+                    const value = node.css(attr);
+                    switch (attr) {
+                        case 'borderTop':
+                        case 'borderRight':
+                        case 'borderBottom':
+                        case 'borderLeft': {
+                            let borderColor = node.css(`${attr}Color`);
+                            switch (borderColor.toLowerCase()) {
+                                case 'initial':
+                                    borderColor = '#000000';
+                                    break;
+                                case 'inherit':
+                                case 'currentcolor':
+                                    borderColor = $dom.cssInherit(node.element, `${attr}Color`);
+                                    break;
                             }
-                            if (gradients.length) {
-                                boxStyle.backgroundGradient = gradients;
+                            const style = node.css(`${attr}Style`) || 'none';
+                            let width = node.css(`${attr}Width`) || '1px';
+                            let color: ColorData | undefined;
+                            switch (style) {
+                                case 'none':
+                                    break;
+                                case 'inset':
+                                    if (width === '0px') {
+                                        width = '1px';
+                                    }
+                                default:
+                                    color = $color.parseRGBA(borderColor, node.css('opacity'));
+                                    break;
+                            }
+                            boxStyle[attr] = <BorderAttribute> {
+                                width,
+                                style,
+                                color: color ? color.valueRGBA : ''
+                            };
+                            break;
+                        }
+                        case 'borderRadius': {
+                            const [top, right, bottom, left] = [
+                                node.css('borderTopLeftRadius'),
+                                node.css('borderTopRightRadius'),
+                                node.css('borderBottomLeftRadius'),
+                                node.css('borderBottomRightRadius')
+                            ];
+                            if (top === right && right === bottom && bottom === left) {
+                                boxStyle.borderRadius = $util.convertInt(top) > 0 ? [top] : undefined;
                             }
                             else {
-                                const images: string[] = [];
-                                pattern = new RegExp($util.REGEXP_PATTERN.URL, 'g');
+                                boxStyle.borderRadius = [top, right, bottom, left];
+                            }
+                            break;
+                        }
+                        case 'backgroundColor':
+                            if (!node.has('backgroundColor') && (value === node.cssParent('backgroundColor', false, true) || node.documentParent.visible && $dom.cssFromParent(node.element, 'backgroundColor'))) {
+                                boxStyle.backgroundColor = '';
+                            }
+                            else {
+                                const color = $color.parseRGBA(value, node.css('opacity'));
+                                boxStyle.backgroundColor = color ? color.valueRGBA : '';
+                            }
+                            break;
+                        case 'background':
+                        case 'backgroundImage':
+                            if (value !== 'none' && !node.hasBit('excludeResource', NODE_RESOURCE.IMAGE_SOURCE)) {
+                                const gradients: Gradient[] = [];
+                                const opacity = node.css('opacity');
+                                let pattern = new RegExp(`(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|circle|ellipse|closest-side|closest-corner|farthest-side|farthest-corner)?(?:\\s*at [\\w %]+)?),?\\s*(${REGEXP_COLORSTOP}+)\\)`, 'g');
+                                let match: RegExpExecArray | null;
                                 while ((match = pattern.exec(value)) !== null) {
-                                    images.push(match[0]);
+                                    let gradient!: Gradient;
+                                    switch (match[1]) {
+                                        case 'linear': {
+                                            if (match[2] === undefined) {
+                                                match[2] = 'to bottom';
+                                            }
+                                            gradient = <LinearGradient> {
+                                                type: 'linear',
+                                                angle: (() => {
+                                                    switch (match[2]) {
+                                                        case 'to top':
+                                                            return 0;
+                                                        case 'to right top':
+                                                            return 45;
+                                                        case 'to right':
+                                                            return 90;
+                                                        case 'to right bottom':
+                                                            return 135;
+                                                        case 'to bottom':
+                                                            return 180;
+                                                        case 'to left bottom':
+                                                            return 225;
+                                                        case 'to left':
+                                                            return 270;
+                                                        case 'to left top':
+                                                            return 315;
+                                                        default:
+                                                            return parseAngle(match[2]);
+                                                    }
+                                                })(),
+                                                colorStops: getColorStops(match[3], opacity)
+                                            };
+                                            break;
+                                        }
+                                        case 'radial': {
+                                            gradient = <RadialGradient> {
+                                                type: 'radial',
+                                                position: (() => {
+                                                    const result = ['center', 'ellipse'];
+                                                    if (match[2]) {
+                                                        const position = REGEXP_POSITION.exec(match[2]);
+                                                        if (position) {
+                                                            if (position[1]) {
+                                                                switch (position[1]) {
+                                                                    case 'ellipse':
+                                                                    case 'circle':
+                                                                    case 'closest-side':
+                                                                    case 'closest-corner':
+                                                                    case 'farthest-side':
+                                                                    case 'farthest-corner':
+                                                                        result[1] = position[1];
+                                                                        break;
+                                                                }
+                                                            }
+                                                            if (position[2]) {
+                                                                result[0] = position[2];
+                                                            }
+                                                        }
+                                                    }
+                                                    return result;
+                                                })(),
+                                                colorStops: getColorStops(match[3], opacity)
+                                            };
+                                            break;
+                                        }
+                                        case 'conic': {
+                                            gradient = <ConicGradient> {
+                                                type: 'conic',
+                                                angle: parseAngle(match[2]),
+                                                position: (() => {
+                                                    if (match[2]) {
+                                                        const position = REGEXP_POSITION.exec(match[2]);
+                                                        if (position) {
+                                                            return [position[2]];
+                                                        }
+                                                    }
+                                                    return ['center'];
+                                                })(),
+                                                colorStops: getColorStops(match[3], opacity, true)
+                                            };
+                                            break;
+                                        }
+                                    }
+                                    if (gradient.colorStops.length > 1) {
+                                        gradients.push(gradient);
+                                    }
                                 }
-                                if (images.length) {
-                                    boxStyle.backgroundImage = images;
+                                if (gradients.length) {
+                                    boxStyle.backgroundGradient = gradients;
+                                }
+                                else {
+                                    const images: string[] = [];
+                                    pattern = new RegExp($util.REGEXP_PATTERN.URL, 'g');
+                                    while ((match = pattern.exec(value)) !== null) {
+                                        images.push(match[0]);
+                                    }
+                                    if (images.length) {
+                                        boxStyle.backgroundImage = images;
+                                    }
                                 }
                             }
-                        }
-                        break;
-                    case 'backgroundSize':
-                    case 'backgroundRepeat':
-                    case 'backgroundPositionX':
-                    case 'backgroundPositionY':
-                        boxStyle[attr] = value;
-                        break;
+                            break;
+                        case 'backgroundSize':
+                        case 'backgroundRepeat':
+                        case 'backgroundPositionX':
+                        case 'backgroundPositionY':
+                            boxStyle[attr] = value;
+                            break;
+                    }
                 }
+                const borderTop = JSON.stringify(boxStyle.borderTop);
+                if (borderTop === JSON.stringify(boxStyle.borderRight) && borderTop === JSON.stringify(boxStyle.borderBottom) && borderTop === JSON.stringify(boxStyle.borderLeft)) {
+                    boxStyle.border = boxStyle.borderTop;
+                }
+                node.data(Resource.KEY_NAME, 'boxStyle', boxStyle);
             }
-            const borderTop = JSON.stringify(boxStyle.borderTop);
-            if (borderTop === JSON.stringify(boxStyle.borderRight) && borderTop === JSON.stringify(boxStyle.borderBottom) && borderTop === JSON.stringify(boxStyle.borderLeft)) {
-                boxStyle.border = boxStyle.borderTop;
-            }
-            node.data(Resource.KEY_NAME, 'boxStyle', boxStyle);
         }
     }
 
@@ -543,104 +545,106 @@ export default abstract class Resource<T extends Node> implements squared.base.R
             }
             return [value, true];
         }
-        for (const node of this.cache.visible) {
-            const element = <HTMLInputElement> node.element;
-            if (element) {
-                let name = '';
-                let value = '';
-                let inlineTrim = false;
-                let performTrim = true;
-                if (element.tagName === 'INPUT') {
-                    switch (element.type) {
-                        case 'text':
-                        case 'number':
-                        case 'email':
-                        case 'search':
-                        case 'submit':
-                        case 'reset':
-                        case 'button':
-                            value = element.value.trim();
-                            break;
-                        default:
-                            if (node.companion && !node.companion.visible) {
-                                value = node.companion.textContent.trim();
+        for (const node of this.cache) {
+            if (node.visible) {
+                const element = <HTMLInputElement> node.element;
+                if (element) {
+                    let name = '';
+                    let value = '';
+                    let inlineTrim = false;
+                    let performTrim = true;
+                    if (element.tagName === 'INPUT') {
+                        switch (element.type) {
+                            case 'text':
+                            case 'number':
+                            case 'email':
+                            case 'search':
+                            case 'submit':
+                            case 'reset':
+                            case 'button':
+                                value = element.value.trim();
+                                break;
+                            default:
+                                if (node.companion && !node.companion.visible) {
+                                    value = node.companion.textContent.trim();
+                                }
+                                break;
+                        }
+                    }
+                    else if (element.tagName === 'TEXTAREA') {
+                        value = element.value.trim();
+                    }
+                    else if (node.htmlElement) {
+                        if (element.tagName === 'BUTTON') {
+                            value = element.innerText;
+                        }
+                        else if (node.inlineText) {
+                            name = node.textContent.trim();
+                            if (element.tagName === 'CODE') {
+                                value = $xml.replaceEntity(replaceExcluded(element, 'innerHTML'));
                             }
-                            break;
+                            else if ($dom.hasLineBreak(element, true)) {
+                                value = $xml.replaceEntity(replaceExcluded(element, 'innerHTML'));
+                                value = value.replace(/\s*<br[^>]*>\s*/g, '\\n');
+                                value = value.replace(/(<([^>]+)>)/ig, '');
+                            }
+                            else {
+                                value = $xml.replaceEntity(replaceExcluded(element, 'textContent'));
+                            }
+                            [value, inlineTrim] = replaceWhiteSpace(node, value);
+                        }
+                        else if (element.innerText.trim() === '' && Resource.hasDrawableBackground(node.data(Resource.KEY_NAME, 'boxStyle'))) {
+                            value = $xml.replaceEntity(element.innerText);
+                            performTrim = false;
+                        }
                     }
-                }
-                else if (element.tagName === 'TEXTAREA') {
-                    value = element.value.trim();
-                }
-                else if (node.htmlElement) {
-                    if (element.tagName === 'BUTTON') {
-                        value = element.innerText;
-                    }
-                    else if (node.inlineText) {
+                    else if (node.plainText) {
                         name = node.textContent.trim();
-                        if (element.tagName === 'CODE') {
-                            value = $xml.replaceEntity(replaceExcluded(element, 'innerHTML'));
-                        }
-                        else if ($dom.hasLineBreak(element, true)) {
-                            value = $xml.replaceEntity(replaceExcluded(element, 'innerHTML'));
-                            value = value.replace(/\s*<br[^>]*>\s*/g, '\\n');
-                            value = value.replace(/(<([^>]+)>)/ig, '');
-                        }
-                        else {
-                            value = $xml.replaceEntity(replaceExcluded(element, 'textContent'));
-                        }
+                        value = $xml.replaceEntity(node.textContent);
+                        value = value.replace(/&[A-Za-z]+;/g, match => match.replace('&', '&amp;'));
                         [value, inlineTrim] = replaceWhiteSpace(node, value);
                     }
-                    else if (element.innerText.trim() === '' && Resource.hasDrawableBackground(node.data(Resource.KEY_NAME, 'boxStyle'))) {
-                        value = $xml.replaceEntity(element.innerText);
-                        performTrim = false;
-                    }
-                }
-                else if (node.plainText) {
-                    name = node.textContent.trim();
-                    value = $xml.replaceEntity(node.textContent);
-                    value = value.replace(/&[A-Za-z]+;/g, match => match.replace('&', '&amp;'));
-                    [value, inlineTrim] = replaceWhiteSpace(node, value);
-                }
-                if (value !== '') {
-                    if (performTrim) {
-                        const previousSibling = node.previousSiblings().pop();
-                        const nextSibling = node.nextSiblings().shift();
-                        let previousSpaceEnd = false;
-                        if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && /\s+$/.test(previousSibling.textContent)) {
-                            value = value.replace(/^\s+/, '');
-                        }
-                        else if (previousSibling.element) {
-                            previousSpaceEnd = /\s+$/.test((<HTMLElement> previousSibling.element).innerText || previousSibling.textContent);
-                        }
-                        if (inlineTrim) {
-                            const original = value;
-                            value = value.trim();
-                            if (previousSibling && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd && /^\s+/.test(original)) {
-                                value = '&#160;' + value;
-                            }
-                            if (nextSibling && !nextSibling.lineBreak && /\s+$/.test(original)) {
-                                value = value + '&#160;';
-                            }
-                        }
-                        else {
-                            if (!/^\s+$/.test(value)) {
-                                value = value.replace(/^\s+/,
-                                    previousSibling && (
-                                        previousSibling.block ||
-                                        previousSibling.lineBreak ||
-                                        previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
-                                        node.multiline && $dom.hasLineBreak(element)
-                                    ) ? '' : '&#160;'
-                                );
-                                value = value.replace(/\s+$/, node.display === 'table-cell' || nextSibling && nextSibling.lineBreak || node.blockStatic ? '' : '&#160;');
-                            }
-                            else if (value.length) {
-                                value = '&#160;' + value.substring(1);
-                            }
-                        }
-                    }
                     if (value !== '') {
-                        node.data(Resource.KEY_NAME, 'valueString', { name, value });
+                        if (performTrim) {
+                            const previousSibling = node.previousSiblings().pop();
+                            const nextSibling = node.nextSiblings().shift();
+                            let previousSpaceEnd = false;
+                            if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && /\s+$/.test(previousSibling.textContent)) {
+                                value = value.replace(/^\s+/, '');
+                            }
+                            else if (previousSibling.element) {
+                                previousSpaceEnd = /\s+$/.test((<HTMLElement> previousSibling.element).innerText || previousSibling.textContent);
+                            }
+                            if (inlineTrim) {
+                                const original = value;
+                                value = value.trim();
+                                if (previousSibling && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd && /^\s+/.test(original)) {
+                                    value = '&#160;' + value;
+                                }
+                                if (nextSibling && !nextSibling.lineBreak && /\s+$/.test(original)) {
+                                    value = value + '&#160;';
+                                }
+                            }
+                            else {
+                                if (!/^\s+$/.test(value)) {
+                                    value = value.replace(/^\s+/,
+                                        previousSibling && (
+                                            previousSibling.block ||
+                                            previousSibling.lineBreak ||
+                                            previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
+                                            node.multiline && $dom.hasLineBreak(element)
+                                        ) ? '' : '&#160;'
+                                    );
+                                    value = value.replace(/\s+$/, node.display === 'table-cell' || nextSibling && nextSibling.lineBreak || node.blockStatic ? '' : '&#160;');
+                                }
+                                else if (value.length) {
+                                    value = '&#160;' + value.substring(1);
+                                }
+                            }
+                        }
+                        if (value !== '') {
+                            node.data(Resource.KEY_NAME, 'valueString', { name, value });
+                        }
                     }
                 }
             }

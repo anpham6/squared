@@ -107,7 +107,7 @@ export default class Layout<T extends Node> extends squared.lib.base.Container<T
     }
 
     get visible() {
-        return this.children.filter(node => node.visible);
+        return this.filter(node => node.visible);
     }
 
     set linearX(value) {

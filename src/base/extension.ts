@@ -58,13 +58,15 @@ export default abstract class Extension<T extends Node> implements squared.base.
 
     public beforeInit(element: HTMLElement, recursive = false) {
         if (!recursive && this.included(element)) {
-            this.dependencies.filter(item => item.preload).forEach(item => {
-                const ext = this.application.extensionManager.retrieve(item.name);
-                if (ext && !ext.preloaded) {
-                    ext.beforeInit(element, true);
-                    ext.preloaded = true;
+            for (const item of this.dependencies) {
+                if (item.preload) {
+                    const ext = this.application.extensionManager.retrieve(item.name);
+                    if (ext && !ext.preloaded) {
+                        ext.beforeInit(element, true);
+                        ext.preloaded = true;
+                    }
                 }
-            });
+            }
         }
     }
 
@@ -74,13 +76,15 @@ export default abstract class Extension<T extends Node> implements squared.base.
 
     public afterInit(element: HTMLElement, recursive = false) {
         if (!recursive && this.included(element)) {
-            this.dependencies.filter(item => item.preload).forEach(item => {
-                const ext = this.application.extensionManager.retrieve(item.name);
-                if (ext && ext.preloaded) {
-                    ext.afterInit(element, true);
-                    ext.preloaded = false;
+            for (const item of this.dependencies) {
+                if (item.preload) {
+                    const ext = this.application.extensionManager.retrieve(item.name);
+                    if (ext && ext.preloaded) {
+                        ext.afterInit(element, true);
+                        ext.preloaded = false;
+                    }
                 }
-            });
+            }
         }
     }
 

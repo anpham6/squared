@@ -74,7 +74,9 @@ export function convertUnderscore(value: string) {
     value = value.charAt(0).toLowerCase() + value.substring(1);
     const matchArray = value.match(/([a-z][A-Z])/g);
     if (matchArray) {
-        matchArray.forEach(match => value = value.replace(match, `${match[0]}_${match[1].toLowerCase()}`));
+        for (const match of matchArray) {
+            value = value.replace(match, `${match[0]}_${match[1].toLowerCase()}`);
+        }
     }
     return value;
 }
@@ -82,7 +84,9 @@ export function convertUnderscore(value: string) {
 export function convertCamelCase(value: string, char = '-') {
     const matchArray = value.replace(new RegExp(`^${char}+`), '').match(new RegExp(`(${char}[a-z])`, 'g'));
     if (matchArray) {
-        matchArray.forEach(match => value = value.replace(match, match[1].toUpperCase()));
+        for (const match of matchArray) {
+            value = value.replace(match, match[1].toUpperCase());
+        }
     }
     return value;
 }
@@ -270,12 +274,19 @@ export function isPercent(value: string) {
 }
 
 export function includes(source: string | undefined, value: string, delimiter = ',') {
-    return source ? source.split(delimiter).map(segment => segment.trim()).includes(value) : false;
+    if (source) {
+        for (const name of source.split(delimiter)) {
+            if (name.trim() === value) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 export function cloneObject(data: {}, destination = {}) {
     for (const attr in data) {
-        if (data && typeof data[attr] === 'object') {
+        if (typeof data[attr] === 'object') {
             destination[attr] = cloneObject(data[attr]);
         }
         else {
@@ -344,14 +355,14 @@ export function resolvePath(value: string) {
             if (value.startsWith('../')) {
                 const parts: string[] = [];
                 let levels = 0;
-                value.split('/').forEach(dir => {
+                for (const dir of value.split('/')) {
                     if (dir === '..') {
                         levels++;
                     }
                     else {
                         parts.push(dir);
                     }
-                });
+                }
                 pathname = pathname.slice(0, Math.max(pathname.length - levels, 0));
                 pathname.push(...parts);
                 value = location.origin + pathname.join('/');
@@ -435,6 +446,15 @@ export function hasValue<T>(value: T): value is T {
     return typeof value !== 'undefined' && value !== null && value.toString().trim() !== '';
 }
 
+export function hasInSet<T>(list: Set<T>, condition: (x: T) => boolean) {
+    for (const item of list) {
+        if (condition(item)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 export function withinRange(a: number, b: number, offset = 0) {
     return b >= (a - offset) && b <= (a + offset);
 }
@@ -503,7 +523,7 @@ export function partitionArray<T>(list: T[], predicate: IteratorPredicate<T, boo
     const invalid: T[] = [];
     for (let i = 0; i < list.length; i++) {
         const item = list[i];
-        if (predicate(item, i)) {
+        if (predicate(item, i, list)) {
             valid.push(item);
         }
         else {
@@ -513,13 +533,7 @@ export function partitionArray<T>(list: T[], predicate: IteratorPredicate<T, boo
     return [valid, invalid];
 }
 
-export function retainArray<T>(list: T[], predicate: IteratorPredicate<T, any>) {
-    const retain = list.filter(predicate);
-    list.length = 0;
-    list.push(...retain);
-}
-
-export function spliceArray<T, U = boolean>(list: T[], predicate: IteratorPredicate<T, U>, callback?: IteratorCallback<T>) {
+export function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>) {
     for (let i = 0; i < list.length; i++) {
         if (predicate(list[i], i, list)) {
             if (callback) {
@@ -557,5 +571,40 @@ export function flatArray<T>(list: any[]): T[] {
 }
 
 export function flatMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[] {
-    return list.map((item: T, index) => predicate(item, index)).filter((item: U) => hasValue(item));
+    const result: U[] = [];
+    for (let i = 0; i < list.length; i++) {
+        const item = predicate(list[i], i, list);
+        if (hasValue(item)) {
+            result.push(item);
+        }
+    }
+    return result;
+}
+
+export function filterMap<T, U>(list: T[], predicate: IteratorPredicate<T, boolean>, mapping: IteratorPredicate<T, U>): U[] {
+    const result: U[] = [];
+    for (let i = 0; i < list.length; i++) {
+        if (predicate(list[i], i, list)) {
+            result.push(mapping(list[i], i, list));
+        }
+    }
+    return result;
+}
+
+export function replaceMap<T>(list: T[], predicate: IteratorPredicate<T, T>): T[] {
+    for (let i = 0; i < list.length; i++) {
+        list[i] = predicate(list[i], i, list);
+    }
+    return list;
+}
+
+export function joinMap<T>(list: T[], predicate: IteratorPredicate<T, string>, char = '\n'): string {
+    let result = '';
+    for (let i = 0; i < list.length; i++) {
+        const value = predicate(list[i], i, list);
+        if (value !== '') {
+            result += value + char;
+        }
+    }
+    return result.substring(0, result.length - char.length);
 }

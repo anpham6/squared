@@ -86,7 +86,7 @@ if ($dom.isUserAgent($dom.USER_AGENT.EDGE)) {
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 
 function deleteStyleAttribute(sorted: AttributeMap[], attrs: string, ids: number[]) {
-    attrs.split(';').forEach(value => {
+    for (const value of attrs.split(';')) {
         for (let i = 0; i < sorted.length; i++) {
             if (sorted[i]) {
                 let index = -1;
@@ -108,7 +108,7 @@ function deleteStyleAttribute(sorted: AttributeMap[], attrs: string, ids: number
                 }
             }
         }
-    });
+    }
 }
 
 export default class ResourceFonts<T extends View> extends squared.base.Extension<T> {
@@ -305,7 +305,9 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                 }
                             }
                         }
-                        deleteKeys.forEach(value => delete filtered[value]);
+                        for (const value of deleteKeys) {
+                            delete filtered[value];
+                        }
                         for (const attrs in filtered) {
                             deleteStyleAttribute(sorted, attrs, filtered[attrs]);
                             style[tag][attrs] = filtered[attrs];
@@ -356,12 +358,12 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             const styleData: StyleAttribute[] = [];
             for (const attrs in tagData) {
                 const items: NameValue[] = [];
-                attrs.split(';').forEach(value => {
+                for (const value of attrs.split(';')) {
                     const match = $util.REGEXP_PATTERN.ATTRIBUTE.exec(value);
                     if (match) {
                         items.push({ name: match[1], value: match[2] });
                     }
-                });
+                }
                 styleData.push({
                     name: '',
                     parent: '',
@@ -390,7 +392,9 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 }
                 return c <= d ? 1 : -1;
             });
-            styleData.forEach((item, index) => item.name = $util.capitalize(tag) + (index > 0 ? `_${index}` : ''));
+            for (let i = 0; i < styleData.length; i++) {
+                styleData[i].name = $util.capitalize(tag) + (i > 0 ? `_${i}` : '');
+            }
             resource[tag] = styleData;
         }
         for (const tag in resource) {
@@ -423,12 +427,14 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     parentStyle.add(styles.join('.'));
                     node.attr('_', 'style', `@style/${styles.pop()}`);
                 }
-                nodeMap[id].attrs.sort().forEach(value => node.formatted(replaceUnit(value, settings.resolutionDPI, settings.convertPixels, true), false));
+                for (const value of nodeMap[id].attrs.sort()) {
+                    node.formatted(replaceUnit(value, settings.resolutionDPI, settings.convertPixels, true), false);
+                }
             }
         }
         for (const value of parentStyle) {
             let parent = '';
-            value.split('.').forEach(name => {
+            for (const name of value.split('.')) {
                 const match = name.match(/^(\w*?)(?:_(\d+))?$/);
                 if (match) {
                     const data = resource[match[1].toUpperCase()];
@@ -438,7 +444,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         parent = name;
                     }
                 }
-            });
+            }
         }
     }
 }
