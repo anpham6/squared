@@ -108,7 +108,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
         if (!(node.tableElement && node.css('borderCollapse') === 'collapse')) {
             const mainData: GridData = node.data($const.EXT_NAME.GRID, 'mainData');
             if (mainData) {
-                node.each(item => {
+                node.renderEach(item => {
                     const cellData: GridCellData<T> = item.data($const.EXT_NAME.GRID, 'cellData');
                     if (cellData) {
                         const actualParent = item.actualParent;
@@ -136,7 +136,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                             }
                         }
                     }
-                }, true);
+                });
             }
             node.modifyBox($enum.BOX_STANDARD.PADDING_TOP, mainData.paddingTop);
             node.modifyBox($enum.BOX_STANDARD.PADDING_RIGHT, mainData.paddingRight);

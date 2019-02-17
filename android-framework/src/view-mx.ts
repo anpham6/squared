@@ -941,7 +941,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                         }
                     }
                     let lineHeight = this.lineHeight;
-                    this.each(node => lineHeight = Math.max(lineHeight, node.lineHeight), true);
+                    this.renderEach(node => lineHeight = Math.max(lineHeight, node.lineHeight));
                     if (lineHeight > 0) {
                         this.applyLineHeight(lineHeight);
                     }
@@ -991,11 +991,11 @@ export default (Base: Constructor<squared.base.Node>) => {
                         }
                     }
                     else if (this.layoutVertical) {
-                        this.each((node: View) => {
+                        this.renderEach((node: View) => {
                             if (!node.layoutHorizontal) {
                                 node.applyLineHeight(lineHeight, true);
                             }
-                        }, true);
+                        });
                     }
                 }
             }

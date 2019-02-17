@@ -162,7 +162,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             const data: TemplateDataA = { A: [] };
             this.stored.arrays = new Map([...this.stored.arrays.entries()].sort());
             for (const [name, values] of this.stored.arrays.entries()) {
-                data.A.push({ name, AA: values.map(value => ({ value })) });
+                data.A.push({ name, AA: $util.objectMap<string, {}>(values, value => ({ value })) });
             }
             result.push(
                 replaceTab(

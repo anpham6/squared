@@ -92,7 +92,7 @@ function convertToAnimateValue(value: AnimateValue) {
 
 function convertToString(value: AnimateValue) {
     if (Array.isArray(value)) {
-        return value.map(pt => `${pt.x},${pt.y}`).join(' ');
+        return $util.objectMap<Point, string>(value, pt => `${pt.x},${pt.y}`).join(' ');
     }
     return value.toString();
 }
@@ -260,7 +260,7 @@ function getItemValue(item: SvgAnimate, baseValue: AnimateValue, values: string[
     else if (typeof baseValue === 'string') {
         if (item.additiveSum) {
             const baseArray = $util.replaceMap<string, number>(baseValue.split(/\s+/), value => parseFloat(value));
-            const valuesArray = values.map(value => $util.replaceMap<string, number>(value.trim().split(/\s+/), pt => parseFloat(pt)));
+            const valuesArray = $util.objectMap<string, number[]>(values, value => $util.replaceMap<string, number>(value.trim().split(/\s+/), pt => parseFloat(pt)));
             if (valuesArray.every(value => baseArray.length === value.length)) {
                 const result = valuesArray[index];
                 if (!item.accumulateSum) {
@@ -636,7 +636,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
             if (animations === undefined) {
                 animations = this.animations;
             }
-            return <SvgAnimateTransform[]> animations.filter(item => SvgBuild.asAnimateTransform(item) && item.duration > 0);
+            return <SvgAnimateTransform[]> $util.filterArray(animations, item => SvgBuild.asAnimateTransform(item) && item.duration > 0);
         }
 
         public mergeAnimations(animations: SvgAnimation[], transformations: SvgAnimateTransform[], keyTimeMode = 0, path?: SvgPath) {
@@ -757,12 +757,12 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                         }
                         const groupDelay: number[] = [];
                         const groupData: SvgAnimate[][] = [];
-                        const groupItems = staggered.filter(item  => item.attributeName === attr);
+                        const groupItems = $util.filterArray(staggered, item  => item.attributeName === attr);
                         for (const [delay, data] of groupName[attr].entries()) {
                             groupDelay.push(delay);
                             groupData.push(data);
                         }
-                        const setterData = setter.filter(item => item.attributeName === attr);
+                        const setterData = $util.filterArray(setter, item => item.attributeName === attr);
                         const backwards = groupItems.find(item  => item.fillBackwards);
                         const incomplete: SvgAnimate[] = [];
                         let maxTime = -1;
@@ -1849,7 +1849,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                 const animate = new SvgAnimateTransform();
                                                 animate.attributeName = 'transform';
                                                 animate.type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
-                                                animate.values = $util.replaceMap<TimelineValue, string>([dataFrom, dataTo], data => {
+                                                animate.values = $util.objectMap<TimelineValue, string>([dataFrom, dataTo], data => {
                                                     const x = data.get('x') as number || 0;
                                                     const y = data.get('y') as number || 0;
                                                     return this.parent ? `${this.parent.refitX(x)} ${this.parent.refitX(y)}` : `${x} ${y}`;

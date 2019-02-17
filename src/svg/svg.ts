@@ -69,8 +69,7 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
 
     private init() {
         if (this.documentRoot) {
-            const viewBox = this.element.viewBox.baseVal;
-            $util.cloneObject(viewBox, this.aspectRatio);
+            $util.cloneObject(this.element.viewBox.baseVal, this.aspectRatio);
             this.element.querySelectorAll('set, animate, animateTransform, animateMotion').forEach((element: SVGAnimationElement) => {
                 const target = getTargetElement(element, this.element);
                 if (target) {
@@ -118,12 +117,7 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
     }
 
     get viewBox() {
-        if (this.element.viewBox.baseVal) {
-            return this.element.viewBox.baseVal;
-        }
-        else {
-            return $dom.getDOMRect(this.element);
-        }
+        return this.element.viewBox.baseVal || $dom.getDOMRect(this.element);
     }
 
     get instanceType() {

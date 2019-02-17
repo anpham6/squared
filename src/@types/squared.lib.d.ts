@@ -113,8 +113,10 @@ declare global {
             function flatArray<T>(list: any[]): T[];
             function partitionArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): [T[], T[]];
             function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>): T[];
+            function filterArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): T[];
             function flatMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[];
             function filterMap<T, U>(list: T[], predicate: IteratorPredicate<T, boolean>, mapping: IteratorPredicate<T, U>): U[];
+            function objectMap<T, U>(list: any[], predicate: IteratorPredicate<T, U>): U[];
             function replaceMap<T, U>(list: any[], predicate: IteratorPredicate<T, U>): U[];
             function joinMap<T>(list: T[], predicate: IteratorPredicate<T, string>, char?: string): string;
             function captureMap<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, void>): void;

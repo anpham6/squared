@@ -114,7 +114,7 @@ function adjustBaseline<T extends View>(baseline: T, nodes: T[]) {
 }
 
 function getTextBottom<T extends View>(nodes: T[]): T | undefined {
-    return nodes.filter(node => node.verticalAlign === 'text-bottom').sort((a, b) => {
+    return $util.filterArray(nodes, node => node.verticalAlign === 'text-bottom').sort((a, b) => {
         if (a.bounds.height === b.bounds.height) {
             return a.is(CONTAINER_NODE.SELECT) ? 1 : -1;
         }
@@ -669,7 +669,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
     public setConstraints() {
         for (const node of this.cache) {
             if (node.visible && (node.layoutRelative || node.layoutConstraint) && !node.hasBit('excludeProcedure', $enum.NODE_PROCEDURE.CONSTRAINT)) {
-                const children = node.renderChildren.filter(item => !item.positioned) as T[];
+                const children = node.renderFilter(item => !item.positioned) as T[];
                 if (children.length) {
                     if (node.layoutRelative) {
                         this.processRelativeHorizontal(node, children);
@@ -678,7 +678,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         const [pageFlow, absolute] = $util.partitionArray(children, item => item.pageFlow);
                         let bottomParent = node.box.bottom;
                         if (absolute.length) {
-                            node.each(item => bottomParent = Math.max(bottomParent, item.linear.bottom), true);
+                            node.renderEach(item => bottomParent = Math.max(bottomParent, item.linear.bottom));
                             for (const item of absolute) {
                                 if (!item.positionAuto && (item.documentParent === item.absoluteParent || item.position === 'fixed')) {
                                     if (item.hasWidth && item.autoMargin.horizontal) {
@@ -1661,7 +1661,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             }
             columns[j].push(item);
             if (item.length) {
-                totalGap += $util.maxArray(item.map(child => child.marginLeft + child.marginRight));
+                totalGap += $util.maxArray($util.objectMap<T, number>(item.children, child => child.marginLeft + child.marginRight));
             }
         }
         const columnGap = $util.convertInt(node.css('columnGap')) || 16;

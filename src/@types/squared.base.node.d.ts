@@ -140,8 +140,9 @@ declare global {
             namespace(obj: string): StringMap;
             delete(obj: string, ...attrs: string[]): void;
             apply(options: {}): void;
-            each(predicate: IteratorPredicate<Node, void>, rendered?: boolean): this;
             render(parent: Node): void;
+            renderEach(predicate: IteratorPredicate<Node, void>): this;
+            renderFilter(predicate: IteratorPredicate<Node, boolean>): Node[];
             hide(invisible?: boolean): void;
             data(obj: string, attr: string, value?: any, overwrite?: boolean): any;
             unsetCache(...attrs: string[]): void;

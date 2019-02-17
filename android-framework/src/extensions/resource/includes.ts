@@ -18,7 +18,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
         for (const node of processing.cache) {
             const open: NodeRenderIndex[] = [];
             const close: NodeRenderIndex[] = [];
-            node.each((item: T, index) => {
+            node.renderEach((item: T, index) => {
                 const openTag = $util.hasValue(item.dataset.androidInclude);
                 const closeTag = item.dataset.androidIncludeEnd === 'true';
                 if (openTag || closeTag) {
@@ -36,7 +36,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                         close.push(data);
                     }
                 }
-            }, true);
+            });
             if (open.length && close.length) {
                 open.length = Math.min(open.length, close.length);
                 for (let i = open.length; i < close.length; i++) {

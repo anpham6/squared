@@ -100,7 +100,7 @@ function deleteStyleAttribute(sorted: AttributeMap[], attrs: string, ids: number
                     }
                 }
                 if (index !== -1) {
-                    sorted[index][key] = sorted[index][key].filter(id => !ids.includes(id));
+                    sorted[index][key] = $util.filterArray(sorted[index][key], id => !ids.includes(id));
                     if (sorted[index][key].length === 0) {
                         delete sorted[index][key];
                     }
@@ -198,7 +198,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             style[tag] = {};
             layout[tag] = {};
             const count = nameMap[tag].length;
-            let sorted = groupMap[tag].filter(item => Object.keys(item).length > 0).sort((a, b) => {
+            const sorted = $util.filterArray(groupMap[tag], item => Object.keys(item).length > 0).sort((a, b) => {
                 let maxA = 0;
                 let maxB = 0;
                 let countA = 0;
@@ -336,15 +336,15 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             delete sorted[i];
                         }
                     }
-                    sorted = sorted.filter(item => {
+                    $util.spliceArray(sorted, item => {
                         if (item) {
                             for (const attr in item) {
                                 if (item[attr] && item[attr].length) {
-                                    return true;
+                                    return false;
                                 }
                             }
                         }
-                        return false;
+                        return true;
                     });
                 }
             }

@@ -1,4 +1,4 @@
-import { flatMap, partitionArray, spliceArray } from '../util';
+import { filterArray, flatMap, objectMap, partitionArray, spliceArray } from '../util';
 
 export default class Container<T> implements squared.lib.base.Container<T>, Iterable<T> {
     private _children: T[];
@@ -45,7 +45,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
 
     public remove(item: T) {
         for (let i = 0; i < this._children.length; i++) {
-            if (item === this._children[i]) {
+            if (this._children[i] === item) {
                 return this._children.splice(i, 1);
             }
         }
@@ -79,19 +79,20 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
 
     public find(predicate: IteratorPredicate<T, boolean> | string, value?: any) {
         if (typeof predicate === 'string') {
-            return this._children.find(item => item[predicate] === value);
+            for (let i = 0; i < this._children.length; i++) {
+                if (this._children[i][predicate] === value) {
+                    return this._children[i];
+                }
+            }
         }
         else {
-            return this._children.find(predicate);
+            for (let i = 0; i < this._children.length; i++) {
+                if (predicate(this._children[i], i, this._children)) {
+                    return this._children[i];
+                }
+            }
         }
-    }
-
-    public filter(predicate: IteratorPredicate<T, any>) {
-        return this._children.filter(predicate);
-    }
-
-    public map<U>(predicate: IteratorPredicate<T, U>): U[] {
-        return this._children.map(predicate);
+        return undefined;
     }
 
     public sort(predicate: (a: T, b: T) => number) {
@@ -100,15 +101,28 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     }
 
     public every(predicate: IteratorPredicate<T, boolean>) {
-        return this.length > 0 && this._children.every(predicate);
+        if (this.length > 0) {
+            for (let i = 0; i < this._children.length; i++) {
+                if (!predicate(this._children[i], i, this._children)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
     }
 
     public some(predicate: IteratorPredicate<T, boolean>) {
-        return this._children.some(predicate);
+        for (let i = 0; i < this._children.length; i++) {
+            if (predicate(this._children[i], i, this._children)) {
+                return true;
+            }
+        }
+        return false;
     }
 
-    public flatMap<U>(predicate: IteratorPredicate<T, U>): U[] {
-        return flatMap(this._children, predicate);
+    public filter(predicate: IteratorPredicate<T, any>) {
+        return filterArray(this._children, predicate);
     }
 
     public partition(predicate: IteratorPredicate<T, boolean>): [T[], T[]] {
@@ -117,6 +131,14 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
 
     public splice(predicate: IteratorPredicate<T, boolean>, callback?: (item: T) => void): T[] {
         return spliceArray(this._children, predicate, callback);
+    }
+
+    public map<U>(predicate: IteratorPredicate<T, U>): U[] {
+        return objectMap(this._children, predicate);
+    }
+
+    public flatMap<U>(predicate: IteratorPredicate<T, U>): U[] {
+        return flatMap(this._children, predicate);
     }
 
     public cascade() {

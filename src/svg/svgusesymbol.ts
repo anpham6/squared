@@ -41,12 +41,7 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewR
     }
 
     get viewBox() {
-        if (this.symbolElement.viewBox.baseVal) {
-            return this.symbolElement.viewBox.baseVal;
-        }
-        else {
-            return $dom.getDOMRect(this.element);
-        }
+        return this.symbolElement.viewBox.baseVal || $dom.getDOMRect(this.element);
     }
 
     get instanceType() {

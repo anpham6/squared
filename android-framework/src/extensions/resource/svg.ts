@@ -747,7 +747,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                             propertyNames = getTransformPropertyName(item.type);
                                             values = getTransformValues(item);
                                             if (fillBefore && propertyNames) {
-                                                beforeValues = propertyNames.map(value => getTransformInitialValue(value) || '0');
+                                                beforeValues = $util.objectMap<string, string>(propertyNames, value => getTransformInitialValue(value) || '0');
                                             }
                                             transformOrigin = item.transformOrigin;
                                             transforming = true;
@@ -913,7 +913,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                             propertyNames = getAttributePropertyName(item.attributeName);
                                             switch (options.valueType) {
                                                 case 'intType':
-                                                    values = item.values.map(value => $util.convertInt(value).toString());
+                                                    values = $util.objectMap<string, string>(item.values, value => $util.convertInt(value).toString());
                                                     break;
                                                 case 'floatType':
                                                     values = item.values;
@@ -1659,7 +1659,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
 
     private queueAnimations(svg: SvgView, name: string, predicate: IteratorPredicate<SvgAnimation, boolean>, pathData = '') {
         if (svg.animations.length) {
-            const animate = svg.animations.filter((item, index, array) => !item.paused && (item.duration > 0 || item.setterType) && predicate(item, index, array));
+            const animate = $util.filterArray(svg.animations, (item, index, array) => !item.paused && (item.duration > 0 || item.setterType) && predicate(item, index, array));
             if (animate.length) {
                 this.ANIMATE_DATA.set(name, {
                     element: svg.element,

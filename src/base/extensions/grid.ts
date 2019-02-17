@@ -250,7 +250,7 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                 let spacer = 0;
                 for (let m = 0, start = 0; m < columns[l].length; m++) {
                     const item = columns[l][m];
-                    if (!(item as any).spacer) {
+                    if (!item['spacer']) {
                         item.parent = node;
                         const data: GridCellData<T> = Object.assign(Grid.createDataCellAttribute(), item.data(EXT_NAME.GRID, 'cellData'));
                         if (columnBalance) {
@@ -288,7 +288,7 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                             if (documentParent) {
                                 for (let i = 0; i < documentParent.children.length; i++) {
                                     const sibling = $dom.getElementAsNode<T>(<Element> documentParent.children[i]);
-                                    if (sibling && sibling.visible && !sibling.rendered && sibling.linear.left >= sibling.linear.right && sibling.linear.right <= columnEnd[index]) {
+                                    if (sibling && sibling.visible && !sibling.rendered && sibling.linear.left >= item.linear.right && sibling.linear.right <= columnEnd[index]) {
                                         data.siblings.push(sibling);
                                     }
                                 }
@@ -304,7 +304,7 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                         }
                         item.data(EXT_NAME.GRID, 'cellData', data);
                     }
-                    else if ((item as any).spacer === 1) {
+                    else if (item['spacer'] === 1) {
                         spacer++;
                     }
                 }

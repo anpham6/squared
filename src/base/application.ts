@@ -297,12 +297,11 @@ export default class Application<T extends Node> implements squared.base.Applica
         }
         else {
             this.initialized = true;
-            Promise.all(images.map(image => {
-                return new Promise((resolve, reject) => {
+            Promise.all($util.objectMap<HTMLImageElement, {}>(images, image => new Promise((resolve, reject) => {
                     image.onload = resolve;
                     image.onerror = reject;
-                });
-            }))
+                })
+            ))
             .then((result: Event[]) => {
                 if (Array.isArray(result)) {
                     for (const item of result) {
@@ -450,7 +449,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 const mapParent = this._renderPosition.get(id);
                 let revised: T[] | undefined;
                 if (mapParent) {
-                    const previous = mapParent.children.filter(item => !parent.contains(item)) as T[];
+                    const previous = $util.filterArray(mapParent.children, item => !parent.contains(item)) as T[];
                     if (parent.siblingIndex < previous.length) {
                         previous.splice(parent.siblingIndex, 0, parent);
                         for (let i = parent.siblingIndex + 1; i < previous.length; i++) {
@@ -479,7 +478,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         if (required) {
             const renderMap = this._renderPosition.get(parent.id);
             if (renderMap) {
-                children = renderMap.children.filter(item => !parent.contains(item));
+                children = $util.filterArray(renderMap.children, item => !parent.contains(item));
                 children.push(...parent.children as T[]);
             }
             else {
@@ -816,7 +815,8 @@ export default class Application<T extends Node> implements squared.base.Applica
                 const axisY = parent.duplicate() as T[];
                 const hasFloat = axisY.some(node => node.floating);
                 const cleared = hasFloat ? NodeList.clearedAll(parent) : new Map<T, string>();
-                const extensionsChild = extensions.filter(item => item.subscribersChild.size);
+                const extensionsParent = parent.renderExtension.size ? Array.from(parent.renderExtension) : [];
+                const extensionsChild = $util.filterArray(extensions, item => item.subscribersChild.size > 0);
                 let k = -1;
                 while (++k < axisY.length) {
                     let nodeY = axisY[k];
@@ -844,12 +844,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                     const extendable = nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE);
                     let parentY = nodeY.parent as T;
                     let unknownParent = parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN);
-                    if (axisY.length > 1 && k < axisY.length - 1 &&
-                        nodeY.pageFlow &&
-                        (parentY.alignmentType === 0 || extendable || unknownParent) &&
-                        !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) &&
-                        !nodeY.hasBit('excludeSection', APP_SECTION.DOM_TRAVERSE))
-                    {
+                    if (axisY.length > 1 && k < axisY.length - 1 && nodeY.pageFlow && (parentY.alignmentType === 0 || extendable || unknownParent) && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && !nodeY.hasBit('excludeSection', APP_SECTION.DOM_TRAVERSE)) {
                         const horizontal: T[] = [];
                         const vertical: T[] = [];
                         const floatSegment = new Set();
@@ -912,12 +907,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                             const startNewRow = item.alignedVertically(previousSiblings, [...horizontal, ...vertical, item], cleared, false);
                                             if (startNewRow || settings.floatOverlapDisabled && previous.floating && item.blockStatic && floatSegment.size === 2) {
                                                 if (horizontal.length) {
-                                                    if (!settings.floatOverlapDisabled &&
-                                                        floatSegment.size &&
-                                                        !previous.autoMargin.horizontal &&
-                                                        !previousSiblings.some(node => node.lineBreak && !cleared.has(node)) &&
-                                                        cleared.get(item) !== 'both')
-                                                    {
+                                                    if (!settings.floatOverlapDisabled && floatSegment.size && !previous.autoMargin.horizontal && !previousSiblings.some(node => node.lineBreak && !cleared.has(node)) && cleared.get(item) !== 'both') {
                                                         let floatBottom = Number.NEGATIVE_INFINITY;
                                                         $util.captureMap(horizontal, node => node.floating, node => floatBottom = Math.max(floatBottom, node.linear.bottom));
                                                         if (!item.floating || item.linear.top < floatBottom) {
@@ -1014,8 +1004,12 @@ export default class Application<T extends Node> implements squared.base.Applica
                     }
                     if (!nodeY.rendered && !nodeY.hasBit('excludeSection', APP_SECTION.EXTENSION)) {
                         let next = false;
-                        if (parentY.renderExtension.size || extensionsChild.length) {
-                            for (const ext of [...parentY.renderExtension, ...extensionsChild.filter(item => item.subscribersChild.has(nodeY))]) {
+                        if (extensionsParent.length || extensionsChild.length) {
+                            const combined = extensionsParent.slice(0);
+                            if (extensionsChild.length) {
+                                combined.push(...$util.filterArray(extensionsChild, item => item.subscribersChild.has(nodeY)));
+                            }
+                            for (const ext of combined) {
                                 const result = ext.processChild(nodeY, parentY);
                                 if (result.output) {
                                     this.addRenderTemplate(parentY, nodeY, result.output);
@@ -1497,7 +1491,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         layerIndex.push(leftSub, rightSub);
                     }
                 }
-                layerIndex = layerIndex.filter(item => item.length > 0);
+                $util.spliceArray(layerIndex, item => item.length === 0);
                 layout.itemCount = layerIndex.length;
                 const vertical = inlineAbove.length === 0 && (leftSub.length === 0 || rightSub.length === 0) ? this.controllerHandler.containerTypeVertical : this.controllerHandler.containerTypeVerticalMargin;
                 layout.setType(vertical.containerType, vertical.alignmentType);

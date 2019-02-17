@@ -183,20 +183,23 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
     }
 
-    public each(predicate: IteratorPredicate<T, void>, rendered = false) {
-        const list = (rendered ? this.renderChildren : this.children);
-        for (let i = 0; i < list.length; i++) {
-            if (list[i].visible || !rendered) {
-                predicate(list[i], i, list);
+    public render(parent: T) {
+        this.renderParent = parent;
+        this.renderDepth = this.documentRoot || this === parent || $util.hasValue(parent.dataset.target) ? 0 : parent.renderDepth + 1;
+        this.rendered = true;
+    }
+
+    public renderEach(predicate: IteratorPredicate<T, void>) {
+        for (let i = 0; i < this.renderChildren.length; i++) {
+            if (this.renderChildren[i].visible) {
+                predicate(this.renderChildren[i], i, this.renderChildren);
             }
         }
         return this;
     }
 
-    public render(parent: T) {
-        this.renderParent = parent;
-        this.renderDepth = this.documentRoot || this === parent || $util.hasValue(parent.dataset.target) ? 0 : parent.renderDepth + 1;
-        this.rendered = true;
+    public renderFilter(predicate: IteratorPredicate<T, boolean>) {
+        return $util.filterArray(this.renderChildren, predicate);
     }
 
     public hide(invisible?: boolean) {
@@ -669,7 +672,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (this.styleElement) {
             const applyExclusions = (attr: string, enumeration: {}) => {
                 const actualParent = this.actualParent;
-                const exclude = [$util.trimNull(this.dataset[`exclude${attr}`]), actualParent ? $util.trimNull(actualParent.dataset[`exclude${attr}Child`]) : ''].filter(value => value !== '').join('|');
+                const exclude = $util.spliceArray([$util.trimNull(this.dataset[`exclude${attr}`]), actualParent ? $util.trimNull(actualParent.dataset[`exclude${attr}Child`]) : ''], value => value.trim() === '').join('|');
                 let result = 0;
                 for (let value of exclude.split('|')) {
                     value = value.trim().toUpperCase();
@@ -806,7 +809,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             element = <Element> this._element.previousSibling;
         }
         else if (this._initial.children.length) {
-            const children = this._initial.children.filter(node => node.pageFlow);
+            const children = $util.filterArray(this._initial.children, node => node.pageFlow);
             element = children.length && children[0].element ? <Element> children[0].element.previousSibling : null;
         }
         while (element) {
@@ -834,10 +837,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             element = <Element> this._element.nextSibling;
         }
         else if (this._initial.children.length) {
-            const children = this._initial.children.filter(node => node.pageFlow);
+            const children = $util.filterArray(this._initial.children, node => node.pageFlow);
             if (children.length) {
                 const lastChild = children[children.length - 1];
-                element = lastChild.element ? <Element> lastChild.element.nextSibling : null;
+                element = lastChild.element && lastChild.element.nextSibling as Element;
             }
         }
         while (element) {
@@ -905,9 +908,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return $util.convertInt(this.percentValue(attr, this.css(attr), direction === 'Left' || direction === 'Right'));
     }
 
-    private percentValue(attr: string, value: string, horizontal: boolean, parent = true) {
+    private percentValue(attr: string, value: string, horizontal: boolean, parent = true): string {
         if ($util.isPercent(value)) {
-            return $util.isUnit(this.style[attr]) ? this.style[attr] as string : this.convertPercent(value, horizontal, parent);
+            return $util.isUnit(this.style[attr]) ? this.style[attr] : this.convertPercent(value, horizontal, parent);
         }
         return value;
     }
@@ -966,7 +969,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get svgElement() {
-        return !!this._element && this._element.tagName === 'svg';
+        return this._element !== null && this._element.tagName === 'svg';
     }
 
     get styleElement() {
@@ -974,7 +977,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get naturalElement() {
-        return !!this._element && this._element.className !== '__css.placeholder';
+        if (this._cached.naturalElement === undefined) {
+            this._cached.naturalElement = this._element !== null && this._element.className !== '__css.placeholder';
+        }
+        return this._cached.naturalElement;
     }
 
     get imageElement() {
@@ -1223,7 +1229,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         return this.toInt('top') === 0 && this.toInt('right') === 0 && this.toInt('bottom') === 0 && this.toInt('left') === 0;
                     case 'inherit':
                         const actualParent = this.actualParent;
-                        return !!actualParent && !(actualParent.position === 'absolute' || actualParent.position === 'fixed');
+                        return actualParent !== undefined && !(actualParent.position === 'absolute' || actualParent.position === 'fixed');
                     default:
                         return true;
                 }
@@ -1233,8 +1239,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get positionRelative() {
-        const position = this.position;
-        return position === 'relative' || position === 'sticky';
+        const value = this.position;
+        return value === 'relative' || value === 'sticky';
     }
 
     get positionAuto() {

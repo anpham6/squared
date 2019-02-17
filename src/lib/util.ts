@@ -538,7 +538,7 @@ export function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]) 
 export function flatArray<T>(list: any[]): T[] {
     let current = list;
     while (current.some(item => Array.isArray(item))) {
-        current = [].concat.apply([], current.filter(item => item));
+        current = [].concat.apply([], filterArray(current, item => item !== undefined && item !== null));
     }
     return current;
 }
@@ -570,6 +570,16 @@ export function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolea
     return list;
 }
 
+export function filterArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>) {
+    const result: T[] = [];
+    for (let i = 0; i < list.length; i++) {
+        if (predicate(list[i], i, list)) {
+            result.push(list[i]);
+        }
+    }
+    return result;
+}
+
 export function flatMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[] {
     const result: U[] = [];
     for (let i = 0; i < list.length; i++) {
@@ -596,6 +606,14 @@ export function replaceMap<T, U>(list: any[], predicate: IteratorPredicate<T, U>
         list[i] = predicate(list[i], i, list);
     }
     return list;
+}
+
+export function objectMap<T, U>(list: any[], predicate: IteratorPredicate<T, U>): U[] {
+    const result: U[] = [];
+    for (let i = 0; i < list.length; i++) {
+        result[i] = predicate(list[i], i, list);
+    }
+    return result;
 }
 
 export function joinMap<T>(list: T[], predicate: IteratorPredicate<T, string>, char = '\n'): string {

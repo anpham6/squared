@@ -14,7 +14,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
     }
 
     public static baseline<T extends Node>(list: T[], text = false) {
-        let baseline = list.filter(item => {
+        let baseline = $util.filterArray(list, item => {
             if (item.baseline || $util.isUnit(item.verticalAlign) && item.verticalAlign !== '0px') {
                 const position = item.cssInitial('position');
                 return position !== 'absolute' && position !== 'fixed';
@@ -24,7 +24,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
         if (baseline.length) {
             list = baseline;
         }
-        baseline = list.filter(item => item.textElement || item.verticalAlign !== 'text-top' && item.verticalAlign !== 'text-bottom');
+        baseline = $util.filterArray(list, item => item.textElement || item.verticalAlign !== 'text-top' && item.verticalAlign !== 'text-bottom');
         if (baseline.length) {
             list = baseline;
         }
@@ -165,15 +165,15 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
     }
 
     public static floatedAll<T extends Node>(parent: T) {
-        return this.floated(parent.actualChildren.filter(item => item.pageFlow) as T[]);
+        return this.floated($util.filterArray(parent.actualChildren, item => item.pageFlow) as T[]);
     }
 
     public static clearedAll<T extends Node>(parent: T) {
-        return this.cleared(parent.actualChildren.filter(item => item.pageFlow) as T[], false);
+        return this.cleared($util.filterArray(parent.actualChildren, item => item.pageFlow) as T[], false);
     }
 
     public static linearX<T extends Node>(list: T[]) {
-        const nodes = list.filter(node => node.pageFlow).sort(NodeList.siblingIndex);
+        const nodes = $util.filterArray(list, node => node.pageFlow).sort(NodeList.siblingIndex);
         switch (nodes.length) {
             case 0:
                 return false;
@@ -238,7 +238,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
     }
 
     public static linearY<T extends Node>(list: T[]) {
-        const nodes = list.filter(node => node.pageFlow).sort(NodeList.siblingIndex);
+        const nodes = $util.filterArray(list, node => node.pageFlow).sort(NodeList.siblingIndex);
         switch (nodes.length) {
             case 0:
                 return false;
