@@ -314,7 +314,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         }
                         for (const index in combined) {
                             const attrs = Array.from(combined[index]).sort().join(';');
-                            const ids = index.split(',').map(value => parseInt(value));
+                            const ids = $util.replaceMap<string, number>(index.split(','), value => parseInt(value));
                             deleteStyleAttribute(sorted, attrs, ids);
                             style[tag][attrs] = ids;
                         }

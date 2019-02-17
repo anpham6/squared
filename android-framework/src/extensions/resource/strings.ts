@@ -24,12 +24,13 @@ export default class ResourceStrings<T extends android.base.View> extends square
                         result = numberArray;
                     }
                     else {
-                        result = stringArray || numberArray;
-                        if (result) {
-                            result = result.map(value => {
+                        const resourceArray = stringArray || numberArray;
+                        if (resourceArray) {
+                            result = [];
+                            for (let value of resourceArray) {
                                 value = Resource.addString($xml.replaceCharacter(value), '', this.options.numberResourceValue);
-                                return value !== '' ? `@string/${value}` : '';
-                            });
+                                result.push(value !== '' ? `@string/${value}` : '');
+                            }
                         }
                     }
                     if (result && result.length) {

@@ -35,8 +35,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             case 'rotate':
             case 'scale':
             case 'translate':
-                currentValue = values[index].trim().split(/\s+/).map(value => parseFloat(value));
-                nextValue = values[index + 1].trim().split(/\s+/).map(value => parseFloat(value));
+                currentValue = $util.replaceMap<string, number>(values[index].trim().split(/\s+/), value => parseFloat(value));
+                nextValue = $util.replaceMap<string, number>(values[index + 1].trim().split(/\s+/), value => parseFloat(value));
                 break;
             default:
                 if ($util.isNumber(values[index])) {
@@ -276,7 +276,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         super.delay = value;
         const end = $dom.getNamedItem(this.element, 'end');
         if (end !== '') {
-            const endTime = sortNumber(end.split(';').map(time => convertClockTime(time)))[0] as number | undefined;
+            const endTime = sortNumber($util.replaceMap<string, number>(end.split(';'), time => convertClockTime(time)))[0] as number | undefined;
             if (endTime !== undefined && (this.iterationCount === -1 || this.duration > 0 && endTime < this.duration * this.iterationCount)) {
                 if (this.delay > endTime) {
                     this.end = endTime;
@@ -375,7 +375,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             if (value.length >= minSegment && !value.every(spline => spline === '' || spline === KEYSPLINE_NAME.linear)) {
                 const keySplines: string[] = [];
                 for (let i = 0; i < minSegment; i++) {
-                    const points = value[i].split(' ').map(pt => parseFloat(pt));
+                    const points = $util.replaceMap<string, number>(value[i].split(' '), pt => parseFloat(pt));
                     if (points.length === 4 && !points.some(pt => isNaN(pt)) && points[0] >= 0 && points[0] <= 1 && points[2] >= 0 && points[2] <= 1) {
                         keySplines.push(points.join(' '));
                     }
@@ -406,7 +406,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             if (this._keySplines) {
                 const keySplines: string[] = [];
                 for (let i = this._keySplines.length - 1; i >= 0; i--) {
-                    const points = this._keySplines[i].split(' ').map(pt => parseFloat(pt));
+                    const points = $util.replaceMap<string, number>(this._keySplines[i].split(' '), pt => parseFloat(pt));
                     if (points.length === 4) {
                         keySplines.push(`${invertControlPoint(points[2])} ${invertControlPoint(points[3])} ${invertControlPoint(points[0])} ${invertControlPoint(points[1])}`);
                     }

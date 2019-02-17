@@ -4,33 +4,37 @@ import SvgBuild from './svgbuild';
 import { INSTANCE_TYPE } from './lib/constant';
 
 const $dom = squared.lib.dom;
+const $util = squared.lib.util;
 
 export default class SvgAnimateTransform extends SvgAnimate implements squared.svg.SvgAnimateTransform {
     public static toRotateList(values: string[]) {
-        const result = values.map(value => {
+        const result: number[][] = [];
+        for (const value of values) {
             if (value === '') {
-                return [0, 0, 0];
+                result.push([0, 0, 0]);
             }
             else {
                 const segment = SvgBuild.toNumberList(value);
                 if (segment.length === 1) {
                     segment[1] = 0;
                     segment[2] = 0;
-                    return segment;
                 }
-                else if (segment.length === 3) {
-                    return segment;
+                if (segment.length === 3) {
+                    result.push(segment);
                 }
-                return [];
+                else {
+                    return undefined;
+                }
             }
-        });
-        return result.some(item => item.length === 0) ? undefined : result;
+        }
+        return result;
     }
 
     public static toScaleList(values: string[]) {
-        const result = values.map(value => {
+        const result: number[][] = [];
+        for (const value of values) {
             if (value === '') {
-                return [1, 1, 0, 0];
+                result.push([1, 1, 0, 0]);
             }
             else {
                 const segment = SvgBuild.toNumberList(value);
@@ -40,51 +44,57 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                 if (segment.length === 2) {
                     segment[2] = 0;
                     segment[3] = 0;
-                    return segment;
                 }
-                else if (segment.length === 4) {
-                    return segment;
+                if (segment.length === 4) {
+                    result.push(segment);
                 }
-                return [];
+                else {
+                    return undefined;
+                }
             }
-        });
-        return result.some(item => item.length === 0) ? undefined : result;
+        }
+        return result;
     }
 
     public static toTranslateList(values: string[]) {
-        const result = values.map(value => {
+        const result: number[][] = [];
+        for (const value of values) {
             if (value === '') {
-                return [0, 0];
+                result.push([0, 0]);
             }
             else {
                 const segment = SvgBuild.toNumberList(value);
                 if (segment.length === 1) {
                     segment[1] = 0;
-                    return segment;
                 }
-                else if (segment.length === 2) {
-                    return segment;
+                if (segment.length === 2) {
+                    result.push(segment);
                 }
-                return [];
+                else {
+                    return undefined;
+                }
             }
-        });
-        return result.some(item => item.length === 0) ? undefined : result;
+        }
+        return result;
     }
 
     public static toSkewList(values: string[]) {
-        const result = values.map(value => {
+        const result: number[][] = [];
+        for (const value of values) {
             if (value === '') {
-                return [0];
+                result.push([0]);
             }
             else {
                 const segment = SvgBuild.toNumberList(value);
                 if (segment.length === 1) {
-                    return segment;
+                    result.push(segment);
                 }
-                return [];
+                else {
+                    return undefined;
+                }
             }
-        });
-        return result.some(item => item.length === 0) ? undefined : result;
+        }
+        return result;
     }
 
     public transformFrom?: string;
@@ -112,9 +122,8 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                         keySplines.push('');
                     }
                     for (let j = 0; j < this.keyTimes.length; j++) {
-                        const stringValues = this.values[j].split(' ');
-                        const floatValues = stringValues.map(value => parseFloat(value));
-                        if (stringValues.length === floatValues.length) {
+                        const floatValues = $util.replaceMap<string, number>(this.values[j].split(' '), value => parseFloat(value));
+                        if (floatValues.every(value => !isNaN(value))) {
                             let currentValues: number[] | undefined;
                             switch (this.type) {
                                 case SVGTransform.SVG_TRANSFORM_TRANSLATE:
@@ -210,7 +219,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                 values = SvgAnimateTransform.toSkewList(this.values);
                 break;
         }
-        this.values = values ? values.map(array => array.join(' ')) : [];
+        this.values = values ? $util.replaceMap<number[], string>(values, array => array.join(' ')) : [];
     }
 
     get instanceType() {

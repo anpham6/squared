@@ -24,6 +24,8 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
     public processNode(node: T, parent: T): ExtensionResult<T> {
         const target = $util.hasValue(node.dataset.target) && !$util.hasValue(node.dataset.use);
         const overflow: string[] = [];
+        const scrollView: T[] = [];
+        let outputAs = '';
         if (node.overflowX && node.overflowY) {
             overflow.push(SCROLL_HORIZONTAL, SCROLL_VERTICAL);
         }
@@ -45,10 +47,10 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
             }
             node.overflow = overflowType;
         }
-        const scrollView = overflow.map((value, index) => {
-            const container = this.application.createNode(index === 0 ? <Element> node.element : $dom.createElement(node.actualParent ? node.actualParent.element : null, node.block));
-            container.setControlType(value, CONTAINER_NODE.BLOCK);
-            if (index === 0) {
+        for (let i = 0; i < overflow.length; i++) {
+            const container = this.application.createNode(i === 0 ? <Element> node.element : $dom.createElement(node.actualParent ? node.actualParent.element : null, node.block));
+            container.setControlType(overflow[i], CONTAINER_NODE.BLOCK);
+            if (i === 0) {
                 container.inherit(node, 'initial', 'base', 'styleMap');
                 parent.appendTry(node, container);
             }
@@ -58,9 +60,8 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
             }
             container.exclude({ resource: $enum.NODE_RESOURCE.ASSET });
             container.resetBox($enum.BOX_STANDARD.PADDING);
-            return container;
-        }) as T[];
-        let outputAs = '';
+            scrollView.push(container);
+        }
         for (let i = 0; i < scrollView.length; i++) {
             const item = scrollView[i];
             const previous = scrollView[i - 1];

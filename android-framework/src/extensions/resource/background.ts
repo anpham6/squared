@@ -216,15 +216,15 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             const stored: BoxStyle = node.data(Resource.KEY_NAME, 'boxStyle');
             if (stored && !node.hasBit('excludeResource', $enum.NODE_RESOURCE.BOX_STYLE)) {
                 stored.backgroundColor = Resource.addColor(stored.backgroundColor);
+                const backgroundRepeat = $util.replaceMap<string, string>(stored.backgroundRepeat.split(','), value => value.trim());
+                const backgroundSize = $util.replaceMap<string, string>(stored.backgroundSize.split(','), value => value.trim());
+                const backgroundPositionX = $util.replaceMap<string, string>(stored.backgroundPositionX.split(','), value => value.trim());
+                const backgroundPositionY = $util.replaceMap<string, string>(stored.backgroundPositionY.split(','), value => value.trim());
                 const backgroundImage: string[] = [];
                 const backgroundVector: StringMap[] = [];
-                const backgroundRepeat = stored.backgroundRepeat.split(',').map(value => value.trim());
                 const backgroundDimensions: Undefined<ImageAsset>[] = [];
                 const backgroundGradient: (BackgroundGradient & TemplateDataAA)[] = [];
-                const backgroundSize = stored.backgroundSize.split(',').map(value => value.trim());
                 const backgroundPosition: string[] = [];
-                const backgroundPositionX = stored.backgroundPositionX.split(',').map(value => value.trim());
-                const backgroundPositionY = stored.backgroundPositionY.split(',').map(value => value.trim());
                 if (!node.hasBit('excludeResource', $enum.NODE_RESOURCE.IMAGE_SOURCE)) {
                     if (stored.backgroundImage) {
                         for (let i = 0; i < stored.backgroundImage.length; i++) {

@@ -591,7 +591,7 @@ export function filterMap<T, U>(list: T[], predicate: IteratorPredicate<T, boole
     return result;
 }
 
-export function replaceMap<T>(list: T[], predicate: IteratorPredicate<T, T>): T[] {
+export function replaceMap<T, U>(list: any[], predicate: IteratorPredicate<T, U>): U[] {
     for (let i = 0; i < list.length; i++) {
         list[i] = predicate(list[i], i, list);
     }

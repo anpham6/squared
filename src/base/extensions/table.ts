@@ -74,7 +74,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
         inheritStyles(tfoot);
         const layoutFixed = node.css('tableLayout') === 'fixed';
         const borderCollapse = node.css('borderCollapse') === 'collapse';
-        const [horizontal, vertical] = borderCollapse ? [0, 0] : node.css('borderSpacing').split(' ').map(value => parseInt(value));
+        const [horizontal, vertical] = borderCollapse ? [0, 0] : $util.replaceMap<string, number>(node.css('borderSpacing').split(' '), value => parseInt(value));
         if (horizontal > 0) {
             node.modifyBox(BOX_STANDARD.PADDING_LEFT, horizontal);
             node.modifyBox(BOX_STANDARD.PADDING_RIGHT, horizontal);
@@ -97,10 +97,10 @@ export default abstract class Table<T extends Node> extends Extension<T> {
         const rowWidth: number[] = [];
         const mapBounds: number[] = [];
         const tableFilled: T[][] = [];
+        const mapWidth: string[] = [];
         let rowCount = table.length;
         let columnIndex: number[] = new Array(rowCount).fill(0);
         let columnCount = 0;
-        let mapWidth: string[] = [];
         let multiline = 0;
         for (let i = 0; i < rowCount; i++) {
             const tr = table[i];
@@ -197,7 +197,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
             columnCount = Math.max(columnCount, columnIndex[i]);
         }
         if (node.has('width', CSS_STANDARD.UNIT) && mapWidth.some(value => $util.isPercent(value))) {
-            mapWidth = mapWidth.map((value, index) => {
+            $util.replaceMap<string, string>(mapWidth, (value, index) => {
                 if (value === 'auto' && mapBounds[index] > 0) {
                     value = $util.formatPX(mapBounds[index]);
                 }
@@ -206,7 +206,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
         }
         if (mapWidth.every(value => $util.isPercent(value)) && mapWidth.reduce((a, b) => a + parseFloat(b), 0) > 1) {
             let percentTotal = 100;
-            mapWidth = mapWidth.map(value => {
+            $util.replaceMap<string, string>(mapWidth, value => {
                 const percent = parseFloat(value);
                 if (percentTotal <= 0) {
                     value = '0px';
@@ -221,7 +221,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
         else if (mapWidth.every(value => $util.isUnit(value))) {
             const width = mapWidth.reduce((a, b) => a + parseInt(b), 0);
             if (width < node.width) {
-                mapWidth = mapWidth.map(value => value !== '0px' ? `${(parseInt(value) / width) * 100}%` : value);
+                $util.replaceMap<string, string>(mapWidth, value => value !== '0px' ? `${(parseInt(value) / width) * 100}%` : value);
             }
             else if (width > node.width) {
                 node.css('width', 'auto', true);

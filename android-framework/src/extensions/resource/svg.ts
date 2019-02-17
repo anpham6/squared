@@ -916,7 +916,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                     values = item.values.map(value => $util.convertInt(value).toString());
                                                     break;
                                                 case 'floatType':
-                                                    values = item.values.map(value => $util.convertFloat(value).toString());
+                                                    values = item.values;
                                                     break;
                                                 default:
                                                     values = item.values.slice(0);

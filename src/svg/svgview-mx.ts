@@ -96,7 +96,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                     if (begin && /^[a-zA-Z]+$/.test(begin.value.trim())) {
                         continue;
                     }
-                    const times = begin ? sortNumber(begin.value.split(';').map(value => convertClockTime(value))) : [0];
+                    const times = begin ? sortNumber($util.replaceMap<string, number>(begin.value.split(';'), value => convertClockTime(value))) : [0];
                     if (times.length) {
                         switch (item.tagName) {
                             case 'set':

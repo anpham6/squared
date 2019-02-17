@@ -630,7 +630,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 for (const node of sibling) {
                     flowIndex = Math.min(flowIndex, node.siblingIndex);
                 }
-                return floating.map(node => node.siblingIndex).some(value => value < flowIndex);
+                return $util.replaceMap<T, number>(floating, node => node.siblingIndex).some(value => value < flowIndex);
             }
         }
         return false;

@@ -182,7 +182,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 let sizeWeight = 0;
                 if (data.unit.every(value => value === 'auto')) {
                     if (dimension === 'width') {
-                        data.unit = data.unit.map(() => '1fr');
+                        data.unit = new Array(data.unit.length).fill('1fr');
                     }
                     else {
                         data.unit.length = 0;

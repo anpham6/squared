@@ -14,13 +14,14 @@ type SvgBaseVal = squared.svg.SvgBaseVal;
 type SvgContainer = squared.svg.SvgContainer;
 
 type AnimateValue = number | Point[] | string;
+type TimelineValue = Map<any, AnimateValue>;
 type TimelineIndex = Map<number, AnimateValue>;
 type TimelineMap = ObjectMap<TimelineIndex>;
-type KeyTimeMap = Map<number, Map<any, AnimateValue>>;
+type KeyTimeMap = Map<number, TimelineValue>;
 type ForwardMap = ObjectMap<ForwardValue>;
 type InterpolatorMap = Map<number, string>;
 type TransformOriginMap = Map<number, Point>;
-type TimelineEntries = [number, Map<any, AnimateValue>][];
+type TimelineEntries = [number, TimelineValue][];
 
 interface ForwardValue extends NumberValue<AnimateValue> {
     time: number;
@@ -258,8 +259,8 @@ function getItemValue(item: SvgAnimate, baseValue: AnimateValue, values: string[
     }
     else if (typeof baseValue === 'string') {
         if (item.additiveSum) {
-            const baseArray = baseValue.split(/\s+/).map(value => parseFloat(value));
-            const valuesArray = values.map(value => value.trim().split(/\s+/).map(xy => parseFloat(xy)));
+            const baseArray = $util.replaceMap<string, number>(baseValue.split(/\s+/), value => parseFloat(value));
+            const valuesArray = values.map(value => $util.replaceMap<string, number>(value.trim().split(/\s+/), pt => parseFloat(pt)));
             if (valuesArray.every(value => baseArray.length === value.length)) {
                 const result = valuesArray[index];
                 if (!item.accumulateSum) {
@@ -292,8 +293,8 @@ function getItemSplitValue(fraction: number, previousFraction: number, previousV
             return getSplitValue(previousValue, nextValue, (fraction - previousFraction) / (nextFraction - previousFraction));
         }
         else if (typeof previousValue === 'string' && typeof nextValue === 'string') {
-            const previousArray = previousValue.split(' ').map(value => parseFloat(value));
-            const nextArray = nextValue.split(' ').map(value => parseFloat(value));
+            const previousArray = $util.replaceMap<string, number>(previousValue.split(' '), value => parseFloat(value));
+            const nextArray = $util.replaceMap<string, number>(nextValue.split(' '), value => parseFloat(value));
             if (previousArray.length === nextArray.length) {
                 const result: number[] = [];
                 for (let i = 0; i < previousArray.length; i++) {
@@ -1606,10 +1607,12 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                         const timelineMap: TimelineMap = {};
                         const infiniteAnimations: SvgAnimate[] = [];
                         const keyTimes: number[] = [];
+                        const duration: number[] = [];
                         for (const attr in infiniteMap) {
+                            duration.push(infiniteMap[attr].duration);
                             infiniteAnimations.push(infiniteMap[attr]);
                         }
-                        const maxDuration = getLeastCommonMultiple(infiniteAnimations.map(item => item.duration));
+                        const maxDuration = getLeastCommonMultiple(duration);
                         for (const item of infiniteAnimations) {
                             const attr = item.attributeName;
                             timelineMap[attr] = new Map<number, AnimateValue>();
@@ -1836,7 +1839,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                 if (pathData) {
                                                     object = new SvgAnimate();
                                                     object.attributeName = 'd';
-                                                    object.values = pathData.map(item => item.value.toString());
+                                                    object.values = $util.replaceMap<NumberValue<string>, string>(pathData, item => item.value.toString());
                                                 }
                                                 else {
                                                     continue;
@@ -1846,7 +1849,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                 const animate = new SvgAnimateTransform();
                                                 animate.attributeName = 'transform';
                                                 animate.type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
-                                                animate.values = [dataFrom, dataTo].map(data => {
+                                                animate.values = $util.replaceMap<TimelineValue, string>([dataFrom, dataTo], data => {
                                                     const x = data.get('x') as number || 0;
                                                     const y = data.get('y') as number || 0;
                                                     return this.parent ? `${this.parent.refitX(x)} ${this.parent.refitX(y)}` : `${x} ${y}`;

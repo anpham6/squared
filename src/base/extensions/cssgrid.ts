@@ -68,6 +68,16 @@ function convertUnit<T extends Node>(node: T, value: string) {
     return $util.isUnit(value) ? node.convertPX(value) : value;
 }
 
+function getColumnTotal<T extends Node>(rows: (T[] | undefined)[]) {
+    let result = 0;
+    for (const row of rows) {
+        if (row) {
+            result++;
+        }
+    }
+    return result;
+}
+
 export default class CssGrid<T extends Node> extends Extension<T> {
     public static createDataAttribute<T extends Node>(): CssGridData<T> {
         return {
@@ -113,7 +123,7 @@ export default class CssGrid<T extends Node> extends Extension<T> {
         const gridAutoFlow = node.css('gridAutoFlow');
         const horizontal = gridAutoFlow.indexOf('row') !== -1;
         const dense = gridAutoFlow.indexOf('dense') !== -1;
-        const rowData: Undefined<T[]>[][] = [];
+        const rowData: (T[] | undefined)[][] = [];
         const cellsPerRow: number[] = [];
         const gridPosition: GridPosition[] = [];
         let rowInvalid: ObjectIndex<boolean> = {};
@@ -506,7 +516,7 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                         if (rowData[i] === undefined) {
                             available.push([[0, -1]] as [number, number][]);
                         }
-                        else if (rowData[i].map(column => column).length + COLUMN_SPAN <= COLUMN_COUNT) {
+                        else if (getColumnTotal(rowData[i]) + COLUMN_SPAN <= COLUMN_COUNT) {
                             const range: [number, number][] = [];
                             let span = 0;
                             for (let j = 0, k = -1; j < COLUMN_COUNT; j++) {

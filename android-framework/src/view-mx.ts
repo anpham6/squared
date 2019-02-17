@@ -213,7 +213,7 @@ export default (Base: Constructor<squared.base.Node>) => {
             const renderParent = this.renderParent as View;
             if (renderParent) {
                 if (renderParent.layoutConstraint) {
-                    this.delete('app', ...$util.replaceMap(position, value => this.localizeString(LAYOUT_ANDROID.constraint[value])));
+                    this.delete('app', ...$util.replaceMap<string, string>(position, value => this.localizeString(LAYOUT_ANDROID.constraint[value])));
                 }
                 else if (renderParent.layoutRelative) {
                     for (const value of position) {

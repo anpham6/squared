@@ -1875,7 +1875,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                                 case 'aspect-ratio':
                                                 case 'min-aspect-ratio':
                                                 case 'max-aspect-ratio':
-                                                    const [width, height] = value.split('/').map(ratio => parseInt(ratio));
+                                                    const [width, height] = $util.replaceMap<string, number>(value.split('/'), ratio => parseInt(ratio));
                                                     valid = compareRange(operation, window.innerWidth / window.innerHeight, width / height);
                                                     break;
                                                 case 'width':

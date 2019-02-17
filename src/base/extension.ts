@@ -37,7 +37,7 @@ export default abstract class Extension<T extends Node> implements squared.base.
         options?: ExternalData)
     {
         if (Array.isArray(tagNames)) {
-            this.tagNames = tagNames.map(value => value.trim().toUpperCase());
+            this.tagNames = $util.replaceMap<string, string>(tagNames, value => value.trim().toUpperCase());
         }
         if (options) {
             Object.assign(this.options, options);

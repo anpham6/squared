@@ -592,7 +592,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     public static toPointList(value: string) {
         const result: Point[] = [];
         for (const coords of value.trim().split(/\s+/)) {
-            const [x, y] = coords.split(',').map(pt => parseFloat(pt));
+            const [x, y] = $util.replaceMap<string, number>(coords.split(','), pt => parseFloat(pt));
             result.push({ x, y });
         }
         return result;
