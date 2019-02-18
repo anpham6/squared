@@ -1,4 +1,4 @@
-import { SvgPoint, SvgTransform, SvgTransformExclude, SvgTransformResidual } from './@types/object';
+import { SvgPoint, SvgStrokeDash, SvgTransform, SvgTransformExclude, SvgTransformResidual } from './@types/object';
 
 import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgPaint$MX from './svgpaint-mx';
@@ -11,6 +11,8 @@ import { SVG, TRANSFORM } from './lib/util';
 type SvgContainer = squared.svg.SvgContainer;
 type SvgShapePattern = squared.svg.SvgShapePattern;
 
+const $util = squared.lib.util;
+
 export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) implements squared.svg.SvgPath {
     public static build(path: SvgPath, transforms: SvgTransform[], exclude?: SvgTransformExclude, residual?: SvgTransformResidual) {
         if (exclude && exclude[path.element.tagName]) {
@@ -20,37 +22,13 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         return path;
     }
 
-    public static getCenter(values: SvgPoint[]): SvgPoint {
-        let minX = values[0].x;
-        let minY = values[0].y;
-        let maxX = minX;
-        let maxY = minY;
-        for (let i = 1; i < values.length; i++) {
-            const pt = values[i];
-            if (pt.x < minX) {
-                minX = pt.x;
-            }
-            else if (pt.x > maxX) {
-                maxX = pt.x;
-            }
-            if (pt.y < minY) {
-                minY = pt.y;
-            }
-            else if (pt.y > maxX) {
-                maxY = pt.y;
-            }
-        }
-        return {
-            x: (minX + maxX) / 2,
-            y: (minY + maxY) / 2
-        };
-    }
-
     public name = '';
     public value = '';
+    public pathLength!: string;
     public transformed: SvgTransform[] | null = null;
     public transformResidual?: SvgTransform[][];
 
+    private _totalLength = 0;
     private _transforms?: SvgTransform[];
 
     constructor(public readonly element: SVGGraphicsElement) {
@@ -62,12 +40,12 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         if (!extract) {
             this.transformed = null;
         }
+        const element = this.element;
         const parent = <SvgContainer> this.parent;
         const patternParent = <SvgShapePattern> this.patternParent;
-        const element = this.element;
         const requireRefit = !!parent && parent.requireRefit();
-        const requirePatternRefit = !!this.patternParent && this.patternParent.patternContentUnits === REGION_UNIT.OBJECT_BOUNDING_BOX;
-        let d = '';
+        const requirePatternRefit = !!patternParent && patternParent.patternContentUnits === REGION_UNIT.OBJECT_BOUNDING_BOX;
+        let d: string;
         if (SVG.path(element)) {
             d = this.getBaseValue('d');
             if (transforms && transforms.length || requireRefit || requirePatternRefit) {
@@ -83,7 +61,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                 [this.transformResidual, transforms] = residual.call(this, element, transforms);
                             }
                             if (transforms.length) {
-                                points = this.transformPoints(transforms, points);
+                                points = SvgBuild.applyTransforms(transforms, points, TRANSFORM.origin(this.element));
                                 this.transformed = transforms;
                             }
                         }
@@ -108,7 +86,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                     [this.transformResidual, transforms] = residual.call(this, element, transforms);
                 }
                 if (transforms.length) {
-                    points = this.transformPoints(transforms, points);
+                    points = SvgBuild.applyTransforms(transforms, points, TRANSFORM.origin(this.element));
                     this.transformed = transforms;
                 }
             }
@@ -139,7 +117,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                     [this.transformResidual, transforms] = residual.call(this, element, transforms, rx, ry);
                 }
                 if (transforms.length) {
-                    points = this.transformPoints(transforms, points);
+                    points = SvgBuild.applyTransforms(transforms, points, TRANSFORM.origin(this.element));
                     this.transformed = transforms;
                 }
             }
@@ -168,7 +146,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                     [this.transformResidual, transforms] = residual.call(this, element, transforms);
                 }
                 if (transforms.length) {
-                    points = this.transformPoints(transforms, points);
+                    points = SvgBuild.applyTransforms(transforms, points, TRANSFORM.origin(this.element));
                     this.transformed = transforms;
                 }
                 if (requireRefit) {
@@ -202,7 +180,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                     [this.transformResidual, transforms] = residual.call(this, element, transforms);
                 }
                 if (transforms.length) {
-                    points = this.transformPoints(transforms, points);
+                    points = SvgBuild.applyTransforms(transforms, points, TRANSFORM.origin(this.element));
                     this.transformed = transforms;
                 }
             }
@@ -214,15 +192,38 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             }
             d = SVG.polygon(element) ? SvgBuild.drawPolygon(points, this.transformed !== undefined) : SvgBuild.drawPolyline(points, this.transformed !== undefined);
         }
+        else {
+            d = '';
+        }
         if (!extract) {
             this.value = d;
+            this._totalLength = 0;
             this.setPaint([d]);
         }
         return d;
     }
 
-    public transformPoints(transforms: SvgTransform[], points: Point[], center?: Point) {
-        return SvgBuild.applyTransforms(transforms, points, TRANSFORM.origin(this.element), center);
+    public getStrokeDash() {
+        const result: SvgStrokeDash[] = [];
+        const value = $util.convertInt(this.strokeDasharray);
+        if (value > 0) {
+            const offset = $util.convertInt(this.strokeDashoffset);
+            const totalLength = $util.convertInt(this.pathLength) || this.totalLength;
+            if (offset >= totalLength) {
+                result.push({ start: 1, end: 1 });
+            }
+            else {
+                for (let i = offset, j = 0; i < totalLength; i += value, j++) {
+                    if (j % 2 === 0) {
+                        result.push({
+                            start: i / totalLength,
+                            end: Math.min(i + value, totalLength) / totalLength
+                        });
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     private init() {
@@ -256,6 +257,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         else if (SVG.polygon(element) || SVG.polyline(element)) {
             this.setBaseValue('points', SvgBuild.clonePoints(element.points));
         }
+        this.setAttribute('pathLength');
     }
 
     get transforms() {
@@ -263,6 +265,21 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             this._transforms = SvgBuild.filterTransforms(TRANSFORM.parse(this.element) || SvgBuild.convertTransforms(this.element.transform.baseVal));
         }
         return this._transforms;
+    }
+
+    get totalLength() {
+        if (this.value !== '' && this._totalLength === 0) {
+            let element: SVGPathElement;
+            if (SVG.path(this.element)) {
+                element = this.element;
+            }
+            else {
+                element = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                element.setAttribute('d', this.value);
+            }
+            this._totalLength = element.getTotalLength();
+        }
+        return this._totalLength;
     }
 
     get instanceType() {

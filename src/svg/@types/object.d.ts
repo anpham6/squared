@@ -105,3 +105,9 @@ export interface SvgAnimateAttribute {
     iterationCount: string;
     fillMode: string;
 }
+
+export interface SvgStrokeDash {
+    start: number;
+    end: number;
+    offset?: number;
+}

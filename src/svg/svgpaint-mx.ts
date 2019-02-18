@@ -31,8 +31,8 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
         public strokeLinecap!: string;
         public strokeLinejoin!: string;
         public strokeMiterlimit!: string;
-        public strokeDashArray!: string;
-        public strokeDashOffset!: string;
+        public strokeDasharray!: string;
+        public strokeDashoffset!: string;
         public color!: string;
         public clipPath!: string;
         public clipRule!: string;
@@ -230,8 +230,8 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             this.strokeLinecap = 'butt';
             this.strokeLinejoin = 'miter';
             this.strokeMiterlimit = '4';
-            this.strokeDashArray = '';
-            this.strokeDashOffset = '0';
+            this.strokeDasharray = '';
+            this.strokeDashoffset = '0';
             this.color = '';
             this.clipPath = '';
             this.clipRule = '';

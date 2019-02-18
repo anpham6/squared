@@ -29,6 +29,12 @@ interface ForwardValue extends NumberValue<AnimateValue> {
 
 const $util = squared.lib.util;
 
+const LINE_ARGS = ['x1', 'y1', 'x2', 'y2'];
+const RECT_ARGS = ['width', 'height', 'x', 'y'];
+const POLYGON_ARGS = ['points'];
+const CIRCLE_ARGS = ['cx', 'cy', 'r'];
+const ELLIPSE_ARGS = ['cx', 'cy', 'rx', 'ry'];
+
 function insertAdjacentSplitValue(map: TimelineIndex, insertMap: TimelineIndex, time: number) {
     let previousTime = 0;
     let previousValue!: AnimateValue;
@@ -103,20 +109,20 @@ function getPathData(entries: TimelineEntries, path: SvgPath, parent: SvgContain
     let baseVal: string[];
     switch (tagName) {
         case 'line':
-            baseVal = ['x1', 'y1', 'x2', 'y2'];
+            baseVal = LINE_ARGS;
             break;
         case 'rect':
-            baseVal = ['width', 'height', 'x', 'y'];
+            baseVal = RECT_ARGS;
             break;
         case 'polyline':
         case 'polygon':
-            baseVal = ['points'];
+            baseVal = POLYGON_ARGS;
             break;
         case 'circle':
-            baseVal = ['cx', 'cy', 'r'];
+            baseVal = CIRCLE_ARGS;
             break;
         case 'ellipse':
-            baseVal = ['cx', 'cy', 'rx', 'ry'];
+            baseVal = ELLIPSE_ARGS;
             break;
         default:
             return undefined;

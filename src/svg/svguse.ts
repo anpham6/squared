@@ -14,10 +14,13 @@ export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(Svg
 
     constructor(
         public readonly element: SVGUseElement,
-        public shapeElement: SVGGraphicsElement)
+        public shapeElement: SVGGraphicsElement,
+        initPath = true)
     {
         super(element, false);
-        this.setPath();
+        if (initPath) {
+            this.setPath();
+        }
     }
 
     public setPath() {

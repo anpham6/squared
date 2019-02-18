@@ -1893,7 +1893,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                                     else if (value.endsWith('dppx') || value.endsWith('x')) {
                                                         resolution *= 96;
                                                     }
-                                                    valid = compareRange(operation, $util.getDeviceDPI(), resolution);
+                                                    valid = compareRange(operation, $dom.getDeviceDPI(), resolution);
                                                     break;
                                                 case 'grid':
                                                     valid = value === '0';

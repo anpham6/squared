@@ -64,7 +64,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         return super.append(item);
     }
 
-    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, element?: Element) {
+    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, element?: Element, dryRun = false) {
         if (element === undefined) {
             element = this.element;
         }
@@ -101,7 +101,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                             this.setAspectRatio(<SvgGroup> svg);
                         }
                         else {
-                            svg = new squared.svg.SvgUse(item, target);
+                            svg = new squared.svg.SvgUse(item, target, !dryRun);
                         }
                     }
                 }
@@ -116,12 +116,12 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                     this.setAspectRatio(<SvgGroup> svg);
                 }
                 else {
-                    svg = new squared.svg.SvgShape(item);
+                    svg = new squared.svg.SvgShape(item, !dryRun);
                 }
             }
             if (svg) {
                 this.append(svg, viewport);
-                svg.build(exclude, residual);
+                svg.build(exclude, residual, undefined, dryRun);
             }
         }
         if (SvgBuild.asSvg(this) && this.documentRoot) {

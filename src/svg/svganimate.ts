@@ -11,7 +11,7 @@ const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 function invertControlPoint(value: number) {
-    return parseFloat((1 - value).toFixed(5));
+    return parseFloat((1 - value).toPrecision(5));
 }
 
 export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgAnimate {

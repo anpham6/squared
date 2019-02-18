@@ -122,6 +122,10 @@ export function isUserAgent(value: string | number) {
     return hasBit(value, client);
 }
 
+export function getDeviceDPI() {
+    return window.devicePixelRatio * 96;
+}
+
 export function getKeyframeRules(): CSSRuleData {
     const result = new Map<string, ObjectMap<StringMap>>();
     violation: {

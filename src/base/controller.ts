@@ -5,7 +5,6 @@ import Layout from './layout';
 import Node from './node';
 import NodeList from './nodelist';
 
-const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
 export default abstract class Controller<T extends Node> implements squared.base.Controller<T> {
@@ -82,7 +81,7 @@ export default abstract class Controller<T extends Node> implements squared.base
     }
 
     public getEnclosingTag(controlName: string, id: number, depth: number, xml = '') {
-        const indent = $util.repeat(Math.max(0, depth));
+        const indent = '\t'.repeat(Math.max(0, depth));
         let result = `{<${id}}`;
         if (xml !== '') {
             result += indent + `<${controlName}${depth === 0 ? '{#0}' : ''}{@${id}}>\n` +

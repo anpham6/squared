@@ -471,7 +471,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                     else if ($util.isPercent(width)) {
                         if (renderParent && renderParent.is(CONTAINER_NODE.GRID)) {
                             this.android('layout_width', '0px', false);
-                            this.android('layout_columnWeight', (parseInt(width) / 100).toFixed(2), false);
+                            this.android('layout_columnWeight', (parseInt(width) / 100).toPrecision(2), false);
                         }
                         else if (width === '100%') {
                             this.android('layout_width', 'match_parent');

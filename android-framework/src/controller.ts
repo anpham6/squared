@@ -185,7 +185,7 @@ function constraintPercentValue<T extends View>(node: T, dimension: string, valu
         }
         else if (value !== '100%') {
             const percent = parseInt(value) / 100 + (node.actualParent ? node.contentBoxWidth / node.actualParent.box.width : 0);
-            node.app(`layout_constraint${dimension}_percent`, percent.toFixed(node.localSettings.constraintPercentAccuracy || 4));
+            node.app(`layout_constraint${dimension}_percent`, percent.toPrecision(node.localSettings.constraintPercentAccuracy || 4));
             node.android(`layout_${dimension.toLowerCase()}`, '0px');
         }
     }
@@ -241,7 +241,7 @@ function parseAttributes<T extends View>(node: T) {
 }
 
 function combineAttributes<T extends View>(node: T, depth: number) {
-    const indent = $util.repeat(depth);
+    const indent = '\t'.repeat(depth);
     let output = '';
     for (const value of node.combine()) {
         output += `\n${indent + value}`;
@@ -303,7 +303,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         if (basis !== 'auto') {
             if ($util.isPercent(basis)) {
                 if (basis !== '0%') {
-                    node.app(`layout_constraint${horizontal ? 'Width' : 'Height'}_percent`, (parseInt(basis) / 100).toFixed(2));
+                    node.app(`layout_constraint${horizontal ? 'Width' : 'Height'}_percent`, (parseInt(basis) / 100).toPrecision(2));
                     basis = '';
                 }
             }
@@ -1110,12 +1110,12 @@ export default class Controller<T extends View> extends squared.base.Controller<
         let percentWidth = '';
         let percentHeight = '';
         if ($util.isPercent(width)) {
-            percentWidth = (parseInt(width) / 100).toFixed(2);
+            percentWidth = (parseInt(width) / 100).toPrecision(2);
             options.android.layout_columnWeight = percentWidth;
             width = '0px';
         }
         if ($util.isPercent(height)) {
-            percentHeight = (parseInt(height) / 100).toFixed(2);
+            percentHeight = (parseInt(height) / 100).toPrecision(2);
             options.android.layout_rowWeight = percentHeight;
             height = '0px';
         }
@@ -1212,7 +1212,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     }
                     if (percent) {
                         const position = Math.abs(node[dimension][LT] - documentParent.box[LT]) / documentParent.box[horizontal ? 'width' : 'height'];
-                        location = parseFloat(Math.abs(position - (!opposite ? 0 : 1)).toFixed(this.localSettings.constraint.percentAccuracy));
+                        location = parseFloat(Math.abs(position - (!opposite ? 0 : 1)).toPrecision(this.localSettings.constraint.percentAccuracy));
                         usePercent = true;
                         beginPercent += 'percent';
                     }
@@ -1686,7 +1686,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 }
                 if (percent > 0) {
                     item.android('layout_width', '0px');
-                    item.app('layout_constraintWidth_percent', percent.toFixed(2));
+                    item.app('layout_constraintWidth_percent', percent.toPrecision(2));
                 }
             }
             chainVertical.push(column);

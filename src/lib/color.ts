@@ -222,7 +222,7 @@ function sortHSL(a: Color, b: Color) {
 }
 
 function formatRGBA(rgba: RGBA) {
-    return `rgb${rgba.a < 255 ? 'a' : ''}(${rgba.r}, ${rgba.g}, ${rgba.b}${rgba.a < 255 ? `, ${(rgba.a / 255).toFixed(2)}` : ''})`;
+    return `rgb${rgba.a < 255 ? 'a' : ''}(${rgba.r}, ${rgba.g}, ${rgba.b}${rgba.a < 255 ? `, ${(rgba.a / 255).toPrecision(2)}` : ''})`;
 }
 
 function convertAlpha(value: string) {
@@ -330,7 +330,7 @@ export function parseRGBA(value: string, opacity = '1') {
         const match = value.match(REGEXP_RGBA);
         if (match && match.length >= 4 && (match[4] === undefined || parseFloat(match[4]) > 0)) {
             if (match[4] === undefined) {
-                match[4] = parseFloat(opacity).toFixed(2);
+                match[4] = parseFloat(opacity).toPrecision(2);
             }
             const valueHex = convertHex(match[1]) + convertHex(match[2]) + convertHex(match[3]);
             const valueA = convertAlpha(match[4]);

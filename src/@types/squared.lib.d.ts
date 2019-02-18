@@ -17,6 +17,7 @@ declare global {
             export import ELEMENT_BLOCK = $dom.ELEMENT_BLOCK;
             export import ELEMENT_INLINE = $dom.ELEMENT_INLINE;
             function isUserAgent(value: string | number): boolean;
+            function getDeviceDPI(): number;
             function getKeyframeRules(): CSSRuleData;
             function getDataSet(element: Element | null, prefix: string): StringMap;
             function newBoxRect(): BoxRect;
@@ -60,7 +61,6 @@ declare global {
         namespace util {
             export import REGEXP_PATTERN = $util.REGEXP_PATTERN;
             export import REGEXP_STRING = $util.REGEXP_STRING;
-            function getDeviceDPI(): number;
             function capitalize(value: string, upper?: boolean): string;
             function convertUnderscore(value: string): string;
             function convertCamelCase(value: string, char?: string): string;
@@ -96,7 +96,6 @@ declare global {
             function trimString(value: string | undefined, char: string): string;
             function trimStart(value: string | undefined, char: string): string;
             function trimEnd(value: string | undefined, char: string): string;
-            function repeat(many: number, value?: string): string;
             function indexOf(value: string, ...terms: string[]): number;
             function lastIndexOf(value: string, char?: string): string;
             function searchObject(obj: StringMap, value: string | StringMap): any[][];

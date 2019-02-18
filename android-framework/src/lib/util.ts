@@ -48,7 +48,7 @@ export function convertUnit(value: string, dpi = 160, font = false) {
         let result = parseFloat(value);
         if (!isNaN(result)) {
             result /= dpi / 160;
-            value = result >= 1 || result === 0 ? Math.floor(result).toString() : result.toFixed(2);
+            value = result >= 1 || result === 0 ? Math.floor(result).toString() : result.toPrecision(2);
             return value + (font ? 'sp' : 'dp');
         }
     }
@@ -74,7 +74,7 @@ export function calculateBias(start: number, end: number, accuracy = 4) {
         return 1;
     }
     else {
-        return parseFloat(Math.max(start / (start + end), 0).toFixed(accuracy));
+        return parseFloat(Math.max(start / (start + end), 0).toPrecision(accuracy));
     }
 }
 

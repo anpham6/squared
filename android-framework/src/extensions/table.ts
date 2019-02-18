@@ -33,7 +33,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                                 const percent = $util.convertFloat(item.data($const.EXT_NAME.TABLE, 'percent')) / 100;
                                 if (percent > 0) {
                                     item.android('layout_width', '0px');
-                                    item.android('layout_columnWeight', $util.trimEnd(percent.toFixed(3), '0'));
+                                    item.android('layout_columnWeight', $util.trimEnd(percent.toPrecision(3), '0'));
                                     requireWidth = true;
                                 }
                             }

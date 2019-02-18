@@ -1,4 +1,4 @@
-import { joinMap, repeat, trimEnd } from './util';
+import { joinMap, trimEnd } from './util';
 
 type XMLTagData = {
     tag: string;
@@ -34,7 +34,7 @@ export function replaceIndent(value: string, depth: number, pattern: RegExp) {
                 if (indent === -1) {
                     indent = match[2].length;
                 }
-                return match[1] + repeat(depth + (match[2].length - indent)) + match[3];
+                return match[1] + '\t'.repeat(depth + (match[2].length - indent)) + match[3];
             }
             return line;
         });
@@ -216,7 +216,7 @@ export function formatTemplate(value: string, closeEmpty = true, char = '\t') {
             let firstLine = true;
             for (const partial of line.tag.trim().split('\n')) {
                 const depth = previous + (firstLine ? 0 : 1);
-                result += (depth > 0 ? repeat(depth, char) : '') + partial.trim() + '\n';
+                result += (depth > 0 ? char.repeat(depth) : '') + partial.trim() + '\n';
                 firstLine = false;
             }
         }

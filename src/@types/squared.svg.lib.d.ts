@@ -21,6 +21,7 @@ declare global {
             function getNearestViewBox(element: SVGElement): DOMRect | undefined;
             function sortNumber(values: number[], descending?: boolean): boolean;
             function truncateString(value: string, precision?: number): string;
+            function truncateRange(value: number, precision?: number): string;
             function getSplitValue(value: number, next: number, percent: number): number;
             function getLeastCommonMultiple(values: number[], offset?: number[]): number;
         }

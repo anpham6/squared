@@ -7,7 +7,7 @@ declare global {
             parent?: SvgContainer;
             readonly element: SVGGraphicsElement;
             readonly instanceType: number;
-            build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, element?: Element): void;
+            build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, element?: Element, dryRun?: boolean): void;
             synchronize(keyTimeMode?: number): void;
         }
 
@@ -43,7 +43,7 @@ declare global {
         }
 
         class SvgUse implements SvgUse {
-            constructor(element: SVGUseElement, shapeElement: SVGGraphicsElement);
+            constructor(element: SVGUseElement, shapeElement: SVGGraphicsElement, initPath?: boolean);
         }
     }
 }

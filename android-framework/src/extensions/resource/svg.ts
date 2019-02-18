@@ -71,9 +71,10 @@ interface TogetherTemplateData extends SetOrdering, ExternalData {
 
 interface PathTemplateData extends Partial<SvgPath> {
     name: string;
-    render: TransformData[][];
     clipElement: StringMap[];
     fillPattern: any;
+    trimPathStart?: string;
+    trimPathEnd?: string;
 }
 
 interface TransformData {
@@ -1306,9 +1307,25 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
         for (const item of group) {
             const CCC: ExternalData[] = [];
             const DDD: StringMap[] = [];
+            const render: TransformData[][] = [[]];
             if ($SvgBuild.isShape(item)) {
                 if (item.visible && item.path && item.path.value) {
-                    CCC.push(this.createPath(item, item.path));
+                    const pathData = this.createPath(item, item.path, render);
+                    if (pathData.name === '') {
+                        const strokeDash = item.path.getStrokeDash();
+                        if (strokeDash.length) {
+                            for (let i = 0; i < strokeDash.length; i++) {
+                                const pathObject = i === 0 ? pathData : Object.assign({}, pathData);
+                                pathObject.trimPathStart = $utilS.truncateRange(strokeDash[i].start);
+                                pathObject.trimPathEnd = $utilS.truncateRange(strokeDash[i].end);
+                                CCC.push(pathObject);
+                            }
+                            render[0].push({ groupName: item.name });
+                        }
+                    }
+                    if (CCC.length === 0) {
+                        CCC.push(pathData);
+                    }
                 }
                 else {
                     continue;
@@ -1340,7 +1357,11 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                     continue;
                 }
             }
-            groupData.BB.push({ CCC, DDD });
+            groupData.BB.push({
+                render,
+                CCC,
+                DDD
+            });
         }
         this.VECTOR_DATA.set(group.name, groupData);
     }
@@ -1394,12 +1415,10 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
         return result;
     }
 
-    private createPath(target: $SvgShape, path: SvgPath) {
-        const render: TransformData[][] = [[]];
+    private createPath(target: $SvgShape, path: SvgPath, render: TransformData[][]) {
         const clipElement: StringMap[] = [];
         const result: PathTemplateData = {
             name: target.name,
-            render,
             clipElement,
             fillPattern: false
         };

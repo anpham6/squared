@@ -54,10 +54,6 @@ export const REGEXP_STRING: StringMap = {
 
 REGEXP_STRING.DEGREE = REGEXP_STRING.DECIMAL + '(deg|rad|turn|grad)';
 
-export function getDeviceDPI() {
-    return window.devicePixelRatio * 96;
-}
-
 export function capitalize(value: string, upper = true) {
     if (value !== '') {
         if (upper) {
@@ -123,7 +119,7 @@ export function convertAngle(value: string, unit = 'deg') {
 }
 
 export function convertPercent(value: number, precision = 0) {
-    return value < 1 ? `${precision === 0 ? Math.round(value * 100) : parseFloat((value * 100).toFixed(precision))}%` : `100%`;
+    return value < 1 ? `${precision === 0 ? Math.round(value * 100) : parseFloat((value * 100).toPrecision(precision))}%` : `100%`;
 }
 
 export function convertPX(value: string, fontSize?: number) {
@@ -167,7 +163,7 @@ export function convertPX(value: string, fontSize?: number) {
                 case 'cm':
                     result /= 2.54;
                 case 'in':
-                    result *= getDeviceDPI();
+                    result *= window.devicePixelRatio * 96;
                     break;
             }
             return `${result}px`;
@@ -353,18 +349,18 @@ export function resolvePath(value: string) {
         }
         else {
             if (value.startsWith('../')) {
-                const parts: string[] = [];
+                const segments: string[] = [];
                 let levels = 0;
                 for (const dir of value.split('/')) {
                     if (dir === '..') {
                         levels++;
                     }
                     else {
-                        parts.push(dir);
+                        segments.push(dir);
                     }
                 }
                 pathname = pathname.slice(0, Math.max(pathname.length - levels, 0));
-                pathname.push(...parts);
+                pathname.push(...segments);
                 value = location.origin + pathname.join('/');
             }
             else {
@@ -384,15 +380,11 @@ export function trimString(value: string | undefined, char: string) {
 }
 
 export function trimStart(value: string | undefined, char: string) {
-    return value ? value.replace(new RegExp(`^${char}+`, 'g'), '') : '';
+    return value ? value.replace(new RegExp(`^${char}+`), '') : '';
 }
 
 export function trimEnd(value: string | undefined, char: string) {
-    return value ? value.replace(new RegExp(`${char}+$`, 'g'), '') : '';
-}
-
-export function repeat(many: number, value = '\t') {
-    return value.repeat(many);
+    return value ? value.replace(new RegExp(`${char}+$`), '') : '';
 }
 
 export function indexOf(value: string, ...terms: string[]) {

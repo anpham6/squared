@@ -15,7 +15,7 @@ export default class SvgPattern extends SvgView$MX(SvgContainer) implements squa
     }
 
     public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual) {
-        super.build(exclude, residual, this.patternElement);
+        super.build(exclude, residual, this.patternElement, true);
     }
 
     get animations(): SvgAnimation[] {

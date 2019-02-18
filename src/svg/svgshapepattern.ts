@@ -79,17 +79,20 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                     const pattern = new SvgPattern(element, this.patternElement);
                     pattern.build(exclude, residual);
                     for (const item of pattern.cascade()) {
-                        if (SvgBuild.isShape(item) && item.path) {
-                            item.path.patternParent = this;
-                            if (this.patternContentUnits === REGION_UNIT.OBJECT_BOUNDING_BOX) {
-                                item.path.refitBaseValue(x / patternWidth, y / patternHeight);
+                        if (SvgBuild.isShape(item)) {
+                            item.setPath();
+                            if (item.path) {
+                                item.path.patternParent = this;
+                                if (this.patternContentUnits === REGION_UNIT.OBJECT_BOUNDING_BOX) {
+                                    item.path.refitBaseValue(x / patternWidth, y / patternHeight);
+                                }
+                                else {
+                                    item.path.refitBaseValue(x, y);
+                                }
+                                SvgPath.build(<SvgPath> item.path, item.transforms, exclude, residual);
+                                item.path.fillOpacity = (parseFloat(item.path.fillOpacity) * parseFloat(this.fillOpacity)).toString();
+                                item.path.clipPath = SvgBuild.drawRect(tileWidth, tileHeight, x, y) + (item.path.clipPath !== '' ? `;${item.path.clipPath}` : '');
                             }
-                            else {
-                                item.path.refitBaseValue(x, y);
-                            }
-                            SvgPath.build(<SvgPath> item.path, item.transforms, exclude, residual);
-                            item.path.fillOpacity = (parseFloat(item.path.fillOpacity) * parseFloat(this.fillOpacity)).toString();
-                            item.path.clipPath = SvgBuild.drawRect(tileWidth, tileHeight, x, y) + (item.path.clipPath !== '' ? `;${item.path.clipPath}` : '');
                         }
                     }
                     this.append(pattern);
