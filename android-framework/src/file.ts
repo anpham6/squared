@@ -331,10 +331,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 result.push(
                     replaceTab(
                         replaceUnit(
-                            $xml.createTemplate(template, {
-                                name: `res/drawable/${name}.xml`,
-                                value
-                            }),
+                            $xml.createTemplate(template, { name: `res/drawable/${name}.xml`, value }),
                             settings.resolutionDPI,
                             settings.convertPixels
                         ),
@@ -359,10 +356,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     for (const dpi in images) {
                         result.push(
                             replaceTab(
-                                $xml.createTemplate(template, {
-                                    name: `res/drawable-${dpi}/${name}.${$util.lastIndexOf(images[dpi], '.')}`,
-                                    value: `<!-- image: ${images[dpi]} -->`
-                                }),
+                                $xml.createTemplate(template, { name: `res/drawable-${dpi}/${name}.${$util.lastIndexOf(images[dpi], '.')}`, value: `<!-- image: ${images[dpi]} -->` }),
                                 settings.insertSpaces
                             )
                         );
@@ -371,10 +365,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 else if (images.mdpi) {
                     result.push(
                         replaceTab(
-                            $xml.createTemplate(template, {
-                                name: `res/drawable/${name}.${$util.lastIndexOf(images.mdpi, '.')}`,
-                                value: `<!-- image: ${images.mdpi} -->`
-                            }),
+                            $xml.createTemplate(template, { name: `res/drawable/${name}.${$util.lastIndexOf(images.mdpi, '.')}`, value: `<!-- image: ${images.mdpi} -->` }),
                             settings.insertSpaces
                         )
                     );

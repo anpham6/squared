@@ -96,12 +96,12 @@ declare global {
             public static filterTransforms(transforms: SvgTransform[], exclude?: number[]): SvgTransform[];
             public static applyTransforms(transforms: SvgTransform[], values: Point[], aspectRatio?: SvgAspectRatio, origin?: Point): SvgPoint[];
             public static convertTransforms(transforms: SVGTransformList): SvgTransform[];
-            public static getCenter(values: Point[]): Point[];
             public static clonePoints(values: SvgPoint[] | SVGPointList): SvgPoint[];
             public static minMaxPoints(values: Point[]): number[];
+            public static centerPoints(values: Point[]): Point[];
             public static convertNumbers(values: number[]): Point[];
-            public static getPathPoints(values: SvgPathCommand[], includeRadius?: boolean): SvgPoint[];
-            public static setPathPoints(values: SvgPathCommand[], points: SvgPoint[]): SvgPathCommand[];
+            public static getPathPoints(values: SvgPathCommand[], radius?: boolean): SvgPoint[];
+            public static bindPathPoints(values: SvgPathCommand[], points: SvgPoint[]): SvgPathCommand[];
             public static toPointList(value: string): Point[];
             public static toNumberList(value: string): number[];
             public static toBoxRect(value: string): BoxRect;

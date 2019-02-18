@@ -68,7 +68,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                         if (requireRefit) {
                             parent.refitPoints(points);
                         }
-                        d = SvgBuild.drawPath(SvgBuild.setPathPoints(commands, points), this.transformed !== undefined);
+                        d = SvgBuild.drawPath(SvgBuild.bindPathPoints(commands, points), this.transformed !== undefined);
                     }
                 }
             }

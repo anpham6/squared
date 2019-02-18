@@ -266,15 +266,15 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
             for (const image of this.session.image.values()) {
                 if (image.width === 0 && image.height === 0 && image.uri) {
-                    const imageElement = document.createElement('img');
-                    imageElement.src = image.uri;
-                    if (imageElement.complete && imageElement.naturalWidth > 0 && imageElement.naturalHeight > 0) {
-                        image.width = imageElement.naturalWidth;
-                        image.height = imageElement.naturalHeight;
+                    const element = document.createElement('img');
+                    element.src = image.uri;
+                    if (element.complete && element.naturalWidth > 0 && element.naturalHeight > 0) {
+                        image.width = element.naturalWidth;
+                        image.height = element.naturalHeight;
                     }
                     else {
-                        imageElement.className = '__css.preload';
-                        documentRoot.appendChild(imageElement);
+                        element.className = '__css.preload';
+                        documentRoot.appendChild(element);
                     }
                 }
             }

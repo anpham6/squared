@@ -279,15 +279,15 @@ export const TRANSFORM = {
         const value = $dom.getNamedItem(element, attr);
         const result: SvgPoint[] = [];
         if (value !== '') {
-            const pattern = /rotate\((-?[\d.]+),?\s*(-?[\d.]+),?\s*(-?[\d.]+)\)/g;
+            const pattern = /rotate\((-?[\d.]+)(?:,? (-?[\d.]+))?(?:,? (-?[\d.]+))?\)/g;
             let match: RegExpExecArray | null;
             while ((match = pattern.exec(value)) !== null) {
                 const angle = parseFloat(match[1]);
                 if (angle !== 0) {
                     result.push({
                         angle,
-                        x: parseFloat(match[2]),
-                        y: parseFloat(match[3])
+                        x: match[2] ? parseFloat(match[2]) : 0,
+                        y: match[3] ? parseFloat(match[3]) : 0
                     });
                 }
             }

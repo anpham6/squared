@@ -8,17 +8,17 @@ const $util = squared.lib.util;
 
 export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.SvgAnimateMotion {
     public path = '';
-    public mpath: SVGGraphicsElement | null = null;
+    public motionPathElement: SVGGraphicsElement | null = null;
     public rotate = 0;
     public rotateAuto = false;
     public rotateAutoReverse = false;
     public keyPoints?: number[];
 
-    constructor(element?: SVGAnimateMotionElement) {
-        super(element);
-        if (element) {
+    constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimateMotionElement) {
+        super(element, animationElement);
+        if (animationElement) {
             this.setAttribute('path');
-            const rotate = $dom.getNamedItem(element, 'rotate');
+            const rotate = $dom.getNamedItem(animationElement, 'rotate');
             switch (rotate) {
                 case 'auto':
                     this.rotateAuto = true;
@@ -31,7 +31,7 @@ export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.
                     break;
             }
             if (this.keyTimes.length) {
-                const keyPoints = $dom.getNamedItem(element, 'keyPoints');
+                const keyPoints = $dom.getNamedItem(animationElement, 'keyPoints');
                 if (keyPoints !== '') {
                     const points = SvgAnimate.toFractionList(keyPoints);
                     if (points.length === this.keyTimes.length) {
@@ -39,12 +39,12 @@ export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.
                     }
                 }
             }
-            for (let i = 0; i < element.children.length; i++) {
-                const item = element.children[i];
+            for (let i = 0; i < animationElement.children.length; i++) {
+                const item = animationElement.children[i];
                 if (item.tagName === 'mpath') {
                     const target = getTargetElement(item);
                     if (target && (SVG.shape(target) || SVG.use(target))) {
-                        this.mpath = target;
+                        this.motionPathElement = target;
                         break;
                     }
                 }

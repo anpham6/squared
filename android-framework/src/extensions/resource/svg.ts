@@ -1227,7 +1227,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                     }
                 }
                 if (this.IMAGE_DATA.length) {
-                    const imageD: StringMap[] = [];
+                    const D: StringMap[] = [];
                     for (const item of this.IMAGE_DATA) {
                         const scaleX = svg.width / svg.viewBox.width;
                         const scaleY = svg.height / svg.viewBox.height;
@@ -1259,14 +1259,14 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                         else if (!item.visible) {
                             continue;
                         }
-                        imageD.push(data);
+                        D.push(data);
                     }
                     const xml = $xml.formatTemplate(
                         $xml.createTemplate(TEMPLATES.LAYER_LIST, <TemplateDataA> {
                             A: [],
                             B: false,
                             C: [{ src: vectorName }],
-                            D: imageD,
+                            D,
                             E: false,
                             F: false
                         })
@@ -1311,7 +1311,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
             if ($SvgBuild.isShape(item)) {
                 if (item.visible && item.path && item.path.value) {
                     const pathData = this.createPath(item, item.path, render);
-                    if (pathData.name === '') {
+                    if (!this.ANIMATE_DATA.has(item.name)) {
                         const strokeDash = item.path.getStrokeDash();
                         if (strokeDash.length) {
                             for (let i = 0; i < strokeDash.length; i++) {
@@ -1320,7 +1320,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                 pathObject.trimPathEnd = $utilS.truncateRange(strokeDash[i].end);
                                 CCC.push(pathObject);
                             }
-                            render[0].push({ groupName: item.name });
+                            render[0].push({ groupName: getVectorName(item, 'stroke') });
                         }
                     }
                     if (CCC.length === 0) {
@@ -1357,11 +1357,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                     continue;
                 }
             }
-            groupData.BB.push({
-                render,
-                CCC,
-                DDD
-            });
+            groupData.BB.push({ render, CCC, DDD });
         }
         this.VECTOR_DATA.set(group.name, groupData);
     }
@@ -1574,13 +1570,11 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                             const previous = replaceData[j];
                             if (!previous.reset) {
                                 for (let k = i + 1; k < replaceData.length; k++) {
-                                    const next = replaceData[k];
-                                    if (next.index === item.index) {
-                                        break invalid;
-                                    }
-                                    else if (next.index === previous.index) {
-                                        valid = false;
-                                        break invalid;
+                                    switch (replaceData[k].index) {
+                                        case previous.index:
+                                            valid = false;
+                                        case item.index:
+                                            break invalid;
                                     }
                                 }
                             }
@@ -1618,7 +1612,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 }
             }
         }
-        if (!this.queueAnimations(target, target.name, item => ($SvgBuild.asAnimate(item) || $SvgBuild.asSet(item)) && item.attributeName !== 'clip-path', pathData) && replaceResult.length === 0) {
+        if (!this.queueAnimations(target, result.name, item => ($SvgBuild.asAnimate(item) || $SvgBuild.asSet(item)) && item.attributeName !== 'clip-path', pathData) && replaceResult.length === 0) {
             result.name = '';
         }
         if (transformResult.length) {

@@ -3,7 +3,8 @@ import { SvgAnimateAttribute, SvgAnimationGroup } from '../svg/@types/object';
 declare global {
     namespace squared.svg {
         interface SvgAnimation {
-            element: SVGAnimationElement | null;
+            element: SVGGraphicsElement | null;
+            animationElement: SVGAnimationElement | null;
             attributeName: string;
             delay: number;
             to: string;
@@ -22,7 +23,7 @@ declare global {
         }
 
         interface SvgAnimate extends SvgAnimation {
-            element: SVGAnimateElement | null;
+            animationElement: SVGAnimateElement | null;
             type: number;
             from: string;
             values: string[];
@@ -51,7 +52,7 @@ declare global {
         }
 
         interface SvgAnimateTransform extends SvgAnimate {
-            element: SVGAnimateTransformElement | null;
+            animationElement: SVGAnimateTransformElement | null;
             transformFrom?: string;
             transformOrigin?: Point[];
             setType(value: string): void;
@@ -59,23 +60,23 @@ declare global {
         }
 
         interface SvgAnimateMotion extends SvgAnimate {
-            element: SVGAnimateMotionElement | null;
+            animationElement: SVGAnimateMotionElement | null;
+            motionPathElement: SVGGraphicsElement | null;
             path: string;
             rotate: number;
             rotateAuto: boolean;
             rotateAutoReverse: boolean;
-            mpath: SVGGraphicsElement | null;
             keyPoints?: number[];
         }
 
         class SvgAnimation implements SvgAnimation {
-            constructor(element?: SVGAnimationElement);
+            constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimationElement);
         }
 
         class SvgAnimate implements SvgAnimate {
             public static toStepFractionList(name: string, keyTimes: number[], values: string[], keySpline: string, index: number, fontSize?: number): [number[], string[]] | undefined;
             public static toFractionList(value: string, delimiter?: string): number[];
-            constructor(element?: SVGAnimateElement);
+            constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimateElement);
         }
 
         class SvgAnimateTransform implements SvgAnimateTransform {
@@ -83,11 +84,11 @@ declare global {
             public static toScaleList(values: string[]): number[][] | undefined;
             public static toTranslateList(values: string[]): number[][] | undefined;
             public static toSkewList(values: string[]): number[][] | undefined;
-            constructor(element?: SVGAnimateTransformElement);
+            constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimateTransformElement);
         }
 
         class SvgAnimateMotion implements SvgAnimateMotion {
-            constructor(element?: SVGAnimateMotionElement);
+            constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimateMotionElement);
         }
     }
 }

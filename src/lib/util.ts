@@ -583,11 +583,11 @@ export function flatMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[
     return result;
 }
 
-export function filterMap<T, U>(list: T[], predicate: IteratorPredicate<T, boolean>, mapper: IteratorPredicate<T, U>): U[] {
+export function filterMap<T, U>(list: T[], predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, U>): U[] {
     const result: U[] = [];
     for (let i = 0; i < list.length; i++) {
         if (predicate(list[i], i, list)) {
-            result.push(mapper(list[i], i, list));
+            result.push(callback(list[i], i, list));
         }
     }
     return result;
@@ -600,7 +600,7 @@ export function replaceMap<T, U>(list: any[], predicate: IteratorPredicate<T, U>
     return list;
 }
 
-export function objectMap<T, U>(list: any[], predicate: IteratorPredicate<T, U>): U[] {
+export function objectMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[] {
     const result: U[] = [];
     for (let i = 0; i < list.length; i++) {
         result[i] = predicate(list[i], i, list);

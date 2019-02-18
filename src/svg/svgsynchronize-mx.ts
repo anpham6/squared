@@ -511,7 +511,7 @@ function isFromToFormat(transforming: boolean, keyTimeMode: number) {
 }
 
 function playableAnimation(item: SvgAnimate) {
-    return !item.paused && (item.element && item.duration !== -1 || item.keyTimes && item.keyTimes.length > 1 && item.duration > 0);
+    return !item.paused && (item.animationElement && item.duration !== -1 || item.keyTimes && item.keyTimes.length > 1 && item.duration > 0);
 }
 
 function getDurationTotal(item: SvgAnimate, minimum = false) {
@@ -676,7 +676,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         const timeB = getDurationTotal(itemB);
                                         if (itemA.delay === itemB.delay && (!itemB.fillReplace || timeA <= timeB || itemB.iterationCount === -1) ||
                                             itemB.fillBackwards && itemA.delay <= itemB.delay && (itemB.fillForwards || itemA.fillReplace && timeA <= itemB.delay) ||
-                                            itemA.element && itemB.element === null && (itemA.delay >= itemB.delay && timeA <= timeB || itemB.fillForwards))
+                                            itemA.animationElement && itemB.animationElement === null && (itemA.delay >= itemB.delay && timeA <= timeB || itemB.fillForwards))
                                         {
                                             excluded[i] = itemA;
                                             break;
@@ -845,7 +845,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                 setterData,
                                 set => set.delay >= delayTime && set.delay < endTime,
                                 (set: SvgAnimate) => {
-                                    if (set.element) {
+                                    if (set.animationElement) {
                                         removeIncomplete();
                                     }
                                     if (incomplete.length === 0) {
@@ -898,7 +898,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                         }
                         function sortIncomplete() {
                             incomplete.sort((a, b) => {
-                                if (a.element && b.element && a.delay !== b.delay) {
+                                if (a.animationElement && b.animationElement && a.delay !== b.delay) {
                                     return a.delay < b.delay ? 1 : -1;
                                 }
                                 return a.group.id <= b.group.id ? 1 : -1;
@@ -909,7 +909,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                 $util.spliceArray(incomplete, previous => previous === item);
                             }
                             else {
-                                $util.spliceArray(incomplete, previous => previous.element !== null);
+                                $util.spliceArray(incomplete, previous => previous.animationElement !== null);
                             }
                         }
                         function setFreezeValue(time: number, value: AnimateValue, type = 0, item?: SvgAnimation) {
@@ -1002,7 +1002,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                             continue;
                                         }
                                     }
-                                    if (item.element && item.delay <= backwards.delay) {
+                                    if (item.animationElement && item.delay <= backwards.delay) {
                                         groupData[i].splice(j--, 1);
                                         queueIncomplete(item);
                                     }
@@ -1149,7 +1149,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                     let startTime = maxTime + 1;
                                     let maxThreadTime = Math.min(nextDelayTime || Number.POSITIVE_INFINITY, item.end || Number.POSITIVE_INFINITY);
                                     let setterInterrupt: SvgAnimation | undefined;
-                                    if (setterData.length && item.element) {
+                                    if (setterData.length && item.animationElement) {
                                         const interruptTime = Math.min(nextDelayTime || Number.POSITIVE_INFINITY, durationTotal, maxThreadTime);
                                         setterInterrupt = setterData.find(set => set.delay >= actualMaxTime && set.delay <= interruptTime);
                                         if (setterInterrupt) {
@@ -1342,7 +1342,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         set => set.delay >= actualStartTime && set.delay <= actualMaxTime,
                                         (set: SvgAnimate) => {
                                             setFreezeValue(set.delay, set.to, set.type, set);
-                                            if (set.element) {
+                                            if (set.animationElement) {
                                                 removeIncomplete();
                                             }
                                         }

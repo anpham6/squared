@@ -101,17 +101,17 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         switch (item.tagName) {
                             case 'set':
                                 for (const time of times) {
-                                    addAnimation(new SvgAnimation(<SVGAnimationElement> item), time);
+                                    addAnimation(new SvgAnimation(element, <SVGAnimationElement> item), time);
                                 }
                                 break;
                             case 'animate':
                                 for (const time of times) {
-                                    addAnimation(new SvgAnimate(<SVGAnimateElement> item), time);
+                                    addAnimation(new SvgAnimate(element, <SVGAnimateElement> item), time);
                                 }
                                 break;
                             case 'animateTransform':
                                 for (const time of times) {
-                                    const animate = new SvgAnimateTransform(<SVGAnimateTransformElement> item);
+                                    const animate = new SvgAnimateTransform(element, <SVGAnimateTransformElement> item);
                                     if (SvgBuild.isShape(this) && this.path) {
                                         animate.transformFrom = this.path.draw(undefined, undefined, true);
                                     }
@@ -120,7 +120,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 break;
                             case 'animateMotion':
                                 for (const time of times) {
-                                    addAnimation(new SvgAnimateMotion(<SVGAnimateMotionElement> item), time);
+                                    addAnimation(new SvgAnimateMotion(element, <SVGAnimateMotionElement> item), time);
                                 }
                                 break;
                         }
@@ -265,15 +265,13 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 case 'skewX':
                                 case 'skewY':
                                 case 'translate':
-                                    animate = new SvgAnimateTransform();
+                                    animate = new SvgAnimateTransform(element);
                                     animate.attributeName = 'transform';
-                                    animate.baseFrom = TRANSFORM.typeAsValue(name);
                                     (<SvgAnimateTransform> animate).setType(name);
                                     break;
                                 default:
-                                    animate = new SvgAnimate();
+                                    animate = new SvgAnimate(element);
                                     animate.attributeName = name;
-                                    animate.baseFrom = $util.optionalAsString(element, `${name}.baseVal.valueAsString`) || $dom.cssAttribute(element, name);
                                     break;
                             }
                             const timingFunction = cssData['animation-timing-function'][i];

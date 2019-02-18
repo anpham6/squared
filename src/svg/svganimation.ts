@@ -1,13 +1,14 @@
 import { SvgAnimationGroup } from './@types/object';
 
 import { INSTANCE_TYPE } from './lib/constant';
-import { TRANSFORM, convertClockTime } from './lib/util';
+import { convertClockTime } from './lib/util';
 
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 export default class SvgAnimation implements squared.svg.SvgAnimation {
-    public element: SVGAnimationElement | null = null;
+    public element: SVGGraphicsElement | null = null;
+    public animationElement: SVGAnimationElement | null = null;
     public attributeName = '';
     public paused = false;
     public synchronizeState = 0;
@@ -19,26 +20,29 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     private _to = '';
     private _group?: SvgAnimationGroup;
 
-    constructor(element?: SVGAnimationElement) {
+    constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimationElement) {
         if (element) {
             this.element = element;
+        }
+        if (animationElement) {
+            this.animationElement = animationElement;
             this.setAttribute('attributeName');
             this.setAttribute('to');
-            const dur = $dom.getNamedItem(element, 'dur');
+            const dur = $dom.getNamedItem(animationElement, 'dur');
             if (dur !== '' && dur !== 'indefinite') {
                 this.duration = convertClockTime(dur);
             }
-            if (this.attributeName === 'transform') {
-                this.baseFrom = TRANSFORM.typeAsValue($dom.getNamedItem(element, 'type'));
-            }
-            else if (element.parentElement) {
-                this.baseFrom = $util.optionalAsString(element.parentElement, `${this.attributeName}.baseVal.valueAsString`) || $dom.cssInheritAttribute(element.parentElement, this.attributeName);
+        }
+        if (this.attributeName !== 'transform') {
+            const baseElement = animationElement && animationElement.parentElement || element;
+            if (baseElement) {
+                this.baseFrom = $util.optionalAsString(baseElement, `${this.attributeName}.baseVal.valueAsString`) || $dom.cssInheritAttribute(baseElement, this.attributeName);
             }
         }
     }
 
     public setAttribute(attr: string, equality?: string) {
-        const value = $dom.getNamedItem(this.element, attr);
+        const value = $dom.getNamedItem(this.animationElement, attr);
         if (value !== '') {
             if (equality !== undefined) {
                 this[attr + $util.capitalize(equality)] = value === equality;

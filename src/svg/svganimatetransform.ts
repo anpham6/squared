@@ -2,6 +2,7 @@ import SvgAnimate from './svganimate';
 import SvgBuild from './svgbuild';
 
 import { INSTANCE_TYPE } from './lib/constant';
+import { TRANSFORM } from './lib/util';
 
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
@@ -100,10 +101,10 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
     public transformFrom?: string;
     public transformOrigin?: Point[];
 
-    constructor(element?: SVGAnimateTransformElement) {
-        super(element);
-        if (element) {
-            const type = $dom.getNamedItem(element, 'type');
+    constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimateTransformElement) {
+        super(element, animationElement);
+        if (animationElement) {
+            const type = $dom.getNamedItem(animationElement, 'type');
             this.setType(type);
             this.setCalcMode(type);
         }
@@ -218,8 +219,11 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                 this.type = SVGTransform.SVG_TRANSFORM_SKEWY;
                 values = SvgAnimateTransform.toSkewList(this.values);
                 break;
+            default:
+                return;
         }
         this.values = values ? $util.replaceMap<number[], string>(values, array => array.join(' ')) : [];
+        this.baseFrom = TRANSFORM.typeAsValue(this.type);
     }
 
     get instanceType() {

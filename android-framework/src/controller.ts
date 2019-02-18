@@ -1661,7 +1661,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             }
             columns[j].push(item);
             if (item.length) {
-                totalGap += $util.maxArray($util.objectMap<T, number>(item.children, child => child.marginLeft + child.marginRight));
+                totalGap += $util.maxArray($util.objectMap<T, number>(item.children as T[], child => child.marginLeft + child.marginRight));
             }
         }
         const columnGap = $util.convertInt(node.css('columnGap')) || 16;

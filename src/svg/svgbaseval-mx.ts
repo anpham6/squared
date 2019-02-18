@@ -61,7 +61,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         const commands = SvgBuild.getPathCommands(value);
                         const points = SvgBuild.getPathPoints(commands);
                         adjustPoints(points);
-                        this._baseVal[attr] = SvgBuild.drawPath(SvgBuild.setPathPoints(commands, points));
+                        this._baseVal[attr] = SvgBuild.drawPath(SvgBuild.bindPathPoints(commands, points));
                     }
                 }
                 else if (typeof value === 'number') {
