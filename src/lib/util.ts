@@ -221,6 +221,15 @@ export function convertEnum(value: number, base: {}, derived: {}): string {
     return '';
 }
 
+export function truncateRange(value: number, precision = 3) {
+    if (value === 0 || value === 1) {
+        return value.toString();
+    }
+    else {
+        return value.toPrecision(precision).replace(/\.?0+$/, '');
+    }
+}
+
 export function formatPX(value: string | number) {
     if (typeof value === 'string') {
         value = parseFloat(value);
@@ -278,6 +287,10 @@ export function includes(source: string | undefined, value: string, delimiter = 
         }
     }
     return false;
+}
+
+export function cloneInstance<T>(value: T): T {
+    return Object.assign(Object.create(Object.getPrototypeOf(value)), value);
 }
 
 export function cloneObject(data: {}, destination = {}) {

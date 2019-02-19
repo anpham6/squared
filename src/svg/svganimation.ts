@@ -1,7 +1,7 @@
 import { SvgAnimationGroup } from './@types/object';
 
 import { INSTANCE_TYPE } from './lib/constant';
-import { convertClockTime } from './lib/util';
+import { convertClockTime, getFontSize } from './lib/util';
 
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
@@ -9,12 +9,12 @@ const $util = squared.lib.util;
 export default class SvgAnimation implements squared.svg.SvgAnimation {
     public element: SVGGraphicsElement | null = null;
     public animationElement: SVGAnimationElement | null = null;
-    public attributeName = '';
     public paused = false;
     public synchronizeState = 0;
     public parent?: squared.svg.SvgView | squared.svg.SvgPath;
     public baseFrom?: string;
 
+    private _attributeName = '';
     private _duration = -1;
     private _delay = 0;
     private _to = '';
@@ -31,12 +31,6 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
             const dur = $dom.getNamedItem(animationElement, 'dur');
             if (dur !== '' && dur !== 'indefinite') {
                 this.duration = convertClockTime(dur);
-            }
-        }
-        if (this.attributeName !== 'transform') {
-            const baseElement = animationElement && animationElement.parentElement || element;
-            if (baseElement) {
-                this.baseFrom = $util.optionalAsString(baseElement, `${this.attributeName}.baseVal.valueAsString`) || $dom.cssInheritAttribute(baseElement, this.attributeName);
             }
         }
     }
@@ -71,6 +65,22 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
 
     public hasState(...values: number[]) {
         return values.some(value => $util.hasBit(this.synchronizeState, value));
+    }
+
+    set attributeName(value) {
+        if (value !== 'transform') {
+            const baseElement = this.animationElement && this.animationElement.parentElement || this.element;
+            if (baseElement) {
+                this.baseFrom = $util.optionalAsString(baseElement, `${value}.baseVal.valueAsString`) || $dom.cssInheritAttribute(baseElement, value);
+                if ($util.isUnit(this.baseFrom)) {
+                    this.baseFrom = parseFloat($util.convertPX(this.baseFrom, getFontSize(<SVGGraphicsElement> baseElement))).toString();
+                }
+            }
+            this._attributeName = value;
+        }
+    }
+    get attributeName() {
+        return this._attributeName;
     }
 
     set delay(value) {

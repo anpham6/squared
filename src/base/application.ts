@@ -105,10 +105,10 @@ export default class Application<T extends Node> implements squared.base.Applica
 
     constructor(
         public framework: number,
+        public nodeConstructor: Constructor<T>,
         controllerConstructor: Constructor<T>,
         resourceConstructor: Constructor<T>,
-        extensionManagerHandler: Constructor<T>,
-        public nodeConstructor: Constructor<T>)
+        extensionManagerHandler: Constructor<T>)
     {
         this.controllerHandler = (<unknown> new controllerConstructor(this, this.processing.cache)) as Controller<T>;
         this.resourceHandler = (<unknown> new resourceConstructor(this, this.processing.cache)) as Resource<T>;
@@ -981,7 +981,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                             unknownParent = false;
                         }
                         if (result) {
-                            const layout = result.layout as Layout<T>;
+                            const layout = result.layout;
                             const output = this.renderLayout(layout);
                             if (output !== '') {
                                 this.addRenderTemplate(parentY, layout.node, output, true);
@@ -1082,7 +1082,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                 continue;
                             }
                             else {
-                                layout = result.layout as Layout<T>;
+                                layout = result.layout;
                             }
                         }
                         const output = this.renderLayout(layout);

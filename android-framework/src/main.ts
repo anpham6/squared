@@ -195,7 +195,7 @@ const appBase: AppFramework<T> = {
     create() {
         const EN = squared.base.lib.constant.EXT_NAME;
         const EA = constant.EXT_ANDROID;
-        application = new squared.base.Application(framework, Controller, Resource, ExtensionManager, View);
+        application = new squared.base.Application(framework, View, Controller, Resource, ExtensionManager);
         fileHandler = new File(application.resourceHandler);
         userSettings = { ...SETTINGS };
         Object.assign(application.builtInExtensions, {

@@ -42,10 +42,10 @@ declare global {
         class Application<T extends Node> implements Application<T> {
             constructor(
                 framework: number,
+                nodeConstructor: Constructor<T>,
                 controllerConstructor: Constructor<Controller<T>>,
                 resourceConstructor: Constructor<Resource<T>>,
-                extensionManagerConstructor: Constructor<ExtensionManager<T>>,
-                nodeConstructor: Constructor<T>
+                extensionManagerConstructor: Constructor<ExtensionManager<T>>
             );
         }
     }

@@ -2,8 +2,8 @@ import { SvgPoint, SvgStrokeDash, SvgTransform, SvgTransformExclude, SvgTransfor
 
 import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgPaint$MX from './svgpaint-mx';
-import SvgElement from './svgelement';
 import SvgBuild from './svgbuild';
+import SvgElement from './svgelement';
 
 import { INSTANCE_TYPE, REGION_UNIT } from './lib/constant';
 import { SVG, TRANSFORM } from './lib/util';
@@ -203,25 +203,85 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         return d;
     }
 
-    public getStrokeDash() {
+    public drawStrokeDash() {
+        const dashArray = $util.convertInt(this.strokeDasharray);
+        if (dashArray > 0) {
+            return this.getStrokeDash(dashArray, $util.convertInt(this.strokeDashoffset), $util.convertInt(this.pathLength) || this.totalLength);
+        }
+        return undefined;
+    }
+
+    public getStrokeDash(dashArray: number, dashOffset: number, totalLength: number) {
         const result: SvgStrokeDash[] = [];
-        const value = $util.convertInt(this.strokeDasharray);
-        if (value > 0) {
-            const offset = $util.convertInt(this.strokeDashoffset);
-            const totalLength = $util.convertInt(this.pathLength) || this.totalLength;
-            if (offset >= totalLength) {
-                result.push({ start: 1, end: 1 });
-            }
-            else {
-                for (let i = offset, j = 0; i < totalLength; i += value, j++) {
-                    if (j % 2 === 0) {
-                        result.push({
-                            start: i / totalLength,
-                            end: Math.min(i + value, totalLength) / totalLength
-                        });
+        let actualLength: number;
+        if (dashOffset < 0 && Math.abs(dashOffset) >= totalLength) {
+            actualLength = Math.abs(dashOffset) + Math.ceil(totalLength / dashArray) * dashArray;
+        }
+        else {
+            actualLength = totalLength;
+        }
+        let previousEnd: number | undefined;
+        for (let i = -dashOffset, j = 0; i <= actualLength; i += dashArray, j++) {
+            if (i + dashArray >= 0 && j % 2 === 0) {
+                const startOffset = i % dashArray;
+                let start = startOffset / totalLength;
+                let end: number;
+                if (previousEnd !== undefined) {
+                    const length = dashArray / totalLength;
+                    start = previousEnd + length;
+                    if (start >= 1) {
+                        break;
+                    }
+                    else {
+                        end = Math.min(start + length, 1);
                     }
                 }
+                else {
+                    const reverse = Math.floor(i / dashArray) % 2 === 1;
+                    if (i < 0 && Math.abs(start) === 0) {
+                        start = 1;
+                        end = 0;
+                    }
+                    else if (start === 1) {
+                        if (reverse) {
+                            start = 0;
+                            end = 1;
+                        }
+                        else {
+                            end = 0;
+                        }
+                    }
+                    else {
+                        if (start > 1) {
+                            if (Math.floor(start) % 2 === 1) {
+                                start = 1;
+                            }
+                            else {
+                                start %= 1;
+                            }
+                        }
+                        end = Math.min(start + (dashArray / totalLength), 1);
+                        if (start < 0 && end >= 0) {
+                            start = 0;
+                        }
+                        else if (reverse && actualLength !== totalLength)  {
+                            if (Math.abs(start) === 0) {
+                                start = 1;
+                                end = 0;
+                            }
+                            else {
+                                end = Math.min(start, 1);
+                                start = 0;
+                            }
+                        }
+                    }
+                }
+                result.push({ start, end });
+                previousEnd = end;
             }
+        }
+        if (result.length === 0) {
+            result.push({ start: 1, end: 0 });
         }
         return result;
     }

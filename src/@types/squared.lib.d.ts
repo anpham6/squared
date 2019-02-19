@@ -75,6 +75,7 @@ declare global {
             function convertAlpha(value: number): string;
             function convertRoman(value: number): string;
             function convertEnum(value: number, base: {}, derived: {}): string;
+            function truncateRange(value: number, precision?: number): string;
             function formatPX(value: string | number): string;
             function formatPercent(value: string | number): string;
             function formatString(value: string, ...params: string[]): string;
@@ -85,6 +86,7 @@ declare global {
             function isUnit(value: string): boolean;
             function isPercent(value: string): boolean;
             function includes(source: string | undefined, value: string, delimiter?: string): boolean;
+            function cloneInstance<T>(value: T): T;
             function cloneObject(data: {}, destination?: {}): {};
             function optional(obj: UndefNull<object>, value: string, type?: string): any;
             function optionalAsObject(obj: UndefNull<object>, value: string): object;

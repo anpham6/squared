@@ -7,7 +7,8 @@ declare global {
             transforms: SvgTransform[];
             readonly totalLength: number;
             draw(transforms?: SvgTransform[], residual?: SvgTransformResidual, extract?: boolean): string;
-            getStrokeDash(value?: number, offset?: number): SvgStrokeDash[];
+            drawStrokeDash(animations?: SvgAnimation[]): SvgStrokeDash[] | undefined;
+            getStrokeDash(dashArray: number, dashOffset: number, totalLength: number): SvgStrokeDash[];
         }
 
         class SvgPath implements SvgPath {

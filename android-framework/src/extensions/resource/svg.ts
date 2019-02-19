@@ -75,6 +75,7 @@ interface PathTemplateData extends Partial<SvgPath> {
     fillPattern: any;
     trimPathStart?: string;
     trimPathEnd?: string;
+    trimPathOffset?: string;
 }
 
 interface TransformData {
@@ -162,14 +163,16 @@ const INTERPOLATOR_XML = `<?xml version="1.0" encoding="utf-8"?>
 	android:controlY2="{3}" />`;
 
 const ATTRIBUTE_ANDROID = {
-    'stroke': 'strokeColor',
-    'fill': 'fillColor',
-    'opacity': 'alpha',
-    'stroke-opacity': 'strokeAlpha',
-    'fill-opacity': 'fillAlpha',
-    'stroke-width': 'strokeWidth',
-    'd': 'pathData',
-    'clip-path': 'pathData'
+    'stroke': ['strokeColor'],
+    'fill': ['fillColor'],
+    'opacity': ['alpha'],
+    'stroke-opacity': ['strokeAlpha'],
+    'fill-opacity': ['fillAlpha'],
+    'stroke-width': ['strokeWidth'],
+    'stroke-dasharray': ['trimPathStart', 'trimPathEnd'],
+    'stroke-dashoffset': ['trimPathOffset'],
+    'd': ['pathData'],
+    'clip-path': ['pathData']
 };
 
 function getPaintAttribute(value: string) {
@@ -366,6 +369,8 @@ function getValueType(attributeName: string) {
             return '';
         case 'opacity':
         case 'stroke-opacity':
+        case 'stroke-dashoffset':
+        case 'stroke-dasharray':
         case 'fill-opacity':
         case 'transform':
             return 'floatType';
@@ -436,11 +441,11 @@ function getTransformValues(item: $SvgAnimateTransform) {
 }
 
 function getAttributePropertyName(value: string, checkTransform = true) {
-    let result: string | undefined = ATTRIBUTE_ANDROID[value];
+    let result: string[] | undefined = ATTRIBUTE_ANDROID[value];
     if (result === undefined && checkTransform && getTransformInitialValue(value)) {
-        result = value;
+        result = [value];
     }
-    return result ? [result] : undefined;
+    return result ? result : undefined;
 }
 
 function getTransformInitialValue(name: string) {
@@ -1311,16 +1316,21 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
             if ($SvgBuild.isShape(item)) {
                 if (item.visible && item.path && item.path.value) {
                     const pathData = this.createPath(item, item.path, render);
-                    if (!this.ANIMATE_DATA.has(item.name)) {
-                        const strokeDash = item.path.getStrokeDash();
-                        if (strokeDash.length) {
+                    const animateData = this.ANIMATE_DATA.get(item.name);
+                    if (animateData === undefined || animateData.animate.every(animate => animate.attributeName.startsWith('stroke-dash'))) {
+                        const strokeDash = item.path.drawStrokeDash();
+                        if (strokeDash) {
+                            const groupName = getVectorName(item, 'stroke');
                             for (let i = 0; i < strokeDash.length; i++) {
                                 const pathObject = i === 0 ? pathData : Object.assign({}, pathData);
-                                pathObject.trimPathStart = $utilS.truncateRange(strokeDash[i].start);
-                                pathObject.trimPathEnd = $utilS.truncateRange(strokeDash[i].end);
+                                pathObject.trimPathStart = $util.truncateRange(strokeDash[i].start);
+                                pathObject.trimPathEnd = $util.truncateRange(strokeDash[i].end);
                                 CCC.push(pathObject);
                             }
-                            render[0].push({ groupName: getVectorName(item, 'stroke') });
+                            if (animateData && animateData.animate) {
+                                this.ANIMATE_DATA.delete(item.name);
+                            }
+                            render[0].push({ groupName });
                         }
                     }
                     if (CCC.length === 0) {

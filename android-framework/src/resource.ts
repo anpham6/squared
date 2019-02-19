@@ -193,7 +193,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                     }
                     gradient.colorStops.push({
                         color,
-                        offset: (offset / 100).toFixed(offset > 0 && offset < 100 ? 2 : 0),
+                        offset: $util.truncateRange(offset / 100),
                         opacity: stop.opacity
                     });
                 }

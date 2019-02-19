@@ -518,15 +518,6 @@ export function truncateString(value: string, precision = 3) {
     return result;
 }
 
-export function truncateRange(value: number, precision = 3) {
-    if (value === 0 || value === 1) {
-        return value.toString();
-    }
-    else {
-        return value.toPrecision(precision).replace(/0+$/, '');
-    }
-}
-
 export function getSplitValue(value: number, next: number, percent: number) {
     return value + (next - value) * percent;
 }
