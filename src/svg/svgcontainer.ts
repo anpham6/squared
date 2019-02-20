@@ -64,7 +64,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         return super.append(item);
     }
 
-    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, element?: Element, dryRun = false) {
+    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, precision?: number, element?: Element, initPath = true) {
         if (element === undefined) {
             element = this.element;
         }
@@ -101,7 +101,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                             this.setAspectRatio(<SvgGroup> svg);
                         }
                         else {
-                            svg = new squared.svg.SvgUse(item, target, !dryRun);
+                            svg = new squared.svg.SvgUse(item, target, initPath);
                         }
                     }
                 }
@@ -116,17 +116,17 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                     this.setAspectRatio(<SvgGroup> svg);
                 }
                 else {
-                    svg = new squared.svg.SvgShape(item, !dryRun);
+                    svg = new squared.svg.SvgShape(item, initPath);
                 }
             }
             if (svg) {
                 this.append(svg, viewport);
-                svg.build(exclude, residual, undefined, dryRun);
+                svg.build(exclude, residual, precision, undefined, initPath);
             }
         }
         if (SvgBuild.asSvg(this) && this.documentRoot) {
             if (this.aspectRatio.x < 0 || this.aspectRatio.y < 0) {
-                this.clipViewBox(this.aspectRatio.x, this.aspectRatio.y, this.aspectRatio.width, this.aspectRatio.height, true);
+                this.clipViewBox(this.aspectRatio.x, this.aspectRatio.y, this.aspectRatio.width, this.aspectRatio.height, precision, true);
             }
         }
         else if (requireClip && this.hasViewBox() && (this.aspectRatio.x !== 0 || this.aspectRatio.y !== 0)) {
@@ -134,7 +134,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
             const x = this.refitX(this.aspectRatio.x);
             const y = this.refitY(this.aspectRatio.y);
             if (boxRect.left < x || boxRect.top < y) {
-                this.clipViewBox(boxRect.left, boxRect.top, this.refitSize(this.aspectRatio.width), this.refitSize(this.aspectRatio.height));
+                this.clipViewBox(boxRect.left, boxRect.top, this.refitSize(this.aspectRatio.width), this.refitSize(this.aspectRatio.height), precision);
             }
         }
     }
@@ -143,17 +143,17 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         return SvgBuild.asSvg(this) && !!this.element.viewBox.baseVal || SvgBuild.asUseSymbol(this) && !!this.symbolElement.viewBox.baseVal;
     }
 
-    public clipViewBox(x: number, y: number, width: number, height: number, documentRoot = false) {
+    public clipViewBox(x: number, y: number, width: number, height: number, precision?: number, documentRoot = false) {
         if (documentRoot) {
-            this.clipRegion = SvgBuild.drawRect(width - x, height - y, x < 0 ? x * -1 : 0, y < 0 ? y * -1 : 0);
+            this.clipRegion = SvgBuild.drawRect(width - x, height - y, x < 0 ? x * -1 : 0, y < 0 ? y * -1 : 0, precision);
         }
         else {
-            this.clipRegion = SvgBuild.drawRect(width, height, x, y);
+            this.clipRegion = SvgBuild.drawRect(width, height, x, y, precision);
         }
     }
 
-    public synchronize(keyTimeMode = 0) {
-        this.each(item => item.synchronize(keyTimeMode));
+    public synchronize(keyTimeMode = 0, precision: number) {
+        this.each(item => item.synchronize(keyTimeMode, precision));
     }
 
     public refitX(value: number) {
@@ -195,7 +195,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
     }
 
     private getViewport(): Svg | undefined {
-        return this.viewport || (SvgBuild.asSvg(this) ? this as any : undefined);
+        return this.viewport || SvgBuild.asSvg(this) && this || undefined;
     }
 
     private setAspectRatio(group: SvgGroup, viewBox?: DOMRect) {

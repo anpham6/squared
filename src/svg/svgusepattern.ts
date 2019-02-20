@@ -17,16 +17,16 @@ export default class SvgUsePattern extends SvgSynchronize$MX(SvgViewRect$MX(SvgS
         super(element, patternElement);
     }
 
-    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual) {
-        super.build(exclude, residual, this.shapeElement);
+    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, precision?: number) {
+        super.build(exclude, residual, precision, this.shapeElement);
     }
 
-    public synchronize(keyTimeMode = 0) {
+    public synchronize(keyTimeMode = 0, precision?: number) {
         const [animations, transformations] = [$util.filterArray(this.animations, item => this.verifyBaseValue(item.attributeName, 0) === undefined || item.attributeName === 'x' || item.attributeName === 'y'), this.getAnimateTransform()];
         if (animations.length || transformations.length) {
-            this.mergeAnimations(this.getAnimateViewRect(animations), transformations, keyTimeMode);
+            this.mergeAnimations(this.getAnimateViewRect(animations), transformations, keyTimeMode, precision);
         }
-        super.synchronize(keyTimeMode);
+        super.synchronize(keyTimeMode, precision);
     }
 
     get instanceType() {

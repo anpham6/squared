@@ -46,6 +46,7 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
         pattern: new Map<string, SVGPatternElement>(),
         gradient: new Map<string, SvgGradient>()
     };
+    public precision?: number;
 
     constructor(
         public readonly element: SVGSVGElement,
@@ -55,16 +56,17 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
         this.init();
     }
 
-    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual) {
+    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, precision?: number) {
+        this.precision = precision;
         this.setRect();
-        super.build(exclude, residual);
+        super.build(exclude, residual, precision);
     }
 
-    public synchronize(keyTimeMode = 0) {
+    public synchronize(keyTimeMode = 0, precision?: number) {
         if (!this.documentRoot && this.animations.length) {
-            this.mergeAnimations(this.getAnimateViewRect(), this.getAnimateTransform(), keyTimeMode);
+            this.mergeAnimations(this.getAnimateViewRect(), this.getAnimateTransform(), keyTimeMode, precision);
         }
-        super.synchronize(keyTimeMode);
+        super.synchronize(keyTimeMode, precision);
     }
 
     private init() {

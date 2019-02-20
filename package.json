@@ -7,6 +7,7 @@
     "express": "node app.js",
     "dev": "tsc -w",
     "prod": "npm run clean && tslint -c tslint.json '**/*.ts' && tsc --inlineSourceMap false && rollup -c rollup.config.js && cd ./android-framework && rollup -c rollup.config.js && cd ../android-widget && rollup -c rollup.config.js",
+    "main": "npm run clean && tslint -c tslint.json '**/*.ts' && tsc --inlineSourceMap false && rollup -c rollup.config.js && cd ./android-framework && rollup -c rollup.config.js",
     "clean": "rimraf build/* && rimraf dist/* && rimraf temp/*"
   },
   "repository": {
@@ -58,7 +59,7 @@
     "@babel/plugin-transform-for-of": "^7.2.0",
     "@babel/preset-env": "^7.3.1",
     "rimraf": "^2.6.3",
-    "rollup": "^1.2.1",
+    "rollup": "^1.2.2",
     "rollup-plugin-babel": "^4.3.2",
     "rollup-plugin-terser": "^4.0.4",
     "systemjs": "^0.21.6",

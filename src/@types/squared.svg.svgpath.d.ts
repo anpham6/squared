@@ -6,13 +6,13 @@ declare global {
             value: string;
             transforms: SvgTransform[];
             readonly totalLength: number;
-            draw(transforms?: SvgTransform[], residual?: SvgTransformResidual, extract?: boolean): string;
+            draw(transforms?: SvgTransform[], residual?: SvgTransformResidual, precision?: number, extract?: boolean): string;
             drawStrokeDash(animations?: SvgAnimation[]): SvgStrokeDash[] | undefined;
-            getStrokeDash(dashArray: number, dashOffset: number, totalLength: number): SvgStrokeDash[];
+            getStrokeDash(value: number, offset: number, totalLength: number): SvgStrokeDash[];
         }
 
         class SvgPath implements SvgPath {
-            public static build(path: SvgPath, transform: SvgTransform[], exclude?: SvgTransformExclude, residual?: SvgTransformResidual): SvgPath;
+            public static build(path: SvgPath, transform: SvgTransform[], exclude?: SvgTransformExclude, residual?: SvgTransformResidual, precision?: number): SvgPath;
             constructor(element: SVGGraphicsElement);
         }
     }

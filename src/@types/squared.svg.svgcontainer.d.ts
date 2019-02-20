@@ -19,13 +19,14 @@ declare global {
             requireRefit(): boolean;
             getPathAll(cascade?: boolean): string[];
             hasViewBox(): boolean;
-            clipViewBox(x: number, y: number, width: number, height: number, documentRoot?: boolean): void;
+            clipViewBox(x: number, y: number, width: number, height: number, precision?: number, documentRoot?: boolean): void;
         }
 
         interface SvgViewRectExtended extends SvgView, SvgViewRect, SvgViewBox, SvgBaseVal, SvgSynchronize {
         }
 
         interface Svg extends SvgContainer, SvgViewRectExtended {
+            precision?: number;
             readonly element: SVGSVGElement;
             readonly documentRoot: boolean;
             readonly definitions: {

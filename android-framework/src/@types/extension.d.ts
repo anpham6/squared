@@ -6,6 +6,8 @@ export interface ConstraintGuidelineOptions {
 
 export interface ResourceSvgOptions {
     transformExclude: SvgTransformExclude;
+    decimalPrecisionKeyTime: number;
+    decimalPrecisionValue: number;
     animateInterpolator: string;
 }
 

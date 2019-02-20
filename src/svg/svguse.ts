@@ -28,16 +28,16 @@ export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(Svg
         this.path.useParent = this;
     }
 
-    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual) {
+    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, precision?: number) {
         super.build(exclude, residual);
-        this.setPaint(this.path ? [this.path.value] : undefined);
+        this.setPaint(this.path ? [this.path.value] : undefined, precision);
     }
 
-    public synchronize(keyTimeMode = 0) {
+    public synchronize(keyTimeMode = 0, precision?: number) {
         if (this.animations.length) {
-            this.mergeAnimations(this.getAnimateViewRect(), this.getAnimateTransform(), keyTimeMode);
+            this.mergeAnimations(this.getAnimateViewRect(), this.getAnimateTransform(), keyTimeMode, precision);
         }
-        super.synchronize(keyTimeMode, this.shapeElement);
+        super.synchronize(keyTimeMode, precision, this.shapeElement);
     }
 
     get transforms() {

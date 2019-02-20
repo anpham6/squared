@@ -11,9 +11,9 @@ export default class SvgG extends SvgPaint$MX(SvgView$MX(SvgContainer)) implemen
         super(element);
     }
 
-    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual) {
-        super.build(exclude, residual);
-        this.setPaint(this.getPathAll());
+    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, precision?: number) {
+        super.build(exclude, residual, precision);
+        this.setPaint(this.getPathAll(), precision);
     }
 
     get instanceType() {

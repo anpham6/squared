@@ -12,6 +12,7 @@ import SvgPattern from './svgpattern';
 import { INSTANCE_TYPE, REGION_UNIT } from './lib/constant';
 import { TRANSFORM } from './lib/util';
 
+const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 function getPercent(value: string) {
@@ -31,24 +32,22 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
         public readonly patternElement: SVGPatternElement)
     {
         super(element);
-        const units = this.patternElement.attributes.getNamedItem('patternUnits');
-        const contentUnits = this.patternElement.attributes.getNamedItem('patternContentUnits');
-        this.patternUnits = units && units.value === 'userSpaceOnUse' ? REGION_UNIT.USER_SPACE_ON_USE : REGION_UNIT.OBJECT_BOUNDING_BOX;
-        this.patternContentUnits = contentUnits && contentUnits.value === 'objectBoundingBox' ? REGION_UNIT.OBJECT_BOUNDING_BOX : REGION_UNIT.USER_SPACE_ON_USE;
+        this.patternUnits = $dom.getNamedItem(this.patternElement, 'patternUnits') === 'userSpaceOnUse' ? REGION_UNIT.USER_SPACE_ON_USE : REGION_UNIT.OBJECT_BOUNDING_BOX;
+        this.patternContentUnits = $dom.getNamedItem(this.patternElement, 'patternContentUnits') === 'objectBoundingBox' ? REGION_UNIT.OBJECT_BOUNDING_BOX : REGION_UNIT.USER_SPACE_ON_USE;
     }
 
-    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, element?: SVGGraphicsElement) {
+    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, precision?: number, element?: SVGGraphicsElement) {
         if (element === undefined) {
             element = this.element;
         }
-        const path = SvgPath.build(new SvgPath(element), [], exclude);
+        const path = SvgPath.build(new SvgPath(element), [], exclude, undefined, precision);
         if (path.value) {
             this.clipRegion = path.value;
             if (path.clipPath) {
                 this.clipRegion = path.clipPath;
             }
             const d = [path.value];
-            this.setPaint(d);
+            this.setPaint(d, precision);
             this.drawRegion = SvgBuild.toBoxRect(d);
             const boundingBox = this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX;
             const patternWidth = this.patternWidth;
@@ -84,14 +83,14 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                             if (item.path) {
                                 item.path.patternParent = this;
                                 if (this.patternContentUnits === REGION_UNIT.OBJECT_BOUNDING_BOX) {
-                                    item.path.refitBaseValue(x / patternWidth, y / patternHeight);
+                                    item.path.refitBaseValue(x / patternWidth, y / patternHeight, precision);
                                 }
                                 else {
-                                    item.path.refitBaseValue(x, y);
+                                    item.path.refitBaseValue(x, y, precision);
                                 }
-                                SvgPath.build(<SvgPath> item.path, item.transforms, exclude, residual);
+                                SvgPath.build(<SvgPath> item.path, item.transforms, exclude, residual, precision);
                                 item.path.fillOpacity = (parseFloat(item.path.fillOpacity) * parseFloat(this.fillOpacity)).toString();
-                                item.path.clipPath = SvgBuild.drawRect(tileWidth, tileHeight, x, y) + (item.path.clipPath !== '' ? `;${item.path.clipPath}` : '');
+                                item.path.clipPath = SvgBuild.drawRect(tileWidth, tileHeight, x, y, precision) + (item.path.clipPath !== '' ? `;${item.path.clipPath}` : '');
                             }
                         }
                     }

@@ -7,15 +7,15 @@ declare global {
             parent?: SvgContainer;
             readonly element: SVGGraphicsElement;
             readonly instanceType: number;
-            build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, element?: Element, dryRun?: boolean): void;
-            synchronize(keyTimeMode?: number): void;
+            build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, precision?: number, element?: Element, initPath?: boolean): void;
+            synchronize(keyTimeMode?: number, precision?: number): void;
         }
 
         interface SvgShape extends SvgElement, SvgView, SvgSynchronize {
             path?: SvgPath;
             readonly element: SVGShapeElement | SVGUseElement;
             setPath(): void;
-            synchronize(keyTimeMode?: number, element?: SVGGraphicsElement): void;
+            synchronize(keyTimeMode?: number, precision?: number, element?: SVGGraphicsElement): void;
         }
 
         interface SvgImage extends SvgElement, SvgView, SvgViewRect, SvgBaseVal, SvgTransformable {
@@ -27,7 +27,7 @@ declare global {
         interface SvgUse extends SvgShape, SvgViewRect, SvgBaseVal, SvgPaint {
             readonly element: SVGUseElement;
             shapeElement: SVGGraphicsElement;
-            synchronize(keyTimeMode?: number, element?: SVGGraphicsElement): void;
+            synchronize(keyTimeMode?: number, precision?: number, element?: SVGGraphicsElement): void;
         }
 
         class SvgElement implements SvgElement {

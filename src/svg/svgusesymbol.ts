@@ -19,9 +19,9 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewR
         super(element);
     }
 
-    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual) {
+    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, precision?: number) {
         this.setRect();
-        super.build(exclude, residual, this.symbolElement);
+        super.build(exclude, residual, precision, this.symbolElement);
         const x = this.getBaseValue('x', 0);
         const y = this.getBaseValue('y', 0);
         if (x !== 0 || y !== 0) {
@@ -30,14 +30,14 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewR
                 item.translationOffset = pt;
             }
         }
-        this.setPaint(this.getPathAll());
+        this.setPaint(this.getPathAll(), precision);
     }
 
-    public synchronize(keyTimeMode = 0) {
+    public synchronize(keyTimeMode = 0, precision?: number) {
         if (this.animations.length) {
-            this.mergeAnimations(this.getAnimateViewRect(), this.getAnimateTransform(), keyTimeMode);
+            this.mergeAnimations(this.getAnimateViewRect(), this.getAnimateTransform(), keyTimeMode, precision);
         }
-        super.synchronize(keyTimeMode);
+        super.synchronize(keyTimeMode, precision);
     }
 
     get viewBox() {

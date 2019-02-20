@@ -118,42 +118,42 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         }
     }
 
-    public static drawLine(x1: number, y1: number, x2 = 0, y2 = 0, truncate = false) {
+    public static drawLine(x1: number, y1: number, x2 = 0, y2 = 0, precision?: number) {
         const result = `M${x1},${y1} L${x2},${y2}`;
-        return truncate ? truncateString(result) : result;
+        return precision ? truncateString(result, precision) : result;
     }
 
-    public static drawRect(width: number, height: number, x = 0, y = 0, truncate = false) {
+    public static drawRect(width: number, height: number, x = 0, y = 0, precision?: number) {
         const result = `M${x},${y} ${x + width},${y} ${x + width},${y + height} ${x},${y + height} Z`;
-        return truncate ? truncateString(result) : result;
+        return precision ? truncateString(result, precision) : result;
     }
 
-    public static drawCircle(cx: number, cy: number, r: number, truncate = false) {
-        return SvgBuild.drawEllipse(cx, cy, r, r, truncate);
+    public static drawCircle(cx: number, cy: number, r: number, precision?: number) {
+        return SvgBuild.drawEllipse(cx, cy, r, r, precision);
     }
 
-    public static drawEllipse(cx: number, cy: number, rx: number, ry?: number, truncate = false) {
+    public static drawEllipse(cx: number, cy: number, rx: number, ry?: number, precision?: number) {
         if (ry === undefined) {
             ry = rx;
         }
         const result = `M${cx - rx},${cy} a${rx},${ry},0,1,0,${rx * 2},0 a${rx},${ry},0,1,0,-${rx * 2},0`;
-        return truncate ? truncateString(result) : result;
+        return precision ? truncateString(result, precision) : result;
     }
 
-    public static drawPolygon(values: Point[] | DOMPoint[], truncate = false) {
-        return values.length ? `${SvgBuild.drawPolyline(values, truncate)} Z` : '';
+    public static drawPolygon(values: Point[] | DOMPoint[], precision?: number) {
+        return values.length ? `${SvgBuild.drawPolyline(values, precision)} Z` : '';
     }
 
-    public static drawPolyline(values: Point[] | DOMPoint[], truncate = false) {
+    public static drawPolyline(values: Point[] | DOMPoint[], precision?: number) {
         let result = 'M';
         for (const value of values) {
             result += `${value.x},${value.y} `;
         }
         result = result.substring(0, result.length - 1);
-        return truncate ? truncateString(result) : result;
+        return precision ? truncateString(result, precision) : result;
     }
 
-    public static drawPath(values: SvgPathCommand[], truncate = false) {
+    public static drawPath(values: SvgPathCommand[], precision?: number) {
         let result = '';
         for (const value of values) {
             result += (result !== '' ? ' ' : '') + value.command;
@@ -177,7 +177,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     break;
             }
         }
-        return truncate ? truncateString(result) : result;
+        return precision ? truncateString(result, precision) : result;
     }
 
     public static getPathCommands(value: string) {

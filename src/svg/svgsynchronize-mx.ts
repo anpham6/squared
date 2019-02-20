@@ -103,7 +103,7 @@ function convertToString(value: AnimateValue) {
     return value.toString();
 }
 
-function getPathData(entries: TimelineEntries, path: SvgPath, parent: SvgContainer | undefined) {
+function getPathData(entries: TimelineEntries, path: SvgPath, parent: SvgContainer | undefined, precision?: number) {
     const result: NumberValue<string>[] = [];
     const tagName = path.element.tagName;
     let baseVal: string[];
@@ -172,16 +172,16 @@ function getPathData(entries: TimelineEntries, path: SvgPath, parent: SvgContain
             switch (tagName) {
                 case 'line':
                 case 'polyline':
-                    value = SvgBuild.drawPolyline(points, true);
+                    value = SvgBuild.drawPolyline(points, precision);
                     break;
                 case 'rect':
                 case 'polygon':
-                    value = SvgBuild.drawPolygon(points, true);
+                    value = SvgBuild.drawPolygon(points, precision);
                     break;
                 case 'circle':
                 case 'ellipse':
                     const pt = <Required<SvgPoint>> points[0];
-                    value = SvgBuild.drawEllipse(pt.x, pt.y, pt.rx, pt.ry, true);
+                    value = SvgBuild.drawEllipse(pt.x, pt.y, pt.rx, pt.ry, precision);
                     break;
             }
             if (value !== undefined) {
@@ -645,10 +645,10 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
             return <SvgAnimateTransform[]> $util.filterArray(animations, item => SvgBuild.asAnimateTransform(item) && item.duration > 0);
         }
 
-        public mergeAnimations(animations: SvgAnimation[], transformations: SvgAnimateTransform[], keyTimeMode = 0, path?: SvgPath) {
+        public mergeAnimations(animations?: SvgAnimation[], transformations?: SvgAnimateTransform[], keyTimeMode = 0, precision?: number, path?: SvgPath) {
             [animations, transformations].forEach((mergeable, index) => {
                 const transforming = index === 1;
-                if (mergeable.length === 0 || index === 0 && $util.hasBit(keyTimeMode, SYNCHRONIZE_MODE.IGNORE_ANIMATE) || transforming && $util.hasBit(keyTimeMode, SYNCHRONIZE_MODE.IGNORE_TRANSFORM)) {
+                if (!mergeable || mergeable.length === 0 || index === 0 && $util.hasBit(keyTimeMode, SYNCHRONIZE_MODE.IGNORE_ANIMATE) || transforming && $util.hasBit(keyTimeMode, SYNCHRONIZE_MODE.IGNORE_TRANSFORM)) {
                     return;
                 }
                 const staggered: SvgAnimate[] = [];
@@ -1771,7 +1771,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                             item[0] -= delay;
                                         }
                                         if (path) {
-                                            const pathData = getPathData(convertToFraction(entries), path, this.parent);
+                                            const pathData = getPathData(convertToFraction(entries), path, this.parent, precision);
                                             if (pathData) {
                                                 object = new SvgAnimate();
                                                 object.attributeName = 'd';
@@ -1841,7 +1841,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         }
                                         else {
                                             if (path) {
-                                                const pathData = getPathData([[keyTimeFrom, dataFrom], [keyTimeTo, dataTo]], path, this.parent);
+                                                const pathData = getPathData([[keyTimeFrom, dataFrom], [keyTimeTo, dataTo]], path, this.parent, precision);
                                                 if (pathData) {
                                                     object = new SvgAnimate();
                                                     object.attributeName = 'd';

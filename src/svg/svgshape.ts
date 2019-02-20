@@ -23,16 +23,16 @@ export default class SvgShape extends SvgSynchronize$MX(SvgView$MX(SvgElement)) 
         this.path = new SvgPath(this.element);
     }
 
-    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual) {
+    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, precision?: number) {
         if (this.path) {
             this.path.parent = this.parent;
-            SvgPath.build(this.path, this.transforms, exclude, residual);
+            SvgPath.build(this.path, this.transforms, exclude, residual, precision);
         }
     }
 
-    public synchronize(keyTimeMode = 0, element?: SVGGraphicsElement) {
+    public synchronize(keyTimeMode = 0, precision?: number, element?: SVGGraphicsElement) {
         if (this.path && this.animations.length) {
-            this.mergeAnimations(this.getAnimateShape(element || this.element), element ? [] : this.getAnimateTransform(), keyTimeMode, this.path);
+            this.mergeAnimations(this.getAnimateShape(element || this.element), element ? undefined : this.getAnimateTransform(), keyTimeMode, precision, this.path);
         }
     }
 

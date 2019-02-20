@@ -8,17 +8,18 @@ import SvgElement from './svgelement';
 import { INSTANCE_TYPE, REGION_UNIT } from './lib/constant';
 import { SVG, TRANSFORM } from './lib/util';
 
+type SvgAnimation = squared.svg.SvgAnimation;
 type SvgContainer = squared.svg.SvgContainer;
 type SvgShapePattern = squared.svg.SvgShapePattern;
 
 const $util = squared.lib.util;
 
 export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) implements squared.svg.SvgPath {
-    public static build(path: SvgPath, transforms: SvgTransform[], exclude?: SvgTransformExclude, residual?: SvgTransformResidual) {
+    public static build(path: SvgPath, transforms: SvgTransform[], exclude?: SvgTransformExclude, residual?: SvgTransformResidual, precision?: number) {
         if (exclude && exclude[path.element.tagName]) {
             transforms = SvgBuild.filterTransforms(transforms, exclude[path.element.tagName]);
         }
-        path.draw(transforms, residual);
+        path.draw(transforms, residual, precision);
         return path;
     }
 
@@ -36,7 +37,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         this.init();
     }
 
-    public draw(transforms?: SvgTransform[], residual?: SvgTransformResidual, extract = false) {
+    public draw(transforms?: SvgTransform[], residual?: SvgTransformResidual, precision?: number, extract = false) {
         if (!extract) {
             this.transformed = null;
         }
@@ -68,7 +69,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                         if (requireRefit) {
                             parent.refitPoints(points);
                         }
-                        d = SvgBuild.drawPath(SvgBuild.bindPathPoints(commands, points), this.transformed !== undefined);
+                        d = SvgBuild.drawPath(SvgBuild.bindPathPoints(commands, points), precision);
                     }
                 }
             }
@@ -93,7 +94,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             if (requireRefit) {
                 parent.refitPoints(points);
             }
-            d = SvgBuild.drawPolyline(points, this.transformed !== undefined);
+            d = SvgBuild.drawPolyline(points, precision);
         }
         else if (SVG.circle(element) || SVG.ellipse(element)) {
             let rx: number;
@@ -125,7 +126,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 parent.refitPoints(points);
             }
             const pt = <Required<SvgPoint>> points[0];
-            d = SvgBuild.drawEllipse(pt.x, pt.y, pt.rx, pt.ry, this.transformed !== undefined);
+            d = SvgBuild.drawEllipse(pt.x, pt.y, pt.rx, pt.ry, precision);
         }
         else if (SVG.rect(element)) {
             let x = this.getBaseValue('x');
@@ -152,7 +153,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 if (requireRefit) {
                     parent.refitPoints(points);
                 }
-                d = SvgBuild.drawPolygon(points, true);
+                d = SvgBuild.drawPolygon(points, precision);
             }
             else {
                 if (requirePatternRefit) {
@@ -167,7 +168,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                     width = parent.refitSize(width);
                     height = parent.refitSize(height);
                 }
-                d = SvgBuild.drawRect(width, height, x, y);
+                d = SvgBuild.drawRect(width, height, x, y, precision);
             }
         }
         else if (SVG.polygon(element) || SVG.polyline(element)) {
@@ -190,7 +191,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 }
                 parent.refitPoints(points);
             }
-            d = SVG.polygon(element) ? SvgBuild.drawPolygon(points, this.transformed !== undefined) : SvgBuild.drawPolyline(points, this.transformed !== undefined);
+            d = SVG.polygon(element) ? SvgBuild.drawPolygon(points, precision) : SvgBuild.drawPolyline(points, precision);
         }
         else {
             d = '';
@@ -198,36 +199,92 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         if (!extract) {
             this.value = d;
             this._totalLength = 0;
-            this.setPaint([d]);
+            this.setPaint([d], precision);
         }
         return d;
     }
 
-    public drawStrokeDash() {
+    public drawStrokeDash(animations?: SvgAnimation[]) {
         const dashArray = $util.convertInt(this.strokeDasharray);
         if (dashArray > 0) {
-            return this.getStrokeDash(dashArray, $util.convertInt(this.strokeDashoffset), $util.convertInt(this.pathLength) || this.totalLength);
+            const dashOffset = $util.convertInt(this.strokeDashoffset);
+            const totalLength = this.totalLength;
+            const pathLength = $util.convertInt(this.pathLength) || totalLength;
+            const result = this.getStrokeDash(dashArray, dashOffset, pathLength);
+            if (animations) {
+                const dashTotal = Math.ceil(totalLength / (dashArray * 2));
+                for (const item of animations) {
+                    if (SvgBuild.asAnimate(item) && item.attributeName === 'stroke-dashoffset' && item.valueTo !== '') {
+                        const valueTo = parseFloat(item.valueTo);
+                        const valueFrom = item.valueFrom !== '' ? parseFloat(item.valueFrom) : dashOffset;
+                        const offsetValue = valueTo - valueFrom;
+                        const offsetLength = Math.abs(offsetValue / totalLength);
+                        let iterationCount = (dashTotal / result.length) * offsetLength;
+                        if (offsetLength % 1 === 0 || offsetValue % pathLength === 0) {
+                            iterationCount = Math.ceil(iterationCount);
+                        }
+                        const keyTimeInterval = iterationCount > 1 ? item.duration / (iterationCount * item.duration) : 1;
+                        const values: string[] = [];
+                        const keyTimes: number[] = [];
+                        let keyTime = 0;
+                        for (let i = iterationCount; i > 0; i--) {
+                            keyTimes.push(keyTime + (keyTime !== 0 ? 1 / item.duration : 0));
+                            if (i >= 1) {
+                                if (valueTo < valueFrom) {
+                                    values.push('0', '1');
+                                }
+                                else {
+                                    values.push('1', '0');
+                                }
+                                keyTime += keyTimeInterval;
+                            }
+                            else {
+                                if (valueTo < valueFrom) {
+                                    values.push('0', i.toString());
+                                }
+                                else {
+                                    values.push('1', (1 - i).toString());
+                                }
+                                keyTime = 1;
+                            }
+                            keyTimes.push(keyTime);
+                        }
+                        item.values = values;
+                        item.keyTimes = keyTimes;
+                        if (keyTimes.length === 2 && item.keySplines && item.keySplines.length >= 1) {
+                            item.keySplines.length = 1;
+                        }
+                        else {
+                            item.keySplines = undefined;
+                        }
+                    }
+                }
+            }
+            return result;
         }
         return undefined;
     }
 
-    public getStrokeDash(dashArray: number, dashOffset: number, totalLength: number) {
+    public getStrokeDash(value: number, offset: number, totalLength: number) {
         const result: SvgStrokeDash[] = [];
         let actualLength: number;
-        if (dashOffset < 0 && Math.abs(dashOffset) >= totalLength) {
-            actualLength = Math.abs(dashOffset) + Math.ceil(totalLength / dashArray) * dashArray;
+        if (offset < 0 && Math.abs(offset) >= totalLength) {
+            actualLength = Math.abs(offset) + Math.ceil(totalLength / value) * value;
         }
         else {
             actualLength = totalLength;
         }
         let previousEnd: number | undefined;
-        for (let i = -dashOffset, j = 0; i <= actualLength; i += dashArray, j++) {
-            if (i + dashArray >= 0 && j % 2 === 0) {
-                const startOffset = i % dashArray;
+        for (let i = -offset, j = 0; i <= actualLength; i += value, j++) {
+            if (i + value >= 0 && j % 2 === 0) {
+                const startOffset = i % value;
                 let start = startOffset / totalLength;
+                if (Math.abs(start) === 0) {
+                    start = 0;
+                }
                 let end: number;
                 if (previousEnd !== undefined) {
-                    const length = dashArray / totalLength;
+                    const length = value / totalLength;
                     start = previousEnd + length;
                     if (start >= 1) {
                         break;
@@ -237,8 +294,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                     }
                 }
                 else {
-                    const reverse = Math.floor(i / dashArray) % 2 === 1;
-                    if (i < 0 && Math.abs(start) === 0) {
+                    const reverse = Math.floor(i / value) % 2 === 1;
+                    if (i < 0 && start === 0) {
                         start = 1;
                         end = 0;
                     }
@@ -260,12 +317,12 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                 start %= 1;
                             }
                         }
-                        end = Math.min(start + (dashArray / totalLength), 1);
+                        end = Math.min(start + (value / totalLength), 1);
                         if (start < 0 && end >= 0) {
                             start = 0;
                         }
                         else if (reverse && actualLength !== totalLength)  {
-                            if (Math.abs(start) === 0) {
+                            if (start === 0) {
                                 start = 1;
                                 end = 0;
                             }
@@ -276,7 +333,9 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                         }
                     }
                 }
-                result.push({ start, end });
+                if (!(start >= 0.999 && end >= 0.999)) {
+                    result.push({ start, end });
+                }
                 previousEnd = end;
             }
         }

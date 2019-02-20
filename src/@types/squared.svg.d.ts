@@ -24,7 +24,7 @@ declare global {
             getAnimateShape(element: SVGGraphicsElement, animation?: SvgAnimation[]): SvgAnimate[];
             getAnimateViewRect(animation?: SvgAnimation[]): SvgAnimate[];
             getAnimateTransform(animation?: SvgAnimation[]): SvgAnimateTransform[];
-            mergeAnimations(animations: SvgAnimate[], transformations: SvgAnimateTransform[], keyTimeMode?: number, path?: SvgPath): void;
+            mergeAnimations(animations?: SvgAnimate[], transformations?: SvgAnimateTransform[], keyTimeMode?: number, precision?: number, path?: SvgPath): void;
         }
 
         interface SvgViewRect extends SvgRect, SvgBaseVal {
@@ -34,7 +34,7 @@ declare global {
         interface SvgBaseVal extends SvgElement {
             setBaseValue(attr: string, value?: any): boolean;
             getBaseValue(attr: string, defaultValue?: any): any;
-            refitBaseValue(x: number, y: number, scaleX?: number, scaleY?: number): void;
+            refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
             verifyBaseValue(attr: string, value?: any): boolean | undefined;
         }
 
@@ -61,7 +61,7 @@ declare global {
             clipRule: string;
             useParent?: SvgUse | SvgUseSymbol;
             patternParent?: SvgShapePattern;
-            setPaint(d?: string[]): void;
+            setPaint(d?: string[], precision?: number): void;
             setAttribute(attr: string, computed?: boolean): void;
             getAttribute(attr: string, computed?: boolean, inherited?: boolean): string;
             resetPaint(): void;
@@ -85,13 +85,13 @@ declare global {
             public static asAnimateTransform(object: SvgAnimation): object is SvgAnimateTransform;
             public static asAnimateMotion(object: SvgAnimation): object is SvgAnimateMotion;
             public static setName(element?: SVGElement): string;
-            public static drawLine(x1: number, y1: number, x2?: number, y2?: number, truncate?: boolean): string;
-            public static drawRect(width: number, height: number, x?: number, y?: number, truncate?: boolean): string;
-            public static drawCircle(cx: number, cy: number, r: number, truncate?: boolean): string;
-            public static drawEllipse(cx: number, cy: number, rx: number, ry?: number, truncate?: boolean): string;
-            public static drawPolygon(values: Point[] | DOMPoint[], truncate?: boolean): string;
-            public static drawPolyline(values: Point[] | DOMPoint[], truncate?: boolean): string;
-            public static drawPath(values: SvgPathCommand[], truncate?: boolean): string;
+            public static drawLine(x1: number, y1: number, x2?: number, y2?: number, precision?: number): string;
+            public static drawRect(width: number, height: number, x?: number, y?: number, precision?: number): string;
+            public static drawCircle(cx: number, cy: number, r: number, precision?: number): string;
+            public static drawEllipse(cx: number, cy: number, rx: number, ry?: number, precision?: number): string;
+            public static drawPolygon(values: Point[] | DOMPoint[], precision?: number): string;
+            public static drawPolyline(values: Point[] | DOMPoint[], precision?: number): string;
+            public static drawPath(values: SvgPathCommand[], precision?: number): string;
             public static getPathCommands(value: string): SvgPathCommand[];
             public static filterTransforms(transforms: SvgTransform[], exclude?: number[]): SvgTransform[];
             public static applyTransforms(transforms: SvgTransform[], values: Point[], aspectRatio?: SvgAspectRatio, origin?: Point): SvgPoint[];

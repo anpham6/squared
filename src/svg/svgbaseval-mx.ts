@@ -43,7 +43,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             return this._baseVal[attr] === undefined && !this.setBaseValue(attr) ? defaultValue : this._baseVal[attr];
         }
 
-        public refitBaseValue(x: number, y: number, scaleX = 1, scaleY = 1) {
+        public refitBaseValue(x: number, y: number, precision?: number, scaleX = 1, scaleY = 1) {
             function adjustPoints(values: SvgPoint[]) {
                 for (const pt of values) {
                     pt.x += x;
@@ -61,7 +61,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         const commands = SvgBuild.getPathCommands(value);
                         const points = SvgBuild.getPathPoints(commands);
                         adjustPoints(points);
-                        this._baseVal[attr] = SvgBuild.drawPath(SvgBuild.bindPathPoints(commands, points));
+                        this._baseVal[attr] = SvgBuild.drawPath(SvgBuild.bindPathPoints(commands, points), precision);
                     }
                 }
                 else if (typeof value === 'number') {

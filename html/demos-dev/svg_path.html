@@ -51,6 +51,26 @@
             width: 200px;
             text-decoration: none;
         }
+        #dash1 {
+            animation: dash 5s linear forwards;
+        }
+        #dash2 {
+            animation: dash 5s linear forwards;
+        }
+        #dash3 {
+            animation: dash 5s linear forwards;
+        }
+        #dash4 {
+            animation: dash 5s linear forwards;
+        }
+        #dash5 {
+            animation: dash 5s linear forwards;
+        }
+        @keyframes dash {
+            to {
+                stroke-dashoffset: 100;
+            }
+        }
     </style>
     <script src="/node_modules/systemjs/dist/system.js"></script>
     <script src="common/dev.js"></script>
@@ -81,20 +101,21 @@
 <body>
     <!-- START: DEMO -->
     <div id="squared_ui" style="width: 300px;">
-        <svg id="dash" viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg">
+        <svg id="imageview_1" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
             <style>
-                #dash path {
+                #imageview_1 path {
                     fill: none;
                     stroke: black;
                     stroke-width: 2;
                     stroke-dasharray: 10;
+                    stroke-dashoffset: 0;
                 }
             </style>
-            <path d="M 0,10 h100"/>
-            <path d="M 0,20 h100" pathLength="90"/>
-            <path d="M 0,30 h100" pathLength="50"/>
-            <path d="M 0,40 h100" pathLength="30"/>
-            <path d="M 0,50 h100" pathLength="10"/>
+            <path id="dash1" d="M 0,20 h100" />
+            <path id="dash2" d="M 0,20 h100" pathLength="90" />
+            <path id="dash3" d="M 0,30 h100" pathLength="50" />
+            <path id="dash4" d="M 0,40 h100" pathLength="30" />
+            <path id="dash5" d="M 0,50 h100" pathLength="15" />
         </svg>
         <br /><br />
         <svg viewBox="0 0 200 100">

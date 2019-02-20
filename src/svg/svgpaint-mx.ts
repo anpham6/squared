@@ -40,7 +40,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
         public patternParent?: SvgShapePattern;
         public useParent?: SvgUse | SvgUseSymbol;
 
-        public setPaint(d?: string[]) {
+        public setPaint(d?: string[], precision?: number) {
             this.resetPaint();
             this.setAttribute('color', true);
             this.setAttribute('fill');
@@ -105,7 +105,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     if (parent) {
                                         parent.refitPoints(points);
                                     }
-                                    this.clipPath = SvgBuild.drawPolygon(points);
+                                    this.clipPath = SvgBuild.drawPolygon(points, precision);
                                     return;
                                 }
                                 case 'polygon': {
@@ -118,7 +118,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     if (parent) {
                                         parent.refitPoints(points);
                                     }
-                                    this.clipPath = SvgBuild.drawPolygon(points);
+                                    this.clipPath = SvgBuild.drawPolygon(points, precision);
                                     return;
                                 }
                                 default: {
@@ -146,7 +146,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                             rx = parent.refitSize(rx);
                                             ry = parent.refitSize(ry);
                                         }
-                                        this.clipPath = SvgBuild.drawEllipse(cx, cy, rx, ry);
+                                        this.clipPath = SvgBuild.drawEllipse(cx, cy, rx, ry, precision);
                                     }
                                     return;
                                 }
