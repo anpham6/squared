@@ -231,24 +231,9 @@ export function truncateRange(value: number, precision = 3) {
 }
 
 export function truncatePrecision(value: number) {
-    const match = /^(\d+)\.(\d*?)((?:0|9){5,})\d*$/.exec(value.toString());
+    const match = /^\d+\.(\d+?)(0{5,}|9{5,})\d*$/.exec(value.toString());
     if (match) {
-        if (match[3].startsWith('0')) {
-            if (match[2]) {
-                return parseInt(match[1]) + parseFloat(`0.${match[2]}`);
-            }
-            else {
-                return parseInt(match[1]);
-            }
-        }
-        else {
-            if (match[2]) {
-                return parseInt(match[1]) + parseFloat(`0.${parseInt(match[2]) + 1}`);
-            }
-            else {
-                return parseInt(match[1]) + 1;
-            }
-        }
+        return parseFloat(value.toPrecision(match[1].length));
     }
     return value;
 }

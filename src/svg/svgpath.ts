@@ -286,85 +286,112 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     }
 
     public extractStrokeDash(animations?: SvgAnimation[]) {
-        const dashArray = $util.convertInt(this.strokeDasharray);
+        let dashArray = $util.convertInt(this.strokeDasharray);
         if (dashArray > 0) {
-            const dashOffset = $util.convertInt(this.strokeDashoffset);
             const totalLength = this.totalLength;
             const pathLength = $util.convertInt(this.pathLength) || totalLength;
-            const result = this.flatStrokeDash(dashArray, dashOffset, pathLength);
+            const dashGroup: SvgStrokeDash[][] = [];
+            const dashDelay: number[] = [];
+            let dashOffset = $util.convertInt(this.strokeDashoffset);
+            let dashLength = 0;
+            const createDashGroup = (delay = 0) => {
+                const group = this.flatStrokeDash(dashArray, dashOffset, pathLength);
+                dashLength = Math.max(dashLength, group.length);
+                dashGroup.push(group);
+                dashDelay.push(delay);
+                return group;
+            };
+            const result = createDashGroup();
             if (animations) {
                 animations.sort((a, b) => a.delay !== b.delay && a.attributeName.startsWith('stroke-dash') && b.attributeName.startsWith('stroke-dash') ? (a.delay < b.delay ? -1 : 1) : 0);
                 const dashTotal = Math.ceil(totalLength / (dashArray * 2));
                 const revised: SvgAnimation[] = [];
-                let previousDash = result;
                 for (let i = 0; i < animations.length; i++) {
                     const item = animations[i];
-                    if (item.attributeName === 'stroke-dashoffset') {
-                        if (SvgBuild.asSet(item) && item.to !== '') {
-                            const dashGroup = this.flatStrokeDash(dashArray, $util.convertInt(item.to), pathLength);
-                            if (dashGroup.length <= result.length) {
-                                for (let j = 0; j < result.length; j++) {
-                                    const previous = previousDash[j] || result[j];
-                                    const animate = new SvgAnimate(this.element);
-                                    animate.id = j;
-                                    animate.attributeName = 'stroke-dasharray';
-                                    animate.delay = item.delay;
-                                    animate.from = `${previous.start} ${previous.end}`;
-                                    animate.to = dashGroup[j] ? `${dashGroup[j].start} ${dashGroup[j].end}` : '1 0';
-                                    animate.duration = 0;
-                                    animate.fillFreeze = true;
-                                    animate.convertToValues();
-                                    revised.push(animate);
-                                }
-                                previousDash = dashGroup;
+                    switch (item.attributeName) {
+                        case 'stroke-dasharray':
+                            if (SvgBuild.asSet(item) && item.to !== '') {
+                                dashArray = $util.convertInt(item.to);
+                                createDashGroup(item.delay);
                                 continue;
                             }
-                        }
-                        else if (SvgBuild.asAnimate(item) && item.valueTo !== '') {
-                            const valueTo = parseFloat(item.valueTo);
-                            const offsetValue = valueTo - dashOffset;
-                            const offsetLength = Math.abs(offsetValue / totalLength);
-                            let iterationCount = (dashTotal / result.length) * offsetLength;
-                            if (offsetLength % 1 === 0 || offsetValue % pathLength === 0) {
-                                iterationCount = Math.ceil(iterationCount);
+                            break;
+                        case 'stroke-dashoffset':
+                            if (SvgBuild.asSet(item) && item.to !== '') {
+                                dashOffset = $util.convertInt(item.to);
+                                createDashGroup(item.delay);
+                                continue;
                             }
-                            const keyTimeInterval = iterationCount > 1 ? item.duration / (iterationCount * item.duration) : 1;
-                            const values: string[] = [];
-                            const keyTimes: number[] = [];
-                            let keyTime = 0;
-                            for (let j = iterationCount; j > 0; j--) {
-                                keyTimes.push(keyTime + (keyTime !== 0 ? 1 / item.duration : 0));
-                                if (j >= 1) {
-                                    if (valueTo < dashOffset) {
-                                        values.push('0', '1');
+                            else if (SvgBuild.asAnimate(item) && item.valueTo !== '') {
+                                const valueTo = parseFloat(item.valueTo);
+                                const offsetValue = valueTo - dashOffset;
+                                const offsetLength = Math.abs(offsetValue / totalLength);
+                                let iterationCount = (dashTotal / result.length) * offsetLength;
+                                if (offsetLength % 1 === 0 || offsetValue % pathLength === 0) {
+                                    iterationCount = Math.ceil(iterationCount);
+                                }
+                                const keyTimeInterval = iterationCount > 1 ? item.duration / (iterationCount * item.duration) : 1;
+                                const values: string[] = [];
+                                const keyTimes: number[] = [];
+                                let keyTime = 0;
+                                for (let j = iterationCount; j > 0; j--) {
+                                    keyTimes.push(keyTime + (keyTime !== 0 ? 1 / item.duration : 0));
+                                    if (j >= 1) {
+                                        if (valueTo < dashOffset) {
+                                            values.push('0', '1');
+                                        }
+                                        else {
+                                            values.push('1', '0');
+                                        }
+                                        keyTime += keyTimeInterval;
                                     }
                                     else {
-                                        values.push('1', '0');
+                                        if (valueTo < dashOffset) {
+                                            values.push('0', j.toString());
+                                        }
+                                        else {
+                                            values.push('1', (1 - j).toString());
+                                        }
+                                        keyTime = 1;
                                     }
-                                    keyTime += keyTimeInterval;
+                                    keyTimes.push(keyTime);
+                                }
+                                item.values = values;
+                                item.keyTimes = keyTimes;
+                                if (keyTimes.length === 2 && item.keySplines && item.keySplines.length >= 1) {
+                                    item.keySplines.length = 1;
                                 }
                                 else {
-                                    if (valueTo < dashOffset) {
-                                        values.push('0', j.toString());
-                                    }
-                                    else {
-                                        values.push('1', (1 - j).toString());
-                                    }
-                                    keyTime = 1;
+                                    item.keySplines = undefined;
                                 }
-                                keyTimes.push(keyTime);
                             }
-                            item.values = values;
-                            item.keyTimes = keyTimes;
-                            if (keyTimes.length === 2 && item.keySplines && item.keySplines.length >= 1) {
-                                item.keySplines.length = 1;
-                            }
-                            else {
-                                item.keySplines = undefined;
-                            }
-                        }
+                            break;
                     }
                     revised.push(item);
+                }
+                if (dashGroup.length > 1) {
+                    let previousDash: SvgStrokeDash[] | undefined;
+                    for (let i = 0; i < dashGroup.length; i++) {
+                        const group = dashGroup[i];
+                        for (let j = group.length; j < dashLength; j++) {
+                            group.push({ start: 1, end: 0 });
+                        }
+                        if (previousDash) {
+                            for (let j = 0; j < dashLength; j++) {
+                                const animate = new SvgAnimate(this.element);
+                                animate.id = j;
+                                animate.attributeName = 'stroke-dasharray';
+                                animate.delay = dashDelay[i];
+                                animate.from = `${previousDash[j].start} ${previousDash[j].end}`;
+                                animate.to = `${group[j].start} ${group[j].end}`;
+                                animate.duration = 0;
+                                animate.fillFreeze = true;
+                                animate.convertToValues();
+                                revised.push(animate);
+                            }
+                        }
+                        previousDash = group;
+                    }
                 }
                 animations.length = 0;
                 animations.push(...revised);

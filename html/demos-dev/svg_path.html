@@ -61,7 +61,7 @@
             animation: dash 5s linear forwards;
         }
         #dash5 {
-            animation: dash 5s linear forwards;
+            animation: dash 5s linear;
         }
         @keyframes dash {
             to {
@@ -110,7 +110,9 @@
             </style>
             <path id="dash1" d="M 0,10 h100">
                 <set attributeName="stroke-dashoffset" to="50" begin="5s" />
-                <set attributeName="stroke-dashoffset" to="0" begin="10s" />
+                <set attributeName="stroke-dasharray" to="1" begin="10s" />
+                <set attributeName="stroke-dashoffset" to="5" begin="15s" />
+                <set attributeName="stroke-dasharray" to="5" begin="20s" />
             </path>
             <path id="dash2" d="M 0,20 h100" pathLength="90" />
             <path id="dash3" d="M 0,30 h100" pathLength="50" />
