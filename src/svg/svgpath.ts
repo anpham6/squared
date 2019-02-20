@@ -2,6 +2,7 @@ import { SvgPoint, SvgStrokeDash, SvgTransform, SvgTransformExclude, SvgTransfor
 
 import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgPaint$MX from './svgpaint-mx';
+import SvgAnimate from './svganimate';
 import SvgBuild from './svgbuild';
 import SvgElement from './svgelement';
 
@@ -204,68 +205,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         return d;
     }
 
-    public drawStrokeDash(animations?: SvgAnimation[]) {
-        const dashArray = $util.convertInt(this.strokeDasharray);
-        if (dashArray > 0) {
-            const dashOffset = $util.convertInt(this.strokeDashoffset);
-            const totalLength = this.totalLength;
-            const pathLength = $util.convertInt(this.pathLength) || totalLength;
-            const result = this.getStrokeDash(dashArray, dashOffset, pathLength);
-            if (animations) {
-                const dashTotal = Math.ceil(totalLength / (dashArray * 2));
-                for (const item of animations) {
-                    if (SvgBuild.asAnimate(item) && item.attributeName === 'stroke-dashoffset' && item.valueTo !== '') {
-                        const valueTo = parseFloat(item.valueTo);
-                        const valueFrom = item.valueFrom !== '' ? parseFloat(item.valueFrom) : dashOffset;
-                        const offsetValue = valueTo - valueFrom;
-                        const offsetLength = Math.abs(offsetValue / totalLength);
-                        let iterationCount = (dashTotal / result.length) * offsetLength;
-                        if (offsetLength % 1 === 0 || offsetValue % pathLength === 0) {
-                            iterationCount = Math.ceil(iterationCount);
-                        }
-                        const keyTimeInterval = iterationCount > 1 ? item.duration / (iterationCount * item.duration) : 1;
-                        const values: string[] = [];
-                        const keyTimes: number[] = [];
-                        let keyTime = 0;
-                        for (let i = iterationCount; i > 0; i--) {
-                            keyTimes.push(keyTime + (keyTime !== 0 ? 1 / item.duration : 0));
-                            if (i >= 1) {
-                                if (valueTo < valueFrom) {
-                                    values.push('0', '1');
-                                }
-                                else {
-                                    values.push('1', '0');
-                                }
-                                keyTime += keyTimeInterval;
-                            }
-                            else {
-                                if (valueTo < valueFrom) {
-                                    values.push('0', i.toString());
-                                }
-                                else {
-                                    values.push('1', (1 - i).toString());
-                                }
-                                keyTime = 1;
-                            }
-                            keyTimes.push(keyTime);
-                        }
-                        item.values = values;
-                        item.keyTimes = keyTimes;
-                        if (keyTimes.length === 2 && item.keySplines && item.keySplines.length >= 1) {
-                            item.keySplines.length = 1;
-                        }
-                        else {
-                            item.keySplines = undefined;
-                        }
-                    }
-                }
-            }
-            return result;
-        }
-        return undefined;
-    }
-
-    public getStrokeDash(value: number, offset: number, totalLength: number) {
+    public flatStrokeDash(value: number, offset: number, totalLength: number) {
         const result: SvgStrokeDash[] = [];
         let actualLength: number;
         if (offset < 0 && Math.abs(offset) >= totalLength) {
@@ -278,19 +218,19 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         for (let i = -offset, j = 0; i <= actualLength; i += value, j++) {
             if (i + value >= 0 && j % 2 === 0) {
                 const startOffset = i % value;
-                let start = startOffset / totalLength;
+                let start = $util.truncatePrecision(startOffset / totalLength);
                 if (Math.abs(start) === 0) {
                     start = 0;
                 }
                 let end: number;
                 if (previousEnd !== undefined) {
                     const length = value / totalLength;
-                    start = previousEnd + length;
+                    start = $util.truncatePrecision(previousEnd + length);
                     if (start >= 1) {
                         break;
                     }
                     else {
-                        end = Math.min(start + length, 1);
+                        end = $util.truncatePrecision(Math.min(start + length, 1));
                     }
                 }
                 else {
@@ -317,7 +257,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                 start %= 1;
                             }
                         }
-                        end = Math.min(start + (value / totalLength), 1);
+                        end = $util.truncatePrecision(Math.min(start + (value / totalLength), 1));
                         if (start < 0 && end >= 0) {
                             start = 0;
                         }
@@ -333,7 +273,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                         }
                     }
                 }
-                if (!(start >= 0.999 && end >= 0.999)) {
+                if (start < 1) {
                     result.push({ start, end });
                 }
                 previousEnd = end;
@@ -343,6 +283,95 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             result.push({ start: 1, end: 0 });
         }
         return result;
+    }
+
+    public extractStrokeDash(animations?: SvgAnimation[]) {
+        const dashArray = $util.convertInt(this.strokeDasharray);
+        if (dashArray > 0) {
+            const dashOffset = $util.convertInt(this.strokeDashoffset);
+            const totalLength = this.totalLength;
+            const pathLength = $util.convertInt(this.pathLength) || totalLength;
+            const result = this.flatStrokeDash(dashArray, dashOffset, pathLength);
+            if (animations) {
+                animations.sort((a, b) => a.delay !== b.delay && a.attributeName.startsWith('stroke-dash') && b.attributeName.startsWith('stroke-dash') ? (a.delay < b.delay ? -1 : 1) : 0);
+                const dashTotal = Math.ceil(totalLength / (dashArray * 2));
+                const revised: SvgAnimation[] = [];
+                let previousDash = result;
+                for (let i = 0; i < animations.length; i++) {
+                    const item = animations[i];
+                    if (item.attributeName === 'stroke-dashoffset') {
+                        if (SvgBuild.asSet(item) && item.to !== '') {
+                            const dashGroup = this.flatStrokeDash(dashArray, $util.convertInt(item.to), pathLength);
+                            if (dashGroup.length <= result.length) {
+                                for (let j = 0; j < result.length; j++) {
+                                    const previous = previousDash[j] || result[j];
+                                    const animate = new SvgAnimate(this.element);
+                                    animate.id = j;
+                                    animate.attributeName = 'stroke-dasharray';
+                                    animate.delay = item.delay;
+                                    animate.from = `${previous.start} ${previous.end}`;
+                                    animate.to = dashGroup[j] ? `${dashGroup[j].start} ${dashGroup[j].end}` : '1 0';
+                                    animate.duration = 0;
+                                    animate.fillFreeze = true;
+                                    animate.convertToValues();
+                                    revised.push(animate);
+                                }
+                                previousDash = dashGroup;
+                                continue;
+                            }
+                        }
+                        else if (SvgBuild.asAnimate(item) && item.valueTo !== '') {
+                            const valueTo = parseFloat(item.valueTo);
+                            const offsetValue = valueTo - dashOffset;
+                            const offsetLength = Math.abs(offsetValue / totalLength);
+                            let iterationCount = (dashTotal / result.length) * offsetLength;
+                            if (offsetLength % 1 === 0 || offsetValue % pathLength === 0) {
+                                iterationCount = Math.ceil(iterationCount);
+                            }
+                            const keyTimeInterval = iterationCount > 1 ? item.duration / (iterationCount * item.duration) : 1;
+                            const values: string[] = [];
+                            const keyTimes: number[] = [];
+                            let keyTime = 0;
+                            for (let j = iterationCount; j > 0; j--) {
+                                keyTimes.push(keyTime + (keyTime !== 0 ? 1 / item.duration : 0));
+                                if (j >= 1) {
+                                    if (valueTo < dashOffset) {
+                                        values.push('0', '1');
+                                    }
+                                    else {
+                                        values.push('1', '0');
+                                    }
+                                    keyTime += keyTimeInterval;
+                                }
+                                else {
+                                    if (valueTo < dashOffset) {
+                                        values.push('0', j.toString());
+                                    }
+                                    else {
+                                        values.push('1', (1 - j).toString());
+                                    }
+                                    keyTime = 1;
+                                }
+                                keyTimes.push(keyTime);
+                            }
+                            item.values = values;
+                            item.keyTimes = keyTimes;
+                            if (keyTimes.length === 2 && item.keySplines && item.keySplines.length >= 1) {
+                                item.keySplines.length = 1;
+                            }
+                            else {
+                                item.keySplines = undefined;
+                            }
+                        }
+                    }
+                    revised.push(item);
+                }
+                animations.length = 0;
+                animations.push(...revised);
+            }
+            return result;
+        }
+        return undefined;
     }
 
     private init() {

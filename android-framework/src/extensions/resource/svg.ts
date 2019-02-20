@@ -169,6 +169,7 @@ const ATTRIBUTE_ANDROID = {
     'stroke-opacity': ['strokeAlpha'],
     'fill-opacity': ['fillAlpha'],
     'stroke-width': ['strokeWidth'],
+    'stroke-dasharray': ['trimPathStart', 'trimPathEnd'],
     'stroke-dashoffset': ['trimPathOffset'],
     'd': ['pathData'],
     'clip-path': ['pathData']
@@ -176,7 +177,7 @@ const ATTRIBUTE_ANDROID = {
 
 function getPaintAttribute(value: string) {
     for (const attr in ATTRIBUTE_ANDROID) {
-        if (ATTRIBUTE_ANDROID[attr] === value) {
+        if (ATTRIBUTE_ANDROID[attr].includes(value)) {
             return $util.convertCamelCase(attr);
         }
     }
@@ -368,6 +369,7 @@ function getValueType(attributeName: string) {
             return '';
         case 'opacity':
         case 'stroke-opacity':
+        case 'stroke-dasharray':
         case 'stroke-dashoffset':
         case 'fill-opacity':
         case 'transform':
@@ -640,7 +642,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                         }
                         [togetherTargets, transformTargets, ...isolatedTargets].forEach((targets, index) => {
                             const setData: SetTemplateData = {
-                                ordering: index === 0 ? '' : 'sequentially',
+                                ordering: index === 0 || targets.length === 1 ? '' : 'sequentially',
                                 AA: [],
                                 BB: []
                             };
@@ -692,17 +694,43 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                     const valueType = getValueType(item.attributeName);
                                     let transforming = false;
                                     let transformOrigin: Point[] | undefined;
-                                    function getFillAfter(propertyName: string) {
+                                    function getFillAfter(propertyName: string, lastValue?: PropertyValue) {
                                         if (!synchronized && item.fillReplace) {
                                             let valueTo: string | undefined;
                                             if (transforming) {
                                                 valueTo = getTransformInitialValue(propertyName);
                                             }
                                             else if (item.parent && $SvgBuild.isShape(item.parent) && item.parent.path) {
-                                                valueTo = item.parent.path[propertyName === 'pathData' ? 'value' : getPaintAttribute(propertyName)];
+                                                switch (propertyName) {
+                                                    case 'pathData':
+                                                        valueTo = item.parent.path.value;
+                                                        break;
+                                                    case 'trimPathOffset':
+                                                        valueTo = '0';
+                                                        break;
+                                                    case 'trimPathStart':
+                                                    case 'trimPathEnd':
+                                                        if (item.values.length) {
+                                                            valueTo = item.values[0].split(' ')[propertyName === 'trimPathStart' ? 0 : 1];
+                                                        }
+                                                        break;
+                                                    default:
+                                                        valueTo = item.parent.path[getPaintAttribute(propertyName)];
+                                                        break;
+                                                }
                                             }
                                             const result: PropertyValue[] = [];
-                                            if ($util.isString(valueTo)) {
+                                            let previousValue: string | undefined;
+                                            if (lastValue) {
+                                                if ($util.isArray(lastValue.propertyValues)) {
+                                                    const propertyValue = lastValue.propertyValues[lastValue.propertyValues.length - 1];
+                                                    previousValue = propertyValue.keyframes[propertyValue.keyframes.length - 1].value;
+                                                }
+                                                else {
+                                                    previousValue = lastValue.valueTo;
+                                                }
+                                            }
+                                            if ($util.isString(valueTo) && valueTo !== previousValue) {
                                                 result.push(createPropertyValue(propertyName, valueTo, '0', valueType, valueType === 'pathType' ? valueTo : ''));
                                             }
                                             if (transformOrigin) {
@@ -919,7 +947,14 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                     values = $util.objectMap<string, string>(item.values, value => $util.convertInt(value).toString());
                                                     break;
                                                 case 'floatType':
-                                                    values = item.values;
+                                                    switch (item.attributeName) {
+                                                        case 'stroke-dasharray':
+                                                            values = $util.objectMap<string, number[]>(item.values, value => $util.replaceMap<string, number>(value.split(' '), fraction => parseFloat(fraction)));
+                                                            break;
+                                                        default:
+                                                            values = item.values;
+                                                            break;
+                                                    }
                                                     break;
                                                 default:
                                                     values = item.values.slice(0);
@@ -1045,7 +1080,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                             }
                                                         }
                                                         if (requireFill) {
-                                                            const fillAfter = getFillAfter(propertyName);
+                                                            const fillAfter = getFillAfter(propertyName, propertyData.repeating[propertyData.repeating.length - 1]);
                                                             if (fillAfter) {
                                                                 if (fillAfter.length === 1) {
                                                                     propertyData.repeating.push(fillAfter[0]);
@@ -1107,7 +1142,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                     }
                                                 }
                                                 if (requireFill) {
-                                                    const fillAfter = getFillAfter(propertyName);
+                                                    const fillAfter = getFillAfter(propertyName, animatorData.repeating[animatorData.repeating.length - 1]);
                                                     if (fillAfter) {
                                                         fillAfterData.values.push(...fillAfter);
                                                     }
@@ -1320,7 +1355,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                     const pathData = this.createPath(item, item.path, render);
                     const animateData = this.ANIMATE_DATA.get(item.name);
                     if (animateData === undefined || animateData.animate.every(animate => animate.attributeName.startsWith('stroke-dash'))) {
-                        const strokeDash = item.path.drawStrokeDash(animateData && animateData.animate);
+                        const strokeDash = item.path.extractStrokeDash(animateData && animateData.animate);
                         if (strokeDash) {
                             const groupName = getVectorName(item, 'stroke');
                             for (let i = 0; i < strokeDash.length; i++) {
@@ -1329,7 +1364,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                 if (animateData) {
                                     this.ANIMATE_DATA.set(pathObject.name, {
                                         element: animateData.element,
-                                        animate: animateData.animate
+                                        animate: $util.filterArray(animateData.animate, data => data.id === undefined || data.id === i)
                                     });
                                 }
                                 pathObject.trimPathStart = $util.truncateRange(strokeDash[i].start, this.options.decimalPrecisionValue);

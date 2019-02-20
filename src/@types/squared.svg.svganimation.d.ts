@@ -13,6 +13,7 @@ declare global {
             synchronizeState: number;
             group: SvgAnimationGroup;
             setterType: boolean;
+            id?: number;
             parent?: SvgView | SvgPath;
             baseFrom?: string;
             readonly instanceType: number;

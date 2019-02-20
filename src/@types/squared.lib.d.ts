@@ -76,6 +76,7 @@ declare global {
             function convertRoman(value: number): string;
             function convertEnum(value: number, base: {}, derived: {}): string;
             function truncateRange(value: number, precision?: number): string;
+            function truncatePrecision(value: number): number;
             function formatPX(value: string | number): string;
             function formatPercent(value: string | number): string;
             function formatString(value: string, ...params: string[]): string;

@@ -51,9 +51,6 @@
             width: 200px;
             text-decoration: none;
         }
-        #dash1 {
-            animation: dash 5s linear forwards;
-        }
         #dash2 {
             animation: dash 5s linear forwards;
         }
@@ -101,7 +98,7 @@
 <body>
     <!-- START: DEMO -->
     <div id="squared_ui" style="width: 300px;">
-        <svg id="imageview_1" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+        <svg id="imageview_1" viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg">
             <style>
                 #imageview_1 path {
                     fill: none;
@@ -111,7 +108,10 @@
                     stroke-dashoffset: 0;
                 }
             </style>
-            <path id="dash1" d="M 0,20 h100" />
+            <path id="dash1" d="M 0,10 h100">
+                <set attributeName="stroke-dashoffset" to="50" begin="5s" />
+                <set attributeName="stroke-dashoffset" to="0" begin="10s" />
+            </path>
             <path id="dash2" d="M 0,20 h100" pathLength="90" />
             <path id="dash3" d="M 0,30 h100" pathLength="50" />
             <path id="dash4" d="M 0,40 h100" pathLength="30" />
