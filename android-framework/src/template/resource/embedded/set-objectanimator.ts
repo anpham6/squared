@@ -28,11 +28,11 @@ export default `<?xml version="1.0" encoding="utf-8"?>
 			<<propertyValues>>
 			</objectAnimator>
 		<<repeating>>
-		<<infinite>>
-			<set android:ordering="sequentially">
+		<<fillCustom>>
+			<set android:ordering="{~ordering}">
 			<<values>><<values>>
 			</set>
-		<<infinite>>
+		<<fillCustom>>
 		<<fillAfter>>
 			<set>
 			<<values>>

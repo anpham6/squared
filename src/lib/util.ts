@@ -221,6 +221,16 @@ export function convertEnum(value: number, base: {}, derived: {}): string {
     return '';
 }
 
+export function truncateString(value: string, precision = 3) {
+    let result = value;
+    const pattern = new RegExp(`(\\d+\\.\\d{${precision}})\\d+`, 'g');
+    let match: RegExpExecArray | null;
+    while ((match = pattern.exec(value)) !== null) {
+        result = result.replace(match[0], match[1]);
+    }
+    return result;
+}
+
 export function truncateRange(value: number, precision = 3) {
     if (value === 0 || value === 1) {
         return value.toString();

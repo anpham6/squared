@@ -75,6 +75,7 @@ declare global {
             function convertAlpha(value: number): string;
             function convertRoman(value: number): string;
             function convertEnum(value: number, base: {}, derived: {}): string;
+            function truncateString(value: string, precision?: number): string;
             function truncateRange(value: number, precision?: number): string;
             function truncatePrecision(value: number): number;
             function formatPX(value: string | number): string;

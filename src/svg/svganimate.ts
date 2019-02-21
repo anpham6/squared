@@ -3,7 +3,7 @@ import { SvgAnimateAttribute } from './@types/object';
 import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 
-import { FILL_MODE, INSTANCE_TYPE, KEYSPLINE_NAME } from './lib/constant';
+import { INSTANCE_TYPE, KEYSPLINE_NAME } from './lib/constant';
 import { convertClockTime, getFontSize, getSplitValue, sortNumber } from './lib/util';
 
 const $color = squared.lib.color;
@@ -134,10 +134,10 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
 
     public type = 0;
     public from = '';
-    public fillMode = 0;
     public alternate = false;
     public additiveSum = false;
     public accumulateSum = false;
+    public timingFunction?: string;
     public end?: number;
     public synchronized?: NumberValue<string>;
 
@@ -256,20 +256,6 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
 
     public getPartialDuration(iteration?: number) {
         return (iteration === 0 ? this.delay : 0) + this.keyTimes[this.keyTimes.length - 1] * this.duration;
-    }
-
-    private _setFillMode(mode: boolean, value: number) {
-        const hasBit = $util.hasBit(this.fillMode, value);
-        if (mode) {
-            if (!hasBit) {
-                this.fillMode |= value;
-            }
-        }
-        else {
-            if (hasBit) {
-                this.fillMode ^= value;
-            }
-        }
     }
 
     set delay(value) {
@@ -421,31 +407,6 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
     get reverse() {
         return this._reverse;
-    }
-
-    set fillBackwards(value) {
-        this._setFillMode(value, FILL_MODE.BACKWARDS);
-    }
-    get fillBackwards() {
-        return $util.hasBit(this.fillMode, FILL_MODE.BACKWARDS);
-    }
-
-    set fillForwards(value) {
-        this._setFillMode(value, FILL_MODE.FORWARDS);
-    }
-    get fillForwards() {
-        return $util.hasBit(this.fillMode, FILL_MODE.FORWARDS);
-    }
-
-    set fillFreeze(value) {
-        this._setFillMode(value, FILL_MODE.FREEZE);
-    }
-    get fillFreeze() {
-        return $util.hasBit(this.fillMode, FILL_MODE.FREEZE);
-    }
-
-    get fillReplace() {
-        return this.fillMode < FILL_MODE.FORWARDS;
     }
 
     get fromToType() {

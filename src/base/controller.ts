@@ -91,7 +91,7 @@ export default abstract class Controller<T extends Node> implements squared.base
         else {
             result += indent + `<${controlName}${depth === 0 ? '{#0}' : ''}{@${id}} />\n`;
         }
-        result += `{>${id}}`;
+        result += `{>${id}}\n`;
         return result;
     }
 

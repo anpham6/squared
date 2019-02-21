@@ -1,6 +1,6 @@
 import { SvgAnimationGroup } from './@types/object';
 
-import { INSTANCE_TYPE } from './lib/constant';
+import { FILL_MODE, INSTANCE_TYPE } from './lib/constant';
 import { convertClockTime, getFontSize } from './lib/util';
 
 const $dom = squared.lib.dom;
@@ -10,6 +10,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     public element: SVGGraphicsElement | null = null;
     public animationElement: SVGAnimationElement | null = null;
     public paused = false;
+    public fillMode = 0;
     public synchronizeState = 0;
     public parent?: squared.svg.SvgView | squared.svg.SvgPath;
     public baseFrom?: string;
@@ -29,6 +30,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
             this.animationElement = animationElement;
             this.setAttribute('attributeName');
             this.setAttribute('to');
+            this.setAttribute('fill', 'freeze');
             const dur = $dom.getNamedItem(animationElement, 'dur');
             if (dur !== '' && dur !== 'indefinite') {
                 this.duration = convertClockTime(dur);
@@ -68,6 +70,20 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
         return values.some(value => $util.hasBit(this.synchronizeState, value));
     }
 
+    private setFillMode(mode: boolean, value: number) {
+        const hasBit = $util.hasBit(this.fillMode, value);
+        if (mode) {
+            if (!hasBit) {
+                this.fillMode |= value;
+            }
+        }
+        else {
+            if (hasBit) {
+                this.fillMode ^= value;
+            }
+        }
+    }
+
     set attributeName(value) {
         if (value !== 'transform') {
             const baseElement = this.animationElement && this.animationElement.parentElement || this.element;
@@ -77,8 +93,8 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
                     this.baseFrom = parseFloat($util.convertPX(this.baseFrom, getFontSize(<SVGGraphicsElement> baseElement))).toString();
                 }
             }
-            this._attributeName = value;
         }
+        this._attributeName = value;
     }
     get attributeName() {
         return this._attributeName;
@@ -103,6 +119,31 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
     get to() {
         return this._to;
+    }
+
+    set fillBackwards(value) {
+        this.setFillMode(value, FILL_MODE.BACKWARDS);
+    }
+    get fillBackwards() {
+        return $util.hasBit(this.fillMode, FILL_MODE.BACKWARDS);
+    }
+
+    set fillForwards(value) {
+        this.setFillMode(value, FILL_MODE.FORWARDS);
+    }
+    get fillForwards() {
+        return $util.hasBit(this.fillMode, FILL_MODE.FORWARDS);
+    }
+
+    set fillFreeze(value) {
+        this.setFillMode(value, FILL_MODE.FREEZE);
+    }
+    get fillFreeze() {
+        return $util.hasBit(this.fillMode, FILL_MODE.FREEZE);
+    }
+
+    get fillReplace() {
+        return this.fillMode < FILL_MODE.FORWARDS;
     }
 
     set group(value) {

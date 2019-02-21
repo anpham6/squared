@@ -8,6 +8,10 @@ declare global {
             attributeName: string;
             delay: number;
             to: string;
+            fillMode: number;
+            fillBackwards: boolean;
+            fillForwards: boolean;
+            fillFreeze: boolean;
             duration: number;
             paused: boolean;
             synchronizeState: number;
@@ -17,6 +21,7 @@ declare global {
             parent?: SvgView | SvgPath;
             baseFrom?: string;
             readonly instanceType: number;
+            readonly fillReplace: boolean;
             setAttribute(attr: string, equality?: string): void;
             addState(...values: number[]): void;
             removeState(...values: number[]): void;
@@ -30,10 +35,6 @@ declare global {
             values: string[];
             keyTimes: number[];
             iterationCount: number;
-            fillMode: number;
-            fillBackwards: boolean;
-            fillForwards: boolean;
-            fillFreeze: boolean;
             reverse: boolean;
             alternate: boolean;
             additiveSum: boolean;
@@ -41,9 +42,9 @@ declare global {
             keySplines?: string[];
             end?: number;
             synchronized?: NumberValue<string>;
+            timingFunction?: string;
             readonly valueTo: string;
             readonly valueFrom: string;
-            readonly fillReplace: boolean;
             readonly fromToType: boolean;
             readonly partialType: boolean;
             setCalcMode(name: string): void;

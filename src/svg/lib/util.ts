@@ -508,16 +508,6 @@ export function sortNumber(values: number[], descending = false) {
     return descending ? values.sort((a, b) => a > b ? -1 : 1) : values.sort((a, b) => a < b ? -1 : 1);
 }
 
-export function truncateString(value: string, precision = 3) {
-    let result = value;
-    const pattern = new RegExp(`(\\d+\\.\\d{${precision}})\\d+`, 'g');
-    let match: RegExpExecArray | null;
-    while ((match = pattern.exec(value)) !== null) {
-        result = result.replace(match[0], match[1]);
-    }
-    return result;
-}
-
 export function getSplitValue(value: number, next: number, percent: number) {
     return value + (next - value) * percent;
 }

@@ -1,7 +1,7 @@
 import { SvgPathCommand, SvgPoint, SvgTransform } from './@types/object';
 
 import { INSTANCE_TYPE } from './lib/constant';
-import { MATRIX, TRANSFORM, truncateString } from './lib/util';
+import { MATRIX, TRANSFORM } from './lib/util';
 
 type Svg = squared.svg.Svg;
 type SvgAnimate = squared.svg.SvgAnimate;
@@ -120,12 +120,12 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static drawLine(x1: number, y1: number, x2 = 0, y2 = 0, precision?: number) {
         const result = `M${x1},${y1} L${x2},${y2}`;
-        return precision ? truncateString(result, precision) : result;
+        return precision ? $util.truncateString(result, precision) : result;
     }
 
     public static drawRect(width: number, height: number, x = 0, y = 0, precision?: number) {
         const result = `M${x},${y} ${x + width},${y} ${x + width},${y + height} ${x},${y + height} Z`;
-        return precision ? truncateString(result, precision) : result;
+        return precision ? $util.truncateString(result, precision) : result;
     }
 
     public static drawCircle(cx: number, cy: number, r: number, precision?: number) {
@@ -137,7 +137,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             ry = rx;
         }
         const result = `M${cx - rx},${cy} a${rx},${ry},0,1,0,${rx * 2},0 a${rx},${ry},0,1,0,-${rx * 2},0`;
-        return precision ? truncateString(result, precision) : result;
+        return precision ? $util.truncateString(result, precision) : result;
     }
 
     public static drawPolygon(values: Point[] | DOMPoint[], precision?: number) {
@@ -150,7 +150,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             result += `${value.x},${value.y} `;
         }
         result = result.substring(0, result.length - 1);
-        return precision ? truncateString(result, precision) : result;
+        return precision ? $util.truncateString(result, precision) : result;
     }
 
     public static drawPath(values: SvgPathCommand[], precision?: number) {
@@ -177,7 +177,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     break;
             }
         }
-        return precision ? truncateString(result, precision) : result;
+        return precision ? $util.truncateString(result, precision) : result;
     }
 
     public static getPathCommands(value: string) {

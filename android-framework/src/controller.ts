@@ -376,24 +376,28 @@ export default class Controller<T extends View> extends squared.base.Controller<
     public finalize(data: SessionData<$NodeList<T>>) {
         const views = [...data.views, ...data.includes];
         if (this.userSettings.showAttributes) {
-            for (const view of views) {
-                for (const node of data.cache) {
-                    if (node.visible) {
-                        const hash = $xml.formatPlaceholder(node.id, '@');
-                        if (views.length === 1 || view.content.indexOf(hash) !== -1) {
-                            view.content = view.content.replace(hash, parseAttributes(node));
-                            continue;
+            for (const node of data.cache) {
+                if (node.visible) {
+                    const hash = $xml.formatPlaceholder(node.id, '@');
+                    if (views.length === 1) {
+                        views[0].content = views[0].content.replace(hash, parseAttributes(node));
+                    }
+                    else {
+                        for (const view of views) {
+                            if (view.content.indexOf(hash) !== -1) {
+                                view.content = view.content.replace(hash, parseAttributes(node));
+                                break;
+                            }
                         }
                     }
                 }
-                view.content = view.content.replace(/{#0}/, getRootNamespace(view.content));
             }
         }
         for (const view of views) {
             view.content = this.removePlaceholders(
                 replaceTab(
                     replaceUnit(
-                        view.content,
+                        view.content.replace(/{#0}/, getRootNamespace(view.content)),
                         this.userSettings.resolutionDPI,
                         this.userSettings.convertPixels
                     ),
