@@ -71,7 +71,7 @@
             animation: dash 5s linear 3s forwards;
         }
         #imageview_2 #dash6 {
-            stroke-dasharray: 10;
+            stroke-dasharray: 5 5 10 5 5;
         }
         @keyframes dash {
             to {
@@ -118,11 +118,11 @@
             <path id="dash2" d="M 0,20 h100" />
             <path id="dash3" d="M 0,30 h100" pathLength="80" />
             <path id="dash4" d="M 0,40 h100" pathLength="50" />
-            <path id="dash5" d="M 0,50 h100" pathLength="15" />-->
+            <path id="dash5" d="M 0,50 h100" pathLength="15" />
         </svg>
         <svg id="imageview_2" viewBox="0 0 200 100">
             <path id="dash6" d="M 50,30 A 20,20 0,0,1 90,30 A 20,20 0,0,1 130,30 Q 130,60 90,90 Q 50,60 50,30 z">
-                <animate attributeName="stroke-dasharray" to="1" begin="5s" dur="10s" calcMode="spline" keySplines="0.42 0 0.58 1" repeatCount="1" fill="freeze" />
+                <animate attributeName="stroke-dasharray" to="1 2" begin="5s" dur="10s" repeatCount="1" fill="freeze" />
             </path>
         </svg>
         <br /><br />
