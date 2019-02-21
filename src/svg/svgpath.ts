@@ -205,98 +205,59 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         return d;
     }
 
-    public flatStrokeDash(value: number, offset: number, totalLength: number) {
+    public flatStrokeDash(valueArray: number[], valueOffset: number, totalLength: number, pathLength?: number) {
         const result: SvgStrokeDash[] = [];
-        let actualLength: number;
-        if (offset < 0 && Math.abs(offset) >= totalLength) {
-            actualLength = Math.abs(offset) + Math.ceil(totalLength / value) * value;
-        }
-        else {
-            actualLength = totalLength;
-        }
-        let previousEnd: number | undefined;
-        for (let i = -offset, j = 0; i <= actualLength; i += value, j++) {
-            if (i + value >= 0 && j % 2 === 0) {
-                const startOffset = i % value;
-                let start = $util.truncatePrecision(startOffset / totalLength);
-                if (Math.abs(start) === 0) {
-                    start = 0;
-                }
-                let end: number;
-                if (previousEnd !== undefined) {
-                    const length = value / totalLength;
-                    start = $util.truncatePrecision(previousEnd + length);
-                    if (start >= 1) {
+        if (valueArray.length) {
+            if (!pathLength) {
+                pathLength = totalLength;
+            }
+            valueOffset %= totalLength;
+            if (valueOffset < 0) {
+                valueOffset += totalLength;
+            }
+            let dashLength = 0;
+            for (let i = 0, j = 0; ; i += dashLength, j++) {
+                dashLength = valueArray[j % valueArray.length];
+                if (i + dashLength > valueOffset && j % 2 === 0) {
+                    let startOffset: number;
+                    let actualLength: number;
+                    if (i < valueOffset) {
+                        startOffset = 0;
+                        actualLength = valueOffset - i;
+                    }
+                    else {
+                        startOffset = i - valueOffset;
+                        actualLength = dashLength;
+                    }
+                    const start = $util.truncatePrecision(startOffset / pathLength);
+                    if (start < 1) {
+                        const end = $util.truncatePrecision(Math.min(start + (actualLength / pathLength), 1));
+                        result.push({ start, end });
+                    }
+                    else {
                         break;
                     }
-                    else {
-                        end = $util.truncatePrecision(Math.min(start + length, 1));
-                    }
                 }
-                else {
-                    const reverse = Math.floor(i / value) % 2 === 1;
-                    if (i < 0 && start === 0) {
-                        start = 1;
-                        end = 0;
-                    }
-                    else if (start === 1) {
-                        if (reverse) {
-                            start = 0;
-                            end = 1;
-                        }
-                        else {
-                            end = 0;
-                        }
-                    }
-                    else {
-                        if (start > 1) {
-                            if (Math.floor(start) % 2 === 1) {
-                                start = 1;
-                            }
-                            else {
-                                start %= 1;
-                            }
-                        }
-                        end = $util.truncatePrecision(Math.min(start + (value / totalLength), 1));
-                        if (start < 0 && end >= 0) {
-                            start = 0;
-                        }
-                        else if (reverse && actualLength !== totalLength)  {
-                            if (start === 0) {
-                                start = 1;
-                                end = 0;
-                            }
-                            else {
-                                end = Math.min(start, 1);
-                                start = 0;
-                            }
-                        }
-                    }
-                }
-                if (start < 1) {
-                    result.push({ start, end });
-                }
-                previousEnd = end;
             }
-        }
-        if (result.length === 0) {
-            result.push({ start: 1, end: 1 });
+            if (result.length === 0) {
+                result.push({ start: 1, end: 1 });
+            }
         }
         return result;
     }
 
     public extractStrokeDash(animations?: SvgAnimation[]) {
-        let dashArray = $util.convertInt(this.strokeDasharray);
-        if (dashArray > 0) {
+        let valueArray = SvgBuild.toNumberList(this.strokeDasharray);
+        if (valueArray.length) {
             const totalLength = this.totalLength;
             const pathLength = $util.convertInt(this.pathLength) || totalLength;
             const dashGroup: SvgStrokeDash[][] = [];
             const dashDelay: number[] = [];
             const dashDuration: number[] = [];
-            let dashOffset = $util.convertInt(this.strokeDashoffset);
+            let valueOffset = $util.convertInt(this.strokeDashoffset);
             let dashLength = 0;
-            const createDashGroup = (value: number, offset: number, delay: number, duration = 0) => {
-                const group = this.flatStrokeDash(value, offset, pathLength);
+            const createDashGroup = (values: number[], offset: number, delay: number, duration = 0) => {
+                const group = this.flatStrokeDash(values, offset, totalLength, pathLength);
                 dashLength = Math.max(dashLength, group.length);
                 dashGroup.push(group);
                 dashDelay.push(delay);
@@ -309,101 +270,127 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             function getTimingFunction(item: SvgAnimate) {
                 return item.keySplines && item.keySplines.length ? item.keySplines[0] : item.timingFunction;
             }
-            const result = createDashGroup(dashArray, dashOffset, 0);
+            function getDashLength(values: number[]) {
+                return Math.ceil(totalLength / (values.length === 1 ? values[0] * 2 : values.reduce((a, b) => a + b, 0)));
+            }
+            const result = createDashGroup(valueArray, valueOffset, 0);
             if (animations) {
-                const sorted = animations.slice(0).sort((a, b) => a.delay !== b.delay && a.attributeName.startsWith('stroke-dash') && b.attributeName.startsWith('stroke-dash') ? (a.delay < b.delay ? -1 : 1) : 0);
-                const dashTotal = Math.ceil(totalLength / (dashArray * 2));
+                const sorted = animations.slice(0).sort((a, b) => {
+                    if (a.attributeName.startsWith('stroke-dash') && b.attributeName.startsWith('stroke-dash')) {
+                        if (a.delay !== b.delay) {
+                            return a.delay < b.delay ? -1 : 1;
+                        }
+                        else if (SvgBuild.asSet(a) && SvgBuild.asAnimate(b) || a.animationElement === undefined && b.animationElement) {
+                            return -1;
+                        }
+                        else if (SvgBuild.asAnimate(a) && SvgBuild.asSet(b) || a.animationElement && b.animationElement === undefined) {
+                            return 1;
+                        }
+                    }
+                    return 0;
+                });
                 const revised: SvgAnimation[] = [];
+                function setDashLength() {
+                    for (const item of sorted) {
+                        if (item.attributeName === 'stroke-dasharray') {
+                            if (SvgBuild.asSet(item)) {
+                                dashLength = Math.max(dashLength, getDashLength(SvgBuild.toNumberList(item.to)));
+                            }
+                            else if (SvgBuild.asAnimate(item)) {
+                                dashLength = Math.max(dashLength, getDashLength(SvgBuild.toNumberList(item.valueTo)));
+                            }
+                        }
+                    }
+                }
                 for (let i = 0; i < sorted.length; i++) {
                     const item = sorted[i];
                     if (SvgBuild.asSet(item) && item.to !== '') {
                         let valid = true;
                         switch (item.attributeName) {
                             case 'stroke-dasharray':
-                                dashArray = $util.convertInt(item.to);
+                                valueArray = SvgBuild.toNumberList(item.to);
                                 break;
                             case 'stroke-dashoffset':
-                                dashOffset = $util.convertInt(item.to);
+                                valueOffset = $util.convertInt(item.to);
                                 break;
                             default:
                                 valid = false;
                                 break;
                         }
                         if (valid) {
-                            createDashGroup(dashArray, dashOffset, item.delay, item.fillReplace && item.duration > 0 ? item.duration : 0);
+                            createDashGroup(valueArray, valueOffset, item.delay, item.fillReplace && item.duration > 0 ? item.duration : 0);
                             continue;
                         }
                     }
                     else if (SvgBuild.asAnimate(item) && item.valueTo !== '') {
-                        const valueTo = parseFloat(item.valueTo);
                         const timingFunction = getTimingFunction(<SvgAnimate> item);
                         switch (item.attributeName) {
                             case 'stroke-dasharray': {
-                                let offsetValue = Math.abs(valueTo - dashArray);
-                                if (offsetValue > 0) {
-                                    const group = createDashGroup(Math.min(valueTo, dashArray), dashOffset, -1);
-                                    const groupArray: SvgAnimate[] = [];
-                                    const values: string[][] = [];
-                                    const keyTimes: number[] = [0];
-                                    for (let j = 0; j < group.length; j++) {
-                                        values[j] = [getFromToValue(result[j])];
-                                        const animate = new SvgAnimate(this.element);
-                                        animate.id = j;
-                                        animate.attributeName = 'stroke-dasharray';
-                                        animate.delay = item.delay;
-                                        animate.duration = item.duration;
-                                        animate.fillForwards = true;
-                                        animate.values = values[j];
-                                        groupArray.push(animate);
-                                    }
-                                    const increment = (item.duration / offsetValue) / item.duration;
-                                    const increasing = valueTo > dashArray;
-                                    let valueArray = dashArray;
-                                    let keyTime = 0;
-                                    do {
-                                        valueArray += increasing ? Math.min(offsetValue, 1) : Math.max(-offsetValue, -1);
-                                        const nextGroup = this.flatStrokeDash(valueArray, dashOffset, pathLength);
-                                        for (let j = 0; j < group.length; j++) {
-                                            values[j].push(getFromToValue(nextGroup[j]));
+                                const valueTo = SvgBuild.toNumberList(item.valueTo)[0];
+                                if (!isNaN(valueTo)) {
+                                    let offsetLength = Math.abs(valueTo - valueArray[0]);
+                                    if (offsetLength > 0) {
+                                        setDashLength();
+                                        const groupArray: SvgAnimate[] = [];
+                                        const values: string[][] = [];
+                                        const keyTimes: number[] = [0];
+                                        for (let j = 0; j < dashLength; j++) {
+                                            values[j] = [getFromToValue(result[j])];
+                                            const animate = new SvgAnimate(this.element);
+                                            animate.id = j;
+                                            animate.attributeName = 'stroke-dasharray';
+                                            animate.delay = item.delay;
+                                            animate.duration = item.duration;
+                                            animate.fillForwards = true;
+                                            animate.values = values[j];
+                                            groupArray.push(animate);
                                         }
-                                        keyTime += increment;
-                                        keyTimes.push(keyTime);
-                                    }
-                                    while (--offsetValue > 0);
-                                    if (item.fillReplace) {
-                                        for (let j = 0; j < group.length; j++) {
-                                            values[j].push(getFromToValue(result[j]));
+                                        const increment = (item.duration / offsetLength) / item.duration;
+                                        const increasing = valueTo > valueArray[0];
+                                        let value = valueArray[0];
+                                        let keyTime = 0;
+                                        do {
+                                            value += increasing ? Math.min(offsetLength, 1) : Math.max(-offsetLength, -1);
+                                            const nextGroup = this.flatStrokeDash([value], valueOffset, totalLength, pathLength);
+                                            for (let j = 0; j < dashLength; j++) {
+                                                values[j].push(getFromToValue(nextGroup[j]));
+                                            }
+                                            keyTime += increment;
+                                            keyTimes.push(keyTime);
                                         }
-                                        keyTimes[keyTimes.length - 1] = 1 - 1 / item.duration;
-                                        keyTimes.push(1);
+                                        while (--offsetLength > 0);
+                                        if (item.fillReplace) {
+                                            for (let j = 0; j < dashLength; j++) {
+                                                values[j].push(getFromToValue(result[j]));
+                                            }
+                                            keyTimes[keyTimes.length - 1] = 1 - 1 / item.duration;
+                                            keyTimes.push(1);
+                                        }
+                                        else {
+                                            keyTimes[keyTimes.length - 1] = 1;
+                                            valueArray = [valueTo];
+                                        }
+                                        for (let j = 0; j < dashLength; j++) {
+                                            groupArray[j].values = values[j];
+                                            groupArray[j].keyTimes = keyTimes;
+                                            groupArray[j].timingFunction = timingFunction;
+                                        }
+                                        revised.push(...groupArray);
                                     }
-                                    else {
-                                        keyTimes[keyTimes.length - 1] = 1;
-                                    }
-                                    for (let j = 0; j < group.length; j++) {
-                                        groupArray[j].values = values[j];
-                                        groupArray[j].keyTimes = keyTimes;
-                                        groupArray[j].timingFunction = timingFunction;
-                                    }
-                                    revised.push(...groupArray);
                                 }
                                 continue;
                             }
                             case 'stroke-dashoffset': {
-                                const offsetValue = valueTo - dashOffset;
-                                const offsetLength = Math.abs(offsetValue / totalLength);
-                                let iterationCount = (dashTotal / result.length) * offsetLength;
-                                if (offsetLength % 1 === 0 || offsetValue % pathLength === 0) {
-                                    iterationCount = Math.ceil(iterationCount);
-                                }
-                                const keyTimeInterval = iterationCount > 1 ? item.duration / (iterationCount * item.duration) : 1;
+                                const valueTo = parseFloat(item.valueTo);
+                                const iterationCount = (Math.abs(valueTo - valueOffset) / totalLength) * (totalLength / pathLength);
+                                const keyTimeInterval = item.duration / (iterationCount * item.duration);
                                 const values: string[] = [];
                                 const keyTimes: number[] = [];
                                 let keyTime = 0;
                                 for (let j = iterationCount; j > 0; j--) {
                                     keyTimes.push(keyTime + (keyTime !== 0 ? 1 / item.duration : 0));
-                                    if (j >= 1) {
-                                        if (valueTo < dashOffset) {
+                                    if (j > 1) {
+                                        if (valueTo < valueOffset) {
                                             values.push('0', '1');
                                         }
                                         else {
@@ -412,7 +399,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         keyTime += keyTimeInterval;
                                     }
                                     else {
-                                        if (valueTo < dashOffset) {
+                                        if (valueTo < valueOffset) {
                                             values.push('0', j.toString());
                                         }
                                         else {
@@ -434,7 +421,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                     }
                     revised.push(item);
                 }
-                if (dashGroup.length > 1) {
+                if (dashLength > 0) {
                     let groupFrom: SvgStrokeDash[] | undefined;
                     for (let i = 0; i < dashGroup.length; i++) {
                         const groupTo = dashGroup[i];

@@ -7,7 +7,7 @@ declare global {
             transforms: SvgTransform[];
             readonly totalLength: number;
             draw(transforms?: SvgTransform[], residual?: SvgTransformResidual, precision?: number, extract?: boolean): string;
-            flatStrokeDash(value: number, offset: number, totalLength: number): SvgStrokeDash[];
+            flatStrokeDash(valueArray: number[], valueOffset: number, totalLength: number, pathLength?: number): SvgStrokeDash[];
             extractStrokeDash(animations?: SvgAnimation[]): SvgStrokeDash[] | undefined;
         }
 
