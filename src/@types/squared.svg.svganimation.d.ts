@@ -87,6 +87,7 @@ declare global {
         }
 
         class SvgAnimation implements SvgAnimation {
+            public static convertClockTime(value: string): number;
             constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimationElement);
         }
 
@@ -94,6 +95,7 @@ declare global {
             public static getGroupDuration(item: SvgAnimationAttribute): number;
             public static getIntervalMap(): SvgIntervalMap;
             public static getIntervalValue(map: SvgIntervalMap, attr: string, interval: number): string | undefined;
+            public static getSplitValue(value: number, next: number, percent: number): number;
             public static toStepFractionList(name: string, keyTimes: number[], values: string[], keySpline: string, index: number, fontSize?: number): [number[], string[]] | undefined;
             public static toFractionList(value: string, delimiter?: string): number[];
             constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimateElement);

@@ -7,7 +7,7 @@ import SvgBuild from './svgbuild';
 import SvgPath from './svgpath';
 
 import { SYNCHRONIZE_MODE, SYNCHRONIZE_STATE } from './lib/constant';
-import { SVG, TRANSFORM, getLeastCommonMultiple, getSplitValue, sortNumber } from './lib/util';
+import { SVG, TRANSFORM } from './lib/util';
 
 type SvgAnimation = squared.svg.SvgAnimation;
 type SvgBaseVal = squared.svg.SvgBaseVal;
@@ -27,6 +27,7 @@ interface ForwardValue extends NumberValue<AnimateValue> {
     time: number;
 }
 
+const $math = squared.lib.math;
 const $util = squared.lib.util;
 
 const LINE_ARGS = ['x1', 'y1', 'x2', 'y2'];
@@ -296,7 +297,7 @@ function getItemValue(item: SvgAnimate, baseValue: AnimateValue, values: string[
 function getItemSplitValue(fraction: number, previousFraction: number, previousValue: AnimateValue, nextFraction: number, nextValue: AnimateValue) {
     if (fraction > previousFraction) {
         if (typeof previousValue === 'number' && typeof nextValue === 'number') {
-            return getSplitValue(previousValue, nextValue, (fraction - previousFraction) / (nextFraction - previousFraction));
+            return SvgAnimate.getSplitValue(previousValue, nextValue, (fraction - previousFraction) / (nextFraction - previousFraction));
         }
         else if (typeof previousValue === 'string' && typeof nextValue === 'string') {
             const previousArray = $util.replaceMap<string, number>(previousValue.split(' '), value => parseFloat(value));
@@ -712,7 +713,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                     }
                     for (const attr in groupName) {
                         const groupDelay = new Map<number, SvgAnimate[]>();
-                        for (const delay of sortNumber(Array.from(groupName[attr].keys()))) {
+                        for (const delay of $util.sortNumber(Array.from(groupName[attr].keys()))) {
                             const group = <SvgAnimate[]> groupName[attr].get(delay);
                             for (const item of group) {
                                 repeatingDuration = Math.max(repeatingDuration, item.getTotalDuration(true));
@@ -1516,7 +1517,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                             }
                             else {
                                 if (duration.length > 1) {
-                                    repeatingEndTime = getLeastCommonMultiple(duration, delay);
+                                    repeatingEndTime = $math.getLeastCommonMultiple(duration, delay);
                                 }
                                 else if ((repeatingEndTime - delay[0]) % duration[0] !== 0) {
                                     repeatingEndTime = duration[0] * Math.ceil(repeatingEndTime / duration[0]);
@@ -1562,7 +1563,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                 }
                             }
                         }
-                        const keyTimes = sortNumber(Array.from(keyTimesRepeating));
+                        const keyTimes = $util.sortNumber(Array.from(keyTimesRepeating));
                         if (path || transforming) {
                             for (const attr in repeatingMap) {
                                 if (!repeatingMap[attr].has(0) && baseValueMap[attr] !== undefined) {
@@ -1575,7 +1576,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                     if (!keyTimes.includes(endTime)) {
                                         keyTimes.push(endTime);
                                     }
-                                    sortNumber(keyTimes);
+                                    $util.sortNumber(keyTimes);
                                 }
                             }
                         }
@@ -1607,7 +1608,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                             duration.push(infiniteMap[attr].duration);
                             infiniteAnimations.push(infiniteMap[attr]);
                         }
-                        const maxDuration = getLeastCommonMultiple(duration);
+                        const maxDuration = $math.getLeastCommonMultiple(duration);
                         for (const item of infiniteAnimations) {
                             const attr = item.attributeName;
                             timelineMap[attr] = new Map<number, AnimateValue>();

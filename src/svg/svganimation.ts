@@ -1,12 +1,55 @@
 import { SvgAnimationGroup } from './@types/object';
 
 import { FILL_MODE, INSTANCE_TYPE } from './lib/constant';
-import { convertClockTime, getFontSize } from './lib/util';
 
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 export default class SvgAnimation implements squared.svg.SvgAnimation {
+    public static convertClockTime(value: string) {
+        let s = 0;
+        let ms = 0;
+        if ($util.isNumber(value)) {
+            s = parseInt(value);
+        }
+        else {
+            if (/-?\d+ms$/.test(value)) {
+                ms = parseFloat(value);
+            }
+            else if (/-?\d+s$/.test(value)) {
+                s = parseFloat(value);
+            }
+            else if (/-?\d+min$/.test(value)) {
+                s = parseFloat(value) * 60;
+            }
+            else if (/-?\d+(.\d+)?h$/.test(value)) {
+                s = parseFloat(value) * 60 * 60;
+            }
+            else {
+                const match = /^(?:(-?)(\d?\d):)?(?:(\d?\d):)?(\d?\d)\.?(\d?\d?\d)?$/.exec(value);
+                if (match) {
+                    if (match[2]) {
+                        s += parseInt(match[2]) * 60 * 60;
+                    }
+                    if (match[3]) {
+                        s += parseInt(match[3]) * 60;
+                    }
+                    if (match[4]) {
+                        s += parseInt(match[4]);
+                    }
+                    if (match[5]) {
+                        ms = parseInt(match[5]) * (match[5].length < 3 ? Math.pow(10, 3 - match[5].length) : 1);
+                    }
+                    if (match[1]) {
+                        s *= -1;
+                        ms *= -1;
+                    }
+                }
+            }
+        }
+        return s * 1000 + ms;
+    }
+
     public element: SVGGraphicsElement | null = null;
     public animationElement: SVGAnimationElement | null = null;
     public paused = false;
@@ -33,7 +76,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
             this.setAttribute('fill', 'freeze');
             const dur = $dom.getNamedItem(animationElement, 'dur');
             if (dur !== '' && dur !== 'indefinite') {
-                this.duration = convertClockTime(dur);
+                this.duration = SvgAnimation.convertClockTime(dur);
             }
         }
     }
@@ -90,7 +133,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
             if (baseElement) {
                 this.baseFrom = $util.optionalAsString(baseElement, `${value}.baseVal.valueAsString`) || $dom.cssInheritAttribute(baseElement, value);
                 if ($util.isUnit(this.baseFrom)) {
-                    this.baseFrom = parseFloat($util.convertPX(this.baseFrom, getFontSize(<SVGGraphicsElement> baseElement))).toString();
+                    this.baseFrom = parseFloat($util.convertPX(this.baseFrom, $dom.getFontSize(baseElement))).toString();
                 }
             }
         }

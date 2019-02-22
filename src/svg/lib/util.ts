@@ -1,12 +1,8 @@
 import { SvgMatrix, SvgPoint, SvgTransform } from '../@types/object';
 
 const $dom = squared.lib.dom;
+const $math = squared.lib.math;
 const $util = squared.lib.util;
-
-function setAttribute(element: SVGElement, attr: string, value: string) {
-    element.style[attr] = value;
-    element.setAttribute(attr, value);
-}
 
 const SHAPES = {
     path: 1,
@@ -34,9 +30,6 @@ export const MATRIX = {
     applyY(matrix: SvgMatrix | DOMMatrix, x: number, y: number) {
         return matrix.b * x + matrix.d * y + matrix.f;
     },
-    distance(angle: number, value: number) {
-        return value * Math.cos($util.convertRadian(angle)) * -1;
-    },
     clone(matrix: SvgMatrix | DOMMatrix) {
         return {
             a: matrix.a,
@@ -48,7 +41,7 @@ export const MATRIX = {
         };
     },
     rotate(angle: number): SvgMatrix {
-        const r = $util.convertRadian(angle);
+        const r = $math.convertRadian(angle);
         const a = Math.cos(r);
         const b = Math.sin(r);
         return {
@@ -63,8 +56,8 @@ export const MATRIX = {
     skew(x = 0, y = 0): SvgMatrix {
         return {
             a: 1,
-            b: Math.tan($util.convertRadian(y)),
-            c: Math.tan($util.convertRadian(x)),
+            b: Math.tan($math.convertRadian(y)),
+            c: Math.tan($math.convertRadian(x)),
             d: 1,
             e: 0,
             f: 0
@@ -150,7 +143,7 @@ export const TRANSFORM = {
                         ordered[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SCALE, matrix, 0, !isY, !isX);
                     }
                     else if (match[1].startsWith('translate')) {
-                        const fontSize = getFontSize(element);
+                        const fontSize = $dom.getFontSize(element);
                         const arg1 = parseFloat($util.convertPX(match[2], fontSize));
                         const arg2 = (!isX && match[3] ? parseFloat($util.convertPX(match[3], fontSize)) : 0);
                         const x = isY ? 0 : arg1;
@@ -240,7 +233,7 @@ export const TRANSFORM = {
                                 position = '50%';
                             }
                             if ($util.isUnit(position)) {
-                                result[attr] = parseInt(position.endsWith('px') ? position : $util.convertPX(position, getFontSize(element)));
+                                result[attr] = parseInt(position.endsWith('px') ? position : $util.convertPX(position, $dom.getFontSize(element)));
                             }
                             else if ($util.isPercent(position)) {
                                 result[attr] = (attr === 'x' ? width : height) * (parseInt(position) / 100);
@@ -385,78 +378,6 @@ export const SVG = {
     }
 };
 
-export function getFontSize(element: SVGElement | null) {
-    return parseInt($dom.getStyle(element).fontSize || '16');
-}
-
-export function convertClockTime(value: string) {
-    let s = 0;
-    let ms = 0;
-    if ($util.isNumber(value)) {
-        s = parseInt(value);
-    }
-    else {
-        if (/-?\d+ms$/.test(value)) {
-            ms = parseFloat(value);
-        }
-        else if (/-?\d+s$/.test(value)) {
-            s = parseFloat(value);
-        }
-        else if (/-?\d+min$/.test(value)) {
-            s = parseFloat(value) * 60;
-        }
-        else if (/-?\d+(.\d+)?h$/.test(value)) {
-            s = parseFloat(value) * 60 * 60;
-        }
-        else {
-            const match = /^(?:(-?)(\d?\d):)?(?:(\d?\d):)?(\d?\d)\.?(\d?\d?\d)?$/.exec(value);
-            if (match) {
-                if (match[2]) {
-                    s += parseInt(match[2]) * 60 * 60;
-                }
-                if (match[3]) {
-                    s += parseInt(match[3]) * 60;
-                }
-                if (match[4]) {
-                    s += parseInt(match[4]);
-                }
-                if (match[5]) {
-                    ms = parseInt(match[5]) * (match[5].length < 3 ? Math.pow(10, 3 - match[5].length) : 1);
-                }
-                if (match[1]) {
-                    s *= -1;
-                    ms *= -1;
-                }
-            }
-        }
-    }
-    return s * 1000 + ms;
-}
-
-export function isVisible(element: Element) {
-    const value = $dom.cssAttribute(element, 'visibility', true);
-    return value !== 'hidden' && value !== 'collapse' && $dom.cssAttribute(element, 'display', true) !== 'none';
-}
-
-export function setVisible(element: SVGGraphicsElement, value: boolean) {
-    setAttribute(element, 'display', value ? 'block' : 'none');
-    setAttribute(element, 'visibility', value ? 'visible' : 'hidden');
-}
-
-export function setOpacity(element: SVGGraphicsElement, value: string) {
-    if ($util.isNumber(value)) {
-        let opacity = parseFloat(value.toString());
-        if (opacity <= 0) {
-            opacity = 0;
-        }
-        else if (opacity >= 1) {
-            opacity = 1;
-        }
-        element.style.opacity = opacity.toString();
-        element.setAttribute('opacity', opacity.toString());
-    }
-}
-
 export function getAttributeUrl(value: string) {
     const match = /url\("?(#.+?)"?\)/.exec(value);
     return match ? match[1] : '';
@@ -505,47 +426,8 @@ export function getNearestViewBox(element: SVGElement) {
     return undefined;
 }
 
-export function sortNumber(values: number[], descending = false) {
-    return descending ? values.sort((a, b) => a > b ? -1 : 1) : values.sort((a, b) => a < b ? -1 : 1);
-}
-
-export function getSplitValue(value: number, next: number, percent: number) {
-    return value + (next - value) * percent;
-}
-
-export function getLeastCommonMultiple(values: number[], offset?: number[]) {
-    if (values.length > 1) {
-        const increment = sortNumber(values.slice(0))[0];
-        let minimum = 0;
-        if (offset) {
-            if (offset.length === values.length) {
-                for (let i = 0; i < offset.length; i++) {
-                    minimum = Math.max(minimum, offset[i] + values[i]);
-                }
-            }
-            else {
-                offset = undefined;
-            }
-        }
-        if (offset === undefined) {
-            minimum = Math.max(minimum, increment);
-        }
-        let result = minimum;
-        let valid = false;
-        while (!valid) {
-            for (let i = 0; i < values.length; i++) {
-                const total = result - (offset ? offset[i] : 0);
-                if (total % values[i] === 0) {
-                    valid = true;
-                }
-                else {
-                    valid = false;
-                    result += increment;
-                    break;
-                }
-            }
-        }
-        return result;
-    }
-    return values[0];
+export function getPathLength(value: string) {
+    const element = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    element.setAttribute('d', value);
+    return element.getTotalLength();
 }

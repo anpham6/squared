@@ -31,6 +31,7 @@ declare global {
             function getRangeClientRect(element: Element): TextDimension;
             function assignBounds(bounds: RectDimension | DOMRect): RectDimension;
             function getStyle(element: Element | null, cache?: boolean): CSSStyleDeclaration;
+            function getFontSize(element: Element | null): number;
             function cssResolveUrl(value: string): string;
             function cssInherit(element: Element | null, attr: string, exclude?: string[], tagNames?: string[]): string;
             function cssParent(element: Element | null, attr: string, ...styles: string[]): boolean;
@@ -58,6 +59,19 @@ declare global {
             function getElementAsNodeAttribute<T>(element: Element, attr: string): T | undefined;
         }
 
+        namespace math {
+            function minArray(list: number[]): number;
+            function maxArray(list: number[]): number;
+            function convertRadian(value: number): number;
+            function distanceFromX(value: number, angle: number): number;
+            function distanceFromY(value: number, angle: number): number;
+            function truncateString(value: string, precision?: number): string;
+            function truncateRange(value: number, precision?: number): string;
+            function truncatePrecision(value: number): number;
+            function getAngle(start: Point, end: Point): number;
+            function getLeastCommonMultiple(values: number[], offset?: number[]): number;
+        }
+
         namespace util {
             export import REGEXP_PATTERN = $util.REGEXP_PATTERN;
             export import REGEXP_STRING = $util.REGEXP_STRING;
@@ -67,7 +81,6 @@ declare global {
             function convertWord(value: string, dash?: boolean): string;
             function convertInt(value: string): number;
             function convertFloat(value: string): number;
-            function convertRadian(angle: number): number;
             function convertPercent(value: number, precision?: number): string;
             function convertAngle(value: string, unit?: string): number;
             function convertPX(value: string, fontSize?: number): string;
@@ -75,9 +88,6 @@ declare global {
             function convertAlpha(value: number): string;
             function convertRoman(value: number): string;
             function convertEnum(value: number, base: {}, derived: {}): string;
-            function truncateString(value: string, precision?: number): string;
-            function truncateRange(value: number, precision?: number): string;
-            function truncatePrecision(value: number): number;
             function formatPX(value: string | number): string;
             function formatPercent(value: string | number): string;
             function formatString(value: string, ...params: string[]): string;
@@ -111,8 +121,7 @@ declare global {
             function withinFraction(lower: number, upper: number): boolean;
             function assignWhenNull(destination: {}, source: {}): void;
             function defaultWhenNull(options: {}, ...attrs: string[]): void;
-            function minArray(list: number[]): number;
-            function maxArray(list: number[]): number;
+            function sortNumber(values: number[], descending?: boolean): number[];
             function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]): T[];
             function flatArray<T>(list: any[]): T[];
             function partitionArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): [T[], T[]];

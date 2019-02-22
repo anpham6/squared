@@ -13,18 +13,11 @@ const $Resource = squared.base.Resource;
 const $SvgBuild = squared.svg && squared.svg.SvgBuild;
 const $color = squared.lib.color;
 const $dom = squared.lib.dom;
+const $math = squared.lib.math;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
 const STORED = <ResourceStoredMapAndroid> $Resource.STORED;
-
-function getDistanceToX(angle: number, length: number) {
-    return length * Math.sin($util.convertRadian(angle));
-}
-
-function getDistanceToY(angle: number, length: number) {
-    return length * Math.cos($util.convertRadian(angle)) * -1;
-}
 
 function getRadiusPercent(value: string) {
     return $util.isPercent(value) ? parseInt(value) / 100 : 0.5;
@@ -72,7 +65,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                             switch (path.element.tagName) {
                                 case 'path':
                                     for (const command of $SvgBuild.getPathCommands(path.value)) {
-                                        points.push(...command.points);
+                                        points.push(...command.value);
                                     }
                                 case 'polygon':
                                     if (path.element instanceof SVGPolygonElement) {
@@ -149,10 +142,10 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                         if (hasStop) {
                             const x = Math.round(node.bounds.width / 2);
                             const y = Math.round(node.bounds.height / 2);
-                            gradient.startX = Math.round(getDistanceToX(linear.angle + 180, x) + x).toString();
-                            gradient.startY = Math.round(getDistanceToY(linear.angle + 180, y) + y).toString();
-                            gradient.endX = Math.round(getDistanceToX(linear.angle, x) + x).toString();
-                            gradient.endY = Math.round(getDistanceToY(linear.angle, y) + y).toString();
+                            gradient.startX = Math.round(x + $math.distanceFromX(x, linear.angle + 180)).toString();
+                            gradient.startY = Math.round(y + $math.distanceFromY(y, linear.angle + 180)).toString();
+                            gradient.endX = Math.round(x + $math.distanceFromX(x, linear.angle)).toString();
+                            gradient.endY = Math.round(y + $math.distanceFromY(y, linear.angle)).toString();
                         }
                         else {
                             gradient.angle = (Math.floor(linear.angle / 45) * 45).toString();
@@ -193,7 +186,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                     }
                     gradient.colorStops.push({
                         color,
-                        offset: $util.truncateRange(offset / 100),
+                        offset: $math.truncateRange(offset / 100),
                         opacity: stop.opacity
                     });
                 }

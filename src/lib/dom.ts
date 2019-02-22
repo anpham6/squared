@@ -320,6 +320,10 @@ export function getStyle(element: Element | null, cache = true): CSSStyleDeclara
     return <CSSStyleDeclaration> { display: 'none' };
 }
 
+export function getFontSize(element: Element | null) {
+    return parseInt(getStyle(element).fontSize || '16');
+}
+
 export function cssResolveUrl(value: string) {
     const match = value.match(REGEXP_PATTERN.URL);
     if (match) {

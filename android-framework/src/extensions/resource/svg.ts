@@ -127,6 +127,7 @@ interface FillReplace {
 }
 
 const $util = squared.lib.util;
+const $math = squared.lib.math;
 const $xml = squared.lib.xml;
 const $constS = squared.svg.lib.constant;
 const $utilS = squared.svg.lib.util;
@@ -881,8 +882,8 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                 if (x !== undefined && !isNaN(x) || y !== undefined && !isNaN(y)) {
                                                                     const commandA = commands[0];
                                                                     const commandB = commands[commands.length - 1];
-                                                                    const pointA = commandA.points[0];
-                                                                    const pointB = commandB.points[commandB.points.length - 1];
+                                                                    const pointA = commandA.value[0];
+                                                                    const pointB = commandB.value[commandB.value.length - 1];
                                                                     let recalibrate = false;
                                                                     if (x !== undefined) {
                                                                         switch (item.attributeName) {
@@ -922,7 +923,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                         for (const path of commands) {
                                                                             if (!path.relative) {
                                                                                 for (let j = 0, k = 0; j < path.coordinates.length; j += 2, k++) {
-                                                                                    const pt = path.points[k];
+                                                                                    const pt = path.value[k];
                                                                                     if (x !== undefined) {
                                                                                         path.coordinates[j] += x;
                                                                                         pt.x += x;
@@ -938,7 +939,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                 }
                                                                 else if (rx !== undefined && !isNaN(rx) || ry !== undefined && !isNaN(ry)) {
                                                                     for (const path of commands) {
-                                                                        if (path.command.toUpperCase() === 'A') {
+                                                                        if (path.name.toUpperCase() === 'A') {
                                                                             if (rx !== undefined) {
                                                                                 path.radiusX = rx;
                                                                                 path.coordinates[0] = rx * 2 * (path.coordinates[0] < 0 ? -1 : 1);
@@ -951,14 +952,14 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                 }
                                                                 else if (width !== undefined && !isNaN(width)) {
                                                                     for (const path of commands) {
-                                                                        if (path.command === 'h') {
+                                                                        if (path.name === 'h') {
                                                                             path.coordinates[0] = width * (path.coordinates[0] < 0 ? -1 : 1);
                                                                         }
                                                                     }
                                                                 }
                                                                 else if (height !== undefined && !isNaN(height)) {
                                                                     for (const path of commands) {
-                                                                        if (path.command === 'v') {
+                                                                        if (path.name === 'v') {
                                                                             path.coordinates[1] = height;
                                                                         }
                                                                     }
@@ -1037,10 +1038,10 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                             for (let j = 0; j < item.keyTimes.length; j++) {
                                                                 let value = getValue(j, i);
                                                                 if (value !== undefined) {
-                                                                    value = $util.truncateString(value, this.options.decimalPrecisionValue);
+                                                                    value = $math.truncateString(value, this.options.decimalPrecisionValue);
                                                                     keyframes.push({
                                                                         interpolator: j > 0 && value !== '' && propertyName !== 'pivotX' && propertyName !== 'pivotY' ? this.getPathInterpolator(item.keySplines, j - 1) : '',
-                                                                        fraction: item.keyTimes[j] === 0 && value === '' ? '' : $util.truncateRange(item.keyTimes[j], this.options.decimalPrecisionKeyTime),
+                                                                        fraction: item.keyTimes[j] === 0 && value === '' ? '' : $math.truncateRange(item.keyTimes[j], this.options.decimalPrecisionKeyTime),
                                                                         value
                                                                     });
                                                                 }
@@ -1356,31 +1357,38 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
             const CCC: ExternalData[] = [];
             const DDD: StringMap[] = [];
             const render: TransformData[][] = [[]];
+            const clipGroup: StringMap[] = [];
             if ($SvgBuild.isShape(item)) {
                 if (item.visible && item.path && item.path.value) {
                     const pathData = this.createPath(item, item.path, render);
-                    const animateData = this.ANIMATE_DATA.get(item.name);
-                    if (animateData === undefined || animateData.animate.every(animate => animate.attributeName.startsWith('stroke-dash'))) {
-                        const strokeDash = item.path.extractStrokeDash(animateData && animateData.animate);
-                        if (strokeDash) {
-                            const groupName = getVectorName(item, 'stroke');
-                            for (let i = 0; i < strokeDash.length; i++) {
-                                const pathObject = i === 0 ? pathData : Object.assign({}, pathData);
-                                pathObject.name = `${groupName}_${i}`;
-                                if (animateData) {
-                                    this.ANIMATE_DATA.set(pathObject.name, {
-                                        element: animateData.element,
-                                        animate: $util.filterArray(animateData.animate, data => data.id === undefined || data.id === i)
-                                    });
+                    if (pathData.strokeWidth && (pathData.strokeDasharray || pathData.strokeDashoffset)) {
+                        const animateData = this.ANIMATE_DATA.get(item.name);
+                        if (animateData === undefined || animateData.animate.every(animate => animate.attributeName.startsWith('stroke-dash'))) {
+                            const [strokeDash, pathValue, clipPathData] = item.path.extractStrokeDash(animateData && animateData.animate, this.options.decimalPrecisionValue);
+                            if (strokeDash) {
+                                const groupName = getVectorName(item, 'stroke');
+                                if (pathValue && clipPathData) {
+                                    pathData.value = pathValue;
+                                    clipGroup.push({ clipPathData });
                                 }
-                                pathObject.trimPathStart = $util.truncateRange(strokeDash[i].start, this.options.decimalPrecisionValue);
-                                pathObject.trimPathEnd = $util.truncateRange(strokeDash[i].end, this.options.decimalPrecisionValue);
-                                CCC.push(pathObject);
+                                for (let i = 0; i < strokeDash.length; i++) {
+                                    const pathObject = i === 0 ? pathData : Object.assign({}, pathData);
+                                    pathObject.name = `${groupName}_${i}`;
+                                    if (animateData) {
+                                        this.ANIMATE_DATA.set(pathObject.name, {
+                                            element: animateData.element,
+                                            animate: $util.filterArray(animateData.animate, data => data.id === undefined || data.id === i)
+                                        });
+                                    }
+                                    pathObject.trimPathStart = $math.truncateRange(strokeDash[i].start, this.options.decimalPrecisionValue);
+                                    pathObject.trimPathEnd = $math.truncateRange(strokeDash[i].end, this.options.decimalPrecisionValue);
+                                    CCC.push(pathObject);
+                                }
+                                if (animateData) {
+                                    this.ANIMATE_DATA.delete(item.name);
+                                }
+                                render[0].push({ groupName });
                             }
-                            if (animateData) {
-                                this.ANIMATE_DATA.delete(item.name);
-                            }
-                            render[0].push({ groupName });
                         }
                     }
                     if (CCC.length === 0) {
@@ -1417,7 +1425,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                     continue;
                 }
             }
-            groupData.BB.push({ render, CCC, DDD });
+            groupData.BB.push({ render, clipGroup, CCC, DDD });
         }
         this.VECTOR_DATA.set(group.name, groupData);
     }
@@ -1752,8 +1760,8 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
             duration,
             repeatCount,
             valueType,
-            valueFrom: $util.isNumber(valueFrom) ? $util.truncateString(valueFrom, this.options.decimalPrecisionValue) : valueFrom,
-            valueTo: $util.isNumber(valueTo) ? $util.truncateString(valueTo, this.options.decimalPrecisionValue) : valueTo,
+            valueFrom: $util.isNumber(valueFrom) ? $math.truncateString(valueFrom, this.options.decimalPrecisionValue) : valueFrom,
+            valueTo: $util.isNumber(valueTo) ? $math.truncateString(valueTo, this.options.decimalPrecisionValue) : valueTo,
             propertyValues: false
         };
     }

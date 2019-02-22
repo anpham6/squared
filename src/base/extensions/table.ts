@@ -8,6 +8,7 @@ import { EXT_NAME } from '../lib/constant';
 import { BOX_STANDARD, CSS_STANDARD } from '../lib/enumeration';
 
 const $dom = squared.lib.dom;
+const $math = squared.lib.math;
 const $util = squared.lib.util;
 
 const enum LAYOUT_TABLE {
@@ -265,7 +266,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                         caption.css('maxWidth', $util.formatPX(caption.bounds.width));
                     }
                 }
-                else if (caption.bounds.width > $util.maxArray(rowWidth)) {
+                else if (caption.bounds.width > $math.maxArray(rowWidth)) {
                     setBoundsWidth(caption);
                 }
             }

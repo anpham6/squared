@@ -18,6 +18,7 @@ import $NodeList = squared.base.NodeList;
 const $enum = squared.base.lib.enumeration;
 const $color = squared.lib.color;
 const $dom = squared.lib.dom;
+const $math = squared.lib.math;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
@@ -1663,7 +1664,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             }
             columns[j].push(item);
             if (item.length) {
-                totalGap += $util.maxArray($util.objectMap<T, number>(item.children as T[], child => child.marginLeft + child.marginRight));
+                totalGap += $math.maxArray($util.objectMap<T, number>(item.children as T[], child => child.marginLeft + child.marginRight));
             }
         }
         const columnGap = $util.convertInt(node.css('columnGap')) || 16;

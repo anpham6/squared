@@ -19,6 +19,7 @@ type SvgUse = squared.svg.SvgUse;
 type SvgUsePattern = squared.svg.SvgUsePattern;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
 
+const $math = squared.lib.math;
 const $util = squared.lib.util;
 
 const NAME_GRAPHICS = new Map<string, number>();
@@ -120,12 +121,12 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static drawLine(x1: number, y1: number, x2 = 0, y2 = 0, precision?: number) {
         const result = `M${x1},${y1} L${x2},${y2}`;
-        return precision ? $util.truncateString(result, precision) : result;
+        return precision ? $math.truncateString(result, precision) : result;
     }
 
     public static drawRect(width: number, height: number, x = 0, y = 0, precision?: number) {
         const result = `M${x},${y} ${x + width},${y} ${x + width},${y + height} ${x},${y + height} Z`;
-        return precision ? $util.truncateString(result, precision) : result;
+        return precision ? $math.truncateString(result, precision) : result;
     }
 
     public static drawCircle(cx: number, cy: number, r: number, precision?: number) {
@@ -137,7 +138,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             ry = rx;
         }
         const result = `M${cx - rx},${cy} a${rx},${ry},0,1,0,${rx * 2},0 a${rx},${ry},0,1,0,-${rx * 2},0`;
-        return precision ? $util.truncateString(result, precision) : result;
+        return precision ? $math.truncateString(result, precision) : result;
     }
 
     public static drawPolygon(values: Point[] | DOMPoint[], precision?: number) {
@@ -150,14 +151,14 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             result += `${value.x},${value.y} `;
         }
         result = result.substring(0, result.length - 1);
-        return precision ? $util.truncateString(result, precision) : result;
+        return precision ? $math.truncateString(result, precision) : result;
     }
 
     public static drawPath(values: SvgPathCommand[], precision?: number) {
         let result = '';
         for (const value of values) {
-            result += (result !== '' ? ' ' : '') + value.command;
-            switch (value.command.toUpperCase()) {
+            result += (result !== '' ? ' ' : '') + value.name;
+            switch (value.name.toUpperCase()) {
                 case 'M':
                 case 'L':
                 case 'C':
@@ -177,7 +178,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     break;
             }
         }
-        return precision ? $util.truncateString(result, precision) : result;
+        return precision ? $math.truncateString(result, precision) : result;
     }
 
     public static getPathCommands(value: string) {
@@ -194,8 +195,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             let previousPoint: Point | undefined;
             if (result.length) {
                 const previous = result[result.length - 1];
-                previousCommand = previous.command.toUpperCase();
-                previousPoint = previous.points[previous.points.length - 1];
+                previousCommand = previous.name.toUpperCase();
+                previousPoint = previous.value[previous.value.length - 1];
             }
             let radiusX: number | undefined;
             let radiusY: number | undefined;
@@ -305,10 +306,10 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     points.push({ x, y });
                 }
                 result.push({
-                    command: match[1],
+                    name: match[1],
+                    value: points,
                     relative,
                     coordinates,
-                    points,
                     radiusX,
                     radiusY,
                     xAxisRotation,
@@ -336,7 +337,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     y = item.coordinates[j + 1];
                 }
                 const pt: SvgPoint = { x, y };
-                if (item.command.toUpperCase() === 'A') {
+                if (item.name.toUpperCase() === 'A') {
                     pt.rx = item.radiusX;
                     pt.ry = item.radiusY;
                     if (radius) {
@@ -351,18 +352,18 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 result.push(pt);
             }
             if (item.relative) {
-                switch (item.command) {
+                switch (item.name) {
                     case 'h':
                     case 'v':
                         const previous = values[i - 1];
-                        if (previous && previous.command === 'M') {
+                        if (previous && previous.name === 'M') {
                             previous.coordinates.push(...item.coordinates);
                             values.splice(i--, 1);
                         }
-                        item.command = 'M';
+                        item.name = 'M';
                         break;
                     default:
-                        item.command = item.command.toUpperCase();
+                        item.name = item.name.toUpperCase();
                         break;
                 }
                 item.relative = false;
@@ -375,7 +376,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         const absolute = points.slice(0);
         invalid: {
             for (const item of values) {
-                switch (item.command.toUpperCase()) {
+                switch (item.name.toUpperCase()) {
                     case 'M':
                     case 'L':
                     case 'H':
@@ -479,11 +480,11 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     case SVGTransform.SVG_TRANSFORM_ROTATE:
                         if (item.method.x) {
                             x1 -= origin.x;
-                            x2 = origin.x + MATRIX.distance(item.angle, origin.x);
+                            x2 = origin.x + $math.distanceFromY(origin.x, item.angle);
                         }
                         if (item.method.y) {
                             y1 -= origin.y;
-                            y2 = origin.y + MATRIX.distance(item.angle, origin.y);
+                            y2 = origin.y + $math.distanceFromY(origin.y, item.angle);
                         }
                         break;
                 }

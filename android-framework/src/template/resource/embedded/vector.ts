@@ -17,6 +17,9 @@ export default `<?xml version="1.0" encoding="utf-8"?>
 			##render-start##
 			<group android:name="{~groupName}" android:rotation="{~rotation}" android:scaleX="{~scaleX}" android:scaleY="{~scaleY}" android:translateX="{~translateX}" android:translateY="{~translateY}" android:pivotX="{~pivotX}" android:pivotY="{~pivotY}">
 			##render-start##
+			<<clipGroup>>
+			<clip-path android:name="{~clipName}" android:pathData="{&clipPathData}" />
+			<<clipGroup>>
 			<<CCC>>
 				<<clipElement>>
 				<clip-path android:name="{~clipName}" android:pathData="{&clipPathData}" />

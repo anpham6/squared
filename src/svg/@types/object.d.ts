@@ -38,11 +38,11 @@ export interface SvgRadialGradient extends SvgGradient {
     frAsString: string;
 }
 
-export interface SvgPathCommand {
-    command: string;
+export interface SvgPathCommand extends NameValue {
+    name: string;
+    value: Point[];
     relative: boolean;
     coordinates: number[];
-    points: Point[];
     radiusX?: number;
     radiusY?: number;
     xAxisRotation?: number;
@@ -110,4 +110,5 @@ export interface SvgStrokeDash {
     start: number;
     end: number;
     offset?: number;
+    remainder?: number;
 }

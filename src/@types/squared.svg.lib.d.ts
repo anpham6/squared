@@ -13,15 +13,9 @@ declare global {
             export import MATRIX = $util.MATRIX;
             export import SVG = $util.SVG;
             export import TRANSFORM = $util.TRANSFORM;
-            function getFontSize(element: SVGElement | null): number;
-            function convertClockTime(value: string): number;
-            function isVisible(element: Element): boolean;
-            function setVisible(element: SVGGraphicsElement, value: boolean): void;
-            function getTargetElement(element: Element, rootElement?: SVGElement | HTMLElement | null): SVGElement | null;
+            function getTargetElement(element: Element, rootElement?: HTMLElement | SVGElement | null): SVGElement | null;
             function getNearestViewBox(element: SVGElement): DOMRect | undefined;
-            function sortNumber(values: number[], descending?: boolean): boolean;
-            function getSplitValue(value: number, next: number, percent: number): number;
-            function getLeastCommonMultiple(values: number[], offset?: number[]): number;
+            function getPathLength(value: string): string;
         }
     }
 }

@@ -116,10 +116,6 @@ export function convertFloat(value: string) {
     return value && parseFloat(value) || 0;
 }
 
-export function convertRadian(angle: number) {
-    return angle * Math.PI / 180;
-}
-
 export function convertAngle(value: string, unit = 'deg') {
     let angle = parseFloat(value);
     switch (unit) {
@@ -236,33 +232,6 @@ export function convertEnum(value: number, base: {}, derived: {}): string {
         }
     }
     return '';
-}
-
-export function truncateString(value: string, precision = 3) {
-    let result = value;
-    const pattern = new RegExp(`(\\d+\\.\\d{${precision}})\\d+`, 'g');
-    let match: RegExpExecArray | null;
-    while ((match = pattern.exec(value)) !== null) {
-        result = result.replace(match[0], match[1]);
-    }
-    return result;
-}
-
-export function truncateRange(value: number, precision = 3) {
-    if (value === 0 || value === 1) {
-        return value.toString();
-    }
-    else {
-        return value.toPrecision(precision).replace(/\.?0+$/, '');
-    }
-}
-
-export function truncatePrecision(value: number) {
-    const match = /^\d+\.(\d+?)(0{5,}|9{5,})\d*$/.exec(value.toString());
-    if (match) {
-        return parseFloat(value.toPrecision(match[1].length));
-    }
-    return value;
 }
 
 export function formatPX(value: string | number) {
@@ -569,18 +538,8 @@ export function defaultWhenNull(options: {}, ...attrs: string[]) {
     }
 }
 
-export function minArray(list: number[]): number {
-    if (list.length) {
-        return Math.min.apply(null, list);
-    }
-    return Number.POSITIVE_INFINITY;
-}
-
-export function maxArray(list: number[]): number {
-    if (list.length) {
-        return Math.max.apply(null, list);
-    }
-    return Number.NEGATIVE_INFINITY;
+export function sortNumber(values: number[], descending = false) {
+    return descending ? values.sort((a, b) => a > b ? -1 : 1) : values.sort((a, b) => a < b ? -1 : 1);
 }
 
 export function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]) {

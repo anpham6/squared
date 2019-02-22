@@ -4,7 +4,6 @@ import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 
 import { INSTANCE_TYPE, KEYSPLINE_NAME, FILL_MODE } from './lib/constant';
-import { convertClockTime, getFontSize, getSplitValue, sortNumber } from './lib/util';
 
 type SvgIntervalMap = squared.svg.SvgIntervalMap;
 type SvgIntervalValue = squared.svg.SvgIntervalValue;
@@ -84,7 +83,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             }
         }
         for (const attr in intervalMap) {
-            for (const time of sortNumber(Array.from(intervalTimes[attr]))) {
+            for (const time of $util.sortNumber(Array.from(intervalTimes[attr]))) {
                 const values = intervalMap[attr][time];
                 for (let i = 0; i < values.length; i++) {
                     const interval = values[i];
@@ -226,6 +225,10 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         return result;
     }
 
+    public static getSplitValue(value: number, next: number, percent: number) {
+        return value + (next - value) * percent;
+    }
+
     public static toStepFractionList(name: string, keyTimes: number[], values: string[], keySpline: string, index: number, fontSize?: number): [number[], string[]] | undefined {
         let currentValue: any[] | undefined;
         let nextValue: any[] | undefined;
@@ -291,11 +294,11 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                             const current = <ColorData> currentValue[0];
                             const next = <ColorData> nextValue[0];
                             const rgb = $color.convertHex(
-                                getSplitValue(current.rgba.r, next.rgba.r, percent),
-                                getSplitValue(current.rgba.g, next.rgba.g, percent),
-                                getSplitValue(current.rgba.b, next.rgba.b, percent)
+                                SvgAnimate.getSplitValue(current.rgba.r, next.rgba.r, percent),
+                                SvgAnimate.getSplitValue(current.rgba.g, next.rgba.g, percent),
+                                SvgAnimate.getSplitValue(current.rgba.b, next.rgba.b, percent)
                             );
-                            const a = $color.convertHex(getSplitValue(current.rgba.a, next.rgba.a, percent));
+                            const a = $color.convertHex(SvgAnimate.getSplitValue(current.rgba.a, next.rgba.a, percent));
                             value.push(`#${rgb + (a !== 'FF' ? a : '')}`);
                             break;
                         }
@@ -303,7 +306,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                             for (let k = 0; k < currentValue.length; k++) {
                                 const current = <Point> currentValue[k];
                                 const next = <Point> nextValue[k];
-                                value.push(`${getSplitValue(current.x, next.x, percent)},${getSplitValue(current.y, next.y, percent)}`);
+                                value.push(`${SvgAnimate.getSplitValue(current.x, next.x, percent)},${SvgAnimate.getSplitValue(current.y, next.y, percent)}`);
                             }
                             break;
                         }
@@ -311,7 +314,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                             for (let k = 0; k < currentValue.length; k++) {
                                 const current = currentValue[k] as number;
                                 const next = nextValue[k] as number;
-                                value.push(getSplitValue(current, next, percent).toString());
+                                value.push(SvgAnimate.getSplitValue(current, next, percent).toString());
                             }
                             break;
                         }
@@ -395,7 +398,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             this.setAttribute('additive', 'sum');
             const repeatDur = $dom.getNamedItem(animationElement, 'repeatDur');
             if (repeatDur !== '' && repeatDur !== 'indefinite') {
-                this._repeatDuration = convertClockTime(repeatDur);
+                this._repeatDuration = SvgAnimation.convertClockTime(repeatDur);
             }
             const repeatCount = $dom.getNamedItem(animationElement, 'repeatCount');
             this.iterationCount = repeatCount === 'indefinite' ? -1 : parseFloat(repeatCount);
@@ -412,7 +415,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                     const keyTimes: number[] = [];
                     const values: string[] = [];
                     for (let i = 0; i < this.keyTimes.length - 1; i++) {
-                        const result = SvgAnimate.toStepFractionList(name, this.keyTimes, this.values, 'step-end', i, getFontSize(this.animationElement));
+                        const result = SvgAnimate.toStepFractionList(name, this.keyTimes, this.values, 'step-end', i, $dom.getFontSize(this.animationElement));
                         if (result) {
                             keyTimes.push(...result[0]);
                             values.push(...result[1]);
@@ -481,7 +484,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         super.delay = value;
         const end = $dom.getNamedItem(this.animationElement, 'end');
         if (end !== '') {
-            const endTime = sortNumber($util.replaceMap<string, number>(end.split(';'), time => convertClockTime(time)))[0] as number | undefined;
+            const endTime = $util.sortNumber($util.replaceMap<string, number>(end.split(';'), time => SvgAnimation.convertClockTime(time)))[0] as number | undefined;
             if (endTime !== undefined && (this.iterationCount === -1 || this.duration > 0 && endTime < this.duration * this.iterationCount)) {
                 if (this.delay > endTime) {
                     this.end = endTime;

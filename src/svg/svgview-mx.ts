@@ -7,7 +7,7 @@ import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 
 import { KEYSPLINE_NAME } from './lib/constant';
-import { TRANSFORM, convertClockTime, getFontSize, isVisible, setOpacity, setVisible, sortNumber } from './lib/util';
+import { TRANSFORM } from './lib/util';
 
 interface AttributeData extends NumberValue<string> {
     transformOrigin?: Point;
@@ -30,6 +30,11 @@ const ANIMATION_DEFAULT: StringMap = {
 };
 
 const REGEXP_CUBICBEZIER = new RegExp(`cubic-bezier\\((${$util.REGEXP_STRING.ZERO_ONE}), (${$util.REGEXP_STRING.DECIMAL}), (${$util.REGEXP_STRING.ZERO_ONE}), (${$util.REGEXP_STRING.DECIMAL})\\)`);
+
+function setAttribute(element: SVGElement, attr: string, value: string) {
+    element.style[attr] = value;
+    element.setAttribute(attr, value);
+}
 
 function parseAttribute(element: SVGElement, attr: string) {
     let value = $dom.cssAttribute(element, attr);
@@ -61,6 +66,30 @@ function parseAttribute(element: SVGElement, attr: string) {
 
 function sortAttribute(value: NumberValue<string>[]) {
     return value.sort((a, b) => a.index >= b.index ? 1 : -1);
+}
+
+function setVisible(element: SVGGraphicsElement, value: boolean) {
+    setAttribute(element, 'display', value ? 'block' : 'none');
+    setAttribute(element, 'visibility', value ? 'visible' : 'hidden');
+}
+
+function isVisible(element: Element) {
+    const value = $dom.cssAttribute(element, 'visibility', true);
+    return value !== 'hidden' && value !== 'collapse' && $dom.cssAttribute(element, 'display', true) !== 'none';
+}
+
+function setOpacity(element: SVGGraphicsElement, value: string) {
+    if ($util.isNumber(value)) {
+        let opacity = parseFloat(value.toString());
+        if (opacity <= 0) {
+            opacity = 0;
+        }
+        else if (opacity >= 1) {
+            opacity = 1;
+        }
+        element.style.opacity = opacity.toString();
+        element.setAttribute('opacity', opacity.toString());
+    }
 }
 
 export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
@@ -96,7 +125,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                     if (begin && /^[a-zA-Z]+$/.test(begin.value.trim())) {
                         continue;
                     }
-                    const times = begin ? sortNumber($util.replaceMap<string, number>(begin.value.split(';'), value => convertClockTime(value))) : [0];
+                    const times = begin ? $util.sortNumber($util.replaceMap<string, number>(begin.value.split(';'), value => SvgAnimation.convertClockTime(value))) : [0];
                     if (times.length) {
                         switch (item.tagName) {
                             case 'set':
@@ -145,13 +174,13 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                 }
                 for (let i = 0; i < animationName.length; i++) {
                     const keyframes = KEYFRAME_NAME.get(animationName[i]);
-                    const duration = convertClockTime(cssData['animation-duration'][i]);
+                    const duration = SvgAnimation.convertClockTime(cssData['animation-duration'][i]);
                     if (keyframes && duration > 0) {
                         id++;
                         const attrMap: AttributeMap = {};
                         const keyframeMap: AttributeMap = {};
                         const paused = cssData['animation-play-state'][i] === 'paused';
-                        const delay = convertClockTime(cssData['animation-delay'][i]);
+                        const delay = SvgAnimation.convertClockTime(cssData['animation-delay'][i]);
                         const iterationCount = cssData['animation-iteration-count'][i];
                         const fillMode = cssData['animation-fill-mode'][i];
                         const keyframeIndex = `${animationName[i]}_${i}`;
@@ -310,7 +339,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                         if (j === 0 && values[j] === '' && animate.baseFrom) {
                                             values[j] = animate.baseFrom;
                                         }
-                                        const steps = SvgAnimate.toStepFractionList(name, keyTimes, values, keySplines[j], j, getFontSize(element));
+                                        const steps = SvgAnimate.toStepFractionList(name, keyTimes, values, keySplines[j], j, $dom.getFontSize(element));
                                         if (steps) {
                                             keyTimesData.push(...steps[0]);
                                             valuesData.push(...steps[1]);
