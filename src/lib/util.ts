@@ -1,3 +1,18 @@
+interface UtilRegExpString {
+    DECIMAL: string;
+    ZERO_ONE: string;
+    UNIT: string;
+    DEGREE: string;
+    LENGTH: string;
+}
+
+interface UtilRegExpPattern {
+    URL: RegExp;
+    URI: RegExp;
+    UNIT: RegExp;
+    ATTRIBUTE: RegExp;
+}
+
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const NUMERALS = [
     '', 'C', 'CC', 'CCC', 'CD', 'D', 'DC', 'DCC', 'DCCC', 'CM',
@@ -40,19 +55,21 @@ function compareObject(obj1: {}, obj2: {}, attr: string, numeric: boolean) {
     return [current1, current2];
 }
 
-export const REGEXP_PATTERN = {
+export const REGEXP_STRING: UtilRegExpString = <any> {
+    DECIMAL: '-?\\d+(?:.\\d+)?',
+    ZERO_ONE: '0(?:\\.\\d+)?|1(?:\\.0+)?'
+};
+
+REGEXP_STRING.UNIT = `(${REGEXP_STRING.DECIMAL})(px|em|ch|pc|pt|vw|vh|vmin|vmax|mm|cm|in)`,
+REGEXP_STRING.DEGREE = `(${REGEXP_STRING.DECIMAL})(deg|rad|turn|grad)`;
+REGEXP_STRING.LENGTH = `(${REGEXP_STRING.DECIMAL}(?:[a-z]{2,}|%)?)`;
+
+export const REGEXP_PATTERN: UtilRegExpPattern = {
     URL: /url\("?(.+?)"?\)/,
     URI: /^[A-Za-z]+:\/\//,
-    UNIT: /^(?:\s*(-?[\d.]+)(px|em|ch|pc|pt|vw|vh|vmin|vmax|mm|cm|in))+$/,
+    UNIT: new RegExp(`^${REGEXP_STRING.UNIT}$`),
     ATTRIBUTE: /([^\s]+)="([^"]+)"/
 };
-
-export const REGEXP_STRING: StringMap = {
-    DECIMAL: '(-?[\\d.]+)',
-    LENGTH: '(-?[\\d.]+(?:[a-z]{2,}|%)?)'
-};
-
-REGEXP_STRING.DEGREE = REGEXP_STRING.DECIMAL + '(deg|rad|turn|grad)';
 
 export function capitalize(value: string, upper = true) {
     if (value !== '') {
@@ -294,6 +311,31 @@ export function isUnit(value: string) {
 
 export function isPercent(value: string) {
     return /^\d+(\.\d+)?%$/.test(value);
+}
+
+export function isEqual(source: any, values: any) {
+    if (source === values) {
+        return true;
+    }
+    else if (Array.isArray(source) && Array.isArray(values)) {
+        if (source.length === values.length) {
+            for (let i = 0; i < source.length; i++) {
+                if (source[i] !== values[i]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+    else if (Object.keys(source).length === Object.keys(values).length) {
+        for (const attr in source) {
+            if (source[attr] !== values[attr]) {
+                return false;
+            }
+        }
+        return true;
+    }
+    return false;
 }
 
 export function includes(source: string | undefined, value: string, delimiter = ',') {

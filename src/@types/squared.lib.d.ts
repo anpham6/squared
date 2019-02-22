@@ -8,7 +8,7 @@ declare global {
             function getColorByShade(value: string): Color | undefined;
             function convertHex(...values: string[] | number[]): string;
             function convertRGBA(value: string): RGBA | undefined;
-            function parseRGBA(value: string, opacity?: string): ColorData | undefined;
+            function parseRGBA(value: string, opacity?: string, transparency?: boolean): ColorData | undefined;
             function reduceRGBA(value: string, percent: number): ColorData | undefined;
         }
 
@@ -87,6 +87,7 @@ declare global {
             function isArray<T>(value: any): value is Array<T>;
             function isUnit(value: string): boolean;
             function isPercent(value: string): boolean;
+            function isEqual(source: any, values: any): boolean;
             function includes(source: string | undefined, value: string, delimiter?: string): boolean;
             function cloneInstance<T>(value: T): T;
             function cloneObject(data: {}, destination?: {}): {};

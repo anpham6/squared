@@ -201,28 +201,40 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
         switch (value) {
             case 'translate':
                 this.type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
-                values = SvgAnimateTransform.toTranslateList(this.values);
+                if (this.animationElement) {
+                    values = SvgAnimateTransform.toTranslateList(this.values);
+                }
                 break;
             case 'scale':
                 this.type = SVGTransform.SVG_TRANSFORM_SCALE;
-                values = SvgAnimateTransform.toScaleList(this.values);
+                if (this.animationElement) {
+                    values = SvgAnimateTransform.toScaleList(this.values);
+                }
                 break;
             case 'rotate':
                 this.type = SVGTransform.SVG_TRANSFORM_ROTATE;
-                values = SvgAnimateTransform.toRotateList(this.values);
+                if (this.animationElement) {
+                    values = SvgAnimateTransform.toRotateList(this.values);
+                }
                 break;
             case 'skewX':
                 this.type = SVGTransform.SVG_TRANSFORM_SKEWX;
-                values = SvgAnimateTransform.toSkewList(this.values);
+                if (this.animationElement) {
+                    values = SvgAnimateTransform.toSkewList(this.values);
+                }
                 break;
             case 'skewY':
                 this.type = SVGTransform.SVG_TRANSFORM_SKEWY;
-                values = SvgAnimateTransform.toSkewList(this.values);
+                if (this.animationElement) {
+                    values = SvgAnimateTransform.toSkewList(this.values);
+                }
                 break;
             default:
                 return;
         }
-        this.values = values ? $util.replaceMap<number[], string>(values, array => array.join(' ')) : [];
+        if (values) {
+            this.values = $util.replaceMap<number[], string>(values, array => array.join(' '));
+        }
         this.baseFrom = TRANSFORM.typeAsValue(this.type);
     }
 

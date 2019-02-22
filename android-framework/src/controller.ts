@@ -78,12 +78,10 @@ function sortHorizontalFloat<T extends View>(list: T[]) {
             }
             return 0;
         });
-        for (let i = 0; i < result.length; i++) {
-            if (result[i].id !== list[i].id) {
-                list.length = 0;
-                list.push(...result);
-                return true;
-            }
+        if (!$util.isEqual(list, result)) {
+            list.length = 0;
+            list.push(...result);
+            return true;
         }
     }
     return false;

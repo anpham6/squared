@@ -678,8 +678,8 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                 const fillCustomData: FillTemplateData = { values: [] };
                                 const fillAfterData: FillTemplateData = { values: [] };
                                 const togetherData: TogetherTemplateData = { together: [] };
-                                (synchronized ? $util.partitionArray(items, animate => animate.iterationCount !== -1) : [items, []]).forEach((partition, section) => {
-                                    if (section === 1 && partition.length) {
+                                (synchronized ? $util.partitionArray(items, animate => animate.iterationCount !== -1) : [items]).forEach((partition, section) => {
+                                    if (section === 1 && partition.length > 1) {
                                         fillCustomData.ordering = 'sequentially';
                                     }
                                     const animatorMap = new Map<string, PropertyValueHolder[]>();
@@ -785,7 +785,14 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                             }
                                         }
                                         else if (valueType !== undefined) {
-                                            const options = this.createPropertyValue('', '', item.duration.toString(), valueType, '', item.delay > 0 ? item.delay.toString() : '', item.iterationCount !== -1 ? Math.ceil(item.iterationCount - 1).toString() : '-1');
+                                            let repeatCount: string;
+                                            if (section === 1) {
+                                                repeatCount = partition.length > 1 ? '0' : '-1';
+                                            }
+                                            else {
+                                                repeatCount = item.iterationCount !== -1 ? Math.ceil(item.iterationCount - 1).toString() : '-1';
+                                            }
+                                            const options = this.createPropertyValue('', '', item.duration.toString(), valueType, '', item.delay > 0 ? item.delay.toString() : '', repeatCount);
                                             if (item.timingFunction) {
                                                 options.interpolator = createPathInterpolator(item.timingFunction);
                                             }

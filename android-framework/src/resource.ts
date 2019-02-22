@@ -49,10 +49,10 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
             const gradient: BackgroundGradient = { type: item.type, colorStops: [] };
             let hasStop: boolean;
             if (!node.svgElement && parseFloat(item.colorStops[0].offset) === 0 && ['100%', '360'].includes(item.colorStops[item.colorStops.length - 1].offset) && (item.colorStops.length === 2 || item.colorStops.length === 3 && ['50%', '180'].includes(item.colorStops[1].offset))) {
-                gradient.startColor = Resource.addColor(item.colorStops[0].color);
-                gradient.endColor = Resource.addColor(item.colorStops[item.colorStops.length - 1].color) ;
+                gradient.startColor = Resource.addColor(item.colorStops[0].color, true);
+                gradient.endColor = Resource.addColor(item.colorStops[item.colorStops.length - 1].color, true);
                 if (item.colorStops.length === 3) {
-                    gradient.centerColor = Resource.addColor(item.colorStops[1].color);
+                    gradient.centerColor = Resource.addColor(item.colorStops[1].color, true);
                 }
                 hasStop = false;
             }
@@ -179,7 +179,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
             if (hasStop) {
                 for (let i = 0; i < item.colorStops.length; i++) {
                     const stop = item.colorStops[i];
-                    const color = `@color/${Resource.addColor(stop.color)}`;
+                    const color = `@color/${Resource.addColor(stop.color, true)}`;
                     let offset = parseInt(stop.offset);
                     if (gradient.type === 'sweep') {
                         offset *= 100 / 360;
@@ -420,11 +420,11 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
         return '';
     }
 
-    public static addColor(value: ColorData | string | undefined) {
+    public static addColor(value: ColorData | string | undefined, transparency = false) {
         if (typeof value === 'string') {
-            value = $color.parseRGBA(value);
+            value = $color.parseRGBA(value, undefined, transparency);
         }
-        if (value && value.valueRGBA !== '#00000000') {
+        if (value && (value.valueRGBA !== '#00000000' || transparency)) {
             const argb = value.opaque ? value.valueARGB : value.valueRGB;
             let name = STORED.colors.get(argb) || '';
             if (name === '') {

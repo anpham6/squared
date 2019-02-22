@@ -17,7 +17,7 @@ declare global {
             public static addImageSrcSet(element: HTMLImageElement, prefix?: string): string;
             public static addImage(images: StringMap, prefix?: string): string;
             public static addImageUrl(value: string, prefix?: string): string;
-            public static addColor(value: ColorData | string | undefined): string;
+            public static addColor(value: ColorData | string | undefined, transparency?: boolean): string;
         }
     }
 }

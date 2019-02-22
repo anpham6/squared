@@ -22,7 +22,7 @@ export function formatPlaceholder(id: string | number, symbol = ':') {
 
 export function replacePlaceholder(value: string, id: string | number, content: string, before = false) {
     const hash = typeof id === 'number' ? formatPlaceholder(id) : id;
-    return value.replace(hash, (before ? hash : '') + content + (before ? '' : hash));
+    return value.replace(hash, (before ? hash : '') + content + '\n' + (before ? '' : hash));
 }
 
 export function replaceIndent(value: string, depth: number, pattern: RegExp) {

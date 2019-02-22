@@ -13,7 +13,7 @@ const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
-const REGEXP_COLORSTOP = `(?:\\s*(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[a-zA-Z\\d]{3,}|[a-z]+)\\s*(\\d+%|${$util.REGEXP_STRING.DEGREE})?,?\\s*)`;
+const REGEXP_COLORSTOP = `(?:\\s*(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[a-zA-Z\\d]{3,}|[a-z]+)\\s*(\\d+%|${$util.REGEXP_STRING.DEGREE}|${$util.REGEXP_STRING.UNIT})?,?\\s*)`;
 const REGEXP_POSITION = /(.+?)?\s*at (.+?)$/;
 
 function replaceExcluded<T extends Node>(element: HTMLElement, attr: string) {
@@ -32,8 +32,8 @@ function getColorStops(value: string, opacity: string, conic = false) {
     const pattern = new RegExp(REGEXP_COLORSTOP, 'g');
     let match: RegExpExecArray | null;
     while ((match = pattern.exec(value)) !== null) {
-        const color = $color.parseRGBA(match[1], opacity);
-        if (color && color.visible) {
+        const color = $color.parseRGBA(match[1], opacity, true);
+        if (color) {
             const item: ColorStop = {
                 color: color.valueRGBA,
                 opacity: color.alpha,
@@ -45,7 +45,7 @@ function getColorStops(value: string, opacity: string, conic = false) {
                 }
             }
             else {
-                if (match[2]) {
+                if (match[2] && $util.isPercent(match[2])) {
                     item.offset = match[2];
                 }
             }
@@ -312,37 +312,46 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                             if (match[2] === undefined) {
                                                 match[2] = 'to bottom';
                                             }
+                                            let angle: number;
+                                            switch (match[2]) {
+                                                case 'to top':
+                                                    angle = 0;
+                                                    break;
+                                                case 'to right top':
+                                                    angle = 45;
+                                                    break;
+                                                case 'to right':
+                                                    angle = 90;
+                                                    break;
+                                                case 'to right bottom':
+                                                    angle = 135;
+                                                    break;
+                                                case 'to bottom':
+                                                    angle = 180;
+                                                    break;
+                                                case 'to left bottom':
+                                                    angle = 225;
+                                                    break;
+                                                case 'to left':
+                                                    angle = 270;
+                                                    break;
+                                                case 'to left top':
+                                                    angle = 315;
+                                                    break;
+                                                default:
+                                                    angle = parseAngle(match[2]);
+                                                    break;
+                                            }
                                             gradient = <LinearGradient> {
-                                                type: 'linear',
-                                                angle: (() => {
-                                                    switch (match[2]) {
-                                                        case 'to top':
-                                                            return 0;
-                                                        case 'to right top':
-                                                            return 45;
-                                                        case 'to right':
-                                                            return 90;
-                                                        case 'to right bottom':
-                                                            return 135;
-                                                        case 'to bottom':
-                                                            return 180;
-                                                        case 'to left bottom':
-                                                            return 225;
-                                                        case 'to left':
-                                                            return 270;
-                                                        case 'to left top':
-                                                            return 315;
-                                                        default:
-                                                            return parseAngle(match[2]);
-                                                    }
-                                                })(),
+                                                type: match[1],
+                                                angle,
                                                 colorStops: getColorStops(match[3], opacity)
                                             };
                                             break;
                                         }
                                         case 'radial': {
                                             gradient = <RadialGradient> {
-                                                type: 'radial',
+                                                type: match[1],
                                                 position: (() => {
                                                     const result = ['center', 'ellipse'];
                                                     if (match[2]) {
@@ -373,7 +382,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                         }
                                         case 'conic': {
                                             gradient = <ConicGradient> {
-                                                type: 'conic',
+                                                type: match[1],
                                                 angle: parseAngle(match[2]),
                                                 position: (() => {
                                                     if (match[2]) {

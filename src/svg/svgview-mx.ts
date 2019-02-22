@@ -28,8 +28,8 @@ const ANIMATION_DEFAULT: StringMap = {
     'animation-fill-mode': 'none',
     'animation-timing-function': 'ease'
 };
-const REGEXP_0_1 = '(0(?:\\.\\d+)?|1(?:\\.0+)?)';
-const REGEXP_CUBICBEZIER = new RegExp(`cubic-bezier\\(${REGEXP_0_1}, ${$util.REGEXP_STRING.DECIMAL}, ${REGEXP_0_1}, ${$util.REGEXP_STRING.DECIMAL}\\)`);
+
+const REGEXP_CUBICBEZIER = new RegExp(`cubic-bezier\\((${$util.REGEXP_STRING.ZERO_ONE}), (${$util.REGEXP_STRING.DECIMAL}), (${$util.REGEXP_STRING.ZERO_ONE}), (${$util.REGEXP_STRING.DECIMAL})\\)`);
 
 function parseAttribute(element: SVGElement, attr: string) {
     let value = $dom.cssAttribute(element, attr);

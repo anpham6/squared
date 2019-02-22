@@ -13,6 +13,12 @@ import { SVG, TRANSFORM, getLeastCommonMultiple } from './lib/util';
 type SvgContainer = squared.svg.SvgContainer;
 type SvgShapePattern = squared.svg.SvgShapePattern;
 
+interface DashGroup {
+    items: SvgStrokeDash[];
+    delay: number;
+    duration: number;
+}
+
 const $util = squared.lib.util;
 
 export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) implements squared.svg.SvgPath {
@@ -251,18 +257,14 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         if (valueArray.length) {
             const totalLength = this.totalLength;
             const pathLength = $util.convertInt(this.pathLength) || totalLength;
-            const dashGroup: SvgStrokeDash[][] = [];
-            const dashDelay: number[] = [];
-            const dashDuration: number[] = [];
+            const dashGroup: DashGroup[] = [];
             let valueOffset = $util.convertInt(this.strokeDashoffset);
             let dashLength = 0;
             const createDashGroup = (values: number[], offset: number, delay: number, duration = 0) => {
-                const group = this.flatStrokeDash(values, offset, totalLength, pathLength);
-                dashLength = Math.max(dashLength, group.length);
-                dashGroup.push(group);
-                dashDelay.push(delay);
-                dashDuration.push(duration);
-                return group;
+                const items = this.flatStrokeDash(values, offset, totalLength, pathLength);
+                dashLength = Math.max(dashLength, items.length);
+                dashGroup.push({ items, delay, duration});
+                return items;
             };
             function getFromToValue(group?: SvgStrokeDash) {
                 return group ? `${group.start} ${group.end}` : '1 1';
@@ -286,27 +288,26 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                     }
                     return 0;
                 });
-                const setDashLength = (index = 0) => {
+                const setDashLength = (index: number) => {
                     let offset = valueOffset;
                     for (let i = index; i < sorted.length; i++) {
                         const item = sorted[i];
-                        if (item.attributeName === 'stroke-dasharray') {
-                            if (SvgBuild.asSet(item)) {
-                                dashLength = Math.max(dashLength, this.flatStrokeDash(SvgBuild.toNumberList(item.to), offset, totalLength, pathLength).length);
-                            }
-                            else if (SvgBuild.asAnimate(item)) {
-                                dashLength = Math.max(dashLength, this.flatStrokeDash(SvgBuild.toNumberList(item.valueTo), offset, totalLength, pathLength).length);
-                            }
-                        }
-                        else if (item.attributeName === 'stroke-dashoffset') {
-                            offset = $util.convertInt(SvgBuild.asAnimate(item) ? item.valueTo : item.to);
+                        const value = SvgBuild.asAnimate(item) ? item.valueTo : item.to;
+                        switch (item.attributeName) {
+                            case 'stroke-dasharray':
+                                dashLength = Math.max(dashLength, this.flatStrokeDash(SvgBuild.toNumberList(value), offset, totalLength, pathLength).length);
+                                break;
+                            case 'stroke-dashoffset':
+                                offset = $util.convertInt(value);
+                                break;
                         }
                     }
                 };
                 const revised: SvgAnimation[] = [];
+                let modified = false;
                 for (let i = 0; i < sorted.length; i++) {
                     const item = sorted[i];
-                    if (SvgBuild.asSet(item) && item.to !== '') {
+                    if (SvgBuild.asSet(item)) {
                         let valid = true;
                         switch (item.attributeName) {
                             case 'stroke-dasharray':
@@ -321,24 +322,26 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                         }
                         if (valid) {
                             createDashGroup(valueArray, valueOffset, item.delay, item.fillReplace && item.duration > 0 ? item.duration : 0);
+                            modified = true;
                             continue;
                         }
                     }
-                    else if (SvgBuild.asAnimate(item) && item.valueTo !== '') {
+                    else if (SvgBuild.asAnimate(item)) {
                         const timingFunction = getTimingFunction(<SvgAnimate> item);
                         switch (item.attributeName) {
                             case 'stroke-dasharray': {
                                 const valueTo = SvgBuild.toNumberList(item.valueTo);
-                                if (valueTo.length && JSON.stringify(valueTo) !== JSON.stringify(valueArray)) {
+                                if (valueTo.length && !$util.isEqual(valueArray, valueTo)) {
                                     setDashLength(i);
+                                    const arrayFrom = valueArray.slice(0);
+                                    const arrayTo = valueTo.slice(0);
+                                    const baseFrom = modified ? this.flatStrokeDash(valueArray, valueOffset, totalLength, pathLength) : result;
+                                    const duration = item.duration;
                                     const groupArray: SvgAnimate[] = [];
                                     const values: string[][] = [];
                                     const keyTimes: number[] = [0];
-                                    const arrayFrom = valueArray.slice(0);
-                                    const arrayTo = valueTo.slice(0);
-                                    const duration = item.duration;
                                     for (let j = 0; j < dashLength; j++) {
-                                        values[j] = [getFromToValue(result[j])];
+                                        values[j] = [getFromToValue(baseFrom[j])];
                                         const animate = new SvgAnimate(this.element);
                                         animate.id = j;
                                         animate.attributeName = 'stroke-dasharray';
@@ -349,14 +352,14 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         groupArray.push(animate);
                                     }
                                     if (arrayFrom.length !== arrayTo.length) {
-                                        const fromLength = arrayFrom.length;
-                                        const toLength = arrayTo.length;
-                                        const multiple = getLeastCommonMultiple([fromLength, toLength]);
+                                        const from = arrayFrom.length;
+                                        const to = arrayTo.length;
+                                        const multiple = getLeastCommonMultiple([from, to]);
                                         for (const fromTo of [arrayFrom, arrayTo]) {
-                                            const arrayLength = fromTo === arrayFrom ? fromLength : toLength;
+                                            const length = fromTo === arrayFrom ? from : to;
                                             for (let j = fromTo.length, k = 0; j < multiple; j++) {
                                                 fromTo.push(fromTo[k]);
-                                                if (++k === arrayLength) {
+                                                if (++k === length) {
                                                     k = 0;
                                                 }
                                             }
@@ -413,7 +416,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     while (keyTime < 1);
                                     if (item.fillReplace) {
                                         for (let j = 0; j < dashLength; j++) {
-                                            values[j].push(getFromToValue(result[j]));
+                                            values[j].push(getFromToValue(baseFrom[j]));
                                         }
                                         keyTimes[keyTimes.length - 1] -= 1 / duration;
                                         keyTimes.push(1);
@@ -439,6 +442,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         groupArray[j].timingFunction = timingFunction;
                                     }
                                     revised.push(...groupArray);
+                                    modified = true;
                                 }
                                 continue;
                             }
@@ -477,6 +481,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     item.timingFunction = timingFunction;
                                     item.keySplines = undefined;
                                 }
+                                modified = true;
                                 break;
                             }
                         }
@@ -484,28 +489,27 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                     revised.push(item);
                 }
                 if (dashLength > 0) {
-                    let groupFrom: SvgStrokeDash[] | undefined;
+                    let groupFrom: DashGroup | undefined;
                     for (let i = 0; i < dashGroup.length; i++) {
                         const groupTo = dashGroup[i];
                         if (groupFrom) {
-                            if (dashDelay[i] !== -1) {
-                                const duration = dashDuration[i];
-                                for (let j = 0; j < dashLength; j++) {
-                                    const animate = new SvgAnimation(this.element);
-                                    animate.id = j;
-                                    animate.attributeName = 'stroke-dasharray';
-                                    animate.baseFrom = getFromToValue(result[j]);
-                                    animate.delay = dashDelay[i];
-                                    animate.to = getFromToValue(groupTo[j]);
-                                    animate.duration = duration;
-                                    animate.fillFreeze = duration === 0;
-                                    revised.push(animate);
-                                }
+                            const delay = groupTo.delay;
+                            const duration = groupTo.duration;
+                            for (let j = 0; j < dashLength; j++) {
+                                const animate = new SvgAnimation(this.element);
+                                animate.id = j;
+                                animate.attributeName = 'stroke-dasharray';
+                                animate.baseFrom = getFromToValue(result[j]);
+                                animate.delay = delay;
+                                animate.to = getFromToValue(groupTo.items[j]);
+                                animate.duration = duration;
+                                animate.fillFreeze = duration === 0;
+                                revised.push(animate);
                             }
                         }
                         else {
-                            for (let j = groupTo.length; j < dashLength; j++) {
-                                groupTo.push({ start: 1, end: 1 });
+                            for (let j = groupTo.items.length; j < dashLength; j++) {
+                                groupTo.items.push({ start: 1, end: 1 });
                             }
                         }
                         groupFrom = groupTo;

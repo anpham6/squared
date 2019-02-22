@@ -309,8 +309,8 @@ export function convertRGBA(value: string) {
     return undefined;
 }
 
-export function parseRGBA(value: string, opacity = '1') {
-    if (value && value !== 'initial' && value !== 'transparent') {
+export function parseRGBA(value: string, opacity = '1', transparency = false) {
+    if (value && (value !== 'transparent' || transparency)) {
         if (opacity.trim() === '') {
             opacity = '1';
         }
@@ -320,6 +320,12 @@ export function parseRGBA(value: string, opacity = '1') {
                 value = formatRGBA(rgba);
             }
         }
+        else if (value === 'initial') {
+            value = formatRGBA({ r: 0, g: 0, b: 0, a: 1 });
+        }
+        else if (value === 'transparent') {
+            value = formatRGBA({ r: 0, g: 0, b: 0, a: 0 });
+        }
         else if (!value.startsWith('rgb')) {
             const color = getColorByName(value);
             if (color && color.rgba) {
@@ -328,7 +334,7 @@ export function parseRGBA(value: string, opacity = '1') {
             }
         }
         const match = value.match(REGEXP_RGBA);
-        if (match && match.length >= 4 && (match[4] === undefined || parseFloat(match[4]) > 0)) {
+        if (match && match.length >= 4 && (match[4] === undefined || parseFloat(match[4]) > 0 || transparency)) {
             if (match[4] === undefined) {
                 match[4] = parseFloat(opacity).toPrecision(2);
             }
