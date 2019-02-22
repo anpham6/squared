@@ -93,10 +93,10 @@ export type SvgTransformResidual = (e: SVGGraphicsElement, t: SvgTransform[], rx
 export interface SvgAnimationGroup {
     id: number;
     name: string;
-    siblings?: SvgAnimateAttribute[];
+    ordering?: SvgAnimationAttribute[];
 }
 
-export interface SvgAnimateAttribute {
+export interface SvgAnimationAttribute {
     name: string;
     attributes: string[];
     paused: boolean;

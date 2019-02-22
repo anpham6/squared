@@ -143,7 +143,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     get fillReplace() {
-        return this.fillMode < FILL_MODE.FORWARDS;
+        return this.fillMode === 0 || this.fillMode === FILL_MODE.BACKWARDS;
     }
 
     set group(value) {

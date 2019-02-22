@@ -1,4 +1,4 @@
-import { SvgAnimateAttribute, SvgTransform } from './@types/object';
+import { SvgAnimationAttribute, SvgTransform } from './@types/object';
 
 import SvgAnimate from './svganimate';
 import SvgAnimateMotion from './svganimatemotion';
@@ -131,7 +131,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             if (animationName.length) {
                 const cssData: ObjectMap<string[]> = {};
                 const groupName: SvgAnimate[] = [];
-                const groupSiblings: SvgAnimateAttribute[] = [];
+                const groupOrdering: SvgAnimationAttribute[] = [];
                 for (const name in ANIMATION_DEFAULT) {
                     const values = parseAttribute(element, name);
                     if (values.length === 0) {
@@ -156,7 +156,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         const fillMode = cssData['animation-fill-mode'][i];
                         const keyframeIndex = `${animationName[i]}_${i}`;
                         const attributes: string[] = [];
-                        groupSiblings.push({
+                        groupOrdering.push({
                             name: keyframeIndex,
                             attributes,
                             paused,
@@ -353,9 +353,9 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         }
                     }
                 }
-                groupSiblings.reverse();
+                groupOrdering.reverse();
                 for (const item of groupName) {
-                    item.setGroupSiblings(groupSiblings);
+                    item.setGroupOrdering(groupOrdering);
                 }
             }
             for (const item of result) {

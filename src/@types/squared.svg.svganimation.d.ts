@@ -1,4 +1,4 @@
-import { SvgAnimateAttribute, SvgAnimationGroup } from '../svg/@types/object';
+import { SvgAnimationAttribute, SvgAnimationGroup } from '../svg/@types/object';
 
 declare global {
     namespace squared.svg {
@@ -48,8 +48,9 @@ declare global {
             readonly fromToType: boolean;
             readonly partialType: boolean;
             setCalcMode(name: string): void;
-            setGroupSiblings(value: SvgAnimateAttribute[]): void;
+            setGroupOrdering(value: SvgAnimationAttribute[]): void;
             getPartialDuration(iteration?: number): number;
+            getTotalDuration(minimum?: boolean): number;
             convertToValues(keyTimes?: number[]): void;
         }
 
@@ -71,11 +72,28 @@ declare global {
             keyPoints?: number[];
         }
 
+        interface SvgIntervalMap {
+            [key: string]: Map<number, SvgIntervalValue[]>;
+        }
+
+        interface SvgIntervalValue {
+            time: number;
+            value: string;
+            start: boolean;
+            end: boolean;
+            fillMode: number;
+            infinite: boolean;
+            animate?: SvgAnimation;
+        }
+
         class SvgAnimation implements SvgAnimation {
             constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimationElement);
         }
 
         class SvgAnimate implements SvgAnimate {
+            public static getGroupDuration(item: SvgAnimationAttribute): number;
+            public static getIntervalMap(): SvgIntervalMap;
+            public static getIntervalValue(map: SvgIntervalMap, attr: string, interval: number): string | undefined;
             public static toStepFractionList(name: string, keyTimes: number[], values: string[], keySpline: string, index: number, fontSize?: number): [number[], string[]] | undefined;
             public static toFractionList(value: string, delimiter?: string): number[];
             constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimateElement);

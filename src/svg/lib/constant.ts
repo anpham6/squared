@@ -36,9 +36,9 @@ export const enum SYNCHRONIZE_STATE {
 }
 
 export const enum FILL_MODE {
-    BACKWARDS = 2,
+    FREEZE = 2,
     FORWARDS = 4,
-    FREEZE = 8
+    BACKWARDS = 8
 }
 
 export const enum REGION_UNIT {
