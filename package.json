@@ -5,9 +5,9 @@
   "main": "dist/squared.js",
   "scripts": {
     "express": "node app.js",
-    "dev": "tsc -w",
-    "prod": "npm run clean && tslint -c tslint.json '**/*.ts' && tsc --inlineSourceMap false && rollup -c rollup.config.js && cd ./android-framework && rollup -c rollup.config.js && cd ../android-widget && rollup -c rollup.config.js",
-    "main": "npm run clean && tslint -c tslint.json '**/*.ts' && tsc --inlineSourceMap false && rollup -c rollup.config.js && cd ./android-framework && rollup -c rollup.config.js",
+    "watch": "tsc -w",
+    "dev": "tsc --inlineSourceMap false && rollup -c rollup.config.dev.js && cd ./android-framework && rollup -c rollup.config.dev.js",
+    "prod": "npm run clean && tslint -c tslint.json '**/*.ts' && tsc --inlineSourceMap false && rollup -c rollup.config.dev.js && rollup -c rollup.config.js && cd ./android-framework && rollup -c rollup.config.dev.js && rollup -c rollup.config.js && cd ../android-widget && rollup -c rollup.config.js",
     "clean": "rimraf build/* && rimraf dist/* && rimraf temp/*"
   },
   "repository": {
