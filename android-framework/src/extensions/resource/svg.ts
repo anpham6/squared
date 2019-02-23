@@ -704,9 +704,6 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                             break;
                                                         case 'trimPathStart':
                                                         case 'trimPathEnd':
-                                                            if (item.values.length) {
-                                                                valueTo = item.values[0];
-                                                            }
                                                             break;
                                                         default:
                                                             valueTo = item.parent.path[getPaintAttribute(propertyName)];
@@ -728,13 +725,15 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                     }
                                                 }
                                                 if ($util.isString(valueTo) && valueTo !== previousValue) {
+                                                    let duration: string | undefined;
                                                     switch (propertyName) {
                                                         case 'trimPathStart':
                                                         case 'trimPathEnd':
                                                             valueTo = valueTo.split(' ')[propertyName === 'trimPathStart' ? 0 : 1];
+                                                            duration = '1';
                                                             break;
                                                     }
-                                                    result.push(this.createPropertyValue(propertyName, valueTo, '0', valueType, valueType === 'pathType' ? valueTo : '', startOffset ? startOffset.toString() : ''));
+                                                    result.push(this.createPropertyValue(propertyName, valueTo, duration, valueType, valueType === 'pathType' ? valueTo : '', startOffset ? startOffset.toString() : ''));
                                                 }
                                                 if (transformOrigin) {
                                                     if (propertyName.endsWith('X')) {

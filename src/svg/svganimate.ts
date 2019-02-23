@@ -38,7 +38,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         const result: SvgIntervalMap = {};
         const intervalMap: ObjectMap<ObjectIndex<SvgIntervalValue[]>> = {};
         const intervalTimes: ObjectMap<Set<number>> = {};
-        function insertIntervalValue(attr: string, time: number, value: string, animate?: squared.svg.SvgAnimation, start = false, end = false, fillMode = 0, infinite = false) {
+        function insertIntervalValue(attr: string, time: number, value: string, duration = 0, animate?: squared.svg.SvgAnimation, start = false, end = false, fillMode = 0, infinite = false, valueFrom?: string) {
             if (intervalMap[attr][time] === undefined) {
                 intervalMap[attr][time] = [];
             }
@@ -48,8 +48,10 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 animate,
                 start,
                 end,
+                duration,
                 fillMode,
-                infinite
+                infinite,
+                valueFrom
             });
             intervalTimes[attr].add(time);
         }
@@ -59,7 +61,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             intervalTimes[attr] = new Set<number>();
             const backwards = <SvgAnimate> $util.filterArray(animations, item => item.fillBackwards && item.attributeName === attr).sort((a, b) => a.group.id < b.group.id ? -1 : 1)[0];
             if (backwards) {
-                insertIntervalValue(attr, 0, backwards.values[0], backwards, backwards.delay === 0, false, FILL_MODE.BACKWARDS);
+                insertIntervalValue(attr, 0, backwards.values[0], backwards.delay, backwards, backwards.delay === 0, false, FILL_MODE.BACKWARDS);
             }
         }
         for (const item of animations) {
@@ -69,16 +71,17 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             }
             if (item.setterType) {
                 const fillReplace = item.fillReplace && item.duration > 0;
-                insertIntervalValue(attr, item.delay, item.to, item, fillReplace, !fillReplace, FILL_MODE.FREEZE);
+                insertIntervalValue(attr, item.delay, item.to, fillReplace ? item.delay + item.duration : 0, item, fillReplace, !fillReplace, FILL_MODE.FREEZE);
                 if (fillReplace) {
-                    insertIntervalValue(attr, item.delay + item.duration, '', item, false, true, FILL_MODE.FREEZE);
+                    insertIntervalValue(attr, item.delay + item.duration, '', 0, item, false, true, FILL_MODE.FREEZE);
                 }
             }
             else if (SvgBuild.asAnimate(item) && item.duration > 0) {
                 const infinite = item.iterationCount === -1;
-                insertIntervalValue(attr, item.delay, item.valueFrom, item, true, false, 0, infinite);
+                const timeEnd = item.getTotalDuration();
+                insertIntervalValue(attr, item.delay, item.valueTo, timeEnd, item, true, false, 0, infinite, item.valueFrom);
                 if (!infinite && !item.fillReplace) {
-                    insertIntervalValue(attr, item.delay + item.duration * item.iterationCount, item.valueTo, item, false, true, item.fillForwards ? FILL_MODE.FORWARDS : FILL_MODE.FREEZE);
+                    insertIntervalValue(attr, timeEnd, item.valueTo, 0, item, false, true, item.fillForwards ? FILL_MODE.FORWARDS : FILL_MODE.FREEZE);
                 }
             }
         }
@@ -205,13 +208,13 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         return result;
     }
 
-    public static getIntervalValue(map: SvgIntervalMap, attr: string, interval: number) {
+    public static getIntervalValue(map: SvgIntervalMap, attr: string, interval: number, playing = false) {
         let result: string | undefined;
         if (map[attr]) {
             for (const [time, data] of map[attr].entries()) {
                 if (time <= interval) {
                     for (const previous of data) {
-                        if (previous.value !== '' && (previous.time === -1 || previous.end && (previous.fillMode === FILL_MODE.FORWARDS || previous.fillMode === FILL_MODE.FREEZE))) {
+                        if (previous.value !== '' && (previous.time === -1 || previous.end && (previous.fillMode === FILL_MODE.FORWARDS || previous.fillMode === FILL_MODE.FREEZE)) || playing && previous.start && time !== interval) {
                             result = previous.value;
                             break;
                         }

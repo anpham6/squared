@@ -79,10 +79,12 @@ declare global {
         interface SvgIntervalValue {
             time: number;
             value: string;
+            duration: number;
             start: boolean;
             end: boolean;
             fillMode: number;
             infinite: boolean;
+            valueFrom?: string;
             animate?: SvgAnimation;
         }
 
@@ -94,7 +96,7 @@ declare global {
         class SvgAnimate implements SvgAnimate {
             public static getGroupDuration(item: SvgAnimationAttribute): number;
             public static getIntervalMap(): SvgIntervalMap;
-            public static getIntervalValue(map: SvgIntervalMap, attr: string, interval: number): string | undefined;
+            public static getIntervalValue(map: SvgIntervalMap, attr: string, interval: number, playing?: boolean): string | undefined;
             public static getSplitValue(value: number, next: number, percent: number): number;
             public static toStepFractionList(name: string, keyTimes: number[], values: string[], keySpline: string, index: number, fontSize?: number): [number[], string[]] | undefined;
             public static toFractionList(value: string, delimiter?: string): number[];
