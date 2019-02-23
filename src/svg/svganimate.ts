@@ -3,7 +3,8 @@ import { SvgAnimationAttribute } from './@types/object';
 import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 
-import { INSTANCE_TYPE, KEYSPLINE_NAME, FILL_MODE } from './lib/constant';
+import { FILL_MODE, INSTANCE_TYPE, KEYSPLINE_NAME } from './lib/constant';
+import { TRANSFORM } from './lib/util';
 
 type SvgIntervalMap = squared.svg.SvgIntervalMap;
 type SvgIntervalValue = squared.svg.SvgIntervalValue;
@@ -16,9 +17,24 @@ function invertControlPoint(value: number) {
     return parseFloat((1 - value).toPrecision(5));
 }
 
+function getIntervalAttributeName(value: string) {
+    if (value.indexOf(':') !== -1) {
+        return value.split(':')[0];
+    }
+    return value;
+}
+
 export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgAnimate {
     public static getGroupDuration(item: SvgAnimationAttribute) {
         return item.iterationCount === 'infinite' ? Number.POSITIVE_INFINITY : item.delay + item.duration * parseInt(item.iterationCount);
+    }
+
+    public static getIntervalKeyName(item: squared.svg.SvgAnimation) {
+        let result = item.attributeName;
+        if (SvgBuild.asAnimateTransform(item)) {
+            result += `:${TRANSFORM.typeAsName(item.type)}`;
+        }
+        return result;
     }
 
     public static getIntervalMap(animations: squared.svg.SvgAnimation[], ...attrs: string[]) {
@@ -28,71 +44,74 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             }
             return a.delay < b.delay ? -1 : 1;
         });
-        if (attrs.length === 0) {
-            for (const item of animations) {
-                if (!attrs.includes(item.attributeName)) {
-                    attrs.push(item.attributeName);
-                }
+        attrs.length = 0;
+        for (const item of animations) {
+            const value = SvgAnimate.getIntervalKeyName(item);
+            if (!attrs.includes(value)) {
+                attrs.push(value);
             }
         }
         const result: SvgIntervalMap = {};
         const intervalMap: ObjectMap<ObjectIndex<SvgIntervalValue[]>> = {};
         const intervalTimes: ObjectMap<Set<number>> = {};
-        function insertIntervalValue(attr: string, time: number, value: string, duration = 0, animate?: squared.svg.SvgAnimation, start = false, end = false, fillMode = 0, infinite = false, valueFrom?: string) {
-            if (intervalMap[attr][time] === undefined) {
-                intervalMap[attr][time] = [];
+        function insertIntervalValue(keyName: string, time: number, value: string, duration = 0, animate?: squared.svg.SvgAnimation, start = false, end = false, fillMode = 0, infinite = false, valueFrom?: string) {
+            if (value) {
+                if (intervalMap[keyName][time] === undefined) {
+                    intervalMap[keyName][time] = [];
+                }
+                intervalMap[keyName][time].push({
+                    time,
+                    value,
+                    animate,
+                    start,
+                    end,
+                    duration,
+                    fillMode,
+                    infinite,
+                    valueFrom
+                });
+                intervalTimes[keyName].add(time);
             }
-            intervalMap[attr][time].push({
-                time,
-                value,
-                animate,
-                start,
-                end,
-                duration,
-                fillMode,
-                infinite,
-                valueFrom
-            });
-            intervalTimes[attr].add(time);
         }
-        for (const attr of attrs) {
-            result[attr] = new Map<number, SvgIntervalValue[]>();
-            intervalMap[attr] = {};
-            intervalTimes[attr] = new Set<number>();
-            const backwards = <SvgAnimate> $util.filterArray(animations, item => item.fillBackwards && item.attributeName === attr).sort((a, b) => a.group.id < b.group.id ? -1 : 1)[0];
+        for (const keyName of attrs) {
+            result[keyName] = new Map<number, SvgIntervalValue[]>();
+            intervalMap[keyName] = {};
+            intervalTimes[keyName] = new Set<number>();
+            const attributeName = getIntervalAttributeName(keyName);
+            const backwards = <SvgAnimate> $util.filterArray(animations, item => item.fillBackwards && item.attributeName === attributeName).sort((a, b) => a.group.id < b.group.id ? 1 : -1)[0];
             if (backwards) {
-                insertIntervalValue(attr, 0, backwards.values[0], backwards.delay, backwards, backwards.delay === 0, false, FILL_MODE.BACKWARDS);
+                insertIntervalValue(keyName, 0, backwards.values[0], backwards.delay, backwards, backwards.delay === 0, false, FILL_MODE.BACKWARDS);
             }
         }
         for (const item of animations) {
-            const attr = item.attributeName;
-            if (intervalMap[attr][-1] === undefined && item.baseFrom) {
-                insertIntervalValue(attr, -1, item.baseFrom);
+            const keyName = SvgAnimate.getIntervalKeyName(item);
+            if (intervalMap[keyName][-1] === undefined && item.baseValue) {
+                insertIntervalValue(keyName, -1, item.baseValue);
             }
             if (item.setterType) {
                 const fillReplace = item.fillReplace && item.duration > 0;
-                insertIntervalValue(attr, item.delay, item.to, fillReplace ? item.delay + item.duration : 0, item, fillReplace, !fillReplace, FILL_MODE.FREEZE);
+                insertIntervalValue(keyName, item.delay, item.to, fillReplace ? item.delay + item.duration : 0, item, fillReplace, !fillReplace, FILL_MODE.FREEZE);
                 if (fillReplace) {
-                    insertIntervalValue(attr, item.delay + item.duration, '', 0, item, false, true, FILL_MODE.FREEZE);
+                    insertIntervalValue(keyName, item.delay + item.duration, '', 0, item, false, true, FILL_MODE.FREEZE);
                 }
             }
-            else if (SvgBuild.asAnimate(item) && item.duration > 0) {
+            else if (SvgBuild.isAnimate(item) && item.duration > 0) {
                 const infinite = item.iterationCount === -1;
                 const timeEnd = item.getTotalDuration();
-                insertIntervalValue(attr, item.delay, item.valueTo, timeEnd, item, true, false, 0, infinite, item.valueFrom);
+                insertIntervalValue(keyName, item.delay, item.valueTo, timeEnd, item, true, false, 0, infinite, item.valueFrom);
                 if (!infinite && !item.fillReplace) {
-                    insertIntervalValue(attr, timeEnd, item.valueTo, 0, item, false, true, item.fillForwards ? FILL_MODE.FORWARDS : FILL_MODE.FREEZE);
+                    insertIntervalValue(keyName, timeEnd, item.valueTo, 0, item, false, true, item.fillForwards ? FILL_MODE.FORWARDS : FILL_MODE.FREEZE);
                 }
             }
         }
-        for (const attr in intervalMap) {
-            for (const time of $util.sortNumber(Array.from(intervalTimes[attr]))) {
-                const values = intervalMap[attr][time];
+        for (const keyName in intervalMap) {
+            for (const time of $util.sortNumber(Array.from(intervalTimes[keyName]))) {
+                const values = intervalMap[keyName][time];
                 for (let i = 0; i < values.length; i++) {
                     const interval = values[i];
-                    if (interval.value === '') {
+                    if (interval.value === '' || interval.start && interval.animate && SvgBuild.isAnimate(interval.animate) && interval.animate.evaluateStart) {
                         let value: string | undefined;
-                        for (const group of result[attr].values()) {
+                        for (const group of result[keyName].values()) {
                             for (const previous of group) {
                                 if (interval.animate !== previous.animate && previous.value !== '' && (previous.time === -1 || previous.fillMode === FILL_MODE.FORWARDS || previous.fillMode === FILL_MODE.FREEZE)) {
                                     value = previous.value;
@@ -103,7 +122,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                         if (value) {
                             interval.value = value;
                         }
-                        else {
+                        else if (interval.value === '') {
                             values.splice(i--, 1);
                         }
                     }
@@ -118,17 +137,17 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                         }
                         return 0;
                     });
-                    result[attr].set(time, values);
+                    result[keyName].set(time, values);
                 }
             }
         }
-        for (const attr in result) {
-            for (const [timeA, dataA] of result[attr].entries()) {
+        for (const keyName in result) {
+            for (const [timeA, dataA] of result[keyName].entries()) {
                 for (const itemA of dataA) {
                     if (itemA.animate) {
                         if (itemA.fillMode === FILL_MODE.FREEZE) {
                             const previous: SvgAnimation[] = [];
-                            for (const [timeB, dataB] of result[attr].entries()) {
+                            for (const [timeB, dataB] of result[keyName].entries()) {
                                 if (timeB < timeA) {
                                     for (const itemB of dataB) {
                                         if (itemB.start && itemB.animate && itemB.animate.animationElement) {
@@ -168,7 +187,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                                 }
                             }
                             const previous: SvgAnimation[] = [];
-                            for (const [timeB, dataB] of result[attr].entries()) {
+                            for (const [timeB, dataB] of result[keyName].entries()) {
                                 if (!forwarded && timeB < timeA) {
                                     for (const itemB of dataB) {
                                         if (itemB.start && itemB.animate) {
@@ -198,10 +217,10 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 }
             }
         }
-        for (const attr in result) {
-            for (const [time, data] of Array.from(result[attr].entries())) {
+        for (const keyName in result) {
+            for (const [time, data] of Array.from(result[keyName].entries())) {
                 if (data.length === 0) {
-                    result[attr].delete(time);
+                    result[keyName].delete(time);
                 }
             }
         }
@@ -232,7 +251,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         return value + (next - value) * percent;
     }
 
-    public static toStepFractionList(name: string, keyTimes: number[], values: string[], keySpline: string, index: number, fontSize?: number): [number[], string[]] | undefined {
+    public static convertStepKeyTimeValues(name: string, timingFunction: string, keyTimes: number[], values: string[], index: number, fontSize?: number): [number[], string[]] | undefined {
         let currentValue: any[] | undefined;
         let nextValue: any[] | undefined;
         switch (name) {
@@ -271,15 +290,15 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 break;
         }
         if (currentValue && nextValue && currentValue.length && currentValue.length === nextValue.length) {
-            switch (keySpline)  {
+            switch (timingFunction)  {
                 case 'step-start':
-                    keySpline = 'steps(1, start)';
+                    timingFunction = 'steps(1, start)';
                     break;
                 case 'step-end':
-                    keySpline = 'steps(1, end)';
+                    timingFunction = 'steps(1, end)';
                     break;
             }
-            const match = /steps\((\d+)(?:, (start|end))?\)/.exec(keySpline);
+            const match = /steps\((\d+)(?:, (start|end))?\)/.exec(timingFunction);
             if (match) {
                 const keyTimeTotal = keyTimes[index + 1] - keyTimes[index];
                 const stepSize = parseInt(match[1]);
@@ -354,6 +373,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public alternate = false;
     public additiveSum = false;
     public accumulateSum = false;
+    public evaluateStart = false;
+    public by?: number;
     public end?: number;
     public synchronized?: NumberValue<string>;
 
@@ -373,13 +394,13 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             const keyTimes = this.duration !== -1 ? SvgAnimate.toFractionList($dom.getNamedItem(animationElement, 'keyTimes')) : [];
             if (values !== '') {
                 this.values = $util.flatMap(values.split(';'), value => value.trim());
-                if (this.values.length > 1 && keyTimes.length === this.values.length) {
+                if (this.length > 1 && keyTimes.length === this.length) {
                     this.from = this.values[0];
-                    this.to = this.values[this.values.length - 1];
+                    this.to = this.values[this.length - 1];
                     this.keyTimes = keyTimes;
                 }
-                else if (this.values.length === 1) {
-                    this.to = values[0];
+                else if (this.length === 1) {
+                    this.to = this.values[0];
                     this.convertToValues();
                 }
             }
@@ -388,17 +409,22 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 if (this.to === '') {
                     const by = $dom.getNamedItem(animationElement, 'by');
                     if ($util.isNumber(by)) {
-                        if (this.from === '' && this.baseFrom) {
-                            this.from = this.baseFrom;
+                        if (this.from === '') {
+                            if (this.baseValue) {
+                                this.from = this.baseValue;
+                            }
+                            this.evaluateStart = true;
                         }
                         if ($util.isNumber(this.from)) {
                             this.to = (parseFloat(this.from) + parseFloat(by)).toString();
                         }
                     }
                 }
+                if ($util.isNumber(this.to)) {
+                    this.setAttribute('additive', 'sum');
+                }
                 this.convertToValues(keyTimes);
             }
-            this.setAttribute('additive', 'sum');
             const repeatDur = $dom.getNamedItem(animationElement, 'repeatDur');
             if (repeatDur !== '' && repeatDur !== 'indefinite') {
                 this._repeatDuration = SvgAnimation.convertClockTime(repeatDur);
@@ -418,7 +444,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                     const keyTimes: number[] = [];
                     const values: string[] = [];
                     for (let i = 0; i < this.keyTimes.length - 1; i++) {
-                        const result = SvgAnimate.toStepFractionList(name, this.keyTimes, this.values, 'step-end', i, $dom.getFontSize(this.animationElement));
+                        const result = SvgAnimate.convertStepKeyTimeValues(name, 'step-end', this.keyTimes, this.values, i, $dom.getFontSize(this.animationElement));
                         if (result) {
                             keyTimes.push(...result[0]);
                             values.push(...result[1]);
@@ -437,8 +463,9 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             case 'linear':
                 if (this.keyTimes[0] !== 0 && this.keyTimes[this.keyTimes.length - 1] !== 1) {
                     const keyTimes: number[] = [];
-                    for (let i = 0; i < this.values.length; i++) {
-                        keyTimes.push(i / (this.values.length - 1));
+                    const length = this.values.length;
+                    for (let i = 0; i < length; i++) {
+                        keyTimes.push(i / (length - 1));
                     }
                     this._keyTimes = keyTimes;
                     this._keySplines = undefined;
@@ -451,6 +478,9 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         if (this.to !== '') {
             this.values = [this.from, this.to];
             this.keyTimes = keyTimes && keyTimes.length === 2 && this.keyTimes[0] === 0 && this.keyTimes[1] <= 1 ? keyTimes : [0, 1];
+            if (this.from === '') {
+                this.evaluateStart = true;
+            }
         }
     }
 
@@ -561,7 +591,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
 
     get valueTo() {
-        return this.values[this.values.length - 1] || '';
+        return this._values ? this._values[this._values.length - 1] : '';
     }
 
     get valueFrom() {
@@ -613,7 +643,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
 
     set reverse(value) {
-        if (value !== this._reverse && this.values.length) {
+        if (value !== this._reverse && this.length) {
             this.values.reverse();
             const keyTimes: number[] = [];
             for (const keyTime of this.keyTimes) {
@@ -653,7 +683,11 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         this._setterType = value;
     }
     get setterType() {
-        return this._setterType || this.animationElement !== null && this.duration === 0 && this.keyTimes.length >= 2 && this.keyTimes[0] === 0;
+        return this._setterType || this.animationElement !== null && this.duration === 0 && this.keyTimes.length >= 2 && this.keyTimes[0] === 0 && this.values[0] !== '';
+    }
+
+    get length() {
+        return this._values ? this._values.length : 0;
     }
 
     get instanceType() {

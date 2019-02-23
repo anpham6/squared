@@ -324,6 +324,12 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     animate.transformOrigin[j] = transformOrigin;
                                 }
                             }
+                            if (keyTimes[0] !== 0) {
+                                keyTimes.unshift(0);
+                                values.unshift(animate.baseValue || '');
+                                keySplines.unshift(timingFunction);
+                                animate.evaluateStart = true;
+                            }
                             addAnimation(animate, delay, keyframeIndex);
                             animate.paused = paused;
                             animate.duration = duration;
@@ -336,15 +342,14 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                         keySplines[j] = KEYSPLINE_NAME[keySplines[j]];
                                     }
                                     else if (keySplines[j].startsWith('step')) {
-                                        if (j === 0 && values[j] === '' && animate.baseFrom) {
-                                            values[j] = animate.baseFrom;
-                                        }
-                                        const steps = SvgAnimate.toStepFractionList(name, keyTimes, values, keySplines[j], j, $dom.getFontSize(element));
-                                        if (steps) {
-                                            keyTimesData.push(...steps[0]);
-                                            valuesData.push(...steps[1]);
-                                            steps[0].forEach(() => keySplinesData.push(KEYSPLINE_NAME['step']));
-                                            continue;
+                                        if (values[j] !== '') {
+                                            const steps = SvgAnimate.convertStepKeyTimeValues(name, keySplines[j], keyTimes, values, j, $dom.getFontSize(element));
+                                            if (steps) {
+                                                keyTimesData.push(...steps[0]);
+                                                valuesData.push(...steps[1]);
+                                                steps[0].forEach(() => keySplinesData.push(KEYSPLINE_NAME['step']));
+                                                continue;
+                                            }
                                         }
                                         keySplines[j] = KEYSPLINE_NAME.linear;
                                     }
@@ -365,13 +370,6 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             else {
                                 animate.values = values;
                                 animate.keyTimes = keyTimes;
-                            }
-                            if (animate.keyTimes[0] !== 0 && $util.isString(animate.baseFrom)) {
-                                animate.keyTimes.unshift(0);
-                                animate.values.unshift(animate.baseFrom);
-                                if (animate.keySplines) {
-                                    animate.keySplines.unshift(timingFunction);
-                                }
                             }
                             animate.iterationCount = iterationCount !== 'infinite' ? parseFloat(iterationCount) : -1;
                             animate.fillForwards = fillMode === 'forwards' || fillMode === 'both';

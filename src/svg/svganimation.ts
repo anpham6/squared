@@ -56,7 +56,8 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     public fillMode = 0;
     public synchronizeState = 0;
     public parent?: squared.svg.SvgView | squared.svg.SvgPath;
-    public baseFrom?: string;
+    public baseValue?: string;
+    public startValue?: string;
     public id?: number;
 
     private _attributeName = '';
@@ -131,9 +132,9 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
         if (value !== 'transform') {
             const baseElement = this.animationElement && this.animationElement.parentElement || this.element;
             if (baseElement) {
-                this.baseFrom = $util.optionalAsString(baseElement, `${value}.baseVal.valueAsString`) || $dom.cssInheritAttribute(baseElement, value);
-                if ($util.isUnit(this.baseFrom)) {
-                    this.baseFrom = parseFloat($util.convertPX(this.baseFrom, $dom.getFontSize(baseElement))).toString();
+                this.baseValue = $util.optionalAsString(baseElement, `${value}.baseVal.valueAsString`) || $dom.cssInheritAttribute(baseElement, value);
+                if ($util.isUnit(this.baseValue)) {
+                    this.baseValue = parseFloat($util.convertPX(this.baseValue, $dom.getFontSize(baseElement))).toString();
                 }
             }
         }

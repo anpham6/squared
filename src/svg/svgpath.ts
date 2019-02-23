@@ -355,6 +355,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                     });
                     const revised: SvgAnimation[] = [];
                     const remainder = result[result.length - 1].remainder;
+                    const getFromToValue = (group?: SvgStrokeDash) => group ? `${group.start} ${group.end}` : '1 1';
                     let modified = false;
                     let intervalMap: SvgIntervalMap | undefined;
                     if (sorted.length > 1) {
@@ -387,9 +388,6 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                             dashLength = 0;
                             result = createDashGroup(valueArray, valueOffset, 0);
                         }
-                    }
-                    function getFromToValue(group?: SvgStrokeDash) {
-                        return group ? `${group.start} ${group.end}` : '1 1';
                     }
                     function getDashOffset(time: number, playing = false) {
                         if (intervalMap) {
@@ -436,19 +434,19 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                             switch (item.attributeName) {
                                 case 'stroke-dasharray': {
                                     const valueTo = SvgBuild.toNumberList(item.valueTo);
-                                    if (valueTo.length && !$util.isEqual(valueArray, valueTo)) {
+                                    if (valueTo.length && !$util.isEqual(getDashArray(item.delay), valueTo)) {
                                         const arrayFrom = valueArray.slice(0);
                                         const arrayTo = valueTo.slice(0);
                                         const duration = item.duration;
                                         const groupArray: SvgAnimate[] = [];
                                         const values: string[][] = [];
                                         const keyTimes: number[] = [0];
-                                        let baseFrom: SvgStrokeDash[];
+                                        let baseValue: SvgStrokeDash[];
                                         if (modified && intervalMap) {
-                                            baseFrom = this.flatStrokeDash(getDashArray(item.delay, true), getDashOffset(item.delay, true), totalLength, pathLength);
+                                            baseValue = this.flatStrokeDash(getDashArray(item.delay, true), getDashOffset(item.delay, true), totalLength, pathLength);
                                         }
                                         else {
-                                            baseFrom = result;
+                                            baseValue = result;
                                         }
                                         if (revised.find(animate => animate.id !== undefined && animate.attributeName === 'stroke-dasharray') === undefined) {
                                             let offset = valueOffset;
@@ -466,7 +464,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                             }
                                         }
                                         for (let j = 0; j < dashLength; j++) {
-                                            values[j] = [getFromToValue(baseFrom[j])];
+                                            values[j] = [getFromToValue(baseValue[j])];
                                             const animate = new SvgAnimate(this.element);
                                             animate.id = j;
                                             animate.attributeName = 'stroke-dasharray';
@@ -544,10 +542,10 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                             if (item.iterationCount !== -1) {
                                                 if (modified && intervalMap) {
                                                     const totalDuration = item.getTotalDuration();
-                                                    baseFrom = this.flatStrokeDash(getDashArray(totalDuration), getDashOffset(totalDuration), totalLength, pathLength);
+                                                    baseValue = this.flatStrokeDash(getDashArray(totalDuration), getDashOffset(totalDuration), totalLength, pathLength);
                                                 }
                                                 for (let j = 0; j < dashLength; j++) {
-                                                    groupArray[j].baseFrom = getFromToValue(baseFrom[j]);
+                                                    groupArray[j].baseValue = getFromToValue(baseValue[j]);
                                                 }
                                             }
                                         }
@@ -583,8 +581,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     const repeatFraction = 1 / item.duration;
                                     let keyTime = 0;
                                     for (let j = iterationCount; ; j--) {
-                                        const start = keyTime + (keyTime !== 0 ? repeatFraction : 0);
-                                        keyTimes.push(start);
+                                        keyTimes.push(keyTime + (keyTime !== 0 ? repeatFraction : 0));
                                         if (j > 1) {
                                             if (valueTo < offsetFrom) {
                                                 values.push('0', '1');
@@ -592,7 +589,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                             else {
                                                 values.push('1', '0');
                                             }
-                                            keyTime = Math.min(keyTime + keyTimeInterval, 1);
+                                            keyTime = keyTime + keyTimeInterval;
                                             if (keyTime + repeatFraction >= 1) {
                                                 keyTime = 1;
                                             }
@@ -626,30 +623,31 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                         revised.push(item);
                     }
                     if (modified) {
-                        let groupFrom: DashGroup | undefined;
-                        for (let i = 0; i < dashGroup.length; i++) {
-                            const groupTo = dashGroup[i];
-                            if (groupFrom) {
-                                const delay = groupTo.delay;
-                                const duration = groupTo.duration;
-                                for (let j = 0; j < dashLength; j++) {
-                                    const animate = new SvgAnimation(this.element);
-                                    animate.id = j;
-                                    animate.attributeName = 'stroke-dasharray';
-                                    animate.baseFrom = getFromToValue(result[j]);
-                                    animate.delay = delay;
-                                    animate.to = getFromToValue(groupTo.items[j]);
-                                    animate.duration = duration;
-                                    animate.fillFreeze = duration === 0;
-                                    revised.push(animate);
+                        if (dashLength !== result.length) {
+                            for (let i = 0; i < dashGroup.length; i++) {
+                                const items = dashGroup[i].items;
+                                if (items === result) {
+                                    for (let j = items.length; j < dashLength; j++) {
+                                        items.push({ start: 1, end: 1 });
+                                    }
+                                }
+                                else {
+                                    const delay = dashGroup[i].delay;
+                                    const duration = dashGroup[i].duration;
+                                    const baseValue = dashGroup.length > 2 ? this.flatStrokeDash(getDashArray(delay), getDashOffset(delay), totalLength, pathLength) : result;
+                                    for (let j = 0; j < dashLength; j++) {
+                                        const animate = new SvgAnimation(this.element);
+                                        animate.id = j;
+                                        animate.attributeName = 'stroke-dasharray';
+                                        animate.baseValue = getFromToValue(baseValue[j]);
+                                        animate.delay = delay;
+                                        animate.to = getFromToValue(items[j]);
+                                        animate.duration = duration;
+                                        animate.fillFreeze = duration === 0;
+                                        revised.push(animate);
+                                    }
                                 }
                             }
-                            else {
-                                for (let j = groupTo.items.length; j < dashLength; j++) {
-                                    groupTo.items.push({ start: 1, end: 1 });
-                                }
-                            }
-                            groupFrom = groupTo;
                         }
                         animations.length = 0;
                         animations.push(...revised);

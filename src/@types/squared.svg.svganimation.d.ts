@@ -19,7 +19,8 @@ declare global {
             setterType: boolean;
             id?: number;
             parent?: SvgView | SvgPath;
-            baseFrom?: string;
+            baseValue?: string;
+            startValue?: string;
             readonly instanceType: number;
             readonly fillReplace: boolean;
             setAttribute(attr: string, equality?: string): void;
@@ -39,7 +40,9 @@ declare global {
             alternate: boolean;
             additiveSum: boolean;
             accumulateSum: boolean;
+            evaluateStart: boolean;
             keySplines?: string[];
+            by?: number;
             end?: number;
             synchronized?: NumberValue<string>;
             timingFunction?: string;
@@ -47,6 +50,7 @@ declare global {
             readonly valueFrom: string;
             readonly fromToType: boolean;
             readonly partialType: boolean;
+            readonly length: number;
             setCalcMode(name: string): void;
             setGroupOrdering(value: SvgAnimationAttribute[]): void;
             getPartialDuration(iteration?: number): number;
@@ -95,10 +99,11 @@ declare global {
 
         class SvgAnimate implements SvgAnimate {
             public static getGroupDuration(item: SvgAnimationAttribute): number;
+            public static getIntervalKeyName(item: SvgAnimation): string;
             public static getIntervalMap(): SvgIntervalMap;
             public static getIntervalValue(map: SvgIntervalMap, attr: string, interval: number, playing?: boolean): string | undefined;
             public static getSplitValue(value: number, next: number, percent: number): number;
-            public static toStepFractionList(name: string, keyTimes: number[], values: string[], keySpline: string, index: number, fontSize?: number): [number[], string[]] | undefined;
+            public static convertStepKeyTimeValues(name: string, keyTimes: number[], values: string[], keySpline: string, index: number, fontSize?: number): [number[], string[]] | undefined;
             public static toFractionList(value: string, delimiter?: string): number[];
             constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimateElement);
         }
