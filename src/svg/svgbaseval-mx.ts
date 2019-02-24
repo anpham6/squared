@@ -4,6 +4,17 @@ import SvgBuild from './svgbuild';
 
 const $dom = squared.lib.dom;
 
+function adjustPoints(values: SvgPoint[], x: number, y: number, scaleX: number, scaleY: number) {
+    for (const pt of values) {
+        pt.x += x;
+        pt.y += y;
+        if (pt.rx !== undefined && pt.ry !== undefined) {
+            pt.rx *= scaleX;
+            pt.ry *= scaleY;
+        }
+    }
+}
+
 export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
     return class extends Base implements squared.svg.SvgBaseVal {
         private _baseVal: ObjectMap<any> = {};
@@ -44,24 +55,14 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
         }
 
         public refitBaseValue(x: number, y: number, precision?: number, scaleX = 1, scaleY = 1) {
-            function adjustPoints(values: SvgPoint[]) {
-                for (const pt of values) {
-                    pt.x += x;
-                    pt.y += y;
-                    if (pt.rx !== undefined && pt.ry !== undefined) {
-                        pt.rx *= scaleX;
-                        pt.ry *= scaleY;
-                    }
-                }
-            }
             for (const attr in this._baseVal) {
                 const value = this._baseVal[attr];
                 if (typeof value === 'string') {
                     if (attr === 'd') {
                         const commands = SvgBuild.getPathCommands(value);
-                        const points = SvgBuild.getPathPoints(commands);
-                        adjustPoints(points);
-                        this._baseVal[attr] = SvgBuild.drawPath(SvgBuild.bindPathPoints(commands, points), precision);
+                        const points = SvgBuild.extractPathPoints(commands);
+                        adjustPoints(points, x, y, scaleX, scaleY);
+                        this._baseVal[attr] = SvgBuild.drawPath(SvgBuild.rebindPathPoints(commands, points), precision);
                     }
                 }
                 else if (typeof value === 'number') {
@@ -93,7 +94,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                 }
                 else if (Array.isArray(value)) {
                     if (attr === 'points') {
-                        adjustPoints(value);
+                        adjustPoints(value, x, y, scaleX, scaleY);
                     }
                 }
             }

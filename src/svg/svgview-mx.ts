@@ -333,36 +333,44 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             addAnimation(animate, delay, keyframeIndex);
                             animate.paused = paused;
                             animate.duration = duration;
-                            if (!keySplines.every(spline => spline === 'linear')) {
+                            if (!keySplines.every(value => value === 'linear')) {
                                 const keyTimesData: number[] = [];
                                 const valuesData: string[] = [];
                                 const keySplinesData: string[] = [];
-                                for (let j = 0; j < keySplines.length; j++) {
-                                    if (KEYSPLINE_NAME[keySplines[j]]) {
-                                        keySplines[j] = KEYSPLINE_NAME[keySplines[j]];
-                                    }
-                                    else if (keySplines[j].startsWith('step')) {
-                                        if (values[j] !== '') {
-                                            const steps = SvgAnimate.convertStepTimingFunction(name, keySplines[j], keyTimes, values, j, $dom.getFontSize(element));
-                                            if (steps) {
-                                                keyTimesData.push(...steps[0]);
-                                                valuesData.push(...steps[1]);
-                                                steps[0].forEach(() => keySplinesData.push(KEYSPLINE_NAME['step']));
-                                                continue;
-                                            }
+                                for (let j = 0; j < keyTimes.length; j++) {
+                                    if (j < keyTimes.length - 1) {
+                                        const segmentDuration = (keyTimes[j + 1] - keyTimes[j]) * duration;
+                                        if (KEYSPLINE_NAME[keySplines[j]]) {
+                                            keySplines[j] = KEYSPLINE_NAME[keySplines[j]];
                                         }
-                                        keySplines[j] = KEYSPLINE_NAME.linear;
-                                    }
-                                    else {
-                                        const match = REGEXP_CUBICBEZIER.exec(keySplines[j]);
-                                        keySplines[j] = match ? `${match[1]} ${match[2]} ${match[3]} ${match[4]}` : KEYSPLINE_NAME.ease;
+                                        else if (keySplines[j].startsWith('step')) {
+                                            if (values[j] !== '') {
+                                                const steps = SvgAnimate.convertStepTimingFunction(name, keySplines[j], keyTimes, values, j, $dom.getFontSize(element));
+                                                if (steps) {
+                                                    const offset = keyTimes[j + 1] === 1 ? 1 : 0;
+                                                    for (let k = 0; k < steps[0].length - offset; k++) {
+                                                        let keyTime = (keyTimes[j] + steps[0][k] * segmentDuration) / duration;
+                                                        if (keyTimesData.includes(keyTime)) {
+                                                            keyTime += 1 / duration;
+                                                        }
+                                                        keyTimesData.push(keyTime);
+                                                        valuesData.push(steps[1][k]);
+                                                        keySplinesData.push(KEYSPLINE_NAME[keySplines[j].indexOf('start') !== -1 ? 'step-start' : 'step-end']);
+                                                    }
+                                                    continue;
+                                                }
+                                            }
+                                            keySplines[j] = KEYSPLINE_NAME.linear;
+                                        }
+                                        else {
+                                            const match = REGEXP_CUBICBEZIER.exec(keySplines[j]);
+                                            keySplines[j] = match ? `${match[1]} ${match[2]} ${match[3]} ${match[4]}` : KEYSPLINE_NAME.ease;
+                                        }
+                                        keySplinesData.push(keySplines[j]);
                                     }
                                     keyTimesData.push(keyTimes[j]);
                                     valuesData.push(values[j]);
-                                    keySplinesData.push(keySplines[j]);
                                 }
-                                keyTimesData.push(keyTimes.pop() as number);
-                                valuesData.push(values.pop() as string);
                                 animate.values = valuesData;
                                 animate.keyTimes = keyTimesData;
                                 animate.keySplines = keySplinesData;

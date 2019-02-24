@@ -164,7 +164,7 @@ function getPathData(entries: TimelineEntries, path: SvgPath, parent: SvgContain
         }
         if (points) {
             let value: string | undefined;
-            if (path.transformed && path.transformed.length) {
+            if (path.transformed) {
                 points = SvgBuild.applyTransforms(path.transformed, points, transformOrigin);
             }
             if (parent) {
@@ -722,7 +722,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                     }
                     this._removeAnimations(removeable);
                 }
-                if (!transforming && staggered.length + setterTotal > 0 || transforming && (staggered.length + setterTotal > 1 || staggered.length === 1 && (staggered[0].alternate || staggered[0].end !== undefined))) {
+                if (staggered.length + setterTotal > 1 || staggered.length === 1 && (staggered[0].alternate || staggered[0].end !== undefined)) {
                     for (const item of staggered) {
                         if (item.group.ordering) {
                             $util.spliceArray(item.group.ordering, sibling => !groupActive.has(sibling.name));

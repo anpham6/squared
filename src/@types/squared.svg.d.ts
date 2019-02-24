@@ -100,8 +100,8 @@ declare global {
             public static minMaxPoints(values: Point[]): number[];
             public static centerPoints(values: Point[]): Point[];
             public static convertNumbers(values: number[]): Point[];
-            public static getPathPoints(values: SvgPathCommand[], radius?: boolean): SvgPoint[];
-            public static bindPathPoints(values: SvgPathCommand[], points: SvgPoint[]): SvgPathCommand[];
+            public static extractPathPoints(values: SvgPathCommand[], radius?: boolean): SvgPoint[];
+            public static rebindPathPoints(values: SvgPathCommand[], points: SvgPoint[]): SvgPathCommand[];
             public static toPointList(value: string): Point[];
             public static toNumberList(value: string): number[];
             public static toBoxRect(value: string): BoxRect;

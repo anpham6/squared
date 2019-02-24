@@ -322,16 +322,34 @@ export function cloneInstance<T>(value: T): T {
     return Object.assign(Object.create(Object.getPrototypeOf(value)), value);
 }
 
-export function cloneObject(data: {}, destination = {}) {
-    for (const attr in data) {
-        if (typeof data[attr] === 'object') {
-            destination[attr] = cloneObject(data[attr]);
+export function cloneArray(data: any[], result: any[] = [], object = false) {
+    for (const item of data) {
+        if (Array.isArray(item)) {
+            result.push(cloneArray(item, [], object));
+        }
+        else if (object && typeof item === 'object') {
+            result.push(cloneObject(item, {}, true));
         }
         else {
-            destination[attr] = data[attr];
+            result.push(item);
         }
     }
-    return destination;
+    return result;
+}
+
+export function cloneObject(data: {}, result = {}, array = false) {
+    for (const attr in data) {
+        if (Array.isArray(data[attr])) {
+            result[attr] = array ? cloneArray(data[attr], [], true) : data[attr];
+        }
+        else if (typeof data[attr] === 'object') {
+            result[attr] = cloneObject(data[attr], {}, array);
+        }
+        else {
+            result[attr] = data[attr];
+        }
+    }
+    return result;
 }
 
 export function optional(obj: UndefNull<object>, value: string, type?: string) {

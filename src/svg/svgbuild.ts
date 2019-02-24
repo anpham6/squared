@@ -137,7 +137,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         if (ry === undefined) {
             ry = rx;
         }
-        const result = `M${cx - rx},${cy} a${rx},${ry},0,1,0,${rx * 2},0 a${rx},${ry},0,1,0,-${rx * 2},0`;
+        const result = `M${cx - rx},${cy} a${rx},${ry},0,0,1,${rx * 2},0 a${rx},${ry},0,0,1,-${rx * 2},0`;
         return precision ? $math.truncateString(result, precision) : result;
     }
 
@@ -196,7 +196,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             if (result.length) {
                 const previous = result[result.length - 1];
                 previousCommand = previous.name.toUpperCase();
-                previousPoint = previous.value[previous.value.length - 1];
+                previousPoint = previous.end;
             }
             let radiusX: number | undefined;
             let radiusY: number | undefined;
@@ -308,6 +308,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 result.push({
                     name: match[1],
                     value: points,
+                    start: points[0],
+                    end: points[points.length - 1],
                     relative,
                     coordinates,
                     radiusX,
@@ -321,7 +323,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
-    public static getPathPoints(values: SvgPathCommand[], radius = false) {
+    public static extractPathPoints(values: SvgPathCommand[], radius = false) {
         const result: SvgPoint[] = [];
         let x = 0;
         let y = 0;
@@ -355,10 +357,15 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 switch (item.name) {
                     case 'h':
                     case 'v':
-                        const previous = values[i - 1];
-                        if (previous && previous.name === 'M') {
-                            previous.coordinates.push(...item.coordinates);
-                            values.splice(i--, 1);
+                        if (i > 0) {
+                            const previous = values[i - 1];
+                            switch (previous.name) {
+                                case 'M':
+                                case 'L':
+                                    previous.coordinates.push(...item.coordinates);
+                                    values.splice(i--, 1);
+                                    break;
+                            }
                         }
                         item.name = 'M';
                         break;
@@ -372,7 +379,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
-    public static bindPathPoints(values: SvgPathCommand[], points: SvgPoint[]) {
+    public static rebindPathPoints(values: SvgPathCommand[], points: SvgPoint[]) {
         const absolute = points.slice(0);
         invalid: {
             for (const item of values) {
@@ -594,7 +601,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     public static toBoxRect(values: string[]): BoxRect {
         const points: SvgPoint[] = [];
         for (const value of values) {
-            points.push(...SvgBuild.getPathPoints(SvgBuild.getPathCommands(value), true));
+            points.push(...SvgBuild.extractPathPoints(SvgBuild.getPathCommands(value), true));
         }
         const result = this.minMaxPoints(points);
         return { top: result[1], right: result[2], bottom: result[3], left: result[0] };

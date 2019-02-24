@@ -36,6 +36,7 @@
     <!-- START: DEMO -->
     <div id="squared_ui" style="width: 300px;">
         <svg width="120" height="120" viewBox="0 0 240 240">
+            <animate attributeType="CSS" attributeName="opacity" values="1; 0.5" keyTimes="0; 1" dur="10s" repeatCount="1" />
             <circle id="circle1" cx="60" cy="60" r="50" fill="yellow">
                 <animate attributeName="r" values="10; 75; 100" keyTimes="0; 0.5; 1" dur="7s" repeatCount="1" />
             </circle>
@@ -61,8 +62,7 @@
             </polygon>
             <!--<path d="M10,30 A20,20,0,0,1,50,30 A20,20,0,0,1,90,30 Q90,60,50,90 Q10,60,10,30 Z" fill="red">
                 <animate attributeName="d" to="M20,60 A40,40,0,0,1,100,60 A40,40,0,0,1,180,60 Q180,120,100,180 Q20,120,20,60 Z" dur="5s" repeatCount="1" />
-            </path>
-            <animate attributeType="CSS" attributeName="opacity" values="1; 0" keyTimes="0; 1" dur="10s" repeatCount="1" />-->
+            </path>-->
         </svg>
         <br /><br />
         <svg viewBox="0 0 30 10">
@@ -71,8 +71,6 @@
                 <animate attributeName="cy" from="5" by="5" dur="10s" repeatCount="1" />
             </circle>
             <use href="#myCircle" x="10" fill="blue">
-                <set attributeName="fill" begin="0s" to="blue" />
-                <set attributeName="fill-opacity" begin="0s" to="1" />
                 <set attributeName="fill" begin="2s" to="green" duration="5s" repeatCount="10" />
                 <set attributeName="fill-opacity" begin="5s" to="0.5" duration="indefinite" />
             </use>

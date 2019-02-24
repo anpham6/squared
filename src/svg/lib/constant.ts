@@ -52,5 +52,6 @@ export const KEYSPLINE_NAME = {
     'ease-in-out': '0.42 0 0.58 1',
     'ease-out': '0 0 0.58 1',
     'linear': '0 0 1 1',
-    'step': '0 1 0 1'
+    'step-start': '0 1 0 1',
+    'step-end': '1 0 1 0'
 };

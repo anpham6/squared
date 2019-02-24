@@ -100,7 +100,8 @@ declare global {
             function isEqual(source: any, values: any): boolean;
             function includes(source: string | undefined, value: string, delimiter?: string): boolean;
             function cloneInstance<T>(value: T): T;
-            function cloneObject(data: {}, destination?: {}): {};
+            function cloneArray(data: any[], result?: any[], object?: boolean): any[];
+            function cloneObject(data: {}, result?: {}, array?: boolean): {};
             function optional(obj: UndefNull<object>, value: string, type?: string): any;
             function optionalAsObject(obj: UndefNull<object>, value: string): object;
             function optionalAsString(obj: UndefNull<object>, value: string): string;
