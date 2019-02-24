@@ -11,7 +11,7 @@ const $util = squared.lib.util;
 export default class SvgUsePattern extends SvgSynchronize$MX(SvgViewRect$MX(SvgShapePattern)) implements squared.svg.SvgUsePattern {
     constructor(
         public readonly element: SVGUseElement,
-        public shapeElement: SVGGraphicsElement,
+        public shapeElement: SVGGeometryElement,
         patternElement: SVGPatternElement)
     {
         super(element, patternElement);

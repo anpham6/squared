@@ -3,6 +3,7 @@ import SvgAnimate from './svganimate';
 import SvgAnimateMotion from './svganimatemotion';
 import SvgAnimateTransform from './svganimatetransform';
 import SvgAnimation from './svganimation';
+import SvgAnimationIntervalMap from './svganimationintervalmap';
 import SvgBaseVal from './svgbaseval-mx';
 import SvgBuild from './svgbuild';
 import SvgContainer from './svgcontainer';
@@ -35,6 +36,7 @@ export {
     SvgAnimateMotion,
     SvgAnimateTransform,
     SvgAnimation,
+    SvgAnimationIntervalMap,
     SvgBaseVal,
     SvgBuild,
     SvgContainer,

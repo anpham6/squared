@@ -8,11 +8,12 @@ import SvgPath from './svgpath';
 import { INSTANCE_TYPE } from './lib/constant';
 
 export default class SvgShape extends SvgSynchronize$MX(SvgView$MX(SvgElement)) implements squared.svg.SvgShape {
-    public readonly element!: SVGShapeElement | SVGUseElement;
-
     private _path?: SvgPath;
 
-    constructor(element: SVGGraphicsElement, initPath = true) {
+    constructor(
+        public element: SVGGeometryElement | SVGUseElement,
+        initPath = true)
+    {
         super(element);
         if (initPath) {
             this.setPath();
@@ -20,7 +21,7 @@ export default class SvgShape extends SvgSynchronize$MX(SvgView$MX(SvgElement)) 
     }
 
     public setPath() {
-        this.path = new SvgPath(this.element);
+        this.path = new SvgPath(<SVGGeometryElement> this.element);
     }
 
     public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, precision?: number) {

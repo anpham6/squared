@@ -57,7 +57,6 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     public synchronizeState = 0;
     public parent?: squared.svg.SvgView | squared.svg.SvgPath;
     public baseValue?: string;
-    public startValue?: string;
     public id?: number;
 
     private _attributeName = '';
@@ -129,7 +128,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     set attributeName(value) {
-        if (value !== 'transform') {
+        if (value !== 'transform' && !this.baseValue) {
             const baseElement = this.animationElement && this.animationElement.parentElement || this.element;
             if (baseElement) {
                 this.baseValue = $util.optionalAsString(baseElement, `${value}.baseVal.valueAsString`) || $dom.cssInheritAttribute(baseElement, value);

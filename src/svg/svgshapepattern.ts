@@ -28,7 +28,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
     private __get_transforms = false;
 
     constructor(
-        public element: SVGGraphicsElement,
+        public element: SVGGeometryElement | SVGUseElement,
         public readonly patternElement: SVGPatternElement)
     {
         super(element);
@@ -36,9 +36,9 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
         this.patternContentUnits = $dom.getNamedItem(this.patternElement, 'patternContentUnits') === 'objectBoundingBox' ? REGION_UNIT.OBJECT_BOUNDING_BOX : REGION_UNIT.USER_SPACE_ON_USE;
     }
 
-    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, precision?: number, element?: SVGGraphicsElement) {
+    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, precision?: number, element?: SVGGeometryElement) {
         if (element === undefined) {
-            element = this.element;
+            element = <SVGGeometryElement> this.element;
         }
         const path = SvgPath.build(new SvgPath(element), [], exclude, undefined, precision);
         if (path.value) {

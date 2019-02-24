@@ -98,6 +98,3 @@ interface ColorStop {
 }
 
 type CSSRuleData = Map<string, ObjectMap<StringMap>>;
-
-type SVGContainerElement = SVGSVGElement | SVGGElement | SVGUseElement;
-type SVGShapeElement = SVGPathElement | SVGLineElement | SVGRectElement | SVGCircleElement | SVGEllipseElement | SVGPolylineElement | SVGPolygonElement;

@@ -24,7 +24,7 @@ declare global {
             getAnimateShape(element: SVGGraphicsElement, animations?: SvgAnimation[]): SvgAnimate[];
             getAnimateViewRect(animations?: SvgAnimation[]): SvgAnimate[];
             getAnimateTransform(animations?: SvgAnimation[]): SvgAnimateTransform[];
-            mergeAnimations(animations?: SvgAnimate[], transformations?: SvgAnimateTransform[], keyTimeMode?: number, precision?: number, path?: SvgPath): void;
+            mergeAnimations(animations?: SvgAnimation[], transformations?: SvgAnimateTransform[], keyTimeMode?: number, precision?: number, path?: SvgPath): void;
         }
 
         interface SvgViewRect extends SvgRect, SvgBaseVal {

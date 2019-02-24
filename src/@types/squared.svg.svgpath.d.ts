@@ -5,6 +5,7 @@ declare global {
         interface SvgPath extends SvgBaseVal, SvgPaint, SvgTransformable, NameValue {
             value: string;
             transforms: SvgTransform[];
+            readonly element: SVGGeometryElement;
             readonly pathLength: number;
             readonly totalLength: number;
             draw(transforms?: SvgTransform[], residual?: SvgTransformResidual, precision?: number, extract?: boolean): string;
@@ -15,7 +16,7 @@ declare global {
 
         class SvgPath implements SvgPath {
             public static build(path: SvgPath, transform: SvgTransform[], exclude?: SvgTransformExclude, residual?: SvgTransformResidual, precision?: number): SvgPath;
-            constructor(element: SVGGraphicsElement);
+            constructor(element: SVGGeometryElement);
         }
     }
 }

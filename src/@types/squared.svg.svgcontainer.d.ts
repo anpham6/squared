@@ -9,7 +9,7 @@ declare global {
         interface SvgContainer extends Container<SvgView>, SvgElement {
             clipRegion: string;
             aspectRatio: SvgAspectRatio;
-            readonly element: SVGContainerElement;
+            readonly element: SVGSVGElement | SVGGElement | SVGUseElement;
             readonly instanceType: number;
             append(item: SvgView, viewport?: Svg): this;
             refitX(value: number): number;
@@ -52,7 +52,7 @@ declare global {
 
         interface SvgShapePattern extends SvgPattern, SvgPaint {
             drawRegion?: BoxRect;
-            readonly element: SVGGraphicsElement | SVGUseElement;
+            readonly element: SVGGeometryElement | SVGUseElement;
             readonly patternElement: SVGPatternElement;
             readonly patternUnits: number;
             readonly patternContentUnits: number;
@@ -67,11 +67,11 @@ declare global {
 
         interface SvgUsePattern extends SvgShapePattern, SvgViewRect {
             readonly element: SVGUseElement;
-            readonly shapeElement: SVGGraphicsElement;
+            readonly shapeElement: SVGGeometryElement;
         }
 
         class SvgContainer implements SvgContainer {
-            constructor(element: SVGContainerElement);
+            constructor(element: SVGSVGElement | SVGGElement | SVGUseElement);
         }
 
         class Svg implements Svg {
@@ -95,7 +95,7 @@ declare global {
         }
 
         class SvgUsePattern implements SvgUsePattern {
-            constructor(element: SVGUseElement, shapeElement: SVGGraphicsElement, patternElement: SVGPatternElement);
+            constructor(element: SVGUseElement, shapeElement: SVGGeometryElement, patternElement: SVGPatternElement);
         }
     }
 }

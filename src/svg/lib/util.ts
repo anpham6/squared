@@ -337,7 +337,7 @@ export const SVG = {
     path: (element: Element): element is SVGPathElement => {
         return element.tagName === 'path';
     },
-    shape: (element: Element): element is SVGGraphicsElement => {
+    shape: (element: Element): element is SVGGeometryElement => {
         return SHAPES[element.tagName] !== undefined;
     },
     image: (element: Element): element is SVGImageElement => {

@@ -10,12 +10,14 @@ import { RESERVED_JAVA } from './lib/constant';
 type SvgPath = squared.svg.SvgPath;
 
 const $Resource = squared.base.Resource;
-const $SvgBuild = squared.svg && squared.svg.SvgBuild;
 const $color = squared.lib.color;
 const $dom = squared.lib.dom;
 const $math = squared.lib.math;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
+
+const $SvgBuild = squared.svg && squared.svg.SvgBuild;
+const $utilS = squared.svg && squared.svg.lib && squared.svg.lib.util;
 
 const STORED = <ResourceStoredMapAndroid> $Resource.STORED;
 
@@ -55,13 +57,13 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
             switch (item.type) {
                 case 'radial':
                     if (node.svgElement) {
-                        if (path && $SvgBuild) {
+                        if (path && $SvgBuild && $utilS) {
                             const radial = <SvgRadialGradient> item;
                             const points: Point[] = [];
-                            let cx: number | undefined;
-                            let cy: number | undefined;
-                            let cxDiameter: number | undefined;
-                            let cyDiameter: number | undefined;
+                            let cx!: number;
+                            let cy!: number;
+                            let cxDiameter!: number;
+                            let cyDiameter!: number;
                             switch (path.element.tagName) {
                                 case 'path':
                                     for (const command of $SvgBuild.getPathCommands(path.value)) {
@@ -78,37 +80,38 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                                     cxDiameter -= cx;
                                     cyDiameter -= cy;
                                     break;
-                                case 'rect':
-                                    const rect = <SVGRectElement> path.element;
-                                    cx = rect.x.baseVal.value;
-                                    cy = rect.y.baseVal.value;
-                                    cxDiameter = rect.width.baseVal.value;
-                                    cyDiameter = rect.height.baseVal.value;
-                                    break;
-                                case 'circle':
-                                    const circle = <SVGCircleElement> path.element;
-                                    cx = circle.cx.baseVal.value - circle.r.baseVal.value;
-                                    cy = circle.cy.baseVal.value - circle.r.baseVal.value;
-                                    cxDiameter = circle.r.baseVal.value * 2;
-                                    cyDiameter = cxDiameter;
-                                    break;
-                                case 'ellipse':
-                                    const ellipse = <SVGEllipseElement> path.element;
-                                    cx = ellipse.cx.baseVal.value - ellipse.rx.baseVal.value;
-                                    cy = ellipse.cy.baseVal.value - ellipse.ry.baseVal.value;
-                                    cxDiameter = ellipse.rx.baseVal.value * 2;
-                                    cyDiameter = ellipse.ry.baseVal.value * 2;
+                                default:
+                                    if ($utilS.SVG.rect(path.element)) {
+                                        const rect = path.element;
+                                        cx = rect.x.baseVal.value;
+                                        cy = rect.y.baseVal.value;
+                                        cxDiameter = rect.width.baseVal.value;
+                                        cyDiameter = rect.height.baseVal.value;
+                                    }
+                                    else if ($utilS.SVG.circle(path.element)) {
+                                        const circle = path.element;
+                                        cx = circle.cx.baseVal.value - circle.r.baseVal.value;
+                                        cy = circle.cy.baseVal.value - circle.r.baseVal.value;
+                                        cxDiameter = circle.r.baseVal.value * 2;
+                                        cyDiameter = cxDiameter;
+                                    }
+                                    else if ($utilS.SVG.ellipse(path.element)) {
+                                        const ellipse = path.element;
+                                        cx = ellipse.cx.baseVal.value - ellipse.rx.baseVal.value;
+                                        cy = ellipse.cy.baseVal.value - ellipse.ry.baseVal.value;
+                                        cxDiameter = ellipse.rx.baseVal.value * 2;
+                                        cyDiameter = ellipse.ry.baseVal.value * 2;
+                                    }
+                                    else {
+                                        return result;
+                                    }
                                     break;
                             }
-                            if (cx !== undefined && cy !== undefined && cxDiameter !== undefined && cyDiameter !== undefined) {
-                                const cxPercent = getRadiusPercent(radial.cxAsString);
-                                const cyPercent = getRadiusPercent(radial.cyAsString);
-                                gradient.centerX = (cx + cxDiameter * cxPercent).toString();
-                                gradient.centerY = (cy + cyDiameter * cyPercent).toString();
-                                gradient.gradientRadius = (((cxDiameter + cyDiameter) / 2) * ($util.isPercent(radial.rAsString) ? (parseInt(radial.rAsString) / 100) : 1)).toString();
-                                if (radial.spreadMethod) {
-                                    gradient.tileMode = getTileMode(radial.spreadMethod);
-                                }
+                            gradient.centerX = (cx + cxDiameter * getRadiusPercent(radial.cxAsString)).toString();
+                            gradient.centerY = (cy + cyDiameter * getRadiusPercent(radial.cyAsString)).toString();
+                            gradient.gradientRadius = (((cxDiameter + cyDiameter) / 2) * ($util.isPercent(radial.rAsString) ? (parseFloat(radial.rAsString) / 100) : 1)).toString();
+                            if (radial.spreadMethod) {
+                                gradient.tileMode = getTileMode(radial.spreadMethod);
                             }
                         }
                     }

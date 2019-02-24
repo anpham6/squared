@@ -54,7 +54,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
 
     private _clipRegion: string[] = [];
 
-    constructor(public readonly element: SVGContainerElement) {
+    constructor(public readonly element: SVGSVGElement | SVGGElement | SVGUseElement) {
         super();
     }
 

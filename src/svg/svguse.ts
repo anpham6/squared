@@ -14,7 +14,7 @@ export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(Svg
 
     constructor(
         public readonly element: SVGUseElement,
-        public shapeElement: SVGGraphicsElement,
+        public shapeElement: SVGGeometryElement,
         initPath = true)
     {
         super(element, false);

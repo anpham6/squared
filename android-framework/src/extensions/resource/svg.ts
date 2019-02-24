@@ -712,7 +712,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                         let transformOrigin: Point[] | undefined;
                                         const getFillAfter = (propertyName: string, lastValue?: PropertyValue, startOffset?: number) => {
                                             if (!synchronized && item.fillReplace) {
-                                                let valueTo = item.startValue;
+                                                let valueTo = item.replaceValue;
                                                 if (valueTo === undefined) {
                                                     if (transforming) {
                                                         valueTo = getTransformInitialValue(propertyName);
@@ -831,9 +831,9 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                             let propertyNames: string[] | undefined;
                                             let values: string[] | number[][] | undefined;
                                             let beforeValues: string[] | undefined;
-                                            const insertBeforeValue = (attr: string, value = '0') => {
-                                                if (beforeValues && fillBeforeData.values.find(before => before.propertyName === attr) === undefined) {
-                                                    fillBeforeData.values.push(this.createPropertyValue(attr, value));
+                                            const insertBeforeValue = (attr: string, value = '0', startOffset?: number) => {
+                                                if (fillBeforeData.values.find(before => before.propertyName === attr) === undefined) {
+                                                    fillBeforeData.values.push(this.createPropertyValue(attr, value, '0', '', '', startOffset ? startOffset.toString() : ''));
                                                 }
                                             };
                                             if ($SvgBuild.asAnimateTransform(item)) {
@@ -1012,6 +1012,9 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                         switch (item.attributeName) {
                                                             case 'stroke-dasharray':
                                                                 values = $util.objectMap<string, number[]>(item.values, value => $util.replaceMap<string, number>(value.split(' '), fraction => parseFloat(fraction)));
+                                                                if (item.delay > 0 && item.baseValue) {
+                                                                    beforeValues = $util.replaceMap<string, string>(item.baseValue.split(' '), fraction => parseFloat(fraction).toString());
+                                                                }
                                                                 break;
                                                             default:
                                                                 values = item.values;
@@ -1034,13 +1037,16 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                 }
                                             }
                                             if (values && propertyNames) {
-                                                const keyName = index !== 0 || propertyNames.length > 1 ? JSON.stringify(options) : '';
+                                                const keyName =  item.synchronized ? item.synchronized.index + item.synchronized.value : (index !== 0 || propertyNames.length > 1 ? JSON.stringify(options) : '');
                                                 for (let i = 0; i < propertyNames.length; i++) {
                                                     const propertyName = propertyNames[i];
                                                     if (beforeValues && beforeValues[i]) {
                                                         insertBeforeValue(propertyName, beforeValues[i]);
                                                     }
-                                                    if (useKeyFrames) {
+                                                    if (values.length === 1 && item.duration === 0) {
+                                                        insertBeforeValue(propertyName, Array.isArray(values[0]) ? values[values.length - 1][i].toString() : values[values.length - 1].toString(), item.delay);
+                                                    }
+                                                    else if (useKeyFrames && item.keyTimes.length > 1) {
                                                         if (supportedKeyFrames && options.valueType !== 'pathType') {
                                                             const propertyValues = animatorMap.get(keyName) || [];
                                                             const keyframes: KeyFrame[] = [];
@@ -1088,10 +1094,10 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                     startOffset: j === 0 ? (item.delay + (item.keyTimes[j] > 0 ? Math.floor(item.keyTimes[j] * item.duration) : 0)).toString() : '',
                                                                     propertyValues: false
                                                                 };
-                                                                const valueTo = getPropertyValue(values, j, i, false, item.startValue || (options.valueType === 'pathType' ? group.pathData : item.baseValue));
+                                                                const valueTo = getPropertyValue(values, j, i, false, options.valueType === 'pathType' ? group.pathData : item.baseValue);
                                                                 if (valueTo) {
                                                                     if (options.valueType === 'pathType') {
-                                                                        const pathData = j === 0 ? item.startValue || group.pathData : getPropertyValue(values, j - 1, i);
+                                                                        const pathData = j === 0 ? group.pathData : getPropertyValue(values, j - 1, i);
                                                                         if (pathData) {
                                                                             propertyOptions.valueFrom = pathData;
                                                                         }

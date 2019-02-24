@@ -20,7 +20,6 @@ declare global {
             id?: number;
             parent?: SvgView | SvgPath;
             baseValue?: string;
-            startValue?: string;
             readonly instanceType: number;
             readonly fillReplace: boolean;
             setAttribute(attr: string, equality?: string): void;
@@ -42,10 +41,12 @@ declare global {
             accumulateSum: boolean;
             evaluateStart: boolean;
             keySplines?: string[];
+            timingFunction?: string;
             by?: number;
             end?: number;
+            replaceValue?: string;
             synchronized?: NumberValue<string>;
-            timingFunction?: string;
+            readonly playable: boolean;
             readonly valueTo: string;
             readonly valueFrom: string;
             readonly fromToType: boolean;
@@ -76,11 +77,18 @@ declare global {
             keyPoints?: number[];
         }
 
-        interface SvgIntervalMap {
-            [key: string]: Map<number, SvgIntervalValue[]>;
+        interface SvgAnimationIntervalMap {
+            map: SvgAnimationIntervalAttributeMap;
+            has(attr: string): boolean;
+            get(attr: string, time: number, playing?: boolean): string | undefined;
+            evaluateStart(item: SvgAnimate, otherValue?: any): string[];
         }
 
-        interface SvgIntervalValue {
+        interface SvgAnimationIntervalAttributeMap {
+            [key: string]: Map<number, SvgAnimationIntervalValue[]>;
+        }
+
+        interface SvgAnimationIntervalValue {
             time: number;
             value: string;
             duration: number;
@@ -89,7 +97,7 @@ declare global {
             fillMode: number;
             infinite: boolean;
             valueFrom?: string;
-            animate?: SvgAnimation;
+            animation?: SvgAnimation;
         }
 
         class SvgAnimation implements SvgAnimation {
@@ -98,12 +106,8 @@ declare global {
         }
 
         class SvgAnimate implements SvgAnimate {
-            public static getGroupDuration(item: SvgAnimationAttribute): number;
-            public static getIntervalKeyName(item: SvgAnimation): string;
-            public static getIntervalMap(): SvgIntervalMap;
-            public static getIntervalValue(map: SvgIntervalMap, attr: string, interval: number, playing?: boolean): string | undefined;
             public static getSplitValue(value: number, next: number, percent: number): number;
-            public static convertStepKeyTimeValues(name: string, keyTimes: number[], values: string[], keySpline: string, index: number, fontSize?: number): [number[], string[]] | undefined;
+            public static convertStepTimingFunction(name: string, keyTimes: number[], values: string[], keySpline: string, index: number, fontSize?: number): [number[], string[]] | undefined;
             public static toFractionList(value: string, delimiter?: string): number[];
             constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimateElement);
         }
@@ -118,6 +122,12 @@ declare global {
 
         class SvgAnimateMotion implements SvgAnimateMotion {
             constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimateMotionElement);
+        }
+
+        class SvgAnimationIntervalMap implements SvgAnimationIntervalMap {
+            public static getGroupDuration(item: SvgAnimationAttribute): number;
+            public static getKeyName(item: SvgAnimation): string;
+            constructor(animations: SvgAnimation[], ...attrs: string[]);
         }
     }
 }

@@ -13,7 +13,7 @@ declare global {
 
         interface SvgShape extends SvgElement, SvgView, SvgSynchronize {
             path?: SvgPath;
-            readonly element: SVGShapeElement | SVGUseElement;
+            readonly element: SVGGeometryElement | SVGUseElement;
             setPath(): void;
             synchronize(keyTimeMode?: number, precision?: number, element?: SVGGraphicsElement): void;
         }
@@ -26,7 +26,7 @@ declare global {
 
         interface SvgUse extends SvgShape, SvgViewRect, SvgBaseVal, SvgPaint {
             readonly element: SVGUseElement;
-            shapeElement: SVGGraphicsElement;
+            shapeElement: SVGGeometryElement;
             synchronize(keyTimeMode?: number, precision?: number, element?: SVGGraphicsElement): void;
         }
 

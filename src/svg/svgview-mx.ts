@@ -343,7 +343,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     }
                                     else if (keySplines[j].startsWith('step')) {
                                         if (values[j] !== '') {
-                                            const steps = SvgAnimate.convertStepKeyTimeValues(name, keySplines[j], keyTimes, values, j, $dom.getFontSize(element));
+                                            const steps = SvgAnimate.convertStepTimingFunction(name, keySplines[j], keyTimes, values, j, $dom.getFontSize(element));
                                             if (steps) {
                                                 keyTimesData.push(...steps[0]);
                                                 valuesData.push(...steps[1]);

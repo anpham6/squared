@@ -2,17 +2,16 @@ import { SvgPoint } from './@types/object';
 
 import SvgAnimate from './svganimate';
 import SvgAnimateTransform from './svganimatetransform';
-
+import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
+import SvgAnimationIntervalMap from './svganimationintervalmap';
 import SvgPath from './svgpath';
 
 import { SYNCHRONIZE_MODE, SYNCHRONIZE_STATE } from './lib/constant';
 import { SVG, TRANSFORM } from './lib/util';
 
-type SvgAnimation = squared.svg.SvgAnimation;
 type SvgBaseVal = squared.svg.SvgBaseVal;
 type SvgContainer = squared.svg.SvgContainer;
-type SvgIntervalMap = squared.svg.SvgIntervalMap;
 
 type AnimateValue = number | Point[] | string;
 type TimelineValue = Map<any, AnimateValue>;
@@ -372,7 +371,7 @@ function insertSplitValue(item: SvgAnimate, baseValue: AnimateValue, keyTimes: n
     return [time, value];
 }
 
-function appendPartialKeyTimes(map: SvgIntervalMap, item: SvgAnimate, startTime: number, maxThreadTime: number, values: string[], baseValue: AnimateValue, queued: SvgAnimate[], ): [number[], string[], string[]] {
+function appendPartialKeyTimes(map: SvgAnimationIntervalMap, item: SvgAnimate, startTime: number, maxThreadTime: number, values: string[], baseValue: AnimateValue, queued: SvgAnimate[], ): [number[], string[], string[]] {
     const keyTimes = item.keyTimes.slice(0);
     const keySplines = item.keySplines ? item.keySplines.slice(0) : new Array(values.length - 1).fill('') as string[];
     const completeTime = startTime + item.duration;
@@ -504,15 +503,17 @@ function insertInterpolator(item: SvgAnimate, time: number, keySplines: string[]
     }
 }
 
-function getStartItemValues(map: SvgIntervalMap, item: SvgAnimate, baseValue: AnimateValue) {
+function getStartItemValues(map: SvgAnimationIntervalMap, item: SvgAnimate, baseValue: AnimateValue) {
     if (item.evaluateStart) {
-        const values = item.values.slice(0);
         const index = item.reverse ? item.length - 1 : 0;
-        values[index] = SvgAnimate.getIntervalValue(map, SvgAnimate.getIntervalKeyName(item), item.delay) || item.values[index] || !item.additiveSum && item.baseValue || convertToString(baseValue);
-        if (item.by && $util.isNumber(values[index])) {
-            values[index] = (parseFloat(values[index]) + item.by).toString();
+        const value = map.get(SvgAnimationIntervalMap.getKeyName(item), item.delay) || item.values[index] || !item.additiveSum && item.baseValue;
+        if (!value) {
+            item.values[index] = convertToString(baseValue);
         }
-        return values;
+        if (item.by && $util.isNumber(item.values[index])) {
+            item.values[index] = (parseFloat(item.values[index]) + item.by).toString();
+        }
+        item.evaluateStart = false;
     }
     return item.values;
 }
@@ -530,9 +531,8 @@ function isKeyTimeFormat(transforming: boolean, keyTimeMode: number) {
 function isFromToFormat(transforming: boolean, keyTimeMode: number) {
     return $util.hasBit(keyTimeMode, transforming ? SYNCHRONIZE_MODE.FROMTO_TRANSFORM : SYNCHRONIZE_MODE.FROMTO_ANIMATE);
 }
-
 function playableAnimation(item: SvgAnimate) {
-    return !item.paused && (item.animationElement && item.duration !== -1 || item.keyTimes && item.keyTimes.length > 1 && item.duration > 0);
+    return item.playable || item.animationElement && item.duration !== -1;
 }
 
 function getFreezeValue(map: TimelineIndex, time: number) {
@@ -583,7 +583,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
     return class extends Base implements squared.svg.SvgSynchronize {
         public getAnimateShape(element: SVGGraphicsElement, animations?: SvgAnimation[]) {
             if (animations === undefined) {
-                animations = this.animations;
+                animations = this.animations as any;
             }
             const result: SvgAnimate[] = [];
             for (const item of animations as SvgAnimate[]) {
@@ -631,7 +631,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
 
         public getAnimateViewRect(animations?: SvgAnimation[]) {
             if (animations === undefined) {
-                animations = this.animations;
+                animations = this.animations as any;
             }
             const result: SvgAnimate[] = [];
             for (const item of animations as SvgAnimate[]) {
@@ -649,9 +649,9 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
 
         public getAnimateTransform(animations?: SvgAnimation[]) {
             if (animations === undefined) {
-                animations = this.animations;
+                animations = this.animations as any;
             }
-            return <SvgAnimateTransform[]> $util.filterArray(animations, item => SvgBuild.asAnimateTransform(item) && item.duration > 0);
+            return $util.filterArray(<SvgAnimateTransform[]> animations, item => SvgBuild.asAnimateTransform(item) && item.duration > 0);
         }
 
         public mergeAnimations(animations?: SvgAnimation[], transformations?: SvgAnimateTransform[], keyTimeMode = 0, precision?: number, path?: SvgPath) {
@@ -755,7 +755,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                         groupName[attr] = groupDelay;
                         groupAttributeMap[attr].reverse();
                     }
-                    const intervalMap = SvgAnimate.getIntervalMap(mergeable);
+                    const intervalMap = new SvgAnimationIntervalMap(mergeable);
                     const repeatingMap: TimelineMap = {};
                     const repeatingInterpolatorMap = new Map<number, string>();
                     const repeatingTransformOriginMap = transforming ? new Map<number, Point>() : undefined;
@@ -809,7 +809,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         if (previous.name === item.group.name) {
                                             return true;
                                         }
-                                        else if (SvgAnimate.getGroupDuration(previous) >= duration) {
+                                        else if (SvgAnimationIntervalMap.getGroupDuration(previous) >= duration) {
                                             return false;
                                         }
                                     }
