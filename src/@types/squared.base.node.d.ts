@@ -158,7 +158,7 @@ declare global {
             outsideY(rect: RectDimension, dimension?: string): boolean;
             css(attr: object | string, value?: string, cache?: boolean): string;
             cssInitial(attr: string, modified?: boolean, computed?: boolean): string;
-            cssParent(attr: string, childStart?: boolean, visible?: boolean): string;
+            cssAscend(attr: string, startChild?: boolean, visible?: boolean): string;
             cssSort(attr: string, duplicate?: boolean): Node[];
             cssPX(attr: string, value: number, negative?: boolean, cache?: boolean): string;
             cssTry(attr: string, value: string): boolean;

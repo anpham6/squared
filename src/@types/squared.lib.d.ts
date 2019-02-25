@@ -19,6 +19,7 @@ declare global {
             function isUserAgent(value: string | number): boolean;
             function getDeviceDPI(): number;
             function getKeyframeRules(): CSSRuleData;
+            function checkStyleAttribute(element: Element, attr: string, value: string, style?: CSSStyleDeclaration, fontSize?: number): string;
             function getDataSet(element: Element | null, prefix: string): StringMap;
             function newBoxRect(): BoxRect;
             function newRectDimension(): RectDimension;
@@ -33,12 +34,12 @@ declare global {
             function getStyle(element: Element | null, cache?: boolean): CSSStyleDeclaration;
             function getFontSize(element: Element | null): number;
             function cssResolveUrl(value: string): string;
-            function cssInherit(element: Element | null, attr: string, exclude?: string[], tagNames?: string[]): string;
             function cssParent(element: Element | null, attr: string, ...styles: string[]): boolean;
             function cssFromParent(element: Element | null, attr: string): boolean;
             function cssInline(element: Element, attr: string): string;
             function cssAttribute(element: Element, attr: string, computed?: boolean): string;
             function cssInheritAttribute(element: Element | null, attr: string): string;
+            function cssInheritStyle(element: Element | null, attr: string, exclude?: string[], tagNames?: string[]): string;
             function getNamedItem(element: Element | null, attr: string): string;
             function getBackgroundPosition(value: string, dimension: RectDimension, fontSize?: number, leftPerspective?: boolean, percent?: boolean): RectPosition;
             function getFirstChildElement(elements: Element | null, lineBreak?: boolean): Element | null;

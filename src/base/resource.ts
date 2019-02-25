@@ -250,7 +250,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                     break;
                                 case 'inherit':
                                 case 'currentcolor':
-                                    borderColor = $dom.cssInherit(node.element, `${attr}Color`);
+                                    borderColor = $dom.cssInheritStyle(node.element, `${attr}Color`);
                                     break;
                             }
                             const style = node.css(`${attr}Style`) || 'none';
@@ -290,7 +290,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                             break;
                         }
                         case 'backgroundColor':
-                            if (!node.has('backgroundColor') && (value === node.cssParent('backgroundColor', false, true) || node.documentParent.visible && $dom.cssFromParent(node.element, 'backgroundColor'))) {
+                            if (!node.has('backgroundColor') && (value === node.cssAscend('backgroundColor', false, true) || node.documentParent.visible && $dom.cssFromParent(node.element, 'backgroundColor'))) {
                                 boxStyle.backgroundColor = '';
                             }
                             else {
@@ -448,7 +448,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                 const color = $color.parseRGBA(node.css('color'), opacity);
                 let backgroundColor: ColorData | undefined;
                 if (!(backgroundImage ||
-                    node.css('backgroundColor') === node.cssParent('backgroundColor', false, true) && (node.plainText || node.style.backgroundColor !== node.cssInitial('backgroundColor')) ||
+                    node.css('backgroundColor') === node.cssAscend('backgroundColor', false, true) && (node.plainText || node.style.backgroundColor !== node.cssInitial('backgroundColor')) ||
                     node.documentParent.visible && !node.has('backgroundColor') && $dom.cssFromParent(node.element, 'backgroundColor')))
                 {
                     backgroundColor = $color.parseRGBA(node.css('backgroundColor'), opacity);

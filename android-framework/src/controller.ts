@@ -122,7 +122,7 @@ function getTextBottom<T extends View>(nodes: T[]): T | undefined {
 }
 
 function checkSingleLine<T extends View>(node: T, nowrap = false) {
-    if (node.textElement && node.cssParent('textAlign', true) !== 'center' && !node.hasWidth && !node.multiline && (nowrap || node.textContent.trim().split(String.fromCharCode(32)).length > 0)) {
+    if (node.textElement && node.cssAscend('textAlign', true) !== 'center' && !node.hasWidth && !node.multiline && (nowrap || node.textContent.trim().split(String.fromCharCode(32)).length > 0)) {
         node.android('singleLine', 'true');
     }
 }
@@ -751,7 +751,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         }
                         else {
                             for (const item of pageFlow) {
-                                if (item.autoMargin.leftRight || (item.inlineStatic && item.cssParent('textAlign', true) === 'center')) {
+                                if (item.autoMargin.leftRight || (item.inlineStatic && item.cssAscend('textAlign', true) === 'center')) {
                                     item.anchorParent(AXIS_ANDROID.HORIZONTAL);
                                 }
                                 else if (item.rightAligned) {

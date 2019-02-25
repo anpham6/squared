@@ -173,6 +173,55 @@ export function getKeyframeRules(): CSSRuleData {
     return result;
 }
 
+export function checkStyleAttribute(element: Element, attr: string, value: string, style?: CSSStyleDeclaration, fontSize?: number) {
+    if (style === undefined) {
+        style = getStyle(element);
+    }
+    if (value === 'inherit') {
+        value = cssInheritStyle(element.parentElement, attr);
+    }
+    if (value !== 'initial') {
+        if (value !== style[attr]) {
+            switch (attr) {
+                case 'backgroundColor':
+                case 'borderTopColor':
+                case 'borderRightColor':
+                case 'borderBottomColor':
+                case 'borderLeftColor':
+                case 'color':
+                case 'fontSize':
+                case 'fontWeight':
+                    return style[attr] || value;
+                case 'width':
+                case 'height':
+                case 'minWidth':
+                case 'maxWidth':
+                case 'minHeight':
+                case 'maxHeight':
+                case 'lineHeight':
+                case 'verticalAlign':
+                case 'textIndent':
+                case 'columnGap':
+                case 'top':
+                case 'right':
+                case 'bottom':
+                case 'left':
+                case 'marginTop':
+                case 'marginRight':
+                case 'marginBottom':
+                case 'marginLeft':
+                case 'paddingTop':
+                case 'paddingRight':
+                case 'paddingBottom':
+                case 'paddingLeft':
+                    return /^[A-Za-z\-]+$/.test(value) || isPercent(value) ? value : convertPX(value, fontSize);
+            }
+        }
+        return value;
+    }
+    return '';
+}
+
 export function getDataSet(element: Element | null, prefix: string) {
     const result: StringMap = {};
     if (hasComputedStyle(element)) {
@@ -316,6 +365,7 @@ export function getStyle(element: Element | null, cache = true): CSSStyleDeclara
             setElementCache(element, 'style', style);
             return style;
         }
+        return <CSSStyleDeclaration> {};
     }
     return <CSSStyleDeclaration> { display: 'none' };
 }
@@ -332,7 +382,7 @@ export function cssResolveUrl(value: string) {
     return '';
 }
 
-export function cssInherit(element: Element | null, attr: string, exclude?: string[], tagNames?: string[]) {
+export function cssInheritStyle(element: Element | null, attr: string, exclude?: string[], tagNames?: string[]) {
     let result = '';
     if (element) {
         let current = element.parentElement;
@@ -341,7 +391,7 @@ export function cssInherit(element: Element | null, attr: string, exclude?: stri
             if (result === 'inherit' || exclude && exclude.some(value => result.indexOf(value) !== -1)) {
                 result = '';
             }
-            if (current === document.body || result) {
+            if (result !== '' || current === document.body) {
                 break;
             }
             current = current.parentElement;

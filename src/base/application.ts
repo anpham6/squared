@@ -1953,73 +1953,24 @@ export default class Application<T extends Node> implements squared.base.Applica
 
     private applyStyleRule(item: CSSStyleRule) {
         const clientFirefox = $dom.isUserAgent($dom.USER_AGENT.FIREFOX);
-        const common = new Set<string>();
+        const fromRule: string[] = [];
         for (const attr of Array.from(item.style)) {
-            common.add($util.convertCamelCase(attr));
+            fromRule.push($util.convertCamelCase(attr));
         }
         document.querySelectorAll(item.selectorText).forEach((element: HTMLElement) => {
-            const applied = new Set(common);
-            for (const attr of Array.from(element.style)) {
-                applied.add($util.convertCamelCase(attr));
-            }
             const style = $dom.getStyle(element);
             const fontSize = parseInt($util.convertPX(style.fontSize || '16px', 0));
             const styleMap: StringMap = {};
-            for (const attr of applied) {
-                if (element.style[attr]) {
-                    styleMap[attr] = element.style[attr];
+            for (const attr of fromRule) {
+                const value = $dom.checkStyleAttribute(element, attr, item.style[attr], style, fontSize);
+                if (value !== '') {
+                    styleMap[attr] = value;
                 }
-                else {
-                    const value: string = item.style[attr];
-                    if (value !== 'initial') {
-                        const computedValue = style[attr] || '';
-                        if (value === computedValue) {
-                            styleMap[attr] = value;
-                        }
-                        else {
-                            switch (attr) {
-                                case 'backgroundColor':
-                                case 'borderTopColor':
-                                case 'borderRightColor':
-                                case 'borderBottomColor':
-                                case 'borderLeftColor':
-                                case 'color':
-                                case 'fontSize':
-                                case 'fontWeight':
-                                    styleMap[attr] = computedValue || value;
-                                    break;
-                                case 'width':
-                                case 'height':
-                                case 'minWidth':
-                                case 'maxWidth':
-                                case 'minHeight':
-                                case 'maxHeight':
-                                case 'lineHeight':
-                                case 'verticalAlign':
-                                case 'textIndent':
-                                case 'columnGap':
-                                case 'top':
-                                case 'right':
-                                case 'bottom':
-                                case 'left':
-                                case 'marginTop':
-                                case 'marginRight':
-                                case 'marginBottom':
-                                case 'marginLeft':
-                                case 'paddingTop':
-                                case 'paddingRight':
-                                case 'paddingBottom':
-                                case 'paddingLeft':
-                                    styleMap[attr] = /^[A-Za-z\-]+$/.test(value) || $util.isPercent(value) ? value : $util.convertPX(value, fontSize);
-                                    break;
-                                default:
-                                    if (styleMap[attr] === undefined) {
-                                        styleMap[attr] = value;
-                                    }
-                                    break;
-                            }
-                        }
-                    }
+            }
+            for (const attr of Array.from(element.style)) {
+                const value = $dom.checkStyleAttribute(element, attr, element.style[attr], style, fontSize);
+                if (value !== '') {
+                    styleMap[attr] = value;
                 }
             }
             if (this.userSettings.preloadImages && $util.hasValue(styleMap.backgroundImage) && styleMap.backgroundImage !== 'initial') {

@@ -259,11 +259,11 @@ function getViewport(element: SVGGraphicsElement) {
     return result;
 }
 
-function getParentOffset(element: SVGGraphicsElement, baseElement: SVGGraphicsElement) {
+function getParentOffset(element: SVGGraphicsElement, rootElement: SVGGraphicsElement) {
     let x = 0;
     let y = 0;
     for (const parent of getViewport(element)) {
-        if (($utilS.SVG.svg(parent) || $utilS.SVG.use(parent)) && parent !== baseElement) {
+        if (($utilS.SVG.svg(parent) || $utilS.SVG.use(parent)) && parent !== rootElement) {
             x += parent.x.baseVal.value;
             y += parent.y.baseVal.value;
         }
@@ -387,8 +387,8 @@ function getPropertyValue(values: string[] | (string | number)[][], index: numbe
     return result || '';
 }
 
-function getValueType(attributeName: string) {
-    switch (attributeName) {
+function getValueType(attr: string) {
+    switch (attr) {
         case 'fill':
         case 'stroke':
             return '';
@@ -418,7 +418,7 @@ function getValueType(attributeName: string) {
         case 'points':
             return 'pathType';
         default:
-            if (getTransformInitialValue(attributeName)) {
+            if (getTransformInitialValue(attr)) {
                 return 'floatType';
             }
             return undefined;
@@ -821,7 +821,13 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                             let propertyNames: string[] | undefined;
                                             let values: string[] | number[][] | undefined;
                                             const beforeValues: string[] = [];
-                                            if ($SvgBuild.asAnimateTransform(item)) {
+                                            if (options.valueType === 'pathType') {
+                                                if (group.pathData) {
+                                                    propertyNames = ['pathData'];
+                                                    values = $SvgPath.extrapolate(group.pathData, item.attributeName, item.values, this.options.floatPrecisionValue, item.parent && item.parent.element);
+                                                }
+                                            }
+                                            else if ($SvgBuild.asAnimateTransform(item)) {
                                                 propertyNames = getTransformPropertyName(item.type);
                                                 if (propertyNames === undefined) {
                                                     continue;
@@ -832,12 +838,6 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                 }
                                                 transformOrigin = item.transformOrigin;
                                                 transforming = true;
-                                            }
-                                            else if (options.valueType === 'pathType') {
-                                                if (group.pathData) {
-                                                    propertyNames = ['pathData'];
-                                                    values = $SvgPath.extrapolate(group.pathData, item.attributeName, item.values, this.options.floatPrecisionValue, item.parent && item.parent.element);
-                                                }
                                             }
                                             else {
                                                 propertyNames = getAttributePropertyName(item.attributeName);
@@ -881,7 +881,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                 for (let i = 0; i < propertyNames.length; i++) {
                                                     const propertyName = propertyNames[i];
                                                     if (fillBefore && beforeValues[i]) {
-                                                        insertBeforeValue(propertyName, beforeValues[i].toString());
+                                                        insertBeforeValue(propertyName, beforeValues[i]);
                                                     }
                                                     if (useKeyFrames && item.keyTimes.length > 1) {
                                                         if (supportedKeyFrames && options.valueType !== 'pathType') {

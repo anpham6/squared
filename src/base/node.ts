@@ -28,7 +28,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public positioned = false;
     public renderExtension = new Set<Extension<T>>();
     public controlId = '';
-    public style: CSSStyleDeclaration;
+    public style!: CSSStyleDeclaration;
     public companion?: T;
 
     public abstract readonly localSettings: {};
@@ -52,7 +52,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     protected abstract readonly _boxAdjustment: BoxModel;
     protected abstract readonly _boxReset: BoxModel;
 
-    private _initialized = false;
     private _renderDepth = -1;
     private _data = {};
     private _excludeSection = 0;
@@ -72,7 +71,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             this._element = element;
             this.init();
         }
-        this.style = $dom.hasComputedStyle(element) ? $dom.getStyle(element) : <CSSStyleDeclaration> {};
+        else {
+            this.style = <CSSStyleDeclaration> {};
+        }
     }
 
     public abstract setControlType(viewName: string, containerType?: number): void;
@@ -92,19 +93,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public abstract get support(): Support;
 
     public init() {
-        if (!this._initialized) {
-            if (this.styleElement) {
-                const element = <HTMLElement> this._element;
-                const styleMap = $dom.getElementCache(element, 'styleMap') || {};
-                for (const attr of Array.from(element.style)) {
-                    styleMap[$util.convertCamelCase(attr)] = element.style[attr];
-                }
-                this._styleMap = { ...styleMap };
-            }
-            if (this._element) {
-                $dom.setElementCache(this._element, 'node', this);
-            }
-            this._initialized = true;
+        if (this.styleElement) {
+            this._styleMap = $dom.getElementCache(<HTMLElement> this._element, 'styleMap') || {};
+        }
+        if (this._element) {
+            $dom.setElementCache(this._element, 'node', this);
+            this.style = $dom.getElementCache(this._element, 'style') || $dom.getStyle(this._element, false);
         }
     }
 
@@ -453,9 +447,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     this.unsetCache(attr);
                 }
             }
-            else if (this._styleMap[attr] === 'inherit' && this._element) {
-                return $dom.cssInheritAttribute(this._element.parentElement, attr);
-            }
             return this._styleMap[attr] || this.style && this.style[attr] || '';
         }
     }
@@ -471,15 +462,20 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return value || '';
     }
 
-    public cssParent(attr: string, childStart = false, visible = false) {
+    public cssAscend(attr: string, startChild = false, visible = false) {
         let result = '';
-        let current = childStart ? this : this.actualParent;
+        let current = startChild ? this : this.actualParent;
         while (current) {
             result = current.cssInitial(attr);
-            if (result || current.documentBody) {
+            if (result !== '') {
                 if (visible && !current.visible) {
                     result = '';
                 }
+                else {
+                    break;
+                }
+            }
+            if (current.documentBody) {
                 break;
             }
             current = current.actualParent;
@@ -611,7 +607,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 case 'rgba(0, 0, 0, 0)':
                     return false;
                 case 'inherit':
-                    return this.documentParent.has(attr, checkType, options);
+                    return this.documentBody ? false : this.documentParent.has(attr, checkType, options);
                 default:
                     if (options) {
                         if (options.not) {
@@ -1198,7 +1194,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 this._cached.lineHeight = this.toInt('lineHeight');
             }
             else {
-                const lineHeight = $util.convertInt(this.cssParent('lineHeight', true));
+                const lineHeight = $util.convertInt(this.cssAscend('lineHeight', true));
                 this._cached.lineHeight = lineHeight > this.bounds.height || this.some(node => node.plainText) ? lineHeight : 0;
             }
         }
@@ -1228,8 +1224,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     case 'relative':
                         return this.toInt('top') === 0 && this.toInt('right') === 0 && this.toInt('bottom') === 0 && this.toInt('left') === 0;
                     case 'inherit':
-                        const actualParent = this.actualParent;
-                        return actualParent !== undefined && !(actualParent.position === 'absolute' || actualParent.position === 'fixed');
+                        const position = this._element ? $dom.cssInheritAttribute(this._element.parentElement, 'position') : '';
+                        return position !== '' && !(position === 'absolute' || position === 'fixed');
                     default:
                         return true;
                 }
@@ -1453,7 +1449,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             this._cached.rightAligned = (
                 this.float === 'right' ||
                 this.autoMargin.left ||
-                this.inlineVertical && this.cssParent('textAlign', true) === 'right' ||
+                this.inlineVertical && this.cssAscend('textAlign', true) === 'right' ||
                 !this.pageFlow && this.has('right')
             );
         }

@@ -662,7 +662,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                         }
                     }
                 }
-                const textAlignParent = checkTextAlign(this.cssParent('textAlign'));
+                const textAlignParent = checkTextAlign(this.cssAscend('textAlign'));
                 if (textAlignParent !== '' && textAlignParent !== 'left' && textAlignParent !== 'start') {
                     if (renderParent.layoutFrame && this.pageFlow && !this.floating && !this.autoMargin.horizontal && !this.blockWidth) {
                         this.mergeGravity('layout_gravity', textAlignParent);
@@ -762,7 +762,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                 this.autoSizeBoxModel();
                 this.alignHorizontalLayout();
                 this.alignVerticalLayout();
-                switch (this.cssParent('visibility', true)) {
+                switch (this.cssAscend('visibility', true)) {
                     case 'hidden':
                     case 'collapse':
                         this.hide(true);
