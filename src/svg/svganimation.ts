@@ -57,7 +57,9 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     public synchronizeState = 0;
     public parent?: squared.svg.SvgView | squared.svg.SvgPath;
     public baseValue?: string;
+    public replaceValue?: string;
     public id?: number;
+    public companion?: NumberValue<SvgAnimation>;
 
     private _attributeName = '';
     private _duration = -1;

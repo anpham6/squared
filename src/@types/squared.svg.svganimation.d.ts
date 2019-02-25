@@ -17,9 +17,11 @@ declare global {
             synchronizeState: number;
             group: SvgAnimationGroup;
             setterType: boolean;
-            id?: number;
             parent?: SvgView | SvgPath;
             baseValue?: string;
+            replaceValue?: string;
+            id?: number;
+            companion?: NumberValue<SvgAnimation>;
             readonly instanceType: number;
             readonly fillReplace: boolean;
             setAttribute(attr: string, equality?: string): void;
@@ -44,7 +46,6 @@ declare global {
             timingFunction?: string;
             by?: number;
             end?: number;
-            replaceValue?: string;
             synchronized?: NumberValue<string>;
             readonly playable: boolean;
             readonly valueTo: string;

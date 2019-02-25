@@ -143,7 +143,6 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public evaluateStart = false;
     public by?: number;
     public end?: number;
-    public replaceValue?: string;
     public synchronized?: NumberValue<string>;
 
     private _iterationCount = 1;
