@@ -50,15 +50,15 @@ interface GroupTemplateData extends TemplateDataAA {
 }
 
 interface SetTemplateData extends SetOrdering, TemplateDataAA {
-    AA: AnimatorTemplateData[];
+    AA: AnimatorTemplateData<boolean>[];
     BB: TogetherTemplateData[];
 }
 
-interface AnimatorTemplateData extends SetOrdering, TemplateDataAAA {
-    fillBefore: FillTemplateData[] | false;
+interface AnimatorTemplateData<T> extends SetOrdering, TemplateDataAAA {
+    fillBefore: T extends true ? FillTemplateData[] : false;
     repeating: PropertyValue[];
-    fillCustom: FillTemplateData[] | false;
-    fillAfter: FillTemplateData[] | false;
+    fillCustom: T extends true ? FillTemplateData[] : false;
+    fillAfter: T extends true ? FillTemplateData[] : false;
 }
 
 interface FillTemplateData extends SetOrdering, ExternalData {
@@ -726,7 +726,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                     fillBefore = index > 1 && $SvgBuild.asAnimateTransform(items[0]);
                                     useKeyFrames = true;
                                 }
-                                const animatorData: AnimatorTemplateData = {
+                                const animatorData: AnimatorTemplateData<true> = {
                                     ordering,
                                     fillBefore: [],
                                     repeating: [],
@@ -748,7 +748,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                             continue;
                                         }
                                         const insertBeforeValue = (attr: string, value: string) => {
-                                            if (value && fillBeforeData.values.findIndex(before => before.propertyName === attr) === -1) {
+                                            if (value !== '' && fillBeforeData.values.findIndex(before => before.propertyName === attr) === -1) {
                                                 fillBeforeData.values.push(this.createPropertyValue(attr, value, '0', valueType));
                                             }
                                         };
@@ -829,14 +829,14 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                             setFillAfter(propertyNames[i], fillAfterData, undefined, index > 1 ? item.duration : 0);
                                                         }
                                                         else {
-                                                            if (item.companion && item.companion.index <= 0 && animatorData.fillBefore) {
+                                                            if (item.companion && item.companion.index <= 0) {
                                                                 if (companionBefore === undefined) {
                                                                     companionBefore = { values: [] };
                                                                     animatorData.fillBefore.push(companionBefore);
                                                                 }
                                                                 companionBefore.values.push(propertyValue);
                                                             }
-                                                            else if (item.companion && item.companion.index > 0 && animatorData.fillAfter) {
+                                                            else if (item.companion && item.companion.index > 0) {
                                                                 if (companionAfter === undefined) {
                                                                     companionAfter = { values: [] };
                                                                     animatorData.fillAfter.push(companionAfter);
@@ -895,7 +895,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                     case 'intType':
                                                         values = $util.objectMap<string, string>(item.values, value => $util.convertInt(value).toString());
                                                         if (requireBefore && item.baseValue) {
-                                                            beforeValues.push(...$util.replaceMap<number, string>($SvgBuild.toNumberList(item.baseValue), value => Math.trunc(value).toString()));
+                                                            beforeValues.push(...$util.replaceMap<number, string>($SvgBuild.parseCoordinates(item.baseValue), value => Math.trunc(value).toString()));
                                                         }
                                                         break;
                                                     case 'floatType':
@@ -908,7 +908,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                 break;
                                                         }
                                                         if (requireBefore && item.baseValue) {
-                                                            beforeValues.push(...$util.replaceMap<number, string>($SvgBuild.toNumberList(item.baseValue), value => value.toString()));
+                                                            beforeValues.push(...$util.replaceMap<number, string>($SvgBuild.parseCoordinates(item.baseValue), value => value.toString()));
                                                         }
                                                         break;
                                                     default:
@@ -935,6 +935,9 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                     }
                                                     if (useKeyFrames && item.keyTimes.length > 1) {
                                                         if (supportedKeyFrames && options.valueType !== 'pathType') {
+                                                            if (!fillBefore && requireBefore) {
+                                                                insertBeforeValue(propertyName, beforeValues[i]);
+                                                            }
                                                             const propertyValues = animatorMap.get(keyName) || [];
                                                             const keyframes: KeyFrame[] = [];
                                                             for (let j = 0; j < item.keyTimes.length; j++) {
@@ -958,7 +961,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                             transformOrigin = undefined;
                                                         }
                                                         else {
-                                                            const translateData: AnimatorTemplateData = {
+                                                            const translateData: AnimatorTemplateData<false> = {
                                                                 ordering: 'sequentially',
                                                                 fillBefore: false,
                                                                 repeating: [],
@@ -1066,50 +1069,31 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                     }
                                 });
                                 const valid = animatorData.repeating.length > 0 || fillCustomData.values.length > 0;
-                                if (valid && animatorData.fillBefore) {
-                                    switch (fillBeforeData.values.length) {
-                                        case 0:
-                                            if (animatorData.fillBefore.length === 0) {
-                                                animatorData.fillBefore = false;
-                                            }
-                                            break;
-                                        case 1:
-                                            animatorData.repeating.unshift(fillBeforeData.values[0]);
-                                            break;
-                                        default:
-                                            animatorData.fillBefore.push(fillBeforeData);
-                                            break;
+                                if (valid && fillBeforeData.values.length) {
+                                    if (fillBeforeData.values.length === 1) {
+                                        animatorData.repeating.unshift(fillBeforeData.values[0]);
+                                    }
+                                    else {
+                                        animatorData.fillBefore.push(fillBeforeData);
                                     }
                                 }
-                                if (animatorData.fillCustom) {
-                                    switch (fillCustomData.values.length) {
-                                        case 0:
-                                            animatorData.fillCustom = false;
-                                            break;
-                                        case 1:
-                                            animatorData.repeating.push(fillCustomData.values[0]);
-                                            break;
-                                        default:
-                                            animatorData.fillCustom.push(fillCustomData);
-                                            break;
+                                if (fillCustomData.values.length) {
+                                    if (fillBeforeData.values.length === 1) {
+                                        animatorData.repeating.push(fillCustomData.values[0]);
+                                    }
+                                    else {
+                                        animatorData.fillCustom.push(fillCustomData);
                                     }
                                 }
-                                if (valid && animatorData.fillAfter) {
-                                    switch (fillAfterData.values.length) {
-                                        case 0:
-                                            if (animatorData.fillAfter.length === 0) {
-                                                animatorData.fillAfter = false;
-                                            }
-                                            break;
-                                        case 1:
-                                            animatorData.repeating.push(fillAfterData.values[0]);
-                                            break;
-                                        default:
-                                            animatorData.fillAfter.push(fillAfterData);
-                                            break;
+                                if (valid && fillAfterData.values.length) {
+                                    if (fillAfterData.values.length === 1) {
+                                        animatorData.repeating.push(fillAfterData.values[0]);
+                                    }
+                                    else {
+                                        animatorData.fillAfter.push(fillAfterData);
                                     }
                                 }
-                                const filled = animatorData.fillBefore || animatorData.fillCustom || animatorData.fillAfter;
+                                const filled = animatorData.fillBefore.length > 0 || animatorData.fillCustom.length > 0 || animatorData.fillAfter.length > 0;
                                 if (!filled && animatorData.ordering === 'sequentially' && animatorData.repeating.length === 1) {
                                     animatorData.ordering = '';
                                 }

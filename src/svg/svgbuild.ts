@@ -190,7 +190,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             if (result.length === 0 && match[1].toUpperCase() !== 'M') {
                 break;
             }
-            const coordinates = SvgBuild.toNumberList((match[2] || '').trim());
+            const coordinates = SvgBuild.parseCoordinates((match[2] || '').trim());
             let previousCommand: string | undefined;
             let previousPoint: Point | undefined;
             if (result.length) {
@@ -568,7 +568,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return { x: (result[0] + result[2]) / 2, y: (result[1] + result[3]) / 2 };
     }
 
-    public static convertNumbers(values: number[]) {
+    public static convertPoints(values: number[]) {
         const result: Point[] = [];
         for (let i = 0; i < values.length; i += 2) {
             result.push({ x: values[i], y: values[i + 1] });
@@ -576,7 +576,16 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result.length % 2 === 0 ? result : [];
     }
 
-    public static toNumberList(value: string) {
+    public static parsePoints(value: string) {
+        const result: Point[] = [];
+        for (const coords of value.trim().split(/\s+/)) {
+            const [x, y] = $util.replaceMap<string, number>(coords.split(','), pt => parseFloat(pt));
+            result.push({ x, y });
+        }
+        return result;
+    }
+
+    public static parseCoordinates(value: string) {
         const result: number[] = [];
         const pattern = /-?[\d.]+/g;
         let match: RegExpExecArray | null;
@@ -589,16 +598,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
-    public static toPointList(value: string) {
-        const result: Point[] = [];
-        for (const coords of value.trim().split(/\s+/)) {
-            const [x, y] = $util.replaceMap<string, number>(coords.split(','), pt => parseFloat(pt));
-            result.push({ x, y });
-        }
-        return result;
-    }
-
-    public static toBoxRect(values: string[]): BoxRect {
+    public static parseBoxRect(values: string[]): BoxRect {
         const points: SvgPoint[] = [];
         for (const value of values) {
             points.push(...SvgBuild.extractPathPoints(SvgBuild.getPathCommands(value), true));

@@ -62,15 +62,15 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
                 }
                 let maxCount = 0;
                 let i = 0;
-                for (const segment of map.values()) {
-                    const group = controller.createNodeGroup(segment[0], segment, node);
+                for (const seg of map.values()) {
+                    const group = controller.createNodeGroup(seg[0], seg, node);
                     group.siblingIndex = i++;
                     const box = group.unsafe('box');
                     if (box) {
                         box[size] = node.box[size];
                     }
                     group.alignmentType |= NODE_ALIGNMENT.SEGMENTED;
-                    maxCount = Math.max(segment.length, maxCount);
+                    maxCount = Math.max(seg.length, maxCount);
                 }
                 node.sort(NodeList.siblingIndex);
                 if (mainData.rowDirection) {

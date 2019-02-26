@@ -43,13 +43,13 @@ function parseAttribute(element: SVGElement, attr: string) {
         while (value !== '') {
             let index = value.indexOf(',');
             if (index !== -1) {
-                let segment = value.substring(0, index);
-                if (segment.startsWith('steps') || segment.startsWith('cubic-bezier')) {
+                let seg = value.substring(0, index);
+                if (seg.startsWith('steps') || seg.startsWith('cubic-bezier')) {
                     const nextIndex = value.indexOf(')', index) + 1;
-                    segment += value.substring(index, nextIndex);
+                    seg += value.substring(index, nextIndex);
                     index = nextIndex;
                 }
-                result.push(segment);
+                result.push(seg);
                 value = value.substring(index + 1).trim();
             }
             else {
@@ -339,7 +339,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 const keySplinesData: string[] = [];
                                 for (let j = 0; j < keyTimes.length; j++) {
                                     if (j < keyTimes.length - 1) {
-                                        const segmentDuration = (keyTimes[j + 1] - keyTimes[j]) * duration;
+                                        const segDuration = (keyTimes[j + 1] - keyTimes[j]) * duration;
                                         if (KEYSPLINE_NAME[keySplines[j]]) {
                                             keySplines[j] = KEYSPLINE_NAME[keySplines[j]];
                                         }
@@ -349,7 +349,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                                 if (steps) {
                                                     const offset = keyTimes[j + 1] === 1 ? 1 : 0;
                                                     for (let k = 0; k < steps[0].length - offset; k++) {
-                                                        let keyTime = (keyTimes[j] + steps[0][k] * segmentDuration) / duration;
+                                                        let keyTime = (keyTimes[j] + steps[0][k] * segDuration) / duration;
                                                         if (keyTimesData.includes(keyTime)) {
                                                             keyTime += 1 / duration;
                                                         }

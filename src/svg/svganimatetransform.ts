@@ -15,13 +15,13 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                 result.push([0, 0, 0]);
             }
             else {
-                const segment = SvgBuild.toNumberList(value);
-                if (segment.length === 1) {
-                    segment[1] = 0;
-                    segment[2] = 0;
+                const seg = SvgBuild.parseCoordinates(value);
+                if (seg.length === 1) {
+                    seg[1] = 0;
+                    seg[2] = 0;
                 }
-                if (segment.length === 3) {
-                    result.push(segment);
+                if (seg.length === 3) {
+                    result.push(seg);
                 }
                 else {
                     return undefined;
@@ -38,16 +38,16 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                 result.push([1, 1, 0, 0]);
             }
             else {
-                const segment = SvgBuild.toNumberList(value);
-                if (segment.length === 1) {
-                    segment[1] = segment[0];
+                const seg = SvgBuild.parseCoordinates(value);
+                if (seg.length === 1) {
+                    seg[1] = seg[0];
                 }
-                if (segment.length === 2) {
-                    segment[2] = 0;
-                    segment[3] = 0;
+                if (seg.length === 2) {
+                    seg[2] = 0;
+                    seg[3] = 0;
                 }
-                if (segment.length === 4) {
-                    result.push(segment);
+                if (seg.length === 4) {
+                    result.push(seg);
                 }
                 else {
                     return undefined;
@@ -64,12 +64,12 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                 result.push([0, 0]);
             }
             else {
-                const segment = SvgBuild.toNumberList(value);
-                if (segment.length === 1) {
-                    segment[1] = 0;
+                const seg = SvgBuild.parseCoordinates(value);
+                if (seg.length === 1) {
+                    seg[1] = 0;
                 }
-                if (segment.length === 2) {
-                    result.push(segment);
+                if (seg.length === 2) {
+                    result.push(seg);
                 }
                 else {
                     return undefined;
@@ -86,9 +86,9 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                 result.push([0]);
             }
             else {
-                const segment = SvgBuild.toNumberList(value);
-                if (segment.length === 1) {
-                    result.push(segment);
+                const seg = SvgBuild.parseCoordinates(value);
+                if (seg.length === 1) {
+                    result.push(seg);
                 }
                 else {
                     return undefined;

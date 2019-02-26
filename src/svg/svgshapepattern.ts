@@ -48,7 +48,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
             }
             const d = [path.value];
             this.setPaint(d, precision);
-            this.drawRegion = SvgBuild.toBoxRect(d);
+            this.drawRegion = SvgBuild.parseBoxRect(d);
             const boundingBox = this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX;
             const patternWidth = this.patternWidth;
             const patternHeight = this.patternHeight;

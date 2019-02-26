@@ -143,7 +143,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
             [chainHorizontal, chainVertical].forEach((partition, index) => {
                 const horizontal = index === 0;
                 const inverse = horizontal ? 1 : 0;
-                for (const segment of partition) {
+                for (const seg of partition) {
                     const HW = CHAIN_MAP.widthHeight[inverse];
                     const HWL = HW.toLowerCase();
                     const LT = CHAIN_MAP.leftTop[index];
@@ -151,19 +151,19 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     const RB = CHAIN_MAP.rightBottom[index];
                     const BR = CHAIN_MAP.rightBottom[inverse];
                     let maxSize = Number.NEGATIVE_INFINITY;
-                    $util.captureMap(segment, item => !item.flexElement, item => maxSize = Math.max(maxSize, item.bounds[HW.toLowerCase()]));
+                    $util.captureMap(seg, item => !item.flexElement, item => maxSize = Math.max(maxSize, item.bounds[HW.toLowerCase()]));
                     let baseline: T | undefined;
-                    for (let i = 0; i < segment.length; i++) {
-                        const chain = segment[i];
-                        const previous = segment[i - 1];
-                        const next = segment[i + 1];
+                    for (let i = 0; i < seg.length; i++) {
+                        const chain = seg[i];
+                        const previous = seg[i - 1];
+                        const next = seg[i + 1];
                         if (next) {
                             chain.anchor(CHAIN_MAP.rightLeftBottomTop[index], next.documentId);
                         }
                         if (previous) {
                             chain.anchor(CHAIN_MAP.leftRightTopBottom[index], previous.documentId);
                         }
-                        if (segment !== basicHorizontal && segment !== basicVertical) {
+                        if (seg !== basicHorizontal && seg !== basicVertical) {
                             switch (chain.flexbox.alignSelf) {
                                 case 'start':
                                 case 'flex-start':
@@ -176,7 +176,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 case 'baseline':
                                     if (horizontal) {
                                         if (baseline === undefined) {
-                                            baseline = $NodeList.baseline(segment)[0];
+                                            baseline = $NodeList.baseline(seg)[0];
                                         }
                                         if (baseline) {
                                             if (chain !== baseline) {
@@ -211,12 +211,12 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         chain.positioned = true;
                     }
                     const HV = CHAIN_MAP.horizontalVertical[index];
-                    const chainStart = segment[0];
-                    const chainEnd = segment[segment.length - 1];
+                    const chainStart = seg[0];
+                    const chainEnd = seg[seg.length - 1];
                     const chainStyle = `layout_constraint${HV}_chainStyle`;
                     chainStart.anchor(LT, 'parent');
                     chainEnd.anchor(RB, 'parent');
-                    if (segment.every(item => item.flexbox.grow < 1)) {
+                    if (seg.every(item => item.flexbox.grow < 1)) {
                         switch (mainData.justifyContent) {
                             case 'left':
                                 if (!horizontal) {
@@ -245,7 +245,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 break;
                             case 'space-evenly':
                                 chainStart.app(chainStyle, 'spread');
-                                for (const item of segment) {
+                                for (const item of seg) {
                                     item.app(`layout_constraint${HV}_weight`, (item.flexbox.grow || 1).toString());
                                 }
                                 break;
@@ -260,7 +260,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 break;
                         }
                     }
-                    if (segment.length > 1 && (horizontal && $util.withinFraction(node.box.left, chainStart.linear.left) && $util.withinFraction(chainEnd.linear.right, node.box.right) || !horizontal && $util.withinFraction(node.box.top, chainStart.linear.top) && $util.withinFraction(chainEnd.linear.bottom, node.box.bottom))) {
+                    if (seg.length > 1 && (horizontal && $util.withinFraction(node.box.left, chainStart.linear.left) && $util.withinFraction(chainEnd.linear.right, node.box.right) || !horizontal && $util.withinFraction(node.box.top, chainStart.linear.top) && $util.withinFraction(chainEnd.linear.bottom, node.box.bottom))) {
                         chainStart.app(chainStyle, 'spread_inside', false);
                     }
                     else {

@@ -24,7 +24,7 @@ declare global {
             getAnimateShape(element: SVGGraphicsElement, animations?: SvgAnimation[]): SvgAnimate[];
             getAnimateViewRect(animations?: SvgAnimation[]): SvgAnimate[];
             getAnimateTransform(animations?: SvgAnimation[]): SvgAnimateTransform[];
-            mergeAnimations(animations?: SvgAnimation[], transformations?: SvgAnimateTransform[], keyTimeMode?: number, precision?: number, path?: SvgPath): void;
+            animateSequentially(animations?: SvgAnimation[], transformations?: SvgAnimateTransform[], path?: SvgPath, keyTimeMode?: number, precision?: number): void;
         }
 
         interface SvgViewRect extends SvgRect, SvgBaseVal {
@@ -96,15 +96,15 @@ declare global {
             public static filterTransforms(transforms: SvgTransform[], exclude?: number[]): SvgTransform[];
             public static applyTransforms(transforms: SvgTransform[], values: Point[], aspectRatio?: SvgAspectRatio, origin?: Point): SvgPoint[];
             public static convertTransforms(transforms: SVGTransformList): SvgTransform[];
+            public static extractPathPoints(values: SvgPathCommand[], radius?: boolean): SvgPoint[];
+            public static rebindPathPoints(values: SvgPathCommand[], points: SvgPoint[]): SvgPathCommand[];
             public static clonePoints(values: SvgPoint[] | SVGPointList): SvgPoint[];
             public static minMaxPoints(values: Point[]): number[];
             public static centerPoints(values: Point[]): Point[];
-            public static convertNumbers(values: number[]): Point[];
-            public static extractPathPoints(values: SvgPathCommand[], radius?: boolean): SvgPoint[];
-            public static rebindPathPoints(values: SvgPathCommand[], points: SvgPoint[]): SvgPathCommand[];
-            public static toPointList(value: string): Point[];
-            public static toNumberList(value: string): number[];
-            public static toBoxRect(value: string): BoxRect;
+            public static convertPoints(values: number[]): Point[];
+            public static parsePoints(value: string): Point[];
+            public static parseCoordinates(value: string): number[];
+            public static parseBoxRect(value: string): BoxRect;
         }
     }
 }

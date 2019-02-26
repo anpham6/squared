@@ -66,7 +66,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         }
                         else if (d && d.length) {
                             const fontSize = $dom.getFontSize(this.element);
-                            const boxRect = SvgBuild.toBoxRect(d);
+                            const boxRect = SvgBuild.parseBoxRect(d);
                             const width = boxRect.right - boxRect.left;
                             const height = boxRect.bottom - boxRect.top;
                             const parent = this.parent;

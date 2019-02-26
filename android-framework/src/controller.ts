@@ -25,15 +25,15 @@ const $xml = squared.lib.xml;
 const GUIDELINE_AXIS = [AXIS_ANDROID.HORIZONTAL, AXIS_ANDROID.VERTICAL];
 
 function createColumnLayout<T extends View>(partition: T[][], horizontal: boolean) {
-    for (const segment of partition) {
-        const rowStart = segment[0];
-        const rowEnd = segment[segment.length - 1];
+    for (const seg of partition) {
+        const rowStart = seg[0];
+        const rowEnd = seg[seg.length - 1];
         rowStart.anchor(horizontal ? 'left' : 'top', 'parent');
         rowEnd.anchor(horizontal ? 'right' : 'bottom', 'parent');
-        for (let i = 0; i < segment.length; i++) {
-            const chain = segment[i];
-            const previous = segment[i - 1] as T | undefined;
-            const next = segment[i + 1] as T | undefined;
+        for (let i = 0; i < seg.length; i++) {
+            const chain = seg[i];
+            const previous = seg[i - 1] as T | undefined;
+            const next = seg[i + 1] as T | undefined;
             if (horizontal) {
                 chain.app('layout_constraintVertical_bias', '0');
             }
@@ -1373,11 +1373,11 @@ export default class Controller<T extends View> extends squared.base.Controller<
         let rowPreviousBottom: T | undefined;
         const [right, left] = $util.partitionArray(children, item => item.float === 'right');
         sortHorizontalFloat(left);
-        for (const segment of [left, right]) {
-            const alignParent = segment === left ? 'left' : 'right';
-            for (let i = 0; i < segment.length; i++) {
-                const item = segment[i];
-                const previous = segment[i - 1];
+        for (const seg of [left, right]) {
+            const alignParent = seg === left ? 'left' : 'right';
+            for (let i = 0; i < seg.length; i++) {
+                const item = seg[i];
+                const previous = seg[i - 1];
                 let dimension = item.bounds;
                 if (item.element && !item.hasWidth && item.inlineText) {
                     const bounds = $dom.getRangeClientRect(item.element);
@@ -1391,7 +1391,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         }
                     }
                 }
-                let alignSibling = segment === left ? 'leftRight' : 'rightLeft';
+                let alignSibling = seg === left ? 'leftRight' : 'rightLeft';
                 let siblings: Element[] = [];
                 if (i === 0) {
                     item.anchor(alignParent, 'true');
@@ -1750,14 +1750,14 @@ export default class Controller<T extends View> extends squared.base.Controller<
             chainEnd = 'rightLeft';
         }
         for (let i = 0; i < chainHorizontal.length; i++) {
-            const segment = chainHorizontal[i];
-            const rowStart = segment[0];
-            const rowEnd = segment[segment.length - 1];
+            const seg = chainHorizontal[i];
+            const rowStart = seg[0];
+            const rowEnd = seg[seg.length - 1];
             rowStart.anchor(anchorStart, 'parent');
             if (boxParent.css('textAlign') === 'center') {
                 rowStart.app('layout_constraintHorizontal_chainStyle', 'spread');
             }
-            else if (segment.length > 1) {
+            else if (seg.length > 1) {
                 if (reverse) {
                     rowEnd.app('layout_constraintHorizontal_chainStyle', 'packed');
                     rowEnd.app('layout_constraintHorizontal_bias', '1');
@@ -1767,7 +1767,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     rowStart.app('layout_constraintHorizontal_bias', '0');
                 }
             }
-            if (segment.length > 1) {
+            if (seg.length > 1) {
                 rowEnd.anchor(anchorEnd, 'parent');
             }
             let previousRowBottom: T | undefined;
@@ -1780,10 +1780,10 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     }
                 }
             }
-            for (let j = 0; j < segment.length; j++) {
-                const chain = segment[j];
-                const previous = segment[j - 1];
-                const next = segment[j + 1];
+            for (let j = 0; j < seg.length; j++) {
+                const chain = seg[j];
+                const previous = seg[j - 1];
+                const next = seg[j + 1];
                 if (chain.autoMargin.leftRight) {
                     chain.anchorParent(AXIS_ANDROID.HORIZONTAL);
                 }

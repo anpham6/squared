@@ -960,23 +960,23 @@ export default class Application<T extends Node> implements squared.base.Applica
                             }
                         }
                         let result: LayoutResult<T> | undefined;
-                        let segmentEnd: T | undefined;
+                        let segEnd: T | undefined;
                         if (horizontal.length > 1) {
                             const layout = new Layout(parentY, nodeY, 0, 0, horizontal.length, horizontal);
                             layout.init();
                             result = this.controllerHandler.processTraverseHorizontal(layout, axisY);
-                            segmentEnd = horizontal[horizontal.length - 1];
+                            segEnd = horizontal[horizontal.length - 1];
                         }
                         else if (vertical.length > 1) {
                             const layout = new Layout(parentY, nodeY, 0, 0, vertical.length, vertical);
                             layout.init();
                             result = this.controllerHandler.processTraverseVertical(layout, axisY);
-                            segmentEnd = vertical[vertical.length - 1];
-                            if (!segmentEnd.blockStatic && segmentEnd !== axisY[axisY.length - 1]) {
-                                segmentEnd.alignmentType |= NODE_ALIGNMENT.EXTENDABLE;
+                            segEnd = vertical[vertical.length - 1];
+                            if (!segEnd.blockStatic && segEnd !== axisY[axisY.length - 1]) {
+                                segEnd.alignmentType |= NODE_ALIGNMENT.EXTENDABLE;
                             }
                         }
-                        if (unknownParent && segmentEnd === axisY[axisY.length - 1]) {
+                        if (unknownParent && segEnd === axisY[axisY.length - 1]) {
                             parentY.alignmentType ^= NODE_ALIGNMENT.UNKNOWN;
                             unknownParent = false;
                         }
@@ -1507,8 +1507,8 @@ export default class Application<T extends Node> implements squared.base.Applica
                 if (Array.isArray(item[0])) {
                     segments = item as T[][];
                     const grouping: T[] = [];
-                    for (const segment of segments) {
-                        grouping.push(...segment);
+                    for (const seg of segments) {
+                        grouping.push(...seg);
                     }
                     grouping.sort(NodeList.siblingIndex);
                     floatgroup = this.controllerHandler.createNodeGroup(grouping[0], grouping, data.node);
@@ -1516,7 +1516,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         data.node,
                         floatgroup,
                         0,
-                        segments.some(segment => segment === rightSub || segment === rightAbove) ? NODE_ALIGNMENT.RIGHT : 0,
+                        segments.some(seg => seg === rightSub || seg === rightAbove) ? NODE_ALIGNMENT.RIGHT : 0,
                         segments.length
                     );
                     let vertical: LayoutType | undefined;
@@ -1540,21 +1540,21 @@ export default class Application<T extends Node> implements squared.base.Applica
                     segments = [item as T[]];
                     floatgroup = undefined;
                 }
-                for (const segment of segments) {
+                for (const seg of segments) {
                     let basegroup = data.node;
-                    if (floatgroup && floating.includes(segment)) {
+                    if (floatgroup && floating.includes(seg)) {
                         basegroup = floatgroup;
                     }
                     let target: T | undefined;
-                    if (segment.length > 1) {
-                        target = this.controllerHandler.createNodeGroup(segment[0], segment, basegroup);
+                    if (seg.length > 1) {
+                        target = this.controllerHandler.createNodeGroup(seg[0], seg, basegroup);
                         const layout = new Layout(
                             basegroup,
                             target,
                             0,
                             NODE_ALIGNMENT.SEGMENTED,
-                            segment.length,
-                            segment
+                            seg.length,
+                            seg
                         );
                         if (layout.linearY) {
                             const vertical = this.controllerHandler.containerTypeVertical;
@@ -1566,13 +1566,13 @@ export default class Application<T extends Node> implements squared.base.Applica
                         }
                         output = $xml.replacePlaceholder(output, basegroup.id, this.renderNode(layout));
                     }
-                    else if (segment.length) {
-                        target = segment[0];
+                    else if (seg.length) {
+                        target = seg[0];
                         target.alignmentType |= NODE_ALIGNMENT.SINGLE;
                         target.renderPosition = i;
                         output = $xml.replacePlaceholder(output, basegroup.id, $xml.formatPlaceholder(target.renderPositionId));
                     }
-                    if (!settings.floatOverlapDisabled && target && segment === inlineAbove && segment.some(subitem => subitem.blockStatic && !subitem.hasWidth)) {
+                    if (!settings.floatOverlapDisabled && target && seg === inlineAbove && seg.some(subitem => subitem.blockStatic && !subitem.hasWidth)) {
                         const vertical = this.controllerHandler.containerTypeVertical;
                         const targeted = target.of(vertical.containerType, vertical.alignmentType) ? target.children : [target];
                         if (leftAbove.length) {
@@ -1581,7 +1581,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                             for (const child of leftAbove) {
                                 marginRight = Math.max(marginRight, child.linear.right);
                             }
-                            for (const child of segment) {
+                            for (const child of seg) {
                                 boundsLeft = Math.min(boundsLeft, child.bounds.left);
                             }
                             for (const child of targeted) {
@@ -1594,7 +1594,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                             for (const child of rightAbove) {
                                 marginLeft = Math.min(marginLeft, child.linear.left);
                             }
-                            for (const child of segment) {
+                            for (const child of seg) {
                                 boundsRight = Math.max(boundsRight, child.bounds.right);
                             }
                             for (const child of targeted) {

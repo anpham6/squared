@@ -88,8 +88,8 @@ export function parseTemplate(value: string) {
         const pattern = /(\t*<<(\w+)>>)\n*[\w\W]*\n*\1/g;
         let match: RegExpExecArray | null;
         while ((match = pattern.exec(section)) !== null) {
-            const segment = match[0].replace(new RegExp(`^${match[1]}\\n`), '').replace(new RegExp(`${match[1]}$`), '');
-            data[match[2]] = replaceTemplateSection(parseSection(segment), segment);
+            const seg = match[0].replace(new RegExp(`^${match[1]}\\n`), '').replace(new RegExp(`${match[1]}$`), '');
+            data[match[2]] = replaceTemplateSection(parseSection(seg), seg);
         }
         Object.assign(result, data);
         return data;

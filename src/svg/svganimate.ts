@@ -32,8 +32,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 }
                 break;
             case 'points':
-                currentValue = SvgBuild.convertNumbers(SvgBuild.toNumberList(values[index]));
-                nextValue = SvgBuild.convertNumbers(SvgBuild.toNumberList(values[index + 1]));
+                currentValue = SvgBuild.convertPoints(SvgBuild.parseCoordinates(values[index]));
+                nextValue = SvgBuild.convertPoints(SvgBuild.parseCoordinates(values[index + 1]));
                 break;
             case 'rotate':
             case 'scale':
@@ -124,8 +124,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
 
     public static toFractionList(value: string, delimiter = ';') {
         let previous = 0;
-        const result = $util.flatMap(value.split(delimiter), segment => {
-            const fraction = parseFloat(segment);
+        const result = $util.flatMap(value.split(delimiter), seg => {
+            const fraction = parseFloat(seg);
             if (!isNaN(fraction) && fraction >= previous && fraction <= 1) {
                 previous = fraction;
                 return fraction;

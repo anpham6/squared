@@ -88,7 +88,7 @@ function convertToAnimateValue(value: AnimateValue) {
             value = parseFloat(value);
         }
         else {
-            value = SvgBuild.toPointList(value);
+            value = SvgBuild.parsePoints(value);
             if (value.length === 0) {
                 value = '';
             }
@@ -275,7 +275,7 @@ function getItemValue(item: SvgAnimate, values: string[], iteration: number, ind
             return values[index];
         }
         case 'points': {
-            return SvgBuild.toPointList(values[index]);
+            return SvgBuild.parsePoints(values[index]);
         }
         default: {
             let result = parseFloat(values[index]);
@@ -654,7 +654,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
             return $util.filterArray(<SvgAnimateTransform[]> animations, item => SvgBuild.asAnimateTransform(item) && item.duration > 0);
         }
 
-        public mergeAnimations(animations?: SvgAnimation[], transformations?: SvgAnimateTransform[], keyTimeMode = 0, precision?: number, path?: SvgPath) {
+        public animateSequentially(animations?: SvgAnimation[], transformations?: SvgAnimateTransform[], path?: SvgPath, keyTimeMode = 0, precision?: number) {
             [animations, transformations].forEach(mergeable => {
                 const transforming = mergeable === transformations;
                 if (!mergeable || mergeable.length === 0 || !transforming && $util.hasBit(keyTimeMode, SYNCHRONIZE_MODE.IGNORE_ANIMATE) || transforming && $util.hasBit(keyTimeMode, SYNCHRONIZE_MODE.IGNORE_TRANSFORM)) {

@@ -35,7 +35,7 @@ export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(Svg
 
     public synchronize(keyTimeMode = 0, precision?: number) {
         if (this.animations.length) {
-            this.mergeAnimations(this.getAnimateViewRect(), this.getAnimateTransform(), keyTimeMode, precision);
+            this.animateSequentially(this.getAnimateViewRect(), this.getAnimateTransform(), undefined, keyTimeMode, precision);
         }
         super.synchronize(keyTimeMode, precision, this.shapeElement);
     }
