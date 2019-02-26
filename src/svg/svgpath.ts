@@ -1,4 +1,4 @@
-import { SvgPathCommand, SvgPoint, SvgStrokeDash, SvgTransform, SvgTransformExclude, SvgTransformResidual } from './@types/object';
+import { SvgBuildOptions, SvgPathCommand, SvgPoint, SvgTransformResidual, SvgStrokeDash, SvgTransform } from './@types/object';
 
 import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgPaint$MX from './svgpaint-mx';
@@ -244,11 +244,12 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         return result;
     }
 
-    public static build(path: SvgPath, transforms: SvgTransform[], exclude?: SvgTransformExclude, residual?: SvgTransformResidual, precision?: number) {
+    public static build(path: SvgPath, transforms: SvgTransform[], options?: SvgBuildOptions) {
+        const exclude = options && options.exclude;
         if (exclude && exclude[path.element.tagName]) {
             transforms = SvgBuild.filterTransforms(transforms, exclude[path.element.tagName]);
         }
-        path.draw(transforms, residual, precision);
+        path.draw(transforms, options);
         return path;
     }
 
@@ -265,7 +266,13 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         this.init();
     }
 
-    public draw(transforms?: SvgTransform[], residual?: SvgTransformResidual, precision?: number) {
+    public draw(transforms?: SvgTransform[], options?: SvgBuildOptions) {
+        let residual: SvgTransformResidual | undefined;
+        let precision: number | undefined;
+        if (options) {
+            residual = options.residual;
+            precision = options.precision;
+        }
         this.transformed = undefined;
         const element = this.element;
         const parent = <SvgContainer> this.parent;
@@ -427,7 +434,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         return d;
     }
 
-    public flatStrokeDash(valueArray: number[], valueOffset: number, totalLength: number, pathLength?: number) {
+    public flattenStrokeDash(valueArray: number[], valueOffset: number, totalLength: number, pathLength?: number) {
         const result: SvgStrokeDash[] = [];
         let leading = 0;
         let trailing = 0;
@@ -639,7 +646,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 let valueOffset = $util.convertInt(this.strokeDashoffset);
                 let dashLength = 0;
                 const createDashGroup = (values: number[], offset: number, delay: number, duration = 0, companion?: SvgAnimation) => {
-                    const items = this.flatStrokeDash(values, offset, totalLength, pathLength);
+                    const items = this.flattenStrokeDash(values, offset, totalLength, pathLength);
                     dashLength = Math.max(dashLength, items.length);
                     dashGroup.push({ items, delay, duration, companion });
                     return items;
@@ -693,7 +700,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     offset = parseFloat(value);
                                 }
                                 for (const array of (SvgBuild.asAnimate(item) ? intervalMap.evaluateStart(item) : [item.to])) {
-                                    dashLength = Math.max(dashLength, this.flatStrokeDash(SvgBuild.parseCoordinates(array), offset, totalLength, pathLength).length);
+                                    dashLength = Math.max(dashLength, this.flattenStrokeDash(SvgBuild.parseCoordinates(array), offset, totalLength, pathLength).length);
                                 }
                             }
                         }
@@ -735,7 +742,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     }
                                     const group: SvgAnimate[] = [];
                                     const values: string[][] = [];
-                                    const baseValue = this.flatStrokeDash(valueArray, valueOffset, totalLength, pathLength);
+                                    const baseValue = this.flattenStrokeDash(valueArray, valueOffset, totalLength, pathLength);
                                     for (let j = 0; j < dashLength; j++) {
                                         const animate = new SvgAnimate(this.element);
                                         animate.id = j;
@@ -749,7 +756,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         group.push(animate);
                                     }
                                     for (let j = 0; j < item.keyTimes.length; j++) {
-                                        const dashValue = this.flatStrokeDash(SvgBuild.parseCoordinates(item.values[j]), valueOffset, totalLength, pathLength);
+                                        const dashValue = this.flattenStrokeDash(SvgBuild.parseCoordinates(item.values[j]), valueOffset, totalLength, pathLength);
                                         for (let k = 0; k < dashLength; k++) {
                                             values[k].push(getFromToValue(dashValue[k]));
                                         }
@@ -766,7 +773,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     }
                                     if (item.fillReplace) {
                                         const totalDuration = item.getTotalDuration();
-                                        const replaceValue = this.flatStrokeDash(getDashArray(totalDuration), getDashOffset(totalDuration), totalLength, pathLength);
+                                        const replaceValue = this.flattenStrokeDash(getDashArray(totalDuration), getDashOffset(totalDuration), totalLength, pathLength);
                                         for (let j = 0; j < dashLength; j++) {
                                             group[j].replaceValue = getFromToValue(replaceValue[j]);
                                         }
@@ -792,7 +799,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                             baseValue = createDashGroup(valueArray, startOffset, item.delay, 0, item);
                                         }
                                         else {
-                                            result = this.flatStrokeDash(valueArray, startOffset, totalLength, pathLength);
+                                            result = this.flattenStrokeDash(valueArray, startOffset, totalLength, pathLength);
                                             dashGroup[0].items = result;
                                             dashLength = Math.max(dashLength, result.length);
                                             baseValue = result;
@@ -818,14 +825,14 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                                     extendedPathLength = extendedLength;
                                                 }
                                                 if (baseValue === result) {
-                                                    result = this.flatStrokeDash(valueArray, startOffset - leading, extendedLength, extendedPathLength);
+                                                    result = this.flattenStrokeDash(valueArray, startOffset - leading, extendedLength, extendedPathLength);
                                                     dashGroup[0].items = result;
                                                     baseValue = result;
                                                 }
                                                 else {
                                                     for (const group of dashGroup) {
                                                         if (group.items === baseValue) {
-                                                            baseValue = this.flatStrokeDash(valueArray, startOffset - leading, extendedLength, extendedPathLength);
+                                                            baseValue = this.flattenStrokeDash(valueArray, startOffset - leading, extendedLength, extendedPathLength);
                                                             group.items = baseValue;
                                                             break;
                                                         }
@@ -1000,7 +1007,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                 const delay = dashGroup[i].delay;
                                 const duration = dashGroup[i].duration;
                                 const companion = dashGroup[i].companion;
-                                const baseValue = dashGroup.length > 2 ? this.flatStrokeDash(getDashArray(delay - 1), getDashOffset(delay - 1), totalLength, pathLength) : result;
+                                const baseValue = dashGroup.length > 2 ? this.flattenStrokeDash(getDashArray(delay - 1), getDashOffset(delay - 1), totalLength, pathLength) : result;
                                 for (let j = 0; j < dashLength; j++) {
                                     const animate = new SvgAnimation(this.element);
                                     animate.id = j;

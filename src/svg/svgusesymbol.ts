@@ -1,4 +1,4 @@
-import { SvgTransformExclude, SvgTransformResidual } from './@types/object';
+import { SvgBuildOptions, SvgSynchronizeOptions } from './@types/object';
 
 import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgPaint$MX from './svgpaint-mx';
@@ -19,9 +19,11 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewR
         super(element);
     }
 
-    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, precision?: number) {
+    public build(options?: SvgBuildOptions) {
         this.setRect();
-        super.build(exclude, residual, precision, this.symbolElement);
+        options = Object.assign({}, options);
+        options.symbolElement = this.symbolElement;
+        super.build(options);
         const x = this.getBaseValue('x', 0);
         const y = this.getBaseValue('y', 0);
         if (x !== 0 || y !== 0) {
@@ -30,14 +32,14 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewR
                 item.translationOffset = pt;
             }
         }
-        this.setPaint(this.getPathAll(), precision);
+        this.setPaint(this.getPathAll(), options && options.precision);
     }
 
-    public synchronize(keyTimeMode = 0, precision?: number) {
+    public synchronize(options?: SvgSynchronizeOptions) {
         if (this.animations.length) {
-            this.animateSequentially(this.getAnimateViewRect(), this.getAnimateTransform(), undefined, keyTimeMode, precision);
+            this.animateSequentially(this.getAnimateViewRect(), this.getAnimateTransform(), undefined, options);
         }
-        super.synchronize(keyTimeMode, precision);
+        super.synchronize(options);
     }
 
     get viewBox() {

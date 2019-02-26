@@ -1,4 +1,4 @@
-import { SvgTransformExclude, SvgTransformResidual } from './@types/object';
+import { SvgBuildOptions, SvgSynchronizeOptions } from './@types/object';
 
 import SvgContainer from './svgcontainer';
 
@@ -13,8 +13,8 @@ export default class SvgElement implements squared.svg.SvgElement {
     constructor(public readonly element: SVGGraphicsElement) {
     }
 
-    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, precision?: number, element?: Element, initPath?: boolean) {}
-    public synchronize(keyTimeMode?: number, precision?: number) {}
+    public build(options?: SvgBuildOptions) {}
+    public synchronize(options?: SvgSynchronizeOptions) {}
 
     get instanceType() {
         return INSTANCE_TYPE.SVG_ELEMENT;

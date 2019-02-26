@@ -1,4 +1,4 @@
-import { SvgStrokeDash, SvgTransform, SvgTransformExclude, SvgTransformResidual } from '../svg/@types/object';
+import { SvgBuildOptions, SvgStrokeDash, SvgTransform, SvgTransformExclude, SvgTransformResidual } from '../svg/@types/object';
 
 declare global {
     namespace squared.svg {
@@ -9,15 +9,15 @@ declare global {
             readonly element: SVGGeometryElement;
             readonly pathLength: number;
             readonly totalLength: number;
-            draw(transforms?: SvgTransform[], residual?: SvgTransformResidual, precision?: number): string;
+            draw(transforms?: SvgTransform[], options?: SvgBuildOptions): string;
             extendLength(leading: number, trailing: number, negative?: boolean, precision?: number): [string, number, number];
-            flatStrokeDash(valueArray: number[], valueOffset: number, totalLength: number, pathLength?: number): SvgStrokeDash[];
+            flattenStrokeDash(valueArray: number[], valueOffset: number, totalLength: number, pathLength?: number): SvgStrokeDash[];
             extractStrokeDash(animations?: SvgAnimation[], negative?: boolean, precision?: number): [SvgStrokeDash[] | undefined, string | undefined, string | undefined];
         }
 
         class SvgPath implements SvgPath {
             public static extrapolate(attr: string, value: string, values: string[], companion?: SvgShape, transforms?: SvgTransform[], precision?: number): string[] | undefined;
-            public static build(path: SvgPath, transform: SvgTransform[], exclude?: SvgTransformExclude, residual?: SvgTransformResidual, precision?: number): SvgPath;
+            public static build(path: SvgPath, transform: SvgTransform[], options?: SvgBuildOptions): SvgPath;
             constructor(element: SVGGeometryElement);
         }
     }

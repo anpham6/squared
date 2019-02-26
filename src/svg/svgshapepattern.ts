@@ -1,4 +1,4 @@
-import { SvgPoint, SvgTransformExclude, SvgTransformResidual } from './@types/object';
+import { SvgBuildOptions, SvgPoint } from './@types/object';
 
 import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgPaint$MX from './svgpaint-mx';
@@ -36,12 +36,11 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
         this.patternContentUnits = $dom.getNamedItem(this.patternElement, 'patternContentUnits') === 'objectBoundingBox' ? REGION_UNIT.OBJECT_BOUNDING_BOX : REGION_UNIT.USER_SPACE_ON_USE;
     }
 
-    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, precision?: number, element?: SVGGeometryElement) {
-        if (element === undefined) {
-            element = <SVGGeometryElement> this.element;
-        }
-        const path = SvgPath.build(new SvgPath(element), [], exclude, undefined, precision);
+    public build(options?: SvgBuildOptions) {
+        const element = options && options.element || <SVGGeometryElement> this.element;
+        const path = SvgPath.build(new SvgPath(element), [], options);
         if (path.value) {
+            const precision = options && options.precision;
             this.clipRegion = path.value;
             if (path.clipPath) {
                 this.clipRegion = path.clipPath;
@@ -76,7 +75,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                 do {
                     const x = boundingX + i * tileWidth - offsetX;
                     const pattern = new SvgPattern(element, this.patternElement);
-                    pattern.build(exclude, residual);
+                    pattern.build(options);
                     for (const item of pattern.cascade()) {
                         if (SvgBuild.isShape(item)) {
                             item.setPath();
@@ -88,7 +87,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                                 else {
                                     item.path.refitBaseValue(x, y, precision);
                                 }
-                                SvgPath.build(<SvgPath> item.path, item.transforms, exclude, residual, precision);
+                                SvgPath.build(<SvgPath> item.path, item.transforms, options);
                                 item.path.fillOpacity = (parseFloat(item.path.fillOpacity) * parseFloat(this.fillOpacity)).toString();
                                 item.path.clipPath = SvgBuild.drawRect(tileWidth, tileHeight, x, y, precision) + (item.path.clipPath !== '' ? `;${item.path.clipPath}` : '');
                             }

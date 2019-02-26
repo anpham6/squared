@@ -1,4 +1,4 @@
-import { SvgTransformExclude, SvgTransformResidual } from './@types/object';
+import { SvgBuildOptions, SvgSynchronizeOptions } from './@types/object';
 
 import SvgSynchronize$MX from './svgsynchronize-mx';
 import SvgView$MX from './svgview-mx';
@@ -24,16 +24,17 @@ export default class SvgShape extends SvgSynchronize$MX(SvgView$MX(SvgElement)) 
         this.path = new SvgPath(<SVGGeometryElement> this.element);
     }
 
-    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, precision?: number) {
+    public build(options?: SvgBuildOptions) {
         if (this.path) {
             this.path.parent = this.parent;
-            SvgPath.build(this.path, this.transforms, exclude, residual, precision);
+            SvgPath.build(this.path, this.transforms, options);
         }
     }
 
-    public synchronize(keyTimeMode = 0, precision?: number, element?: SVGGraphicsElement) {
+    public synchronize(options?: SvgSynchronizeOptions) {
         if (this.path && this.animations.length) {
-            this.animateSequentially(this.getAnimateShape(element || this.element), element ? undefined : this.getAnimateTransform(), this.path, keyTimeMode, precision);
+            const element = options && options.element;
+            this.animateSequentially(this.getAnimateShape(element || this.element), element ? undefined : this.getAnimateTransform(), this.path, options);
         }
     }
 

@@ -1,4 +1,4 @@
-import { SvgTransformExclude, SvgTransformResidual } from '../svg/@types/object';
+import { SvgBuildOptions, SvgSynchronizeOptions, SvgTransformExclude, SvgTransformResidual } from '../svg/@types/object';
 
 declare global {
     namespace squared.svg {
@@ -7,15 +7,15 @@ declare global {
             viewport?: Svg;
             readonly element: SVGGraphicsElement;
             readonly instanceType: number;
-            build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, precision?: number, element?: Element, initPath?: boolean): void;
-            synchronize(keyTimeMode?: number, precision?: number): void;
+            build(options?: SvgBuildOptions): void;
+            synchronize(options?: SvgSynchronizeOptions): void;
         }
 
         interface SvgShape extends SvgElement, SvgView, SvgSynchronize {
             path?: SvgPath;
             readonly element: SVGGeometryElement | SVGUseElement;
             setPath(): void;
-            synchronize(keyTimeMode?: number, precision?: number, element?: SVGGraphicsElement): void;
+            synchronize(options?: SvgSynchronizeOptions): void;
         }
 
         interface SvgImage extends SvgElement, SvgView, SvgViewRect, SvgBaseVal, SvgTransformable {
@@ -27,7 +27,7 @@ declare global {
         interface SvgUse extends SvgShape, SvgViewRect, SvgBaseVal, SvgPaint {
             shapeElement: SVGGeometryElement;
             readonly element: SVGUseElement;
-            synchronize(keyTimeMode?: number, precision?: number, element?: SVGGraphicsElement): void;
+            synchronize(options?: SvgSynchronizeOptions): void;
         }
 
         class SvgElement implements SvgElement {

@@ -1,4 +1,4 @@
-import { SvgTransformExclude, SvgTransformResidual } from './@types/object';
+import { SvgBuildOptions, SvgSynchronizeOptions } from './@types/object';
 
 import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgPaint$MX from './svgpaint-mx';
@@ -28,16 +28,18 @@ export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(Svg
         this.path.useParent = this;
     }
 
-    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, precision?: number) {
-        super.build(exclude, residual);
-        this.setPaint(this.path ? [this.path.value] : undefined, precision);
+    public build(options?: SvgBuildOptions) {
+        super.build(options);
+        this.setPaint(this.path ? [this.path.value] : undefined, options && options.precision);
     }
 
-    public synchronize(keyTimeMode = 0, precision?: number) {
+    public synchronize(options?: SvgSynchronizeOptions) {
+        options = Object.assign({}, options);
+        options.element = this.shapeElement;
         if (this.animations.length) {
-            this.animateSequentially(this.getAnimateViewRect(), this.getAnimateTransform(), undefined, keyTimeMode, precision);
+            this.animateSequentially(this.getAnimateViewRect(), this.getAnimateTransform(), undefined, options);
         }
-        super.synchronize(keyTimeMode, precision, this.shapeElement);
+        super.synchronize(options);
     }
 
     get transforms() {

@@ -1,4 +1,4 @@
-import { SvgTransformExclude, SvgTransformResidual } from './@types/object';
+import { SvgBuildOptions, SvgSynchronizeOptions } from './@types/object';
 
 import SvgSynchronize$MX from './svgsynchronize-mx';
 import SvgViewRect$MX from './svgviewrect-mx';
@@ -17,16 +17,18 @@ export default class SvgUsePattern extends SvgSynchronize$MX(SvgViewRect$MX(SvgS
         super(element, patternElement);
     }
 
-    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, precision?: number) {
-        super.build(exclude, residual, precision, this.shapeElement);
+    public build(options?: SvgBuildOptions) {
+        options = Object.assign({}, options);
+        options.element = this.shapeElement;
+        super.build(options);
     }
 
-    public synchronize(keyTimeMode = 0, precision?: number) {
+    public synchronize(options?: SvgSynchronizeOptions) {
         const [animations, transformations] = [$util.filterArray(this.animations, item => this.verifyBaseValue(item.attributeName, 0) === undefined || item.attributeName === 'x' || item.attributeName === 'y'), this.getAnimateTransform()];
         if (animations.length || transformations.length) {
-            this.animateSequentially(this.getAnimateViewRect(animations), transformations, undefined, keyTimeMode, precision);
+            this.animateSequentially(this.getAnimateViewRect(animations), transformations, undefined, options);
         }
-        super.synchronize(keyTimeMode, precision);
+        super.synchronize(options);
     }
 
     get instanceType() {

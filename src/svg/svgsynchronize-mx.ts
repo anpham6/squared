@@ -1,4 +1,4 @@
-import { SvgPoint } from './@types/object';
+import { SvgPoint, SvgSynchronizeOptions } from './@types/object';
 
 import SvgAnimate from './svganimate';
 import SvgAnimateTransform from './svganimatetransform';
@@ -654,7 +654,15 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
             return $util.filterArray(<SvgAnimateTransform[]> animations, item => SvgBuild.asAnimateTransform(item) && item.duration > 0);
         }
 
-        public animateSequentially(animations?: SvgAnimation[], transformations?: SvgAnimateTransform[], path?: SvgPath, keyTimeMode = 0, precision?: number) {
+        public animateSequentially(animations?: SvgAnimation[], transformations?: SvgAnimateTransform[], path?: SvgPath, options?: SvgSynchronizeOptions) {
+            let keyTimeMode = SYNCHRONIZE_MODE.FROMTO_ANIMATE | SYNCHRONIZE_MODE.FROMTO_TRANSFORM;
+            let precision: number | undefined;
+            if (options) {
+                if (options.keyTimeMode) {
+                    keyTimeMode = options.keyTimeMode;
+                }
+                precision = options.precision;
+            }
             [animations, transformations].forEach(mergeable => {
                 const transforming = mergeable === transformations;
                 if (!mergeable || mergeable.length === 0 || !transforming && $util.hasBit(keyTimeMode, SYNCHRONIZE_MODE.IGNORE_ANIMATE) || transforming && $util.hasBit(keyTimeMode, SYNCHRONIZE_MODE.IGNORE_TRANSFORM)) {

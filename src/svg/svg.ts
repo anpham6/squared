@@ -1,4 +1,4 @@
-import { SvgGradient, SvgTransformExclude, SvgTransformResidual } from './@types/object';
+import { SvgBuildOptions, SvgGradient, SvgSynchronizeOptions } from './@types/object';
 
 import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgSynchronize$MX from './svgsynchronize-mx';
@@ -56,17 +56,17 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
         this.init();
     }
 
-    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, precision?: number) {
-        this.precision = precision;
+    public build(options: SvgBuildOptions) {
+        this.precision = options && options.precision;
         this.setRect();
-        super.build(exclude, residual, precision);
+        super.build(options);
     }
 
-    public synchronize(keyTimeMode = 0, precision?: number) {
+    public synchronize(options?: SvgSynchronizeOptions) {
         if (!this.documentRoot && this.animations.length) {
-            this.animateSequentially(this.getAnimateViewRect(), this.getAnimateTransform(), undefined, keyTimeMode, precision);
+            this.animateSequentially(this.getAnimateViewRect(), this.getAnimateTransform(), undefined, options);
         }
-        super.synchronize(keyTimeMode, precision);
+        super.synchronize(options);
     }
 
     private init() {

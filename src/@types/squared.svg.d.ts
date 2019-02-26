@@ -1,4 +1,4 @@
-import { SvgAspectRatio, SvgPathCommand, SvgPoint, SvgRect, SvgTransform } from '../svg/@types/object';
+import { SvgAspectRatio, SvgPathCommand, SvgPoint, SvgRect, SvgSynchronizeOptions, SvgTransform } from '../svg/@types/object';
 
 declare global {
     namespace squared.svg {
@@ -24,7 +24,7 @@ declare global {
             getAnimateShape(element: SVGGraphicsElement, animations?: SvgAnimation[]): SvgAnimate[];
             getAnimateViewRect(animations?: SvgAnimation[]): SvgAnimate[];
             getAnimateTransform(animations?: SvgAnimation[]): SvgAnimateTransform[];
-            animateSequentially(animations?: SvgAnimation[], transformations?: SvgAnimateTransform[], path?: SvgPath, keyTimeMode?: number, precision?: number): void;
+            animateSequentially(animations?: SvgAnimation[], transformations?: SvgAnimateTransform[], path?: SvgPath, options?: SvgSynchronizeOptions): void;
         }
 
         interface SvgViewRect extends SvgRect, SvgBaseVal {

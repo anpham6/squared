@@ -1,4 +1,4 @@
-import { SvgAspectRatio, SvgPoint, SvgTransformExclude, SvgTransformResidual } from './@types/object';
+import { SvgAspectRatio, SvgBuildOptions, SvgPoint, SvgSynchronizeOptions } from './@types/object';
 
 import SvgBuild from './svgbuild';
 
@@ -64,9 +64,21 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         return super.append(item);
     }
 
-    public build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, precision?: number, element?: Element, initPath = true) {
-        if (element === undefined) {
+    public build(options?: SvgBuildOptions) {
+        let element: SVGGraphicsElement | SVGSymbolElement;
+        let precision: number | undefined;
+        let initPath: boolean;
+        if (options) {
+            element = options.symbolElement || options.patternElement || options.element || this.element;
+            precision = options.precision;
+            initPath = options.initPath !== false;
+            options.symbolElement = undefined;
+            options.patternElement = undefined;
+            options.element = undefined;
+        }
+        else {
             element = this.element;
+            initPath = true;
         }
         this.clear();
         const viewport = this.getViewport();
@@ -121,7 +133,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
             }
             if (svg) {
                 this.append(svg, viewport);
-                svg.build(exclude, residual, precision, undefined, initPath);
+                svg.build(options);
             }
         }
         if (SvgBuild.asSvg(this) && this.documentRoot) {
@@ -152,8 +164,8 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         }
     }
 
-    public synchronize(keyTimeMode = 0, precision: number) {
-        this.each(item => item.synchronize(keyTimeMode, precision));
+    public synchronize(options?: SvgSynchronizeOptions) {
+        this.each(item => item.synchronize(options));
     }
 
     public refitX(value: number) {

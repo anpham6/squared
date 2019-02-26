@@ -553,8 +553,15 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 this.IMAGE_DATA.length = 0;
                 this.NAMESPACE_AAPT = false;
                 this.SYNCHRONIZE_MODE = $constS.SYNCHRONIZE_MODE.FROMTO_ANIMATE | (supportedKeyFrames ? $constS.SYNCHRONIZE_MODE.KEYTIME_TRANSFORM : $constS.SYNCHRONIZE_MODE.IGNORE_TRANSFORM);
-                svg.build(this.options.transformExclude, partitionTransforms, this.options.floatPrecisionValue);
-                svg.synchronize(this.SYNCHRONIZE_MODE, this.options.floatPrecisionValue);
+                svg.build({
+                    exclude: this.options.transformExclude,
+                    residual: partitionTransforms,
+                    precision: this.options.floatPrecisionValue
+                });
+                svg.synchronize({
+                    keyTimeMode: this.SYNCHRONIZE_MODE,
+                    precision: this.options.floatPrecisionValue
+                });
                 this.parseVectorData(svg);
                 this.queueAnimations(svg, svg.name, item => item.attributeName === 'opacity');
                 const templateName = $util.convertWord(`${node.tagName}_${node.controlId}_viewbox`, true).toLowerCase();
@@ -611,9 +618,9 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                         const togetherTargets: SvgAnimation[][] = [];
                         const isolatedTargets: SvgAnimation[][][] = [];
                         const transformTargets: SvgAnimation[][] = [];
-                        const [companions, groupAnimate] = $util.partitionArray(group.animate, child => child.companion !== undefined);
-                        for (let i = 0; i < groupAnimate.length; i++) {
-                            const item = groupAnimate[i];
+                        const [companions, animations] = $util.partitionArray(group.animate, child => child.companion !== undefined);
+                        for (let i = 0; i < animations.length; i++) {
+                            const item = animations[i];
                             if (item.setterType) {
                                 if (ATTRIBUTE_ANDROID[item.attributeName] && $util.hasValue(item.to)) {
                                     if (item.duration > 0 && item.fillReplace) {
@@ -656,20 +663,22 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                             sequentialMap.set(synchronized.value, values);
                                         }
                                     }
-                                    else if ($SvgBuild.asAnimateTransform(item)) {
-                                        item.expandToValues();
-                                    }
-                                    else if (item.iterationCount === -1) {
-                                        isolated.push(item);
-                                    }
-                                    else if ((!item.fromToType || $SvgBuild.asAnimateTransform(item) && item.transformOrigin) && !(supportedKeyFrames && getValueType(item.attributeName) !== 'pathType')) {
-                                        togetherTargets.push([item]);
-                                    }
-                                    else if (item.fillReplace) {
-                                        isolated.push(item);
-                                    }
                                     else {
-                                        together.push(item);
+                                        if ($SvgBuild.asAnimateTransform(item)) {
+                                            item.expandToValues();
+                                        }
+                                        if (item.iterationCount === -1) {
+                                            isolated.push(item);
+                                        }
+                                        else if ((!item.fromToType || $SvgBuild.asAnimateTransform(item) && item.transformOrigin) && !(supportedKeyFrames && getValueType(item.attributeName) !== 'pathType')) {
+                                            togetherTargets.push([item]);
+                                        }
+                                        else if (item.fillReplace) {
+                                            isolated.push(item);
+                                        }
+                                        else {
+                                            together.push(item);
+                                        }
                                     }
                                 }
                             }
@@ -1392,8 +1401,14 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
         }
         if ($util.hasValue(path.clipPath)) {
             const shape = new $SvgShape(path.element);
-            shape.build(this.options.transformExclude, partitionTransforms);
-            shape.synchronize(this.SYNCHRONIZE_MODE, this.options.floatPrecisionValue);
+            shape.build({
+                exclude: this.options.transformExclude,
+                residual: partitionTransforms
+            });
+            shape.synchronize({
+                keyTimeMode: this.SYNCHRONIZE_MODE,
+                precision: this.options.floatPrecisionValue
+            });
             this.createClipPath(shape, clipElement, path.clipPath);
         }
         const baseData: TransformData = {};
@@ -1577,8 +1592,14 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 const element = this.SVG_INSTANCE.definitions.clipPath.get(value);
                 if (element) {
                     const g = new $SvgG(element);
-                    g.build(this.options.transformExclude, partitionTransforms);
-                    g.synchronize(this.SYNCHRONIZE_MODE, this.options.floatPrecisionValue);
+                    g.build({
+                        exclude: this.options.transformExclude,
+                        residual: partitionTransforms
+                    });
+                    g.synchronize({
+                        keyTimeMode: this.SYNCHRONIZE_MODE,
+                        precision: this.options.floatPrecisionValue
+                    });
                     g.each((child: $SvgShape) => {
                         if (child.path && child.path.value) {
                             let clipName = getVectorName(child, 'clip_path', array.length > 1 ? index + 1 : -1);

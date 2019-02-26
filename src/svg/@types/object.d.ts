@@ -115,3 +115,19 @@ export interface SvgStrokeDash {
     leading?: number;
     trailing?: number;
 }
+
+export interface SvgBuildOptions {
+    exclude?: SvgTransformExclude;
+    residual?: SvgTransformResidual;
+    precision?: number;
+    element?: SVGGeometryElement;
+    symbolElement?: SVGSymbolElement;
+    patternElement?: SVGPatternElement;
+    initPath?: boolean;
+}
+
+export interface SvgSynchronizeOptions {
+    keyTimeMode?: number;
+    precision?: number;
+    element?: SVGGeometryElement;
+}
