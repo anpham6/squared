@@ -134,7 +134,7 @@ declare global {
             function objectMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[];
             function replaceMap<T, U>(list: any[], predicate: IteratorPredicate<T, U>): U[];
             function joinMap<T>(list: T[], predicate: IteratorPredicate<T, string>, char?: string): string;
-            function captureMap<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, void>): void;
+            function captureMap<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, any>): void;
         }
 
         namespace xml {

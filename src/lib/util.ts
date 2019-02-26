@@ -669,10 +669,13 @@ export function joinMap<T>(list: T[], predicate: IteratorPredicate<T, string>, c
     return result.substring(0, result.length - char.length);
 }
 
-export function captureMap<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, void>) {
+export function captureMap<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, any>) {
     for (let i = 0; i < list.length; i++) {
         if (predicate(list[i], i, list)) {
-            callback(list[i], i, list);
+            const value = callback(list[i], i, list);
+            if (value === false) {
+                break;
+            }
         }
     }
 }

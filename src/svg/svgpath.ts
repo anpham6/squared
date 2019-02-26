@@ -24,6 +24,10 @@ interface DashGroup {
 const $math = squared.lib.math;
 const $util = squared.lib.util;
 
+function getStrokeDashRemainder(values: SvgStrokeDash[]) {
+    return [values[0].leading || 0, values[values.length - 1].trailing || 0];
+}
+
 export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) implements squared.svg.SvgPath {
     public static extrapolate(basePath: string, attr: string, values: string[], precision?: number, element?: SVGGraphicsElement) {
         let result: string[] | undefined;
@@ -50,7 +54,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         }
         else if (basePath) {
             const commands = SvgBuild.getPathCommands(basePath);
-            if (commands.length <= 1) {
+            if (commands.length === 0) {
                 return undefined;
             }
             else {
@@ -404,7 +408,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
 
     public flatStrokeDash(valueArray: number[], valueOffset: number, totalLength: number, pathLength?: number) {
         const result: SvgStrokeDash[] = [];
-        let remainder = 0;
+        let leading = 0;
+        let trailing = 0;
         if (valueArray.length) {
             if (!pathLength) {
                 pathLength = totalLength;
@@ -416,17 +421,19 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             let dashLength: number;
             for (let i = 0, j = 0; ; i += dashLength, j++) {
                 dashLength = valueArray[j % valueArray.length];
-                let startOffset: number;
-                let actualLength: number;
-                if (i < valueOffset) {
-                    startOffset = 0;
-                    actualLength = valueOffset - i;
-                }
-                else {
-                    startOffset = i - valueOffset;
-                    actualLength = dashLength;
-                }
                 if (i + dashLength > valueOffset) {
+                    let startOffset: number;
+                    let actualLength: number;
+                    if (i < valueOffset) {
+                        leading = valueOffset - i;
+                        startOffset = 0;
+                        actualLength = dashLength - leading;
+                        leading *= totalLength / pathLength;
+                    }
+                    else {
+                        startOffset = i - valueOffset;
+                        actualLength = dashLength;
+                    }
                     const start = $math.truncatePrecision(startOffset / pathLength);
                     const end = $math.truncatePrecision(start + (actualLength / pathLength));
                     if (j % 2 === 0) {
@@ -435,13 +442,13 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                         }
                         else {
                             if (start > 1) {
-                                remainder = (start - 1) * totalLength;
+                                trailing = (start - 1) * pathLength;
                             }
                             break;
                         }
                     }
                     else if (start >= 1) {
-                        remainder = (end - 1) * totalLength;
+                        trailing = (end - 1) * pathLength;
                         break;
                     }
                 }
@@ -450,64 +457,154 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 result.push({ start: 1, end: 1 });
             }
         }
-        if (remainder > 0) {
-            result[result.length - 1].remainder = $math.truncatePrecision(remainder);
+        if (leading > 0) {
+            result[0].leading = $math.truncatePrecision(leading);
+        }
+        if (trailing > 0) {
+            result[result.length - 1].trailing = $math.truncatePrecision(trailing);
         }
         return result;
     }
 
-    public extendLength(value: number, precision?: number) {
+    public extendLength(leading: number, trailing: number, negative = false, precision?: number): [string, number, number] {
         if (this.value !== '') {
             switch (this.element.tagName) {
                 case 'path':
                 case 'line':
                 case 'polyline':
                     const commands = SvgBuild.getPathCommands(this.value);
-                    if (commands.length > 1) {
+                    if (commands.length) {
+                        const pathStart = commands[0];
+                        const pathStartPoint = pathStart.start;
                         const pathEnd = commands[commands.length - 1];
-                        const pathEndPoint = pathEnd.value[0];
-                        if (commands[0].value[0].x !== pathEndPoint.x || commands[0].value[0].y !== pathEndPoint.y) {
-                            const name = pathEnd.name.toUpperCase();
-                            let modified = false;
-                            switch (name) {
-                                case 'M':
-                                case 'L': {
-                                    const beforeEnd = commands[commands.length - 2];
-                                    const beforeEndPoint = beforeEnd.value[beforeEnd.value.length - 1];
-                                    if (beforeEndPoint.x === pathEndPoint.x) {
-                                        pathEnd.coordinates[1] += pathEndPoint.y > beforeEndPoint.y ? value : -value;
+                        const pathEndPoint = pathEnd.end;
+                        let modified = false;
+                        if (pathStartPoint.x !== pathEndPoint.x || pathStartPoint.y !== pathEndPoint.y) {
+                            if (leading > 0) {
+                                let afterStartPoint: SvgPoint | undefined;
+                                if (pathStart.value.length > 1) {
+                                    afterStartPoint = pathStart.value[1];
+                                }
+                                else if (commands.length > 1) {
+                                    afterStartPoint = commands[1].start;
+                                }
+                                if (afterStartPoint) {
+                                    if (afterStartPoint.x === pathStartPoint.x) {
+                                        const y = pathStart.coordinates[1] + (pathStartPoint.y > afterStartPoint.y ? leading : -leading);
+                                        if (negative || y >= 0) {
+                                            pathStart.coordinates[1] = y;
+                                            modified = true;
+                                        }
+                                        else {
+                                            leading = 0;
+                                        }
                                     }
-                                    else if (beforeEndPoint.y === pathEndPoint.y) {
-                                        pathEnd.coordinates[0] += pathEndPoint.x > beforeEndPoint.x ? value : -value;
+                                    else if (afterStartPoint.y === pathStartPoint.y) {
+                                        const x = pathStart.coordinates[0] + (pathStartPoint.x > afterStartPoint.x ? leading : -leading);
+                                        if (negative || x >= 0) {
+                                            pathStart.coordinates[0] = x;
+                                            modified = true;
+                                        }
+                                        else {
+                                            leading = 0;
+                                        }
                                     }
                                     else {
-                                        const angle = $math.getAngle(beforeEndPoint, pathEndPoint);
-                                        pathEnd.coordinates[0] += $math.distanceFromX(value, angle);
-                                        pathEnd.coordinates[1] += $math.distanceFromY(value, angle);
+                                        const angle = $math.getAngle(afterStartPoint, pathStartPoint);
+                                        const x = pathStart.coordinates[0] - $math.distanceFromX(leading, angle);
+                                        const y = pathStart.coordinates[1] - $math.distanceFromY(leading, angle);
+                                        if (negative || x >= 0 && y >= 0) {
+                                            pathStart.coordinates[0] = x;
+                                            pathStart.coordinates[1] = y;
+                                            modified = true;
+                                        }
+                                        else {
+                                            leading = 0;
+                                        }
                                     }
-                                    modified = true;
-                                    break;
-                                }
-                                case 'H':
-                                case 'V': {
-                                    const index = name === 'H' ? 0 : 1;
-                                    pathEnd.coordinates[index] += pathEnd.coordinates[index] > 0 ? value : -value;
-                                    modified = true;
-                                    break;
                                 }
                             }
-                            if (modified) {
-                                return SvgBuild.drawPath(commands, precision);
+                            if (trailing > 0) {
+                                const name = pathEnd.name.toUpperCase();
+                                switch (name) {
+                                    case 'M':
+                                    case 'L': {
+                                        let beforeEndPoint: SvgPoint | undefined;
+                                        if (commands.length === 1) {
+                                            if (pathStart.value.length > 1) {
+                                                beforeEndPoint = pathStart.value[pathStart.value.length - 2];
+                                            }
+                                        }
+                                        else if (pathEnd.value.length > 1) {
+                                            beforeEndPoint = pathEnd.value[pathEnd.value.length - 2];
+                                        }
+                                        else {
+                                            beforeEndPoint = commands[commands.length - 2].end;
+                                        }
+                                        if (beforeEndPoint) {
+                                            if (beforeEndPoint.x === pathEndPoint.x) {
+                                                const y = pathEnd.coordinates[1] + (pathEndPoint.y > beforeEndPoint.y ? trailing : -trailing);
+                                                if (negative || y >= 0) {
+                                                    pathEnd.coordinates[1] = y;
+                                                    modified = true;
+                                                }
+                                                else {
+                                                    trailing = 0;
+                                                }
+                                            }
+                                            else if (beforeEndPoint.y === pathEndPoint.y) {
+                                                const x = pathEnd.coordinates[0] + (pathEndPoint.x > beforeEndPoint.x ? trailing : -trailing);
+                                                if (negative || x >= 0) {
+                                                    pathEnd.coordinates[0] = x;
+                                                    modified = true;
+                                                }
+                                                else {
+                                                    trailing = 0;
+                                                }
+                                            }
+                                            else {
+                                                const angle = $math.getAngle(beforeEndPoint, pathEndPoint);
+                                                const x = pathEnd.coordinates[0] + $math.distanceFromX(trailing, angle);
+                                                const y = pathEnd.coordinates[1] + $math.distanceFromY(trailing, angle);
+                                                if (negative || x >= 0 && y >= 0) {
+                                                    pathEnd.coordinates[0] = x;
+                                                    pathEnd.coordinates[1] = y;
+                                                    modified = true;
+                                                }
+                                                else {
+                                                    trailing = 0;
+                                                }
+                                            }
+                                        }
+                                        break;
+                                    }
+                                    case 'H':
+                                    case 'V': {
+                                        const index = name === 'H' ? 0 : 1;
+                                        const pt = pathEnd.coordinates[index] + (leading + trailing) * (pathEnd.coordinates[index] >= 0 ? 1 : -1);
+                                        if (negative || pt >= 0) {
+                                            pathEnd.coordinates[index] = pt;
+                                            modified = true;
+                                        }
+                                        else {
+                                            trailing = 0;
+                                        }
+                                        break;
+                                    }
+                                }
                             }
+                        }
+                        if (modified) {
+                            return [SvgBuild.drawPath(commands, precision), leading, trailing];
                         }
                     }
                     break;
             }
         }
-        return '';
+        return ['', 0, 0];
     }
 
-    public extractStrokeDash(animations?: SvgAnimation[], precision?: number): [SvgStrokeDash[] | undefined, string | undefined, string | undefined] {
+    public extractStrokeDash(animations?: SvgAnimation[], negative = false, precision?: number): [SvgStrokeDash[] | undefined, string | undefined, string | undefined] {
         const strokeWidth = $util.convertInt(this.strokeWidth);
         let result: SvgStrokeDash[] | undefined;
         let path: string | undefined;
@@ -520,8 +617,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 const dashGroup: DashGroup[] = [];
                 let valueOffset = $util.convertInt(this.strokeDashoffset);
                 let dashLength = 0;
-                const createDashGroup = (values: number[], offset: number, delay: number, duration = 0, otherLength?: number, companion?: SvgAnimation) => {
-                    const items = this.flatStrokeDash(values, offset, totalLength, otherLength || pathLength);
+                const createDashGroup = (values: number[], offset: number, delay: number, duration = 0, companion?: SvgAnimation) => {
+                    const items = this.flatStrokeDash(values, offset, totalLength, pathLength);
                     dashLength = Math.max(dashLength, items.length);
                     dashGroup.push({ items, delay, duration, companion });
                     return items;
@@ -663,7 +760,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     const values: string[] = [];
                                     const keyTimes: number[] = [];
                                     const endTime = item.keyTimes[item.keyTimes.length - 1];
-                                    let actualLength = totalLength;
+                                    let extendedLength = totalLength;
+                                    let extendedPathLength = pathLength;
                                     let keyTime = 0;
                                     let previousIteration = 0;
                                     let previousDirection = 0;
@@ -672,7 +770,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     let baseValue: SvgStrokeDash[] | undefined;
                                     if (valueOffset !== startOffset) {
                                         if (modified || item.delay > 0) {
-                                            baseValue = createDashGroup(valueArray, startOffset, item.delay, 0, pathLength, item);
+                                            baseValue = createDashGroup(valueArray, startOffset, item.delay, 0, item);
                                         }
                                         else {
                                             result = this.flatStrokeDash(valueArray, startOffset, totalLength, pathLength);
@@ -681,35 +779,29 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                             baseValue = result;
                                         }
                                     }
-                                    else if (result[result.length - 1].remainder) {
+                                    else if (result[result.length - 1].trailing) {
                                         baseValue = result;
                                     }
                                     if (baseValue) {
-                                        const remainder = baseValue[baseValue.length - 1].remainder;
-                                        if (remainder) {
-                                            path = this.extendLength(remainder, precision);
+                                        let [leading, trailing] = getStrokeDashRemainder(baseValue);
+                                        if (leading > 0 || trailing > 0) {
+                                            [path, leading, trailing] = this.extendLength(leading, trailing, negative, precision);
                                             if (path !== '') {
                                                 const boxRect = SvgBuild.toBoxRect([this.value]);
                                                 const strokeOffset = Math.ceil(strokeWidth / 2);
                                                 clipPath = SvgBuild.drawRect(boxRect.right - boxRect.left, boxRect.bottom - boxRect.top + strokeOffset * 2, boxRect.left, boxRect.top - strokeOffset);
-                                                actualLength = getPathLength(path);
-                                                let otherLength = this.pathLength;
-                                                if (otherLength > 0) {
-                                                    otherLength *= actualLength / totalLength;
-                                                }
-                                                else {
-                                                    otherLength = actualLength;
-                                                }
+                                                extendedLength = getPathLength(path);
+                                                extendedPathLength *= extendedLength / totalLength;
                                                 if (baseValue === result) {
-                                                    result = this.flatStrokeDash(valueArray, startOffset, actualLength, otherLength);
+                                                    result = this.flatStrokeDash(valueArray, startOffset - leading, extendedLength, extendedPathLength);
                                                     dashGroup[0].items = result;
                                                     baseValue = result;
                                                 }
                                                 else {
-                                                    for (let j = 0; j < dashGroup.length; j++) {
-                                                        if (dashGroup[j].items === baseValue) {
-                                                            baseValue = this.flatStrokeDash(valueArray, startOffset, actualLength, otherLength);
-                                                            dashGroup[j].items = baseValue;
+                                                    for (const group of dashGroup) {
+                                                        if (group.items === baseValue) {
+                                                            baseValue = this.flatStrokeDash(valueArray, startOffset - leading, extendedLength, extendedPathLength);
+                                                            group.items = baseValue;
                                                             break;
                                                         }
                                                     }
@@ -723,14 +815,14 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                             const offsetFrom = parseFloat(item.values[j]);
                                             const offsetTo = parseFloat(item.values[j + 1]);
                                             const increasing = offsetTo > offsetFrom;
-                                            let iterationCount = (Math.abs(offsetTo - offsetFrom) / actualLength) * (actualLength / pathLength);
+                                            let iterationCount = (Math.abs(offsetTo - offsetFrom) / totalLength) * (totalLength / pathLength);
                                             let segmentDuration = (item.keyTimes[j + 1] - item.keyTimes[j]) * duration;
                                             let remainderDuration!: number;
                                             let keyTimeInterval!: number;
                                             let keyTimeRemainder!: number;
                                             function setKeyTimeInterval() {
                                                 if (iterationCount >= 1) {
-                                                    remainderDuration = (iterationCount % 1) * (segmentDuration / Math.ceil(iterationCount));
+                                                    remainderDuration = (iterationCount % 1) * (segmentDuration / iterationCount);
                                                     keyTimeInterval = ((segmentDuration - remainderDuration) / Math.floor(iterationCount)) / duration;
                                                 }
                                                 else {

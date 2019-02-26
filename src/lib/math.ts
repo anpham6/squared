@@ -52,11 +52,14 @@ export function convertRadian(value: number) {
 }
 
 export function getAngle(start: Point, end: Point) {
-    let result = Math.atan2(end.y - start.y, end.x + start.x) * 180 / Math.PI;
-    if (result < 0) {
-        result += 360;
+    const y = end.y - start.y;
+    const value = Math.atan2(y, end.x - start.x) * 180 / Math.PI;
+    if (value < 0) {
+        return 270 + (y < 0 ? value : Math.abs(value)) % 360;
     }
-    return result + 90;
+    else {
+        return (value + 90) % 360;
+    }
 }
 
 export function getLeastCommonMultiple(values: number[], offset?: number[]) {

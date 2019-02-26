@@ -112,5 +112,6 @@ export interface SvgStrokeDash {
     start: number;
     end: number;
     offset?: number;
-    remainder?: number;
+    leading?: number;
+    trailing?: number;
 }
