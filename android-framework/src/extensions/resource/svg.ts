@@ -795,7 +795,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                 break;
 
                                                         }
-                                                        fillAfter.values.push(this.createPropertyValue(propertyName, valueTo, '1', valueType, valueType === 'pathType' ? valueTo : '', startOffset ? startOffset.toString() : ''));
+                                                        fillAfter.values.push(this.createPropertyValue(propertyName, valueTo, '1', valueType, valueType === 'pathType' ? previousValue : '', startOffset ? startOffset.toString() : ''));
                                                     }
                                                 }
                                                 if (transformOrigin) {
@@ -871,10 +871,18 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                             let propertyNames: string[] | undefined;
                                             let values: string[] | number[][] | undefined;
                                             const beforeValues: string[] = [];
-                                            if (options.valueType === 'pathType') {
+                                            if (!synchronized && options.valueType === 'pathType') {
                                                 if (group.pathData) {
                                                     propertyNames = ['pathData'];
-                                                    values = $SvgPath.extrapolate(group.pathData, item.attributeName, item.values, this.options.floatPrecisionValue, item.parent && item.parent.element);
+                                                    let transforms: SvgTransform[] | undefined;
+                                                    let companion: $SvgShape | undefined;
+                                                    if (item.parent && $SvgBuild.isShape(item.parent)) {
+                                                        companion = item.parent;
+                                                        if (item.parent.path) {
+                                                            transforms = item.parent.path.transformed;
+                                                        }
+                                                    }
+                                                    values = $SvgPath.extrapolate(item.attributeName, group.pathData, item.values, companion, transforms, this.options.floatPrecisionValue);
                                                 }
                                             }
                                             else if ($SvgBuild.asAnimateTransform(item)) {
@@ -961,6 +969,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                             transformOrigin = undefined;
                                                         }
                                                         else {
+                                                            animatorData.ordering = 'sequentially';
                                                             const translateData: AnimatorTemplateData<false> = {
                                                                 ordering: 'sequentially',
                                                                 fillBefore: false,

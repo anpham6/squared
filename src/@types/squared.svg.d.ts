@@ -6,7 +6,7 @@ declare global {
             name: string;
             opacity: string;
             visible: boolean;
-            transformed: SvgTransform[] | null;
+            transformed?: SvgTransform[];
             translationOffset?: Point;
             readonly transforms: SvgTransform[];
             readonly animations: SvgAnimation[];
@@ -15,8 +15,8 @@ declare global {
         }
 
         interface SvgTransformable {
-            transformed: SvgTransform[] | null;
             rotateAngle?: number;
+            transformed?: SvgTransform[];
             transformResidual?: SvgTransform[][];
         }
 
@@ -92,6 +92,7 @@ declare global {
             public static drawPolygon(values: Point[] | DOMPoint[], precision?: number): string;
             public static drawPolyline(values: Point[] | DOMPoint[], precision?: number): string;
             public static drawPath(values: SvgPathCommand[], precision?: number): string;
+            public static drawRefit(element: SVGGraphicsElement, parent?: SvgContainer, precision?: number): string;
             public static getPathCommands(value: string): SvgPathCommand[];
             public static filterTransforms(transforms: SvgTransform[], exclude?: number[]): SvgTransform[];
             public static applyTransforms(transforms: SvgTransform[], values: Point[], aspectRatio?: SvgAspectRatio, origin?: Point): SvgPoint[];

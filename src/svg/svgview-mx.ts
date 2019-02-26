@@ -94,7 +94,7 @@ function setOpacity(element: SVGGraphicsElement, value: string) {
 
 export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
     return class extends Base implements squared.svg.SvgView {
-        public transformed: SvgTransform[] | null = null;
+        public transformed?: SvgTransform[];
         public translationOffset?: Point;
 
         private _name?: string;
@@ -142,7 +142,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 for (const time of times) {
                                     const animate = new SvgAnimateTransform(element, <SVGAnimateTransformElement> item);
                                     if (SvgBuild.isShape(this) && this.path) {
-                                        animate.transformFrom = this.path.draw(undefined, undefined, this.viewport && this.viewport.precision, true);
+                                        animate.transformFrom = SvgBuild.drawRefit(element, this.parent, this.viewport && this.viewport.precision);
                                     }
                                     addAnimation(animate, time);
                                 }

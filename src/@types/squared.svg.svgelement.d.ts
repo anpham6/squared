@@ -3,8 +3,8 @@ import { SvgTransformExclude, SvgTransformResidual } from '../svg/@types/object'
 declare global {
     namespace squared.svg {
         interface SvgElement {
-            viewport?: Svg;
             parent?: SvgContainer;
+            viewport?: Svg;
             readonly element: SVGGraphicsElement;
             readonly instanceType: number;
             build(exclude?: SvgTransformExclude, residual?: SvgTransformResidual, precision?: number, element?: Element, initPath?: boolean): void;
@@ -25,8 +25,8 @@ declare global {
         }
 
         interface SvgUse extends SvgShape, SvgViewRect, SvgBaseVal, SvgPaint {
-            readonly element: SVGUseElement;
             shapeElement: SVGGeometryElement;
+            readonly element: SVGUseElement;
             synchronize(keyTimeMode?: number, precision?: number, element?: SVGGraphicsElement): void;
         }
 

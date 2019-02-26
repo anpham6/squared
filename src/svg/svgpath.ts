@@ -12,6 +12,7 @@ import { INSTANCE_TYPE, REGION_UNIT } from './lib/constant';
 import { SVG, TRANSFORM, getPathLength } from './lib/util';
 
 type SvgContainer = squared.svg.SvgContainer;
+type SvgShape = squared.svg.SvgShape;
 type SvgShapePattern = squared.svg.SvgShapePattern;
 
 interface DashGroup {
@@ -29,20 +30,29 @@ function getStrokeDashRemainder(values: SvgStrokeDash[]) {
 }
 
 export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) implements squared.svg.SvgPath {
-    public static extrapolate(basePath: string, attr: string, values: string[], precision?: number, element?: SVGGraphicsElement) {
-        let result: string[] | undefined;
+    public static extrapolate(attr: string, pathData: string, values: string[], companion?: SvgShape, transforms?: SvgTransform[], precision?: number) {
+        const result: string[] = [];
         if (attr === 'points') {
-            result = [];
             for (let i = 0; i < values.length; i++) {
-                const value = values[i].trim();
-                if (value !== '') {
-                    const points = SvgBuild.convertPoints(SvgBuild.parseCoordinates(value));
-                    if (points.length) {
-                        result[i] = element && SVG.polygon(element) ? SvgBuild.drawPolygon(points, precision) : SvgBuild.drawPolyline(points, precision);
+                let points = SvgBuild.convertPoints(SvgBuild.parseCoordinates(values[i]));
+                if (points.length) {
+                    function drawPoints() {
+                        result[i] = companion && SVG.polygon(companion.element) ? SvgBuild.drawPolygon(points, precision) : SvgBuild.drawPolyline(points, precision);
                     }
-                    else {
-                        return undefined;
+                    if (transforms && transforms.length) {
+                        drawPoints();
+                        const commands = SvgBuild.getPathCommands(result[i]);
+                        if (commands.length) {
+                            points = SvgBuild.extractPathPoints(commands);
+                            if (points.length) {
+                                points = SvgBuild.applyTransforms(transforms, points, companion && TRANSFORM.origin(companion.element));
+                            }
+                        }
                     }
+                    if (companion && companion.parent && companion.parent.requireRefit()) {
+                        companion.parent.refitPoints(points);
+                    }
+                    drawPoints();
                 }
                 else {
                     result[i] = '';
@@ -50,170 +60,184 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             }
         }
         else if (attr === 'd') {
-            result = values.slice(0);
+            return values.slice(0);
         }
-        else if (basePath) {
-            const commands = SvgBuild.getPathCommands(basePath);
-            if (commands.length === 0) {
-                return undefined;
+        else if (pathData) {
+            if (transforms && transforms.length && companion && SVG.shape(companion.element)) {
+                pathData = SvgBuild.drawRefit(companion.element, companion.parent, precision);
             }
-            else {
-                result = [];
-                for (let i = 0; i < values.length; i++) {
-                    const value = parseFloat(values[i]);
-                    if (!isNaN(value)) {
-                        const path = i < values.length - 1 ? <SvgPathCommand[]> $util.cloneArray(commands, [], true) : commands;
-                        let x: number | undefined;
-                        let y: number | undefined;
-                        let rx: number | undefined;
-                        let ry: number | undefined;
-                        let width: number | undefined;
-                        let height: number | undefined;
-                        switch (attr) {
-                            case 'x':
-                            case 'x1':
-                            case 'x2':
-                            case 'cx':
-                                x = value;
-                                break;
-                            case 'y':
-                            case 'y1':
-                            case 'y2':
-                            case 'cy':
-                                y = value;
-                                break;
-                            case 'r':
-                                rx = value;
-                                ry = rx;
-                                break;
-                            case 'rx':
-                                rx = value;
-                                break;
-                            case 'ry':
-                                ry = value;
-                            case 'width':
-                                width = value;
-                                break;
-                            case 'height':
-                                height = value;
-                                break;
-                            default:
-                                continue;
-                        }
-                        if (x !== undefined || y !== undefined) {
-                            const commandA = path[0];
-                            const commandB = path[path.length - 1];
-                            const pointA = commandA.start;
-                            const pointB = commandB.end;
-                            let recalibrate = false;
-                            if (x !== undefined) {
-                                switch (attr) {
-                                    case 'x':
-                                        x -= pointA.x;
-                                        recalibrate = true;
-                                        break;
-                                    case 'x1':
-                                    case 'cx':
-                                        pointA.x = x;
-                                        commandA.coordinates[0] = x;
-                                        break;
-                                    case 'x2':
-                                        pointB.x = x;
-                                        commandB.coordinates[0] = x;
-                                        break;
-                                }
-                            }
-                            if (y !== undefined) {
-                                switch (attr) {
-                                    case 'y':
-                                        y -= pointA.y;
-                                        recalibrate = true;
-                                        break;
-                                    case 'y1':
-                                    case 'cy':
-                                        pointA.y = y;
-                                        commandA.coordinates[1] = y;
-                                        break;
-                                    case 'y2':
-                                        pointB.y = y;
-                                        commandB.coordinates[1] = y;
-                                        break;
-                                }
-                            }
-                            if (recalibrate) {
-                                for (const seg of path) {
-                                    if (!seg.relative) {
-                                        for (let j = 0, k = 0; j < seg.coordinates.length; j += 2, k++) {
-                                            const pt = seg.value[k];
-                                            if (x !== undefined) {
-                                                seg.coordinates[j] += x;
-                                                pt.x += x;
-                                            }
-                                            if (y !== undefined) {
-                                                seg.coordinates[j + 1] += y;
-                                                pt.y += y;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        else if (rx !== undefined || ry !== undefined) {
-                            for (const seg of path) {
-                                if (seg.name.toUpperCase() === 'A') {
-                                    if (rx !== undefined) {
-                                        seg.radiusX = rx;
-                                        seg.coordinates[0] = rx * 2 * (seg.coordinates[0] < 0 ? -1 : 1);
-                                    }
-                                    if (ry !== undefined) {
-                                        seg.radiusY = ry;
-                                    }
-                                }
-                            }
-                        }
-                        else if (width !== undefined) {
-                            for (const index of [1, 2]) {
-                                const seg = path[index];
-                                switch (seg.name) {
-                                    case 'm':
-                                    case 'l':
-                                    case 'h':
-                                        seg.coordinates[0] = width * (seg.coordinates[0] < 0 ? -1 : 1);
-                                        break;
-                                    case 'M':
-                                    case 'L':
-                                    case 'H':
-                                        seg.coordinates[0] = path[0].end.x + width;
-                                        break;
-                                }
-                            }
-                        }
-                        else if (height !== undefined) {
-                            for (const index of [2, 3]) {
-                                const seg = path[index];
-                                switch (seg.name) {
-                                    case 'm':
-                                    case 'l':
-                                    case 'v':
-                                        seg.coordinates[1] = height * (seg.coordinates[1] < 0 ? -1 : 1);
-                                        break;
-                                    case 'M':
-                                    case 'L':
-                                    case 'V':
-                                        seg.coordinates[1] = path[0].end.y + height;
-                                        break;
-                                }
-                            }
-                        }
-                        else {
-                            result[i] = values[i - 1] || basePath;
+            let commands = SvgBuild.getPathCommands(pathData);
+            for (let i = 0; i < values.length; i++) {
+                const value = parseFloat(values[i]);
+                if (!isNaN(value)) {
+                    const path = i < values.length - 1 ? <SvgPathCommand[]> $util.cloneArray(commands, [], true) : commands;
+                    let x: number | undefined;
+                    let y: number | undefined;
+                    let rx: number | undefined;
+                    let ry: number | undefined;
+                    let width: number | undefined;
+                    let height: number | undefined;
+                    switch (attr) {
+                        case 'x':
+                        case 'x1':
+                        case 'x2':
+                        case 'cx':
+                            x = value;
+                            break;
+                        case 'y':
+                        case 'y1':
+                        case 'y2':
+                        case 'cy':
+                            y = value;
+                            break;
+                        case 'r':
+                            rx = value;
+                            ry = rx;
+                            break;
+                        case 'rx':
+                            rx = value;
+                            break;
+                        case 'ry':
+                            ry = value;
+                        case 'width':
+                            width = value;
+                            break;
+                        case 'height':
+                            height = value;
+                            break;
+                        default:
                             continue;
+                    }
+                    if (x !== undefined || y !== undefined) {
+                        const commandA = path[0];
+                        const commandB = path[path.length - 1];
+                        const pointA = commandA.start;
+                        const pointB = commandB.end;
+                        let recalibrate = false;
+                        if (x !== undefined) {
+                            switch (attr) {
+                                case 'x':
+                                    x -= pointA.x;
+                                    recalibrate = true;
+                                    break;
+                                case 'x1':
+                                case 'cx':
+                                    pointA.x = x;
+                                    commandA.coordinates[0] = x;
+                                    break;
+                                case 'x2':
+                                    pointB.x = x;
+                                    commandB.coordinates[0] = x;
+                                    break;
+                            }
                         }
-                        result[i] = SvgBuild.drawPath(path, precision);
+                        if (y !== undefined) {
+                            switch (attr) {
+                                case 'y':
+                                    y -= pointA.y;
+                                    recalibrate = true;
+                                    break;
+                                case 'y1':
+                                case 'cy':
+                                    pointA.y = y;
+                                    commandA.coordinates[1] = y;
+                                    break;
+                                case 'y2':
+                                    pointB.y = y;
+                                    commandB.coordinates[1] = y;
+                                    break;
+                            }
+                        }
+                        if (recalibrate) {
+                            for (const seg of path) {
+                                for (let j = 0, k = 0; j < seg.coordinates.length; j += 2, k++) {
+                                    if (x !== undefined) {
+                                        if (!seg.relative) {
+                                            seg.coordinates[j] += x;
+                                        }
+                                        seg.value[k].x += x;
+                                    }
+                                    if (y !== undefined) {
+                                        if (!seg.relative) {
+                                            seg.coordinates[j + 1] += y;
+                                        }
+                                        seg.value[k].y += y;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else if (rx !== undefined || ry !== undefined) {
+                        for (let j = 0; j < path.length; j++) {
+                            const seg = path[j];
+                            if (seg.name.toUpperCase() === 'A') {
+                                if (rx !== undefined && seg.radiusX) {
+                                    const offset = rx - seg.radiusX;
+                                    seg.radiusX = rx;
+                                    seg.coordinates[0] = rx * 2 * (seg.coordinates[0] < 0 ? -1 : 1);
+                                    if (j === 1) {
+                                        path[0].coordinates[0] -= offset;
+                                        path[0].end.x -= offset;
+                                    }
+                                }
+                                if (ry !== undefined && seg.radiusY) {
+                                    seg.radiusY = ry;
+                                }
+                            }
+                        }
+                    }
+                    else if (width !== undefined) {
+                        for (const index of [1, 2]) {
+                            const seg = path[index];
+                            switch (seg.name) {
+                                case 'm':
+                                case 'l':
+                                case 'h':
+                                    seg.coordinates[0] = width * (seg.coordinates[0] < 0 ? -1 : 1);
+                                    break;
+                                case 'M':
+                                case 'L':
+                                case 'H':
+                                    seg.coordinates[0] = path[0].end.x + width;
+                                    break;
+                            }
+                        }
+                    }
+                    else if (height !== undefined) {
+                        for (const index of [2, 3]) {
+                            const seg = path[index];
+                            switch (seg.name) {
+                                case 'm':
+                                case 'l':
+                                case 'v':
+                                    seg.coordinates[1] = height * (seg.coordinates[1] < 0 ? -1 : 1);
+                                    break;
+                                case 'M':
+                                case 'L':
+                                case 'V':
+                                    seg.coordinates[1] = path[0].end.y + height;
+                                    break;
+                            }
+                        }
                     }
                     else {
-                        result[i] = '';
+                        result[i] = values[i - 1] || pathData;
+                        continue;
                     }
+                    result[i] = SvgBuild.drawPath(path, precision);
+                    if (transforms && transforms.length) {
+                        commands = SvgBuild.getPathCommands(result[i]);
+                        if (commands.length) {
+                            let points = SvgBuild.extractPathPoints(commands);
+                            if (points.length) {
+                                points = SvgBuild.applyTransforms(transforms, points, companion && TRANSFORM.origin(companion.element));
+                                result[i] = SvgBuild.drawPath(SvgBuild.rebindPathPoints(commands, points), precision);
+                            }
+                        }
+                    }
+                }
+                else {
+                    result[i] = '';
                 }
             }
         }
@@ -230,7 +254,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
 
     public name = '';
     public value = '';
-    public transformed: SvgTransform[] | null = null;
+    public baseValue = '';
+    public transformed?: SvgTransform[];
     public transformResidual?: SvgTransform[][];
 
     private _transforms?: SvgTransform[];
@@ -240,10 +265,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         this.init();
     }
 
-    public draw(transforms?: SvgTransform[], residual?: SvgTransformResidual, precision?: number, extract = false) {
-        if (!extract) {
-            this.transformed = null;
-        }
+    public draw(transforms?: SvgTransform[], residual?: SvgTransformResidual, precision?: number) {
+        this.transformed = undefined;
         const element = this.element;
         const parent = <SvgContainer> this.parent;
         const patternParent = <SvgShapePattern> this.patternParent;
@@ -399,10 +422,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         else {
             d = '';
         }
-        if (!extract) {
-            this.value = d;
-            this.setPaint([d], precision);
-        }
+        this.value = d;
+        this.setPaint([d], precision);
         return d;
     }
 
