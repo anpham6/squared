@@ -315,6 +315,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     if (result.length) {
                         coordinates[0] = result[0].coordinates[0];
                         coordinates[1] = result[0].coordinates[1];
+                        coordinates.length = 2;
                         match[1] = 'Z';
                         break;
                     }
@@ -365,16 +366,15 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 default:
                     continue;
             }
-            if (coordinates.length > 1) {
+            if (coordinates.length >= 2) {
+                const relative = match[1] === match[1].toLowerCase();
                 const points: SvgPoint[] = [];
-                const relative = /[a-z]/.test(match[1]);
                 for (let i = 0; i < coordinates.length; i += 2) {
                     let x = coordinates[i];
                     let y = coordinates[i + 1];
                     if (relative && previousPoint) {
                         x += previousPoint.x;
                         y += previousPoint.y;
-                        previousPoint = { x, y };
                     }
                     points.push({ x, y });
                 }
@@ -656,10 +656,12 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static convertPoints(values: number[]) {
         const result: Point[] = [];
-        for (let i = 0; i < values.length; i += 2) {
-            result.push({ x: values[i], y: values[i + 1] });
+        if (values.length % 2 === 0) {
+            for (let i = 0; i < values.length; i += 2) {
+                result.push({ x: values[i], y: values[i + 1] });
+            }
         }
-        return result.length % 2 === 0 ? result : [];
+        return result;
     }
 
     public static parsePoints(value: string) {
@@ -676,9 +678,9 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         const pattern = /-?[\d.]+/g;
         let match: RegExpExecArray | null;
         while ((match = pattern.exec(value)) !== null) {
-            const digit = parseFloat(match[0]);
-            if (!isNaN(digit)) {
-                result.push(digit);
+            const coord = parseFloat(match[0]);
+            if (!isNaN(coord)) {
+                result.push(coord);
             }
         }
         return result;

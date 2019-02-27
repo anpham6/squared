@@ -32,7 +32,7 @@ function getColorStop(element: SVGGradientElement) {
 function getBaseValue(element: SVGElement, ...attrs: string[]) {
     const result: ObjectMap<string | number> = {};
     for (const attr of attrs) {
-        if (element[attr] && element[attr].baseVal) {
+        if (element[attr]) {
             result[attr] = element[attr].baseVal.value;
             result[`${attr}AsString`] = element[attr].baseVal.valueAsString;
         }

@@ -637,9 +637,14 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                     children.sort((a, b) => (<AnimateCompanion> a.companion).index >= (<AnimateCompanion> b.companion).index ? 1 : 0);
                                     const sequentially: SvgAnimation[] = [];
                                     const after: SvgAnimation[] = [];
-                                    for (const child of children) {
+                                    for (let j = 0; j < children.length; j++) {
+                                        const child = children[j];
                                         if ((<AnimateCompanion> child.companion).index <= 0) {
                                             sequentially.push(child);
+                                            if (j === 0 && item.delay > 0) {
+                                                child.delay += item.delay;
+                                                item.delay = 0;
+                                            }
                                         }
                                         else {
                                             after.push(child);
@@ -757,7 +762,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                             continue;
                                         }
                                         const insertBeforeValue = (attr: string, value: string) => {
-                                            if (value !== '' && fillBeforeData.values.findIndex(before => before.propertyName === attr) === -1) {
+                                            if (value && fillBeforeData.values.findIndex(before => before.propertyName === attr) === -1) {
                                                 fillBeforeData.values.push(this.createPropertyValue(attr, value, '0', valueType));
                                             }
                                         };
@@ -947,7 +952,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                 const keyName =  item.synchronized ? item.synchronized.index + item.synchronized.value : (index !== 0 || propertyNames.length > 1 ? JSON.stringify(options) : '');
                                                 for (let i = 0; i < propertyNames.length; i++) {
                                                     const propertyName = propertyNames[i];
-                                                    if (fillBefore && beforeValues[i]) {
+                                                    if (fillBefore) {
                                                         insertBeforeValue(propertyName, beforeValues[i]);
                                                     }
                                                     if (useKeyFrames && item.keyTimes.length > 1) {
@@ -1241,8 +1246,10 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                             const [strokeDash, pathValue, clipPathData] = item.path.extractStrokeDash(animateData && animateData.animate, false, this.options.floatPrecisionValue);
                             if (strokeDash) {
                                 const groupName = getVectorName(item, 'stroke');
-                                if (pathValue && clipPathData) {
+                                if (pathValue) {
                                     pathData.value = pathValue;
+                                }
+                                if (clipPathData) {
                                     clipGroup.push({ clipPathData });
                                 }
                                 for (let i = 0; i < strokeDash.length; i++) {

@@ -262,8 +262,8 @@ export function hasBit(value: number, type: number) {
     return (value & type) === type;
 }
 
-export function isNumber(value: string | number): value is number {
-    return typeof value === 'number' || /^-?\d+(\.\d+)?$/.test(value.trim());
+export function isNumber(value: string): boolean {
+    return value !== '' && /^-?\d+(\.\d+)?$/.test(value.trim());
 }
 
 export function isString(value: any): value is string {

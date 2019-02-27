@@ -112,8 +112,6 @@ export interface SvgStrokeDash {
     start: number;
     end: number;
     offset?: number;
-    leading?: number;
-    trailing?: number;
 }
 
 export interface SvgBuildOptions {
@@ -130,4 +128,16 @@ export interface SvgSynchronizeOptions {
     keyTimeMode?: number;
     precision?: number;
     element?: SVGGeometryElement;
+}
+
+export interface SvgPathExtendData {
+    items: SvgStrokeDash[];
+    leading: number;
+    trailing: number;
+    trailingSpace: number;
+    pathLengthRatio: number;
+    extendedLength?: number;
+    path?: string;
+    leadingOffset?: number;
+    trailingOffset?: number;
 }
