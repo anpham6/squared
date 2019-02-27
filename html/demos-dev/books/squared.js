@@ -1,4 +1,4 @@
-var squared = null;
+/*var squared = null;
 
 System.config({
     packages: {
@@ -30,5 +30,13 @@ System.import('/build/src/main.js').then(result => {
                 squared.saveAllToDisk();
             });
         });
+    });
+});*/
+
+document.addEventListener('DOMContentLoaded', function() {
+    squared.setFramework(android);
+    squared.parseDocument().then(function() {
+        squared.close();
+        squared.saveAllToDisk();
     });
 });
