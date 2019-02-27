@@ -107,14 +107,15 @@ export function isUserAgent(value: string | number) {
         }
     }
     let client: number;
-    if (navigator.userAgent.indexOf('Edge') !== -1) {
-        client = USER_AGENT.EDGE;
+    const userAgent = navigator.userAgent;
+    if (userAgent.indexOf('Safari') !== -1 && userAgent.indexOf('Chrome') === -1) {
+        client = USER_AGENT.SAFARI;
     }
-    else if (navigator.userAgent.indexOf('Firefox') !== -1) {
+    else if (userAgent.indexOf('Firefox') !== -1) {
         client = USER_AGENT.FIREFOX;
     }
-    else if (navigator.userAgent.indexOf('Chrome') === -1 && navigator.userAgent.indexOf('Safari') !== -1) {
-        client = USER_AGENT.SAFARI;
+    else if (userAgent.indexOf('Edge') !== -1) {
+        client = USER_AGENT.EDGE;
     }
     else {
         client = USER_AGENT.CHROME;
@@ -371,7 +372,7 @@ export function getStyle(element: Element | null, cache = true): CSSStyleDeclara
 }
 
 export function getFontSize(element: Element | null) {
-    return parseInt(getStyle(element).fontSize || '16');
+    return parseInt(getStyle(element).fontSize || '16px');
 }
 
 export function cssResolveUrl(value: string) {
@@ -758,7 +759,7 @@ export function getNextElementSibling(element: Element | null) {
     return null;
 }
 
-export function hasComputedStyle(element: UndefNull<Element>): element is HTMLElement {
+export function hasComputedStyle(element: Element | null): element is HTMLElement {
     return !!element && typeof element['style'] === 'object';
 }
 
@@ -787,9 +788,4 @@ export function deleteElementCache(element: Element, ...attrs: string[]) {
 
 export function getElementAsNode<T>(element: Element): T | undefined {
     return isString(element.className) && element.className.startsWith('squared') ? undefined : getElementCache(element, 'node');
-}
-
-export function getElementAsNodeAttribute<T>(element: Element, attr: string): T | undefined {
-    const node = getElementAsNode(element);
-    return node && node[attr] !== undefined ? node[attr] as T : undefined;
 }

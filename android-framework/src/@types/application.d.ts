@@ -29,3 +29,5 @@ export interface StyleAttribute {
     items: StringMap | NameValue[];
     ids?: number[];
 }
+
+export type CustomizationResult = (result: {}, api?: number, node?: android.base.View) => boolean;

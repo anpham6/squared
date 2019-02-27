@@ -125,50 +125,50 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                         }
                         else {
                             valid = true;
-                            const bottomStart = previousSiblings.pop() as T;
-                            const topEnd = nextSiblings.pop() as T;
-                            if (bottomStart.inlineStatic && topEnd.inlineStatic && previousSiblings.length === 0) {
+                            const above = previousSiblings.pop() as T;
+                            const below = nextSiblings.pop() as T;
+                            if (above.inlineStatic && below.inlineStatic && previousSiblings.length === 0) {
                                 processed.add(node);
                                 continue;
                             }
                             let bottom: number;
                             let top: number;
-                            if (bottomStart.lineHeight > 0 && bottomStart.element && bottomStart.cssTry('lineHeight', '0px')) {
-                                bottom = bottomStart.element.getBoundingClientRect().bottom + bottomStart.marginBottom;
-                                bottomStart.cssFinally('lineHeight');
+                            if (above.lineHeight > 0 && above.element && above.cssTry('lineHeight', '0px')) {
+                                bottom = above.element.getBoundingClientRect().bottom + above.marginBottom;
+                                above.cssFinally('lineHeight');
                             }
                             else {
-                                bottom = bottomStart.linear.bottom;
+                                bottom = above.linear.bottom;
                             }
-                            if (topEnd.lineHeight > 0 && topEnd.element && topEnd.cssTry('lineHeight', '0px')) {
-                                top = topEnd.element.getBoundingClientRect().top - topEnd.marginTop;
-                                topEnd.cssFinally('lineHeight');
+                            if (below.lineHeight > 0 && below.element && below.cssTry('lineHeight', '0px')) {
+                                top = below.element.getBoundingClientRect().top - below.marginTop;
+                                below.cssFinally('lineHeight');
                             }
                             else {
-                                top = topEnd.linear.top;
+                                top = below.linear.top;
                             }
-                            const bottomParent = bottomStart.visible ? bottomStart.renderParent : undefined;
-                            const topParent = topEnd.visible ? topEnd.renderParent : undefined;
+                            const aboveParent = above.visible ? above.renderParent : undefined;
+                            const belowParent = below.visible ? below.renderParent : undefined;
                             const offset = top - bottom;
                             if (offset > 0) {
-                                if (topParent && topParent.groupParent && topParent.firstChild === topEnd) {
-                                    topParent.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
+                                if (belowParent && belowParent.groupParent && belowParent.firstChild === below) {
+                                    belowParent.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
                                 }
-                                else if (bottomParent && bottomParent.groupParent && bottomParent.lastChild === bottomStart) {
-                                    bottomParent.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offset);
+                                else if (aboveParent && aboveParent.groupParent && aboveParent.lastChild === above) {
+                                    aboveParent.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offset);
                                 }
                                 else {
-                                    if (topParent && topParent.layoutVertical && (topEnd.visible || topEnd.renderAs)) {
-                                        (topEnd.renderAs || topEnd).modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
+                                    if (belowParent && belowParent.layoutVertical && (below.visible || below.renderAs)) {
+                                        (below.renderAs || below).modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
                                     }
-                                    else if (bottomParent && bottomParent.layoutVertical && (bottomStart.visible || bottomStart.renderAs)) {
-                                        (bottomStart.renderAs || bottomStart).modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offset);
+                                    else if (aboveParent && aboveParent.layoutVertical && (above.visible || above.renderAs)) {
+                                        (above.renderAs || above).modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offset);
                                     }
-                                    else if (!topParent && !bottomParent && actualParent && actualParent.visible) {
-                                        if (topEnd.lineBreak || topEnd.excluded) {
+                                    else if (!belowParent && !aboveParent && actualParent && actualParent.visible) {
+                                        if (below.lineBreak || below.excluded) {
                                             actualParent.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);
                                         }
-                                        else if (bottomStart.lineBreak || bottomStart.excluded) {
+                                        else if (above.lineBreak || above.excluded) {
                                             actualParent.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
                                         }
                                         else {
@@ -227,9 +227,9 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                 if (offset !== 0) {
                     const nextSiblings = node.nextSiblings(true, true, true);
                     if (nextSiblings.length) {
-                        const topEnd = nextSiblings.pop() as T;
-                        if (topEnd.visible) {
-                            topEnd.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
+                        const below = nextSiblings.pop() as T;
+                        if (below.visible) {
+                            below.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
                             processed.add(node);
                         }
                     }

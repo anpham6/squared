@@ -53,7 +53,10 @@ function checkPositionStatic<T extends Node>(node: T, parent?: T) {
     const previousSiblings = node.previousSiblings();
     const nextSiblings = node.nextSiblings();
     if ((previousSiblings.length === 0 || !previousSiblings.some(item => item.multiline > 0 || item.excluded && !item.blockStatic)) && (nextSiblings.length === 0 || nextSiblings.every(item => item.blockStatic || item.lineBreak || item.excluded) || parent && node.element === $dom.getLastChildElement(parent.element))) {
-        node.css({ display: 'inline-block', verticalAlign: 'top' }, '', true);
+        node.cssApply({
+            display: 'inline-block',
+            verticalAlign: 'top'
+        }, true);
         node.positionStatic = true;
         return true;
     }
@@ -1774,7 +1777,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 else {
                     node.css('whiteSpace', $dom.getStyle(element.parentElement).whiteSpace || 'normal');
                 }
-                node.css({
+                node.cssApply({
                     position: 'static',
                     display: 'inline',
                     verticalAlign: 'baseline',
@@ -1878,7 +1881,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                                 case 'height':
                                                 case 'min-height':
                                                 case 'max-height':
-                                                    valid = compareRange(operation, attr.indexOf('width') !== -1 ? window.innerWidth : window.innerHeight, parseFloat($util.convertPX(value, $util.convertInt($dom.getStyle(document.body).fontSize || '16'))));
+                                                    valid = compareRange(operation, attr.indexOf('width') !== -1 ? window.innerWidth : window.innerHeight, parseFloat($util.convertPX(value, $util.convertInt($dom.getStyle(document.body).fontSize as string))));
                                                     break;
                                                 case 'orientation':
                                                     valid = value === 'portrait' && window.innerWidth <= window.innerHeight || value === 'landscape' && window.innerWidth > window.innerHeight;
@@ -1959,16 +1962,10 @@ export default class Application<T extends Node> implements squared.base.Applica
         }
         document.querySelectorAll(item.selectorText).forEach((element: HTMLElement) => {
             const style = $dom.getStyle(element);
-            const fontSize = parseInt($util.convertPX(style.fontSize || '16px', 0));
+            const fontSize = parseInt($util.convertPX(style.fontSize as string, 0));
             const styleMap: StringMap = {};
             for (const attr of fromRule) {
                 const value = $dom.checkStyleAttribute(element, attr, item.style[attr], style, fontSize);
-                if (value !== '') {
-                    styleMap[attr] = value;
-                }
-            }
-            for (const attr of Array.from(element.style)) {
-                const value = $dom.checkStyleAttribute(element, attr, element.style[attr], style, fontSize);
                 if (value !== '') {
                     styleMap[attr] = value;
                 }

@@ -39,8 +39,8 @@ import ResourceSvg from './extensions/resource/svg';
 import * as constant from './lib/constant';
 import * as enumeration from './lib/enumeration';
 import * as util from './lib/util';
+import * as customization from './lib/customization';
 
-import { API_ANDROID } from './customizations';
 import SETTINGS from './settings';
 
 type T = View;
@@ -68,6 +68,7 @@ function checkApplication(main?: Application): main is Application {
 
 const lib = {
     constant,
+    customization,
     enumeration,
     util
 };
@@ -114,12 +115,12 @@ const appBase: AppFramework<T> = {
     lib,
     system: {
         customize(build: number, widget: string, options: {}) {
-            if (API_ANDROID[build]) {
-                const customizations = API_ANDROID[build].customizations;
-                if (customizations[widget] === undefined) {
-                    customizations[widget] = {};
+            if (customization.API_ANDROID[build]) {
+                const assign = customization.API_ANDROID[build].assign;
+                if (assign[widget] === undefined) {
+                    assign[widget] = {};
                 }
-                Object.assign(customizations[widget], options);
+                Object.assign(assign[widget], options);
             }
         },
         addXmlNs(name: string, uri: string) {
@@ -197,7 +198,7 @@ const appBase: AppFramework<T> = {
         const EA = constant.EXT_ANDROID;
         application = new squared.base.Application(framework, View, Controller, Resource, ExtensionManager);
         fileHandler = new File(application.resourceHandler);
-        userSettings = { ...SETTINGS };
+        userSettings = Object.assign({}, SETTINGS);
         Object.assign(application.builtInExtensions, {
             [EN.EXTERNAL]: new External(EN.EXTERNAL, framework),
             [EN.SUBSTITUTE]: new Substitute(EN.SUBSTITUTE, framework),

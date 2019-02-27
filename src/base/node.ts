@@ -83,7 +83,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public abstract applyOptimizations(): void;
     public abstract applyCustomizations(): void;
     public abstract alignParent(position: string): boolean;
-    public abstract alignSibling(position: string): boolean;
+    public abstract alignSibling(position: string, documentId?: string): string;
     public abstract localizeString(value: string): string;
     public abstract clone(id?: number, attributes?: boolean, position?: boolean): T;
     public abstract set containerType(value: number);
@@ -93,19 +93,29 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public abstract get support(): Support;
 
     public init() {
-        if (this.styleElement) {
-            this._styleMap = $dom.getElementCache(<HTMLElement> this._element, 'styleMap') || {};
+        const element = <HTMLElement> this._element;
+        if (element) {
+            $dom.setElementCache(element, 'node', this);
+            this.style = $dom.getElementCache(element, 'style') || $dom.getStyle(element, false);
         }
-        if (this._element) {
-            $dom.setElementCache(this._element, 'node', this);
-            this.style = $dom.getElementCache(this._element, 'style') || $dom.getStyle(this._element, false);
+        if (this.styleElement) {
+            const styleMap = $dom.getElementCache(element, 'styleMap') || {};
+            const fontSize = $util.convertInt(this.style.fontSize as string);
+            for (let attr of Array.from(element.style)) {
+                attr = $util.convertCamelCase(attr);
+                const value = $dom.checkStyleAttribute(element, attr, element.style[attr], this.style, fontSize);
+                if (value !== '') {
+                    styleMap[attr] = value;
+                }
+            }
+            this._styleMap = styleMap;
         }
     }
 
     public saveAsInitial() {
         if (this._initial.iteration === -1) {
             this._initial.children = this.duplicate();
-            this._initial.styleMap = { ...this._styleMap };
+            this._initial.styleMap = Object.assign({}, this._styleMap);
             this._initial.documentParent = this._documentParent;
         }
         if (this._bounds) {
@@ -271,7 +281,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public ascend(generated = false, levels = -1) {
         const result: T[] = [];
         const attr = generated ? (this.renderParent ? 'renderParent' : 'parent') : 'actualParent';
-        let current: UndefNull<T> = this[attr];
+        let current: T | undefined = this[attr];
         let i = -1;
         while (current && current.id !== 0 && !result.includes(current)) {
             result.push(current);
@@ -333,7 +343,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                             style[key] = node.style[key];
                         }
                     }
-                    this.css(style);
+                    this.cssApply(style);
                     break;
             }
         }
@@ -350,12 +360,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 }
                 if (checkFloat) {
                     const previous = siblings[siblings.length - 1];
-                    if (this.floating && (
-                            this.linear.top >= previous.linear.bottom ||
-                            this.float === 'left' && siblings.find(node => node.siblingIndex < this.siblingIndex && $util.withinFraction(this.linear.left, node.linear.left)) !== undefined ||
-                            this.float === 'right' && siblings.find(node => node.siblingIndex < this.siblingIndex && $util.withinFraction(this.linear.right, node.linear.right)) !== undefined
-                       ))
-                    {
+                    if (this.floating && (this.linear.top >= previous.linear.bottom || this.float === 'left' && siblings.find(node => node.siblingIndex < this.siblingIndex && $util.withinFraction(this.linear.left, node.linear.left)) !== undefined || this.float === 'right' && siblings.find(node => node.siblingIndex < this.siblingIndex && $util.withinFraction(this.linear.right, node.linear.right)) !== undefined)) {
                         return true;
                     }
                 }
@@ -366,9 +371,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     previous.blockStatic ||
                     this.blockStatic && (
                         !previous.inlineFlow ||
-                        cleared && cleared.has(previous)
+                        !!cleared && cleared.has(previous)
                     ) ||
-                    cleared && cleared.get(previous) === 'both' && (!$util.isArray(siblings) || siblings[0] !== previous) ||
+                    !!cleared && cleared.get(previous) === 'both' && (!$util.isArray(siblings) || siblings[0] !== previous) ||
                     !previous.floating && (
                         this.blockStatic ||
                         !this.floating && !this.inlineFlow
@@ -430,25 +435,24 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return Math.ceil(self.top) < Math.floor(rect.top) || Math.ceil(self.top) >= Math.floor(rect.bottom);
     }
 
-    public css(attr: object | string, value = '', cache = false): string {
-        if (typeof attr === 'object') {
-            Object.assign(this._styleMap, attr);
+    public css(attr: string, value = '', cache = false): string {
+        if (arguments.length >= 2) {
+            this._styleMap[attr] = value;
             if (cache) {
-                for (const name in attr) {
-                    this.unsetCache(name);
-                }
+                this.unsetCache(attr);
             }
-            return '';
         }
-        else {
-            if (arguments.length >= 2) {
-                this._styleMap[attr] = value;
-                if (cache) {
-                    this.unsetCache(attr);
-                }
+        return this._styleMap[attr] || this.style && this.style[attr] || '';
+    }
+
+    public cssApply(values: StringMap, cache = false) {
+        Object.assign(this._styleMap, values);
+        if (cache) {
+            for (const name in values) {
+                this.unsetCache(name);
             }
-            return this._styleMap[attr] || this.style && this.style[attr] || '';
         }
+        return this;
     }
 
     public cssInitial(attr: string, modified = false, computed = false) {
@@ -503,8 +507,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public cssPX(attr: string, value: number, negative = false, cache = false) {
         const current = this._styleMap[attr];
-        if (current && current.endsWith('px') && $util.isUnit(current)) {
-            value += parseInt(current);
+        if (current && $util.isUnit(current)) {
+            value += parseFloat($util.convertPX(current, this.fontSize));
             if (!negative) {
                 value = Math.max(0, value);
             }
@@ -606,8 +610,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 case 'transparent':
                 case 'rgba(0, 0, 0, 0)':
                     return false;
-                case 'inherit':
-                    return this.documentBody ? false : this.documentParent.has(attr, checkType, options);
                 default:
                     if (options) {
                         if (options.not) {
@@ -653,13 +655,13 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public exclude({ section = 0, procedure = 0, resource = 0 }) {
-        if (section) {
+        if (section > 0 && !$util.hasBit(this._excludeSection, section)) {
             this._excludeSection |= section;
         }
-        if (procedure) {
+        if (procedure > 0 && !$util.hasBit(this._excludeProcedure, procedure)) {
             this._excludeProcedure |= procedure;
         }
-        if (resource) {
+        if (resource > 0 && !$util.hasBit(this._excludeResource, resource)) {
             this._excludeResource |= resource;
         }
     }
@@ -1572,8 +1574,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get baseline() {
         if (this._cached.baseline === undefined) {
             const value = this.verticalAlign;
-            const originalValue = this.cssInitial('verticalAlign');
-            this._cached.baseline = this.pageFlow && !this.floating && !this.svgElement && (value === 'baseline' || value === 'initial' || $util.isUnit(originalValue) && parseInt(originalValue) === 0);
+            const initialValue = this.cssInitial('verticalAlign');
+            this._cached.baseline = this.pageFlow && !this.floating && !this.svgElement && (value === 'baseline' || value === 'initial' || $util.isUnit(initialValue) && parseInt(initialValue) === 0);
         }
         return this._cached.baseline;
     }
@@ -1587,7 +1589,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
     get multiline() {
         if (this._cached.multiline === undefined) {
-            this._cached.multiline = this.plainText || this.inlineFlow && this.inlineText ? $dom.getRangeClientRect(<Element> this._element).multiline : 0;
+            this._cached.multiline = this.plainText || this.inlineText && (this.inlineFlow || this.length === 0) ? $dom.getRangeClientRect(<Element> this._element).multiline : 0;
         }
         return this._cached.multiline;
     }

@@ -20,7 +20,7 @@ declare global {
             app(attr: string, value?: string, overwrite?: boolean): string;
             formatted(value: string, overwrite?: boolean): void;
             mergeGravity(attr: string, ...alignment: string[]): string;
-            applyLineHeight(value: number, isolated?: boolean): void;
+            setLineHeight(value: number): void;
             anchor(position: string, documentId?: string, overwrite?: boolean): boolean;
             anchorParent(orientation: string, overwrite?: boolean, constraintBias?: boolean): boolean;
             anchorDelete(...position: string[]): void;
@@ -33,7 +33,6 @@ declare global {
 
         class View implements View {
             public static documentBody(): View;
-            public static getCustomizationValue(api: number, tagName: string, obj: string, attr: string): string;
             public static getControlName(containerType: number): string;
             constructor(id: number, element?: Element | null, afterInit?: BindGeneric<View, void>);
         }

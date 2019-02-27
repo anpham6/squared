@@ -1,4 +1,4 @@
-/* android.widget 0.6.2
+/* android.widget 0.7.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};

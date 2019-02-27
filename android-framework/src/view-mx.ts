@@ -1,14 +1,16 @@
 import { CachedValue } from '../../src/base/@types/node';
+import { CustomizationResult } from './@types/application';
 import { Constraint, LocalSettings } from './@types/node';
 
 import { AXIS_ANDROID, CONTAINER_ANDROID, ELEMENT_ANDROID, LAYOUT_ANDROID, RESERVED_JAVA } from './lib/constant';
+import { API_ANDROID, DEPRECATED_ANDROID } from './lib/customization';
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
 import { calculateBias, replaceRTL, stripId, validateString } from './lib/util';
 
-import { API_ANDROID, DEPRECATED_ANDROID, FunctionResult } from './customizations';
-
 import $NodeList = squared.base.NodeList;
 import $Resource = squared.base.Resource;
+
+type T = android.base.View;
 
 const $enum = squared.base.lib.enumeration;
 const $dom = squared.lib.dom;
@@ -30,6 +32,46 @@ function checkTextAlign(value: string) {
     }
 }
 
+function setAutoMargin(node: T) {
+    if (!node.blockWidth) {
+        const alignment: string[] = [];
+        const singleFrame = node.documentRoot && node.layoutFrame && node.length === 1 && node.has('maxWidth');
+        if (node.autoMargin.leftRight) {
+            if (singleFrame) {
+                (node.renderChildren[0] as T).mergeGravity('layout_gravity', 'center_horizontal');
+            }
+            else {
+                alignment.push('center_horizontal');
+            }
+        }
+        else if (node.autoMargin.left) {
+            if (singleFrame) {
+                (node.renderChildren[0] as T).mergeGravity('layout_gravity', 'right');
+            }
+            else {
+                alignment.push('right');
+            }
+        }
+        else if (node.autoMargin.right) {
+            alignment.push('left');
+        }
+        if (node.autoMargin.topBottom) {
+            alignment.push('center_vertical');
+        }
+        else if (node.autoMargin.top) {
+            alignment.push('bottom');
+        }
+        else if (node.autoMargin.bottom) {
+            alignment.push('top');
+        }
+        if (alignment.length) {
+            node.mergeGravity(node.blockWidth || !node.pageFlow ? 'gravity' : 'layout_gravity', ...alignment);
+            return true;
+        }
+    }
+    return false;
+}
+
 export default (Base: Constructor<squared.base.Node>) => {
     return class View extends Base implements android.base.View {
         public static documentBody() {
@@ -42,23 +84,13 @@ export default (Base: Constructor<squared.base.Node>) => {
             return View._documentBody;
         }
 
-        public static getCustomizationValue(api: number, tagName: string, obj: string, attr: string) {
-            for (const build of [API_ANDROID[api], API_ANDROID[0]]) {
-                const value = $util.optionalAsString(build, `customizations.${tagName}.${obj}.${attr}`);
-                if ($util.isString(value)) {
-                    return value;
-                }
-            }
-            return '';
-        }
-
         public static getControlName(containerType: number): string {
             return CONTAINER_ANDROID[CONTAINER_NODE[containerType]];
         }
 
-        private static _documentBody: View;
+        private static _documentBody: T;
 
-        public readonly renderChildren: View[] = [];
+        public readonly renderChildren: T[] = [];
         public readonly constraint: Constraint = {
             horizontal: false,
             vertical: false,
@@ -68,8 +100,8 @@ export default (Base: Constructor<squared.base.Node>) => {
         protected _namespaces = new Set(['android', 'app']);
         protected _controlName = '';
         protected _fontSize = 0;
-        protected _renderParent?: View;
-        protected _documentParent?: View;
+        protected _renderParent?: T;
+        protected _documentParent?: T;
         protected readonly _boxAdjustment: BoxModel = $dom.newBoxModel();
         protected readonly _boxReset: BoxModel = $dom.newBoxModel();
 
@@ -84,7 +116,7 @@ export default (Base: Constructor<squared.base.Node>) => {
         constructor(
             id = 0,
             element?: Element | null,
-            afterInit?: BindGeneric<View, void>)
+            afterInit?: BindGeneric<T, void>)
         {
             super(id, element);
             if (afterInit) {
@@ -125,12 +157,10 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         public apply(options: {}) {
-            if (options && typeof options === 'object') {
-                const local = { ...options };
-                super.apply(local);
-                for (const obj in local) {
-                    this.formatted(`${obj}="${local[obj]}"`);
-                }
+            const data = Object.assign({}, options);
+            super.apply(data);
+            for (const obj in data) {
+                this.formatted(`${obj}="${data[obj]}"`);
             }
         }
 
@@ -142,7 +172,7 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         public anchor(position: string, documentId = '', overwrite?: boolean) {
-            const renderParent = this.renderParent as View;
+            const renderParent = this.renderParent as T;
             if (renderParent) {
                 if (renderParent.layoutConstraint) {
                     if (documentId === undefined || this.constraint.current[position] === undefined || overwrite) {
@@ -186,7 +216,7 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         public anchorParent(orientation: string, overwrite = false, constraintBias = false) {
-            const renderParent = this.renderParent as View;
+            const renderParent = this.renderParent as T;
             if (renderParent) {
                 const horizontal = orientation === AXIS_ANDROID.HORIZONTAL;
                 if (renderParent.layoutConstraint) {
@@ -210,14 +240,14 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         public anchorDelete(...position: string[]) {
-            const renderParent = this.renderParent as View;
+            const renderParent = this.renderParent as T;
             if (renderParent) {
                 if (renderParent.layoutConstraint) {
                     this.delete('app', ...$util.replaceMap<string, string>(position, value => this.localizeString(LAYOUT_ANDROID.constraint[value])));
                 }
                 else if (renderParent.layoutRelative) {
                     for (const value of position) {
-                        if (this.alignSibling(value)) {
+                        if (this.alignSibling(value) !== '') {
                             this.delete('android', LAYOUT_ANDROID.relative[value], this.localizeString(LAYOUT_ANDROID.relative[value]));
                         }
                         else if (LAYOUT_ANDROID.relativeParent[value]) {
@@ -229,7 +259,7 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         public anchorClear() {
-            const renderParent = this.renderParent as View;
+            const renderParent = this.renderParent as T;
             if (renderParent) {
                 if (renderParent.layoutConstraint) {
                     this.anchorDelete(...Object.keys(LAYOUT_ANDROID.constraint));
@@ -242,7 +272,7 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         public alignParent(position: string) {
-            const renderParent = this.renderParent as View;
+            const renderParent = this.renderParent as T;
             if (renderParent) {
                 if (renderParent.layoutConstraint) {
                     const attr: string = LAYOUT_ANDROID.constraint[position];
@@ -260,21 +290,33 @@ export default (Base: Constructor<squared.base.Node>) => {
             return false;
         }
 
-        public alignSibling(position: string) {
-            const renderParent = this.renderParent as View;
+        public alignSibling(position: string, documentId?: string) {
+            const renderParent = this.renderParent as T;
             if (renderParent) {
-                if (renderParent.layoutConstraint) {
-                    const attr: string = LAYOUT_ANDROID.constraint[position];
-                    const value = this.app(this.localizeString(attr)) || this.app(attr);
-                    return value !== '' && value !== 'parent' && value !== renderParent.documentId;
+                if (documentId) {
+                    if (renderParent.layoutConstraint) {
+                        const attr: string = LAYOUT_ANDROID.constraint[position];
+                        this.app(this.localizeString(attr), documentId);
+                    }
+                    else if (renderParent.layoutRelative) {
+                        const attr: string = LAYOUT_ANDROID.relative[position];
+                        this.android(this.localizeString(attr), documentId);
+                    }
                 }
-                else if (renderParent.layoutRelative) {
-                    const attr: string = LAYOUT_ANDROID.relative[position];
-                    const value = this.android(this.localizeString(attr)) || this.android(attr);
-                    return value !== '';
+                else {
+                    if (renderParent.layoutConstraint) {
+                        const attr: string = LAYOUT_ANDROID.constraint[position];
+                        const value = this.app(this.localizeString(attr)) || this.app(attr);
+                        return value !== '' && value !== 'parent' && value !== renderParent.documentId ? value : '';
+                    }
+                    else if (renderParent.layoutRelative) {
+                        const attr: string = LAYOUT_ANDROID.relative[position];
+                        const value = this.android(this.localizeString(attr)) || this.android(attr);
+                        return value;
+                    }
                 }
             }
-            return false;
+            return '';
         }
 
         public horizontalBias() {
@@ -299,7 +341,7 @@ export default (Base: Constructor<squared.base.Node>) => {
 
         public supported(obj: string, attr: string, result = {}): boolean {
             if (this.localSettings.targetAPI > 0 && this.localSettings.targetAPI < BUILD_ANDROID.LATEST) {
-                const deprecated: ObjectMap<FunctionResult> = DEPRECATED_ANDROID[obj];
+                const deprecated: ObjectMap<CustomizationResult> = DEPRECATED_ANDROID[obj];
                 if (deprecated && typeof deprecated[attr] === 'function') {
                     const valid = deprecated[attr](result, this.localSettings.targetAPI, this);
                     if (!valid || Object.keys(result).length) {
@@ -309,7 +351,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                 for (let i = this.localSettings.targetAPI; i <= BUILD_ANDROID.LATEST; i++) {
                     const version = API_ANDROID[i];
                     if (version && version[obj] && version[obj][attr] !== undefined) {
-                        const callback: FunctionResult | boolean = version[obj][attr];
+                        const callback: CustomizationResult | boolean = version[obj][attr];
                         if (typeof callback === 'boolean') {
                             return callback;
                         }
@@ -351,7 +393,7 @@ export default (Base: Constructor<squared.base.Node>) => {
             }
         }
 
-        public clone(id?: number, attributes = false, position = false): View {
+        public clone(id?: number, attributes = false, position = false): T {
             const node = new View(id || this.id, this.element);
             Object.assign(node.localSettings, this.localSettings);
             node.tagName = this.tagName;
@@ -458,7 +500,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                 if (!this.inlineStatic && this.has('width') || this.toInt('width') > 0 && !this.cssInitial('width')) {
                     const width = this.css('width');
                     if ($util.isUnit(width)) {
-                        const widthParent = renderParent ? $util.convertInt((renderParent as View).android('layout_width')) : 0;
+                        const widthParent = renderParent ? $util.convertInt((renderParent as T).android('layout_width')) : 0;
                         const value = this.convertPX(width);
                         if (parent === renderParent && widthParent > 0 && $util.convertInt(value) >= widthParent) {
                             this.android('layout_width', 'match_parent');
@@ -500,18 +542,12 @@ export default (Base: Constructor<squared.base.Node>) => {
                 else if (
                     this.flexElement && renderParent && renderParent.hasWidth ||
                     this.groupParent && children.some(node => !(node.plainText && node.multiline) && node.linear.width >= this.documentParent.box.width) ||
-                    blockStatic && (
-                        this.documentBody ||
-                        !!parent && (
-                            parent.documentBody ||
-                            parent.has('width', $enum.CSS_STANDARD.PERCENT) ||
-                            parent.blockStatic && (this.singleChild || this.alignedVertically(this.previousSiblings()))
-                        )
-                    ) ||
-                    this.layoutFrame && (
-                        $NodeList.floated(children).size === 2 ||
-                        children.some(node => node.blockStatic && (node.autoMargin.leftRight || node.rightAligned))
-                   ))
+                    blockStatic && (this.documentBody || !!parent && (
+                        parent.documentBody ||
+                        parent.has('width', $enum.CSS_STANDARD.PERCENT) ||
+                        parent.blockStatic && (this.singleChild || this.alignedVertically(this.previousSiblings()))
+                    )) ||
+                    this.layoutFrame && ($NodeList.floated(children).size === 2 || children.some(node => node.blockStatic && (node.autoMargin.leftRight || node.rightAligned))))
                 {
                     this.android('layout_width', 'match_parent', false);
                 }
@@ -571,47 +607,8 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         public setAlignment() {
-            const renderParent = this.renderParent as View;
+            const renderParent = this.renderParent as T;
             if (renderParent) {
-                function setAutoMargin(node: View) {
-                    if (!node.blockWidth) {
-                        const alignment: string[] = [];
-                        const singleFrame = node.documentRoot && node.layoutFrame && node.length === 1 && node.has('maxWidth');
-                        if (node.autoMargin.leftRight) {
-                            if (singleFrame) {
-                                node.renderChildren[0].mergeGravity('layout_gravity', 'center_horizontal');
-                            }
-                            else {
-                                alignment.push('center_horizontal');
-                            }
-                        }
-                        else if (node.autoMargin.left) {
-                            if (singleFrame) {
-                                node.renderChildren[0].mergeGravity('layout_gravity', 'right');
-                            }
-                            else {
-                                alignment.push('right');
-                            }
-                        }
-                        else if (node.autoMargin.right) {
-                            alignment.push('left');
-                        }
-                        if (node.autoMargin.topBottom) {
-                            alignment.push('center_vertical');
-                        }
-                        else if (node.autoMargin.top) {
-                            alignment.push('bottom');
-                        }
-                        else if (node.autoMargin.bottom) {
-                            alignment.push('top');
-                        }
-                        if (alignment.length) {
-                            node.mergeGravity(node.blockWidth ? 'gravity' : 'layout_gravity', ...alignment);
-                            return true;
-                        }
-                    }
-                    return false;
-                }
                 let textAlign = checkTextAlign(this.cssInitial('textAlign', true));
                 if (this.pageFlow) {
                     let floating = '';
@@ -661,6 +658,9 @@ export default (Base: Constructor<squared.base.Node>) => {
                             this.mergeGravity('layout_gravity', floating);
                         }
                     }
+                }
+                else {
+                    setAutoMargin(this);
                 }
                 const textAlignParent = checkTextAlign(this.cssAscend('textAlign'));
                 if (textAlignParent !== '' && textAlignParent !== 'left' && textAlignParent !== 'start') {
@@ -744,18 +744,17 @@ export default (Base: Constructor<squared.base.Node>) => {
             }
         }
 
-        public applyLineHeight(value: number, isolated = false) {
-            if (isolated && this.support.lineHeight) {
-                this.android('lineHeight', $util.formatPX(value));
+        public setLineHeight(value: number) {
+            const offset = value - (this.hasHeight ? this.height : this.bounds.height);
+            if (offset > 0) {
+                this.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.floor(offset / 2) - (this.inlineVertical ? $util.convertInt(this.verticalAlign) : 0));
+                this.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, Math.ceil(offset / 2));
             }
-            else {
-                const offset = value - (this.hasHeight ? this.height : this.bounds.height);
-                if (offset > 0) {
-                    this.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.floor(offset / 2) - (this.inlineVertical ? $util.convertInt(this.verticalAlign) : 0));
-                    this.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, Math.ceil(offset / 2));
-                }
+            else if (!this.hasHeight && this.multiline === 0) {
+                this.android('minHeight', $util.formatPX(value));
+                this.mergeGravity('gravity', 'center_vertical');
             }
-        }
+         }
 
         public applyOptimizations() {
             if (this.renderParent) {
@@ -773,13 +772,13 @@ export default (Base: Constructor<squared.base.Node>) => {
 
         public applyCustomizations() {
             for (const build of [API_ANDROID[0], API_ANDROID[this.localSettings.targetAPI]]) {
-                if (build && build.customizations) {
+                if (build && build.assign) {
                     for (const tagName of [this.tagName, this.controlName]) {
-                        const customizations = build.customizations[tagName];
-                        if (customizations) {
-                            for (const obj in customizations) {
-                                for (const attr in customizations[obj]) {
-                                    this.attr(obj, attr, customizations[obj][attr], this.localSettings.customizationsOverwritePrivilege);
+                        const assign = build.assign[tagName];
+                        if (assign) {
+                            for (const obj in assign) {
+                                for (const attr in assign[obj]) {
+                                    this.attr(obj, attr, assign[obj][attr], this.localSettings.customizationsOverwritePrivilege);
                                 }
                             }
                         }
@@ -875,7 +874,7 @@ export default (Base: Constructor<squared.base.Node>) => {
 
         private autoSizeBoxModel() {
             if (!this.hasBit('excludeProcedure', $enum.NODE_PROCEDURE.AUTOFIT)) {
-                const renderParent = this.renderParent as View;
+                const renderParent = this.renderParent as T;
                 let layoutWidth = $util.convertInt(this.android('layout_width'));
                 let layoutHeight = $util.convertInt(this.android('layout_height'));
                 if (this.is(CONTAINER_NODE.BUTTON) && layoutHeight === 0) {
@@ -930,7 +929,7 @@ export default (Base: Constructor<squared.base.Node>) => {
             if (this.layoutHorizontal) {
                 if (this.layoutLinear) {
                     const children = this.renderChildren;
-                    let baseline: View | undefined;
+                    let baseline: T | undefined;
                     if (children.some(node => node.floating) && !children.some(node => node.imageElement && node.baseline)) {
                         this.android('baselineAligned', 'false');
                     }
@@ -943,7 +942,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                     let lineHeight = this.lineHeight;
                     this.renderEach(node => lineHeight = Math.max(lineHeight, node.lineHeight));
                     if (lineHeight > 0) {
-                        this.applyLineHeight(lineHeight);
+                        this.setLineHeight(lineHeight);
                     }
                 }
                 if (!this.hasAlign($enum.NODE_ALIGNMENT.MULTILINE) && !this.hasAlign($enum.NODE_ALIGNMENT.RIGHT) && !this.visibleStyle.background) {
@@ -983,7 +982,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                     if (this.length === 0) {
                         if (!this.layoutHorizontal) {
                             if (this.support.lineHeight || this.inlineStatic && this.visibleStyle.background) {
-                                this.applyLineHeight(lineHeight, true);
+                                this.setLineHeight(lineHeight);
                             }
                             else {
                                 setMinHeight();
@@ -991,9 +990,9 @@ export default (Base: Constructor<squared.base.Node>) => {
                         }
                     }
                     else if (this.layoutVertical) {
-                        this.renderEach((node: View) => {
+                        this.renderEach((node: T) => {
                             if (!node.layoutHorizontal) {
-                                node.applyLineHeight(lineHeight, true);
+                                node.setLineHeight(lineHeight);
                             }
                         });
                     }
@@ -1040,7 +1039,7 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         get support() {
-            const cached: CachedValue<View> = this.unsafe('cached') || {};
+            const cached: CachedValue<T> = this.unsafe('cached') || {};
             if (cached.support === undefined) {
                 cached.support = {
                     lineHeight: this.textElement && this.supported('android', 'lineHeight'),

@@ -1,4 +1,4 @@
-/* android.widget 0.6.2
+/* android.widget 0.7.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -22,13 +22,13 @@ this.android.widget.toolbar = (function () {
         }
         init(element) {
             if (this.included(element)) {
-                Array.from(element.children).some((item) => {
+                for (let i = 0; i < element.children.length; i++) {
+                    const item = element.children[i];
                     if (item.tagName === 'NAV' && !$util.includes(item.dataset.use, $const.EXT_NAME.EXTERNAL)) {
                         item.dataset.use = ($util.hasValue(item.dataset.use) ? `${item.dataset.use}, ` : '') + $const.EXT_NAME.EXTERNAL;
-                        return true;
+                        break;
                     }
-                    return false;
-                });
+                }
                 if (element.dataset.target) {
                     const target = document.getElementById(element.dataset.target);
                     if (target && element.parentElement !== target && !$util.includes(target.dataset.use, "android.widget.coordinator" /* COORDINATOR */)) {
@@ -94,8 +94,8 @@ this.android.widget.toolbar = (function () {
                     }
                 }
             }
-            const hasCollapsingToolbar = options.hasOwnProperty('collapsingToolbar') || collapsingToolbarChildren.length;
-            const hasAppBar = options.hasOwnProperty('appBar') || appBarChildren.length || hasCollapsingToolbar;
+            const hasCollapsingToolbar = 'collapsingToolbar' in options || collapsingToolbarChildren.length;
+            const hasAppBar = 'appBar' in options || appBarChildren.length > 0 || hasCollapsingToolbar;
             let appBarOverlay = '';
             let popupOverlay = '';
             if (hasCollapsingToolbar) {
@@ -271,11 +271,11 @@ this.android.widget.toolbar = (function () {
             placeholder.inherit(node, 'base');
             placeholder.exclude({ resource: $enum.NODE_RESOURCE.ALL });
             placeholder.positioned = true;
-            let siblingIndex = Number.MAX_VALUE;
-            children.forEach(item => {
+            let siblingIndex = Number.POSITIVE_INFINITY;
+            for (const item of children) {
                 siblingIndex = Math.min(siblingIndex, item.siblingIndex);
                 item.parent = placeholder;
-            });
+            }
             placeholder.siblingIndex = siblingIndex;
             return placeholder;
         }

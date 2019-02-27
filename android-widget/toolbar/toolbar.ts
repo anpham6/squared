@@ -105,8 +105,8 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                 }
             }
         }
-        const hasCollapsingToolbar = options.hasOwnProperty('collapsingToolbar') || collapsingToolbarChildren.length;
-        const hasAppBar = options.hasOwnProperty('appBar') || appBarChildren.length || hasCollapsingToolbar;
+        const hasCollapsingToolbar = 'collapsingToolbar' in options || collapsingToolbarChildren.length;
+        const hasAppBar = 'appBar' in options || appBarChildren.length > 0 || hasCollapsingToolbar;
         let appBarOverlay = '';
         let popupOverlay = '';
         if (hasCollapsingToolbar) {

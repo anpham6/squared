@@ -17,14 +17,14 @@ const REGEXP_COLORSTOP = `(?:\\s*(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[a-
 const REGEXP_POSITION = /(.+?)?\s*at (.+?)$/;
 
 function replaceExcluded<T extends Node>(element: HTMLElement, attr: string) {
-    let result: string = element[attr];
+    let value: string = element[attr];
     for (let i = 0; i < element.children.length; i++) {
         const item = $dom.getElementAsNode<T>(<HTMLElement> element.children[i]);
         if (item && (item.excluded || $util.hasValue(item.dataset.target) && $util.isString(item[attr]))) {
-            result = result.replace(item[attr], '');
+            value = value.replace(item[attr], '');
         }
     }
-    return result;
+    return value;
 }
 
 function getColorStops(value: string, opacity: string, conic = false) {
@@ -96,6 +96,40 @@ function parseAngle(value: string | undefined) {
         }
     }
     return 0;
+}
+
+function replaceWhiteSpace<T extends Node>(node: T, value: string): [string, boolean] {
+    const renderParent = node.renderParent;
+    if (node.multiline && renderParent && !renderParent.layoutVertical) {
+        value = value.replace(/^\s*\n/, '');
+    }
+    switch (node.css('whiteSpace')) {
+        case 'nowrap':
+            value = value.replace(/\n/g, ' ');
+            break;
+        case 'pre':
+        case 'pre-wrap':
+            if (renderParent && !renderParent.layoutVertical) {
+                value = value.replace(/^\n/, '');
+            }
+            value = value.replace(/\n/g, '\\n').replace(/\s/g, '&#160;');
+            break;
+        case 'pre-line':
+            value = value.replace(/\n/g, '\\n').replace(/\s+/g, ' ');
+            break;
+        default:
+            const element = node.element;
+            if (element) {
+                if ($dom.isLineBreak(<Element> element.previousSibling)) {
+                    value = value.replace(/^\s+/, '');
+                }
+                if ($dom.isLineBreak(<Element> element.nextSibling)) {
+                    value = value.replace(/\s+$/, '');
+                }
+            }
+            return [value, false];
+    }
+    return [value, true];
 }
 
 export default abstract class Resource<T extends Node> implements squared.base.Resource<T> {
@@ -521,139 +555,104 @@ export default abstract class Resource<T extends Node> implements squared.base.R
     }
 
     public setValueString() {
-        function replaceWhiteSpace(node: T, value: string): [string, boolean] {
-            const renderParent = node.renderParent;
-            if (node.multiline && renderParent && !renderParent.layoutVertical) {
-                value = value.replace(/^\s*\n/, '');
-            }
-            switch (node.css('whiteSpace')) {
-                case 'nowrap':
-                    value = value.replace(/\n/g, ' ');
-                    break;
-                case 'pre':
-                case 'pre-wrap':
-                    if (renderParent && !renderParent.layoutVertical) {
-                        value = value.replace(/^\n/, '');
-                    }
-                    value = value.replace(/\n/g, '\\n').replace(/\s/g, '&#160;');
-                    break;
-                case 'pre-line':
-                    value = value.replace(/\n/g, '\\n').replace(/\s+/g, ' ');
-                    break;
-                default:
-                    const element = node.element;
-                    if (element) {
-                        if ($dom.isLineBreak(<Element> element.previousSibling)) {
-                            value = value.replace(/^\s+/, '');
-                        }
-                        if ($dom.isLineBreak(<Element> element.nextSibling)) {
-                            value = value.replace(/\s+$/, '');
-                        }
-                    }
-                    return [value, false];
-            }
-            return [value, true];
-        }
         for (const node of this.cache) {
-            if (node.visible) {
-                const element = <HTMLInputElement> node.element;
-                if (element) {
-                    let name = '';
-                    let value = '';
-                    let inlineTrim = false;
-                    let performTrim = true;
-                    if (element.tagName === 'INPUT') {
-                        switch (element.type) {
-                            case 'text':
-                            case 'number':
-                            case 'email':
-                            case 'search':
-                            case 'submit':
-                            case 'reset':
-                            case 'button':
-                                value = element.value.trim();
-                                break;
-                            default:
-                                if (node.companion && !node.companion.visible) {
-                                    value = node.companion.textContent.trim();
-                                }
-                                break;
-                        }
-                    }
-                    else if (element.tagName === 'TEXTAREA') {
-                        value = element.value.trim();
-                    }
-                    else if (node.htmlElement) {
-                        if (element.tagName === 'BUTTON') {
-                            value = element.innerText;
-                        }
-                        else if (node.inlineText) {
-                            name = node.textContent.trim();
-                            if (element.tagName === 'CODE') {
-                                value = $xml.replaceEntity(replaceExcluded(element, 'innerHTML'));
+            const element = <HTMLInputElement> node.element;
+            if (element && node.visible) {
+                let name = '';
+                let value = '';
+                let inlineTrim = false;
+                let performTrim = true;
+                if (element.tagName === 'INPUT') {
+                    switch (element.type) {
+                        case 'text':
+                        case 'number':
+                        case 'email':
+                        case 'search':
+                        case 'submit':
+                        case 'reset':
+                        case 'button':
+                            value = element.value.trim();
+                            break;
+                        default:
+                            if (node.companion && !node.companion.visible) {
+                                value = node.companion.textContent.trim();
                             }
-                            else if ($dom.hasLineBreak(element, true)) {
-                                value = $xml.replaceEntity(replaceExcluded(element, 'innerHTML'));
-                                value = value.replace(/\s*<br[^>]*>\s*/g, '\\n');
-                                value = value.replace(/(<([^>]+)>)/ig, '');
-                            }
-                            else {
-                                value = $xml.replaceEntity(replaceExcluded(element, 'textContent'));
-                            }
-                            [value, inlineTrim] = replaceWhiteSpace(node, value);
-                        }
-                        else if (element.innerText.trim() === '' && Resource.hasDrawableBackground(node.data(Resource.KEY_NAME, 'boxStyle'))) {
-                            value = $xml.replaceEntity(element.innerText);
-                            performTrim = false;
-                        }
+                            break;
                     }
-                    else if (node.plainText) {
+                }
+                else if (element.tagName === 'TEXTAREA') {
+                    value = element.value.trim();
+                }
+                else if (node.htmlElement) {
+                    if (element.tagName === 'BUTTON') {
+                        value = element.innerText;
+                    }
+                    else if (node.inlineText) {
                         name = node.textContent.trim();
-                        value = $xml.replaceEntity(node.textContent);
-                        value = value.replace(/&[A-Za-z]+;/g, match => match.replace('&', '&amp;'));
+                        if (element.tagName === 'CODE') {
+                            value = $xml.replaceEntity(replaceExcluded(element, 'innerHTML'));
+                        }
+                        else if ($dom.hasLineBreak(element, true)) {
+                            value = $xml.replaceEntity(replaceExcluded(element, 'innerHTML'));
+                            value = value.replace(/\s*<br[^>]*>\s*/g, '\\n');
+                            value = value.replace(/(<([^>]+)>)/ig, '');
+                        }
+                        else {
+                            value = $xml.replaceEntity(replaceExcluded(element, 'textContent'));
+                        }
                         [value, inlineTrim] = replaceWhiteSpace(node, value);
                     }
+                    else if (element.innerText.trim() === '' && Resource.hasDrawableBackground(node.data(Resource.KEY_NAME, 'boxStyle'))) {
+                        value = $xml.replaceEntity(element.innerText);
+                        performTrim = false;
+                    }
+                }
+                else if (node.plainText) {
+                    name = node.textContent.trim();
+                    value = $xml.replaceEntity(node.textContent);
+                    value = value.replace(/&[A-Za-z]+;/g, match => match.replace('&', '&amp;'));
+                    [value, inlineTrim] = replaceWhiteSpace(node, value);
+                }
+                if (value !== '') {
+                    if (performTrim) {
+                        const previousSibling = node.previousSiblings().pop();
+                        const nextSibling = node.nextSiblings().shift();
+                        let previousSpaceEnd = false;
+                        if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && /\s+$/.test(previousSibling.textContent)) {
+                            value = value.replace(/^\s+/, '');
+                        }
+                        else if (previousSibling.element) {
+                            previousSpaceEnd = /\s+$/.test((<HTMLElement> previousSibling.element).innerText || previousSibling.textContent);
+                        }
+                        if (inlineTrim) {
+                            const original = value;
+                            value = value.trim();
+                            if (previousSibling && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd && /^\s+/.test(original)) {
+                                value = '&#160;' + value;
+                            }
+                            if (nextSibling && !nextSibling.lineBreak && /\s+$/.test(original)) {
+                                value = value + '&#160;';
+                            }
+                        }
+                        else {
+                            if (!/^\s+$/.test(value)) {
+                                value = value.replace(/^\s+/,
+                                    previousSibling && (
+                                        previousSibling.block ||
+                                        previousSibling.lineBreak ||
+                                        previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
+                                        node.multiline && $dom.hasLineBreak(element)
+                                    ) ? '' : '&#160;'
+                                );
+                                value = value.replace(/\s+$/, node.display === 'table-cell' || nextSibling && nextSibling.lineBreak || node.blockStatic ? '' : '&#160;');
+                            }
+                            else if (value.length) {
+                                value = '&#160;' + value.substring(1);
+                            }
+                        }
+                    }
                     if (value !== '') {
-                        if (performTrim) {
-                            const previousSibling = node.previousSiblings().pop();
-                            const nextSibling = node.nextSiblings().shift();
-                            let previousSpaceEnd = false;
-                            if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && /\s+$/.test(previousSibling.textContent)) {
-                                value = value.replace(/^\s+/, '');
-                            }
-                            else if (previousSibling.element) {
-                                previousSpaceEnd = /\s+$/.test((<HTMLElement> previousSibling.element).innerText || previousSibling.textContent);
-                            }
-                            if (inlineTrim) {
-                                const original = value;
-                                value = value.trim();
-                                if (previousSibling && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd && /^\s+/.test(original)) {
-                                    value = '&#160;' + value;
-                                }
-                                if (nextSibling && !nextSibling.lineBreak && /\s+$/.test(original)) {
-                                    value = value + '&#160;';
-                                }
-                            }
-                            else {
-                                if (!/^\s+$/.test(value)) {
-                                    value = value.replace(/^\s+/,
-                                        previousSibling && (
-                                            previousSibling.block ||
-                                            previousSibling.lineBreak ||
-                                            previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
-                                            node.multiline && $dom.hasLineBreak(element)
-                                        ) ? '' : '&#160;'
-                                    );
-                                    value = value.replace(/\s+$/, node.display === 'table-cell' || nextSibling && nextSibling.lineBreak || node.blockStatic ? '' : '&#160;');
-                                }
-                                else if (value.length) {
-                                    value = '&#160;' + value.substring(1);
-                                }
-                            }
-                        }
-                        if (value !== '') {
-                            node.data(Resource.KEY_NAME, 'valueString', { name, value });
-                        }
+                        node.data(Resource.KEY_NAME, 'valueString', { name, value });
                     }
                 }
             }

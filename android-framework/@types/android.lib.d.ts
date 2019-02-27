@@ -2,6 +2,7 @@ import { StyleAttribute } from '../src/@types/application';
 import { ViewAttribute } from '../src/@types/node';
 
 import * as $const from '../src/lib/constant';
+import * as $custom from '../src/lib/customization';
 import * as $enum from '../src/lib/enumeration';
 
 declare global {
@@ -23,6 +24,12 @@ declare global {
             export import XMLNS_ANDROID = $const.XMLNS_ANDROID;
             export import PREFIX_ANDROID = $const.PREFIX_ANDROID;
             export import RESERVED_JAVA = $const.RESERVED_JAVA;
+        }
+
+        namespace customizations {
+            export import API_ANDROID = $custom.API_ANDROID;
+            export import DEPRECATED_ANDROID = $custom.DEPRECATED_ANDROID;
+            function getValue(api: number, tagName: string, obj: string, attr: string): string;
         }
 
         namespace util {

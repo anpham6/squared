@@ -1,37 +1,38 @@
-import { BUILD_ANDROID } from './lib/enumeration';
+import { CustomizationResult } from '../@types/application';
 
-import View from './view';
+import { BUILD_ANDROID } from './enumeration';
+
+import View from '../view';
 
 type T = View;
-
 type Customizations = {
     [index: number]: {
-        android: ObjectMap<boolean | FunctionResult>;
-        app: ObjectMap<boolean | FunctionResult>;
-        customizations: {
+        android: ObjectMap<boolean | CustomizationResult>;
+        app: ObjectMap<boolean | CustomizationResult>;
+        assign: {
             [namespace: string]: ObjectMap<StringMap>;
         };
     };
 };
-
 type Deprecations = {
-    android: ObjectMap<FunctionResult>;
+    android: ObjectMap<CustomizationResult>;
 };
+
+const $util = squared.lib.util;
 
 function substitute(result: {}, value: string, api?: number, minApi = 0) {
     if (!api || api >= minApi) {
         result['attr'] = value;
+        return true;
     }
-    return true;
+    return false;
 }
-
-export type FunctionResult = (result: {}, api?: number, node?: T) => boolean;
 
 export const API_ANDROID: Customizations = {
     [BUILD_ANDROID.PIE]: {
         android: {},
         app: {},
-        customizations: {}
+        assign: {}
     },
     [BUILD_ANDROID.OREO_1]: {
         android: {
@@ -58,7 +59,7 @@ export const API_ANDROID: Customizations = {
             'windowLayoutInDisplayCutoutMode': false
         },
         app: {},
-        customizations: {}
+        assign: {}
     },
     [BUILD_ANDROID.OREO]: {
         android: {
@@ -69,7 +70,7 @@ export const API_ANDROID: Customizations = {
             'windowLightNavigationBar': false
         },
         app: {},
-        customizations: {}
+        assign: {}
     },
     [BUILD_ANDROID.NOUGAT_1]: {
         android: {
@@ -81,7 +82,7 @@ export const API_ANDROID: Customizations = {
             'paddingVertical': false
         },
         app: {},
-        customizations: {}
+        assign: {}
     },
     [BUILD_ANDROID.NOUGAT]: {
         android: {
@@ -96,7 +97,7 @@ export const API_ANDROID: Customizations = {
             'showMetadataInPreview': false,
         },
         app: {},
-        customizations: {}
+        assign: {}
     },
     [BUILD_ANDROID.MARSHMALLOW]: {
         android: {
@@ -155,7 +156,7 @@ export const API_ANDROID: Customizations = {
             'windowBackgroundFallback': false
         },
         app: {},
-        customizations: {}
+        assign: {}
     },
     [BUILD_ANDROID.LOLLIPOP_1]: {
         android: {
@@ -189,7 +190,7 @@ export const API_ANDROID: Customizations = {
             'windowLightStatusBar': false
         },
         app: {},
-        customizations: {}
+        assign: {}
     },
     [BUILD_ANDROID.LOLLIPOP]: {
         android: {
@@ -202,7 +203,7 @@ export const API_ANDROID: Customizations = {
             'searchHintIcon': false
         },
         app: {},
-        customizations: {}
+        assign: {}
     },
     [BUILD_ANDROID.KITKAT_1]: {
         android: {
@@ -403,7 +404,7 @@ export const API_ANDROID: Customizations = {
             'yearListSelectorColor': false
         },
         app: {},
-        customizations: {}
+        assign: {}
     },
     [BUILD_ANDROID.KITKAT]: {
         android: {
@@ -411,7 +412,7 @@ export const API_ANDROID: Customizations = {
             'windowSwipeToDismiss': false
         },
         app: {},
-        customizations: {}
+        assign: {}
     },
     [BUILD_ANDROID.JELLYBEAN_2]: {
         android: {
@@ -440,7 +441,7 @@ export const API_ANDROID: Customizations = {
             'windowTranslucentStatus': false
         },
         app: {},
-        customizations: {}
+        assign: {}
     },
     [BUILD_ANDROID.JELLYBEAN_1]: {
         android: {
@@ -460,7 +461,7 @@ export const API_ANDROID: Customizations = {
             'windowOverscan': false
         },
         app: {},
-        customizations: {}
+        assign: {}
     },
     [BUILD_ANDROID.JELLYBEAN]: {
         android: {
@@ -495,7 +496,7 @@ export const API_ANDROID: Customizations = {
             'widgetCategory': false
         },
         app: {},
-        customizations: {}
+        assign: {}
     },
     [BUILD_ANDROID.ICE_CREAM_SANDWICH_1]: {
         android: {
@@ -508,17 +509,17 @@ export const API_ANDROID: Customizations = {
             'parentActivityName': false
         },
         app: {},
-        customizations: {}
+        assign: {}
     },
     [BUILD_ANDROID.ICE_CREAM_SANDWICH]: {
         android: {},
         app: {},
-        customizations: {}
+        assign: {}
     },
     [BUILD_ANDROID.ALL]: {
         android: {},
         app: {},
-        customizations: {
+        assign: {
             Button: {
                 android: {
                     'textAllCaps': 'false'
@@ -548,3 +549,13 @@ export const DEPRECATED_ANDROID: Deprecations = {
         'yearListSelectorColor': (result: {}, api: number) => api < BUILD_ANDROID.MARSHMALLOW
     }
 };
+
+export function getValue(api: number, tagName: string, obj: string, attr: string) {
+    for (const build of [API_ANDROID[api], API_ANDROID[0]]) {
+        const value = $util.optionalAsString(build, `assign.${tagName}.${obj}.${attr}`);
+        if ($util.isString(value)) {
+            return value;
+        }
+    }
+    return '';
+}

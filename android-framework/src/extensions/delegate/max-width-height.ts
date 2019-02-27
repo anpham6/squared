@@ -17,11 +17,17 @@ export default class MaxWidthHeight<T extends android.base.View> extends squared
         container.css('display', 'block', true);
         if (node.has('maxWidth')) {
             const maxWidth = node.css('maxWidth');
-            container.css({ width: maxWidth, maxWidth }, '', true);
+            container.cssApply({
+                width: maxWidth,
+                maxWidth
+            }, true);
         }
         if (node.has('maxHeight')) {
             const maxHeight = node.css('maxHeight');
-            container.css({ height: maxHeight, maxHeight }, '', true);
+            container.cssApply({
+                height: maxHeight,
+                maxHeight
+            }, true);
         }
         const layout = new $Layout(
             parent,

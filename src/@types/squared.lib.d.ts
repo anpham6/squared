@@ -51,13 +51,11 @@ declare global {
             function getElementsBetween(elementStart: Element | null, elementEnd: Element, whiteSpace?: boolean): Element[];
             function getPreviousElementSibling(element: Element | null): Element | null;
             function getNextElementSibling(element: Element | null): Element | null;
-            function hasComputedStyle(element: UndefNull<Element>): element is HTMLElement;
-            function hasVisibleDimensions(element: Element): boolean;
+            function hasComputedStyle(element: Element | null): element is HTMLElement;
             function setElementCache(element: Element, attr: string, data: any): void;
             function getElementCache(element: Element, attr: string): any;
             function deleteElementCache(element: Element, ...attrs: string[]): void;
             function getElementAsNode<T>(element: Element): T | undefined;
-            function getElementAsNodeAttribute<T>(element: Element, attr: string): T | undefined;
         }
 
         namespace math {

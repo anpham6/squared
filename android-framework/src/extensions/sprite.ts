@@ -31,7 +31,7 @@ export default class <T extends android.base.View> extends squared.base.extensio
                 procedure: $enum.NODE_PROCEDURE.AUTOFIT,
                 resource: $enum.NODE_RESOURCE.FONT_STYLE | $enum.NODE_RESOURCE.BOX_STYLE
             });
-            node.css({
+            node.cssApply({
                 position: 'static',
                 top: 'auto',
                 right: 'auto',

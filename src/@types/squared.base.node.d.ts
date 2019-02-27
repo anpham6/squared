@@ -128,7 +128,7 @@ declare global {
             modifyBox(region: number, offset: number | null, negative?: boolean): void;
             valueBox(region: number): [number, number];
             alignParent(position: string): boolean;
-            alignSibling(position: string): boolean;
+            alignSibling(position: string, documentId?: string): string;
             localizeString(value: string): string;
             clone(id?: number, attributes?: boolean, position?: boolean): Node;
             init(): void;
@@ -156,7 +156,8 @@ declare global {
             withinY(rect: RectDimension, dimension?: string): boolean;
             outsideX(rect: RectDimension, dimension?: string): boolean;
             outsideY(rect: RectDimension, dimension?: string): boolean;
-            css(attr: object | string, value?: string, cache?: boolean): string;
+            css(attr: string, value?: string, cache?: boolean): string;
+            cssApply(values: StringMap, cache?: boolean): this;
             cssInitial(attr: string, modified?: boolean, computed?: boolean): string;
             cssAscend(attr: string, startChild?: boolean, visible?: boolean): string;
             cssSort(attr: string, duplicate?: boolean): Node[];

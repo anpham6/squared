@@ -180,7 +180,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                     if (gradient.type === 'sweep') {
                         offset *= 100 / 360;
                     }
-                    else if (!node.svgElement && i === 0 && offset !== 0) {
+                    else if (i === 0 && offset !== 0 && !node.svgElement) {
                         gradient.colorStops.push({
                             color,
                             offset: '0',
@@ -205,35 +205,33 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                 const obj: ExternalData = options[namespace];
                 if (typeof obj === 'object') {
                     for (const attr in obj) {
-                        if (obj.hasOwnProperty(attr)) {
-                            let value = obj[attr].toString();
-                            switch (attr) {
-                                case 'text':
-                                    if (!value.startsWith('@string/')) {
-                                        value = this.addString(value, '', numberAlias);
-                                        if (value !== '') {
-                                            obj[attr] = `@string/${value}`;
-                                            continue;
-                                        }
+                        let value = obj[attr].toString();
+                        switch (attr) {
+                            case 'text':
+                                if (!value.startsWith('@string/')) {
+                                    value = this.addString(value, '', numberAlias);
+                                    if (value !== '') {
+                                        obj[attr] = `@string/${value}`;
+                                        continue;
                                     }
-                                    break;
-                                case 'src':
-                                case 'srcCompat':
-                                    if ($util.REGEXP_PATTERN.URI.test(value)) {
-                                        value = this.addImage({ mdpi: value });
-                                        if (value !== '') {
-                                            obj[attr] = `@drawable/${value}`;
-                                            continue;
-                                        }
-                                    }
-                                    break;
-                            }
-                            const color = $color.parseRGBA(value);
-                            if (color) {
-                                const colorValue = this.addColor(color);
-                                if (colorValue !== '') {
-                                    obj[attr] = `@color/${colorValue}`;
                                 }
+                                break;
+                            case 'src':
+                            case 'srcCompat':
+                                if ($util.REGEXP_PATTERN.URI.test(value)) {
+                                    value = this.addImage({ mdpi: value });
+                                    if (value !== '') {
+                                        obj[attr] = `@drawable/${value}`;
+                                        continue;
+                                    }
+                                }
+                                break;
+                        }
+                        const color = $color.parseRGBA(value);
+                        if (color) {
+                            const colorValue = this.addColor(color);
+                            if (colorValue !== '') {
+                                obj[attr] = `@color/${colorValue}`;
                             }
                         }
                     }

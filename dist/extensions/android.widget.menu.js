@@ -1,4 +1,4 @@
-/* android.widget 0.6.2
+/* android.widget 0.7.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -57,7 +57,7 @@ this.android.widget.menu = (function () {
             if (value && validator[attr]) {
                 const match = value.match(validator[attr]);
                 if (match) {
-                    options[NAMESPACE_APP.includes(attr) ? 'app' : 'android'][attr] = Array.from(new Set(match)).join('|');
+                    options[NAMESPACE_APP.includes(attr) ? 'app' : 'android'][attr] = match.join('|');
                 }
             }
         }
@@ -67,8 +67,9 @@ this.android.widget.menu = (function () {
             return element.title;
         }
         else {
-            for (const node of $util.flatMap(Array.from(element.childNodes), (item) => $dom.getElementAsNode(item))) {
-                if (node.textElement) {
+            for (let i = 0; i < element.childNodes.length; i++) {
+                const node = $dom.getElementAsNode(element.childNodes[i]);
+                if (node && node.textElement) {
                     return node.textContent.trim();
                 }
             }
@@ -84,19 +85,27 @@ this.android.widget.menu = (function () {
             if (this.included(element)) {
                 let valid = false;
                 if (element.children.length) {
+                    valid = true;
                     const tagName = element.children[0].tagName;
-                    valid = Array.from(element.children).every(item => item.tagName === tagName);
-                    let current = element.parentElement;
-                    while (current) {
-                        if (current.tagName === 'NAV' && this.application.parseElements.has(current)) {
+                    for (let i = 1; i < element.children.length; i++) {
+                        if (element.children[i].tagName !== tagName) {
                             valid = false;
                             break;
                         }
-                        current = current.parentElement;
+                    }
+                    if (valid) {
+                        let current = element.parentElement;
+                        while (current) {
+                            if (current.tagName === 'NAV' && this.application.parseElements.has(current)) {
+                                valid = false;
+                                break;
+                            }
+                            current = current.parentElement;
+                        }
                     }
                 }
                 if (valid) {
-                    Array.from(element.querySelectorAll('NAV')).forEach((item) => {
+                    element.querySelectorAll('NAV').forEach((item) => {
                         if ($dom.getStyle(element).display === 'none') {
                             $dom.setElementCache(item, 'squaredExternalDisplay', 'none');
                             item.style.display = 'block';
@@ -119,7 +128,9 @@ this.android.widget.menu = (function () {
                 resource: $enum.NODE_RESOURCE.ALL
             });
             const output = this.application.controllerHandler.renderNodeStatic(VIEW_NAVIGATION.MENU, 0, {}, '', '', node, true);
-            node.cascade().forEach(item => this.subscribersChild.add(item));
+            for (const item of node.cascade()) {
+                this.subscribersChild.add(item);
+            }
             return { output, complete: true };
         }
         processChild(node, parent) {
@@ -205,7 +216,7 @@ this.android.widget.menu = (function () {
         postBaseLayout(node) {
             const element = node.element;
             if (this.included(element)) {
-                Array.from(element.querySelectorAll('NAV')).forEach((item) => {
+                element.querySelectorAll('NAV').forEach((item) => {
                     const display = $dom.getElementCache(item, 'squaredExternalDisplay');
                     if (display) {
                         item.style.display = display;

@@ -1,4 +1,4 @@
-/* android.widget 0.6.2
+/* android.widget 0.7.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -23,13 +23,17 @@ this.android.widget.bottomnavigation = (function () {
             for (let i = 5; i < node.length; i++) {
                 const item = node.item(i);
                 item.hide();
-                item.cascade().forEach(child => child.hide());
+                for (const child of item.cascade()) {
+                    child.hide();
+                }
             }
             node.setControlType($constA.SUPPORT_ANDROID.BOTTOM_NAVIGATION, $enumA.CONTAINER_NODE.BLOCK);
             node.exclude({ resource: $enum.NODE_RESOURCE.ASSET });
             node.render(parent);
             const output = this.application.controllerHandler.renderNodeStatic($constA.SUPPORT_ANDROID.BOTTOM_NAVIGATION, node.renderDepth, $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')), 'match_parent', 'wrap_content', node);
-            node.cascade().forEach(item => this.subscribersChild.add(item));
+            for (const item of node.cascade()) {
+                this.subscribersChild.add(item);
+            }
             this.setStyleTheme();
             return { output, complete: true };
         }

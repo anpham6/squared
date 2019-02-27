@@ -70,7 +70,7 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
                     const value = node.css('height');
                     node.android('layout_width', 'wrap_content');
                     item.android('layout_height', node.convertPX(value, false));
-                    item.css({
+                    item.cssApply({
                         overflow: 'scroll visible',
                         overflowX: 'visible',
                         overflowY: 'scroll'
@@ -81,7 +81,7 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
                     const value = node.css('width');
                     item.android('layout_width', node.convertPX(value));
                     node.android('layout_height', 'wrap_content');
-                    item.css({
+                    item.cssApply({
                         overflow: 'visible scroll',
                         overflowX: 'scroll',
                         overflowY: 'visible'

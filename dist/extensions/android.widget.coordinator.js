@@ -1,4 +1,4 @@
-/* android.widget 0.6.2
+/* android.widget 0.7.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -27,7 +27,7 @@ this.android.widget.coordinator = (function () {
                     const extension = this.application.extensionManager.retrieve("android.widget.toolbar" /* TOOLBAR */);
                     if (extension) {
                         const toolbarOptions = $utilA.createViewAttribute(extension.options[toolbar.element.id]);
-                        if (toolbarOptions.hasOwnProperty('collapsingToolbar')) {
+                        if ('collapsingToolbar' in toolbarOptions) {
                             node.android('fitsSystemWindows', 'true');
                         }
                     }

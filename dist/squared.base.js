@@ -1,4 +1,4 @@
-/* squared.base 0.6.2
+/* squared.base 0.7.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -23,7 +23,7 @@
             return undefined;
         }
         static baseline(list, text = false) {
-            let baseline = list.filter(item => {
+            let baseline = $util.filterArray(list, item => {
                 if (item.baseline || $util.isUnit(item.verticalAlign) && item.verticalAlign !== '0px') {
                     const position = item.cssInitial('position');
                     return position !== 'absolute' && position !== 'fixed';
@@ -33,16 +33,21 @@
             if (baseline.length) {
                 list = baseline;
             }
-            baseline = list.filter(item => item.textElement || item.verticalAlign !== 'text-top' && item.verticalAlign !== 'text-bottom');
+            baseline = $util.filterArray(list, item => item.textElement || item.verticalAlign !== 'text-top' && item.verticalAlign !== 'text-bottom');
             if (baseline.length) {
                 list = baseline;
             }
             if (text) {
-                list = list.filter(item => item.element && !item.imageElement);
+                $util.spliceArray(list, item => item.imageElement || !item.naturalElement);
             }
-            const lineHeight = $util.maxArray(list.map(node => node.lineHeight));
-            const boundsHeight = $util.maxArray(list.map(node => node.bounds.height));
-            return list.filter(item => lineHeight > boundsHeight ? item.lineHeight === lineHeight : item.bounds.height === boundsHeight).sort((a, b) => {
+            let lineHeight = 0;
+            let boundsHeight = 0;
+            for (const item of list) {
+                lineHeight = Math.max(lineHeight, item.lineHeight);
+                boundsHeight = Math.max(boundsHeight, item.bounds.height);
+            }
+            $util.spliceArray(list, item => lineHeight > boundsHeight ? item.lineHeight !== lineHeight : !$util.withinFraction(item.bounds.height, boundsHeight));
+            return list.sort((a, b) => {
                 if (a.groupParent || a.length || (!a.baseline && b.baseline)) {
                     return 1;
                 }
@@ -94,7 +99,13 @@
             });
         }
         static floated(list) {
-            return new Set(list.map(node => node.float).filter(value => value !== 'none'));
+            const result = new Set();
+            for (const node of list) {
+                if (node.floating) {
+                    result.add(node.float);
+                }
+            }
+            return result;
         }
         static cleared(list, parent = true) {
             if (parent && list.length > 1) {
@@ -125,10 +136,7 @@
             }
             const result = new Map();
             const floated = new Set();
-            const previous = {
-                left: null,
-                right: null
-            };
+            const previous = { left: null, right: null };
             for (const node of list) {
                 if (node.pageFlow) {
                     const clear = node.css('clear');
@@ -136,12 +144,12 @@
                         const previousFloat = clear === 'both' ? [previous.left, previous.right]
                             : clear === 'left' ? [previous.left, null]
                                 : clear === 'right' ? [null, previous.right] : [];
-                        previousFloat.forEach(item => {
+                        for (const item of previousFloat) {
                             if (item && !node.floating && node.linear.top > item.linear.bottom && floated.has(item.float)) {
                                 floated.delete(item.float);
                                 previous[item.float] = null;
                             }
-                        });
+                        }
                         if (clear === 'both') {
                             result.set(node, floated.size === 2 ? 'both' : floated.values().next().value);
                             floated.clear();
@@ -163,13 +171,13 @@
             return result;
         }
         static floatedAll(parent) {
-            return this.floated(parent.actualChildren.filter(item => item.pageFlow));
+            return this.floated($util.filterArray(parent.actualChildren, item => item.pageFlow));
         }
         static clearedAll(parent) {
-            return this.cleared(parent.actualChildren.filter(item => item.pageFlow), false);
+            return this.cleared($util.filterArray(parent.actualChildren, item => item.pageFlow), false);
         }
         static linearX(list) {
-            const nodes = list.filter(node => node.pageFlow).sort(NodeList.siblingIndex);
+            const nodes = $util.filterArray(list, node => node.pageFlow).sort(NodeList.siblingIndex);
             switch (nodes.length) {
                 case 0:
                     return false;
@@ -184,10 +192,22 @@
                                 return false;
                             }
                         }
-                        const boxLeft = $util.minArray(nodes.map(node => node.linear.left));
-                        const boxRight = $util.maxArray(nodes.map(node => node.linear.right));
-                        const floatLeft = $util.maxArray(nodes.filter(node => node.float === 'left').map(node => node.linear.right));
-                        const floatRight = $util.minArray(nodes.filter(node => node.float === 'right').map(node => node.linear.left));
+                        let boxLeft = Number.POSITIVE_INFINITY;
+                        let boxRight = Number.NEGATIVE_INFINITY;
+                        let floatLeft = Number.NEGATIVE_INFINITY;
+                        let floatRight = Number.POSITIVE_INFINITY;
+                        for (const node of nodes) {
+                            boxLeft = Math.min(boxLeft, node.linear.left);
+                            boxRight = Math.max(boxRight, node.linear.right);
+                            if (node.floating) {
+                                if (node.float === 'left') {
+                                    floatLeft = Math.max(floatLeft, node.linear.right);
+                                }
+                                else {
+                                    floatRight = Math.min(floatRight, node.linear.left);
+                                }
+                            }
+                        }
                         for (let i = 0, j = 0, k = 0, l = 0, m = 0; i < nodes.length; i++) {
                             const item = nodes[i];
                             if (Math.floor(item.linear.left) <= boxLeft) {
@@ -221,7 +241,7 @@
             }
         }
         static linearY(list) {
-            const nodes = list.filter(node => node.pageFlow).sort(NodeList.siblingIndex);
+            const nodes = $util.filterArray(list, node => node.pageFlow).sort(NodeList.siblingIndex);
             switch (nodes.length) {
                 case 0:
                     return false;
@@ -299,12 +319,6 @@
             this._currentId = 0;
             this.clear();
             return this;
-        }
-        get visible() {
-            return this.children.filter(node => node.visible);
-        }
-        get elements() {
-            return this.children.filter(node => node.visible && node.styleElement);
         }
         get nextId() {
             return ++this._currentId;
@@ -393,7 +407,7 @@
             return this._cleared || this.getCleared();
         }
         get visible() {
-            return this.children.filter(node => node.visible);
+            return this.filter(node => node.visible);
         }
         set linearX(value) {
             this._linearX = value;
@@ -451,25 +465,25 @@
     const $dom$1 = squared.lib.dom;
     const $util$2 = squared.lib.util;
     const $xml = squared.lib.xml;
-    const REGEX_COLORSTOP = `(?:\\s*(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[a-zA-Z\\d]{3,}|[a-z]+)\\s*(\\d+%|${$util$2.REGEXP_STRING.DEGREE})?,?\\s*)`;
-    const REGEX_POSITION = /(.+?)?\s*at (.+?)$/;
+    const REGEXP_COLORSTOP = `(?:\\s*(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[a-zA-Z\\d]{3,}|[a-z]+)\\s*(\\d+%|${$util$2.REGEXP_STRING.DEGREE}|${$util$2.REGEXP_STRING.UNIT})?,?\\s*)`;
+    const REGEXP_POSITION = /(.+?)?\s*at (.+?)$/;
     function replaceExcluded(element, attr) {
-        let result = element[attr];
+        let value = element[attr];
         for (let i = 0; i < element.children.length; i++) {
             const item = $dom$1.getElementAsNode(element.children[i]);
             if (item && (item.excluded || $util$2.hasValue(item.dataset.target) && $util$2.isString(item[attr]))) {
-                result = result.replace(item[attr], '');
+                value = value.replace(item[attr], '');
             }
         }
-        return result;
+        return value;
     }
     function getColorStops(value, opacity, conic = false) {
         const result = [];
-        const pattern = new RegExp(REGEX_COLORSTOP, 'g');
+        const pattern = new RegExp(REGEXP_COLORSTOP, 'g');
         let match;
         while ((match = pattern.exec(value)) !== null) {
-            const color = $color.parseRGBA(match[1], opacity);
-            if (color && color.visible) {
+            const color = $color.parseRGBA(match[1], opacity, true);
+            if (color) {
                 const item = {
                     color: color.valueRGBA,
                     opacity: color.alpha,
@@ -481,7 +495,7 @@
                     }
                 }
                 else {
-                    if (match[2]) {
+                    if (match[2] && $util$2.isPercent(match[2])) {
                         item.offset = match[2];
                     }
                 }
@@ -516,6 +530,11 @@
             }
             previousIncrement = parseInt(item.offset);
         }
+        if (conic && previousIncrement < 360 || !conic && previousIncrement < 100) {
+            const colorFill = Object.assign({}, result[result.length - 1]);
+            colorFill.offset = conic ? '360' : '100%';
+            result.push(colorFill);
+        }
         return result;
     }
     function parseAngle(value) {
@@ -526,6 +545,39 @@
             }
         }
         return 0;
+    }
+    function replaceWhiteSpace(node, value) {
+        const renderParent = node.renderParent;
+        if (node.multiline && renderParent && !renderParent.layoutVertical) {
+            value = value.replace(/^\s*\n/, '');
+        }
+        switch (node.css('whiteSpace')) {
+            case 'nowrap':
+                value = value.replace(/\n/g, ' ');
+                break;
+            case 'pre':
+            case 'pre-wrap':
+                if (renderParent && !renderParent.layoutVertical) {
+                    value = value.replace(/^\n/, '');
+                }
+                value = value.replace(/\n/g, '\\n').replace(/\s/g, '&#160;');
+                break;
+            case 'pre-line':
+                value = value.replace(/\n/g, '\\n').replace(/\s+/g, ' ');
+                break;
+            default:
+                const element = node.element;
+                if (element) {
+                    if ($dom$1.isLineBreak(element.previousSibling)) {
+                        value = value.replace(/^\s+/, '');
+                    }
+                    if ($dom$1.isLineBreak(element.nextSibling)) {
+                        value = value.replace(/\s+$/, '');
+                    }
+                }
+                return [value, false];
+        }
+        return [value, true];
     }
     class Resource {
         constructor(application, cache) {
@@ -615,206 +667,217 @@
             }
         }
         setBoxStyle() {
-            for (const node of this.cache.elements) {
-                const boxStyle = {
-                    background: null,
-                    borderTop: null,
-                    borderRight: null,
-                    borderBottom: null,
-                    borderLeft: null,
-                    borderRadius: null,
-                    backgroundColor: null,
-                    backgroundSize: null,
-                    backgroundImage: null,
-                    backgroundRepeat: null,
-                    backgroundPositionX: null,
-                    backgroundPositionY: null
-                };
-                for (const attr in boxStyle) {
-                    const value = node.css(attr);
-                    switch (attr) {
-                        case 'borderTop':
-                        case 'borderRight':
-                        case 'borderBottom':
-                        case 'borderLeft': {
-                            let borderColor = node.css(`${attr}Color`);
-                            switch (borderColor.toLowerCase()) {
-                                case 'initial':
-                                    borderColor = '#000000';
-                                    break;
-                                case 'inherit':
-                                case 'currentcolor':
-                                    borderColor = $dom$1.cssInherit(node.element, `${attr}Color`);
-                                    break;
-                            }
-                            const style = node.css(`${attr}Style`) || 'none';
-                            let width = node.css(`${attr}Width`) || '1px';
-                            let color;
-                            switch (style) {
-                                case 'none':
-                                    break;
-                                case 'inset':
-                                    if (width === '0px') {
-                                        width = '1px';
-                                    }
-                                default:
-                                    color = $color.parseRGBA(borderColor, node.css('opacity'));
-                                    break;
-                            }
-                            boxStyle[attr] = {
-                                width,
-                                style,
-                                color: color ? color.valueRGBA : ''
-                            };
-                            break;
-                        }
-                        case 'borderRadius': {
-                            const [top, right, bottom, left] = [
-                                node.css('borderTopLeftRadius'),
-                                node.css('borderTopRightRadius'),
-                                node.css('borderBottomLeftRadius'),
-                                node.css('borderBottomRightRadius')
-                            ];
-                            if (top === right && right === bottom && bottom === left) {
-                                boxStyle.borderRadius = $util$2.convertInt(top) > 0 ? [top] : undefined;
-                            }
-                            else {
-                                boxStyle.borderRadius = [top, right, bottom, left];
-                            }
-                            break;
-                        }
-                        case 'backgroundColor':
-                            if (!node.has('backgroundColor') && (value === node.cssParent('backgroundColor', false, true) || node.documentParent.visible && $dom$1.cssFromParent(node.element, 'backgroundColor'))) {
-                                boxStyle.backgroundColor = '';
-                            }
-                            else {
-                                const color = $color.parseRGBA(value, node.css('opacity'));
-                                boxStyle.backgroundColor = color ? color.valueRGBA : '';
-                            }
-                            break;
-                        case 'background':
-                        case 'backgroundImage':
-                            if (value !== 'none' && !node.hasBit('excludeResource', NODE_RESOURCE.IMAGE_SOURCE)) {
-                                const gradients = [];
-                                const opacity = node.css('opacity');
-                                let pattern = new RegExp(`(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|circle|ellipse|closest-side|closest-corner|farthest-side|farthest-corner)?(?:\\s*at [\\w %]+)?),?\\s*(${REGEX_COLORSTOP}+)\\)`, 'g');
-                                let match;
-                                while ((match = pattern.exec(value)) !== null) {
-                                    let gradient;
-                                    switch (match[1]) {
-                                        case 'linear': {
-                                            if (match[2] === undefined) {
-                                                match[2] = 'to bottom';
-                                            }
-                                            gradient = {
-                                                type: 'linear',
-                                                angle: (() => {
-                                                    switch (match[2]) {
-                                                        case 'to top':
-                                                            return 0;
-                                                        case 'to right top':
-                                                            return 45;
-                                                        case 'to right':
-                                                            return 90;
-                                                        case 'to right bottom':
-                                                            return 135;
-                                                        case 'to bottom':
-                                                            return 180;
-                                                        case 'to left bottom':
-                                                            return 225;
-                                                        case 'to left':
-                                                            return 270;
-                                                        case 'to left top':
-                                                            return 315;
-                                                        default:
-                                                            return parseAngle(match[2]);
-                                                    }
-                                                })(),
-                                                colorStop: getColorStops(match[3], opacity)
-                                            };
-                                            break;
-                                        }
-                                        case 'radial': {
-                                            gradient = {
-                                                type: 'radial',
-                                                position: (() => {
-                                                    const result = ['center', 'ellipse'];
-                                                    if (match[2]) {
-                                                        const position = REGEX_POSITION.exec(match[2]);
-                                                        if (position) {
-                                                            if (position[1]) {
-                                                                switch (position[1]) {
-                                                                    case 'ellipse':
-                                                                    case 'circle':
-                                                                    case 'closest-side':
-                                                                    case 'closest-corner':
-                                                                    case 'farthest-side':
-                                                                    case 'farthest-corner':
-                                                                        result[1] = position[1];
-                                                                        break;
-                                                                }
-                                                            }
-                                                            if (position[2]) {
-                                                                result[0] = position[2];
-                                                            }
-                                                        }
-                                                    }
-                                                    return result;
-                                                })(),
-                                                colorStop: getColorStops(match[3], opacity)
-                                            };
-                                            break;
-                                        }
-                                        case 'conic': {
-                                            gradient = {
-                                                type: 'conic',
-                                                angle: parseAngle(match[2]),
-                                                position: (() => {
-                                                    if (match[2]) {
-                                                        const position = REGEX_POSITION.exec(match[2]);
-                                                        if (position) {
-                                                            return [position[2]];
-                                                        }
-                                                    }
-                                                    return ['center'];
-                                                })(),
-                                                colorStop: getColorStops(match[3], opacity, true)
-                                            };
-                                            break;
-                                        }
-                                    }
-                                    if (gradient.colorStop.length > 1) {
-                                        gradients.push(gradient);
-                                    }
+            for (const node of this.cache) {
+                if (node.visible && node.styleElement) {
+                    const boxStyle = {
+                        background: null,
+                        borderTop: null,
+                        borderRight: null,
+                        borderBottom: null,
+                        borderLeft: null,
+                        borderRadius: null,
+                        backgroundColor: null,
+                        backgroundSize: null,
+                        backgroundImage: null,
+                        backgroundRepeat: null,
+                        backgroundPositionX: null,
+                        backgroundPositionY: null
+                    };
+                    for (const attr in boxStyle) {
+                        const value = node.css(attr);
+                        switch (attr) {
+                            case 'borderTop':
+                            case 'borderRight':
+                            case 'borderBottom':
+                            case 'borderLeft': {
+                                let borderColor = node.css(`${attr}Color`);
+                                switch (borderColor.toLowerCase()) {
+                                    case 'initial':
+                                        borderColor = '#000000';
+                                        break;
+                                    case 'inherit':
+                                    case 'currentcolor':
+                                        borderColor = $dom$1.cssInheritStyle(node.element, `${attr}Color`);
+                                        break;
                                 }
-                                if (gradients.length) {
-                                    boxStyle.backgroundGradient = gradients;
+                                const style = node.css(`${attr}Style`) || 'none';
+                                let width = node.css(`${attr}Width`) || '1px';
+                                let color;
+                                switch (style) {
+                                    case 'none':
+                                        break;
+                                    case 'inset':
+                                        if (width === '0px') {
+                                            width = '1px';
+                                        }
+                                    default:
+                                        color = $color.parseRGBA(borderColor, node.css('opacity'));
+                                        break;
+                                }
+                                boxStyle[attr] = {
+                                    width,
+                                    style,
+                                    color: color ? color.valueRGBA : ''
+                                };
+                                break;
+                            }
+                            case 'borderRadius': {
+                                const [top, right, bottom, left] = [
+                                    node.css('borderTopLeftRadius'),
+                                    node.css('borderTopRightRadius'),
+                                    node.css('borderBottomLeftRadius'),
+                                    node.css('borderBottomRightRadius')
+                                ];
+                                if (top === right && right === bottom && bottom === left) {
+                                    boxStyle.borderRadius = $util$2.convertInt(top) > 0 ? [top] : undefined;
                                 }
                                 else {
-                                    const images = [];
-                                    pattern = new RegExp($util$2.REGEXP_PATTERN.URL, 'g');
+                                    boxStyle.borderRadius = [top, right, bottom, left];
+                                }
+                                break;
+                            }
+                            case 'backgroundColor':
+                                if (!node.has('backgroundColor') && (value === node.cssAscend('backgroundColor', false, true) || node.documentParent.visible && $dom$1.cssFromParent(node.element, 'backgroundColor'))) {
+                                    boxStyle.backgroundColor = '';
+                                }
+                                else {
+                                    const color = $color.parseRGBA(value, node.css('opacity'));
+                                    boxStyle.backgroundColor = color ? color.valueRGBA : '';
+                                }
+                                break;
+                            case 'background':
+                            case 'backgroundImage':
+                                if (value !== 'none' && !node.hasBit('excludeResource', NODE_RESOURCE.IMAGE_SOURCE)) {
+                                    const gradients = [];
+                                    const opacity = node.css('opacity');
+                                    let pattern = new RegExp(`(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|circle|ellipse|closest-side|closest-corner|farthest-side|farthest-corner)?(?:\\s*at [\\w %]+)?),?\\s*(${REGEXP_COLORSTOP}+)\\)`, 'g');
+                                    let match;
                                     while ((match = pattern.exec(value)) !== null) {
-                                        images.push(match[0]);
+                                        let gradient;
+                                        switch (match[1]) {
+                                            case 'linear': {
+                                                if (match[2] === undefined) {
+                                                    match[2] = 'to bottom';
+                                                }
+                                                let angle;
+                                                switch (match[2]) {
+                                                    case 'to top':
+                                                        angle = 0;
+                                                        break;
+                                                    case 'to right top':
+                                                        angle = 45;
+                                                        break;
+                                                    case 'to right':
+                                                        angle = 90;
+                                                        break;
+                                                    case 'to right bottom':
+                                                        angle = 135;
+                                                        break;
+                                                    case 'to bottom':
+                                                        angle = 180;
+                                                        break;
+                                                    case 'to left bottom':
+                                                        angle = 225;
+                                                        break;
+                                                    case 'to left':
+                                                        angle = 270;
+                                                        break;
+                                                    case 'to left top':
+                                                        angle = 315;
+                                                        break;
+                                                    default:
+                                                        angle = parseAngle(match[2]);
+                                                        break;
+                                                }
+                                                gradient = {
+                                                    type: match[1],
+                                                    angle,
+                                                    colorStops: getColorStops(match[3], opacity)
+                                                };
+                                                break;
+                                            }
+                                            case 'radial': {
+                                                gradient = {
+                                                    type: match[1],
+                                                    position: (() => {
+                                                        const result = ['center', 'ellipse'];
+                                                        if (match[2]) {
+                                                            const position = REGEXP_POSITION.exec(match[2]);
+                                                            if (position) {
+                                                                if (position[1]) {
+                                                                    switch (position[1]) {
+                                                                        case 'ellipse':
+                                                                        case 'circle':
+                                                                        case 'closest-side':
+                                                                        case 'closest-corner':
+                                                                        case 'farthest-side':
+                                                                        case 'farthest-corner':
+                                                                            result[1] = position[1];
+                                                                            break;
+                                                                    }
+                                                                }
+                                                                if (position[2]) {
+                                                                    result[0] = position[2];
+                                                                }
+                                                            }
+                                                        }
+                                                        return result;
+                                                    })(),
+                                                    colorStops: getColorStops(match[3], opacity)
+                                                };
+                                                break;
+                                            }
+                                            case 'conic': {
+                                                gradient = {
+                                                    type: match[1],
+                                                    angle: parseAngle(match[2]),
+                                                    position: (() => {
+                                                        if (match[2]) {
+                                                            const position = REGEXP_POSITION.exec(match[2]);
+                                                            if (position) {
+                                                                return [position[2]];
+                                                            }
+                                                        }
+                                                        return ['center'];
+                                                    })(),
+                                                    colorStops: getColorStops(match[3], opacity, true)
+                                                };
+                                                break;
+                                            }
+                                        }
+                                        if (gradient.colorStops.length > 1) {
+                                            gradients.push(gradient);
+                                        }
                                     }
-                                    if (images.length) {
-                                        boxStyle.backgroundImage = images;
+                                    if (gradients.length) {
+                                        boxStyle.backgroundGradient = gradients;
+                                    }
+                                    else {
+                                        const images = [];
+                                        pattern = new RegExp($util$2.REGEXP_PATTERN.URL, 'g');
+                                        while ((match = pattern.exec(value)) !== null) {
+                                            images.push(match[0]);
+                                        }
+                                        if (images.length) {
+                                            boxStyle.backgroundImage = images;
+                                        }
                                     }
                                 }
-                            }
-                            break;
-                        case 'backgroundSize':
-                        case 'backgroundRepeat':
-                        case 'backgroundPositionX':
-                        case 'backgroundPositionY':
-                            boxStyle[attr] = value;
-                            break;
+                                break;
+                            case 'backgroundSize':
+                            case 'backgroundRepeat':
+                            case 'backgroundPositionX':
+                            case 'backgroundPositionY':
+                                boxStyle[attr] = value;
+                                break;
+                        }
                     }
+                    const borderTop = JSON.stringify(boxStyle.borderTop);
+                    if (borderTop === JSON.stringify(boxStyle.borderRight) && borderTop === JSON.stringify(boxStyle.borderBottom) && borderTop === JSON.stringify(boxStyle.borderLeft)) {
+                        boxStyle.border = boxStyle.borderTop;
+                    }
+                    node.data(Resource.KEY_NAME, 'boxStyle', boxStyle);
                 }
-                const borderTop = JSON.stringify(boxStyle.borderTop);
-                if (borderTop === JSON.stringify(boxStyle.borderRight) && borderTop === JSON.stringify(boxStyle.borderBottom) && borderTop === JSON.stringify(boxStyle.borderLeft)) {
-                    boxStyle.border = boxStyle.borderTop;
-                }
-                node.data(Resource.KEY_NAME, 'boxStyle', boxStyle);
             }
         }
         setFontStyle() {
@@ -830,7 +893,7 @@
                     const color = $color.parseRGBA(node.css('color'), opacity);
                     let backgroundColor;
                     if (!(backgroundImage ||
-                        node.css('backgroundColor') === node.cssParent('backgroundColor', false, true) && (node.plainText || node.style.backgroundColor !== node.cssInitial('backgroundColor')) ||
+                        node.css('backgroundColor') === node.cssAscend('backgroundColor', false, true) && (node.plainText || node.style.backgroundColor !== node.cssInitial('backgroundColor')) ||
                         node.documentParent.visible && !node.has('backgroundColor') && $dom$1.cssFromParent(node.element, 'backgroundColor'))) {
                         backgroundColor = $color.parseRGBA(node.css('backgroundColor'), opacity);
                     }
@@ -901,42 +964,9 @@
             }
         }
         setValueString() {
-            function replaceWhiteSpace(node, value) {
-                const renderParent = node.renderParent;
-                if (node.multiline && renderParent && !renderParent.layoutVertical) {
-                    value = value.replace(/^\s*\n/, '');
-                }
-                switch (node.css('whiteSpace')) {
-                    case 'nowrap':
-                        value = value.replace(/\n/g, ' ');
-                        break;
-                    case 'pre':
-                    case 'pre-wrap':
-                        if (renderParent && !renderParent.layoutVertical) {
-                            value = value.replace(/^\n/, '');
-                        }
-                        value = value.replace(/\n/g, '\\n').replace(/\s/g, '&#160;');
-                        break;
-                    case 'pre-line':
-                        value = value.replace(/\n/g, '\\n').replace(/\s+/g, ' ');
-                        break;
-                    default:
-                        const element = node.element;
-                        if (element) {
-                            if ($dom$1.isLineBreak(element.previousSibling)) {
-                                value = value.replace(/^\s+/, '');
-                            }
-                            if ($dom$1.isLineBreak(element.nextSibling)) {
-                                value = value.replace(/\s+$/, '');
-                            }
-                        }
-                        return [value, false];
-                }
-                return [value, true];
-            }
-            for (const node of this.cache.visible) {
+            for (const node of this.cache) {
                 const element = node.element;
-                if (element) {
+                if (element && node.visible) {
                     let name = '';
                     let value = '';
                     let inlineTrim = false;
@@ -1053,12 +1083,15 @@
     const $dom$2 = squared.lib.dom;
     const $util$3 = squared.lib.util;
     const $xml$1 = squared.lib.xml;
+    const PREALIGN_DIRECTION = ['top', 'right', 'bottom', 'left'];
     function prioritizeExtensions(documentRoot, element, extensions) {
         const tagged = [];
         let current = element;
         do {
             if (current.dataset.use) {
-                tagged.push(...current.dataset.use.split(',').map(value => value.trim()));
+                for (const value of current.dataset.use.split(',')) {
+                    tagged.push(value.trim());
+                }
             }
             current = current !== documentRoot ? current.parentElement : null;
         } while (current);
@@ -1074,7 +1107,9 @@
                     untagged.push(ext);
                 }
             }
-            return [...result.filter(item => item), ...untagged];
+            $util$3.spliceArray(result, item => item === undefined);
+            result.push(...untagged);
+            return result;
         }
         else {
             return extensions;
@@ -1084,14 +1119,31 @@
         const previousSiblings = node.previousSiblings();
         const nextSiblings = node.nextSiblings();
         if ((previousSiblings.length === 0 || !previousSiblings.some(item => item.multiline > 0 || item.excluded && !item.blockStatic)) && (nextSiblings.length === 0 || nextSiblings.every(item => item.blockStatic || item.lineBreak || item.excluded) || parent && node.element === $dom$2.getLastChildElement(parent.element))) {
-            node.css({ display: 'inline-block', verticalAlign: 'top' }, '', true);
+            node.cssApply({
+                display: 'inline-block',
+                verticalAlign: 'top'
+            }, true);
             node.positionStatic = true;
             return true;
         }
         return false;
     }
+    function compareRange(operation, value, range) {
+        switch (operation) {
+            case '<=':
+                return value <= range;
+            case '<':
+                return value < range;
+            case '>=':
+                return value >= range;
+            case '>':
+                return value > range;
+            default:
+                return value === range;
+        }
+    }
     class Application {
-        constructor(framework, controllerConstructor, resourceConstructor, extensionManagerHandler, nodeConstructor) {
+        constructor(framework, nodeConstructor, controllerConstructor, resourceConstructor, extensionManagerHandler) {
             this.framework = framework;
             this.nodeConstructor = nodeConstructor;
             this.initialized = false;
@@ -1253,7 +1305,7 @@
                 }
             };
             if (this.userSettings.preloadImages) {
-                Array.from(this.parseElements).forEach(element => {
+                for (const element of this.parseElements) {
                     element.querySelectorAll('svg image').forEach((image) => {
                         const uri = $util$3.resolvePath(image.href.baseVal);
                         this.session.image.set(uri, {
@@ -1262,25 +1314,25 @@
                             uri
                         });
                     });
-                });
+                }
                 for (const image of this.session.image.values()) {
                     if (image.width === 0 && image.height === 0 && image.uri) {
-                        const imageElement = document.createElement('img');
-                        imageElement.src = image.uri;
-                        if (imageElement.complete && imageElement.naturalWidth > 0 && imageElement.naturalHeight > 0) {
-                            image.width = imageElement.naturalWidth;
-                            image.height = imageElement.naturalHeight;
+                        const element = document.createElement('img');
+                        element.src = image.uri;
+                        if (element.complete && element.naturalWidth > 0 && element.naturalHeight > 0) {
+                            image.width = element.naturalWidth;
+                            image.height = element.naturalHeight;
                         }
                         else {
-                            imageElement.className = '__css.preload';
-                            documentRoot.appendChild(imageElement);
+                            element.className = '__css.preload';
+                            documentRoot.appendChild(element);
                         }
                     }
                 }
             }
             const images = [];
             for (const element of this.parseElements) {
-                Array.from(element.querySelectorAll('IMG')).forEach((image) => {
+                element.querySelectorAll('IMG').forEach((image) => {
                     if (image.tagName === 'IMG') {
                         if (image.complete) {
                             this.addImagePreload(image);
@@ -1296,12 +1348,10 @@
             }
             else {
                 this.initialized = true;
-                Promise.all(images.map(image => {
-                    return new Promise((resolve, reject) => {
-                        image.onload = resolve;
-                        image.onerror = reject;
-                    });
-                }))
+                Promise.all($util$3.objectMap(images, image => new Promise((resolve, reject) => {
+                    image.onload = resolve;
+                    image.onerror = reject;
+                })))
                     .then((result) => {
                     if (Array.isArray(result)) {
                         for (const item of result) {
@@ -1441,7 +1491,7 @@
                     const mapParent = this._renderPosition.get(id);
                     let revised;
                     if (mapParent) {
-                        const previous = mapParent.children.filter(item => !parent.contains(item));
+                        const previous = $util$3.filterArray(mapParent.children, item => !parent.contains(item));
                         if (parent.siblingIndex < previous.length) {
                             previous.splice(parent.siblingIndex, 0, parent);
                             for (let i = parent.siblingIndex + 1; i < previous.length; i++) {
@@ -1470,7 +1520,7 @@
             if (required) {
                 const renderMap = this._renderPosition.get(parent.id);
                 if (renderMap) {
-                    children = renderMap.children.filter(item => !parent.contains(item));
+                    children = $util$3.filterArray(renderMap.children, item => !parent.contains(item));
                     children.push(...parent.children);
                 }
                 else {
@@ -1488,8 +1538,12 @@
         createCache(documentRoot) {
             const elements = (() => {
                 if (documentRoot === document.body) {
-                    let i = 0;
-                    return document.querySelectorAll(Array.from(document.body.childNodes).some((item) => this.conditionElement(item) && ++i > 1) ? 'body, body *' : 'body *');
+                    for (let i = 0, j = 0; i < document.body.childNodes.length; i++) {
+                        if (this.conditionElement(document.body.childNodes[i]) && ++j > 1) {
+                            return document.querySelectorAll('body, body *');
+                        }
+                    }
+                    return document.querySelectorAll('body *');
                 }
                 else {
                     return documentRoot.querySelectorAll('*');
@@ -1499,7 +1553,8 @@
             this.processing.cache.clear();
             this.processing.excluded.clear();
             this.processing.node = null;
-            for (const ext of this.extensions) {
+            const extensions = Array.from(this.extensions);
+            for (const ext of extensions) {
                 ext.beforeInit(documentRoot);
             }
             const rootNode = this.insertNode(documentRoot);
@@ -1513,9 +1568,9 @@
                 return false;
             }
             const localSettings = this.controllerHandler.localSettings;
-            for (const element of Array.from(elements)) {
+            elements.forEach((element) => {
                 if (!this.parseElements.has(element)) {
-                    prioritizeExtensions(documentRoot, element, Array.from(this.extensions)).some(item => item.init(element));
+                    prioritizeExtensions(documentRoot, element, extensions).some(item => item.init(element));
                     if (!this.parseElements.has(element) && !(localSettings.unsupported.tagName.has(element.tagName) || element.tagName === 'INPUT' && localSettings.unsupported.tagName.has(`${element.tagName}:${element.type}`))) {
                         let valid = true;
                         let current = element.parentElement;
@@ -1531,13 +1586,13 @@
                         }
                     }
                 }
-            }
+            });
             if (this.processing.cache.length) {
                 for (const node of this.processing.cache) {
                     if (node.htmlElement && node.tagName !== 'SELECT') {
                         const plainText = [];
                         let valid = false;
-                        Array.from(node.element.childNodes).forEach((element) => {
+                        node.element.childNodes.forEach((element) => {
                             if (element.nodeName === '#text') {
                                 plainText.push(element);
                             }
@@ -1549,7 +1604,9 @@
                             }
                         });
                         if (valid) {
-                            plainText.forEach(element => this.insertNode(element, node));
+                            for (const element of plainText) {
+                                this.insertNode(element, node);
+                            }
                         }
                     }
                 }
@@ -1571,12 +1628,12 @@
                             }
                         }
                         if (node.positionRelative && !node.positionStatic) {
-                            ['top', 'right', 'bottom', 'left'].forEach(attr => {
+                            for (const attr of PREALIGN_DIRECTION) {
                                 if (node.has(attr)) {
                                     reset[attr] = node.css(attr);
                                     element.style[attr] = 'auto';
                                 }
-                            });
+                            }
                         }
                         if (element.dir === 'rtl') {
                             element.dir = 'ltr';
@@ -1679,7 +1736,7 @@
                 for (const node of this.processing.cache) {
                     if (node.htmlElement && node.length) {
                         let i = 0;
-                        Array.from(node.element.childNodes).forEach((element) => {
+                        node.element.childNodes.forEach((element) => {
                             const item = $dom$2.getElementAsNode(element);
                             if (item && !item.excluded && (item.pageFlow || item.documentParent === node)) {
                                 item.siblingIndex = i++;
@@ -1687,7 +1744,7 @@
                         });
                         const layers = [];
                         node.each((item) => {
-                            if (item.siblingIndex === Number.MAX_VALUE) {
+                            if (item.siblingIndex === Number.POSITIVE_INFINITY) {
                                 for (const adjacent of node.children) {
                                     if (adjacent.actualChildren.includes(item) || item.ascend().some(child => adjacent.cascade().includes(child))) {
                                         let index = -1;
@@ -1716,7 +1773,7 @@
                                     return a.zIndex < b.zIndex ? -1 : 1;
                                 });
                                 node.each((item) => {
-                                    if (item.siblingIndex !== Number.MAX_VALUE && item.siblingIndex >= j) {
+                                    if (item.siblingIndex >= j && item.siblingIndex !== Number.POSITIVE_INFINITY) {
                                         item.siblingIndex += order.length;
                                     }
                                 });
@@ -1730,7 +1787,7 @@
                     node.saveAsInitial();
                 }
                 $util$3.sortArray(this.processing.cache.children, true, 'depth', 'id');
-                for (const ext of this.extensions) {
+                for (const ext of extensions) {
                     ext.afterInit(documentRoot);
                 }
                 return true;
@@ -1740,8 +1797,13 @@
         setBaseLayout() {
             const settings = this.userSettings;
             const localSettings = this.controllerHandler.localSettings;
+            const extensions = [];
+            for (const item of this.extensions) {
+                if (!item.eventOnly) {
+                    extensions.push(item);
+                }
+            }
             const documentRoot = this.processing.node;
-            const extensions = Array.from(this.extensions).filter(item => !item.eventOnly);
             const mapY = new Map();
             let baseTemplate = localSettings.baseTemplate;
             let empty = true;
@@ -1762,9 +1824,11 @@
             }
             setMapY(-1, 0, documentRoot.parent);
             let maxDepth = 0;
-            for (const node of this.processing.cache.visible) {
-                setMapY(node.depth, node.id, node);
-                maxDepth = Math.max(node.depth, maxDepth);
+            for (const node of this.processing.cache) {
+                if (node.visible) {
+                    setMapY(node.depth, node.id, node);
+                    maxDepth = Math.max(node.depth, maxDepth);
+                }
             }
             for (let i = 0; i < maxDepth; i++) {
                 mapY.set((i * -1) - 2, new Map());
@@ -1772,10 +1836,10 @@
             this.processing.cache.afterAppend = (node) => {
                 deleteMapY(node.id);
                 setMapY((node.depth * -1) - 2, node.id, node);
-                node.cascade().forEach((item) => {
+                for (const item of node.cascade()) {
                     deleteMapY(item.id);
                     setMapY((item.depth * -1) - 2, item.id, item);
-                });
+                }
             };
             for (const depth of mapY.values()) {
                 this.processing.depthMap.clear();
@@ -1786,7 +1850,8 @@
                     const axisY = parent.duplicate();
                     const hasFloat = axisY.some(node => node.floating);
                     const cleared = hasFloat ? NodeList.clearedAll(parent) : new Map();
-                    const extensionsChild = extensions.filter(item => item.subscribersChild.size);
+                    const extensionsParent = parent.renderExtension.size ? Array.from(parent.renderExtension) : [];
+                    const extensionsChild = $util$3.filterArray(extensions, item => item.subscribersChild.size > 0);
                     let k = -1;
                     while (++k < axisY.length) {
                         let nodeY = axisY[k];
@@ -1798,18 +1863,23 @@
                             if (this.parseElements.has(element) && !nodeY.documentRoot && !nodeY.documentBody) {
                                 continue;
                             }
-                            else if (nodeY.length === 0 && element.children.length && Array.from(element.children).every(item => this.parseElements.has(item))) {
-                                nodeY.inlineText = false;
+                            else if (nodeY.length === 0 && element.children.length) {
+                                let valid = true;
+                                for (let i = 0; i < element.children.length; i++) {
+                                    if (!this.parseElements.has(element.children[i])) {
+                                        valid = false;
+                                        break;
+                                    }
+                                }
+                                if (valid) {
+                                    nodeY.inlineText = false;
+                                }
                             }
                         }
                         const extendable = nodeY.hasAlign(8192 /* EXTENDABLE */);
                         let parentY = nodeY.parent;
                         let unknownParent = parentY.hasAlign(2 /* UNKNOWN */);
-                        if (axisY.length > 1 && k < axisY.length - 1 &&
-                            nodeY.pageFlow &&
-                            (parentY.alignmentType === 0 || extendable || unknownParent) &&
-                            !parentY.hasAlign(4 /* AUTO_LAYOUT */) &&
-                            !nodeY.hasBit('excludeSection', APP_SECTION.DOM_TRAVERSE)) {
+                        if (axisY.length > 1 && k < axisY.length - 1 && nodeY.pageFlow && (parentY.alignmentType === 0 || extendable || unknownParent) && !parentY.hasAlign(4 /* AUTO_LAYOUT */) && !nodeY.hasBit('excludeSection', APP_SECTION.DOM_TRAVERSE)) {
                             const horizontal = [];
                             const vertical = [];
                             const floatSegment = new Set();
@@ -1872,12 +1942,9 @@
                                                 const startNewRow = item.alignedVertically(previousSiblings, [...horizontal, ...vertical, item], cleared, false);
                                                 if (startNewRow || settings.floatOverlapDisabled && previous.floating && item.blockStatic && floatSegment.size === 2) {
                                                     if (horizontal.length) {
-                                                        if (!settings.floatOverlapDisabled &&
-                                                            floatSegment.size &&
-                                                            !previous.autoMargin.horizontal &&
-                                                            !previousSiblings.some(node => node.lineBreak && !cleared.has(node)) &&
-                                                            cleared.get(item) !== 'both') {
-                                                            const floatBottom = $util$3.maxArray(horizontal.filter(node => node.floating).map(node => node.linear.bottom));
+                                                        if (!settings.floatOverlapDisabled && floatSegment.size && !previous.autoMargin.horizontal && !previousSiblings.some(node => node.lineBreak && !cleared.has(node)) && cleared.get(item) !== 'both') {
+                                                            let floatBottom = Number.NEGATIVE_INFINITY;
+                                                            $util$3.captureMap(horizontal, node => node.floating, node => floatBottom = Math.max(floatBottom, node.linear.bottom));
                                                             if (!item.floating || item.linear.top < floatBottom) {
                                                                 const floated = NodeList.floated(horizontal);
                                                                 if (cleared.has(item)) {
@@ -1928,23 +1995,23 @@
                                 }
                             }
                             let result;
-                            let segmentEnd;
+                            let segEnd;
                             if (horizontal.length > 1) {
                                 const layout = new Layout(parentY, nodeY, 0, 0, horizontal.length, horizontal);
                                 layout.init();
                                 result = this.controllerHandler.processTraverseHorizontal(layout, axisY);
-                                segmentEnd = horizontal[horizontal.length - 1];
+                                segEnd = horizontal[horizontal.length - 1];
                             }
                             else if (vertical.length > 1) {
                                 const layout = new Layout(parentY, nodeY, 0, 0, vertical.length, vertical);
                                 layout.init();
                                 result = this.controllerHandler.processTraverseVertical(layout, axisY);
-                                segmentEnd = vertical[vertical.length - 1];
-                                if (!segmentEnd.blockStatic && segmentEnd !== axisY[axisY.length - 1]) {
-                                    segmentEnd.alignmentType |= 8192 /* EXTENDABLE */;
+                                segEnd = vertical[vertical.length - 1];
+                                if (!segEnd.blockStatic && segEnd !== axisY[axisY.length - 1]) {
+                                    segEnd.alignmentType |= 8192 /* EXTENDABLE */;
                                 }
                             }
-                            if (unknownParent && segmentEnd === axisY[axisY.length - 1]) {
+                            if (unknownParent && segEnd === axisY[axisY.length - 1]) {
                                 parentY.alignmentType ^= 2 /* UNKNOWN */;
                                 unknownParent = false;
                             }
@@ -1972,8 +2039,12 @@
                         }
                         if (!nodeY.rendered && !nodeY.hasBit('excludeSection', APP_SECTION.EXTENSION)) {
                             let next = false;
-                            if (parentY.renderExtension.size || extensionsChild.length) {
-                                for (const ext of [...parentY.renderExtension, ...extensionsChild.filter(item => item.subscribersChild.has(nodeY))]) {
+                            if (extensionsParent.length || extensionsChild.length) {
+                                const combined = extensionsParent.slice(0);
+                                if (extensionsChild.length) {
+                                    combined.push(...$util$3.filterArray(extensionsChild, item => item.subscribersChild.has(nodeY)));
+                                }
+                                for (const ext of combined) {
                                     const result = ext.processChild(nodeY, parentY);
                                     if (result.output) {
                                         this.addRenderTemplate(parentY, nodeY, result.output);
@@ -2052,24 +2123,26 @@
                     }
                 }
                 for (const [id, templates] of this.processing.depthMap.entries()) {
-                    const renderPosition = this._renderPosition.get(id);
+                    const position = this._renderPosition.get(id);
                     let children;
-                    if (renderPosition) {
-                        children = this.controllerHandler.sortRenderPosition(renderPosition.parent, renderPosition.children);
+                    if (position) {
+                        children = this.controllerHandler.sortRenderPosition(position.parent, position.children);
                     }
                     else if (id !== 0) {
                         const parent = this.processing.cache.find('id', id);
-                        children = parent ? this.controllerHandler.sortRenderPosition(parent, parent.children) : [];
+                        if (parent) {
+                            children = this.controllerHandler.sortRenderPosition(parent, parent.children);
+                        }
                     }
                     if (children && children.length) {
                         const sorted = new Map();
-                        children.forEach(node => {
+                        for (const node of children) {
                             const key = node.renderPositionId;
                             const result = templates.get(key) || (node.companion ? templates.get(node.companion.renderPositionId) : null);
                             if (result) {
                                 sorted.set(key, result);
                             }
-                        });
+                        }
                         if (sorted.size === templates.size) {
                             this.processing.depthMap.set(id, sorted);
                         }
@@ -2080,9 +2153,9 @@
                 }
                 for (const [id, templates] of this.processing.depthMap.entries()) {
                     for (const [key, view] of templates.entries()) {
-                        const placeholder = $xml$1.formatPlaceholder(key.indexOf('^') !== -1 ? key : id);
-                        if (baseTemplate.indexOf(placeholder) !== -1) {
-                            baseTemplate = $xml$1.replacePlaceholder(baseTemplate, placeholder, view);
+                        const hash = $xml$1.formatPlaceholder(key.indexOf('^') !== -1 ? key : id);
+                        if (baseTemplate.indexOf(hash) !== -1) {
+                            baseTemplate = $xml$1.replacePlaceholder(baseTemplate, hash, view);
                             empty = false;
                         }
                         else {
@@ -2092,7 +2165,7 @@
                 }
             }
             if (documentRoot.dataset.layoutName && (!$util$3.hasValue(documentRoot.dataset.target) || documentRoot.renderExtension.size === 0)) {
-                this.addLayoutFile(documentRoot.dataset.layoutName, !empty ? baseTemplate : '', $util$3.trimString($util$3.trimNull(documentRoot.dataset.pathname), '/'), documentRoot.renderExtension.size > 0 && Array.from(documentRoot.renderExtension).some(item => item.documentRoot));
+                this.addLayoutFile(documentRoot.dataset.layoutName, !empty ? baseTemplate : '', $util$3.trimString($util$3.trimNull(documentRoot.dataset.pathname), '/'), documentRoot.renderExtension.size > 0 && $util$3.hasInSet(documentRoot.renderExtension, item => item.documentRoot));
             }
             if (empty && documentRoot.renderExtension.size === 0) {
                 documentRoot.hide();
@@ -2227,9 +2300,9 @@
                 let pendingFloat = 0;
                 for (let i = 0; i < data.length; i++) {
                     const node = data.item(i);
-                    const clear = data.cleared.get(node);
-                    if (clear && ($util$3.hasBit(pendingFloat, clear === 'right' ? 4 : 2) || pendingFloat !== 0 && clear === 'both')) {
-                        switch (clear) {
+                    const direction = data.cleared.get(node);
+                    if (direction && ($util$3.hasBit(pendingFloat, direction === 'right' ? 4 : 2) || pendingFloat !== 0 && direction === 'both')) {
+                        switch (direction) {
                             case 'left':
                                 if ($util$3.hasBit(pendingFloat, 2)) {
                                     pendingFloat ^= 2;
@@ -2427,7 +2500,7 @@
                             layerIndex.push(leftSub, rightSub);
                         }
                     }
-                    layerIndex = layerIndex.filter(item => item.length > 0);
+                    $util$3.spliceArray(layerIndex, item => item.length === 0);
                     layout.itemCount = layerIndex.length;
                     const vertical = inlineAbove.length === 0 && (leftSub.length === 0 || rightSub.length === 0) ? this.controllerHandler.containerTypeVertical : this.controllerHandler.containerTypeVerticalMargin;
                     layout.setType(vertical.containerType, vertical.alignmentType);
@@ -2437,13 +2510,18 @@
             if (layerIndex.length) {
                 const floating = [inlineAbove, leftAbove, leftBelow, rightAbove, rightBelow];
                 let floatgroup;
-                layerIndex.forEach((item, index) => {
+                for (let i = 0; i < layerIndex.length; i++) {
+                    const item = layerIndex[i];
+                    let segments;
                     if (Array.isArray(item[0])) {
+                        segments = item;
                         const grouping = [];
-                        item.forEach(segment => grouping.push(...segment));
+                        for (const seg of segments) {
+                            grouping.push(...seg);
+                        }
                         grouping.sort(NodeList.siblingIndex);
                         floatgroup = this.controllerHandler.createNodeGroup(grouping[0], grouping, data.node);
-                        const layout = new Layout(data.node, floatgroup, 0, (item.some(segment => segment === rightSub || segment === rightAbove) ? 512 /* RIGHT */ : 0), item.length);
+                        const layout = new Layout(data.node, floatgroup, 0, segments.some(seg => seg === rightSub || seg === rightAbove) ? 512 /* RIGHT */ : 0, segments.length);
                         let vertical;
                         if (settings.floatOverlapDisabled) {
                             vertical = this.controllerHandler.containerTypeVerticalMargin;
@@ -2461,15 +2539,19 @@
                             output = $xml$1.replacePlaceholder(output, data.node.id, this.renderNode(layout));
                         }
                     }
-                    (Array.isArray(item[0]) ? item : [item]).forEach(segment => {
+                    else {
+                        segments = [item];
+                        floatgroup = undefined;
+                    }
+                    for (const seg of segments) {
                         let basegroup = data.node;
-                        if (floatgroup && floating.includes(segment)) {
+                        if (floatgroup && floating.includes(seg)) {
                             basegroup = floatgroup;
                         }
                         let target;
-                        if (segment.length > 1) {
-                            target = this.controllerHandler.createNodeGroup(segment[0], segment, basegroup);
-                            const layout = new Layout(basegroup, target, 0, 128 /* SEGMENTED */, segment.length, segment);
+                        if (seg.length > 1) {
+                            target = this.controllerHandler.createNodeGroup(seg[0], seg, basegroup);
+                            const layout = new Layout(basegroup, target, 0, 128 /* SEGMENTED */, seg.length, seg);
                             if (layout.linearY) {
                                 const vertical = this.controllerHandler.containerTypeVertical;
                                 layout.setType(vertical.containerType, vertical.alignmentType);
@@ -2480,28 +2562,44 @@
                             }
                             output = $xml$1.replacePlaceholder(output, basegroup.id, this.renderNode(layout));
                         }
-                        else if (segment.length) {
-                            target = segment[0];
+                        else if (seg.length) {
+                            target = seg[0];
                             target.alignmentType |= 2048 /* SINGLE */;
-                            target.renderPosition = index;
+                            target.renderPosition = i;
                             output = $xml$1.replacePlaceholder(output, basegroup.id, $xml$1.formatPlaceholder(target.renderPositionId));
                         }
-                        if (!settings.floatOverlapDisabled && target && segment === inlineAbove && segment.some(subitem => subitem.blockStatic && !subitem.hasWidth)) {
+                        if (!settings.floatOverlapDisabled && target && seg === inlineAbove && seg.some(subitem => subitem.blockStatic && !subitem.hasWidth)) {
                             const vertical = this.controllerHandler.containerTypeVertical;
                             const targeted = target.of(vertical.containerType, vertical.alignmentType) ? target.children : [target];
                             if (leftAbove.length) {
-                                const marginRight = $util$3.maxArray(leftAbove.map(subitem => subitem.linear.right));
-                                const boundsLeft = $util$3.minArray(segment.map(subitem => subitem.bounds.left));
-                                targeted.forEach(subitem => subitem.modifyBox(256 /* PADDING_LEFT */, marginRight - boundsLeft));
+                                let marginRight = Number.NEGATIVE_INFINITY;
+                                let boundsLeft = Number.POSITIVE_INFINITY;
+                                for (const child of leftAbove) {
+                                    marginRight = Math.max(marginRight, child.linear.right);
+                                }
+                                for (const child of seg) {
+                                    boundsLeft = Math.min(boundsLeft, child.bounds.left);
+                                }
+                                for (const child of targeted) {
+                                    child.modifyBox(256 /* PADDING_LEFT */, marginRight - boundsLeft);
+                                }
                             }
                             if (rightAbove.length) {
-                                const marginLeft = $util$3.minArray(rightAbove.map(subitem => subitem.linear.left));
-                                const boundsRight = $util$3.maxArray(segment.map(subitem => subitem.bounds.right));
-                                targeted.forEach(subitem => subitem.modifyBox(64 /* PADDING_RIGHT */, boundsRight - marginLeft));
+                                let marginLeft = Number.POSITIVE_INFINITY;
+                                let boundsRight = Number.NEGATIVE_INFINITY;
+                                for (const child of rightAbove) {
+                                    marginLeft = Math.min(marginLeft, child.linear.left);
+                                }
+                                for (const child of seg) {
+                                    boundsRight = Math.max(boundsRight, child.bounds.right);
+                                }
+                                for (const child of targeted) {
+                                    child.modifyBox(64 /* PADDING_RIGHT */, boundsRight - marginLeft);
+                                }
                             }
                         }
-                    });
-                });
+                    }
+                }
             }
             return output;
         }
@@ -2618,7 +2716,7 @@
                             basegroup.init();
                             layout.itemCount = children.length;
                             xml += this.renderNode(layout);
-                            children.forEach(node => {
+                            for (const node of children) {
                                 if (data.contains(node) || node.length === 0) {
                                     xml = $xml$1.replacePlaceholder(xml, basegroup.id, $xml$1.formatPlaceholder(node.id));
                                 }
@@ -2626,7 +2724,7 @@
                                     const layoutSegment = new Layout(basegroup, node, vertical.containerType, vertical.alignmentType | 128 /* SEGMENTED */, node.length, node.children);
                                     xml = $xml$1.replacePlaceholder(xml, basegroup.id, this.renderNode(layoutSegment));
                                 }
-                            });
+                            }
                         }
                     }
                 }
@@ -2635,17 +2733,17 @@
             return output;
         }
         insertNode(element, parent) {
-            let node = null;
+            let node;
             if (element.nodeName.charAt(0) === '#' && element.nodeName === '#text') {
                 if ($dom$2.isPlainText(element, true) || $dom$2.cssParent(element, 'whiteSpace', 'pre', 'pre-wrap')) {
-                    node = new this.nodeConstructor(this.nextId, element, this.controllerHandler.afterInsertNode);
+                    node = this.createNode(element);
                     if (parent) {
                         node.inherit(parent, 'textStyle');
                     }
                     else {
                         node.css('whiteSpace', $dom$2.getStyle(element.parentElement).whiteSpace || 'normal');
                     }
-                    node.css({
+                    node.cssApply({
                         position: 'static',
                         display: 'inline',
                         verticalAlign: 'baseline',
@@ -2655,15 +2753,15 @@
                 }
             }
             else if (element.parentElement instanceof HTMLElement) {
-                const nodeConstructor = new this.nodeConstructor(this.nextId, element, this.controllerHandler.afterInsertNode);
+                node = this.createNode(element);
                 if (!this.controllerHandler.localSettings.unsupported.excluded.has(element.tagName) && this.conditionElement(element)) {
-                    node = nodeConstructor;
                     node.setExclusions();
                 }
                 else {
-                    nodeConstructor.visible = false;
-                    nodeConstructor.excluded = true;
-                    this.processing.excluded.append(nodeConstructor);
+                    node.visible = false;
+                    node.excluded = true;
+                    this.processing.excluded.append(node);
+                    return undefined;
                 }
             }
             if (node) {
@@ -2673,10 +2771,7 @@
         }
         conditionElement(element) {
             if ($dom$2.hasComputedStyle(element)) {
-                if (element instanceof SVGGraphicsElement && element.tagName !== 'svg') {
-                    return false;
-                }
-                else if ($dom$2.hasVisibleRect(element, true) || $util$3.hasValue(element.dataset.use)) {
+                if ($dom$2.hasVisibleRect(element, true) || $util$3.hasValue(element.dataset.use)) {
                     return true;
                 }
                 else {
@@ -2689,7 +2784,14 @@
                         }
                         current = current.parentElement;
                     }
-                    return valid && Array.from(element.children).some((item) => $dom$2.hasVisibleRect(item, true));
+                    if (valid) {
+                        for (let i = 0; i < element.children.length; i++) {
+                            if ($dom$2.hasVisibleRect(element.children[i], true)) {
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
                 }
             }
             else {
@@ -2697,122 +2799,167 @@
             }
         }
         setStyleMap() {
-            const dpi = this.userSettings.resolutionDPI;
-            const clientFirefox = $dom$2.isUserAgent(16 /* FIREFOX */);
-            let warning = false;
-            for (let i = 0; i < document.styleSheets.length; i++) {
-                const styleSheet = document.styleSheets[i];
-                if (styleSheet.cssRules) {
-                    for (let j = 0; j < styleSheet.cssRules.length; j++) {
-                        const item = styleSheet.cssRules[j];
-                        try {
-                            if (item instanceof CSSStyleRule) {
-                                const attrRule = new Set();
-                                Array.from(item.style).forEach(value => attrRule.add($util$3.convertCamelCase(value)));
-                                Array.from(document.querySelectorAll(item.selectorText)).forEach((element) => {
-                                    const attrs = new Set(attrRule);
-                                    Array.from(element.style).forEach(value => attrs.add($util$3.convertCamelCase(value)));
-                                    const style = $dom$2.getStyle(element);
-                                    const fontSize = parseInt($util$3.convertPX(style.fontSize || '16px', dpi, 0));
-                                    const styleMap = {};
-                                    for (const attr of attrs) {
-                                        if (element.style[attr]) {
-                                            styleMap[attr] = element.style[attr];
-                                        }
-                                        else {
-                                            const value = item.style[attr];
-                                            if (value !== 'initial') {
-                                                const computedValue = style[attr] || '';
-                                                if (value === computedValue) {
-                                                    styleMap[attr] = value;
+            violation: {
+                for (let i = 0; i < document.styleSheets.length; i++) {
+                    const item = document.styleSheets[i];
+                    if (item.cssRules) {
+                        for (let j = 0; j < item.cssRules.length; j++) {
+                            const rule = item.cssRules[j];
+                            try {
+                                switch (rule.type) {
+                                    case CSSRule.STYLE_RULE:
+                                        this.applyStyleRule(rule);
+                                        break;
+                                    case CSSRule.MEDIA_RULE:
+                                        const patternA = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
+                                        let matchA;
+                                        let statement = false;
+                                        while (!statement && ((matchA = patternA.exec(rule.conditionText)) !== null)) {
+                                            const negate = matchA[1] === 'not';
+                                            const patternB = /\(([a-z\-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
+                                            let matchB;
+                                            let valid = false;
+                                            while (!statement && (matchB = patternB.exec(matchA[2])) !== null) {
+                                                const attr = matchB[1];
+                                                let operation;
+                                                if (matchB[1].startsWith('min')) {
+                                                    operation = '>=';
+                                                }
+                                                else if (matchB[1].startsWith('max')) {
+                                                    operation = '<=';
                                                 }
                                                 else {
-                                                    switch (attr) {
-                                                        case 'backgroundColor':
-                                                        case 'borderTopColor':
-                                                        case 'borderRightColor':
-                                                        case 'borderBottomColor':
-                                                        case 'borderLeftColor':
-                                                        case 'color':
-                                                        case 'fontSize':
-                                                        case 'fontWeight':
-                                                            styleMap[attr] = computedValue || value;
-                                                            break;
-                                                        case 'width':
-                                                        case 'height':
-                                                        case 'minWidth':
-                                                        case 'maxWidth':
-                                                        case 'minHeight':
-                                                        case 'maxHeight':
-                                                        case 'lineHeight':
-                                                        case 'verticalAlign':
-                                                        case 'textIndent':
-                                                        case 'columnGap':
-                                                        case 'top':
-                                                        case 'right':
-                                                        case 'bottom':
-                                                        case 'left':
-                                                        case 'marginTop':
-                                                        case 'marginRight':
-                                                        case 'marginBottom':
-                                                        case 'marginLeft':
-                                                        case 'paddingTop':
-                                                        case 'paddingRight':
-                                                        case 'paddingBottom':
-                                                        case 'paddingLeft':
-                                                            styleMap[attr] = /^[A-Za-z\-]+$/.test(value) || $util$3.isPercent(value) ? value : $util$3.convertPX(value, dpi, fontSize);
-                                                            break;
-                                                        default:
-                                                            if (styleMap[attr] === undefined) {
-                                                                styleMap[attr] = value;
-                                                            }
-                                                            break;
-                                                    }
+                                                    operation = matchA[2];
+                                                }
+                                                const value = matchB[3];
+                                                switch (attr) {
+                                                    case 'aspect-ratio':
+                                                    case 'min-aspect-ratio':
+                                                    case 'max-aspect-ratio':
+                                                        const [width, height] = $util$3.replaceMap(value.split('/'), ratio => parseInt(ratio));
+                                                        valid = compareRange(operation, window.innerWidth / window.innerHeight, width / height);
+                                                        break;
+                                                    case 'width':
+                                                    case 'min-width':
+                                                    case 'max-width':
+                                                    case 'height':
+                                                    case 'min-height':
+                                                    case 'max-height':
+                                                        valid = compareRange(operation, attr.indexOf('width') !== -1 ? window.innerWidth : window.innerHeight, parseFloat($util$3.convertPX(value, $util$3.convertInt($dom$2.getStyle(document.body).fontSize))));
+                                                        break;
+                                                    case 'orientation':
+                                                        valid = value === 'portrait' && window.innerWidth <= window.innerHeight || value === 'landscape' && window.innerWidth > window.innerHeight;
+                                                        break;
+                                                    case 'resolution':
+                                                    case 'min-resolution':
+                                                    case 'max-resolution':
+                                                        let resolution = parseFloat(value);
+                                                        if (value.endsWith('dpcm')) {
+                                                            resolution *= 2.54;
+                                                        }
+                                                        else if (value.endsWith('dppx') || value.endsWith('x')) {
+                                                            resolution *= 96;
+                                                        }
+                                                        valid = compareRange(operation, $dom$2.getDeviceDPI(), resolution);
+                                                        break;
+                                                    case 'grid':
+                                                        valid = value === '0';
+                                                        break;
+                                                    case 'color':
+                                                        valid = value === undefined || $util$3.convertInt(value) > 0;
+                                                        break;
+                                                    case 'min-color':
+                                                        valid = $util$3.convertInt(value) <= screen.colorDepth / 3;
+                                                        break;
+                                                    case 'max-color':
+                                                        valid = $util$3.convertInt(value) >= screen.colorDepth / 3;
+                                                        break;
+                                                    case 'color-index':
+                                                    case 'min-color-index':
+                                                    case 'monochrome':
+                                                    case 'min-monochrome':
+                                                        valid = value === '0';
+                                                        break;
+                                                    case 'max-color-index':
+                                                    case 'max-monochrome':
+                                                        valid = $util$3.convertInt(value) >= 0;
+                                                        break;
+                                                    default:
+                                                        valid = false;
+                                                        break;
+                                                }
+                                                if (!valid) {
+                                                    break;
                                                 }
                                             }
-                                        }
-                                    }
-                                    if (this.userSettings.preloadImages && $util$3.hasValue(styleMap.backgroundImage) && styleMap.backgroundImage !== 'initial') {
-                                        styleMap.backgroundImage.split(',').map(value => value.trim()).forEach(value => {
-                                            const uri = $dom$2.cssResolveUrl(value);
-                                            if (uri !== '' && !this.session.image.has(uri)) {
-                                                this.session.image.set(uri, { width: 0, height: 0, uri });
+                                            if (!negate && valid || negate && !valid) {
+                                                statement = true;
                                             }
-                                        });
-                                    }
-                                    if (clientFirefox && styleMap.display === undefined) {
-                                        switch (element.tagName) {
-                                            case 'INPUT':
-                                            case 'TEXTAREA':
-                                            case 'SELECT':
-                                            case 'BUTTON':
-                                                styleMap.display = 'inline-block';
-                                                break;
                                         }
-                                    }
-                                    const data = $dom$2.getElementCache(element, 'styleMap');
-                                    if (data) {
-                                        Object.assign(data, styleMap);
-                                    }
-                                    else {
-                                        $dom$2.setElementCache(element, 'style', style);
-                                        $dom$2.setElementCache(element, 'styleMap', styleMap);
-                                    }
-                                });
+                                        if (statement) {
+                                            const items = rule.cssRules;
+                                            for (let k = 0; k < items.length; k++) {
+                                                this.applyStyleRule(items[k]);
+                                            }
+                                        }
+                                        break;
+                                }
                             }
-                        }
-                        catch (error) {
-                            if (!warning) {
-                                alert('External CSS files cannot be parsed with Chrome 64+ when loading HTML pages directly from your hard drive [file://]. ' +
-                                    'Either use a local web server [http://], embed your CSS into a &lt;style&gt; element, or use a different browser. ' +
+                            catch (error) {
+                                alert('External CSS files cannot be parsed with some browsers when loading HTML pages directly from your hard drive. ' +
+                                    'Either use a local web server, embed your CSS into a <style> element, or you can also try a different browser. ' +
                                     'See the README for more detailed instructions.\n\n' +
-                                    `${styleSheet.href}\n\n${error}`);
-                                warning = true;
+                                    `${item.href}\n\n${error}`);
+                                break violation;
                             }
                         }
                     }
                 }
             }
+        }
+        applyStyleRule(item) {
+            const clientFirefox = $dom$2.isUserAgent(16 /* FIREFOX */);
+            const fromRule = [];
+            for (const attr of Array.from(item.style)) {
+                fromRule.push($util$3.convertCamelCase(attr));
+            }
+            document.querySelectorAll(item.selectorText).forEach((element) => {
+                const style = $dom$2.getStyle(element);
+                const fontSize = parseInt($util$3.convertPX(style.fontSize, 0));
+                const styleMap = {};
+                for (const attr of fromRule) {
+                    const value = $dom$2.checkStyleAttribute(element, attr, item.style[attr], style, fontSize);
+                    if (value !== '') {
+                        styleMap[attr] = value;
+                    }
+                }
+                if (this.userSettings.preloadImages && $util$3.hasValue(styleMap.backgroundImage) && styleMap.backgroundImage !== 'initial') {
+                    for (const value of styleMap.backgroundImage.split(',')) {
+                        const uri = $dom$2.cssResolveUrl(value.trim());
+                        if (uri !== '' && !this.session.image.has(uri)) {
+                            this.session.image.set(uri, { width: 0, height: 0, uri });
+                        }
+                    }
+                }
+                if (clientFirefox && styleMap.display === undefined) {
+                    switch (element.tagName) {
+                        case 'INPUT':
+                        case 'TEXTAREA':
+                        case 'SELECT':
+                        case 'BUTTON':
+                            styleMap.display = 'inline-block';
+                            break;
+                    }
+                }
+                const data = $dom$2.getElementCache(element, 'styleMap');
+                if (data) {
+                    Object.assign(data, styleMap);
+                }
+                else {
+                    $dom$2.setElementCache(element, 'style', style);
+                    $dom$2.setElementCache(element, 'styleMap', styleMap);
+                }
+            });
         }
         set appName(value) {
             if (this.resourceHandler.fileHandler) {
@@ -2849,7 +2996,6 @@
         }
     }
 
-    const $util$4 = squared.lib.util;
     const $xml$2 = squared.lib.xml;
     class Controller {
         constructor(application, cache) {
@@ -2897,21 +3043,21 @@
             return this._before[id] !== undefined || this._after[id] !== undefined;
         }
         getEnclosingTag(controlName, id, depth, xml = '') {
-            const indent = $util$4.repeat(Math.max(0, depth));
-            let output = `{<${id}}`;
+            const indent = '\t'.repeat(Math.max(0, depth));
+            let result = `{<${id}}`;
             if (xml !== '') {
-                output += indent + `<${controlName}${depth === 0 ? '{#0}' : ''}{@${id}}>\n` +
+                result += indent + `<${controlName}${depth === 0 ? '{#0}' : ''}{@${id}}>\n` +
                     xml +
                     indent + `</${controlName}>\n`;
             }
             else {
-                output += indent + `<${controlName}${depth === 0 ? '{#0}' : ''}{@${id}} />\n`;
+                result += indent + `<${controlName}${depth === 0 ? '{#0}' : ''}{@${id}} />\n`;
             }
-            output += `{>${id}}`;
-            return output;
+            result += `{>${id}}`;
+            return result;
         }
         removePlaceholders(value) {
-            return value.replace(/{[<:@#>]\d+(\^\d+)?}/g, '').trim();
+            return value.replace(/{[<:@#>]\d+(\^\d+)?}\n?/g, '').trim();
         }
         replaceIndent(value, depth, cache) {
             value = $xml$2.replaceIndent(value, depth, /^({[^}]+})(\t*)(<.*)/);
@@ -2937,7 +3083,7 @@
     }
 
     const $dom$3 = squared.lib.dom;
-    const $util$5 = squared.lib.util;
+    const $util$4 = squared.lib.util;
     class Extension {
         constructor(name, framework, tagNames, options) {
             this.name = name;
@@ -2951,7 +3097,7 @@
             this.subscribers = new Set();
             this.subscribersChild = new Set();
             if (Array.isArray(tagNames)) {
-                this.tagNames = tagNames.map(value => value.trim().toUpperCase());
+                this.tagNames = $util$4.replaceMap(tagNames, value => value.trim().toUpperCase());
             }
             if (options) {
                 Object.assign(this.options, options);
@@ -2961,7 +3107,7 @@
             if ($dom$3.hasComputedStyle(element)) {
                 for (let i = 0; i < element.children.length; i++) {
                     const item = element.children[i];
-                    if ($util$5.includes(item.dataset.use, name)) {
+                    if ($util$4.includes(item.dataset.use, name)) {
                         return item;
                     }
                 }
@@ -2975,17 +3121,19 @@
             this.dependencies.push({ name, preload });
         }
         included(element) {
-            return $util$5.includes(element.dataset.use, this.name);
+            return $util$4.includes(element.dataset.use, this.name);
         }
         beforeInit(element, recursive = false) {
             if (!recursive && this.included(element)) {
-                this.dependencies.filter(item => item.preload).forEach(item => {
-                    const ext = this.application.extensionManager.retrieve(item.name);
-                    if (ext && !ext.preloaded) {
-                        ext.beforeInit(element, true);
-                        ext.preloaded = true;
+                for (const item of this.dependencies) {
+                    if (item.preload) {
+                        const ext = this.application.extensionManager.retrieve(item.name);
+                        if (ext && !ext.preloaded) {
+                            ext.beforeInit(element, true);
+                            ext.preloaded = true;
+                        }
                     }
-                });
+                }
             }
         }
         init(element) {
@@ -2993,13 +3141,15 @@
         }
         afterInit(element, recursive = false) {
             if (!recursive && this.included(element)) {
-                this.dependencies.filter(item => item.preload).forEach(item => {
-                    const ext = this.application.extensionManager.retrieve(item.name);
-                    if (ext && ext.preloaded) {
-                        ext.afterInit(element, true);
-                        ext.preloaded = false;
+                for (const item of this.dependencies) {
+                    if (item.preload) {
+                        const ext = this.application.extensionManager.retrieve(item.name);
+                        if (ext && ext.preloaded) {
+                            ext.afterInit(element, true);
+                            ext.preloaded = false;
+                        }
                     }
-                });
+                }
             }
         }
         condition(node, parent) {
@@ -3043,7 +3193,7 @@
         }
     }
 
-    const $util$6 = squared.lib.util;
+    const $util$5 = squared.lib.util;
     class ExtensionManager {
         constructor(application) {
             this.application = application;
@@ -3058,7 +3208,7 @@
                 return true;
             }
             else {
-                if ((ext.framework === 0 || $util$6.hasBit(ext.framework, this.application.framework)) && ext.dependencies.every(item => !!this.retrieve(item.name))) {
+                if ((ext.framework === 0 || $util$5.hasBit(ext.framework, this.application.framework)) && ext.dependencies.every(item => !!this.retrieve(item.name))) {
                     ext.application = this.application;
                     this.application.extensions.add(ext);
                     return true;
@@ -3070,7 +3220,12 @@
             return this.application.extensions.delete(ext);
         }
         retrieve(name) {
-            return Array.from(this.application.extensions).find(item => item.name === name) || null;
+            for (const ext of this.application.extensions) {
+                if (ext.name === name) {
+                    return ext;
+                }
+            }
+            return null;
         }
         optionValue(name, attr) {
             const ext = this.retrieve(name);
@@ -3100,7 +3255,7 @@
         }
     }
 
-    const $util$7 = squared.lib.util;
+    const $util$6 = squared.lib.util;
     class File {
         constructor(resource) {
             this.resource = resource;
@@ -3152,7 +3307,7 @@
                 const settings = this.userSettings;
                 files.push(...this.assets);
                 fetch(`/api/savetodisk` +
-                    `?directory=${encodeURIComponent($util$7.trimString(settings.outputDirectory, '/'))}` +
+                    `?directory=${encodeURIComponent($util$6.trimString(settings.outputDirectory, '/'))}` +
                     `&appname=${encodeURIComponent(this.appName.trim())}` +
                     `&filetype=${settings.outputArchiveFileType.toLowerCase()}` +
                     `&processingtime=${settings.outputMaxProcessingTime.toString().trim()}`, {
@@ -3169,7 +3324,7 @@
                         if (result.zipname) {
                             fetch(`/api/downloadtobrowser?filename=${encodeURIComponent(result.zipname)}`)
                                 .then((responseBlob) => responseBlob.blob())
-                                .then((blob) => File.downloadToDisk(blob, $util$7.lastIndexOf(result.zipname)));
+                                .then((blob) => File.downloadToDisk(blob, $util$6.lastIndexOf(result.zipname)));
                         }
                         else if (result.system) {
                             alert(`${result.application}\n\n${result.system}`);
@@ -3215,14 +3370,18 @@
     });
 
     const $dom$4 = squared.lib.dom;
-    const $util$8 = squared.lib.util;
+    const $util$7 = squared.lib.util;
+    const INHERIT_ALIGNMENT = ['position', 'top', 'right', 'bottom', 'left', 'display', 'verticalAlign', 'cssFloat', 'clear', 'zIndex'];
+    const INHERIT_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
+    const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
+    const CSS_SPACING_VALUES = Array.from(CSS_SPACING.values());
     class Node extends squared.lib.base.Container {
         constructor(id, element) {
             super();
             this.id = id;
             this.alignmentType = 0;
             this.depth = -1;
-            this.siblingIndex = Number.MAX_VALUE;
+            this.siblingIndex = Number.POSITIVE_INFINITY;
             this.renderPosition = -1;
             this.documentRoot = false;
             this.visible = true;
@@ -3239,7 +3398,6 @@
                 children: [],
                 styleMap: {}
             };
-            this._initialized = false;
             this._renderDepth = -1;
             this._data = {};
             this._excludeSection = 0;
@@ -3250,20 +3408,27 @@
                 this._element = element;
                 this.init();
             }
-            this.style = $dom$4.hasComputedStyle(element) ? $dom$4.getStyle(element) : {};
+            else {
+                this.style = {};
+            }
         }
         init() {
-            if (!this._initialized) {
-                if (this.styleElement) {
-                    const element = this._element;
-                    const styleMap = $dom$4.getElementCache(element, 'styleMap') || {};
-                    Array.from(element.style).forEach(attr => styleMap[$util$8.convertCamelCase(attr)] = element.style[attr]);
-                    this._styleMap = Object.assign({}, styleMap);
+            const element = this._element;
+            if (element) {
+                $dom$4.setElementCache(element, 'node', this);
+                this.style = $dom$4.getElementCache(element, 'style') || $dom$4.getStyle(element, false);
+            }
+            if (this.styleElement) {
+                const styleMap = $dom$4.getElementCache(element, 'styleMap') || {};
+                const fontSize = $util$7.convertInt(this.style.fontSize);
+                for (let attr of Array.from(element.style)) {
+                    attr = $util$7.convertCamelCase(attr);
+                    const value = $dom$4.checkStyleAttribute(element, attr, element.style[attr], this.style, fontSize);
+                    if (value !== '') {
+                        styleMap[attr] = value;
+                    }
                 }
-                if (this._element) {
-                    $dom$4.setElementCache(this._element, 'node', this);
-                }
-                this._initialized = true;
+                this._styleMap = styleMap;
             }
         }
         saveAsInitial() {
@@ -3291,7 +3456,7 @@
         }
         attr(obj, attr, value = '', overwrite = true) {
             const name = `__${obj}`;
-            if ($util$8.hasValue(value)) {
+            if ($util$7.hasValue(value)) {
                 if (this[name] === undefined) {
                     this._namespaces.add(obj);
                     this[name] = {};
@@ -3312,7 +3477,7 @@
             if (this[name]) {
                 for (const attr of attrs) {
                     if (attr.indexOf('*') !== -1) {
-                        for (const [key] of $util$8.searchObject(this[name], attr)) {
+                        for (const [key] of $util$7.searchObject(this[name], attr)) {
                             delete this[name][key];
                         }
                     }
@@ -3333,21 +3498,28 @@
                 }
             }
         }
-        each(predicate, rendered = false) {
-            (rendered ? this.renderChildren.filter(node => node.visible) : this.children).forEach(predicate);
-            return this;
-        }
         render(parent) {
             this.renderParent = parent;
-            this.renderDepth = this.documentRoot || this === parent || $util$8.hasValue(parent.dataset.target) ? 0 : parent.renderDepth + 1;
+            this.renderDepth = this.documentRoot || this === parent || $util$7.hasValue(parent.dataset.target) ? 0 : parent.renderDepth + 1;
             this.rendered = true;
+        }
+        renderEach(predicate) {
+            for (let i = 0; i < this.renderChildren.length; i++) {
+                if (this.renderChildren[i].visible) {
+                    predicate(this.renderChildren[i], i, this.renderChildren);
+                }
+            }
+            return this;
+        }
+        renderFilter(predicate) {
+            return $util$7.filterArray(this.renderChildren, predicate);
         }
         hide(invisible) {
             this.rendered = true;
             this.visible = false;
         }
         data(obj, attr, value, overwrite = true) {
-            if ($util$8.hasValue(value)) {
+            if ($util$7.hasValue(value)) {
                 if (this._data[obj] === undefined) {
                     this._data[obj] = {};
                 }
@@ -3428,7 +3600,7 @@
         cascade(element = false) {
             const result = super.cascade();
             if (element) {
-                return result.filter(node => node.element);
+                return $util$7.spliceArray(result, node => node.element === null);
             }
             return result;
         }
@@ -3450,31 +3622,31 @@
                         }
                         break;
                     case 'alignment':
-                        ['position', 'top', 'right', 'bottom', 'left', 'display', 'verticalAlign', 'cssFloat', 'clear', 'zIndex'].forEach(attr => {
+                        for (const attr of INHERIT_ALIGNMENT) {
                             this._styleMap[attr] = node.css(attr);
                             this._initial.styleMap[attr] = initial.styleMap[attr];
-                        });
-                        ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'].forEach(attr => {
+                        }
+                        for (const attr of INHERIT_MARGIN) {
                             if (node.cssInitial(attr) === 'auto') {
                                 this._initial.styleMap[attr] = 'auto';
                             }
                             if (node.cssInitial(attr, true) === 'auto') {
                                 this._styleMap[attr] = 'auto';
                             }
-                        });
+                        }
                         break;
                     case 'styleMap':
-                        $util$8.assignWhenNull(this._styleMap, node.unsafe('styleMap'));
+                        $util$7.assignWhenNull(this._styleMap, node.unsafe('styleMap'));
                         break;
                     case 'textStyle':
                         const style = { whiteSpace: node.css('whiteSpace') };
                         for (const attr in node.style) {
                             if (attr.startsWith('font') || attr.startsWith('color')) {
-                                const key = $util$8.convertCamelCase(attr);
+                                const key = $util$7.convertCamelCase(attr);
                                 style[key] = node.style[key];
                             }
                         }
-                        this.css(style);
+                        this.cssApply(style);
                         break;
                 }
             }
@@ -3484,15 +3656,13 @@
                 return true;
             }
             if (this.pageFlow && previousSiblings.length) {
-                if ($util$8.isArray(siblings) && this !== siblings[0]) {
+                if ($util$7.isArray(siblings) && this !== siblings[0]) {
                     if (cleared && cleared.has(this)) {
                         return true;
                     }
                     if (checkFloat) {
                         const previous = siblings[siblings.length - 1];
-                        if (this.floating && (this.linear.top >= previous.linear.bottom ||
-                            this.float === 'left' && siblings.filter(node => node.siblingIndex < this.siblingIndex && $util$8.withinFraction(this.linear.left, node.linear.left)).length > 0 ||
-                            this.float === 'right' && siblings.filter(node => node.siblingIndex < this.siblingIndex && $util$8.withinFraction(this.linear.right, node.linear.right)).length > 0)) {
+                        if (this.floating && (this.linear.top >= previous.linear.bottom || this.float === 'left' && siblings.find(node => node.siblingIndex < this.siblingIndex && $util$7.withinFraction(this.linear.left, node.linear.left)) !== undefined || this.float === 'right' && siblings.find(node => node.siblingIndex < this.siblingIndex && $util$7.withinFraction(this.linear.right, node.linear.right)) !== undefined)) {
                             return true;
                         }
                     }
@@ -3501,8 +3671,8 @@
                 for (const previous of previousSiblings) {
                     const vertical = (previous.blockStatic ||
                         this.blockStatic && (!previous.inlineFlow ||
-                            cleared && cleared.has(previous)) ||
-                        cleared && cleared.get(previous) === 'both' && (!$util$8.isArray(siblings) || siblings[0] !== previous) ||
+                            !!cleared && cleared.has(previous)) ||
+                        !!cleared && cleared.get(previous) === 'both' && (!$util$7.isArray(siblings) || siblings[0] !== previous) ||
                         !previous.floating && (this.blockStatic ||
                             !this.floating && !this.inlineFlow) ||
                         actualParent && previous.bounds.width > (actualParent.has('width', 2 /* UNIT */) ? actualParent.width : actualParent.box.width) && (!previous.textElement ||
@@ -3549,47 +3719,47 @@
             return Math.ceil(self.top) < Math.floor(rect.top) || Math.ceil(self.top) >= Math.floor(rect.bottom);
         }
         css(attr, value = '', cache = false) {
-            if (typeof attr === 'object') {
-                Object.assign(this._styleMap, attr);
+            if (arguments.length >= 2) {
+                this._styleMap[attr] = value;
                 if (cache) {
-                    for (const name in attr) {
-                        this.unsetCache(name);
-                    }
+                    this.unsetCache(attr);
                 }
-                return '';
             }
-            else {
-                if (arguments.length >= 2) {
-                    this._styleMap[attr] = value;
-                    if (cache) {
-                        this.unsetCache(attr);
-                    }
+            return this._styleMap[attr] || this.style && this.style[attr] || '';
+        }
+        cssApply(values, cache = false) {
+            Object.assign(this._styleMap, values);
+            if (cache) {
+                for (const name in values) {
+                    this.unsetCache(name);
                 }
-                else if (this._styleMap[attr] === 'inherit' && this._element) {
-                    return $dom$4.cssInheritAttribute(this._element.parentElement, attr);
-                }
-                return this._styleMap[attr] || this.style && this.style[attr] || '';
             }
+            return this;
         }
         cssInitial(attr, modified = false, computed = false) {
             if (this._initial.iteration === -1 && !modified) {
                 computed = true;
             }
             let value = modified ? this._styleMap[attr] : this._initial.styleMap[attr];
-            if (computed && !$util$8.hasValue(value)) {
+            if (computed && !$util$7.hasValue(value)) {
                 value = this.style[attr];
             }
             return value || '';
         }
-        cssParent(attr, childStart = false, visible = false) {
+        cssAscend(attr, startChild = false, visible = false) {
             let result = '';
-            let current = childStart ? this : this.actualParent;
+            let current = startChild ? this : this.actualParent;
             while (current) {
                 result = current.cssInitial(attr);
-                if (result || current.documentBody) {
+                if (result !== '') {
                     if (visible && !current.visible) {
                         result = '';
                     }
+                    else {
+                        break;
+                    }
+                }
+                if (current.documentBody) {
                     break;
                 }
                 current = current.actualParent;
@@ -3615,12 +3785,12 @@
         }
         cssPX(attr, value, negative = false, cache = false) {
             const current = this._styleMap[attr];
-            if (current && current.endsWith('px') && $util$8.isUnit(current)) {
-                value += parseInt(current);
+            if (current && $util$7.isUnit(current)) {
+                value += parseFloat($util$7.convertPX(current, this.fontSize));
                 if (!negative) {
                     value = Math.max(0, value);
                 }
-                const result = $util$8.formatPX(value);
+                const result = $util$7.formatPX(value);
                 this.css(attr, result);
                 if (cache) {
                     this.unsetCache(attr);
@@ -3658,10 +3828,10 @@
             return parseInt(value) || defaultValue;
         }
         convertPX(value, horizontal = true, parent = true) {
-            return this.convertPercent(value, horizontal, parent) || $util$8.convertPX(value, this.dpi, this.fontSize);
+            return this.convertPercent(value, horizontal, parent) || $util$7.convertPX(value, this.fontSize);
         }
         convertPercent(value, horizontal, parent = true) {
-            if ($util$8.isPercent(value)) {
+            if ($util$7.isPercent(value)) {
                 const node = (parent ? this.absoluteParent : null) || this;
                 const attr = horizontal ? 'width' : 'height';
                 let dimension;
@@ -3678,10 +3848,10 @@
         }
         has(attr, checkType = 0, options) {
             const value = (options && options.map === 'initial' ? this._initial.styleMap : this._styleMap)[attr];
-            if ($util$8.hasValue(value)) {
+            if ($util$7.hasValue(value)) {
                 switch (value) {
                     case '0px':
-                        if ($util$8.hasBit(checkType, 64 /* ZERO */)) {
+                        if ($util$7.hasBit(checkType, 64 /* ZERO */)) {
                             return true;
                         }
                         else {
@@ -3694,15 +3864,15 @@
                             }
                         }
                     case 'left':
-                        if ($util$8.hasBit(checkType, 8 /* LEFT */)) {
+                        if ($util$7.hasBit(checkType, 8 /* LEFT */)) {
                             return true;
                         }
                     case 'baseline':
-                        if ($util$8.hasBit(checkType, 16 /* BASELINE */)) {
+                        if ($util$7.hasBit(checkType, 16 /* BASELINE */)) {
                             return true;
                         }
                     case 'auto':
-                        if ($util$8.hasBit(checkType, 4 /* AUTO */)) {
+                        if ($util$7.hasBit(checkType, 4 /* AUTO */)) {
                             return true;
                         }
                     case 'none':
@@ -3712,8 +3882,6 @@
                     case 'transparent':
                     case 'rgba(0, 0, 0, 0)':
                         return false;
-                    case 'inherit':
-                        return this.documentParent.has(attr, checkType, options);
                     default:
                         if (options) {
                             if (options.not) {
@@ -3732,13 +3900,13 @@
                             }
                         }
                         let result = checkType === 0;
-                        if ($util$8.hasBit(checkType, 2 /* UNIT */) && $util$8.isUnit(value)) {
+                        if ($util$7.hasBit(checkType, 2 /* UNIT */) && $util$7.isUnit(value)) {
                             result = true;
                         }
-                        if ($util$8.hasBit(checkType, 32 /* PERCENT */) && $util$8.isPercent(value)) {
+                        if ($util$7.hasBit(checkType, 32 /* PERCENT */) && $util$7.isPercent(value)) {
                             result = true;
                         }
-                        if ($util$8.hasBit(checkType, 4 /* AUTO */)) {
+                        if ($util$7.hasBit(checkType, 4 /* AUTO */)) {
                             result = false;
                         }
                         return result;
@@ -3748,21 +3916,21 @@
         }
         hasBit(attr, value) {
             if (this[attr] !== undefined) {
-                return $util$8.hasBit(this[attr], value);
+                return $util$7.hasBit(this[attr], value);
             }
             return false;
         }
         hasAlign(value) {
-            return $util$8.hasBit(this.alignmentType, value);
+            return $util$7.hasBit(this.alignmentType, value);
         }
         exclude({ section = 0, procedure = 0, resource = 0 }) {
-            if (section) {
+            if (section > 0 && !$util$7.hasBit(this._excludeSection, section)) {
                 this._excludeSection |= section;
             }
-            if (procedure) {
+            if (procedure > 0 && !$util$7.hasBit(this._excludeProcedure, procedure)) {
                 this._excludeProcedure |= procedure;
             }
-            if (resource) {
+            if (resource > 0 && !$util$7.hasBit(this._excludeResource, resource)) {
                 this._excludeResource |= resource;
             }
         }
@@ -3770,13 +3938,14 @@
             if (this.styleElement) {
                 const applyExclusions = (attr, enumeration) => {
                     const actualParent = this.actualParent;
-                    const exclude = [$util$8.trimNull(this.dataset[`exclude${attr}`]), actualParent ? $util$8.trimNull(actualParent.dataset[`exclude${attr}Child`]) : ''].filter(value => value).join('|');
+                    const exclude = $util$7.spliceArray([$util$7.trimNull(this.dataset[`exclude${attr}`]), actualParent ? $util$7.trimNull(actualParent.dataset[`exclude${attr}Child`]) : ''], value => value.trim() === '').join('|');
                     let result = 0;
-                    exclude.split('|').map(value => value.toUpperCase().trim()).forEach(value => {
+                    for (let value of exclude.split('|')) {
+                        value = value.trim().toUpperCase();
                         if (enumeration[value] !== undefined) {
                             result |= enumeration[value];
                         }
-                    });
+                    }
                     if (result > 0) {
                         this.exclude({ [attr.toLowerCase()]: result });
                     }
@@ -3819,7 +3988,7 @@
             if (append) {
                 let index = -1;
                 this.each(item => {
-                    if (item.siblingIndex !== Number.MAX_VALUE) {
+                    if (item.siblingIndex !== Number.POSITIVE_INFINITY) {
                         index = Math.max(item.siblingIndex, index);
                     }
                 });
@@ -3853,45 +4022,43 @@
             return [0, 0];
         }
         resetBox(region, node, fromParent = false) {
-            const keys = Array.from(CSS_SPACING.keys());
-            const applyReset = (start, end, margin) => {
+            const applyReset = (start, end) => {
                 let i = 0;
-                for (const attr of Array.from(CSS_SPACING.values()).slice(start, end)) {
+                for (const attr of CSS_SPACING_VALUES.slice(start, end)) {
                     this._boxReset[attr] = 1;
                     if (node) {
-                        const name = CSS_SPACING.get(margin ? keys[i] : keys[i + 4]);
+                        const name = CSS_SPACING.get(CSS_SPACING_KEYS[i + start]);
                         if (name) {
-                            node.modifyBox(fromParent ? keys[i] : keys[i + 4], this[name]);
+                            node.modifyBox(CSS_SPACING_KEYS[i + (fromParent ? 0 : 4)], this[name]);
                         }
                     }
                     i++;
                 }
             };
-            if ($util$8.hasBit(region, 30 /* MARGIN */)) {
-                applyReset(0, 4, true);
+            if ($util$7.hasBit(region, 30 /* MARGIN */)) {
+                applyReset(0, 4);
             }
-            if ($util$8.hasBit(region, 480 /* PADDING */)) {
-                applyReset(4, 8, false);
+            if ($util$7.hasBit(region, 480 /* PADDING */)) {
+                applyReset(4, 8);
             }
         }
         inheritBox(region, node) {
-            const keys = Array.from(CSS_SPACING.keys());
-            const applyReset = (start, end, margin) => {
-                let i = margin ? 0 : 4;
-                for (const attr of Array.from(CSS_SPACING.values()).slice(start, end)) {
+            const applyReset = (start, end) => {
+                let i = start;
+                for (const attr of CSS_SPACING_VALUES.slice(start, end)) {
                     const value = this._boxAdjustment[attr];
                     if (value > 0) {
-                        node.modifyBox(keys[i], this._boxAdjustment[attr], false);
+                        node.modifyBox(CSS_SPACING_KEYS[i], this._boxAdjustment[attr], false);
                         this._boxAdjustment[attr] = 0;
                     }
                     i++;
                 }
             };
-            if ($util$8.hasBit(region, 30 /* MARGIN */)) {
-                applyReset(0, 4, true);
+            if ($util$7.hasBit(region, 30 /* MARGIN */)) {
+                applyReset(0, 4);
             }
-            if ($util$8.hasBit(region, 480 /* PADDING */)) {
-                applyReset(4, 8, false);
+            if ($util$7.hasBit(region, 480 /* PADDING */)) {
+                applyReset(4, 8);
             }
         }
         previousSiblings(lineBreak = true, excluded = true, height = false) {
@@ -3901,7 +4068,7 @@
                 element = this._element.previousSibling;
             }
             else if (this._initial.children.length) {
-                const children = this._initial.children.filter(node => node.pageFlow);
+                const children = $util$7.filterArray(this._initial.children, node => node.pageFlow);
                 element = children.length && children[0].element ? children[0].element.previousSibling : null;
             }
             while (element) {
@@ -3928,10 +4095,10 @@
                 element = this._element.nextSibling;
             }
             else if (this._initial.children.length) {
-                const children = this._initial.children.filter(node => node.pageFlow);
+                const children = $util$7.filterArray(this._initial.children, node => node.pageFlow);
                 if (children.length) {
                     const lastChild = children[children.length - 1];
-                    element = lastChild.element ? lastChild.element.nextSibling : null;
+                    element = lastChild.element && lastChild.element.nextSibling;
                 }
             }
             while (element) {
@@ -3984,19 +4151,19 @@
             let result = 0;
             if (!this.positionStatic) {
                 const value = this.cssInitial(attr);
-                if ($util$8.isUnit(value) || $util$8.isPercent(value)) {
-                    result = $util$8.convertInt(this.percentValue(attr, value, attr === 'left' || attr === 'right'));
+                if ($util$7.isUnit(value) || $util$7.isPercent(value)) {
+                    result = $util$7.convertInt(this.percentValue(attr, value, attr === 'left' || attr === 'right'));
                 }
             }
             return result;
         }
         convertBox(region, direction) {
             const attr = region + direction;
-            return $util$8.convertInt(this.percentValue(attr, this.css(attr), direction === 'Left' || direction === 'Right'));
+            return $util$7.convertInt(this.percentValue(attr, this.css(attr), direction === 'Left' || direction === 'Right'));
         }
         percentValue(attr, value, horizontal, parent = true) {
-            if ($util$8.isPercent(value)) {
-                return $util$8.isUnit(this.style[attr]) ? this.style[attr] : this.convertPercent(value, horizontal, parent);
+            if ($util$7.isPercent(value)) {
+                return $util$7.isUnit(this.style[attr]) ? this.style[attr] : this.convertPercent(value, horizontal, parent);
             }
             return value;
         }
@@ -4050,13 +4217,16 @@
             return this._cached.htmlElement;
         }
         get svgElement() {
-            return !!this._element && this._element.tagName === 'svg';
+            return this._element !== null && this._element.tagName === 'svg';
         }
         get styleElement() {
             return $dom$4.hasComputedStyle(this._element);
         }
         get naturalElement() {
-            return !!this._element && this._element.className !== '__css.placeholder';
+            if (this._cached.naturalElement === undefined) {
+                this._cached.naturalElement = this._element !== null && this._element.className !== '__css.placeholder';
+            }
+            return this._cached.naturalElement;
         }
         get imageElement() {
             return this.tagName === 'IMG';
@@ -4155,20 +4325,23 @@
             return this._excludeResource;
         }
         get extensions() {
-            return this.dataset.use ? this.dataset.use.split(',').map(value => value.trim()).filter(value => value) : [];
+            if (this._cached.extensions === undefined) {
+                this._cached.extensions = this.dataset.use ? $util$7.spliceArray(this.dataset.use.split(/\s*,\s*/), value => value === '') : [];
+            }
+            return this._cached.extensions;
         }
         get flexbox() {
             if (this._cached.flexbox === undefined) {
                 const actualParent = this.actualParent;
                 this._cached.flexbox = {
-                    order: $util$8.convertInt(this.css('order')),
+                    order: $util$7.convertInt(this.css('order')),
                     wrap: this.css('flexWrap'),
                     direction: this.css('flexDirection'),
                     alignSelf: !this.has('alignSelf') && actualParent && actualParent.has('alignItems') ? actualParent.css('alignItems') : this.css('alignSelf'),
                     justifyContent: this.css('justifyContent'),
                     basis: this.css('flexBasis'),
-                    grow: $util$8.convertInt(this.css('flexGrow')),
-                    shrink: $util$8.convertInt(this.css('flexShrink'))
+                    grow: $util$7.convertInt(this.css('flexGrow')),
+                    shrink: $util$7.convertInt(this.css('flexShrink'))
                 };
             }
             return this._cached.flexbox;
@@ -4177,8 +4350,8 @@
             if (this._cached.width === undefined) {
                 let width = 0;
                 for (const value of [this._styleMap.width, this._styleMap.minWidth]) {
-                    if ($util$8.isUnit(value) || $util$8.isPercent(value)) {
-                        width = $util$8.convertInt(this.convertPX(value));
+                    if ($util$7.isUnit(value) || $util$7.isPercent(value)) {
+                        width = $util$7.convertInt(this.convertPX(value));
                         if (width > 0) {
                             break;
                         }
@@ -4192,8 +4365,8 @@
             if (this._cached.height === undefined) {
                 let height = 0;
                 for (const value of [this._styleMap.height, this._styleMap.minHeight]) {
-                    if ($util$8.isUnit(value) || this.hasHeight && $util$8.isPercent(value)) {
-                        height = $util$8.convertInt(this.convertPX(value, true));
+                    if ($util$7.isUnit(value) || this.hasHeight && $util$7.isPercent(value)) {
+                        height = $util$7.convertInt(this.convertPX(value, true));
                         if (height > 0) {
                             break;
                         }
@@ -4210,10 +4383,10 @@
                     if (this.inlineStatic) {
                         return false;
                     }
-                    else if ($util$8.isPercent(value)) {
+                    else if ($util$7.isPercent(value)) {
                         return value !== '0%';
                     }
-                    else if ($util$8.isUnit(value) && value !== '0px' || this.toInt('minWidth') > 0) {
+                    else if ($util$7.isUnit(value) && value !== '0px' || this.toInt('minWidth') > 0) {
                         return true;
                     }
                     return false;
@@ -4228,13 +4401,13 @@
                     if (this.inlineStatic) {
                         return false;
                     }
-                    else if ($util$8.isPercent(value)) {
+                    else if ($util$7.isPercent(value)) {
                         const actualParent = this.actualParent;
                         if (actualParent && actualParent.hasHeight) {
                             return value !== '0%';
                         }
                     }
-                    else if ($util$8.isUnit(value) && value !== '0px' || this.toInt('minHeight') > 0) {
+                    else if ($util$7.isUnit(value) && value !== '0px' || this.toInt('minHeight') > 0) {
                         return true;
                     }
                     return false;
@@ -4248,7 +4421,7 @@
                     this._cached.lineHeight = this.toInt('lineHeight');
                 }
                 else {
-                    const lineHeight = $util$8.convertInt(this.cssParent('lineHeight', true));
+                    const lineHeight = $util$7.convertInt(this.cssAscend('lineHeight', true));
                     this._cached.lineHeight = lineHeight > this.bounds.height || this.some(node => node.plainText) ? lineHeight : 0;
                 }
             }
@@ -4275,8 +4448,8 @@
                         case 'relative':
                             return this.toInt('top') === 0 && this.toInt('right') === 0 && this.toInt('bottom') === 0 && this.toInt('left') === 0;
                         case 'inherit':
-                            const actualParent = this.actualParent;
-                            return !!actualParent && !(actualParent.position === 'absolute' || actualParent.position === 'fixed');
+                            const position = this._element ? $dom$4.cssInheritAttribute(this._element.parentElement, 'position') : '';
+                            return position !== '' && !(position === 'absolute' || position === 'fixed');
                         default:
                             return true;
                     }
@@ -4285,8 +4458,8 @@
             return this._cached.positionStatic;
         }
         get positionRelative() {
-            const position = this.position;
-            return position === 'relative' || position === 'sticky';
+            const value = this.position;
+            return value === 'relative' || value === 'sticky';
         }
         get positionAuto() {
             if (this._cached.positionAuto === undefined) {
@@ -4348,16 +4521,16 @@
             return this._cached.marginLeft;
         }
         get borderTopWidth() {
-            return this.css('borderTopStyle') !== 'none' ? $util$8.convertInt(this.css('borderTopWidth')) : 0;
+            return this.css('borderTopStyle') !== 'none' ? $util$7.convertInt(this.css('borderTopWidth')) : 0;
         }
         get borderRightWidth() {
-            return this.css('borderRightStyle') !== 'none' ? $util$8.convertInt(this.css('borderRightWidth')) : 0;
+            return this.css('borderRightStyle') !== 'none' ? $util$7.convertInt(this.css('borderRightWidth')) : 0;
         }
         get borderBottomWidth() {
-            return this.css('borderBottomStyle') !== 'none' ? $util$8.convertInt(this.css('borderBottomWidth')) : 0;
+            return this.css('borderBottomStyle') !== 'none' ? $util$7.convertInt(this.css('borderBottomWidth')) : 0;
         }
         get borderLeftWidth() {
-            return this.css('borderLeftStyle') !== 'none' ? $util$8.convertInt(this.css('borderLeftWidth')) : 0;
+            return this.css('borderLeftStyle') !== 'none' ? $util$7.convertInt(this.css('borderLeftWidth')) : 0;
         }
         get paddingTop() {
             if (this._cached.paddingTop === undefined) {
@@ -4414,8 +4587,8 @@
         }
         get inlineText() {
             if (this._cached.inlineText === undefined) {
-                let value = false;
                 const element = this._element;
+                let value = false;
                 if (element && this.htmlElement && !this.svgElement) {
                     switch (element.tagName) {
                         case 'INPUT':
@@ -4426,10 +4599,14 @@
                             break;
                         default:
                             if ($dom$4.hasFreeFormText(element)) {
-                                value = Array.from(element.children).every(item => {
-                                    const node = $dom$4.getElementAsNode(item);
-                                    return node === undefined || node.excluded || $util$8.hasValue(node.dataset.target);
-                                });
+                                value = true;
+                                for (let i = 0; i < element.children.length; i++) {
+                                    const node = $dom$4.getElementAsNode(element.children[i]);
+                                    if (!(node === undefined || node.excluded || $util$7.hasValue(node.dataset.target))) {
+                                        value = false;
+                                        break;
+                                    }
+                                }
                             }
                             break;
                     }
@@ -4475,7 +4652,7 @@
             if (this._cached.rightAligned === undefined) {
                 this._cached.rightAligned = (this.float === 'right' ||
                     this.autoMargin.left ||
-                    this.inlineVertical && this.cssParent('textAlign', true) === 'right' ||
+                    this.inlineVertical && this.cssAscend('textAlign', true) === 'right' ||
                     !this.pageFlow && this.has('right'));
             }
             return this._cached.rightAligned || this.hasAlign(512 /* RIGHT */);
@@ -4580,16 +4757,16 @@
             return this._cached.overflow;
         }
         get overflowX() {
-            return $util$8.hasBit(this.overflow, 8 /* HORIZONTAL */);
+            return $util$7.hasBit(this.overflow, 8 /* HORIZONTAL */);
         }
         get overflowY() {
-            return $util$8.hasBit(this.overflow, 16 /* VERTICAL */);
+            return $util$7.hasBit(this.overflow, 16 /* VERTICAL */);
         }
         get baseline() {
             if (this._cached.baseline === undefined) {
                 const value = this.verticalAlign;
-                const originalValue = this.cssInitial('verticalAlign');
-                this._cached.baseline = this.pageFlow && !this.floating && !this.svgElement && (value === 'baseline' || value === 'initial' || $util$8.isUnit(originalValue) && parseInt(originalValue) === 0);
+                const initialValue = this.cssInitial('verticalAlign');
+                this._cached.baseline = this.pageFlow && !this.floating && !this.svgElement && (value === 'baseline' || value === 'initial' || $util$7.isUnit(initialValue) && parseInt(initialValue) === 0);
             }
             return this._cached.baseline;
         }
@@ -4601,14 +4778,14 @@
         }
         get multiline() {
             if (this._cached.multiline === undefined) {
-                this._cached.multiline = this.plainText || this.inlineFlow && this.inlineText ? $dom$4.getRangeClientRect(this._element).multiline : 0;
+                this._cached.multiline = this.plainText || this.inlineText && (this.inlineFlow || this.length === 0) ? $dom$4.getRangeClientRect(this._element).multiline : 0;
             }
             return this._cached.multiline;
         }
         get visibleStyle() {
             if (this._cached.visibleStyle === undefined) {
                 const borderWidth = this.borderTopWidth > 0 || this.borderRightWidth > 0 || this.borderBottomWidth > 0 || this.borderLeftWidth > 0;
-                const backgroundImage = $util$8.REGEXP_PATTERN.URL.test(this.css('backgroundImage')) || $util$8.REGEXP_PATTERN.URL.test(this.css('background'));
+                const backgroundImage = $util$7.REGEXP_PATTERN.URL.test(this.css('backgroundImage')) || $util$7.REGEXP_PATTERN.URL.test(this.css('background'));
                 const backgroundColor = this.has('backgroundColor');
                 const backgroundRepeat = this.css('backgroundRepeat');
                 const paddingHorizontal = this.paddingLeft + this.paddingRight > 0;
@@ -4691,7 +4868,14 @@
         get actualChildren() {
             if (this._cached.actualChildren === undefined) {
                 if (this.htmlElement) {
-                    this._cached.actualChildren = $util$8.flatMap(Array.from(this._element.childNodes), (element) => $dom$4.getElementAsNode(element));
+                    const actualChildren = [];
+                    this._element.childNodes.forEach((element) => {
+                        const node = $dom$4.getElementAsNode(element);
+                        if (node) {
+                            actualChildren.push(node);
+                        }
+                    });
+                    this._cached.actualChildren = actualChildren;
                 }
                 else if (this.groupParent) {
                     this._cached.actualChildren = this._initial.children.slice(0);
@@ -4765,12 +4949,12 @@
     class NodeGroup extends Node {
         init() {
             if (this.length) {
-                let siblingIndex = Number.MAX_VALUE;
+                let siblingIndex = Number.POSITIVE_INFINITY;
                 for (const item of this.children) {
                     siblingIndex = Math.min(siblingIndex, item.siblingIndex);
                     item.parent = this;
                 }
-                if (this.siblingIndex === Number.MAX_VALUE) {
+                if (this.siblingIndex === Number.POSITIVE_INFINITY) {
                     this.siblingIndex = siblingIndex;
                 }
                 if (this.parent) {
@@ -4918,10 +5102,10 @@
     }
 
     const $dom$6 = squared.lib.dom;
-    const $util$9 = squared.lib.util;
+    const $util$8 = squared.lib.util;
     class Accessibility extends Extension {
         afterInit() {
-            for (const node of this.application.processing.cache.elements) {
+            for (const node of this.application.processing.cache) {
                 const element = node.element;
                 if (element && element.tagName === 'INPUT' && !node.hasBit('excludeProcedure', NODE_PROCEDURE.ACCESSIBILITY)) {
                     switch (element.type) {
@@ -4932,7 +5116,7 @@
                                     const label = $dom$6.getElementAsNode(sibling);
                                     const labelParent = sibling.parentElement && sibling.parentElement.tagName === 'LABEL' ? $dom$6.getElementAsNode(sibling.parentElement) : undefined;
                                     if (label && label.visible && label.pageFlow) {
-                                        if ($util$9.hasValue(sibling.htmlFor) && sibling.htmlFor === element.id) {
+                                        if ($util$8.hasValue(sibling.htmlFor) && sibling.htmlFor === element.id) {
                                             node.companion = label;
                                         }
                                         else if (label.textElement && labelParent) {
@@ -4956,7 +5140,7 @@
         }
     }
 
-    const $util$a = squared.lib.util;
+    const $util$9 = squared.lib.util;
     const REGEXP_PARTIAL = {
         UNIT: '[\\d.]+[a-z%]+|auto|max-content|min-content',
         MINMAX: 'minmax\\(([^,]+), ([^)]+)\\)',
@@ -4965,7 +5149,7 @@
     };
     const PATTERN_GRID = {
         UNIT: new RegExp(`^(${REGEXP_PARTIAL.UNIT})$`),
-        NAMED: new RegExp(`\\s*(repeat\\((auto-fit|auto-fill|[0-9]+), (.+)\\)|${REGEXP_PARTIAL.NAMED}|${REGEXP_PARTIAL.MINMAX}|${REGEXP_PARTIAL.FIT_CONTENT}|${REGEXP_PARTIAL.UNIT})\\s*`),
+        NAMED: new RegExp(`\\s*(repeat\\((auto-fit|auto-fill|[0-9]+), (.+)\\)|${REGEXP_PARTIAL.NAMED}|${REGEXP_PARTIAL.MINMAX}|${REGEXP_PARTIAL.FIT_CONTENT}|${REGEXP_PARTIAL.UNIT})\\s*`, 'g'),
         REPEAT: new RegExp(`\\s*(${REGEXP_PARTIAL.NAMED}|${REGEXP_PARTIAL.MINMAX}|${REGEXP_PARTIAL.FIT_CONTENT}|${REGEXP_PARTIAL.UNIT})\\s*`, 'g'),
     };
     function repeatUnit(data, dimension) {
@@ -4998,7 +5182,16 @@
         return result;
     }
     function convertUnit(node, value) {
-        return $util$a.isUnit(value) ? node.convertPX(value) : value;
+        return $util$9.isUnit(value) ? node.convertPX(value) : value;
+    }
+    function getColumnTotal(rows) {
+        let result = 0;
+        for (const row of rows) {
+            if (row) {
+                result++;
+            }
+        }
+        return result;
     }
     class CssGrid extends Extension {
         static createDataAttribute() {
@@ -5067,29 +5260,13 @@
             [node.cssInitial('gridTemplateRows', true), node.cssInitial('gridTemplateColumns', true), node.css('gridAutoRows'), node.css('gridAutoColumns')].forEach((value, index) => {
                 if (value && value !== 'none' && value !== 'auto') {
                     let i = 1;
-                    let match;
-                    while ((match = PATTERN_GRID.NAMED.exec(value)) !== null) {
+                    let matchA;
+                    while ((matchA = PATTERN_GRID.NAMED.exec(value)) !== null) {
                         if (index < 2) {
                             const data = mainData[index === 0 ? 'row' : 'column'];
-                            if (match[1].startsWith('repeat')) {
-                                let replaced = false;
-                                for (let j = match[0].indexOf('(') + 1, k = 1; j < match[0].length; j++) {
-                                    const char = match[0][j];
-                                    if (char === '(') {
-                                        k++;
-                                    }
-                                    else if (char === ')') {
-                                        k--;
-                                        if (k === 0) {
-                                            value = value.substring(j + 1);
-                                            match[3] = match[3].substring(0, match[3].length - value.length);
-                                            replaced = true;
-                                            break;
-                                        }
-                                    }
-                                }
+                            if (matchA[1].startsWith('repeat')) {
                                 let iterations = 1;
-                                switch (match[2]) {
+                                switch (matchA[2]) {
                                     case 'auto-fit':
                                         data.autoFit = true;
                                         break;
@@ -5097,28 +5274,28 @@
                                         data.autoFill = true;
                                         break;
                                     default:
-                                        iterations = $util$a.convertInt(match[3]);
+                                        iterations = $util$9.convertInt(matchA[3]);
                                         break;
                                 }
                                 if (iterations > 0) {
-                                    let matchRepeat;
                                     const repeating = [];
-                                    while ((matchRepeat = PATTERN_GRID.REPEAT.exec(match[3])) !== null) {
-                                        let matchPartial;
-                                        if ((matchPartial = new RegExp(REGEXP_PARTIAL.NAMED).exec(matchRepeat[1])) !== null) {
-                                            if (data.name[matchPartial[1]] === undefined) {
-                                                data.name[matchPartial[1]] = [];
+                                    let matchB;
+                                    while ((matchB = PATTERN_GRID.REPEAT.exec(matchA[3])) !== null) {
+                                        let matchC;
+                                        if ((matchC = new RegExp(REGEXP_PARTIAL.NAMED).exec(matchB[1])) !== null) {
+                                            if (data.name[matchC[1]] === undefined) {
+                                                data.name[matchC[1]] = [];
                                             }
-                                            repeating.push({ name: matchPartial[1] });
+                                            repeating.push({ name: matchC[1] });
                                         }
-                                        else if ((matchPartial = new RegExp(REGEXP_PARTIAL.MINMAX).exec(matchRepeat[1])) !== null) {
-                                            repeating.push({ unit: convertUnit(node, matchPartial[2]), unitMin: convertUnit(node, matchPartial[1]) });
+                                        else if ((matchC = new RegExp(REGEXP_PARTIAL.MINMAX).exec(matchB[1])) !== null) {
+                                            repeating.push({ unit: convertUnit(node, matchC[2]), unitMin: convertUnit(node, matchC[1]) });
                                         }
-                                        else if ((matchPartial = new RegExp(REGEXP_PARTIAL.FIT_CONTENT).exec(matchRepeat[1])) !== null) {
-                                            repeating.push({ unit: convertUnit(node, matchPartial[1]), unitMin: '0px' });
+                                        else if ((matchC = new RegExp(REGEXP_PARTIAL.FIT_CONTENT).exec(matchB[1])) !== null) {
+                                            repeating.push({ unit: convertUnit(node, matchC[1]), unitMin: '0px' });
                                         }
-                                        else if ((matchPartial = new RegExp(REGEXP_PARTIAL.UNIT).exec(matchRepeat[1])) !== null) {
-                                            repeating.push({ unit: convertUnit(node, matchPartial[0]) });
+                                        else if ((matchC = new RegExp(REGEXP_PARTIAL.UNIT).exec(matchB[1])) !== null) {
+                                            repeating.push({ unit: convertUnit(node, matchC[0]) });
                                         }
                                     }
                                     if (repeating.length) {
@@ -5137,39 +5314,35 @@
                                         }
                                     }
                                 }
-                                if (replaced) {
-                                    continue;
-                                }
                             }
-                            else if (match[1].charAt(0) === '[') {
-                                if (data.name[match[4]] === undefined) {
-                                    data.name[match[4]] = [];
+                            else if (matchA[1].charAt(0) === '[') {
+                                if (data.name[matchA[4]] === undefined) {
+                                    data.name[matchA[4]] = [];
                                 }
-                                data.name[match[4]].push(i);
+                                data.name[matchA[4]].push(i);
                             }
-                            else if (match[1].startsWith('minmax')) {
-                                data.unit.push(convertUnit(node, match[6]));
-                                data.unitMin.push(convertUnit(node, match[5]));
+                            else if (matchA[1].startsWith('minmax')) {
+                                data.unit.push(convertUnit(node, matchA[6]));
+                                data.unitMin.push(convertUnit(node, matchA[5]));
                                 data.repeat.push(false);
                                 i++;
                             }
-                            else if (match[1].startsWith('fit-content')) {
-                                data.unit.push(convertUnit(node, match[7]));
+                            else if (matchA[1].startsWith('fit-content')) {
+                                data.unit.push(convertUnit(node, matchA[7]));
                                 data.unitMin.push('0px');
                                 data.repeat.push(false);
                                 i++;
                             }
-                            else if (PATTERN_GRID.UNIT.test(match[1])) {
-                                data.unit.push(convertUnit(node, match[1]));
+                            else if (PATTERN_GRID.UNIT.test(matchA[1])) {
+                                data.unit.push(convertUnit(node, matchA[1]));
                                 data.unitMin.push('');
                                 data.repeat.push(false);
                                 i++;
                             }
                         }
                         else {
-                            mainData[index === 2 ? 'row' : 'column'].auto.push(node.convertPX(match[1]));
+                            mainData[index === 2 ? 'row' : 'column'].auto.push(node.convertPX(matchA[1]));
                         }
-                        value = value.replace(match[0], '');
                     }
                 }
             });
@@ -5193,13 +5366,13 @@
                     if (rowEnd.startsWith('span')) {
                         rowSpan = parseInt(rowEnd.split(' ')[1]);
                     }
-                    else if ($util$a.isNumber(rowEnd)) {
+                    else if ($util$9.isNumber(rowEnd)) {
                         rowSpan = parseInt(rowEnd) - row;
                     }
                     if (columnEnd.startsWith('span')) {
                         columnSpan = parseInt(columnEnd.split(' ')[1]);
                     }
-                    else if ($util$a.isNumber(columnEnd)) {
+                    else if ($util$9.isNumber(columnEnd)) {
                         columnSpan = parseInt(columnEnd) - column;
                     }
                     if (column === 1 && columnMax > 0) {
@@ -5246,8 +5419,8 @@
                 });
             }
             else {
-                node.css('gridTemplateAreas').split(/"[\s\n]+"/).map(value => $util$a.trimString(value.trim(), '"')).forEach((value, i) => {
-                    value.split(' ').forEach((area, j) => {
+                node.css('gridTemplateAreas').split(/"[\s\n]+"/).forEach((template, i) => {
+                    $util$9.trimString(template.trim(), '"').split(' ').forEach((area, j) => {
                         if (area !== '.') {
                             if (mainData.templateAreas[area] === undefined) {
                                 mainData.templateAreas[area] = {
@@ -5326,9 +5499,9 @@
                             }
                         }
                     }
-                    if (placement.filter(value => value).length < 4) {
+                    if (!placement[0] || !placement[1] || !placement[2] || !placement[3]) {
                         function setPlacement(value, position) {
-                            if ($util$a.isNumber(value)) {
+                            if ($util$9.isNumber(value)) {
                                 placement[position] = parseInt(value);
                                 return true;
                             }
@@ -5387,12 +5560,7 @@
                 for (let i = 0; i < gridPosition.length; i++) {
                     const item = gridPosition[i];
                     if (item) {
-                        data.count = $util$a.maxArray([
-                            data.count,
-                            horizontal ? item.columnSpan : item.rowSpan,
-                            item.placement[horizontal ? 1 : 0] || 0,
-                            (item.placement[horizontal ? 3 : 2] || 0) - 1
-                        ]);
+                        data.count = Math.max(data.count, horizontal ? item.columnSpan : item.rowSpan, item.placement[horizontal ? 1 : 0] || 0, (item.placement[horizontal ? 3 : 2] || 0) - 1);
                     }
                 }
                 if (data.autoFill || data.autoFit) {
@@ -5454,7 +5622,7 @@
                             if (rowData[i] === undefined) {
                                 available.push([[0, -1]]);
                             }
-                            else if (rowData[i].map(column => column).length + COLUMN_SPAN <= COLUMN_COUNT) {
+                            else if (getColumnTotal(rowData[i]) + COLUMN_SPAN <= COLUMN_COUNT) {
                                 const range = [];
                                 let span = 0;
                                 for (let j = 0, k = -1; j < COLUMN_COUNT; j++) {
@@ -5550,7 +5718,9 @@
                     mainData.column.count = Math.max(row.length, mainData.column.count);
                     for (const column of row) {
                         if (column) {
-                            column.forEach(item => mainData.children.add(item));
+                            for (const item of column) {
+                                mainData.children.add(item);
+                            }
                         }
                     }
                 }
@@ -5561,7 +5731,7 @@
                         for (let j = 0; j < mainData.column.count; j++) {
                             const column = mainData.rowData[i][j];
                             if (column) {
-                                column.forEach((item) => {
+                                for (const item of column) {
                                     if (item && !modified.has(item)) {
                                         const cellData = item.data(EXT_NAME.CSS_GRID, 'cellData');
                                         const x = j + (cellData ? cellData.columnSpan - 1 : 0);
@@ -5574,7 +5744,7 @@
                                         }
                                         modified.add(item);
                                     }
-                                });
+                                }
                             }
                         }
                     }
@@ -5587,6 +5757,7 @@
         }
     }
 
+    const $util$a = squared.lib.util;
     class Flexbox extends Extension {
         static createDataAttribute(node, children) {
             const flex = node.flexbox;
@@ -5607,7 +5778,7 @@
         }
         processNode(node) {
             const controller = this.application.controllerHandler;
-            const pageFlow = node.children.filter(item => item.pageFlow);
+            const pageFlow = node.filter(item => item.pageFlow);
             const mainData = Flexbox.createDataAttribute(node, pageFlow);
             if (node.cssTry('display', 'block')) {
                 for (const item of pageFlow) {
@@ -5623,7 +5794,7 @@
                 function setDirection(align, sort, size) {
                     const map = new Map();
                     pageFlow.sort((a, b) => {
-                        if (a.linear[align] !== b.linear[align]) {
+                        if (!$util$a.withinFraction(a.linear[align], b.linear[align])) {
                             return a.linear[align] < b.linear[align] ? -1 : 1;
                         }
                         return a.linear[sort] >= b.linear[sort] ? 1 : -1;
@@ -5636,15 +5807,15 @@
                     }
                     let maxCount = 0;
                     let i = 0;
-                    for (const segment of map.values()) {
-                        const group = controller.createNodeGroup(segment[0], segment, node);
+                    for (const seg of map.values()) {
+                        const group = controller.createNodeGroup(seg[0], seg, node);
                         group.siblingIndex = i++;
                         const box = group.unsafe('box');
                         if (box) {
                             box[size] = node.box[size];
                         }
                         group.alignmentType |= 128 /* SEGMENTED */;
-                        maxCount = Math.max(segment.length, maxCount);
+                        maxCount = Math.max(seg.length, maxCount);
                     }
                     node.sort(NodeList.siblingIndex);
                     if (mainData.rowDirection) {
@@ -5773,7 +5944,7 @@
         processNode(node) {
             const columnEnd = [];
             const columnBalance = this.options.columnBalanceEqual;
-            let columns = [];
+            const columns = [];
             if (columnBalance) {
                 const dimensions = [];
                 node.each((item, index) => {
@@ -5864,26 +6035,25 @@
                 const nextCoordsX = Object.keys(nextMapX);
                 if (nextCoordsX.length) {
                     const columnRight = [];
-                    for (let l = 0; l < nextCoordsX.length; l++) {
-                        const nextAxisX = nextMapX[nextCoordsX[l]];
-                        if (l === 0 && nextAxisX.length === 0) {
+                    for (let i = 0; i < nextCoordsX.length; i++) {
+                        const nextAxisX = nextMapX[nextCoordsX[i]];
+                        if (i === 0 && nextAxisX.length === 0) {
                             return { output: '' };
                         }
-                        columnRight[l] = l === 0 ? 0 : columnRight[l - 1];
-                        for (let m = 0; m < nextAxisX.length; m++) {
-                            const nextX = nextAxisX[m];
-                            const [left, right] = [nextX.linear.left, nextX.linear.right];
-                            if (l === 0 || left >= columnRight[l - 1]) {
-                                if (columns[l] === undefined) {
-                                    columns[l] = [];
+                        columnRight[i] = i === 0 ? 0 : columnRight[i - 1];
+                        for (let j = 0; j < nextAxisX.length; j++) {
+                            const nextX = nextAxisX[j];
+                            if (i === 0 || nextX.linear.left >= columnRight[i - 1]) {
+                                if (columns[i] === undefined) {
+                                    columns[i] = [];
                                 }
-                                if (l === 0 || columns[0].length === nextAxisX.length) {
-                                    columns[l][m] = nextX;
+                                if (i === 0 || columns[0].length === nextAxisX.length) {
+                                    columns[i][j] = nextX;
                                 }
                                 else {
                                     const index = getRowIndex(columns, nextX);
                                     if (index !== -1) {
-                                        columns[l][index] = nextX;
+                                        columns[i][index] = nextX;
                                     }
                                     else {
                                         return { output: '' };
@@ -5893,41 +6063,52 @@
                             else {
                                 const current = columns.length - 1;
                                 if (columns[current]) {
-                                    const minLeft = $util$b.minArray(columns[current].map(item => item.linear.left));
-                                    const maxRight = $util$b.maxArray(columns[current].map(item => item.linear.right));
-                                    if (left > minLeft && right > maxRight) {
-                                        const filtered = columns.filter(item => item);
+                                    let minLeft = columns[current][0].linear.left;
+                                    let maxRight = columns[current][0].linear.right;
+                                    for (let k = 1; k < columns[current].length; k++) {
+                                        minLeft = Math.min(minLeft, columns[current][k].linear.left);
+                                        maxRight = Math.max(maxRight, columns[current][k].linear.right);
+                                    }
+                                    if (nextX.linear.left > minLeft && nextX.linear.right > maxRight) {
                                         const index = getRowIndex(columns, nextX);
-                                        if (index !== -1 && filtered[filtered.length - 1][index] === undefined) {
-                                            columns[current].length = 0;
+                                        if (index !== -1) {
+                                            for (let k = columns.length - 1; k >= 0; k--) {
+                                                if (columns[k]) {
+                                                    if (columns[k][index] === undefined) {
+                                                        columns[current].length = 0;
+                                                    }
+                                                    break;
+                                                }
+                                            }
                                         }
                                     }
                                 }
                             }
-                            columnRight[l] = Math.max(right, columnRight[l]);
+                            columnRight[i] = Math.max(nextX.linear.right, columnRight[i]);
                         }
                     }
-                    for (let l = 0, m = -1; l < columnRight.length; l++) {
-                        if (columns[l] === undefined) {
-                            if (m === -1) {
-                                m = l - 1;
+                    for (let i = 0, j = -1; i < columnRight.length; i++) {
+                        if (columns[i] === undefined) {
+                            if (j === -1) {
+                                j = i - 1;
                             }
-                            else if (l === columnRight.length - 1) {
-                                columnRight[m] = columnRight[l];
+                            else if (i === columnRight.length - 1) {
+                                columnRight[j] = columnRight[i];
                             }
                         }
-                        else if (m !== -1) {
-                            columnRight[m] = columnRight[l - 1];
-                            m = -1;
+                        else if (j !== -1) {
+                            columnRight[j] = columnRight[i - 1];
+                            j = -1;
                         }
                     }
-                    columns = columns.filter((item, index) => {
-                        if (item && item.length) {
-                            columnEnd.push(columnRight[index]);
-                            return true;
+                    for (let i = 0; i < columns.length; i++) {
+                        if (columns[i] && columns[i].length) {
+                            columnEnd.push(columnRight[i]);
                         }
-                        return false;
-                    });
+                        else {
+                            columns.splice(i--, 1);
+                        }
+                    }
                     const maxColumn = columns.reduce((a, b) => Math.max(a, b.length), 0);
                     for (let l = 0; l < maxColumn; l++) {
                         for (let m = 0; m < columns.length; m++) {
@@ -5940,13 +6121,16 @@
                 columnEnd.push(node.box.right);
             }
             if (columns.length > 1 && columns[0].length === node.length) {
+                for (const item of node) {
+                    item.hide();
+                }
+                node.clear();
                 const mainData = Object.assign({}, Grid.createDataAttribute(), { columnCount: columnBalance ? columns[0].length : columns.length });
-                node.duplicate().forEach(item => node.remove(item) && item.hide());
                 for (let l = 0, count = 0; l < columns.length; l++) {
                     let spacer = 0;
                     for (let m = 0, start = 0; m < columns[l].length; m++) {
                         const item = columns[l][m];
-                        if (!item.spacer) {
+                        if (!item['spacer']) {
                             item.parent = node;
                             const data = Object.assign(Grid.createDataCellAttribute(), item.data(EXT_NAME.GRID, 'cellData'));
                             if (columnBalance) {
@@ -5981,14 +6165,14 @@
                                 }
                                 const index = Math.min(l + (columnSpan - 1), columnEnd.length - 1);
                                 const documentParent = item.documentParent.element;
-                                data.siblings.push(...$util$b.flatMap(Array.from(documentParent.children), element => {
-                                    const sibling = $dom$8.getElementAsNode(element);
-                                    return (sibling &&
-                                        sibling.visible &&
-                                        !sibling.rendered &&
-                                        sibling.linear.left >= item.linear.right &&
-                                        sibling.linear.right <= columnEnd[index] ? sibling : null);
-                                }));
+                                if (documentParent) {
+                                    for (let i = 0; i < documentParent.children.length; i++) {
+                                        const sibling = $dom$8.getElementAsNode(documentParent.children[i]);
+                                        if (sibling && sibling.visible && !sibling.rendered && sibling.linear.left >= item.linear.right && sibling.linear.right <= columnEnd[index]) {
+                                            data.siblings.push(sibling);
+                                        }
+                                    }
+                                }
                                 data.rowSpan = rowSpan;
                                 data.columnSpan = columnSpan;
                                 data.rowStart = start++ === 0;
@@ -6000,7 +6184,7 @@
                             }
                             item.data(EXT_NAME.GRID, 'cellData', data);
                         }
-                        else if (item.spacer === 1) {
+                        else if (item['spacer'] === 1) {
                             spacer++;
                         }
                     }
@@ -6127,6 +6311,14 @@
                     const layout = new Layout(renderParent, target, target.containerType, target.alignmentType);
                     this.application.controllerHandler.appendAfter(node.id, this.application.renderLayout(layout));
                     this.application.session.cache.append(target, false);
+                    renderParent.renderEach(item => {
+                        if (item.alignSibling('topBottom') === node.documentId) {
+                            item.alignSibling('topBottom', target.documentId);
+                        }
+                        else if (item.alignSibling('bottomTop') === node.documentId) {
+                            item.alignSibling('bottomTop', target.documentId);
+                        }
+                    });
                 }
                 if (node.top !== 0) {
                     target.modifyBox(2 /* MARGIN_TOP */, node.top);
@@ -6170,11 +6362,10 @@
                     url = $dom$9.cssResolveUrl(url);
                     const image = this.application.session.image.get(url);
                     if (image) {
-                        const dpi = node.dpi;
                         const fontSize = node.fontSize;
-                        const width = $util$e.convertPercentPX(node.has('width') ? node.css('width') : node.css('minWidth'), node.bounds.width, dpi, fontSize);
-                        const height = $util$e.convertPercentPX(node.has('height') ? node.css('width') : node.css('minHeight'), node.bounds.height, dpi, fontSize);
-                        const position = $dom$9.getBackgroundPosition(`${node.css('backgroundPositionX')} ${node.css('backgroundPositionY')}`, node.bounds, dpi, fontSize);
+                        const width = $util$e.convertPercentPX(node.has('width') ? node.css('width') : node.css('minWidth'), node.bounds.width, fontSize);
+                        const height = $util$e.convertPercentPX(node.has('height') ? node.css('width') : node.css('minHeight'), node.bounds.height, fontSize);
+                        const position = $dom$9.getBackgroundPosition(`${node.css('backgroundPositionX')} ${node.css('backgroundPositionY')}`, node.bounds, fontSize);
                         if (position.left <= 0 && position.top <= 0 && image.width > width && image.height > height) {
                             image.position = { x: position.left, y: position.top };
                             node.data(EXT_NAME.SPRITE, 'mainData', image);
@@ -6214,6 +6405,7 @@
     }
 
     const $dom$b = squared.lib.dom;
+    const $math = squared.lib.math;
     const $util$f = squared.lib.util;
     class Table extends Extension {
         static createDataAttribute() {
@@ -6225,6 +6417,8 @@
             };
         }
         processNode(node) {
+            const mainData = Table.createDataAttribute();
+            const table = [];
             function setAutoWidth(td) {
                 td.data(EXT_NAME.TABLE, 'percent', `${Math.round((td.bounds.width / node.bounds.width) * 100)}%`);
                 td.data(EXT_NAME.TABLE, 'expand', true);
@@ -6232,31 +6426,44 @@
             function setBoundsWidth(td) {
                 td.css('width', $util$f.formatPX(td.bounds.width), true);
             }
-            const mainData = Table.createDataAttribute();
-            const table = [];
-            const thead = node.filter(item => item.tagName === 'THEAD');
-            const tbody = node.filter(item => item.tagName === 'TBODY');
-            const tfoot = node.filter(item => item.tagName === 'TFOOT');
-            const colgroup = node.element ? Array.from(node.element.children).find(element => element.tagName === 'COLGROUP') : undefined;
-            if (thead.length) {
-                thead[0].cascade().filter(item => item.tagName === 'TH' || item.tagName === 'TD').forEach(item => item.inherit(thead[0], 'styleMap'));
-                table.push(...thead[0].children);
-                thead.forEach(item => item.hide());
+            function inheritStyles(section) {
+                if (section.length) {
+                    for (const item of section[0].cascade()) {
+                        if (item.tagName === 'TH' || item.tagName === 'TD') {
+                            item.inherit(section[0], 'styleMap');
+                        }
+                    }
+                    table.push(...section[0].children);
+                    for (const item of section) {
+                        item.hide();
+                    }
+                }
             }
-            if (tbody.length) {
-                tbody.forEach(item => {
-                    table.push(...item.children);
-                    item.hide();
-                });
+            const thead = [];
+            const tbody = [];
+            const tfoot = [];
+            node.each((item) => {
+                switch (item.tagName) {
+                    case 'THEAD':
+                        thead.push(item);
+                        break;
+                    case 'TBODY':
+                        tbody.push(item);
+                        break;
+                    case 'TFOOT':
+                        tfoot.push(item);
+                        break;
+                }
+            });
+            inheritStyles(thead);
+            for (const section of tbody) {
+                table.push(...section.children);
+                section.hide();
             }
-            if (tfoot.length) {
-                tfoot[0].cascade().filter(item => item.tagName === 'TH' || item.tagName === 'TD').forEach(item => item.inherit(tfoot[0], 'styleMap'));
-                table.push(...tfoot[0].children);
-                tfoot.forEach(item => item.hide());
-            }
+            inheritStyles(tfoot);
             const layoutFixed = node.css('tableLayout') === 'fixed';
             const borderCollapse = node.css('borderCollapse') === 'collapse';
-            const [horizontal, vertical] = borderCollapse ? [0, 0] : node.css('borderSpacing').split(' ').map(value => parseInt(value));
+            const [horizontal, vertical] = borderCollapse ? [0, 0] : $util$f.replaceMap(node.css('borderSpacing').split(' '), value => parseInt(value));
             if (horizontal > 0) {
                 node.modifyBox(256 /* PADDING_LEFT */, horizontal);
                 node.modifyBox(64 /* PADDING_RIGHT */, horizontal);
@@ -6275,23 +6482,25 @@
             }
             const spacingWidth = $util$f.formatPX(horizontal > 1 ? Math.round(horizontal / 2) : horizontal);
             const spacingHeight = $util$f.formatPX(vertical > 1 ? Math.round(vertical / 2) : vertical);
+            const colgroup = node.element && node.element.querySelector('COLGROUP');
             const rowWidth = [];
             const mapBounds = [];
             const tableFilled = [];
-            let columnIndex = new Array(table.length).fill(0);
-            let mapWidth = [];
+            const mapWidth = [];
+            let rowCount = table.length;
+            let columnIndex = new Array(rowCount).fill(0);
+            let columnCount = 0;
             let multiline = 0;
-            for (let i = 0; i < table.length; i++) {
+            for (let i = 0; i < rowCount; i++) {
                 const tr = table[i];
                 rowWidth[i] = horizontal;
                 tableFilled[i] = [];
-                for (let j = 0; j < tr.length; j++) {
-                    const td = tr.item(j);
+                tr.each((td, j) => {
                     const element = td.element;
                     for (let k = 0; k < element.rowSpan - 1; k++) {
-                        const l = (i + 1) + k;
-                        if (columnIndex[l] !== undefined) {
-                            columnIndex[l] += element.colSpan;
+                        const col = (i + 1) + k;
+                        if (columnIndex[col] !== undefined) {
+                            columnIndex[col] += element.colSpan;
                         }
                     }
                     if (!td.visibleStyle.backgroundImage && !td.visibleStyle.backgroundColor) {
@@ -6305,12 +6514,12 @@
                             }
                         }
                         else {
-                            let value = $dom$b.cssInherit(element, 'background', ['rgba(0, 0, 0, 0)', 'transparent'], ['TABLE']);
+                            let value = $dom$b.cssInheritStyle(element, 'background', ['rgba(0, 0, 0, 0)', 'transparent'], ['TABLE']);
                             if (value !== '') {
                                 element.style.background = value;
                             }
                             else {
-                                value = $dom$b.cssInherit(element, 'backgroundColor', ['rgba(0, 0, 0, 0)', 'transparent'], ['TABLE']);
+                                value = $dom$b.cssInheritStyle(element, 'backgroundColor', ['rgba(0, 0, 0, 0)', 'transparent'], ['TABLE']);
                                 if (value !== '') {
                                     element.style.backgroundColor = value;
                                 }
@@ -6363,17 +6572,18 @@
                     if (td.length || td.inlineText) {
                         rowWidth[i] += td.bounds.width + horizontal;
                     }
-                    td.css({
+                    td.cssApply({
                         marginTop: i === 0 ? '0px' : spacingHeight,
                         marginRight: j < tr.length - 1 ? spacingWidth : '0px',
                         marginBottom: i + element.rowSpan - 1 >= table.length - 1 ? '0px' : spacingHeight,
                         marginLeft: columnIndex[i] === 0 ? '0px' : spacingWidth
-                    }, '', true);
+                    }, true);
                     columnIndex[i] += element.colSpan;
-                }
+                });
+                columnCount = Math.max(columnCount, columnIndex[i]);
             }
             if (node.has('width', 2 /* UNIT */) && mapWidth.some(value => $util$f.isPercent(value))) {
-                mapWidth = mapWidth.map((value, index) => {
+                $util$f.replaceMap(mapWidth, (value, index) => {
                     if (value === 'auto' && mapBounds[index] > 0) {
                         value = $util$f.formatPX(mapBounds[index]);
                     }
@@ -6382,7 +6592,7 @@
             }
             if (mapWidth.every(value => $util$f.isPercent(value)) && mapWidth.reduce((a, b) => a + parseFloat(b), 0) > 1) {
                 let percentTotal = 100;
-                mapWidth = mapWidth.map(value => {
+                $util$f.replaceMap(mapWidth, value => {
                     const percent = parseFloat(value);
                     if (percentTotal <= 0) {
                         value = '0px';
@@ -6397,12 +6607,14 @@
             else if (mapWidth.every(value => $util$f.isUnit(value))) {
                 const width = mapWidth.reduce((a, b) => a + parseInt(b), 0);
                 if (width < node.width) {
-                    mapWidth = mapWidth.map(value => value !== '0px' ? `${(parseInt(value) / width) * 100}%` : value);
+                    $util$f.replaceMap(mapWidth, value => value !== '0px' ? `${(parseInt(value) / width) * 100}%` : value);
                 }
                 else if (width > node.width) {
                     node.css('width', 'auto', true);
                     if (!layoutFixed) {
-                        node.cascade().forEach(item => item.css('width', 'auto', true));
+                        for (const item of node.cascade()) {
+                            item.css('width', 'auto', true);
+                        }
                     }
                 }
             }
@@ -6430,8 +6642,6 @@
             if (multiline || (mainData.layoutType === 1 /* STRETCH */ && !node.hasWidth)) {
                 mainData.expand = true;
             }
-            const columnCount = $util$f.maxArray(columnIndex);
-            let rowCount = table.length;
             const caption = node.find(item => item.tagName === 'CAPTION');
             node.clear();
             if (caption) {
@@ -6441,7 +6651,7 @@
                             caption.css('maxWidth', $util$f.formatPX(caption.bounds.width));
                         }
                     }
-                    else if (caption.bounds.width > $util$f.maxArray(rowWidth)) {
+                    else if (caption.bounds.width > $math.maxArray(rowWidth)) {
                         setBoundsWidth(caption);
                     }
                 }
@@ -6571,7 +6781,7 @@
                         if (td && td.css('visibility') === 'visible') {
                             if (i === 0) {
                                 if (td.borderTopWidth < parseInt(borderTopWidth)) {
-                                    td.css({
+                                    td.cssApply({
                                         borderTopColor,
                                         borderTopStyle,
                                         borderTopWidth
@@ -6591,7 +6801,7 @@
                             }
                             if (i === rowCount - 1) {
                                 if (td.borderBottomWidth < parseInt(borderBottomWidth)) {
-                                    td.css({
+                                    td.cssApply({
                                         borderBottomColor,
                                         borderBottomStyle,
                                         borderBottomWidth
@@ -6600,7 +6810,7 @@
                             }
                             if (j === 0) {
                                 if (td.borderLeftWidth < parseInt(borderLeftWidth)) {
-                                    td.css({
+                                    td.cssApply({
                                         borderLeftColor,
                                         borderLeftStyle,
                                         borderLeftWidth
@@ -6620,7 +6830,7 @@
                             }
                             if (j === columnCount - 1) {
                                 if (td.borderRightWidth < parseInt(borderRightWidth)) {
-                                    td.css({
+                                    td.cssApply({
                                         borderRightColor,
                                         borderRightStyle,
                                         borderRightWidth
@@ -6630,7 +6840,7 @@
                         }
                     }
                 }
-                node.css({
+                node.cssApply({
                     borderTopWidth: '0px',
                     borderRightWidth: '0px',
                     borderBottomWidth: '0px',
@@ -6652,8 +6862,8 @@
         }
         processNode(node) {
             const belowBaseline = [];
-            let aboveBaseline = [];
-            let minTop = Number.MAX_VALUE;
+            const aboveBaseline = [];
+            let minTop = Number.POSITIVE_INFINITY;
             node.each((item) => {
                 if (item.inlineVertical && item.linear.top <= minTop) {
                     if (item.linear.top < minTop) {
@@ -6682,7 +6892,7 @@
                 }
             }
             else {
-                aboveBaseline = aboveBaseline.filter(item => $util$g.isUnit(item.verticalAlign) && $util$g.convertInt(item.verticalAlign) > 0);
+                $util$g.spliceArray(aboveBaseline, item => !($util$g.isUnit(item.verticalAlign) && $util$g.convertInt(item.verticalAlign) > 0));
             }
             if (aboveBaseline.length) {
                 node.data(EXT_NAME.VERTICAL_ALIGN, 'mainData', {
@@ -6816,111 +7026,115 @@
                     }
                 }
             }
-            if (this.application.processing.node) {
-                if (this.application.processing.node.htmlElement) {
-                    $util$h.flatMap(Array.from(this.application.processing.node.element.getElementsByTagName('BR')), (item) => $dom$c.getElementAsNode(item)).forEach((node) => {
-                        if (!processed.has(node)) {
-                            const actualParent = node.actualParent;
-                            const previousSiblings = node.previousSiblings(true, true, true);
-                            const nextSiblings = node.nextSiblings(true, true, true);
-                            let valid = false;
-                            if (previousSiblings.length && nextSiblings.length) {
-                                if (nextSiblings[0].lineBreak) {
-                                    return;
+            if (this.application.processing.node && this.application.processing.node.htmlElement) {
+                const elements = this.application.processing.node.element.getElementsByTagName('BR');
+                for (let i = 0; i < elements.length; i++) {
+                    const node = $dom$c.getElementAsNode(elements[i]);
+                    if (node && !processed.has(node)) {
+                        const actualParent = node.actualParent;
+                        const previousSiblings = node.previousSiblings(true, true, true);
+                        const nextSiblings = node.nextSiblings(true, true, true);
+                        let valid = false;
+                        if (previousSiblings.length && nextSiblings.length) {
+                            if (nextSiblings[0].lineBreak) {
+                                continue;
+                            }
+                            else {
+                                valid = true;
+                                const above = previousSiblings.pop();
+                                const below = nextSiblings.pop();
+                                if (above.inlineStatic && below.inlineStatic && previousSiblings.length === 0) {
+                                    processed.add(node);
+                                    continue;
+                                }
+                                let bottom;
+                                let top;
+                                if (above.lineHeight > 0 && above.element && above.cssTry('lineHeight', '0px')) {
+                                    bottom = above.element.getBoundingClientRect().bottom + above.marginBottom;
+                                    above.cssFinally('lineHeight');
                                 }
                                 else {
-                                    valid = true;
-                                    const bottomStart = previousSiblings.pop();
-                                    const topEnd = nextSiblings.pop();
-                                    if (bottomStart.inlineStatic && topEnd.inlineStatic && previousSiblings.length === 0) {
-                                        processed.add(node);
-                                        return;
+                                    bottom = above.linear.bottom;
+                                }
+                                if (below.lineHeight > 0 && below.element && below.cssTry('lineHeight', '0px')) {
+                                    top = below.element.getBoundingClientRect().top - below.marginTop;
+                                    below.cssFinally('lineHeight');
+                                }
+                                else {
+                                    top = below.linear.top;
+                                }
+                                const aboveParent = above.visible ? above.renderParent : undefined;
+                                const belowParent = below.visible ? below.renderParent : undefined;
+                                const offset = top - bottom;
+                                if (offset > 0) {
+                                    if (belowParent && belowParent.groupParent && belowParent.firstChild === below) {
+                                        belowParent.modifyBox(2 /* MARGIN_TOP */, offset);
                                     }
-                                    let bottom;
-                                    let top;
-                                    if (bottomStart.lineHeight > 0 && bottomStart.element && bottomStart.cssTry('lineHeight', '0px')) {
-                                        bottom = bottomStart.element.getBoundingClientRect().bottom + bottomStart.marginBottom;
-                                        bottomStart.cssFinally('lineHeight');
+                                    else if (aboveParent && aboveParent.groupParent && aboveParent.lastChild === above) {
+                                        aboveParent.modifyBox(8 /* MARGIN_BOTTOM */, offset);
                                     }
                                     else {
-                                        bottom = bottomStart.linear.bottom;
-                                    }
-                                    if (topEnd.lineHeight > 0 && topEnd.element && topEnd.cssTry('lineHeight', '0px')) {
-                                        top = topEnd.element.getBoundingClientRect().top - topEnd.marginTop;
-                                        topEnd.cssFinally('lineHeight');
-                                    }
-                                    else {
-                                        top = topEnd.linear.top;
-                                    }
-                                    const bottomParent = bottomStart.visible ? bottomStart.renderParent : undefined;
-                                    const topParent = topEnd.visible ? topEnd.renderParent : undefined;
-                                    const offset = top - bottom;
-                                    if (offset > 0) {
-                                        if (topParent && topParent.groupParent && topParent.firstChild === topEnd) {
-                                            topParent.modifyBox(2 /* MARGIN_TOP */, offset);
+                                        if (belowParent && belowParent.layoutVertical && (below.visible || below.renderAs)) {
+                                            (below.renderAs || below).modifyBox(2 /* MARGIN_TOP */, offset);
                                         }
-                                        else if (bottomParent && bottomParent.groupParent && bottomParent.lastChild === bottomStart) {
-                                            bottomParent.modifyBox(8 /* MARGIN_BOTTOM */, offset);
+                                        else if (aboveParent && aboveParent.layoutVertical && (above.visible || above.renderAs)) {
+                                            (above.renderAs || above).modifyBox(8 /* MARGIN_BOTTOM */, offset);
                                         }
-                                        else {
-                                            if (topParent && topParent.layoutVertical && (topEnd.visible || topEnd.renderAs)) {
-                                                (topEnd.renderAs || topEnd).modifyBox(2 /* MARGIN_TOP */, offset);
+                                        else if (!belowParent && !aboveParent && actualParent && actualParent.visible) {
+                                            if (below.lineBreak || below.excluded) {
+                                                actualParent.modifyBox(128 /* PADDING_BOTTOM */, offset);
                                             }
-                                            else if (bottomParent && bottomParent.layoutVertical && (bottomStart.visible || bottomStart.renderAs)) {
-                                                (bottomStart.renderAs || bottomStart).modifyBox(8 /* MARGIN_BOTTOM */, offset);
-                                            }
-                                            else if (!topParent && !bottomParent && actualParent && actualParent.visible) {
-                                                if (topEnd.lineBreak || topEnd.excluded) {
-                                                    actualParent.modifyBox(128 /* PADDING_BOTTOM */, offset);
-                                                }
-                                                else if (bottomStart.lineBreak || bottomStart.excluded) {
-                                                    actualParent.modifyBox(32 /* PADDING_TOP */, offset);
-                                                }
-                                                else {
-                                                    valid = false;
-                                                }
+                                            else if (above.lineBreak || above.excluded) {
+                                                actualParent.modifyBox(32 /* PADDING_TOP */, offset);
                                             }
                                             else {
                                                 valid = false;
                                             }
                                         }
-                                    }
-                                }
-                            }
-                            else if (actualParent && actualParent.visible) {
-                                if (!actualParent.documentRoot && previousSiblings.length) {
-                                    const previousStart = previousSiblings[previousSiblings.length - 1];
-                                    const offset = actualParent.box.bottom - previousStart.linear[previousStart.lineBreak || previousStart.excluded ? 'top' : 'bottom'];
-                                    if (offset > 0) {
-                                        if (previousStart.visible) {
-                                            actualParent.modifyBox(128 /* PADDING_BOTTOM */, offset);
-                                        }
-                                        else if (!actualParent.hasHeight) {
-                                            setMinHeight(actualParent, offset);
+                                        else {
+                                            valid = false;
                                         }
                                     }
                                 }
-                                else if (nextSiblings.length) {
-                                    const nextStart = nextSiblings[nextSiblings.length - 1];
-                                    const offset = nextStart.linear[nextStart.lineBreak || nextStart.excluded ? 'bottom' : 'top'] - actualParent.box.top;
-                                    if (offset > 0) {
-                                        if (nextStart.visible) {
-                                            actualParent.modifyBox(32 /* PADDING_TOP */, offset);
-                                        }
-                                        else if (!actualParent.hasHeight) {
-                                            setMinHeight(actualParent, offset);
-                                        }
-                                    }
-                                }
-                                valid = true;
-                            }
-                            if (valid) {
-                                processed.add(node);
-                                previousSiblings.forEach((item) => processed.add(item));
-                                nextSiblings.forEach((item) => processed.add(item));
                             }
                         }
-                    });
+                        else if (actualParent && actualParent.visible) {
+                            if (!actualParent.documentRoot && previousSiblings.length) {
+                                const previousStart = previousSiblings[previousSiblings.length - 1];
+                                const offset = actualParent.box.bottom - previousStart.linear[previousStart.lineBreak || previousStart.excluded ? 'top' : 'bottom'];
+                                if (offset > 0) {
+                                    if (previousStart.visible) {
+                                        actualParent.modifyBox(128 /* PADDING_BOTTOM */, offset);
+                                    }
+                                    else if (!actualParent.hasHeight) {
+                                        setMinHeight(actualParent, offset);
+                                    }
+                                }
+                            }
+                            else if (nextSiblings.length) {
+                                const nextStart = nextSiblings[nextSiblings.length - 1];
+                                const offset = nextStart.linear[nextStart.lineBreak || nextStart.excluded ? 'bottom' : 'top'] - actualParent.box.top;
+                                if (offset > 0) {
+                                    if (nextStart.visible) {
+                                        actualParent.modifyBox(32 /* PADDING_TOP */, offset);
+                                    }
+                                    else if (!actualParent.hasHeight) {
+                                        setMinHeight(actualParent, offset);
+                                    }
+                                }
+                            }
+                            valid = true;
+                        }
+                        if (valid) {
+                            processed.add(node);
+                            for (const item of previousSiblings) {
+                                processed.add(item);
+                            }
+                            for (const item of nextSiblings) {
+                                processed.add(item);
+                            }
+                        }
+                    }
                 }
             }
             for (const node of this.application.processing.excluded) {
@@ -6929,9 +7143,9 @@
                     if (offset !== 0) {
                         const nextSiblings = node.nextSiblings(true, true, true);
                         if (nextSiblings.length) {
-                            const topEnd = nextSiblings.pop();
-                            if (topEnd.visible) {
-                                topEnd.modifyBox(2 /* MARGIN_TOP */, offset);
+                            const below = nextSiblings.pop();
+                            if (below.visible) {
+                                below.modifyBox(2 /* MARGIN_TOP */, offset);
                                 processed.add(node);
                             }
                         }
