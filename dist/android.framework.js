@@ -1,4 +1,4 @@
-/* android-framework 0.7.0
+/* android-framework 0.7.1
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -8391,9 +8391,14 @@ var android = (function () {
                                         children.sort((a, b) => a.companion.index >= b.companion.index ? 1 : 0);
                                         const sequentially = [];
                                         const after = [];
-                                        for (const child of children) {
+                                        for (let j = 0; j < children.length; j++) {
+                                            const child = children[j];
                                             if (child.companion.index <= 0) {
                                                 sequentially.push(child);
+                                                if (j === 0 && item.delay > 0) {
+                                                    child.delay += item.delay;
+                                                    item.delay = 0;
+                                                }
                                             }
                                             else {
                                                 after.push(child);
@@ -8511,7 +8516,7 @@ var android = (function () {
                                                 continue;
                                             }
                                             const insertBeforeValue = (attr, value) => {
-                                                if (value !== '' && fillBeforeData.values.findIndex(before => before.propertyName === attr) === -1) {
+                                                if (value && fillBeforeData.values.findIndex(before => before.propertyName === attr) === -1) {
                                                     fillBeforeData.values.push(this.createPropertyValue(attr, value, '0', valueType));
                                                 }
                                             };
@@ -8700,7 +8705,7 @@ var android = (function () {
                                                     const keyName = item.synchronized ? item.synchronized.index + item.synchronized.value : (index !== 0 || propertyNames.length > 1 ? JSON.stringify(options) : '');
                                                     for (let i = 0; i < propertyNames.length; i++) {
                                                         const propertyName = propertyNames[i];
-                                                        if (fillBefore && beforeValues[i]) {
+                                                        if (fillBefore) {
                                                             insertBeforeValue(propertyName, beforeValues[i]);
                                                         }
                                                         if (useKeyFrames && item.keyTimes.length > 1) {
@@ -8980,8 +8985,10 @@ var android = (function () {
                                 const [strokeDash, pathValue, clipPathData] = item.path.extractStrokeDash(animateData && animateData.animate, false, this.options.floatPrecisionValue);
                                 if (strokeDash) {
                                     const groupName = getVectorName(item, 'stroke');
-                                    if (pathValue && clipPathData) {
+                                    if (pathValue) {
                                         pathData.value = pathValue;
+                                    }
+                                    if (clipPathData) {
                                         clipGroup.push({ clipPathData });
                                     }
                                     for (let i = 0; i < strokeDash.length; i++) {

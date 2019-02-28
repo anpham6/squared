@@ -134,8 +134,7 @@ export interface SvgPathExtendData {
     items: SvgStrokeDash[];
     leading: number;
     trailing: number;
-    trailingSpace: number;
-    pathLengthRatio: number;
+    ratioLength: number;
     extendedLength?: number;
     path?: string;
     leadingOffset?: number;

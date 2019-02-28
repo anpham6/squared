@@ -1,4 +1,4 @@
-/* squared 0.7.0
+/* squared 0.7.1
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -235,7 +235,7 @@
         return (value & type) === type;
     }
     function isNumber(value) {
-        return typeof value === 'number' || /^-?\d+(\.\d+)?$/.test(value.trim());
+        return value !== '' && /^-?\d+(\.\d+)?$/.test(value.trim());
     }
     function isString(value) {
         return typeof value === 'string' && value.trim() !== '';
