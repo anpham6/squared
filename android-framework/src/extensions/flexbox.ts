@@ -74,7 +74,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 let previous: T[] | undefined;
                 node.each((item: T) => {
                     if (item.hasAlign($enum.NODE_ALIGNMENT.SEGMENTED)) {
-                        const pageFlow = $util.filterArray(item.renderChildren, child => child.pageFlow) as T[];
+                        const pageFlow = item.renderFilter(child => child.pageFlow) as T[];
                         if (mainData.rowDirection) {
                             item.android('layout_width', 'match_parent');
                             if (node.hasHeight) {

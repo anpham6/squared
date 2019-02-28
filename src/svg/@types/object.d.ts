@@ -121,6 +121,7 @@ export interface SvgBuildOptions {
     element?: SVGGeometryElement;
     symbolElement?: SVGSymbolElement;
     patternElement?: SVGPatternElement;
+    transforms?: SvgTransform[];
     initPath?: boolean;
 }
 
@@ -134,7 +135,8 @@ export interface SvgPathExtendData {
     items: SvgStrokeDash[];
     leading: number;
     trailing: number;
-    ratioLength: number;
+    lengthRatio: number;
+    dashArrayTotal: number;
     extendedLength?: number;
     path?: string;
     leadingOffset?: number;

@@ -22,9 +22,12 @@ export function distanceFromY(value: number, angle: number) {
 
 export function truncateString(value: string, precision = 3) {
     let result = value;
-    const pattern = new RegExp(`(\\d+\\.\\d{${precision}})\\d+`, 'g');
+    const pattern = new RegExp(`(\\d+\\.\\d{${precision}})(\\d)\\d*`, 'g');
     let match: RegExpExecArray | null;
     while ((match = pattern.exec(value)) !== null) {
+        if (parseInt(match[2]) >= 5) {
+            match[1] = (parseFloat(match[1]) + 1 / Math.pow(10, precision)).toString();
+        }
         result = result.replace(match[0], match[1]);
     }
     return result;
@@ -40,9 +43,10 @@ export function truncateRange(value: number, precision = 3) {
 }
 
 export function truncatePrecision(value: number) {
-    const match = /^\d+\.(\d+?)(0{5,}|9{5,})\d*$/.exec(value.toString());
+    const match = /^(\d+)\.(\d+?)(0{5,}|9{5,})\d*$/.exec(value.toString());
     if (match) {
-        return parseFloat(value.toPrecision(match[1].length));
+        const ordinal = match[1] !== '0' ? match[1].length : 0;
+        return parseFloat(value.toPrecision(ordinal + match[2].length));
     }
     return value;
 }
@@ -60,6 +64,16 @@ export function getAngle(start: Point, end: Point) {
     else {
         return (value + 90) % 360;
     }
+}
+
+export function clampRange(value: number, min = 0, max = 1) {
+    if (value < min) {
+        value = min;
+    }
+    else if (value > max) {
+        value = max;
+    }
+    return value;
 }
 
 export function getLeastCommonMultiple(values: number[], offset?: number[]) {

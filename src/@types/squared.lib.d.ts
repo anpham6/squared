@@ -68,6 +68,7 @@ declare global {
             function truncateRange(value: number, precision?: number): string;
             function truncatePrecision(value: number): number;
             function getAngle(start: Point, end: Point): number;
+            function clampRange(value: number, min?: number, max?: number): number;
             function getLeastCommonMultiple(values: number[], offset?: number[]): number;
         }
 

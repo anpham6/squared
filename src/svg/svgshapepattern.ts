@@ -38,7 +38,8 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
 
     public build(options?: SvgBuildOptions) {
         const element = options && options.element || <SVGGeometryElement> this.element;
-        const path = SvgPath.build(new SvgPath(element), [], options);
+        const path = new SvgPath(element);
+        path.build(options);
         if (path.value) {
             const precision = options && options.precision;
             this.clipRegion = path.value;
@@ -68,6 +69,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                 offsetY = tileHeight - offsetY;
                 remainingHeight += tileHeight;
             }
+            options = Object.assign({}, options);
             while (remainingHeight > 0) {
                 const y = boundingY + j * tileHeight - offsetY;
                 let remainingWidth = width;
@@ -87,7 +89,8 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                                 else {
                                     item.path.refitBaseValue(x, y, precision);
                                 }
-                                SvgPath.build(<SvgPath> item.path, item.transforms, options);
+                                options.transforms = item.transforms;
+                                item.path.build(options);
                                 item.path.fillOpacity = (parseFloat(item.path.fillOpacity) * parseFloat(this.fillOpacity)).toString();
                                 item.path.clipPath = SvgBuild.drawRect(tileWidth, tileHeight, x, y, precision) + (item.path.clipPath !== '' ? `;${item.path.clipPath}` : '');
                             }

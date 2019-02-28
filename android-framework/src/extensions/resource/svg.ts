@@ -896,7 +896,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                             transforms = item.parent.path.transformed;
                                                         }
                                                     }
-                                                    values = $SvgPath.extrapolate(item.attributeName, group.pathData, item.values, companion, transforms, this.options.floatPrecisionValue);
+                                                    values = $SvgPath.extrapolate(item.attributeName, group.pathData, item.values, transforms, companion, this.options.floatPrecisionValue);
                                                 }
                                             }
                                             else if ($SvgBuild.asAnimateTransform(item)) {

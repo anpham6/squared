@@ -26,44 +26,24 @@ const $math = squared.lib.math;
 const $util = squared.lib.util;
 
 export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) implements squared.svg.SvgPath {
-    public static extrapolate(attr: string, pathData: string, values: string[], companion?: SvgShape, transforms?: SvgTransform[], precision?: number) {
+    public static extrapolate(attr: string, pathData: string, values: string[], transforms?: SvgTransform[], companion?: SvgShape, precision?: number) {
         const result: string[] = [];
-        if (attr === 'points') {
-            for (let i = 0; i < values.length; i++) {
-                let points = SvgBuild.convertPoints(SvgBuild.parseCoordinates(values[i]));
+        const transformRefit = !!transforms || !!companion && !!companion.parent && companion.parent.requireRefit();
+        let commands: SvgPathCommand[] | undefined;
+        for (let i = 0; i < values.length; i++) {
+            if (attr === 'd') {
+                result[i] = values[i];
+            }
+            else if (attr === 'points') {
+                const points = SvgBuild.convertPoints(SvgBuild.parseCoordinates(values[i]));
                 if (points.length) {
-                    function drawPoints() {
-                        result[i] = companion && SVG.polygon(companion.element) ? SvgBuild.drawPolygon(points, precision) : SvgBuild.drawPolyline(points, precision);
-                    }
-                    if (transforms && transforms.length) {
-                        drawPoints();
-                        const commands = SvgBuild.getPathCommands(result[i]);
-                        if (commands.length) {
-                            points = SvgBuild.extractPathPoints(commands);
-                            if (points.length) {
-                                points = SvgBuild.applyTransforms(transforms, points, companion && TRANSFORM.origin(companion.element));
-                            }
-                        }
-                    }
-                    if (companion && companion.parent && companion.parent.requireRefit()) {
-                        companion.parent.refitPoints(points);
-                    }
-                    drawPoints();
-                }
-                else {
-                    result[i] = '';
+                    result[i] = companion && SVG.polygon(companion.element) ? SvgBuild.drawPolygon(points, precision) : SvgBuild.drawPolyline(points, precision);
                 }
             }
-        }
-        else if (attr === 'd') {
-            return values.slice(0);
-        }
-        else if (pathData) {
-            if (transforms && transforms.length && companion && SVG.shape(companion.element)) {
-                pathData = SvgBuild.drawRefit(companion.element, companion.parent, precision);
-            }
-            let commands = SvgBuild.getPathCommands(pathData);
-            for (let i = 0; i < values.length; i++) {
+            else if (pathData) {
+                if (commands === undefined) {
+                    commands = SvgBuild.getPathCommands(pathData);
+                }
                 const value = parseFloat(values[i]);
                 if (!isNaN(value)) {
                     const path = i < values.length - 1 ? <SvgPathCommand[]> $util.cloneArray(commands, [], true) : commands;
@@ -102,6 +82,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                             height = value;
                             break;
                         default:
+                            result[i] = '';
                             continue;
                     }
                     if (x !== undefined || y !== undefined) {
@@ -216,37 +197,19 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                             }
                         }
                     }
-                    else {
-                        result[i] = values[i - 1] || pathData;
-                        continue;
-                    }
                     result[i] = SvgBuild.drawPath(path, precision);
-                    if (transforms && transforms.length) {
-                        commands = SvgBuild.getPathCommands(result[i]);
-                        if (commands.length) {
-                            let points = SvgBuild.extractPathPoints(commands);
-                            if (points.length) {
-                                points = SvgBuild.applyTransforms(transforms, points, companion && TRANSFORM.origin(companion.element));
-                                result[i] = SvgBuild.drawPath(SvgBuild.rebindPathPoints(commands, points), precision);
-                            }
-                        }
-                    }
                 }
-                else {
-                    result[i] = '';
+            }
+            if (result[i]) {
+                if (transformRefit) {
+                    result[i] = SvgBuild.transformRefit(result[i], transforms, companion, precision);
                 }
+            }
+            else {
+                result[i] = '';
             }
         }
         return result;
-    }
-
-    public static build(path: SvgPath, transforms: SvgTransform[], options?: SvgBuildOptions) {
-        const exclude = options && options.exclude;
-        if (exclude && exclude[path.element.tagName]) {
-            transforms = SvgBuild.filterTransforms(transforms, exclude[path.element.tagName]);
-        }
-        path.draw(transforms, options);
-        return path;
     }
 
     public name = '';
@@ -260,6 +223,14 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     constructor(public readonly element: SVGGeometryElement) {
         super(element);
         this.init();
+    }
+
+    public build(options?: SvgBuildOptions) {
+        let transforms: SvgTransform[] | undefined;
+        if (options && options.transforms) {
+            transforms = SvgBuild.filterTransforms(options.transforms, options.exclude && options.exclude[this.element.tagName]);
+        }
+        this.draw(transforms, options);
     }
 
     public draw(transforms?: SvgTransform[], options?: SvgBuildOptions) {
@@ -574,11 +545,15 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     }
 
     public flattenStrokeDash(valueArray: number[], valueOffset: number, totalLength: number, pathLength?: number, data?: SvgPathExtendData) {
+        if (valueArray.length === 1) {
+            valueArray.push(valueArray[0]);
+        }
         const result: SvgPathExtendData = {
             items: [],
             leading: 0,
             trailing: 0,
-            ratioLength: totalLength / (pathLength || totalLength)
+            dashArrayTotal: valueArray.reduce((a, b) => a + b, 0),
+            lengthRatio: totalLength / (pathLength || totalLength)
         };
         if (valueArray.length) {
             if (!pathLength) {
@@ -588,11 +563,14 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             let trailingSpace = 0;
             let j = 0;
             if (data === undefined) {
-                const arrayTotal = valueArray.reduce((a, b) => a + b, 0);
-                valueOffset %= totalLength;
                 if (valueOffset < 0) {
                     while (valueOffset < 0) {
-                        valueOffset += arrayTotal;
+                        valueOffset += result.dashArrayTotal;
+                    }
+                }
+                else {
+                    while (valueOffset - result.dashArrayTotal >= 0) {
+                        valueOffset -= result.dashArrayTotal;
                     }
                 }
             }
@@ -643,23 +621,13 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                     result.leadingOffset = $math.truncatePrecision(result.items[0].start * extendedLength);
                     result.trailingOffset = $math.truncatePrecision((1 - result.items[result.items.length - 1].end) * extendedLength);
                     if (result.leadingOffset > 0) {
-                        if (result.leadingOffset + result.trailingOffset >= trailingSpace) {
-                            result.leading = 0;
-                            result.trailing = trailingSpace - (result.leadingOffset + result.trailingOffset);
-                        }
-                        else if (result.leadingOffset + result.trailing >= trailingSpace) {
-                            result.leading = 0;
-                            result.trailing -= result.leadingOffset;
-                        }
-                        else if (result.leadingOffset + result.leading >= trailingSpace) {
-                            result.trailing = 0;
-                        }
+                        result.trailing -= result.leadingOffset + result.leading;
                     }
                     else if (result.leading === 0 && result.trailing < trailingSpace) {
                         result.trailing = trailingSpace - result.trailingOffset;
                     }
-                    result.leading *= result.ratioLength;
-                    result.trailing *= result.ratioLength;
+                    result.leading *= result.lengthRatio;
+                    result.trailing *= result.lengthRatio;
                 }
             }
         }
@@ -677,9 +645,9 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 const totalLength = this.totalLength;
                 const pathLength =  this.pathLength || totalLength;
                 const dashGroup: DashGroup[] = [];
-                let flattenData!: SvgPathExtendData;
                 let valueOffset = $util.convertInt(this.strokeDashoffset);
                 let dashTotal = 0;
+                let flattenData!: SvgPathExtendData;
                 const createDashGroup = (values: number[], offset: number, delay: number, duration = 0, companion?: SvgAnimation) => {
                     const data = this.flattenStrokeDash(values, offset, totalLength, pathLength);
                     if (dashGroup.length === 0 || companion) {
@@ -826,8 +794,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     const values: string[] = [];
                                     const keyTimes: number[] = [];
                                     let keyTime = 0;
-                                    let previousRemainder = 0;
-                                    let previousIncreasing: boolean | undefined;
+                                    let previousRemaining = 0;
+                                    let previousIncreasing = false;
                                     const startOffset = parseFloat(item.values[0]);
                                     const requireExtend = () => flattenData.leading !== 0 || flattenData.trailing !== 0;
                                     let baseValue: SvgStrokeDash[] | undefined;
@@ -845,18 +813,21 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     else if (requireExtend()) {
                                         baseValue = result;
                                     }
+                                    let extendedLength = totalLength;
+                                    let extendedRatio = 1;
                                     if (baseValue && (requireExtend())) {
                                         this.extendLength(flattenData, negative, precision);
                                         if (flattenData.path) {
                                             const boxRect = SvgBuild.parseBoxRect([this.value]);
                                             const strokeOffset = Math.ceil(strokeWidth / 2);
-                                            const extendedLength = getPathLength(flattenData.path);
+                                            extendedLength = getPathLength(flattenData.path);
                                             if (flattenData.leading > 0 || flattenData.trailing > 0) {
                                                 clipPath = SvgBuild.drawRect(boxRect.right - boxRect.left, boxRect.bottom - boxRect.top + strokeOffset * 2, boxRect.left, boxRect.top - strokeOffset);
                                             }
                                             flattenData.extendedLength = this.pathLength;
+                                            extendedRatio = extendedLength / totalLength;
                                             if (flattenData.extendedLength > 0) {
-                                                flattenData.extendedLength *= extendedLength / totalLength;
+                                                flattenData.extendedLength *= extendedRatio;
                                             }
                                             else {
                                                 flattenData.extendedLength = extendedLength;
@@ -882,104 +853,164 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         }
                                     }
                                     $util.replaceMap<string, string>(item.values, value => (parseFloat(value) - valueOffset).toString());
-                                    for (let j = 0; j < item.keyTimes.length; j++) {
-                                        if (j < item.keyTimes.length - 1) {
-                                            const offsetFrom = parseFloat(item.values[j]);
-                                            const offsetTo = parseFloat(item.values[j + 1]);
-                                            const increasing = offsetTo > offsetFrom;
-                                            const segDuration = (item.keyTimes[j + 1] - item.keyTimes[j]) * duration;
-                                            let offsetTotal = Math.abs(offsetTo - offsetFrom);
-                                            let finalValue = ((offsetTo % totalLength) / totalLength).toString();
-                                            function getKeyTimeIncrement(value: number) {
-                                                return $math.truncatePrecision(((value / offsetTotal) * segDuration) / duration);
+                                    const iterationCount = item.keyTimes.length - 1;
+                                    for (let j = 0; j < iterationCount; j++) {
+                                        const offsetFrom = parseFloat(item.values[j]);
+                                        const offsetTo = parseFloat(item.values[j + 1]);
+                                        const offsetValue = Math.abs(offsetTo - offsetFrom);
+                                        const increasing = offsetTo > offsetFrom;
+                                        const keyTimeTo = item.keyTimes[j + 1];
+                                        const segDuration = (keyTimeTo - item.keyTimes[j]) * duration;
+                                        const offsetTotal = offsetValue * flattenData.lengthRatio;
+                                        function getKeyTimeIncrement(offset: number) {
+                                            return ((offset / offsetTotal) * segDuration) / duration;
+                                        }
+                                        function getFinalValue(offset: number) {
+                                            offset %= totalLength;
+                                            if (offset < 0) {
+                                                 offset += totalLength;
                                             }
-                                            while (offsetTotal > 0) {
-                                                let ignoreFraction = false;
-                                                if (previousRemainder !== 0) {
-                                                    let previousOffset = parseFloat(values[values.length - 1]);
-                                                    if (previousOffset > 0 && previousOffset < 1) {
-                                                        if (previousIncreasing && !increasing || !previousIncreasing && increasing) {
-                                                            previousOffset = 1 - previousOffset;
-                                                        }
-                                                        previousOffset *= totalLength;
-                                                        if (offsetTotal >= previousOffset) {
-                                                            values.push(increasing ? '0' : '1');
-                                                        }
-                                                        else {
-                                                            values.push(finalValue);
-                                                        }
-                                                        const remainderOffset = offsetTotal - previousOffset;
-                                                        if (remainderOffset > 0) {
-                                                            keyTime += getKeyTimeIncrement(previousOffset);
-                                                            keyTimes.push(keyTime);
-                                                            offsetTotal -= previousOffset;
-                                                            previousRemainder = 0;
-                                                        }
-                                                        else {
-                                                            keyTime = item.keyTimes[j + 1];
-                                                            keyTimes.push(keyTime);
-                                                            break;
-                                                        }
-                                                    }
+                                            offset = (offset / totalLength) * extendedRatio;
+                                            if (increasing) {
+                                                offset = 1 - offset;
+                                            }
+                                            else {
+                                                if ($math.truncatePrecision(offset) === 0) {
+                                                    offset = 1;
                                                 }
-                                                else if (previousIncreasing !== undefined) {
-                                                    if (increasing) {
-                                                        ignoreFraction = previousIncreasing;
-                                                    }
-                                                    else {
-                                                        ignoreFraction = !previousIncreasing;
-                                                    }
-                                                    previousIncreasing = undefined;
-                                                }
-                                                else if (keyTimes.length) {
-                                                    const value = values[values.length - 1];
-                                                    if (increasing) {
-                                                        ignoreFraction = value === '1';
-                                                    }
-                                                    else {
-                                                        ignoreFraction = value === '0';
-                                                    }
-                                                }
-                                                if (!ignoreFraction) {
-                                                    keyTimes.push(keyTime + (keyTime !== 0 ? repeatFraction : 0));
-                                                }
-                                                if (offsetTotal > totalLength) {
-                                                    if (increasing) {
-                                                        if (!ignoreFraction) {
-                                                            values.push('1');
-                                                        }
-                                                        values.push('0');
-                                                    }
-                                                    else {
-                                                        if (!ignoreFraction) {
-                                                            values.push('0');
-                                                        }
-                                                        values.push('1');
-                                                    }
-                                                    keyTime = getKeyTimeIncrement(totalLength);
-                                                    keyTimes.push(keyTime);
+                                            }
+                                            return offset;
+                                        }
+                                        function getPreviousRemaining(offset: number, length = 1) {
+                                            if (previousIncreasing && !increasing || !previousIncreasing && increasing) {
+                                                offset = 1 - offset;
+                                            }
+                                            return offset * length;
+                                        }
+                                        function checkDuplicateFraction() {
+                                            if (j > 0) {
+                                                if (increasing) {
+                                                    return values[values.length - 1] === '1';
                                                 }
                                                 else {
-                                                    if (!ignoreFraction) {
-                                                        if (increasing) {
-                                                            values.push('1');
-                                                        }
-                                                        else {
-                                                            values.push('0');
-                                                        }
-                                                        if (finalValue === '0' && values[values.length - 1] === '0') {
-                                                            finalValue = '1';
-                                                        }
-                                                    }
-                                                    values.push(finalValue);
-                                                    keyTime = item.keyTimes[j + 1];
-                                                    keyTimes.push(keyTime);
-                                                    previousIncreasing = increasing;
-                                                    previousRemainder = offsetTotal;
+                                                    return values[values.length - 1] === '0';
                                                 }
-                                                offsetTotal -= totalLength;
+                                            }
+                                            return false;
+                                        }
+                                        let offsetRemaining = offsetTotal;
+                                        let iterationTotal = offsetTotal / totalLength;
+                                        let iterationDecrement = totalLength;
+                                        let finalValue = getFinalValue(offsetTo);
+                                        if (previousRemaining > 0) {
+                                            const remaining = getPreviousRemaining(previousRemaining);
+                                            const remainingValue = remaining * totalLength;
+                                            const remainingTotal = offsetRemaining - remainingValue;
+                                            if (remainingTotal > 0) {
+                                                values.push(increasing ? '0' : '1');
+                                                keyTime += getKeyTimeIncrement(remainingValue);
+                                                keyTimes.push(keyTime);
+                                                iterationTotal -= remaining;
+                                                offsetRemaining = remainingTotal;
+                                                previousRemaining = 0;
+                                            }
+                                            else {
+                                                if (offsetRemaining === remainingValue) {
+                                                    values.push(increasing ? '0' : '1');
+                                                    previousRemaining = 0;
+                                                }
+                                                else {
+                                                    values.push(finalValue.toString());
+                                                    previousRemaining = $math.truncatePrecision(finalValue) === 1 ? 0 : finalValue;
+                                                }
+                                                keyTime = item.keyTimes[j + 1];
+                                                keyTimes.push(keyTime);
+                                                previousIncreasing = increasing;
+                                                break;
                                             }
                                         }
+                                        const excessRemaining = Math.floor(offsetRemaining) > Math.floor(totalLength);
+                                        if (j < iterationCount - 1) {
+                                            function setFinalValue(offset: number) {
+                                                finalValue = (offsetRemaining - offset) / totalLength;
+                                                if (increasing) {
+                                                    finalValue = 1 - finalValue;
+                                                }
+                                            }
+                                            if (excessRemaining) {
+                                                iterationTotal = Math.floor(iterationTotal);
+                                                setFinalValue(iterationTotal * iterationDecrement);
+                                            }
+                                            else {
+                                                iterationTotal = 0;
+                                                setFinalValue(0);
+                                            }
+                                        }
+                                        else {
+                                            if (excessRemaining) {
+                                                const finalTotal = offsetRemaining - finalValue * totalLength;
+                                                if (finalTotal > totalLength) {
+                                                    iterationTotal -= finalValue;
+                                                    offsetRemaining = finalTotal;
+                                                    iterationTotal = Math.max(Math.floor(iterationTotal), 1);
+                                                    iterationDecrement = offsetRemaining / iterationTotal;
+                                                }
+                                                else {
+                                                    iterationTotal = 1;
+                                                }
+                                            }
+                                            else {
+                                                iterationTotal = 0;
+                                            }
+                                        }
+                                        while (iterationTotal > 0) {
+                                            const ignoreFraction = checkDuplicateFraction();
+                                            if (!ignoreFraction) {
+                                                keyTimes.push(keyTime + (keyTime !== 0 ? repeatFraction : 0));
+                                            }
+                                            if (increasing) {
+                                                if (!ignoreFraction) {
+                                                    values.push('1');
+                                                }
+                                                values.push('0');
+                                            }
+                                            else {
+                                                if (!ignoreFraction) {
+                                                    values.push('0');
+                                                }
+                                                values.push('1');
+                                            }
+                                            keyTime += getKeyTimeIncrement(iterationDecrement);
+                                            keyTimes.push(keyTime);
+                                            iterationTotal--;
+                                        }
+                                        if (!checkDuplicateFraction()) {
+                                            keyTimes.push(keyTime + (keyTime !== 0 ? repeatFraction : 0));
+                                            if (increasing) {
+                                                values.push('1');
+                                            }
+                                            else {
+                                                values.push('0');
+                                            }
+                                        }
+                                        if (j === iterationCount - 1) {
+                                            finalValue = $math.truncatePrecision((finalValue * flattenData.lengthRatio) % 1);
+                                            if (increasing) {
+                                                if (finalValue === 1) {
+                                                    finalValue = 0;
+                                                }
+                                            }
+                                            else {
+                                                if (finalValue === 0) {
+                                                    finalValue = 1;
+                                                }
+                                            }
+                                        }
+                                        values.push(finalValue.toString());
+                                        keyTime = keyTimeTo;
+                                        keyTimes.push(keyTime);
+                                        previousIncreasing = increasing;
+                                        previousRemaining = finalValue > 0 && finalValue < 1 ? finalValue : 0;
                                     }
                                     item.baseValue = undefined;
                                     item.replaceValue = '0';

@@ -116,10 +116,10 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                 node.android('layout_width', $util.formatPX(node.bounds.width));
             }
             if (layoutWidth > 0 && node.cssInitial('width') === 'auto' && node.renderChildren.every(item => item.inlineWidth)) {
-                for (const item of node.renderChildren) {
+                node.renderEach((item: T) => {
                     item.android('layout_width', '0px');
                     item.android('layout_columnWeight', '1');
-                }
+                });
             }
         }
     }

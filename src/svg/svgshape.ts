@@ -27,7 +27,11 @@ export default class SvgShape extends SvgSynchronize$MX(SvgView$MX(SvgElement)) 
     public build(options?: SvgBuildOptions) {
         if (this.path) {
             this.path.parent = this.parent;
-            SvgPath.build(this.path, this.transforms, options);
+            if (options === undefined) {
+                options = {};
+            }
+            options.transforms = this.transforms;
+            this.path.build(options);
         }
     }
 

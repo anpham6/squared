@@ -254,6 +254,23 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return value;
     }
 
+    public static transformRefit(value: string, transforms?: SvgTransform[], companion?: SvgShape, precision?: number) {
+        const commands = SvgBuild.getPathCommands(value);
+        if (commands.length) {
+            let points = SvgBuild.extractPathPoints(commands);
+            if (points.length) {
+                if (transforms && transforms.length) {
+                    points = SvgBuild.applyTransforms(transforms, points, companion && TRANSFORM.origin(companion.element));
+                }
+                if (companion && companion.parent && companion.parent.requireRefit()) {
+                    companion.parent.refitPoints(points);
+                }
+                value = SvgBuild.drawPath(SvgBuild.rebindPathPoints(commands, points), precision);
+            }
+        }
+        return value;
+    }
+
     public static getPathCommands(value: string) {
         const result: SvgPathCommand[] = [];
         const pattern = /([A-Za-z])([^A-Za-z]+)?/g;

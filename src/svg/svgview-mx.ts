@@ -29,7 +29,8 @@ const ANIMATION_DEFAULT: StringMap = {
     'animation-timing-function': 'ease'
 };
 
-const REGEXP_CUBICBEZIER = new RegExp(`cubic-bezier\\((${$util.REGEXP_STRING.ZERO_ONE}), (${$util.REGEXP_STRING.DECIMAL}), (${$util.REGEXP_STRING.ZERO_ONE}), (${$util.REGEXP_STRING.DECIMAL})\\)`);
+const REGEXP_CUBICBEZIER = `cubic-bezier\\((${$util.REGEXP_STRING.ZERO_ONE}), (${$util.REGEXP_STRING.DECIMAL}), (${$util.REGEXP_STRING.ZERO_ONE}), (${$util.REGEXP_STRING.DECIMAL})\\)`;
+const REGEXP_TIMINGFUNCTION = `(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+, (?:start|end)\\)|${REGEXP_CUBICBEZIER}),?\\s*`;
 
 function setAttribute(element: SVGElement, attr: string, value: string) {
     element.style[attr] = value;
@@ -37,25 +38,13 @@ function setAttribute(element: SVGElement, attr: string, value: string) {
 }
 
 function parseAttribute(element: SVGElement, attr: string) {
-    let value = $dom.cssAttribute(element, attr);
+    const value = $dom.cssAttribute(element, attr);
     if (attr === 'animation-timing-function') {
+        const pattern = new RegExp(REGEXP_TIMINGFUNCTION, 'g');
+        let match: RegExpMatchArray | null;
         const result: string[] = [];
-        while (value !== '') {
-            let index = value.indexOf(',');
-            if (index !== -1) {
-                let seg = value.substring(0, index);
-                if (seg.startsWith('steps') || seg.startsWith('cubic-bezier')) {
-                    const nextIndex = value.indexOf(')', index) + 1;
-                    seg += value.substring(index, nextIndex);
-                    index = nextIndex;
-                }
-                result.push(seg);
-                value = value.substring(index + 1).trim();
-            }
-            else {
-                result.push(value);
-                break;
-            }
+        while ((match = pattern.exec(value)) !== null) {
+            result.push(match[1]);
         }
         return result;
     }
@@ -363,7 +352,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                             keySplines[j] = KEYSPLINE_NAME.linear;
                                         }
                                         else {
-                                            const match = REGEXP_CUBICBEZIER.exec(keySplines[j]);
+                                            const match = new RegExp(REGEXP_CUBICBEZIER).exec(keySplines[j]);
                                             keySplines[j] = match ? `${match[1]} ${match[2]} ${match[3]} ${match[4]}` : KEYSPLINE_NAME.ease;
                                         }
                                         keySplinesData.push(keySplines[j]);

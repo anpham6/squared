@@ -16,8 +16,8 @@ declare global {
         }
 
         class SvgPath implements SvgPath {
-            public static extrapolate(attr: string, value: string, values: string[], companion?: SvgShape, transforms?: SvgTransform[], precision?: number): string[] | undefined;
-            public static build(path: SvgPath, transform: SvgTransform[], options?: SvgBuildOptions): SvgPath;
+            public static transform(value: string, transforms: SvgTransform[], element?: SVGGeometryElement, precision?: number): string;
+            public static extrapolate(attr: string, value: string, values: string[], transforms?: SvgTransform[], companion?: SvgShape, precision?: number): string[] | undefined;
             constructor(element: SVGGeometryElement);
         }
     }
