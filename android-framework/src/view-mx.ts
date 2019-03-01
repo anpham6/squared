@@ -484,14 +484,12 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         public setLayout() {
-            const parent = this.absoluteParent;
-            const renderParent = this.renderParent;
-            const children = this.renderChildren;
+            const { absoluteParent: parent, renderParent, renderChildren } = this;
             if (this.documentBody) {
-                if (!this.hasWidth && children.some(node => node.alignParent('right'))) {
+                if (!this.hasWidth && renderChildren.some(node => node.alignParent('right'))) {
                     this.android('layout_width', 'match_parent', false);
                 }
-                if (!this.hasHeight && children.some(node => node.alignParent('bottom'))) {
+                if (!this.hasHeight && renderChildren.some(node => node.alignParent('bottom'))) {
                     this.android('layout_height', 'match_parent', false);
                 }
             }
@@ -536,18 +534,18 @@ export default (Base: Constructor<squared.base.Node>) => {
                 if (this.plainText) {
                     this.android('layout_width', renderParent && this.bounds.width > renderParent.box.width && this.multiline && this.alignParent('left') ? 'match_parent' : 'wrap_content', false);
                 }
-                else if (children.some(node => (node.inlineStatic && !node.plainText || $util.isUnit(node.cssInitial('width'))) && !node.autoMargin.horizontal && Math.ceil(node.bounds.width) >= this.box.width)) {
+                else if (renderChildren.some(node => (node.inlineStatic && !node.plainText || $util.isUnit(node.cssInitial('width'))) && !node.autoMargin.horizontal && Math.ceil(node.bounds.width) >= this.box.width)) {
                     this.android('layout_width', 'wrap_content', false);
                 }
                 else if (
                     this.flexElement && renderParent && renderParent.hasWidth ||
-                    this.groupParent && children.some(node => !(node.plainText && node.multiline) && node.linear.width >= this.documentParent.box.width) ||
+                    this.groupParent && renderChildren.some(node => !(node.plainText && node.multiline) && node.linear.width >= this.documentParent.box.width) ||
                     blockStatic && (this.documentBody || !!parent && (
                         parent.documentBody ||
                         parent.has('width', $enum.CSS_STANDARD.PERCENT) ||
                         parent.blockStatic && (this.singleChild || this.alignedVertically(this.previousSiblings()))
                     )) ||
-                    this.layoutFrame && ($NodeList.floated(children).size === 2 || children.some(node => node.blockStatic && (node.autoMargin.leftRight || node.rightAligned))))
+                    this.layoutFrame && ($NodeList.floated(renderChildren).size === 2 || renderChildren.some(node => node.blockStatic && (node.autoMargin.leftRight || node.rightAligned))))
                 {
                     this.android('layout_width', 'match_parent', false);
                 }
@@ -564,7 +562,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                     if ((!wrap || blockStatic) && (
                             !!parent && this.linear.width >= parent.box.width ||
                             this.layoutVertical && !this.autoMargin.horizontal ||
-                            !this.documentRoot && children.some(node => node.layoutVertical && !node.autoMargin.horizontal && !node.hasWidth && !node.floating)
+                            !this.documentRoot && renderChildren.some(node => node.layoutVertical && !node.autoMargin.horizontal && !node.hasWidth && !node.floating)
                        ))
                     {
                         this.android('layout_width', 'match_parent', false);
@@ -928,15 +926,15 @@ export default (Base: Constructor<squared.base.Node>) => {
         private alignHorizontalLayout() {
             if (this.layoutHorizontal) {
                 if (this.layoutLinear) {
-                    const children = this.renderChildren;
+                    const renderChildren = this.renderChildren;
                     let baseline: T | undefined;
-                    if (children.some(node => node.floating) && !children.some(node => node.imageElement && node.baseline)) {
+                    if (renderChildren.some(node => node.floating) && !renderChildren.some(node => node.imageElement && node.baseline)) {
                         this.android('baselineAligned', 'false');
                     }
                     else {
-                        baseline = $NodeList.baseline(children.filter(node => node.baseline && !node.layoutRelative && !node.layoutConstraint), true)[0];
+                        baseline = $NodeList.baseline(renderChildren.filter(node => node.baseline && !node.layoutRelative && !node.layoutConstraint), true)[0];
                         if (baseline) {
-                            this.android('baselineAlignedChildIndex', children.indexOf(baseline).toString());
+                            this.android('baselineAlignedChildIndex', renderChildren.indexOf(baseline).toString());
                         }
                     }
                     let lineHeight = this.lineHeight;

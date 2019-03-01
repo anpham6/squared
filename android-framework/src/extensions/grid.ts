@@ -126,10 +126,8 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                                         mainData.paddingBottom = heightBottom;
                                     }
                                     else {
-                                        this.application.controllerHandler.appendAfter(
-                                            item.id,
-                                            (<android.base.Controller<T>> this.application.controllerHandler).renderSpace(item.renderDepth, 'match_parent', $util.formatPX(heightBottom), mainData.columnCount)
-                                        );
+                                        const controller = <android.base.Controller<T>> this.application.controllerHandler;
+                                        controller.appendAfter(item.id, controller.renderSpace(item.renderDepth, 'match_parent', $util.formatPX(heightBottom), mainData.columnCount));
                                     }
                                 }
                                 mainData.paddingRight = Math.max(actualParent.marginRight + actualParent.paddingRight, mainData.paddingRight);

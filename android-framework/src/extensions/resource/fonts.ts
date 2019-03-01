@@ -133,8 +133,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         for (const tag in nameMap) {
             const sorted: StyleList[] = [];
             for (let node of nameMap[tag]) {
-                const controlId = node.id;
-                const companion = node.companion;
+                const { id, companion } = node;
                 if (companion && !companion.visible && companion.tagName === 'LABEL') {
                     node = companion as T;
                 }
@@ -186,7 +185,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         if (sorted[i][attr] === undefined) {
                             sorted[i][attr] = [];
                         }
-                        sorted[i][attr].push(controlId);
+                        sorted[i][attr].push(id);
                     }
                 }
             }

@@ -101,10 +101,8 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
         }
         node.mergeGravity('layout_gravity', 'fill');
         if (spaceSpan > 0) {
-            this.application.controllerHandler.appendAfter(
-                node.id,
-                (<android.base.Controller<T>> this.application.controllerHandler).renderSpace(parent.renderDepth + 1, 'wrap_content', 'wrap_content', spaceSpan)
-            );
+            const controller = <android.base.Controller<T>> this.application.controllerHandler;
+            controller.appendAfter(node.id, controller.renderSpace(parent.renderDepth + 1, 'wrap_content', 'wrap_content', spaceSpan));
         }
         return { output: '' };
     }

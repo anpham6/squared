@@ -39,7 +39,8 @@ export default class ScrollView<T extends android.base.View> extends squared.bas
             return null;
         }) as T[];
         if (children.length > 1) {
-            const container = this.application.controllerHandler.createNodeGroup(node, children, parent, replaceWith);
+            const controller = this.application.controllerHandler;
+            const container = controller.createNodeGroup(node, children, parent, replaceWith);
             container.alignmentType |= $enum.NODE_ALIGNMENT.HORIZONTAL | (parent.length !== children.length ? $enum.NODE_ALIGNMENT.SEGMENTED : 0);
             if (parent.layoutConstraint) {
                 container.companion = replaceWith || node;
@@ -61,7 +62,7 @@ export default class ScrollView<T extends android.base.View> extends squared.bas
             container.android('orientation', $NodeList.linearX(children) ? AXIS_ANDROID.HORIZONTAL : AXIS_ANDROID.VERTICAL);
             container.render(target ? container : parent);
             this.subscribers.add(container);
-            const outputAs = this.application.controllerHandler.getEnclosingTag(
+            const outputAs = controller.getEnclosingTag(
                 RADIO_GROUP,
                 container.id,
                 target ? -1 : container.renderDepth, $xml.formatPlaceholder(container.id)

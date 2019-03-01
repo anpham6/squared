@@ -536,13 +536,13 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     public processTraverseHorizontal(layout: $Layout<T>, siblings?: T[]) {
-        const parent = layout.parent;
+        const { node, parent, children } = layout;
         if (this.checkFrameHorizontal(layout)) {
-            layout.node = this.createNodeGroup(layout.node, layout.children, layout.parent);
+            layout.node = this.createNodeGroup(node, children, parent);
             layout.renderType |= $enum.NODE_ALIGNMENT.FLOAT | $enum.NODE_ALIGNMENT.HORIZONTAL;
         }
         else if (siblings === undefined || layout.length !== siblings.length) {
-            layout.node = this.createNodeGroup(layout.node, layout.children, layout.parent);
+            layout.node = this.createNodeGroup(node, children, parent);
             this.processLayoutHorizontal(layout);
         }
         else {
@@ -552,14 +552,14 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     public processTraverseVertical(layout: $Layout<T>, siblings?: T[]) {
-        const parent = layout.parent;
-        if (layout.floated.size && layout.cleared.size && !(layout.floated.size === 1 && layout.every((node, index) => index === 0 || index === layout.length - 1 || layout.cleared.has(node)))) {
-            layout.node = this.createNodeGroup(layout.node, layout.children, parent);
+        const { node, parent, children, floated, cleared } = layout;
+        if (floated.size && cleared.size && !(floated.size === 1 && layout.every((item, index) => index === 0 || index === layout.length - 1 || cleared.has(item)))) {
+            layout.node = this.createNodeGroup(node, children, parent);
             layout.renderType |= $enum.NODE_ALIGNMENT.FLOAT | $enum.NODE_ALIGNMENT.VERTICAL;
         }
         else if (siblings === undefined || layout.length !== siblings.length) {
             if (!parent.layoutVertical) {
-                layout.node = this.createNodeGroup(layout.node, layout.children, parent);
+                layout.node = this.createNodeGroup(node, children, parent);
                 layout.setType(CONTAINER_NODE.LINEAR, $enum.NODE_ALIGNMENT.VERTICAL);
             }
         }
@@ -791,23 +791,23 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     public renderNodeGroup(layout: $Layout<T>) {
-        const node = layout.node;
+        const { node, parent, containerType, alignmentType, rowCount, columnCount } = layout;
         const options = createViewAttribute();
         let valid = false;
-        switch (layout.containerType) {
+        switch (containerType) {
             case CONTAINER_NODE.LINEAR:
-                if ($util.hasBit(layout.alignmentType, $enum.NODE_ALIGNMENT.VERTICAL)) {
+                if ($util.hasBit(alignmentType, $enum.NODE_ALIGNMENT.VERTICAL)) {
                     options.android.orientation = AXIS_ANDROID.VERTICAL;
                     valid = true;
                 }
-                else if ($util.hasBit(layout.alignmentType, $enum.NODE_ALIGNMENT.HORIZONTAL)) {
+                else if ($util.hasBit(alignmentType, $enum.NODE_ALIGNMENT.HORIZONTAL)) {
                     options.android.orientation = AXIS_ANDROID.HORIZONTAL;
                     valid = true;
                 }
                 break;
             case CONTAINER_NODE.GRID:
-                options.android.rowCount = layout.rowCount ? layout.rowCount.toString() : '';
-                options.android.columnCount = layout.columnCount ? layout.columnCount.toString() : '2';
+                options.android.rowCount = rowCount ? rowCount.toString() : '';
+                options.android.columnCount = columnCount ? columnCount.toString() : '2';
                 valid = true;
                 break;
             case CONTAINER_NODE.FRAME:
@@ -818,10 +818,10 @@ export default class Controller<T extends View> extends squared.base.Controller<
         }
         if (valid) {
             const target = $util.hasValue(node.dataset.target) && !$util.hasValue(node.dataset.use);
-            const controlName = View.getControlName(layout.containerType);
-            node.alignmentType |= layout.alignmentType;
-            node.setControlType(controlName, layout.containerType);
-            node.render(target ? node : layout.parent);
+            const controlName = View.getControlName(containerType);
+            node.alignmentType |= alignmentType;
+            node.setControlType(controlName, containerType);
+            node.render(target ? node : parent);
             node.apply(options);
             return this.getEnclosingTag(controlName, node.id, target ? -1 : node.renderDepth, $xml.formatPlaceholder(node.id));
         }
@@ -829,11 +829,10 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     public renderNode(layout: $Layout<T>) {
-        const node = layout.node;
-        const parent = layout.parent;
-        node.alignmentType |= layout.alignmentType;
-        const controlName = View.getControlName(layout.containerType);
-        node.setControlType(controlName, layout.containerType);
+        const { node, parent, containerType, alignmentType } = layout;
+        node.alignmentType |= alignmentType;
+        const controlName = View.getControlName(containerType);
+        node.setControlType(controlName, containerType);
         const target = $util.hasValue(node.dataset.target) && !$util.hasValue(node.dataset.use);
         switch (node.element && node.element.tagName) {
             case 'IMG': {
@@ -1598,7 +1597,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
 
     protected processConstraintHorizontal(node: T, children: T[]) {
         const baseline = $NodeList.baseline(children)[0] as T | undefined;
-        const textBaseline = $NodeList.baseline(children, true)[0] as T | undefined;
+        const baselineText = $NodeList.baseline(children, true)[0] as T | undefined;
         let textBottom = getTextBottom(children);
         const reverse = node.hasAlign($enum.NODE_ALIGNMENT.RIGHT);
         if (baseline) {
@@ -1623,8 +1622,8 @@ export default class Controller<T extends View> extends squared.base.Controller<
             if (item.inlineVertical) {
                 switch (item.verticalAlign) {
                     case 'text-top':
-                        if (textBaseline && item !== textBaseline) {
-                            item.anchor('top', textBaseline.documentId);
+                        if (baselineText && item !== baselineText) {
+                            item.anchor('top', baselineText.documentId);
                         }
                         break;
                     case 'super':
@@ -1635,8 +1634,8 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         item.anchorParent(AXIS_ANDROID.VERTICAL);
                         break;
                     case 'text-bottom':
-                        if (textBaseline && item !== textBaseline && item !== textBottom) {
-                            item.anchor('bottom', textBaseline.documentId);
+                        if (baselineText && item !== baselineText && item !== textBottom) {
+                            item.anchor('bottom', baselineText.documentId);
                         }
                         break;
                     case 'sub':

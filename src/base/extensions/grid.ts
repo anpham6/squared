@@ -181,13 +181,13 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                             }
                         }
                         else {
-                            const current = columns.length - 1;
-                            if (columns[current]) {
-                                let minLeft = columns[current][0].linear.left;
-                                let maxRight = columns[current][0].linear.right;
-                                for (let k = 1; k < columns[current].length; k++) {
-                                    minLeft = Math.min(minLeft, columns[current][k].linear.left);
-                                    maxRight = Math.max(maxRight, columns[current][k].linear.right);
+                            const endIndex = columns.length - 1;
+                            if (columns[endIndex]) {
+                                let minLeft = columns[endIndex][0].linear.left;
+                                let maxRight = columns[endIndex][0].linear.right;
+                                for (let k = 1; k < columns[endIndex].length; k++) {
+                                    minLeft = Math.min(minLeft, columns[endIndex][k].linear.left);
+                                    maxRight = Math.max(maxRight, columns[endIndex][k].linear.right);
                                 }
                                 if (nextX.linear.left > minLeft && nextX.linear.right > maxRight) {
                                     const index = getRowIndex(columns, nextX);
@@ -195,7 +195,7 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                                         for (let k = columns.length - 1; k >= 0; k--) {
                                             if (columns[k]) {
                                                 if (columns[k][index] === undefined) {
-                                                    columns[current].length = 0;
+                                                    columns[endIndex].length = 0;
                                                 }
                                                 break;
                                             }

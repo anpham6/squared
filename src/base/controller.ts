@@ -82,17 +82,17 @@ export default abstract class Controller<T extends Node> implements squared.base
 
     public getEnclosingTag(controlName: string, id: number, depth: number, xml = '') {
         const indent = '\t'.repeat(Math.max(0, depth));
-        let result = `{<${id}}`;
+        let output = `{<${id}}`;
         if (xml !== '') {
-            result += indent + `<${controlName}${depth === 0 ? '{#0}' : ''}{@${id}}>\n` +
+            output += indent + `<${controlName}${depth === 0 ? '{#0}' : ''}{@${id}}>\n` +
                                xml +
                       indent + `</${controlName}>\n`;
         }
         else {
-            result += indent + `<${controlName}${depth === 0 ? '{#0}' : ''}{@${id}} />\n`;
+            output += indent + `<${controlName}${depth === 0 ? '{#0}' : ''}{@${id}} />\n`;
         }
-        result += `{>${id}}`;
-        return result;
+        output += `{>${id}}`;
+        return output;
     }
 
     public removePlaceholders(value: string) {

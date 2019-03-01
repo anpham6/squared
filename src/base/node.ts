@@ -467,13 +467,13 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public cssAscend(attr: string, startChild = false, visible = false) {
-        let result = '';
+        let value = '';
         let current = startChild ? this : this.actualParent;
         while (current) {
-            result = current.cssInitial(attr);
-            if (result !== '') {
+            value = current.cssInitial(attr);
+            if (value !== '') {
                 if (visible && !current.visible) {
-                    result = '';
+                    value = '';
                 }
                 else {
                     break;
@@ -484,7 +484,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             }
             current = current.actualParent;
         }
-        return result;
+        return value;
     }
 
     public cssSort(attr: string, desc = false, duplicate = false) {
@@ -512,12 +512,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             if (!negative) {
                 value = Math.max(0, value);
             }
-            const result = $util.formatPX(value);
-            this.css(attr, result);
+            const unit = $util.formatPX(value);
+            this.css(attr, unit);
             if (cache) {
                 this.unsetCache(attr);
             }
-            return result;
+            return unit;
         }
         return '';
     }
@@ -559,7 +559,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public convertPercent(value: string, horizontal: boolean, parent = true) {
         if ($util.isPercent(value)) {
-            const node = (parent ? this.absoluteParent : null) || this;
+            const node = parent && this.absoluteParent || this;
             const attr = horizontal ? 'width' : 'height';
             let dimension: number;
             if (node.has(attr, CSS_STANDARD.UNIT)) {
@@ -627,17 +627,16 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                             }
                         }
                     }
-                    let result = checkType === 0;
                     if ($util.hasBit(checkType, CSS_STANDARD.UNIT) && $util.isUnit(value)) {
-                        result = true;
+                        return true;
                     }
                     if ($util.hasBit(checkType, CSS_STANDARD.PERCENT) && $util.isPercent(value)) {
-                        result = true;
+                        return true;
                     }
                     if ($util.hasBit(checkType, CSS_STANDARD.AUTO)) {
-                        result = false;
+                        return false;
                     }
-                    return result;
+                    return checkType === 0;
             }
         }
         return false;
@@ -891,14 +890,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     private convertPosition(attr: string) {
-        let result = 0;
+        let value = 0;
         if (!this.positionStatic) {
-            const value = this.cssInitial(attr);
-            if ($util.isUnit(value) || $util.isPercent(value)) {
-                result = $util.convertInt(this.percentValue(attr, value, attr === 'left' || attr === 'right'));
+            const unit = this.cssInitial(attr);
+            if ($util.isUnit(unit) || $util.isPercent(unit)) {
+                value = $util.convertInt(this.percentValue(attr, unit, attr === 'left' || attr === 'right'));
             }
         }
-        return result;
+        return value;
     }
 
     private convertBox(region: string, direction: string) {

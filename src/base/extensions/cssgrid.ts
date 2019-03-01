@@ -69,13 +69,13 @@ function convertUnit<T extends Node>(node: T, value: string) {
 }
 
 function getColumnTotal<T extends Node>(rows: (T[] | undefined)[]) {
-    let result = 0;
+    let value = 0;
     for (const row of rows) {
         if (row) {
-            result++;
+            value++;
         }
     }
-    return result;
+    return value;
 }
 
 export default class CssGrid<T extends Node> extends Extension<T> {

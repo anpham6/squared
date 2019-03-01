@@ -16,14 +16,14 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
         const styles: ObjectMap<string[]> = {};
         for (const node of this.application.session.cache) {
             if (node.visible) {
-                const children = node.renderChildren;
-                if (node.controlId && children.length > 1) {
+                const renderChildren = node.renderChildren;
+                if (node.controlId && renderChildren.length > 1) {
                     const attrMap = new Map<string, number>();
                     let style = '';
                     let valid = true;
-                    for (let i = 0; i < children.length; i++) {
+                    for (let i = 0; i < renderChildren.length; i++) {
                         let found = false;
-                        children[i].combine('_', 'android').some(value => {
+                        renderChildren[i].combine('_', 'android').some(value => {
                             if (value.startsWith('style=')) {
                                 if (i === 0) {
                                     style = value;
@@ -46,7 +46,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                     }
                     if (valid) {
                         for (const [attr, value] of attrMap.entries()) {
-                            if (value !== children.length) {
+                            if (value !== renderChildren.length) {
                                 attrMap.delete(attr);
                             }
                         }
@@ -58,7 +58,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                             for (const attr of attrMap.keys()) {
                                 const match = attr.match(/(\w+):(\w+)="([^"]+)"/);
                                 if (match) {
-                                    for (const item of children) {
+                                    for (const item of renderChildren) {
                                         item.delete(match[1], match[2]);
                                     }
                                     common.push(match[0]);
@@ -76,7 +76,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                                 name = $util.convertCamelCase((style !== '' ? `${style}.` : '') + $util.capitalize(node.controlId), '_');
                                 styles[name] = common;
                             }
-                            for (const item of children) {
+                            for (const item of renderChildren) {
                                 item.attr('_', 'style', `@style/${name}`);
                             }
                         }

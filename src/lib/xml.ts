@@ -186,7 +186,7 @@ export function formatTemplate(value: string, closeEmpty = true, char = '\t') {
         });
     }
     const closed = /\/>\n*$/;
-    let result = '';
+    let output = '';
     let indent = -1;
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
@@ -216,14 +216,14 @@ export function formatTemplate(value: string, closeEmpty = true, char = '\t') {
             let firstLine = true;
             for (const partial of line.tag.trim().split('\n')) {
                 const depth = previous + (firstLine ? 0 : 1);
-                result += (depth > 0 ? char.repeat(depth) : '') + partial.trim() + '\n';
+                output += (depth > 0 ? char.repeat(depth) : '') + partial.trim() + '\n';
                 firstLine = false;
             }
         }
         else {
-            result += line.tag + '\n';
+            output += line.tag + '\n';
         }
-        result += line.value;
+        output += line.value;
     }
-    return result.trim();
+    return output.trim();
 }

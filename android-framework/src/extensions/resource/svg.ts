@@ -274,16 +274,16 @@ function getParentOffset(element: SVGGraphicsElement, rootElement: SVGGraphicsEl
 }
 
 function getOuterOpacity(target: SvgView) {
-    let result = parseFloat(target.opacity);
+    let value = parseFloat(target.opacity);
     let current = target.parent;
     while (current) {
         const opacity = parseFloat(current['opacity'] || '1');
         if (!isNaN(opacity) && opacity < 1) {
-            result *= opacity;
+            value *= opacity;
         }
         current = current['parent'];
     }
-    return result;
+    return value;
 }
 
 function partitionTransforms(element: SVGGraphicsElement, transforms: SvgTransform[], rx = 1, ry = 1): [SvgTransform[][], SvgTransform[]] {
@@ -378,15 +378,15 @@ function groupTransforms(element: SVGGraphicsElement, transforms: SvgTransform[]
 }
 
 function getPropertyValue(values: string[] | (string | number)[][], index: number, propertyIndex: number, keyFrames = false, baseValue?: string) {
-    let result: string | undefined;
-    const value = values[index];
-    if (value) {
-        result = Array.isArray(value) ? value[propertyIndex].toString() : value;
+    let value: string | undefined;
+    const property = values[index];
+    if (property) {
+        value = Array.isArray(property) ? property[propertyIndex].toString() : property;
     }
     else if (!keyFrames && index === 0) {
-        result = baseValue;
+        value = baseValue;
     }
-    return result || '';
+    return value || '';
 }
 
 function getValueType(attr: string) {
@@ -887,7 +887,6 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                             const beforeValues: string[] = [];
                                             if (!synchronized && options.valueType === 'pathType') {
                                                 if (group.pathData) {
-                                                    propertyNames = ['pathData'];
                                                     let transforms: SvgTransform[] | undefined;
                                                     let companion: $SvgShape | undefined;
                                                     if (item.parent && $SvgBuild.isShape(item.parent)) {
@@ -896,6 +895,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                             transforms = item.parent.path.transformed;
                                                         }
                                                     }
+                                                    propertyNames = ['pathData'];
                                                     values = $SvgPath.extrapolate(item.attributeName, group.pathData, item.values, transforms, companion, this.options.floatPrecisionValue);
                                                 }
                                             }

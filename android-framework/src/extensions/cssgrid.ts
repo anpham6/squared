@@ -34,21 +34,21 @@ function getRowData<T extends View>(mainData: CssGridData<T>, direction: string)
 
 function getGridSize<T extends View>(mainData: CssGridData<T>, direction: string, node: T) {
     const dimension = direction === 'column' ? 'width' : 'height';
-    let result = 0;
+    let value = 0;
     for (let i = 0; i < mainData[direction].count; i++) {
-        const value = mainData[direction].unit[i];
-        if (value.endsWith('px')) {
-            result += parseInt(value);
+        const unit = mainData[direction].unit[i];
+        if (unit.endsWith('px')) {
+            value += parseInt(unit);
         }
         else {
             let size = 0;
             $util.captureMap(mainData.rowData[i] as T[][], item => item && item.length > 0, item => size = Math.min(size, item[0].bounds[dimension]));
-            result += size;
+            value += size;
         }
     }
-    result += (mainData[direction].count - 1) * mainData[direction].gap;
-    result = node[dimension] - result;
-    return result;
+    value += (mainData[direction].count - 1) * mainData[direction].gap;
+    value = node[dimension] - value;
+    return value;
 }
 
 function setContentSpacing<T extends View>(mainData: CssGridData<T>, node: T, alignment: string, direction: string) {

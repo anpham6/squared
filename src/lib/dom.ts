@@ -384,21 +384,21 @@ export function cssResolveUrl(value: string) {
 }
 
 export function cssInheritStyle(element: Element | null, attr: string, exclude?: string[], tagNames?: string[]) {
-    let result = '';
+    let value = '';
     if (element) {
         let current = element.parentElement;
         while (current && (tagNames === undefined || !tagNames.includes(current.tagName))) {
-            result = getStyle(current)[attr] || '';
-            if (result === 'inherit' || exclude && exclude.some(value => result.indexOf(value) !== -1)) {
-                result = '';
+            value = getStyle(current)[attr] || '';
+            if (value === 'inherit' || exclude && exclude.some(style => value.indexOf(style) !== -1)) {
+                value = '';
             }
-            if (result !== '' || current === document.body) {
+            if (value !== '' || current === document.body) {
                 break;
             }
             current = current.parentElement;
         }
     }
-    return result;
+    return value;
 }
 
 export function cssParent(element: Element | null, attr: string, ...styles: string[]) {

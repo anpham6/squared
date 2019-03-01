@@ -25,11 +25,11 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
     }
 
     public static getKeyName(item: SvgAnimation) {
-        let result = item.attributeName;
+        let value = item.attributeName;
         if (SvgBuild.asAnimateTransform(item)) {
-            result += `:${TRANSFORM.typeAsName(item.type)}`;
+            value += `:${TRANSFORM.typeAsName(item.type)}`;
         }
-        return result;
+        return value;
     }
 
     public map: SvgAnimationIntervalAttributeMap;
@@ -238,13 +238,13 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
     }
 
     public get(attr: string, time: number, playing = false) {
-        let result: string | undefined;
+        let value: string | undefined;
         if (this.map[attr]) {
             for (const [interval, data] of this.map[attr].entries()) {
                 if (interval <= time) {
                     for (const previous of data) {
                         if (previous.value !== '' && (previous.time === -1 || previous.end && (previous.fillMode === FILL_MODE.FORWARDS || previous.fillMode === FILL_MODE.FREEZE)) || playing && previous.start && time !== interval) {
-                            result = previous.value;
+                            value = previous.value;
                             break;
                         }
                     }
@@ -254,7 +254,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                 }
             }
         }
-        return result;
+        return value;
     }
 
     public evaluateStart(item: SvgAnimate, otherValue?: any) {

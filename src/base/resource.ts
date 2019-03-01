@@ -309,12 +309,10 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                             break;
                         }
                         case 'borderRadius': {
-                            const [top, right, bottom, left] = [
-                                node.css('borderTopLeftRadius'),
-                                node.css('borderTopRightRadius'),
-                                node.css('borderBottomLeftRadius'),
-                                node.css('borderBottomRightRadius')
-                            ];
+                            const top = node.css('borderTopLeftRadius');
+                            const right = node.css('borderTopRightRadius');
+                            const bottom = node.css('borderBottomLeftRadius');
+                            const left = node.css('borderBottomRightRadius');
                             if (top === right && right === bottom && bottom === left) {
                                 boxStyle.borderRadius = $util.convertInt(top) > 0 ? [top] : undefined;
                             }

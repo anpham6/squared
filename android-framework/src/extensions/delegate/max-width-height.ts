@@ -12,8 +12,7 @@ export default class MaxWidthHeight<T extends android.base.View> extends squared
     }
 
     public processNode(node: T, parent: T): ExtensionResult<T> {
-        const controller = <android.base.Controller<T>> this.application.controllerHandler;
-        const container = controller.createNodeWrapper(node, parent);
+        const container = (<android.base.Controller<T>> this.application.controllerHandler).createNodeWrapper(node, parent);
         container.css('display', 'block', true);
         if (node.has('maxWidth')) {
             const maxWidth = node.css('maxWidth');

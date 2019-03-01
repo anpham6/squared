@@ -239,25 +239,25 @@ export function getColorByName(value: string) {
 }
 
 export function getColorByShade(value: string) {
-    const result = HSL_SORTED.slice(0);
-    let index = result.findIndex(item => item.value === value);
+    const sorted = HSL_SORTED.slice(0);
+    let index = sorted.findIndex(item => item.value === value);
     if (index !== -1) {
-        return result[index];
+        return sorted[index];
     }
     else {
         const rgb = convertRGBA(value);
         if (rgb) {
             const hsl = convertHSL(rgb);
             if (hsl) {
-                result.push({
+                sorted.push({
                     name: '',
                     value: '',
                     hsl,
                     rgba: { r: -1, g: -1, b: -1, a: 1 },
                 });
-                result.sort(sortHSL);
-                index = result.findIndex(item => item.name === '');
-                return result[Math.min(index + 1, result.length - 1)];
+                sorted.sort(sortHSL);
+                index = sorted.findIndex(item => item.name === '');
+                return sorted[Math.min(index + 1, sorted.length - 1)];
             }
         }
         return undefined;
@@ -265,16 +265,16 @@ export function getColorByShade(value: string) {
 }
 
 export function convertHex(...values: string[] | number[]) {
-    let result = '';
+    let output = '';
     for (const value of values) {
         let rgb = typeof value === 'string' ? parseInt(value) : value;
         if (isNaN(rgb)) {
             return '00';
         }
         rgb = Math.max(0, Math.min(rgb, 255));
-        result += HEX_CHAR.charAt((rgb - (rgb % 16)) / 16) + HEX_CHAR.charAt(rgb % 16);
+        output += HEX_CHAR.charAt((rgb - (rgb % 16)) / 16) + HEX_CHAR.charAt(rgb % 16);
     }
-    return result;
+    return output;
 }
 
 export function convertRGBA(value: string) {

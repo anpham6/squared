@@ -21,16 +21,16 @@ export function distanceFromY(value: number, angle: number) {
 }
 
 export function truncateString(value: string, precision = 3) {
-    let result = value;
+    let output = value;
     const pattern = new RegExp(`(\\d+\\.\\d{${precision}})(\\d)\\d*`, 'g');
     let match: RegExpExecArray | null;
     while ((match = pattern.exec(value)) !== null) {
         if (parseInt(match[2]) >= 5) {
             match[1] = (parseFloat(match[1]) + 1 / Math.pow(10, precision)).toString();
         }
-        result = result.replace(match[0], match[1]);
+        output = output.replace(match[0], match[1]);
     }
-    return result;
+    return output;
 }
 
 export function truncateRange(value: number, precision = 3) {
@@ -93,22 +93,22 @@ export function getLeastCommonMultiple(values: number[], offset?: number[]) {
         if (offset === undefined) {
             minimum = Math.max(minimum, increment);
         }
-        let result = minimum;
+        let value = minimum;
         let valid = false;
         while (!valid) {
             for (let i = 0; i < values.length; i++) {
-                const total = result - (offset ? offset[i] : 0);
+                const total = value - (offset ? offset[i] : 0);
                 if (total % values[i] === 0) {
                     valid = true;
                 }
                 else {
                     valid = false;
-                    result += increment;
+                    value += increment;
                     break;
                 }
             }
         }
-        return result;
+        return value;
     }
     return values[0];
 }

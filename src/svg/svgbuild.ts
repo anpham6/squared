@@ -93,12 +93,12 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static setName(element?: SVGElement) {
         if (element) {
-            let result = '';
+            let value = '';
             let tagName: string | undefined;
             if ($util.isString(element.id)) {
                 const id = $util.convertWord(element.id, true);
                 if (!NAME_GRAPHICS.has(id)) {
-                    result = id;
+                    value = id;
                 }
                 tagName = id;
             }
@@ -106,9 +106,9 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 tagName = element.tagName;
             }
             let index = NAME_GRAPHICS.get(tagName) || 0;
-            if (result !== '') {
-                NAME_GRAPHICS.set(result, index);
-                return result;
+            if (value !== '') {
+                NAME_GRAPHICS.set(value, index);
+                return value;
             }
             else {
                 NAME_GRAPHICS.set(tagName, ++index);

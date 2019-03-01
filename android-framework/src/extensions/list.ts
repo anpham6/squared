@@ -212,7 +212,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
         super.postBaseLayout(node);
         const columnCount = node.android('columnCount');
         for (let i = 0; i < node.renderChildren.length; i++) {
-            const current = node.renderChildren[i];
+            const item = node.renderChildren[i];
             const previous = node.renderChildren[i - 1];
             let spaceHeight = 0;
             if (previous) {
@@ -223,20 +223,21 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     previous.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, null);
                 }
             }
-            const marginTop = $util.convertInt(current.android(BOX_ANDROID.MARGIN_TOP));
+            const marginTop = $util.convertInt(item.android(BOX_ANDROID.MARGIN_TOP));
             if (marginTop > 0) {
                 spaceHeight += marginTop;
-                current.delete('android', BOX_ANDROID.MARGIN_TOP);
-                current.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, null);
+                item.delete('android', BOX_ANDROID.MARGIN_TOP);
+                item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, null);
             }
             if (spaceHeight > 0) {
+                const controller = this.application.controllerHandler;
                 const options = createViewAttribute({
                     android: {
                         layout_columnSpan: columnCount.toString()
                     }
                 });
-                const output = this.application.controllerHandler.renderNodeStatic(CONTAINER_ANDROID.SPACE, current.renderDepth, options, 'match_parent', $util.formatPX(spaceHeight));
-                this.application.controllerHandler.prependBefore(current.id, output, 0);
+                const output = controller.renderNodeStatic(CONTAINER_ANDROID.SPACE, item.renderDepth, options, 'match_parent', $util.formatPX(spaceHeight));
+                controller.prependBefore(item.id, output, 0);
             }
         }
     }
