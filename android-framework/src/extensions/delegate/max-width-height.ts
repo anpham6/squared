@@ -36,6 +36,11 @@ export default class MaxWidthHeight<T extends android.base.View> extends squared
             1,
             container.children as T[]
         );
-        return { output: '', parent: container, renderAs: container, outputAs: this.application.renderLayout(layout) };
+        return {
+            output: '',
+            parent: container,
+            renderAs: container,
+            outputAs: this.application.renderLayout(layout)
+        };
     }
 }

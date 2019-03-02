@@ -27,6 +27,11 @@ export default class Percent<T extends android.base.View> extends squared.base.E
             1,
             container.children as T[]
         );
-        return { output: '', parent: container, renderAs: container, outputAs: this.application.renderLayout(layout) };
+        return {
+            output: '',
+            parent: container,
+            renderAs: container,
+            outputAs: this.application.renderLayout(layout)
+        };
     }
 }

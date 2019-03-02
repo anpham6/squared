@@ -54,7 +54,7 @@ export default class Guideline<T extends android.base.View> extends squared.base
                         break;
                     }
                 }
-                let anchor: T | undefined;
+                let anchor!: T;
                 for (const [item, alignment] of alignParent.entries()) {
                     if (leftTop) {
                         if (alignment.length === 2) {
@@ -85,7 +85,7 @@ export default class Guideline<T extends android.base.View> extends squared.base
                     controller.addGuideline(anchor, node);
                 }
                 node.each((item: T) => {
-                    if (anchor && item !== anchor) {
+                    if (item !== anchor) {
                         const center1 = item.center;
                         const center2 = anchor.center;
                         const x = Math.abs(center1.x - center2.x);

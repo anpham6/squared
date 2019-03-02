@@ -635,19 +635,13 @@ export function hasFreeFormText(element: Element, whiteSpace = true) {
         }
         return false;
     }
-    if (element.nodeName === '#text') {
-        return findFreeForm([element]);
-    }
-    else {
-        return findFreeForm(element.childNodes);
-    }
+    return findFreeForm(element.nodeName === '#text' ? [element] : element.childNodes);
 }
 
 export function isPlainText(element: Element, whiteSpace = false) {
     if (element && element.nodeName === '#text' && element.textContent) {
         if (whiteSpace) {
             const value = element.textContent;
-            let valid = false;
             for (let i = 0; i < value.length; i++) {
                 switch (value.charCodeAt(i)) {
                     case 9:
@@ -656,11 +650,10 @@ export function isPlainText(element: Element, whiteSpace = false) {
                     case 32:
                         continue;
                     default:
-                        valid = true;
-                        break;
+                        return true;
                 }
             }
-            return valid && value !== '';
+            return false;
         }
         else {
             return element.textContent.trim() !== '';

@@ -11,6 +11,7 @@ import { getXmlNs } from '../../lib/util';
 
 import ANIMATEDVECTOR_TMPL from '../../template/resource/embedded/animated-vector';
 import LAYERLIST_TMPL from '../../template/resource/embedded/layer-list';
+import OBJECTANIMATOR_TMPL from '../../template/resource/embedded/objectanimator';
 import SETOBJECTANIMATOR_TMPL from '../../template/resource/embedded/set-objectanimator';
 import VECTOR_TMPL from '../../template/resource/embedded/vector';
 
@@ -178,7 +179,7 @@ const ATTRIBUTE_ANDROID = {
     'clip-path': ['pathData']
 };
 
-function getPathInterpolator(keySplines: string[] | undefined, index: number) {
+function getPathInterpolator(keySplines: string[] | undefined, index: number): string {
     if (keySplines && keySplines[index]) {
         return INTERPOLATOR_ANDROID[keySplines[index]] || createPathInterpolator(keySplines[index]);
     }
@@ -212,37 +213,35 @@ function createPathInterpolator(value: string) {
     }
 }
 
-function createTransformData(transform: SvgTransform[] | null) {
+function createTransformData(transform: SvgTransform[]) {
     const result: TransformData = {};
-    if (transform) {
-        for (let i = 0; i < transform.length; i++) {
-            const item = transform[i];
-            const m = item.matrix;
-            switch (item.type) {
-                case SVGTransform.SVG_TRANSFORM_SCALE:
-                    result.scaleX = m.a.toString();
-                    result.scaleY = m.d.toString();
-                    if (item.origin) {
-                        result.pivotX = item.origin.x.toString();
-                        result.pivotY = item.origin.y.toString();
-                    }
-                    break;
-                case SVGTransform.SVG_TRANSFORM_ROTATE:
-                    result.rotation = item.angle.toString();
-                    if (item.origin) {
-                        result.pivotX = item.origin.x.toString();
-                        result.pivotY = item.origin.y.toString();
-                    }
-                    else {
-                        result.pivotX = '0';
-                        result.pivotY = '0';
-                    }
-                    break;
-                case SVGTransform.SVG_TRANSFORM_TRANSLATE:
-                    result.translateX = m.e.toString();
-                    result.translateY = m.f.toString();
-                    break;
-            }
+    for (let i = 0; i < transform.length; i++) {
+        const item = transform[i];
+        const m = item.matrix;
+        switch (item.type) {
+            case SVGTransform.SVG_TRANSFORM_SCALE:
+                result.scaleX = m.a.toString();
+                result.scaleY = m.d.toString();
+                if (item.origin) {
+                    result.pivotX = item.origin.x.toString();
+                    result.pivotY = item.origin.y.toString();
+                }
+                break;
+            case SVGTransform.SVG_TRANSFORM_ROTATE:
+                result.rotation = item.angle.toString();
+                if (item.origin) {
+                    result.pivotX = item.origin.x.toString();
+                    result.pivotY = item.origin.y.toString();
+                }
+                else {
+                    result.pivotX = '0';
+                    result.pivotY = '0';
+                }
+                break;
+            case SVGTransform.SVG_TRANSFORM_TRANSLATE:
+                result.translateX = m.e.toString();
+                result.translateY = m.f.toString();
+                break;
         }
     }
     return result;
@@ -432,7 +431,7 @@ function createAnimateFromTo(attributeName: string, delay: number, to: string, f
     result.attributeName = attributeName;
     result.delay = delay;
     result.duration = 1;
-    result.from = from !== undefined ? from : to;
+    result.from = from || to;
     result.to = to;
     result.fillForwards = true;
     result.convertToValues();
@@ -534,6 +533,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
             if (TEMPLATES.ANIMATED === undefined) {
                 TEMPLATES.ANIMATED = $xml.parseTemplate(ANIMATEDVECTOR_TMPL);
                 TEMPLATES.LAYER_LIST = $xml.parseTemplate(LAYERLIST_TMPL);
+                TEMPLATES.OBJECTANIMATOR = $xml.parseTemplate(OBJECTANIMATOR_TMPL);
                 TEMPLATES.SET_OBJECTANIMATOR = $xml.parseTemplate(SETOBJECTANIMATOR_TMPL);
             }
             $SvgBuild.setName();
@@ -606,7 +606,9 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                     }
                 }
                 if (this.ANIMATE_DATA.size) {
-                    const data: TemplateDataA = { vectorName, A: []
+                    const data: TemplateDataA = {
+                        vectorName,
+                        A: []
                     };
                     for (const [name, group] of this.ANIMATE_DATA.entries()) {
                         const targetData: AnimatedTargetData = { name };
@@ -777,12 +779,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                         valueTo = getTransformInitialValue(propertyName);
                                                     }
                                                     else if (item.parent && $SvgBuild.isShape(item.parent) && item.parent.path) {
-                                                        if (propertyName === 'pathData') {
-                                                            valueTo = item.parent.path.value;
-                                                        }
-                                                        else {
-                                                            valueTo = item.parent.path[getPaintAttribute(propertyName)];
-                                                        }
+                                                        valueTo = propertyName === 'pathData' ? item.parent.path.value : item.parent.path[getPaintAttribute(propertyName)];
                                                     }
                                                     if (!valueTo) {
                                                         valueTo = item.baseValue;
@@ -882,9 +879,9 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                     options.interpolator = this.options.animateInterpolator;
                                                 }
                                             }
+                                            const beforeValues: string[] = [];
                                             let propertyNames: string[] | undefined;
                                             let values: string[] | number[][] | undefined;
-                                            const beforeValues: string[] = [];
                                             if (!synchronized && options.valueType === 'pathType') {
                                                 if (group.pathData) {
                                                     let transforms: SvgTransform[] | undefined;
@@ -1136,7 +1133,20 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                             }
                         });
                         if (targetSetData.A.length) {
-                            const xml = $xml.createTemplate(TEMPLATES.SET_OBJECTANIMATOR, targetSetData);
+                            let animatorData: AnimatorTemplateData<true> | undefined;
+                            if (targetSetData.A.length === 1) {
+                                const A = targetSetData.A[0];
+                                if (A.ordering === '' && A.BB && A.BB.length === 0 && A.AA && A.AA.length === 1) {
+                                    animatorData = <AnimatorTemplateData<true>> A.AA[0];
+                                }
+                            }
+                            let xml: string;
+                            if (animatorData) {
+                                xml = $xml.createTemplate(TEMPLATES.OBJECTANIMATOR, animatorData);
+                            }
+                            else {
+                                xml = $xml.createTemplate(TEMPLATES.SET_OBJECTANIMATOR, targetSetData);
+                            }
                             targetData.animationName = Resource.getStoredName('animators', xml);
                             if (targetData.animationName === '') {
                                 targetData.animationName = getFilename('anim', name);

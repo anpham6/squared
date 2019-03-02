@@ -45,11 +45,11 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                 for (let i = open.length - 1; i >= 0; i--) {
                     const openData = open[i];
                     for (let j = 0; j < close.length; j++) {
-                        const closeData = close[j];
-                        if (closeData.index >= openData.index) {
+                        const index = close[j].index;
+                        if (index >= openData.index) {
                             const location = new Map<number, T[]>();
                             let valid = true;
-                            for (let k = openData.index; k <= closeData.index; k++) {
+                            for (let k = openData.index; k <= index; k++) {
                                 const item = node.renderChildren[k] as T;
                                 const depthMap = processing.depthMap.get(node.id);
                                 if (depthMap && depthMap.has(item.renderPositionId)) {

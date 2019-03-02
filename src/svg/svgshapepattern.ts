@@ -170,7 +170,10 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                             while (rotateOrigin.length) {
                                 const pt = <SvgPoint> rotateOrigin.shift();
                                 if (pt.angle === item.angle) {
-                                    item.origin = { x: x + pt.x, y: y + pt.y };
+                                    item.origin = {
+                                        x: x + pt.x,
+                                        y: y + pt.y
+                                    };
                                     break;
                                 }
                             }

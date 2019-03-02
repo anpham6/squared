@@ -41,12 +41,12 @@ function getBaseValue(element: SVGElement, ...attrs: string[]) {
 }
 
 export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer)))) implements squared.svg.Svg {
+    public precision?: number;
     public readonly definitions = {
         clipPath: new Map<string, SVGClipPathElement>(),
         pattern: new Map<string, SVGPatternElement>(),
         gradient: new Map<string, SvgGradient>()
     };
-    public precision?: number;
 
     constructor(
         public readonly element: SVGSVGElement,

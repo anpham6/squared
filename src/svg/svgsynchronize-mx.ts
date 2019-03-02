@@ -250,7 +250,7 @@ function getItemValue(item: SvgAnimate, values: string[], iteration: number, ind
         values = values.slice(0).reverse();
     }
     switch (item.attributeName) {
-        case 'transform': {
+        case 'transform':
             if (item.additiveSum && typeof baseValue === 'string') {
                 const baseArray = $util.replaceMap<string, number>(baseValue.split(/\s+/), value => parseFloat(value));
                 const valuesArray = $util.objectMap<string, number[]>(values, value => $util.replaceMap<string, number>(value.trim().split(/\s+/), pt => parseFloat(pt)));
@@ -273,10 +273,8 @@ function getItemValue(item: SvgAnimate, values: string[], iteration: number, ind
                 }
             }
             return values[index];
-        }
-        case 'points': {
+        case 'points':
             return SvgBuild.parsePoints(values[index]);
-        }
         default: {
             let result = parseFloat(values[index]);
             if (!isNaN(result)) {

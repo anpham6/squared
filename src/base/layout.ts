@@ -33,12 +33,6 @@ export default class Layout<T extends Node> extends squared.lib.base.Container<T
         this.linearX = this.isLinearX();
     }
 
-    public initParent() {
-        this.floated = this.getFloated(true);
-        this.cleared = this.getCleared(true);
-        this.linearX = this.isLinearX();
-    }
-
     public setType(containerType: number, ...alignmentType: number[]) {
         this.containerType = containerType;
         for (const value of alignmentType) {

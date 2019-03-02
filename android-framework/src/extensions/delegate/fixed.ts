@@ -105,8 +105,7 @@ export default class Fixed<T extends View> extends squared.base.Extension<T> {
             children.length,
             children
         );
-        const output = this.application.renderLayout(layout);
-        return { output };
+        return { output: this.application.renderLayout(layout) };
     }
 
     public postBaseLayout(node: T) {

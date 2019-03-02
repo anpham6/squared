@@ -91,22 +91,20 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                             value.push(`#${rgb + (a !== 'FF' ? a : '')}`);
                             break;
                         }
-                        case 'points': {
-                            for (let k = 0; k < currentValue.length; k++) {
-                                const current = <Point> currentValue[k];
-                                const next = <Point> nextValue[k];
+                        case 'points':
+                            for (let j = 0; j < currentValue.length; j++) {
+                                const current = <Point> currentValue[j];
+                                const next = <Point> nextValue[j];
                                 value.push(`${SvgAnimate.getSplitValue(current.x, next.x, percent)},${SvgAnimate.getSplitValue(current.y, next.y, percent)}`);
                             }
                             break;
-                        }
-                        default: {
-                            for (let k = 0; k < currentValue.length; k++) {
-                                const current = currentValue[k] as number;
-                                const next = nextValue[k] as number;
+                        default:
+                            for (let j = 0; j < currentValue.length; j++) {
+                                const current = currentValue[j] as number;
+                                const next = nextValue[j] as number;
                                 value.push(SvgAnimate.getSplitValue(current, next, percent).toString());
                             }
                             break;
-                        }
                     }
                     if (value.length) {
                         splitTimes.push(time);
@@ -144,6 +142,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public by?: number;
     public end?: number;
     public synchronized?: NumberValue<string>;
+    public timingStep?: boolean[];
 
     private _iterationCount = 1;
     private _reverse = false;
@@ -249,6 +248,10 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 this.evaluateStart = true;
             }
         }
+    }
+
+    public isStep(index: number) {
+        return !!this.timingStep && this.timingStep[index] === true;
     }
 
     public setGroupOrdering(value: SvgAnimationAttribute[]) {

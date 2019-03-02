@@ -18,8 +18,8 @@ export default abstract class Relative<T extends Node> extends Extension<T> {
     public postProcedure(node: T) {
         const renderParent = node.renderParent as T;
         if (renderParent) {
-            let target = node;
             const verticalAlign = $util.convertInt(node.verticalAlign);
+            let target = node;
             if (renderParent.support.container.positionRelative && node.length === 0 && (node.top !== 0 || node.bottom !== 0 || verticalAlign !== 0)) {
                 target = node.clone(this.application.nextId, true, true) as T;
                 node.hide(true);

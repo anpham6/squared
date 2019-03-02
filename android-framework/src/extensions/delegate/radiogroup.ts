@@ -67,7 +67,13 @@ export default class ScrollView<T extends android.base.View> extends squared.bas
                 container.id,
                 target ? -1 : container.renderDepth, $xml.formatPlaceholder(container.id)
             );
-            return { output: '', complete: true, parent: container, renderAs: container, outputAs };
+            return {
+                output: '',
+                complete: true,
+                parent: container,
+                renderAs: container,
+                outputAs
+            };
         }
         return { output: '' };
     }

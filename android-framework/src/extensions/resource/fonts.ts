@@ -148,9 +148,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     if (this.options.fontResourceValue && FONTREPLACE_ANDROID[fontFamily]) {
                         fontFamily = FONTREPLACE_ANDROID[fontFamily];
                     }
-                    if (FONT_ANDROID[fontFamily] && node.localSettings.targetAPI >= FONT_ANDROID[fontFamily] ||
-                        this.options.fontResourceValue && FONTALIAS_ANDROID[fontFamily] && node.localSettings.targetAPI >= FONT_ANDROID[FONTALIAS_ANDROID[fontFamily]])
-                    {
+                    if (FONT_ANDROID[fontFamily] && node.localSettings.targetAPI >= FONT_ANDROID[fontFamily] || this.options.fontResourceValue && FONTALIAS_ANDROID[fontFamily] && node.localSettings.targetAPI >= FONT_ANDROID[FONTALIAS_ANDROID[fontFamily]]) {
                         system = true;
                         stored.fontFamily = fontFamily;
                         if (stored.fontStyle === 'normal') {
@@ -437,9 +435,13 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 const match = name.match(/^(\w*?)(?:_(\d+))?$/);
                 if (match) {
                     const data = resource[match[1].toUpperCase()];
-                    const index = match[2] ? parseInt(match[2]) : 0;
+                    const index = $util.convertInt(match[2]);
                     if (data[index]) {
-                        STORED.styles.set(name, { ...data[index], name, parent });
+                        STORED.styles.set(name, {
+                            ...data[index],
+                            name,
+                            parent
+                        });
                         parent = name;
                     }
                 }

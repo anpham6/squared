@@ -1,4 +1,4 @@
-import { SvgBuildOptions, SvgPathCommand, SvgPathExtendData, SvgPoint, SvgTransformResidual, SvgStrokeDash, SvgTransform } from './@types/object';
+import { SvgBuildOptions, SvgPathCommand, SvgPathExtendData, SvgPoint, SvgStrokeDash, SvgTransform, SvgTransformResidual } from './@types/object';
 
 import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgPaint$MX from './svgpaint-mx';
@@ -27,8 +27,8 @@ const $util = squared.lib.util;
 
 export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) implements squared.svg.SvgPath {
     public static extrapolate(attr: string, pathData: string, values: string[], transforms?: SvgTransform[], companion?: SvgShape, precision?: number) {
-        const result: string[] = [];
         const transformRefit = !!transforms || !!companion && !!companion.parent && companion.parent.requireRefit();
+        const result: string[] = [];
         let commands: SvgPathCommand[] | undefined;
         for (let i = 0; i < values.length; i++) {
             if (attr === 'd') {
@@ -793,6 +793,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     const repeatFraction = 1 / duration;
                                     const values: string[] = [];
                                     const keyTimes: number[] = [];
+                                    const timingStep: boolean[] = [];
                                     let keyTime = 0;
                                     let previousRemaining = 0;
                                     let previousIncreasing = false;
@@ -815,15 +816,11 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     }
                                     let extendedLength = totalLength;
                                     let extendedRatio = 1;
-                                    if (baseValue && (requireExtend())) {
+                                    if (baseValue && requireExtend()) {
                                         this.extendLength(flattenData, negative, precision);
                                         if (flattenData.path) {
                                             const boxRect = SvgBuild.parseBoxRect([this.value]);
-                                            const strokeOffset = Math.ceil(strokeWidth / 2);
                                             extendedLength = getPathLength(flattenData.path);
-                                            if (flattenData.leading > 0 || flattenData.trailing > 0) {
-                                                clipPath = SvgBuild.drawRect(boxRect.right - boxRect.left, boxRect.bottom - boxRect.top + strokeOffset * 2, boxRect.left, boxRect.top - strokeOffset);
-                                            }
                                             flattenData.extendedLength = this.pathLength;
                                             extendedRatio = extendedLength / totalLength;
                                             if (flattenData.extendedLength > 0) {
@@ -848,8 +845,10 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                                     }
                                                 }
                                             }
-                                            path = flattenData.path;
                                             dashTotal = Math.max(dashTotal, baseValue.length);
+                                            const strokeOffset = Math.ceil(strokeWidth / 2);
+                                            path = flattenData.path;
+                                            clipPath = SvgBuild.drawRect(boxRect.right - boxRect.left, boxRect.bottom - boxRect.top + strokeOffset * 2, boxRect.left, boxRect.top - strokeOffset);
                                         }
                                     }
                                     $util.replaceMap<string, string>(item.values, value => (parseFloat(value) - valueOffset).toString());
@@ -897,6 +896,13 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                                 }
                                             }
                                             return false;
+                                        }
+                                        function insertKeyTimeFraction() {
+                                            if (!checkDuplicateFraction()) {
+                                                timingStep[keyTimes.length] = true;
+                                                keyTimes.push(keyTime + (keyTime !== 0 ? repeatFraction : 0));
+                                                values.push(increasing ? '1' : '0');
+                                            }
                                         }
                                         let offsetRemaining = offsetTotal;
                                         let iterationTotal = offsetTotal / totalLength;
@@ -964,37 +970,15 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                             }
                                         }
                                         while (iterationTotal > 0) {
-                                            const ignoreFraction = checkDuplicateFraction();
-                                            if (!ignoreFraction) {
-                                                keyTimes.push(keyTime + (keyTime !== 0 ? repeatFraction : 0));
-                                            }
-                                            if (increasing) {
-                                                if (!ignoreFraction) {
-                                                    values.push('1');
-                                                }
-                                                values.push('0');
-                                            }
-                                            else {
-                                                if (!ignoreFraction) {
-                                                    values.push('0');
-                                                }
-                                                values.push('1');
-                                            }
+                                            insertKeyTimeFraction();
+                                            values.push(increasing ? '0' : '1');
                                             keyTime += getKeyTimeIncrement(iterationDecrement);
                                             keyTimes.push(keyTime);
                                             iterationTotal--;
                                         }
-                                        if (!checkDuplicateFraction()) {
-                                            keyTimes.push(keyTime + (keyTime !== 0 ? repeatFraction : 0));
-                                            if (increasing) {
-                                                values.push('1');
-                                            }
-                                            else {
-                                                values.push('0');
-                                            }
-                                        }
+                                        insertKeyTimeFraction();
                                         if (j === iterationCount - 1) {
-                                            finalValue = $math.truncatePrecision((finalValue * flattenData.lengthRatio) % 1);
+                                            finalValue = $math.truncatePrecision(finalValue * flattenData.lengthRatio % 1);
                                             if (increasing) {
                                                 if (finalValue === 1) {
                                                     finalValue = 0;
@@ -1016,6 +1000,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     item.replaceValue = '0';
                                     item.values = values;
                                     item.keyTimes = keyTimes;
+                                    item.timingStep = timingStep;
                                     const timingFunction = item.timingFunction;
                                     if (timingFunction) {
                                         item.keySplines = undefined;

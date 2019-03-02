@@ -17,7 +17,6 @@ declare global {
             renderPosition: boolean;
             readonly visible: T[];
             init(): void;
-            initParent(): void;
             setType(containerType: number, ...alignmentType: number[]): void;
             getFloated(parent?: boolean): Set<string>;
             getCleared(parent?: boolean): Map<T, string>;

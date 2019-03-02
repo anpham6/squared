@@ -1,10 +1,11 @@
 import { ExtensionResult } from '../../../src/base/@types/application';
 import { GridCellData, GridData } from '../../../src/base/@types/extension';
 
-type View = android.base.View;
 import { CONTAINER_NODE } from '../lib/enumeration';
 
 import $Layout = squared.base.Layout;
+
+type View = android.base.View;
 
 const $const = squared.base.lib.constant;
 const $enum = squared.base.lib.enumeration;
@@ -57,7 +58,10 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
             layout.columnCount = mainData.columnCount;
             output = this.application.renderNode(layout);
         }
-        return { output, complete: output !== '' };
+        return {
+            output,
+            complete: output !== ''
+        };
     }
 
     public processChild(node: T, parent: T): ExtensionResult<T> {

@@ -20,13 +20,13 @@ export interface ResourceStoredMapAndroid extends ResourceStoredMap {
 }
 
 export interface StyleAttribute {
+    name: string;
+    parent: string;
+    items: StringMap | NameValue[];
     output?: {
         path: string;
         file: string;
     };
-    name: string;
-    parent: string;
-    items: StringMap | NameValue[];
     ids?: number[];
 }
 

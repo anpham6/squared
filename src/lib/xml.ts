@@ -25,6 +25,20 @@ export function replacePlaceholder(value: string, id: string | number, content: 
     return value.replace(hash, (before ? hash : '') + content + '\n' + (before ? '' : hash));
 }
 
+export function pushIndent(value: string, depth: number, char = '\t') {
+    if (value !== '') {
+        const pattern = new RegExp(`^${char.replace('\\', '\\\\')}+`);
+        return joinMap(value.split('\n'), line => {
+            const match = pattern.exec(line);
+            if (match) {
+                return line.replace(match[0], char.repeat(depth + match[0].length));
+            }
+            return line;
+        });
+    }
+    return value;
+}
+
 export function replaceIndent(value: string, depth: number, pattern: RegExp) {
     if (depth >= 0) {
         let indent = -1;
@@ -139,17 +153,17 @@ export function createTemplate(value: StringMap | string, data: ExternalData, fo
                     for (let i = 0; i < unknown.length; i++) {
                         result += createTemplate(value, unknown[i], format, attr.toString());
                     }
-                    if (result === '') {
-                        result = false;
+                    if (result !== '') {
+                        result = trimEnd(result, '\n');
                     }
                     else {
-                        result = trimEnd(result, '\n');
+                        result = false;
                     }
                 }
             }
             else {
                 hash = '[&~]';
-                result = typeof unknown === 'boolean' ? '' : unknown.toString();
+                result = typeof unknown === 'boolean' ? false : unknown.toString();
             }
             if (!result) {
                 if (new RegExp(`{&${attr}}`).test(output)) {

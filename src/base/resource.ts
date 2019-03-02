@@ -591,9 +591,9 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                             value = $xml.replaceEntity(replaceExcluded(element, 'innerHTML'));
                         }
                         else if ($dom.hasLineBreak(element, true)) {
-                            value = $xml.replaceEntity(replaceExcluded(element, 'innerHTML'));
-                            value = value.replace(/\s*<br[^>]*>\s*/g, '\\n');
-                            value = value.replace(/(<([^>]+)>)/ig, '');
+                            value = $xml.replaceEntity(replaceExcluded(element, 'innerHTML'))
+                                .replace(/\s*<br[^>]*>\s*/g, '\\n')
+                                .replace(/(<([^>]+)>)/ig, '');
                         }
                         else {
                             value = $xml.replaceEntity(replaceExcluded(element, 'textContent'));
@@ -629,7 +629,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                 value = '&#160;' + value;
                             }
                             if (nextSibling && !nextSibling.lineBreak && /\s+$/.test(original)) {
-                                value = value + '&#160;';
+                                value += '&#160;';
                             }
                         }
                         else {

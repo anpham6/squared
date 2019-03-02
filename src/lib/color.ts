@@ -169,9 +169,9 @@ for (const name in X11_CSS3) {
 HSL_SORTED.sort(sortHSL);
 
 function convertHSL({ r = 0, g = 0, b = 0 }) {
-    r = r / 255;
-    g = g / 255;
-    b = b / 255;
+    r /= 255;
+    g /= 255;
+    b /= 255;
     const min = Math.min(r, g, b);
     const max = Math.max(r, g, b);
     let h = (max + min) / 2;
@@ -338,14 +338,14 @@ export function parseRGBA(value: string, opacity = '1', transparency = false) {
             if (match[4] === undefined) {
                 match[4] = parseFloat(opacity).toPrecision(2);
             }
-            const valueHex = convertHex(match[1]) + convertHex(match[2]) + convertHex(match[3]);
-            const valueA = convertAlpha(match[4]);
-            const valueRGBA = `#${valueHex + valueA}`;
+            const valueHEX = convertHex(match[1]) + convertHex(match[2]) + convertHex(match[3]);
+            const valueAlpha = convertAlpha(match[4]);
+            const valueRGBA = `#${valueHEX + valueAlpha}`;
             const alpha = parseFloat(match[4]);
             return <ColorData> {
-                valueRGB: `#${valueHex}`,
+                valueRGB: `#${valueHEX}`,
                 valueRGBA,
-                valueARGB: `#${valueA + valueHex}`,
+                valueARGB: `#${valueAlpha + valueHEX}`,
                 alpha,
                 rgba: convertRGBA(valueRGBA),
                 opaque: alpha < 1,

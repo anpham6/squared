@@ -532,19 +532,19 @@ export function assignWhenNull(destination: {}, source: {}) {
 export function defaultWhenNull(options: {}, ...attrs: string[]) {
     let current = options;
     for (let i = 0 ; i < attrs.length - 1; i++) {
-        const value = attrs[i];
+        const name = attrs[i];
         if (i === attrs.length - 2) {
-            if (!hasValue(current[value])) {
-                current[value] = attrs[i + 1];
+            if (!hasValue(current[name])) {
+                current[name] = attrs[i + 1];
             }
         }
-        else if (isString(value)) {
-            if (typeof current[value] === 'object') {
-                current = current[value];
+        else if (isString(name)) {
+            if (typeof current[name] === 'object') {
+                current = current[name];
             }
-            else if (current[value] === undefined) {
-                current[value] = {};
-                current = current[value];
+            else if (current[name] === undefined) {
+                current[name] = {};
+                current = current[name];
             }
             else {
                 break;

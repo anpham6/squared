@@ -139,6 +139,7 @@ declare global {
         namespace xml {
             function formatPlaceholder(id: string | number, symbol?: string): string;
             function replacePlaceholder(value: string, id: string | number, content: string, before?: boolean): string;
+            function pushIndent(value: string, depth: number, char?: string): string;
             function replaceIndent(value: string, depth: number, pattern: RegExp): string;
             function replaceTab(value: string, spaces?: number, preserve?: boolean): string;
             function replaceEntity(value: string): string;

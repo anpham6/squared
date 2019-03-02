@@ -256,7 +256,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     Resource.isBorderVisible(stored.borderRight) ||
                     Resource.isBorderVisible(stored.borderBottom) ||
                     Resource.isBorderVisible(stored.borderLeft) ||
-                    stored.borderRadius !== undefined
+                    !!stored.borderRadius
                 );
                 if (hasBorder || backgroundImage.length || backgroundGradient.length) {
                     const borders: BorderAttribute[] = [
