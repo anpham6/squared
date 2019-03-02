@@ -966,7 +966,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                 }
                                                                 keyframes.push({
                                                                     interpolator: j > 0 && value !== '' && propertyName !== 'pivotX' && propertyName !== 'pivotY' ? getPathInterpolator(item.keySplines, j - 1) : '',
-                                                                    fraction: item.keyTimes[j] === 0 && value === '' ? '' : $math.truncateRange(item.keyTimes[j], this.options.floatPrecisionKeyTime),
+                                                                    fraction: item.keyTimes[j] === 0 && value === '' ? '' : $math.truncate(item.keyTimes[j], this.options.floatPrecisionKeyTime),
                                                                     value
                                                                 });
                                                             }
@@ -1253,7 +1253,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                     if (pathData.strokeWidth && (pathData.strokeDasharray || pathData.strokeDashoffset)) {
                         const animateData = this.ANIMATE_DATA.get(item.name);
                         if (animateData === undefined || animateData.animate.every(animate => animate.attributeName.startsWith('stroke-dash'))) {
-                            const [strokeDash, pathValue, clipPathData] = item.path.extractStrokeDash(animateData && animateData.animate, false, this.options.floatPrecisionValue);
+                            const [strokeDash, pathValue, clipPathData] = item.path.extractStrokeDash(animateData && animateData.animate, true, this.options.floatPrecisionValue);
                             if (strokeDash) {
                                 const groupName = getVectorName(item, 'stroke');
                                 if (pathValue) {
@@ -1271,8 +1271,8 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                             animate: $util.filterArray(animateData.animate, animate => animate.id === undefined || animate.id === i)
                                         });
                                     }
-                                    pathObject.trimPathStart = $math.truncateRange(strokeDash[i].start, this.options.floatPrecisionValue);
-                                    pathObject.trimPathEnd = $math.truncateRange(strokeDash[i].end, this.options.floatPrecisionValue);
+                                    pathObject.trimPathStart = $math.truncate(strokeDash[i].start, this.options.floatPrecisionValue);
+                                    pathObject.trimPathEnd = $math.truncate(strokeDash[i].end, this.options.floatPrecisionValue);
                                     CCC.push(pathObject);
                                 }
                                 if (animateData) {

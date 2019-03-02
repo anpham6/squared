@@ -142,7 +142,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public by?: number;
     public end?: number;
     public synchronized?: NumberValue<string>;
-    public timingStep?: boolean[];
+    public loopIntervals?: boolean[];
 
     private _iterationCount = 1;
     private _reverse = false;
@@ -250,8 +250,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         }
     }
 
-    public isStep(index: number) {
-        return !!this.timingStep && this.timingStep[index] === true;
+    public isLoop(index: number) {
+        return !!this.loopIntervals && this.loopIntervals[index] === true;
     }
 
     public setGroupOrdering(value: SvgAnimationAttribute[]) {

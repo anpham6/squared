@@ -111,6 +111,7 @@ export interface SvgAnimationAttribute {
 export interface SvgStrokeDash {
     start: number;
     end: number;
+    length?: number;
     offset?: number;
 }
 
@@ -137,7 +138,7 @@ export interface SvgPathExtendData {
     trailing: number;
     lengthRatio: number;
     dashArrayTotal: number;
-    extendedLength?: number;
+    extendedLength: number;
     path?: string;
     leadingOffset?: number;
     trailingOffset?: number;

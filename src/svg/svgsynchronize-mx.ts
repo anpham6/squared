@@ -414,7 +414,7 @@ function appendPartialKeyTimes(map: SvgAnimationIntervalMap, item: SvgAnimate, s
                                     }
                                     if (splitValue !== undefined && !(resultTime === keyTimes[keyTimes.length - 1] && splitValue === values[values.length - 1])) {
                                         if (splitTime === maxTime) {
-                                            resultTime += 1 / item.duration;
+                                            resultTime += 1 / 1000;
                                         }
                                         else {
                                             maxTime = splitTime;

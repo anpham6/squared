@@ -21,11 +21,6 @@ interface HSL {
     l: number;
 }
 
-interface Color extends NameValue {
-    rgba?: RGBA;
-    hsl?: HSL;
-}
-
 interface ColorData {
     valueRGB: string;
     valueRGBA: string;
@@ -34,6 +29,11 @@ interface ColorData {
     alpha: number;
     opaque: boolean;
     visible: boolean;
+}
+
+interface ColorResult extends NameValue {
+    rgba?: RGBA;
+    hsl?: HSL;
 }
 
 interface Point {

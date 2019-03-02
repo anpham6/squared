@@ -153,10 +153,10 @@ const X11_CSS3 = {
 const REGEXP_HEX = /[A-Za-z\d]{3,}/;
 const REGEXP_RGBA = /rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/;
 
-const HSL_SORTED: Color[] = [];
+const HSL_SORTED: ColorResult[] = [];
 
 for (const name in X11_CSS3) {
-    const x11: Color = X11_CSS3[name];
+    const x11: ColorResult = X11_CSS3[name];
     x11.name = name;
     const rgba = convertRGBA(x11.value);
     if (rgba) {
@@ -204,7 +204,7 @@ function convertHSL({ r = 0, g = 0, b = 0 }) {
     };
 }
 
-function sortHSL(a: Color, b: Color) {
+function sortHSL(a: ColorResult, b: ColorResult) {
     if (a.hsl && b.hsl) {
         let c = a.hsl.h;
         let d = b.hsl.h;
@@ -232,7 +232,7 @@ function convertAlpha(value: string) {
 export function getColorByName(value: string) {
     for (const color in X11_CSS3) {
         if (color.toLowerCase() === value.trim().toLowerCase()) {
-            return <Color> X11_CSS3[color];
+            return <ColorResult> X11_CSS3[color];
         }
     }
     return undefined;

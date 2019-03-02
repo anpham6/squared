@@ -4,8 +4,8 @@ import * as $util from '../lib/util';
 declare global {
     namespace squared.lib {
         namespace color {
-            function getColorByName(value: string): Color | undefined;
-            function getColorByShade(value: string): Color | undefined;
+            function getColorByName(value: string): ColorResult | undefined;
+            function getColorByShade(value: string): ColorResult | undefined;
             function convertHex(...values: string[] | number[]): string;
             function convertRGBA(value: string): RGBA | undefined;
             function parseRGBA(value: string, opacity?: string, transparency?: boolean): ColorData | undefined;
@@ -64,9 +64,12 @@ declare global {
             function convertRadian(value: number): number;
             function distanceFromX(value: number, angle: number): number;
             function distanceFromY(value: number, angle: number): number;
+            function isEqual(valueA: number, valueB: number, precision?: number): number;
+            function moreEqual(valueA: number, valueB: number, precision?: number): number;
+            function lessEqual(valueA: number, valueB: number, precision?: number): number;
+            function truncate(value: number, precision?: number): string;
+            function truncateFraction(value: number): number;
             function truncateString(value: string, precision?: number): string;
-            function truncateRange(value: number, precision?: number): string;
-            function truncatePrecision(value: number): number;
             function getAngle(start: Point, end: Point): number;
             function clampRange(value: number, min?: number, max?: number): number;
             function getLeastCommonMultiple(values: number[], offset?: number[]): number;

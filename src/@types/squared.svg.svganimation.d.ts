@@ -46,7 +46,7 @@ declare global {
             timingFunction?: string;
             by?: number;
             end?: number;
-            timingStep?: boolean[];
+            loopIntervals?: boolean[];
             synchronized?: NumberValue<string>;
             readonly playable: boolean;
             readonly valueTo: string;
@@ -56,11 +56,10 @@ declare global {
             readonly length: number;
             setCalcMode(name: string): void;
             convertToValues(keyTimes?: number[]): void;
-            isStep(index: number): boolean;
+            isLoop(index: number): boolean;
             setGroupOrdering(value: SvgAnimationAttribute[]): void;
             getPartialDuration(iteration?: number): number;
             getTotalDuration(minimum?: boolean): number;
-
         }
 
         interface SvgAnimateTransform extends SvgAnimate {

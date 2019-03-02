@@ -189,7 +189,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                     }
                     gradient.colorStops.push({
                         color,
-                        offset: $math.truncateRange(offset / 100),
+                        offset: $math.truncate(offset / 100),
                         opacity: stop.opacity
                     });
                 }

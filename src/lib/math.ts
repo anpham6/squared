@@ -20,21 +20,20 @@ export function distanceFromY(value: number, angle: number) {
     return value * Math.cos(convertRadian(angle)) * -1;
 }
 
-export function truncateString(value: string, precision = 3) {
-    let output = value;
-    const pattern = new RegExp(`(\\d+\\.\\d{${precision}})(\\d)\\d*`, 'g');
-    let match: RegExpExecArray | null;
-    while ((match = pattern.exec(value)) !== null) {
-        if (parseInt(match[2]) >= 5) {
-            match[1] = (parseFloat(match[1]) + 1 / Math.pow(10, precision)).toString();
-        }
-        output = output.replace(match[0], match[1]);
-    }
-    return output;
+export function isEqual(valueA: number, valueB: number, precision = 8) {
+    return valueA.toPrecision(precision) === valueB.toPrecision(precision);
 }
 
-export function truncateRange(value: number, precision = 3) {
-    if (value === 0 || value === 1) {
+export function moreEqual(valueA: number, valueB: number, precision = 8) {
+    return valueA > valueB || isEqual(valueA, valueB, precision);
+}
+
+export function lessEqual(valueA: number, valueB: number, precision = 8) {
+    return valueA < valueB || isEqual(valueA, valueB, precision);
+}
+
+export function truncate(value: number, precision = 3) {
+    if (value === Math.floor(value)) {
         return value.toString();
     }
     else {
@@ -42,13 +41,32 @@ export function truncateRange(value: number, precision = 3) {
     }
 }
 
-export function truncatePrecision(value: number) {
-    const match = /^(\d+)\.(\d+?)(0{5,}|9{5,})\d*$/.exec(value.toString());
-    if (match) {
-        const ordinal = match[1] !== '0' ? match[1].length : 0;
-        return parseFloat(value.toPrecision(ordinal + match[2].length));
+export function truncateFraction(value: number) {
+    if (value !== Math.floor(value)) {
+        const match = /^(\d+)\.(\d*?)(0{5,}|9{5,})\d*$/.exec(value.toString());
+        if (match) {
+            return parseFloat(
+                value.toPrecision(match[2] === ''
+                    ? match[1].length
+                    : (match[1] !== '0' ? match[1].length : 0) + match[2].length
+                )
+            );
+        }
     }
     return value;
+}
+
+export function truncateString(value: string, precision = 3) {
+    let output = value;
+    const pattern = new RegExp(`(\\d+\\.\\d{${precision}})(\\d)\\d*`, 'g');
+    let match: RegExpExecArray | null;
+    while ((match = pattern.exec(value)) !== null) {
+        if (parseInt(match[2]) >= 5) {
+            match[1] = truncateFraction((parseFloat(match[1]) + 1 / Math.pow(10, precision))).toString();
+        }
+        output = output.replace(match[0], match[1]);
+    }
+    return output;
 }
 
 export function convertRadian(value: number) {

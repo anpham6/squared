@@ -32,7 +32,9 @@ app.post('/api/savetodisk', (req, res) => {
     try {
         mkdirp.sync(directory);
         const compression = req.query.compression === 'tar' ? 'tar' : 'zip';
-        const archive = archiver(compression, { zlib: { level: 9 } });
+        const archive = archiver(compression, {
+            zlib: { level: 9 }
+        });
         const zipname = `${dirname}/${req.query.appname || 'squared'}.${compression}`;
         const output = fs.createWriteStream(zipname);
         let delayed = 0;
@@ -62,7 +64,7 @@ app.post('/api/savetodisk', (req, res) => {
                 const data = { name: `${(req.query.directory ? `${req.query.directory}/` : '') + file.pathname}/${file.filename}` };
                 if (file.content && file.content.trim() !== '') {
                     delayed++;
-                    fs.writeFile(filename, file.content, (err) => {
+                    fs.writeFile(filename, file.content, err => {
                         if (delayed !== -1) {
                             if (!err) {
                                 archive.file(filename, data);
@@ -82,7 +84,7 @@ app.post('/api/savetodisk', (req, res) => {
                             finalize();
                         }
                     });
-                    request(file.uri).on('response', (response) => {
+                    request(file.uri).on('response', response => {
                         if (response.statusCode !== 200) {
                             if (delayed !== -1) {
                                 delayed--;
@@ -112,7 +114,7 @@ app.post('/api/savetodisk', (req, res) => {
 
 app.get('/api/downloadtobrowser', (req, res) => {
     if (req.query.filename && req.query.filename.trim() !== '') {
-        res.sendFile(req.query.filename, (err) => {
+        res.sendFile(req.query.filename, err => {
             if (err) {
                 console.log(`ERROR: ${err}`);
             }

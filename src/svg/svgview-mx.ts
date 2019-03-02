@@ -340,7 +340,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                                     for (let k = 0; k < steps[0].length - offset; k++) {
                                                         let keyTime = (keyTimes[j] + steps[0][k] * segDuration) / duration;
                                                         if (keyTimesData.includes(keyTime)) {
-                                                            keyTime += 1 / duration;
+                                                            keyTime += 1 / 1000;
                                                         }
                                                         keyTimesData.push(keyTime);
                                                         valuesData.push(steps[1][k]);
