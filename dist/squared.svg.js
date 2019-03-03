@@ -1,4 +1,4 @@
-/* squared.svg 0.7.1
+/* squared.svg 0.7.2
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -495,12 +495,12 @@
         }
         static setName(element) {
             if (element) {
-                let result = '';
+                let value = '';
                 let tagName;
                 if ($util$1.isString(element.id)) {
                     const id = $util$1.convertWord(element.id, true);
                     if (!NAME_GRAPHICS.has(id)) {
-                        result = id;
+                        value = id;
                     }
                     tagName = id;
                 }
@@ -508,9 +508,9 @@
                     tagName = element.tagName;
                 }
                 let index = NAME_GRAPHICS.get(tagName) || 0;
-                if (result !== '') {
-                    NAME_GRAPHICS.set(result, index);
-                    return result;
+                if (value !== '') {
+                    NAME_GRAPHICS.set(value, index);
+                    return value;
                 }
                 else {
                     NAME_GRAPHICS.set(tagName, ++index);
@@ -644,6 +644,22 @@
             }
             else {
                 value = '';
+            }
+            return value;
+        }
+        static transformRefit(value, transforms, companion, precision) {
+            const commands = SvgBuild.getPathCommands(value);
+            if (commands.length) {
+                let points = SvgBuild.extractPathPoints(commands);
+                if (points.length) {
+                    if (transforms && transforms.length) {
+                        points = SvgBuild.applyTransforms(transforms, points, companion && TRANSFORM.origin(companion.element));
+                    }
+                    if (companion && companion.parent && companion.parent.requireRefit()) {
+                        companion.parent.refitPoints(points);
+                    }
+                    value = SvgBuild.drawPath(SvgBuild.rebindPathPoints(commands, points), precision);
+                }
             }
             return value;
         }
@@ -1530,22 +1546,20 @@
                                 value.push(`#${rgb + (a !== 'FF' ? a : '')}`);
                                 break;
                             }
-                            case 'points': {
-                                for (let k = 0; k < currentValue.length; k++) {
-                                    const current = currentValue[k];
-                                    const next = nextValue[k];
+                            case 'points':
+                                for (let j = 0; j < currentValue.length; j++) {
+                                    const current = currentValue[j];
+                                    const next = nextValue[j];
                                     value.push(`${SvgAnimate.getSplitValue(current.x, next.x, percent)},${SvgAnimate.getSplitValue(current.y, next.y, percent)}`);
                                 }
                                 break;
-                            }
-                            default: {
-                                for (let k = 0; k < currentValue.length; k++) {
-                                    const current = currentValue[k];
-                                    const next = nextValue[k];
+                            default:
+                                for (let j = 0; j < currentValue.length; j++) {
+                                    const current = currentValue[j];
+                                    const next = nextValue[j];
                                     value.push(SvgAnimate.getSplitValue(current, next, percent).toString());
                                 }
                                 break;
-                            }
                         }
                         if (value.length) {
                             splitTimes.push(time);
@@ -1616,6 +1630,9 @@
                     this.evaluateStart = true;
                 }
             }
+        }
+        isLoop(index) {
+            return !!this.loopIntervals && this.loopIntervals[index] === true;
         }
         setGroupOrdering(value) {
             this.group.ordering = value;
@@ -2056,11 +2073,11 @@
             return item.iterationCount === 'infinite' ? Number.POSITIVE_INFINITY : item.delay + item.duration * parseInt(item.iterationCount);
         }
         static getKeyName(item) {
-            let result = item.attributeName;
+            let value = item.attributeName;
             if (SvgBuild.asAnimateTransform(item)) {
-                result += `:${TRANSFORM.typeAsName(item.type)}`;
+                value += `:${TRANSFORM.typeAsName(item.type)}`;
             }
-            return result;
+            return value;
         }
         constructor(animations, ...attrs) {
             animations = (attrs.length ? $util$5.filterArray(animations, item => attrs.includes(item.attributeName)) : animations.slice(0)).sort((a, b) => {
@@ -2264,13 +2281,13 @@
             return this.map[attr] !== undefined;
         }
         get(attr, time, playing = false) {
-            let result;
+            let value;
             if (this.map[attr]) {
                 for (const [interval, data] of this.map[attr].entries()) {
                     if (interval <= time) {
                         for (const previous of data) {
                             if (previous.value !== '' && (previous.time === -1 || previous.end && (previous.fillMode === 4 /* FORWARDS */ || previous.fillMode === 2 /* FREEZE */)) || playing && previous.start && time !== interval) {
-                                result = previous.value;
+                                value = previous.value;
                                 break;
                             }
                         }
@@ -2280,7 +2297,7 @@
                     }
                 }
             }
-            return result;
+            return value;
         }
         evaluateStart(item, otherValue) {
             if (item.evaluateStart) {
@@ -2306,7 +2323,7 @@
     const POLYGON_ARGS = ['points'];
     const CIRCLE_ARGS = ['cx', 'cy', 'r'];
     const ELLIPSE_ARGS = ['cx', 'cy', 'rx', 'ry'];
-    function insertAdjacentSplitValue(map, insertMap, time) {
+    function insertAdjacentSplitValue(map, attr, time, intervalMap) {
         let previousTime = 0;
         let previousValue;
         let previous;
@@ -2316,7 +2333,7 @@
                 previous = { index, value };
                 break;
             }
-            else if (time > previousTime && time < index) {
+            else if (time > previousTime && time < index && previousValue !== undefined) {
                 previous = { index: previousTime, value: previousValue };
                 next = { index, value };
                 break;
@@ -2325,10 +2342,16 @@
             previousValue = value;
         }
         if (previous && next) {
-            setTimelineValue(insertMap, time, getItemSplitValue(time, previous.index, previous.value, next.index, next.value));
+            setTimelineValue(map, time, getItemSplitValue(time, previous.index, previous.value, next.index, next.value), true);
         }
         else if (previous) {
-            setTimelineValue(insertMap, time, previous.value);
+            setTimelineValue(map, time, previous.value, true);
+        }
+        else {
+            const value = intervalMap.get(attr, time, true);
+            if (value) {
+                setTimelineValue(map, time, value);
+            }
         }
     }
     function convertToFraction(values) {
@@ -2485,13 +2508,10 @@
             const values = new Map();
             for (const attr in (forwardMap || map)) {
                 let value;
-                if (map[attr]) {
+                if (map[attr] && map[attr].has(keyTime)) {
                     value = map[attr].get(keyTime);
-                    if (value === undefined) {
-                        value = getFreezeValue(map[attr], keyTime);
-                    }
                 }
-                else if (forwardMap) {
+                else {
                     value = forwardMap[attr].value;
                 }
                 if (value !== undefined) {
@@ -2510,7 +2530,7 @@
             values = values.slice(0).reverse();
         }
         switch (item.attributeName) {
-            case 'transform': {
+            case 'transform':
                 if (item.additiveSum && typeof baseValue === 'string') {
                     const baseArray = $util$6.replaceMap(baseValue.split(/\s+/), value => parseFloat(value));
                     const valuesArray = $util$6.objectMap(values, value => $util$6.replaceMap(value.trim().split(/\s+/), pt => parseFloat(pt)));
@@ -2533,10 +2553,8 @@
                     }
                 }
                 return values[index];
-            }
-            case 'points': {
+            case 'points':
                 return SvgBuild.parsePoints(values[index]);
-            }
             default: {
                 let result = parseFloat(values[index]);
                 if (!isNaN(result)) {
@@ -2659,7 +2677,7 @@
                                         }
                                         if (splitValue !== undefined && !(resultTime === keyTimes[keyTimes.length - 1] && splitValue === values[values.length - 1])) {
                                             if (splitTime === maxTime) {
-                                                resultTime += 1 / item.duration;
+                                                resultTime += 1 / 1000;
                                             }
                                             else {
                                                 maxTime = splitTime;
@@ -2704,7 +2722,7 @@
         }
         return [keyTimes, values, keySplines];
     }
-    function setTimelineValue(map, time, value) {
+    function setTimelineValue(map, time, value, duplicate = false) {
         if (value !== '') {
             let stored = map.get(time);
             let previousTime = false;
@@ -2712,12 +2730,14 @@
                 stored = map.get(time - 1);
                 previousTime = true;
             }
-            if (stored !== value) {
-                if (typeof value === 'number' && Math.round(stored) === Math.round(value)) {
-                    return time;
-                }
-                while (time > 0 && map.has(time)) {
-                    time++;
+            if (stored !== value || duplicate) {
+                if (!duplicate) {
+                    if (typeof value === 'number' && Math.round(stored) === Math.round(value)) {
+                        return time;
+                    }
+                    while (time > 0 && map.has(time)) {
+                        time++;
+                    }
                 }
                 map.set(time, value);
             }
@@ -2770,21 +2790,6 @@
     }
     function playableAnimation(item) {
         return item.playable || item.animationElement && item.duration !== -1;
-    }
-    function getFreezeValue(map, time) {
-        let lastTime = 0;
-        let lastValue;
-        for (const [freezeTime, value] of map.entries()) {
-            if (time === freezeTime) {
-                return value;
-            }
-            else if (time > lastTime && time < freezeTime) {
-                return lastValue;
-            }
-            lastTime = freezeTime;
-            lastValue = value;
-        }
-        return lastValue;
     }
     function cloneKeyTimes(item) {
         return [item.keyTimes.slice(0), item.values.slice(0), item.keySplines ? item.keySplines.slice(0) : undefined];
@@ -3764,8 +3769,8 @@
                                     repeatingAsInfinite = delay[0] <= 0 ? 0 : delay[0];
                                 }
                                 else {
-                                    if (duration.length > 1) {
-                                        repeatingEndTime = $math$2.getLeastCommonMultiple(duration, delay);
+                                    if (duration.length > 1 && duration.every(value => value % 250 === 0)) {
+                                        repeatingEndTime = $math$2.nextMultiple(duration, delay, repeatingEndTime);
                                     }
                                     else if ((repeatingEndTime - delay[0]) % duration[0] !== 0) {
                                         repeatingEndTime = duration[0] * Math.ceil(repeatingEndTime / duration[0]);
@@ -3813,6 +3818,7 @@
                             }
                             const keyTimes = $util$6.sortNumber(Array.from(keyTimesRepeating));
                             if (path || transforming) {
+                                let modified = false;
                                 for (const attr in repeatingMap) {
                                     if (!repeatingMap[attr].has(0) && baseValueMap[attr] !== undefined) {
                                         const endTime = repeatingMap[attr].keys().next().value - 1;
@@ -3820,32 +3826,31 @@
                                         repeatingMap[attr].set(endTime, baseValueMap[attr]);
                                         if (!keyTimes.includes(0)) {
                                             keyTimes.push(0);
+                                            modified = true;
                                         }
                                         if (!keyTimes.includes(endTime)) {
                                             keyTimes.push(endTime);
+                                            modified = true;
                                         }
-                                        $util$6.sortNumber(keyTimes);
                                     }
                                 }
+                                if (modified) {
+                                    $util$6.sortNumber(keyTimes);
+                                }
                             }
-                            const timelineMap = {};
                             for (const attr in repeatingMap) {
-                                const result = new Map();
-                                for (let i = 0; i < keyTimes.length; i++) {
-                                    const keyTime = keyTimes[i];
+                                for (const keyTime of keyTimes) {
                                     if (keyTime <= repeatingMaxTime[attr]) {
-                                        const value = repeatingMap[attr].get(keyTime);
-                                        if (value === undefined) {
-                                            insertAdjacentSplitValue(repeatingMap[attr], result, keyTime);
-                                        }
-                                        else {
-                                            result.set(keyTime, value);
+                                        if (!repeatingMap[attr].has(keyTime)) {
+                                            insertAdjacentSplitValue(repeatingMap[attr], attr, keyTime, intervalMap);
                                         }
                                     }
+                                    else {
+                                        break;
+                                    }
                                 }
-                                timelineMap[attr] = result;
                             }
-                            repeatingResult = createKeyTimeMap(timelineMap, keyTimes);
+                            repeatingResult = createKeyTimeMap(repeatingMap, keyTimes, forwardMap);
                         }
                         if (repeatingAsInfinite === undefined && Object.keys(infiniteMap).length) {
                             const timelineMap = {};
@@ -3856,7 +3861,7 @@
                                 duration.push(infiniteMap[attr].duration);
                                 infiniteAnimations.push(infiniteMap[attr]);
                             }
-                            const maxDuration = $math$2.getLeastCommonMultiple(duration);
+                            const maxDuration = $math$2.nextMultiple(duration);
                             for (const item of infiniteAnimations) {
                                 const attr = item.attributeName;
                                 timelineMap[attr] = new Map();
@@ -3873,7 +3878,9 @@
                                         baseValue = getItemValue(item, values, i, j, baseValue);
                                         maxTime = setTimelineValue(timelineMap[attr], time, baseValue);
                                         insertInterpolator(item, maxTime, item.keySplines, j, keyTimeMode, infiniteInterpolatorMap, infiniteTransformOriginMap);
-                                        keyTimes.push(maxTime);
+                                        if (!keyTimes.includes(maxTime)) {
+                                            keyTimes.push(maxTime);
+                                        }
                                     }
                                 } while (maxTime < maxDuration && ++i);
                             }
@@ -3890,15 +3897,18 @@
                                                 infiniteInterpolatorMap.set(maxTime, interpolator);
                                             }
                                             maxTime = setTimelineValue(timelineMap[attr], maxTime, values[i]);
-                                            keyTimes.push(maxTime);
+                                            if (!keyTimes.includes(maxTime)) {
+                                                keyTimes.push(maxTime);
+                                            }
                                         }
                                     }
                                 }
                             }
+                            $util$6.sortNumber(keyTimes);
                             for (const attr in timelineMap) {
                                 for (const time of keyTimes) {
                                     if (!timelineMap[attr].has(time)) {
-                                        insertAdjacentSplitValue(timelineMap[attr], timelineMap[attr], time);
+                                        insertAdjacentSplitValue(timelineMap[attr], attr, time, intervalMap);
                                     }
                                 }
                             }
@@ -4208,31 +4218,20 @@
         'animation-fill-mode': 'none',
         'animation-timing-function': 'ease'
     };
-    const REGEXP_CUBICBEZIER = new RegExp(`cubic-bezier\\((${$util$8.REGEXP_STRING.ZERO_ONE}), (${$util$8.REGEXP_STRING.DECIMAL}), (${$util$8.REGEXP_STRING.ZERO_ONE}), (${$util$8.REGEXP_STRING.DECIMAL})\\)`);
+    const REGEXP_CUBICBEZIER = `cubic-bezier\\((${$util$8.REGEXP_STRING.ZERO_ONE}), (${$util$8.REGEXP_STRING.DECIMAL}), (${$util$8.REGEXP_STRING.ZERO_ONE}), (${$util$8.REGEXP_STRING.DECIMAL})\\)`;
+    const REGEXP_TIMINGFUNCTION = `(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+, (?:start|end)\\)|${REGEXP_CUBICBEZIER}),?\\s*`;
     function setAttribute(element, attr, value) {
         element.style[attr] = value;
         element.setAttribute(attr, value);
     }
     function parseAttribute(element, attr) {
-        let value = $dom$7.cssAttribute(element, attr);
+        const value = $dom$7.cssAttribute(element, attr);
         if (attr === 'animation-timing-function') {
+            const pattern = new RegExp(REGEXP_TIMINGFUNCTION, 'g');
+            let match;
             const result = [];
-            while (value !== '') {
-                let index = value.indexOf(',');
-                if (index !== -1) {
-                    let seg = value.substring(0, index);
-                    if (seg.startsWith('steps') || seg.startsWith('cubic-bezier')) {
-                        const nextIndex = value.indexOf(')', index) + 1;
-                        seg += value.substring(index, nextIndex);
-                        index = nextIndex;
-                    }
-                    result.push(seg);
-                    value = value.substring(index + 1).trim();
-                }
-                else {
-                    result.push(value);
-                    break;
-                }
+            while ((match = pattern.exec(value)) !== null) {
+                result.push(match[1]);
             }
             return result;
         }
@@ -4515,7 +4514,7 @@
                                                         for (let k = 0; k < steps[0].length - offset; k++) {
                                                             let keyTime = (keyTimes[j] + steps[0][k] * segDuration) / duration;
                                                             if (keyTimesData.includes(keyTime)) {
-                                                                keyTime += 1 / duration;
+                                                                keyTime += 1 / 1000;
                                                             }
                                                             keyTimesData.push(keyTime);
                                                             valuesData.push(steps[1][k]);
@@ -4527,7 +4526,7 @@
                                                 keySplines[j] = KEYSPLINE_NAME.linear;
                                             }
                                             else {
-                                                const match = REGEXP_CUBICBEZIER.exec(keySplines[j]);
+                                                const match = new RegExp(REGEXP_CUBICBEZIER).exec(keySplines[j]);
                                                 keySplines[j] = match ? `${match[1]} ${match[2]} ${match[3]} ${match[4]}` : KEYSPLINE_NAME.ease;
                                             }
                                             keySplinesData.push(keySplines[j]);
@@ -5276,10 +5275,7 @@
         }
         extract(exclude) {
             const transforms = exclude ? SvgBuild.filterTransforms(this.transforms, exclude) : this.transforms;
-            let x = this.x;
-            let y = this.y;
-            let width = this.width;
-            let height = this.height;
+            let { x, y, width, height } = this;
             if (transforms.length) {
                 transforms.reverse();
                 for (let i = 0; i < transforms.length; i++) {
@@ -5417,44 +5413,24 @@
             this.baseValue = '';
             this.init();
         }
-        static extrapolate(attr, pathData, values, companion, transforms, precision) {
+        static extrapolate(attr, pathData, values, transforms, companion, precision) {
+            const transformRefit = !!transforms || !!companion && !!companion.parent && companion.parent.requireRefit();
             const result = [];
-            if (attr === 'points') {
-                for (let i = 0; i < values.length; i++) {
-                    let points = SvgBuild.convertPoints(SvgBuild.parseCoordinates(values[i]));
+            let commands;
+            for (let i = 0; i < values.length; i++) {
+                if (attr === 'd') {
+                    result[i] = values[i];
+                }
+                else if (attr === 'points') {
+                    const points = SvgBuild.convertPoints(SvgBuild.parseCoordinates(values[i]));
                     if (points.length) {
-                        function drawPoints() {
-                            result[i] = companion && SVG.polygon(companion.element) ? SvgBuild.drawPolygon(points, precision) : SvgBuild.drawPolyline(points, precision);
-                        }
-                        if (transforms && transforms.length) {
-                            drawPoints();
-                            const commands = SvgBuild.getPathCommands(result[i]);
-                            if (commands.length) {
-                                points = SvgBuild.extractPathPoints(commands);
-                                if (points.length) {
-                                    points = SvgBuild.applyTransforms(transforms, points, companion && TRANSFORM.origin(companion.element));
-                                }
-                            }
-                        }
-                        if (companion && companion.parent && companion.parent.requireRefit()) {
-                            companion.parent.refitPoints(points);
-                        }
-                        drawPoints();
-                    }
-                    else {
-                        result[i] = '';
+                        result[i] = companion && SVG.polygon(companion.element) ? SvgBuild.drawPolygon(points, precision) : SvgBuild.drawPolyline(points, precision);
                     }
                 }
-            }
-            else if (attr === 'd') {
-                return values.slice(0);
-            }
-            else if (pathData) {
-                if (transforms && transforms.length && companion && SVG.shape(companion.element)) {
-                    pathData = SvgBuild.drawRefit(companion.element, companion.parent, precision);
-                }
-                let commands = SvgBuild.getPathCommands(pathData);
-                for (let i = 0; i < values.length; i++) {
+                else if (pathData) {
+                    if (commands === undefined) {
+                        commands = SvgBuild.getPathCommands(pathData);
+                    }
                     const value = parseFloat(values[i]);
                     if (!isNaN(value)) {
                         const path = i < values.length - 1 ? $util$d.cloneArray(commands, [], true) : commands;
@@ -5493,6 +5469,7 @@
                                 height = value;
                                 break;
                             default:
+                                result[i] = '';
                                 continue;
                         }
                         if (x !== undefined || y !== undefined) {
@@ -5607,36 +5584,26 @@
                                 }
                             }
                         }
-                        else {
-                            result[i] = values[i - 1] || pathData;
-                            continue;
-                        }
                         result[i] = SvgBuild.drawPath(path, precision);
-                        if (transforms && transforms.length) {
-                            commands = SvgBuild.getPathCommands(result[i]);
-                            if (commands.length) {
-                                let points = SvgBuild.extractPathPoints(commands);
-                                if (points.length) {
-                                    points = SvgBuild.applyTransforms(transforms, points, companion && TRANSFORM.origin(companion.element));
-                                    result[i] = SvgBuild.drawPath(SvgBuild.rebindPathPoints(commands, points), precision);
-                                }
-                            }
-                        }
                     }
-                    else {
-                        result[i] = '';
+                }
+                if (result[i]) {
+                    if (transformRefit) {
+                        result[i] = SvgBuild.transformRefit(result[i], transforms, companion, precision);
                     }
+                }
+                else {
+                    result[i] = '';
                 }
             }
             return result;
         }
-        static build(path, transforms, options) {
-            const exclude = options && options.exclude;
-            if (exclude && exclude[path.element.tagName]) {
-                transforms = SvgBuild.filterTransforms(transforms, exclude[path.element.tagName]);
+        build(options) {
+            let transforms;
+            if (options && options.transforms) {
+                transforms = SvgBuild.filterTransforms(options.transforms, options.exclude && options.exclude[this.element.tagName]);
             }
-            path.draw(transforms, options);
-            return path;
+            this.draw(transforms, options);
         }
         draw(transforms, options) {
             let residual;
@@ -5805,7 +5772,7 @@
             this.setPaint([d], precision);
             return d;
         }
-        extendLength(data, negative = false, precision) {
+        extendLength(data, negative = true, precision) {
             if (this.value !== '') {
                 switch (this.element.tagName) {
                     case 'path':
@@ -5851,7 +5818,7 @@
                                             }
                                         }
                                         else {
-                                            const angle = $math$3.getAngle(afterStartPoint, pathStartPoint);
+                                            const angle = $math$3.offsetAngle(afterStartPoint, pathStartPoint);
                                             const x = pathStart.coordinates[0] - $math$3.distanceFromX(leading, angle);
                                             const y = pathStart.coordinates[1] - $math$3.distanceFromY(leading, angle);
                                             if (negative || x >= 0 && y >= 0) {
@@ -5904,7 +5871,7 @@
                                                     }
                                                 }
                                                 else {
-                                                    const angle = $math$3.getAngle(beforeEndPoint, pathEndPoint);
+                                                    const angle = $math$3.offsetAngle(beforeEndPoint, pathEndPoint);
                                                     const x = pathEnd.coordinates[0] + $math$3.distanceFromX(trailing, angle);
                                                     const y = pathEnd.coordinates[1] + $math$3.distanceFromY(trailing, angle);
                                                     if (negative || x >= 0 && y >= 0) {
@@ -5948,98 +5915,115 @@
             return undefined;
         }
         flattenStrokeDash(valueArray, valueOffset, totalLength, pathLength, data) {
-            const result = {
-                items: [],
-                leading: 0,
-                trailing: 0,
-                ratioLength: totalLength / (pathLength || totalLength)
-            };
-            if (valueArray.length) {
-                if (!pathLength) {
-                    pathLength = totalLength;
-                }
-                const extendedLength = data && data.extendedLength || pathLength;
-                let trailingSpace = 0;
-                let j = 0;
-                if (data === undefined) {
-                    const arrayTotal = valueArray.reduce((a, b) => a + b, 0);
-                    valueOffset %= totalLength;
-                    if (valueOffset < 0) {
-                        while (valueOffset < 0) {
-                            valueOffset += arrayTotal;
-                        }
+            if (!pathLength) {
+                pathLength = totalLength;
+            }
+            let arrayLength;
+            let dashArray;
+            let dashArrayTotal;
+            let extendedLength;
+            let j = 0;
+            function getDash(index) {
+                return dashArray[index % arrayLength];
+            }
+            if (data === undefined) {
+                arrayLength = valueArray.length;
+                dashArray = valueArray.slice(0);
+                const dashLength = $math$3.nextMultiple([2, arrayLength]);
+                dashArrayTotal = 0;
+                for (let i = 0; i < dashLength; i++) {
+                    const value = valueArray[i % arrayLength];
+                    dashArrayTotal += value;
+                    if (i >= arrayLength) {
+                        dashArray.push(value);
                     }
                 }
-                else if (data.leadingOffset) {
-                    j = 1;
+                arrayLength = dashLength;
+                if (valueOffset > 0) {
+                    let length = getDash(0);
+                    while (valueOffset - length >= 0) {
+                        valueOffset -= length;
+                        length = getDash(++j);
+                    }
+                    j %= arrayLength;
                 }
-                const arrayLength = valueArray.length;
-                for (let i = 0, dashLength = 0;; i += dashLength, j++) {
-                    dashLength = valueArray[j % arrayLength];
-                    if (i + dashLength > valueOffset) {
-                        let startOffset;
-                        let actualLength;
-                        if (i < valueOffset) {
-                            result.leading = valueOffset - i;
-                            startOffset = 0;
-                            actualLength = dashLength - result.leading;
-                        }
-                        else {
-                            startOffset = i - valueOffset;
-                            actualLength = dashLength;
-                        }
-                        const start = $math$3.truncatePrecision(startOffset / extendedLength);
-                        const end = $math$3.truncatePrecision(start + (actualLength / extendedLength));
-                        if (j % 2 === 0) {
-                            if (start < 1) {
-                                result.items.push({ start, end: Math.min(end, 1) });
-                            }
-                            else {
-                                if (start > 1) {
-                                    result.trailing = $math$3.truncatePrecision((start - 1) * extendedLength);
-                                }
-                                trailingSpace = valueArray[(j + 1) % arrayLength];
-                                break;
-                            }
-                        }
-                        else if (start >= 1) {
-                            result.trailing = $math$3.truncatePrecision((end - 1) * extendedLength);
-                            trailingSpace = dashLength;
-                            break;
-                        }
+                else if (valueOffset < 0) {
+                    dashArray.reverse();
+                    while (valueOffset < 0) {
+                        valueOffset += getDash(j++);
+                    }
+                    j = arrayLength - (j % arrayLength);
+                    dashArray.reverse();
+                }
+                extendedLength = pathLength;
+                data = {
+                    dashArray,
+                    dashArrayTotal,
+                    items: [],
+                    leading: 0,
+                    trailing: 0,
+                    startIndex: j,
+                    extendedLength,
+                    lengthRatio: totalLength / (pathLength || totalLength)
+                };
+            }
+            else {
+                ({ dashArray, dashArrayTotal, extendedLength, startIndex: j } = data);
+                arrayLength = dashArray.length;
+                data.items = [];
+                data.leading = 0;
+            }
+            let dashTotal = 0;
+            let end;
+            for (let i = 0, length = 0;; i += length, j++) {
+                length = getDash(j);
+                let startOffset;
+                let actualLength;
+                if (i < valueOffset) {
+                    data.leading = valueOffset - i;
+                    startOffset = 0;
+                    actualLength = length - data.leading;
+                }
+                else {
+                    startOffset = i - valueOffset;
+                    actualLength = length;
+                }
+                const start = $math$3.truncateFraction(startOffset / extendedLength);
+                end = $math$3.truncateFraction(start + (actualLength / extendedLength));
+                if (j % 2 === 0) {
+                    if (start < 1) {
+                        data.items.push({
+                            start,
+                            end: Math.min(end, 1),
+                            length
+                        });
+                        dashTotal += length;
                     }
                 }
-                if (data === undefined) {
-                    if (result.items.length === 0) {
-                        result.items.push({ start: 1, end: 1 });
-                    }
-                    else {
-                        result.leadingOffset = $math$3.truncatePrecision(result.items[0].start * extendedLength);
-                        result.trailingOffset = $math$3.truncatePrecision((1 - result.items[result.items.length - 1].end) * extendedLength);
-                        if (result.leadingOffset > 0) {
-                            if (result.leadingOffset + result.trailingOffset >= trailingSpace) {
-                                result.leading = 0;
-                                result.trailing = trailingSpace - (result.leadingOffset + result.trailingOffset);
-                            }
-                            else if (result.leadingOffset + result.trailing >= trailingSpace) {
-                                result.leading = 0;
-                                result.trailing -= result.leadingOffset;
-                            }
-                            else if (result.leadingOffset + result.leading >= trailingSpace) {
-                                result.trailing = 0;
-                            }
-                        }
-                        else if (result.leading === 0 && result.trailing < trailingSpace) {
-                            result.trailing = trailingSpace - result.trailingOffset;
-                        }
-                        result.leading *= result.ratioLength;
-                        result.trailing *= result.ratioLength;
-                    }
+                else {
+                    dashTotal += length;
+                }
+                if (end >= 1) {
+                    break;
                 }
             }
-            return result;
+            data.trailing = $math$3.truncateFraction((end - 1) * extendedLength);
+            while (dashTotal % dashArrayTotal !== 0) {
+                const value = getDash(++j);
+                data.trailing += value;
+                dashTotal += value;
+            }
+            if (data.items.length === 0) {
+                data.items.push({ start: 1, end: 1 });
+            }
+            else {
+                data.leadingOffset = $math$3.truncateFraction(data.items[0].start * extendedLength);
+                data.leading *= data.lengthRatio;
+                data.trailing *= data.lengthRatio;
+            }
+            return data;
         }
-        extractStrokeDash(animations, negative = false, precision) {
+        extractStrokeDash(animations, negative = true, loopInterval = 0, precision) {
             const strokeWidth = $util$d.convertInt(this.strokeWidth);
             let result;
             let path;
@@ -6050,9 +6034,10 @@
                     const totalLength = this.totalLength;
                     const pathLength = this.pathLength || totalLength;
                     const dashGroup = [];
-                    let flattenData;
                     let valueOffset = $util$d.convertInt(this.strokeDashoffset);
                     let dashTotal = 0;
+                    let flattenData;
+                    const requireExtend = () => flattenData.leading > 0 || flattenData.trailing > 0;
                     const createDashGroup = (values, offset, delay, duration = 0, companion) => {
                         const data = this.flattenStrokeDash(values, offset, totalLength, pathLength);
                         if (dashGroup.length === 0 || companion) {
@@ -6195,47 +6180,46 @@
                                     }
                                     case 'stroke-dashoffset': {
                                         const duration = item.duration;
-                                        const repeatFraction = 1 / duration;
+                                        const repeatFraction = loopInterval / 1000;
                                         const values = [];
                                         const keyTimes = [];
-                                        let keyTime = 0;
-                                        let previousRemainder = 0;
-                                        let previousIncreasing;
+                                        const loopIntervals = [];
                                         const startOffset = parseFloat(item.values[0]);
-                                        const requireExtend = () => flattenData.leading !== 0 || flattenData.trailing !== 0;
+                                        let keyTime = 0;
+                                        let previousRemaining = 0;
                                         let baseValue;
                                         if (valueOffset !== startOffset) {
                                             if (modified || item.delay > 0) {
-                                                baseValue = createDashGroup(valueArray, startOffset, item.delay, 0, item);
+                                                baseValue = createDashGroup(flattenData.dashArray, startOffset, item.delay, 0, item);
                                             }
                                             else {
-                                                flattenData = this.flattenStrokeDash(valueArray, startOffset, totalLength, pathLength);
-                                                dashGroup[0].items = flattenData.items;
-                                                dashTotal = Math.max(dashTotal, flattenData.items.length);
+                                                flattenData = this.flattenStrokeDash(flattenData.dashArray, startOffset, totalLength, pathLength);
+                                                result = flattenData.items;
+                                                dashGroup[0].items = result;
                                                 baseValue = result;
+                                                dashTotal = Math.max(dashTotal, flattenData.items.length);
                                             }
                                         }
                                         else if (requireExtend()) {
                                             baseValue = result;
                                         }
-                                        if (baseValue && (requireExtend())) {
+                                        let extendedLength = totalLength;
+                                        let extendedRatio = 1;
+                                        if (baseValue && requireExtend()) {
                                             this.extendLength(flattenData, negative, precision);
                                             if (flattenData.path) {
                                                 const boxRect = SvgBuild.parseBoxRect([this.value]);
-                                                const strokeOffset = Math.ceil(strokeWidth / 2);
-                                                const extendedLength = getPathLength(flattenData.path);
-                                                if (flattenData.leading > 0 || flattenData.trailing > 0) {
-                                                    clipPath = SvgBuild.drawRect(boxRect.right - boxRect.left, boxRect.bottom - boxRect.top + strokeOffset * 2, boxRect.left, boxRect.top - strokeOffset);
-                                                }
+                                                extendedLength = $math$3.truncateFraction(getPathLength(flattenData.path));
                                                 flattenData.extendedLength = this.pathLength;
+                                                extendedRatio = extendedLength / totalLength;
                                                 if (flattenData.extendedLength > 0) {
-                                                    flattenData.extendedLength *= extendedLength / totalLength;
+                                                    flattenData.extendedLength *= extendedRatio;
                                                 }
                                                 else {
                                                     flattenData.extendedLength = extendedLength;
                                                 }
                                                 if (baseValue === result) {
-                                                    const data = this.flattenStrokeDash(valueArray, 0, totalLength, pathLength, flattenData);
+                                                    const data = this.flattenStrokeDash(flattenData.dashArray, 0, totalLength, pathLength, flattenData);
                                                     result = data.items;
                                                     dashGroup[0].items = result;
                                                     baseValue = result;
@@ -6243,121 +6227,141 @@
                                                 else {
                                                     for (const group of dashGroup) {
                                                         if (group.items === baseValue) {
-                                                            const data = this.flattenStrokeDash(valueArray, 0, totalLength, pathLength, flattenData);
+                                                            const data = this.flattenStrokeDash(flattenData.dashArray, 0, totalLength, pathLength, flattenData);
                                                             baseValue = data.items;
                                                             group.items = baseValue;
                                                             break;
                                                         }
                                                     }
                                                 }
-                                                path = flattenData.path;
                                                 dashTotal = Math.max(dashTotal, baseValue.length);
+                                                const strokeOffset = Math.ceil(strokeWidth / 2);
+                                                path = flattenData.path;
+                                                clipPath = SvgBuild.drawRect(boxRect.right - boxRect.left, boxRect.bottom - boxRect.top + strokeOffset * 2, boxRect.left, boxRect.top - strokeOffset);
                                             }
                                         }
-                                        $util$d.replaceMap(item.values, value => (parseFloat(value) - valueOffset).toString());
-                                        for (let j = 0; j < item.keyTimes.length; j++) {
-                                            if (j < item.keyTimes.length - 1) {
-                                                const offsetFrom = parseFloat(item.values[j]);
-                                                const offsetTo = parseFloat(item.values[j + 1]);
-                                                const increasing = offsetTo > offsetFrom;
-                                                const segDuration = (item.keyTimes[j + 1] - item.keyTimes[j]) * duration;
-                                                let offsetTotal = Math.abs(offsetTo - offsetFrom);
-                                                let finalValue = ((offsetTo % totalLength) / totalLength).toString();
-                                                function getKeyTimeIncrement(value) {
-                                                    return $math$3.truncatePrecision(((value / offsetTotal) * segDuration) / duration);
+                                        $util$d.replaceMap(item.values, value => (parseFloat(value) - startOffset).toString());
+                                        const iterationCount = item.keyTimes.length - 1;
+                                        for (let j = 0; j < iterationCount; j++) {
+                                            const offsetFrom = parseFloat(item.values[j]);
+                                            const offsetTo = parseFloat(item.values[j + 1]);
+                                            const offsetValue = Math.abs(offsetTo - offsetFrom);
+                                            const keyTimeTo = item.keyTimes[j + 1];
+                                            if (offsetValue === 0) {
+                                                keyTime = keyTimeTo;
+                                                keyTimes.push(keyTime);
+                                                if (values.length) {
+                                                    values.push(values[values.length - 1]);
+                                                    previousRemaining = parseFloat(values[values.length - 1]);
                                                 }
-                                                while (offsetTotal > 0) {
-                                                    let ignoreFraction = false;
-                                                    if (previousRemainder !== 0) {
-                                                        let previousOffset = parseFloat(values[values.length - 1]);
-                                                        if (previousOffset > 0 && previousOffset < 1) {
-                                                            if (previousIncreasing && !increasing || !previousIncreasing && increasing) {
-                                                                previousOffset = 1 - previousOffset;
-                                                            }
-                                                            previousOffset *= totalLength;
-                                                            if (offsetTotal >= previousOffset) {
-                                                                values.push(increasing ? '0' : '1');
-                                                            }
-                                                            else {
-                                                                values.push(finalValue);
-                                                            }
-                                                            const remainderOffset = offsetTotal - previousOffset;
-                                                            if (remainderOffset > 0) {
-                                                                keyTime += getKeyTimeIncrement(previousOffset);
-                                                                keyTimes.push(keyTime);
-                                                                offsetTotal -= previousOffset;
-                                                                previousRemainder = 0;
-                                                            }
-                                                            else {
-                                                                keyTime = item.keyTimes[j + 1];
-                                                                keyTimes.push(keyTime);
-                                                                break;
-                                                            }
+                                                else {
+                                                    values.push('0');
+                                                    previousRemaining = 0;
+                                                }
+                                                continue;
+                                            }
+                                            const increasing = offsetTo > offsetFrom;
+                                            const segDuration = (keyTimeTo - item.keyTimes[j]) * duration;
+                                            const offsetTotal = offsetValue * flattenData.lengthRatio;
+                                            let iterationTotal = offsetTotal / extendedLength;
+                                            function getKeyTimeIncrement(offset) {
+                                                return (offset / offsetTotal * segDuration) / duration;
+                                            }
+                                            function setFinalValue(offset, checkInvert = false) {
+                                                finalValue = (offsetRemaining - offset) / extendedLength;
+                                                if (checkInvert) {
+                                                    const value = $math$3.truncateFraction(finalValue);
+                                                    if (increasing) {
+                                                        if (value > 0) {
+                                                            finalValue = 1 - finalValue;
                                                         }
-                                                    }
-                                                    else if (previousIncreasing !== undefined) {
-                                                        if (increasing) {
-                                                            ignoreFraction = previousIncreasing;
-                                                        }
-                                                        else {
-                                                            ignoreFraction = !previousIncreasing;
-                                                        }
-                                                        previousIncreasing = undefined;
-                                                    }
-                                                    else if (keyTimes.length) {
-                                                        const value = values[values.length - 1];
-                                                        if (increasing) {
-                                                            ignoreFraction = value === '1';
-                                                        }
-                                                        else {
-                                                            ignoreFraction = value === '0';
-                                                        }
-                                                    }
-                                                    if (!ignoreFraction) {
-                                                        keyTimes.push(keyTime + (keyTime !== 0 ? repeatFraction : 0));
-                                                    }
-                                                    if (offsetTotal > totalLength) {
-                                                        if (increasing) {
-                                                            if (!ignoreFraction) {
-                                                                values.push('1');
-                                                            }
-                                                            values.push('0');
-                                                        }
-                                                        else {
-                                                            if (!ignoreFraction) {
-                                                                values.push('0');
-                                                            }
-                                                            values.push('1');
-                                                        }
-                                                        keyTime = getKeyTimeIncrement(totalLength);
-                                                        keyTimes.push(keyTime);
                                                     }
                                                     else {
-                                                        if (!ignoreFraction) {
-                                                            if (increasing) {
-                                                                values.push('1');
-                                                            }
-                                                            else {
-                                                                values.push('0');
-                                                            }
-                                                            if (finalValue === '0' && values[values.length - 1] === '0') {
-                                                                finalValue = '1';
-                                                            }
+                                                        if (value === 0) {
+                                                            finalValue = 1;
                                                         }
-                                                        values.push(finalValue);
-                                                        keyTime = item.keyTimes[j + 1];
-                                                        keyTimes.push(keyTime);
-                                                        previousIncreasing = increasing;
-                                                        previousRemainder = offsetTotal;
                                                     }
-                                                    offsetTotal -= totalLength;
                                                 }
                                             }
+                                            function isDuplicateFraction() {
+                                                if (j > 0) {
+                                                    if (increasing) {
+                                                        return values[values.length - 1] === '1';
+                                                    }
+                                                    else {
+                                                        return values[values.length - 1] === '0';
+                                                    }
+                                                }
+                                                return false;
+                                            }
+                                            function insertFractionKeyTime() {
+                                                if (!isDuplicateFraction()) {
+                                                    loopIntervals[keyTimes.length] = true;
+                                                    keyTimes.push(keyTime === 0 ? 0 : $math$3.truncateFraction(keyTime + repeatFraction));
+                                                    values.push(increasing ? '1' : '0');
+                                                }
+                                            }
+                                            function insertFinalKeyTime() {
+                                                keyTime = keyTimeTo;
+                                                keyTimes.push(keyTime);
+                                                const value = $math$3.truncateFraction(finalValue);
+                                                values.push(value.toString());
+                                                previousRemaining = value > 0 && value < 1 ? finalValue : 0;
+                                            }
+                                            let offsetRemaining = offsetTotal;
+                                            let finalValue = 0;
+                                            if (previousRemaining > 0) {
+                                                const remaining = increasing ? previousRemaining : 1 - previousRemaining;
+                                                const remainingValue = $math$3.truncateFraction(remaining * extendedLength);
+                                                if ($math$3.lessEqual(offsetRemaining, remainingValue)) {
+                                                    setFinalValue(0);
+                                                    if (increasing) {
+                                                        finalValue = previousRemaining - finalValue;
+                                                    }
+                                                    else {
+                                                        finalValue += previousRemaining;
+                                                    }
+                                                    insertFinalKeyTime();
+                                                    continue;
+                                                }
+                                                else {
+                                                    values.push(increasing ? '0' : '1');
+                                                    keyTime += getKeyTimeIncrement(remainingValue);
+                                                    keyTimes.push($math$3.truncateFraction(keyTime));
+                                                    iterationTotal = $math$3.truncateFraction(iterationTotal - remaining);
+                                                    offsetRemaining = $math$3.truncateFraction(offsetRemaining - remainingValue);
+                                                }
+                                            }
+                                            if ($math$3.isEqual(offsetRemaining, extendedLength)) {
+                                                offsetRemaining = extendedLength;
+                                            }
+                                            if (offsetRemaining >= extendedLength) {
+                                                iterationTotal = Math.floor(iterationTotal);
+                                                const iterationOffset = iterationTotal * extendedLength;
+                                                if (iterationOffset === offsetRemaining) {
+                                                    iterationTotal--;
+                                                }
+                                                setFinalValue(iterationOffset, true);
+                                            }
+                                            else {
+                                                iterationTotal = 0;
+                                                setFinalValue(0, true);
+                                            }
+                                            while (iterationTotal > 0) {
+                                                insertFractionKeyTime();
+                                                values.push(increasing ? '0' : '1');
+                                                keyTime += getKeyTimeIncrement(extendedLength);
+                                                keyTimes.push($math$3.truncateFraction(keyTime));
+                                                iterationTotal--;
+                                            }
+                                            insertFractionKeyTime();
+                                            insertFinalKeyTime();
                                         }
                                         item.baseValue = undefined;
                                         item.replaceValue = '0';
                                         item.values = values;
                                         item.keyTimes = keyTimes;
+                                        item.loopIntervals = loopIntervals;
                                         const timingFunction = item.timingFunction;
                                         if (timingFunction) {
                                             item.keySplines = undefined;
@@ -6490,7 +6494,11 @@
         build(options) {
             if (this.path) {
                 this.path.parent = this.parent;
-                SvgPath.build(this.path, this.transforms, options);
+                if (options === undefined) {
+                    options = {};
+                }
+                options.transforms = this.transforms;
+                this.path.build(options);
             }
         }
         synchronize(options) {
@@ -6529,7 +6537,8 @@
         }
         build(options) {
             const element = options && options.element || this.element;
-            const path = SvgPath.build(new SvgPath(element), [], options);
+            const path = new SvgPath(element);
+            path.build(options);
             if (path.value) {
                 const precision = options && options.precision;
                 this.clipRegion = path.value;
@@ -6559,6 +6568,7 @@
                     offsetY = tileHeight - offsetY;
                     remainingHeight += tileHeight;
                 }
+                options = Object.assign({}, options);
                 while (remainingHeight > 0) {
                     const y = boundingY + j * tileHeight - offsetY;
                     let remainingWidth = width;
@@ -6578,7 +6588,8 @@
                                     else {
                                         item.path.refitBaseValue(x, y, precision);
                                     }
-                                    SvgPath.build(item.path, item.transforms, options);
+                                    options.transforms = item.transforms;
+                                    item.path.build(options);
                                     item.path.fillOpacity = (parseFloat(item.path.fillOpacity) * parseFloat(this.fillOpacity)).toString();
                                     item.path.clipPath = SvgBuild.drawRect(tileWidth, tileHeight, x, y, precision) + (item.path.clipPath !== '' ? `;${item.path.clipPath}` : '');
                                 }
@@ -6651,7 +6662,10 @@
                                 while (rotateOrigin.length) {
                                     const pt = rotateOrigin.shift();
                                     if (pt.angle === item.angle) {
-                                        item.origin = { x: x + pt.x, y: y + pt.y };
+                                        item.origin = {
+                                            x: x + pt.x,
+                                            y: y + pt.y
+                                        };
                                         break;
                                     }
                                 }
@@ -6763,7 +6777,8 @@
             super.build(options);
         }
         synchronize(options) {
-            const [animations, transformations] = [$util$f.filterArray(this.animations, item => this.verifyBaseValue(item.attributeName, 0) === undefined || item.attributeName === 'x' || item.attributeName === 'y'), this.getAnimateTransform()];
+            const animations = $util$f.filterArray(this.animations, item => this.verifyBaseValue(item.attributeName, 0) === undefined || item.attributeName === 'x' || item.attributeName === 'y');
+            const transformations = this.getAnimateTransform();
             if (animations.length || transformations.length) {
                 this.animateSequentially(this.getAnimateViewRect(animations), transformations, undefined, options);
             }

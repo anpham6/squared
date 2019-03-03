@@ -84,29 +84,29 @@ export function clampRange(value: number, min = 0, max = 1) {
     return value;
 }
 
-export function nextMultiple(values: number[], offset?: number[]) {
+export function nextMultiple(values: number[], offset?: number[], minimum = 0) {
     if (values.length > 1) {
         const increment = minArray(values);
-        let minimum = 0;
-        if (offset) {
-            if (offset.length === values.length) {
-                for (let i = 0; i < offset.length; i++) {
-                    minimum = Math.max(minimum, offset[i] + values[i]);
-                }
-            }
-            else {
-                offset = undefined;
+        if (offset && offset.length === values.length) {
+            for (let i = 0; i < offset.length; i++) {
+                minimum = Math.max(minimum, offset[i] + values[i]);
             }
         }
-        if (offset === undefined) {
+        else {
+            offset = undefined;
             minimum = Math.max(minimum, increment);
         }
-        let value = minimum;
+        let value = 0;
+        while (value < minimum) {
+            value += increment;
+        }
+        const start = offset ? offset[0] : 0;
         let valid = false;
         while (!valid) {
-            for (let i = 0; i < values.length; i++) {
-                const total = value - (offset ? offset[i] : 0);
-                if (total % values[i] === 0) {
+            const total = start + value;
+            for (let i = 1; i < values.length; i++) {
+                const multiple = values[i] + (offset ? offset[i] : 0);
+                if (total % multiple === 0) {
                     valid = true;
                 }
                 else {
@@ -116,7 +116,7 @@ export function nextMultiple(values: number[], offset?: number[]) {
                 }
             }
         }
-        return value;
+        return start + value;
     }
     return values[0];
 }

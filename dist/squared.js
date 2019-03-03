@@ -1,4 +1,4 @@
-/* squared 0.7.1
+/* squared 0.7.2
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -471,19 +471,19 @@
     function defaultWhenNull(options, ...attrs) {
         let current = options;
         for (let i = 0; i < attrs.length - 1; i++) {
-            const value = attrs[i];
+            const name = attrs[i];
             if (i === attrs.length - 2) {
-                if (!hasValue(current[value])) {
-                    current[value] = attrs[i + 1];
+                if (!hasValue(current[name])) {
+                    current[name] = attrs[i + 1];
                 }
             }
-            else if (isString(value)) {
-                if (typeof current[value] === 'object') {
-                    current = current[value];
+            else if (isString(name)) {
+                if (typeof current[name] === 'object') {
+                    current = current[name];
                 }
-                else if (current[value] === undefined) {
-                    current[value] = {};
-                    current = current[value];
+                else if (current[name] === undefined) {
+                    current[name] = {};
+                    current = current[name];
                 }
                 else {
                     break;
@@ -977,9 +977,9 @@
     }
     HSL_SORTED.sort(sortHSL);
     function convertHSL({ r = 0, g = 0, b = 0 }) {
-        r = r / 255;
-        g = g / 255;
-        b = b / 255;
+        r /= 255;
+        g /= 255;
+        b /= 255;
         const min = Math.min(r, g, b);
         const max = Math.max(r, g, b);
         let h = (max + min) / 2;
@@ -1042,41 +1042,41 @@
         return undefined;
     }
     function getColorByShade(value) {
-        const result = HSL_SORTED.slice(0);
-        let index = result.findIndex(item => item.value === value);
+        const sorted = HSL_SORTED.slice(0);
+        let index = sorted.findIndex(item => item.value === value);
         if (index !== -1) {
-            return result[index];
+            return sorted[index];
         }
         else {
             const rgb = convertRGBA(value);
             if (rgb) {
                 const hsl = convertHSL(rgb);
                 if (hsl) {
-                    result.push({
+                    sorted.push({
                         name: '',
                         value: '',
                         hsl,
                         rgba: { r: -1, g: -1, b: -1, a: 1 },
                     });
-                    result.sort(sortHSL);
-                    index = result.findIndex(item => item.name === '');
-                    return result[Math.min(index + 1, result.length - 1)];
+                    sorted.sort(sortHSL);
+                    index = sorted.findIndex(item => item.name === '');
+                    return sorted[Math.min(index + 1, sorted.length - 1)];
                 }
             }
             return undefined;
         }
     }
     function convertHex(...values) {
-        let result = '';
+        let output = '';
         for (const value of values) {
             let rgb = typeof value === 'string' ? parseInt(value) : value;
             if (isNaN(rgb)) {
                 return '00';
             }
             rgb = Math.max(0, Math.min(rgb, 255));
-            result += HEX_CHAR.charAt((rgb - (rgb % 16)) / 16) + HEX_CHAR.charAt(rgb % 16);
+            output += HEX_CHAR.charAt((rgb - (rgb % 16)) / 16) + HEX_CHAR.charAt(rgb % 16);
         }
-        return result;
+        return output;
     }
     function convertRGBA(value) {
         value = value.replace(/#/g, '').trim();
@@ -1138,14 +1138,14 @@
                 if (match[4] === undefined) {
                     match[4] = parseFloat(opacity).toPrecision(2);
                 }
-                const valueHex = convertHex(match[1]) + convertHex(match[2]) + convertHex(match[3]);
-                const valueA = convertAlpha$1(match[4]);
-                const valueRGBA = `#${valueHex + valueA}`;
+                const valueHEX = convertHex(match[1]) + convertHex(match[2]) + convertHex(match[3]);
+                const valueAlpha = convertAlpha$1(match[4]);
+                const valueRGBA = `#${valueHEX + valueAlpha}`;
                 const alpha = parseFloat(match[4]);
                 return {
-                    valueRGB: `#${valueHex}`,
+                    valueRGB: `#${valueHEX}`,
                     valueRGBA,
-                    valueARGB: `#${valueA + valueHex}`,
+                    valueARGB: `#${valueAlpha + valueHEX}`,
                     alpha,
                     rgba: convertRGBA(valueRGBA),
                     opaque: alpha < 1,
@@ -1533,21 +1533,21 @@
         return '';
     }
     function cssInheritStyle(element, attr, exclude, tagNames) {
-        let result = '';
+        let value = '';
         if (element) {
             let current = element.parentElement;
             while (current && (tagNames === undefined || !tagNames.includes(current.tagName))) {
-                result = getStyle(current)[attr] || '';
-                if (result === 'inherit' || exclude && exclude.some(value => result.indexOf(value) !== -1)) {
-                    result = '';
+                value = getStyle(current)[attr] || '';
+                if (value === 'inherit' || exclude && exclude.some(style => value.indexOf(style) !== -1)) {
+                    value = '';
                 }
-                if (result !== '' || current === document.body) {
+                if (value !== '' || current === document.body) {
                     break;
                 }
                 current = current.parentElement;
             }
         }
-        return result;
+        return value;
     }
     function cssParent(element, attr, ...styles) {
         if (element) {
@@ -1774,18 +1774,12 @@
             }
             return false;
         }
-        if (element.nodeName === '#text') {
-            return findFreeForm([element]);
-        }
-        else {
-            return findFreeForm(element.childNodes);
-        }
+        return findFreeForm(element.nodeName === '#text' ? [element] : element.childNodes);
     }
     function isPlainText(element, whiteSpace = false) {
         if (element && element.nodeName === '#text' && element.textContent) {
             if (whiteSpace) {
                 const value = element.textContent;
-                let valid = false;
                 for (let i = 0; i < value.length; i++) {
                     switch (value.charCodeAt(i)) {
                         case 9:
@@ -1794,11 +1788,10 @@
                         case 32:
                             continue;
                         default:
-                            valid = true;
-                            break;
+                            return true;
                     }
                 }
-                return valid && value !== '';
+                return false;
             }
             else {
                 return element.textContent.trim() !== '';
@@ -1979,34 +1972,43 @@
     function distanceFromY(value, angle) {
         return value * Math.cos(convertRadian(angle)) * -1;
     }
-    function truncateString(value, precision = 3) {
-        let result = value;
-        const pattern = new RegExp(`(\\d+\\.\\d{${precision}})\\d+`, 'g');
-        let match;
-        while ((match = pattern.exec(value)) !== null) {
-            result = result.replace(match[0], match[1]);
-        }
-        return result;
+    function isEqual$1(valueA, valueB, precision = 8) {
+        return valueA.toPrecision(precision) === valueB.toPrecision(precision);
     }
-    function truncateRange(value, precision = 3) {
-        if (value === 0 || value === 1) {
-            return value.toString();
-        }
-        else {
-            return value.toPrecision(precision).replace(/\.?0+$/, '');
-        }
+    function moreEqual(valueA, valueB, precision = 8) {
+        return valueA > valueB || isEqual$1(valueA, valueB, precision);
     }
-    function truncatePrecision(value) {
-        const match = /^\d+\.(\d+?)(0{5,}|9{5,})\d*$/.exec(value.toString());
-        if (match) {
-            return parseFloat(value.toPrecision(match[1].length));
+    function lessEqual(valueA, valueB, precision = 8) {
+        return valueA < valueB || isEqual$1(valueA, valueB, precision);
+    }
+    function truncate(value, precision = 3) {
+        return value === Math.floor(value) ? value.toString() : value.toPrecision(precision).replace(/\.?0+$/, '');
+    }
+    function truncateFraction(value) {
+        if (value !== Math.floor(value)) {
+            const match = /^(\d+)\.(\d*?)(0{5,}|9{5,})\d*$/.exec(value.toString());
+            if (match) {
+                return match[2] === '' ? Math.round(value) : parseFloat(value.toPrecision((match[1] !== '0' ? match[1].length : 0) + match[2].length));
+            }
         }
         return value;
+    }
+    function truncateString(value, precision = 3) {
+        const pattern = new RegExp(`(\\d+\\.\\d{${precision}})(\\d)\\d*`, 'g');
+        let match;
+        let output = value;
+        while ((match = pattern.exec(value)) !== null) {
+            if (parseInt(match[2]) >= 5) {
+                match[1] = truncateFraction((parseFloat(match[1]) + 1 / Math.pow(10, precision))).toString();
+            }
+            output = output.replace(match[0], match[1]);
+        }
+        return output;
     }
     function convertRadian(value) {
         return value * Math.PI / 180;
     }
-    function getAngle(start, end) {
+    function offsetAngle(start, end) {
         const y = end.y - start.y;
         const value = Math.atan2(y, end.x - start.x) * 180 / Math.PI;
         if (value < 0) {
@@ -2016,39 +2018,48 @@
             return (value + 90) % 360;
         }
     }
-    function getLeastCommonMultiple(values, offset) {
+    function clampRange(value, min = 0, max = 1) {
+        if (value < min) {
+            value = min;
+        }
+        else if (value > max) {
+            value = max;
+        }
+        return value;
+    }
+    function nextMultiple(values, offset, minimum = 0) {
         if (values.length > 1) {
             const increment = minArray(values);
-            let minimum = 0;
-            if (offset) {
-                if (offset.length === values.length) {
-                    for (let i = 0; i < offset.length; i++) {
-                        minimum = Math.max(minimum, offset[i] + values[i]);
-                    }
-                }
-                else {
-                    offset = undefined;
+            if (offset && offset.length === values.length) {
+                for (let i = 0; i < offset.length; i++) {
+                    minimum = Math.max(minimum, offset[i] + values[i]);
                 }
             }
-            if (offset === undefined) {
+            else {
+                offset = undefined;
                 minimum = Math.max(minimum, increment);
             }
-            let result = minimum;
+            let value = 0;
+            while (value < minimum) {
+                value += increment;
+            }
+            const start = offset ? offset[0] : 0;
             let valid = false;
             while (!valid) {
-                for (let i = 0; i < values.length; i++) {
-                    const total = result - (offset ? offset[i] : 0);
-                    if (total % values[i] === 0) {
+                const total = start + value;
+                for (let i = 1; i < values.length; i++) {
+                    const multiple = values[i] + (offset ? offset[i] : 0);
+                    if (total % multiple === 0) {
                         valid = true;
                     }
                     else {
                         valid = false;
-                        result += increment;
+                        value += increment;
                         break;
                     }
                 }
             }
-            return result;
+            return start + value;
         }
         return values[0];
     }
@@ -2058,12 +2069,16 @@
         maxArray: maxArray,
         distanceFromX: distanceFromX,
         distanceFromY: distanceFromY,
+        isEqual: isEqual$1,
+        moreEqual: moreEqual,
+        lessEqual: lessEqual,
+        truncate: truncate,
+        truncateFraction: truncateFraction,
         truncateString: truncateString,
-        truncateRange: truncateRange,
-        truncatePrecision: truncatePrecision,
         convertRadian: convertRadian,
-        getAngle: getAngle,
-        getLeastCommonMultiple: getLeastCommonMultiple
+        offsetAngle: offsetAngle,
+        clampRange: clampRange,
+        nextMultiple: nextMultiple
     });
 
     function replaceTemplateSection(data, value) {
@@ -2079,6 +2094,19 @@
     function replacePlaceholder(value, id, content, before = false) {
         const hash = typeof id === 'number' ? formatPlaceholder(id) : id;
         return value.replace(hash, (before ? hash : '') + content + '\n' + (before ? '' : hash));
+    }
+    function pushIndent(value, depth, char = '\t') {
+        if (value !== '') {
+            const pattern = new RegExp(`^${char.replace('\\', '\\\\')}+`);
+            return joinMap(value.split('\n'), line => {
+                const match = pattern.exec(line);
+                if (match) {
+                    return line.replace(match[0], char.repeat(depth + match[0].length));
+                }
+                return line;
+            });
+        }
+        return value;
     }
     function replaceIndent(value, depth, pattern) {
         if (depth >= 0) {
@@ -2189,17 +2217,17 @@
                         for (let i = 0; i < unknown.length; i++) {
                             result += createTemplate(value, unknown[i], format, attr.toString());
                         }
-                        if (result === '') {
-                            result = false;
+                        if (result !== '') {
+                            result = trimEnd(result, '\n');
                         }
                         else {
-                            result = trimEnd(result, '\n');
+                            result = false;
                         }
                     }
                 }
                 else {
                     hash = '[&~]';
-                    result = typeof unknown === 'boolean' ? '' : unknown.toString();
+                    result = typeof unknown === 'boolean' ? false : unknown.toString();
                 }
                 if (!result) {
                     if (new RegExp(`{&${attr}}`).test(output)) {
@@ -2235,7 +2263,7 @@
             });
         }
         const closed = /\/>\n*$/;
-        let result = '';
+        let output = '';
         let indent = -1;
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
@@ -2265,21 +2293,22 @@
                 let firstLine = true;
                 for (const partial of line.tag.trim().split('\n')) {
                     const depth = previous + (firstLine ? 0 : 1);
-                    result += (depth > 0 ? char.repeat(depth) : '') + partial.trim() + '\n';
+                    output += (depth > 0 ? char.repeat(depth) : '') + partial.trim() + '\n';
                     firstLine = false;
                 }
             }
             else {
-                result += line.tag + '\n';
+                output += line.tag + '\n';
             }
-            result += line.value;
+            output += line.value;
         }
-        return result.trim();
+        return output.trim();
     }
 
     var xml = /*#__PURE__*/Object.freeze({
         formatPlaceholder: formatPlaceholder,
         replacePlaceholder: replacePlaceholder,
+        pushIndent: pushIndent,
         replaceIndent: replaceIndent,
         replaceTab: replaceTab,
         replaceEntity: replaceEntity,

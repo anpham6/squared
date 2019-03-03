@@ -1,4 +1,4 @@
-/* android.widget 0.7.0
+/* android.widget 0.7.2
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -14,12 +14,11 @@ this.android.widget.coordinator = (function () {
     const $utilA = android.lib.util;
     class Coordinator extends squared.base.Extension {
         processNode(node, parent) {
-            const controller = this.application.controllerHandler;
             const options = $utilA.createViewAttribute(node.element ? this.options[node.element.id] : undefined);
             node.setControlType($constA.SUPPORT_ANDROID.COORDINATOR, $enumA.CONTAINER_NODE.BLOCK);
             node.exclude({ resource: $enum.NODE_RESOURCE.ASSET });
             node.render(parent);
-            const output = controller.renderNodeStatic($constA.SUPPORT_ANDROID.COORDINATOR, node.renderDepth, $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')), '', '', node, true);
+            const output = this.application.controllerHandler.renderNodeStatic($constA.SUPPORT_ANDROID.COORDINATOR, node.renderDepth, $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')), '', '', node, true);
             const element = Coordinator.findNestedByName(node.element, "android.widget.toolbar" /* TOOLBAR */);
             if (element) {
                 const toolbar = $dom.getElementAsNode(element);

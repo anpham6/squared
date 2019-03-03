@@ -72,7 +72,7 @@ declare global {
             function truncateString(value: string, precision?: number): string;
             function offsetAngle(start: Point, end: Point): number;
             function clampRange(value: number, min?: number, max?: number): number;
-            function nextMultiple(values: number[], offset?: number[]): number;
+            function nextMultiple(values: number[], offset?: number[], minumum?: number): number;
         }
 
         namespace util {

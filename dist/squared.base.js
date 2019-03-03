@@ -1,4 +1,4 @@
-/* squared.base 0.7.1
+/* squared.base 0.7.2
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -342,11 +342,6 @@
         init() {
             this.floated = this.getFloated();
             this.cleared = this.getCleared();
-            this.linearX = this.isLinearX();
-        }
-        initParent() {
-            this.floated = this.getFloated(true);
-            this.cleared = this.getCleared(true);
             this.linearX = this.isLinearX();
         }
         setType(containerType, ...alignmentType) {
@@ -722,12 +717,10 @@
                                 break;
                             }
                             case 'borderRadius': {
-                                const [top, right, bottom, left] = [
-                                    node.css('borderTopLeftRadius'),
-                                    node.css('borderTopRightRadius'),
-                                    node.css('borderBottomLeftRadius'),
-                                    node.css('borderBottomRightRadius')
-                                ];
+                                const top = node.css('borderTopLeftRadius');
+                                const right = node.css('borderTopRightRadius');
+                                const bottom = node.css('borderBottomLeftRadius');
+                                const left = node.css('borderBottomRightRadius');
                                 if (top === right && right === bottom && bottom === left) {
                                     boxStyle.borderRadius = $util$2.convertInt(top) > 0 ? [top] : undefined;
                                 }
@@ -1002,9 +995,9 @@
                                 value = $xml.replaceEntity(replaceExcluded(element, 'innerHTML'));
                             }
                             else if ($dom$1.hasLineBreak(element, true)) {
-                                value = $xml.replaceEntity(replaceExcluded(element, 'innerHTML'));
-                                value = value.replace(/\s*<br[^>]*>\s*/g, '\\n');
-                                value = value.replace(/(<([^>]+)>)/ig, '');
+                                value = $xml.replaceEntity(replaceExcluded(element, 'innerHTML'))
+                                    .replace(/\s*<br[^>]*>\s*/g, '\\n')
+                                    .replace(/(<([^>]+)>)/ig, '');
                             }
                             else {
                                 value = $xml.replaceEntity(replaceExcluded(element, 'textContent'));
@@ -1040,7 +1033,7 @@
                                     value = '&#160;' + value;
                                 }
                                 if (nextSibling && !nextSibling.lineBreak && /\s+$/.test(original)) {
-                                    value = value + '&#160;';
+                                    value += '&#160;';
                                 }
                             }
                             else {
@@ -3044,17 +3037,17 @@
         }
         getEnclosingTag(controlName, id, depth, xml = '') {
             const indent = '\t'.repeat(Math.max(0, depth));
-            let result = `{<${id}}`;
+            let output = `{<${id}}`;
             if (xml !== '') {
-                result += indent + `<${controlName}${depth === 0 ? '{#0}' : ''}{@${id}}>\n` +
+                output += indent + `<${controlName}${depth === 0 ? '{#0}' : ''}{@${id}}>\n` +
                     xml +
                     indent + `</${controlName}>\n`;
             }
             else {
-                result += indent + `<${controlName}${depth === 0 ? '{#0}' : ''}{@${id}} />\n`;
+                output += indent + `<${controlName}${depth === 0 ? '{#0}' : ''}{@${id}} />\n`;
             }
-            result += `{>${id}}`;
-            return result;
+            output += `{>${id}}`;
+            return output;
         }
         removePlaceholders(value) {
             return value.replace(/{[<:@#>]\d+(\^\d+)?}\n?/g, '').trim();
@@ -3747,13 +3740,13 @@
             return value || '';
         }
         cssAscend(attr, startChild = false, visible = false) {
-            let result = '';
+            let value = '';
             let current = startChild ? this : this.actualParent;
             while (current) {
-                result = current.cssInitial(attr);
-                if (result !== '') {
+                value = current.cssInitial(attr);
+                if (value !== '') {
                     if (visible && !current.visible) {
-                        result = '';
+                        value = '';
                     }
                     else {
                         break;
@@ -3764,7 +3757,7 @@
                 }
                 current = current.actualParent;
             }
-            return result;
+            return value;
         }
         cssSort(attr, desc = false, duplicate = false) {
             const children = duplicate ? this.duplicate() : this.children;
@@ -3790,12 +3783,12 @@
                 if (!negative) {
                     value = Math.max(0, value);
                 }
-                const result = $util$7.formatPX(value);
-                this.css(attr, result);
+                const unit = $util$7.formatPX(value);
+                this.css(attr, unit);
                 if (cache) {
                     this.unsetCache(attr);
                 }
-                return result;
+                return unit;
             }
             return '';
         }
@@ -3832,7 +3825,7 @@
         }
         convertPercent(value, horizontal, parent = true) {
             if ($util$7.isPercent(value)) {
-                const node = (parent ? this.absoluteParent : null) || this;
+                const node = parent && this.absoluteParent || this;
                 const attr = horizontal ? 'width' : 'height';
                 let dimension;
                 if (node.has(attr, 2 /* UNIT */)) {
@@ -3899,17 +3892,16 @@
                                 }
                             }
                         }
-                        let result = checkType === 0;
                         if ($util$7.hasBit(checkType, 2 /* UNIT */) && $util$7.isUnit(value)) {
-                            result = true;
+                            return true;
                         }
                         if ($util$7.hasBit(checkType, 32 /* PERCENT */) && $util$7.isPercent(value)) {
-                            result = true;
+                            return true;
                         }
                         if ($util$7.hasBit(checkType, 4 /* AUTO */)) {
-                            result = false;
+                            return false;
                         }
-                        return result;
+                        return checkType === 0;
                 }
             }
             return false;
@@ -4148,14 +4140,14 @@
             }
         }
         convertPosition(attr) {
-            let result = 0;
+            let value = 0;
             if (!this.positionStatic) {
-                const value = this.cssInitial(attr);
-                if ($util$7.isUnit(value) || $util$7.isPercent(value)) {
-                    result = $util$7.convertInt(this.percentValue(attr, value, attr === 'left' || attr === 'right'));
+                const unit = this.cssInitial(attr);
+                if ($util$7.isUnit(unit) || $util$7.isPercent(unit)) {
+                    value = $util$7.convertInt(this.percentValue(attr, unit, attr === 'left' || attr === 'right'));
                 }
             }
-            return result;
+            return value;
         }
         convertBox(region, direction) {
             const attr = region + direction;
@@ -5185,13 +5177,13 @@
         return $util$9.isUnit(value) ? node.convertPX(value) : value;
     }
     function getColumnTotal(rows) {
-        let result = 0;
+        let value = 0;
         for (const row of rows) {
             if (row) {
-                result++;
+                value++;
             }
         }
-        return result;
+        return value;
     }
     class CssGrid extends Extension {
         static createDataAttribute() {
@@ -6061,13 +6053,13 @@
                                 }
                             }
                             else {
-                                const current = columns.length - 1;
-                                if (columns[current]) {
-                                    let minLeft = columns[current][0].linear.left;
-                                    let maxRight = columns[current][0].linear.right;
-                                    for (let k = 1; k < columns[current].length; k++) {
-                                        minLeft = Math.min(minLeft, columns[current][k].linear.left);
-                                        maxRight = Math.max(maxRight, columns[current][k].linear.right);
+                                const endIndex = columns.length - 1;
+                                if (columns[endIndex]) {
+                                    let minLeft = columns[endIndex][0].linear.left;
+                                    let maxRight = columns[endIndex][0].linear.right;
+                                    for (let k = 1; k < columns[endIndex].length; k++) {
+                                        minLeft = Math.min(minLeft, columns[endIndex][k].linear.left);
+                                        maxRight = Math.max(maxRight, columns[endIndex][k].linear.right);
                                     }
                                     if (nextX.linear.left > minLeft && nextX.linear.right > maxRight) {
                                         const index = getRowIndex(columns, nextX);
@@ -6075,7 +6067,7 @@
                                             for (let k = columns.length - 1; k >= 0; k--) {
                                                 if (columns[k]) {
                                                     if (columns[k][index] === undefined) {
-                                                        columns[current].length = 0;
+                                                        columns[endIndex].length = 0;
                                                     }
                                                     break;
                                                 }
@@ -6303,8 +6295,8 @@
         postProcedure(node) {
             const renderParent = node.renderParent;
             if (renderParent) {
-                let target = node;
                 const verticalAlign = $util$d.convertInt(node.verticalAlign);
+                let target = node;
                 if (renderParent.support.container.positionRelative && node.length === 0 && (node.top !== 0 || node.bottom !== 0 || verticalAlign !== 0)) {
                     target = node.clone(this.application.nextId, true, true);
                     node.hide(true);

@@ -36,7 +36,7 @@ const POLYGON_ARGS = ['points'];
 const CIRCLE_ARGS = ['cx', 'cy', 'r'];
 const ELLIPSE_ARGS = ['cx', 'cy', 'rx', 'ry'];
 
-function insertAdjacentSplitValue(map: TimelineIndex, insertMap: TimelineIndex, time: number) {
+function insertAdjacentSplitValue(map: TimelineIndex, attr: string, time: number, intervalMap: SvgAnimationIntervalMap) {
     let previousTime = 0;
     let previousValue: AnimateValue | undefined;
     let previous: NumberValue<AnimateValue> | undefined;
@@ -55,10 +55,16 @@ function insertAdjacentSplitValue(map: TimelineIndex, insertMap: TimelineIndex, 
         previousValue = value;
     }
     if (previous && next) {
-        setTimelineValue(insertMap, time, getItemSplitValue(time, previous.index, previous.value, next.index, next.value));
+        setTimelineValue(map, time, getItemSplitValue(time, previous.index, previous.value, next.index, next.value), true);
     }
     else if (previous) {
-        setTimelineValue(insertMap, time, previous.value);
+        setTimelineValue(map, time, previous.value, true);
+    }
+    else {
+        const value = intervalMap.get(attr, time, true);
+        if (value) {
+            setTimelineValue(map, time, value);
+        }
     }
 }
 
@@ -217,19 +223,16 @@ function getEllipsePoints(values: number[]): SvgPoint[] {
     return [{ x: values[0], y: values[1], rx: values[2], ry: values[values.length - 1] }];
 }
 
-function createKeyTimeMap(map: TimelineMap, keyTimes: number[], forwardMap?: ForwardMap) {
+function createKeyTimeMap(map: TimelineMap, keyTimes: number[], forwardMap: ForwardMap) {
     const result = new Map<number, Map<string, AnimateValue>>();
     for (const keyTime of keyTimes) {
         const values = new Map<string, AnimateValue>();
         for (const attr in (forwardMap || map)) {
             let value: AnimateValue | undefined;
-            if (map[attr]) {
+            if (map[attr] && map[attr].has(keyTime)) {
                 value = map[attr].get(keyTime);
-                if (value === undefined) {
-                    value = getFreezeValue(map[attr], keyTime);
-                }
             }
-            else if (forwardMap) {
+            else {
                 value = forwardMap[attr].value;
             }
             if (value !== undefined) {
@@ -460,7 +463,7 @@ function appendPartialKeyTimes(map: SvgAnimationIntervalMap, item: SvgAnimate, s
     return [keyTimes, values, keySplines];
 }
 
-function setTimelineValue(map: TimelineIndex, time: number, value: AnimateValue) {
+function setTimelineValue(map: TimelineIndex, time: number, value: AnimateValue, duplicate = false) {
     if (value !== '') {
         let stored = map.get(time);
         let previousTime = false;
@@ -468,12 +471,14 @@ function setTimelineValue(map: TimelineIndex, time: number, value: AnimateValue)
             stored = map.get(time - 1);
             previousTime = true;
         }
-        if (stored !== value) {
-            if (typeof value === 'number' && Math.round(stored as number) === Math.round(value)) {
-                return time;
-            }
-            while (time > 0 && map.has(time)) {
-                time++;
+        if (stored !== value || duplicate) {
+            if (!duplicate) {
+                if (typeof value === 'number' && Math.round(stored as number) === Math.round(value)) {
+                    return time;
+                }
+                while (time > 0 && map.has(time)) {
+                    time++;
+                }
             }
             map.set(time, value);
         }
@@ -531,22 +536,6 @@ function isFromToFormat(transforming: boolean, keyTimeMode: number) {
 }
 function playableAnimation(item: SvgAnimate) {
     return item.playable || item.animationElement && item.duration !== -1;
-}
-
-function getFreezeValue(map: TimelineIndex, time: number) {
-    let lastTime = 0;
-    let lastValue: AnimateValue | undefined;
-    for (const [freezeTime, value] of map.entries()) {
-        if (time === freezeTime) {
-            return value;
-        }
-        else if (time > lastTime && time < freezeTime && lastValue !== undefined) {
-            return lastValue;
-        }
-        lastTime = freezeTime;
-        lastValue = value;
-    }
-    return lastValue;
 }
 
 function cloneKeyTimes(item: SvgAnimate): [number[], string[], string[] | undefined] {
@@ -1552,8 +1541,8 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                 repeatingAsInfinite = delay[0] <= 0 ? 0 : delay[0];
                             }
                             else {
-                                if (duration.length > 1) {
-                                    repeatingEndTime = $math.nextMultiple(duration, delay);
+                                if (duration.length > 1 && duration.every(value => value % 250 === 0)) {
+                                    repeatingEndTime = $math.nextMultiple(duration, delay, repeatingEndTime);
                                 }
                                 else if ((repeatingEndTime - delay[0]) % duration[0] !== 0) {
                                     repeatingEndTime = duration[0] * Math.ceil(repeatingEndTime / duration[0]);
@@ -1602,6 +1591,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                         }
                         const keyTimes = $util.sortNumber(Array.from(keyTimesRepeating));
                         if (path || transforming) {
+                            let modified = false;
                             for (const attr in repeatingMap) {
                                 if (!repeatingMap[attr].has(0) && baseValueMap[attr] !== undefined) {
                                     const endTime = repeatingMap[attr].keys().next().value - 1;
@@ -1609,32 +1599,31 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                     repeatingMap[attr].set(endTime, baseValueMap[attr]);
                                     if (!keyTimes.includes(0)) {
                                         keyTimes.push(0);
+                                        modified = true;
                                     }
                                     if (!keyTimes.includes(endTime)) {
                                         keyTimes.push(endTime);
+                                        modified = true;
                                     }
-                                    $util.sortNumber(keyTimes);
                                 }
                             }
+                            if (modified) {
+                                $util.sortNumber(keyTimes);
+                            }
                         }
-                        const timelineMap: TimelineMap = {};
                         for (const attr in repeatingMap) {
-                            const result = new Map<number, AnimateValue>();
-                            for (let i = 0; i < keyTimes.length; i++) {
-                                const keyTime = keyTimes[i];
+                            for (const keyTime of keyTimes) {
                                 if (keyTime <= repeatingMaxTime[attr]) {
-                                    const value = repeatingMap[attr].get(keyTime);
-                                    if (value === undefined) {
-                                        insertAdjacentSplitValue(repeatingMap[attr], result, keyTime);
-                                    }
-                                    else {
-                                        result.set(keyTime, value);
+                                    if (!repeatingMap[attr].has(keyTime)) {
+                                        insertAdjacentSplitValue(repeatingMap[attr], attr, keyTime, intervalMap);
                                     }
                                 }
+                                else {
+                                    break;
+                                }
                             }
-                            timelineMap[attr] = result;
                         }
-                        repeatingResult = createKeyTimeMap(timelineMap, keyTimes);
+                        repeatingResult = createKeyTimeMap(repeatingMap, keyTimes, forwardMap);
                     }
                     if (repeatingAsInfinite === undefined && Object.keys(infiniteMap).length) {
                         const timelineMap: TimelineMap = {};
@@ -1662,7 +1651,9 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                     baseValue = getItemValue(item, values, i, j, baseValue);
                                     maxTime = setTimelineValue(timelineMap[attr], time, baseValue);
                                     insertInterpolator(item, maxTime, item.keySplines, j, keyTimeMode, infiniteInterpolatorMap, infiniteTransformOriginMap);
-                                    keyTimes.push(maxTime);
+                                    if (!keyTimes.includes(maxTime)) {
+                                        keyTimes.push(maxTime);
+                                    }
                                 }
                             }
                             while (maxTime < maxDuration && ++i);
@@ -1680,15 +1671,18 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                             infiniteInterpolatorMap.set(maxTime, interpolator);
                                         }
                                         maxTime = setTimelineValue(timelineMap[attr], maxTime, values[i]);
-                                        keyTimes.push(maxTime);
+                                        if (!keyTimes.includes(maxTime)) {
+                                            keyTimes.push(maxTime);
+                                        }
                                     }
                                 }
                             }
                         }
+                        $util.sortNumber(keyTimes);
                         for (const attr in timelineMap) {
                             for (const time of keyTimes) {
                                 if (!timelineMap[attr].has(time)) {
-                                    insertAdjacentSplitValue(timelineMap[attr], timelineMap[attr], time);
+                                    insertAdjacentSplitValue(timelineMap[attr], attr, time, intervalMap);
                                 }
                             }
                         }

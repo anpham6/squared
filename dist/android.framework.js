@@ -1,4 +1,4 @@
-/* android-framework 0.7.1
+/* android-framework 0.7.2
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -409,7 +409,7 @@ var android = (function () {
                         }
                         gradient.colorStops.push({
                             color,
-                            offset: $math.truncateRange(offset / 100),
+                            offset: $math.truncate(offset / 100),
                             opacity: stop.opacity
                         });
                     }
@@ -1722,14 +1722,12 @@ var android = (function () {
                 }
             }
             setLayout() {
-                const parent = this.absoluteParent;
-                const renderParent = this.renderParent;
-                const children = this.renderChildren;
+                const { absoluteParent: parent, renderParent, renderChildren } = this;
                 if (this.documentBody) {
-                    if (!this.hasWidth && children.some(node => node.alignParent('right'))) {
+                    if (!this.hasWidth && renderChildren.some(node => node.alignParent('right'))) {
                         this.android('layout_width', 'match_parent', false);
                     }
-                    if (!this.hasHeight && children.some(node => node.alignParent('bottom'))) {
+                    if (!this.hasHeight && renderChildren.some(node => node.alignParent('bottom'))) {
                         this.android('layout_height', 'match_parent', false);
                     }
                 }
@@ -1774,15 +1772,15 @@ var android = (function () {
                     if (this.plainText) {
                         this.android('layout_width', renderParent && this.bounds.width > renderParent.box.width && this.multiline && this.alignParent('left') ? 'match_parent' : 'wrap_content', false);
                     }
-                    else if (children.some(node => (node.inlineStatic && !node.plainText || $util$3.isUnit(node.cssInitial('width'))) && !node.autoMargin.horizontal && Math.ceil(node.bounds.width) >= this.box.width)) {
+                    else if (renderChildren.some(node => (node.inlineStatic && !node.plainText || $util$3.isUnit(node.cssInitial('width'))) && !node.autoMargin.horizontal && Math.ceil(node.bounds.width) >= this.box.width)) {
                         this.android('layout_width', 'wrap_content', false);
                     }
                     else if (this.flexElement && renderParent && renderParent.hasWidth ||
-                        this.groupParent && children.some(node => !(node.plainText && node.multiline) && node.linear.width >= this.documentParent.box.width) ||
+                        this.groupParent && renderChildren.some(node => !(node.plainText && node.multiline) && node.linear.width >= this.documentParent.box.width) ||
                         blockStatic && (this.documentBody || !!parent && (parent.documentBody ||
                             parent.has('width', 32 /* PERCENT */) ||
                             parent.blockStatic && (this.singleChild || this.alignedVertically(this.previousSiblings())))) ||
-                        this.layoutFrame && ($NodeList.floated(children).size === 2 || children.some(node => node.blockStatic && (node.autoMargin.leftRight || node.rightAligned)))) {
+                        this.layoutFrame && ($NodeList.floated(renderChildren).size === 2 || renderChildren.some(node => node.blockStatic && (node.autoMargin.leftRight || node.rightAligned)))) {
                         this.android('layout_width', 'match_parent', false);
                     }
                     else {
@@ -1795,7 +1793,7 @@ var android = (function () {
                             !!renderParent && renderParent.is(CONTAINER_NODE.GRID));
                         if ((!wrap || blockStatic) && (!!parent && this.linear.width >= parent.box.width ||
                             this.layoutVertical && !this.autoMargin.horizontal ||
-                            !this.documentRoot && children.some(node => node.layoutVertical && !node.autoMargin.horizontal && !node.hasWidth && !node.floating))) {
+                            !this.documentRoot && renderChildren.some(node => node.layoutVertical && !node.autoMargin.horizontal && !node.hasWidth && !node.floating))) {
                             this.android('layout_width', 'match_parent', false);
                         }
                         else {
@@ -2149,15 +2147,15 @@ var android = (function () {
             alignHorizontalLayout() {
                 if (this.layoutHorizontal) {
                     if (this.layoutLinear) {
-                        const children = this.renderChildren;
+                        const renderChildren = this.renderChildren;
                         let baseline;
-                        if (children.some(node => node.floating) && !children.some(node => node.imageElement && node.baseline)) {
+                        if (renderChildren.some(node => node.floating) && !renderChildren.some(node => node.imageElement && node.baseline)) {
                             this.android('baselineAligned', 'false');
                         }
                         else {
-                            baseline = $NodeList.baseline(children.filter(node => node.baseline && !node.layoutRelative && !node.layoutConstraint), true)[0];
+                            baseline = $NodeList.baseline(renderChildren.filter(node => node.baseline && !node.layoutRelative && !node.layoutConstraint), true)[0];
                             if (baseline) {
-                                this.android('baselineAlignedChildIndex', children.indexOf(baseline).toString());
+                                this.android('baselineAlignedChildIndex', renderChildren.indexOf(baseline).toString());
                             }
                         }
                         let lineHeight = this.lineHeight;
@@ -2804,13 +2802,13 @@ var android = (function () {
             return { layout, next };
         }
         processTraverseHorizontal(layout, siblings) {
-            const parent = layout.parent;
+            const { node, parent, children } = layout;
             if (this.checkFrameHorizontal(layout)) {
-                layout.node = this.createNodeGroup(layout.node, layout.children, layout.parent);
+                layout.node = this.createNodeGroup(node, children, parent);
                 layout.renderType |= 64 /* FLOAT */ | 8 /* HORIZONTAL */;
             }
             else if (siblings === undefined || layout.length !== siblings.length) {
-                layout.node = this.createNodeGroup(layout.node, layout.children, layout.parent);
+                layout.node = this.createNodeGroup(node, children, parent);
                 this.processLayoutHorizontal(layout);
             }
             else {
@@ -2819,14 +2817,14 @@ var android = (function () {
             return { layout };
         }
         processTraverseVertical(layout, siblings) {
-            const parent = layout.parent;
-            if (layout.floated.size && layout.cleared.size && !(layout.floated.size === 1 && layout.every((node, index) => index === 0 || index === layout.length - 1 || layout.cleared.has(node)))) {
-                layout.node = this.createNodeGroup(layout.node, layout.children, parent);
+            const { node, parent, children, floated, cleared } = layout;
+            if (floated.size && cleared.size && !(floated.size === 1 && layout.every((item, index) => index === 0 || index === layout.length - 1 || cleared.has(item)))) {
+                layout.node = this.createNodeGroup(node, children, parent);
                 layout.renderType |= 64 /* FLOAT */ | 16 /* VERTICAL */;
             }
             else if (siblings === undefined || layout.length !== siblings.length) {
                 if (!parent.layoutVertical) {
-                    layout.node = this.createNodeGroup(layout.node, layout.children, parent);
+                    layout.node = this.createNodeGroup(node, children, parent);
                     layout.setType(CONTAINER_NODE.LINEAR, 16 /* VERTICAL */);
                 }
             }
@@ -3046,23 +3044,23 @@ var android = (function () {
             }
         }
         renderNodeGroup(layout) {
-            const node = layout.node;
+            const { node, parent, containerType, alignmentType, rowCount, columnCount } = layout;
             const options = createViewAttribute();
             let valid = false;
-            switch (layout.containerType) {
+            switch (containerType) {
                 case CONTAINER_NODE.LINEAR:
-                    if ($util$4.hasBit(layout.alignmentType, 16 /* VERTICAL */)) {
+                    if ($util$4.hasBit(alignmentType, 16 /* VERTICAL */)) {
                         options.android.orientation = AXIS_ANDROID.VERTICAL;
                         valid = true;
                     }
-                    else if ($util$4.hasBit(layout.alignmentType, 8 /* HORIZONTAL */)) {
+                    else if ($util$4.hasBit(alignmentType, 8 /* HORIZONTAL */)) {
                         options.android.orientation = AXIS_ANDROID.HORIZONTAL;
                         valid = true;
                     }
                     break;
                 case CONTAINER_NODE.GRID:
-                    options.android.rowCount = layout.rowCount ? layout.rowCount.toString() : '';
-                    options.android.columnCount = layout.columnCount ? layout.columnCount.toString() : '2';
+                    options.android.rowCount = rowCount ? rowCount.toString() : '';
+                    options.android.columnCount = columnCount ? columnCount.toString() : '2';
                     valid = true;
                     break;
                 case CONTAINER_NODE.FRAME:
@@ -3073,21 +3071,20 @@ var android = (function () {
             }
             if (valid) {
                 const target = $util$4.hasValue(node.dataset.target) && !$util$4.hasValue(node.dataset.use);
-                const controlName = View.getControlName(layout.containerType);
-                node.alignmentType |= layout.alignmentType;
-                node.setControlType(controlName, layout.containerType);
-                node.render(target ? node : layout.parent);
+                const controlName = View.getControlName(containerType);
+                node.alignmentType |= alignmentType;
+                node.setControlType(controlName, containerType);
+                node.render(target ? node : parent);
                 node.apply(options);
                 return this.getEnclosingTag(controlName, node.id, target ? -1 : node.renderDepth, $xml$2.formatPlaceholder(node.id));
             }
             return '';
         }
         renderNode(layout) {
-            const node = layout.node;
-            const parent = layout.parent;
-            node.alignmentType |= layout.alignmentType;
-            const controlName = View.getControlName(layout.containerType);
-            node.setControlType(controlName, layout.containerType);
+            const { node, parent, containerType, alignmentType } = layout;
+            node.alignmentType |= alignmentType;
+            const controlName = View.getControlName(containerType);
+            node.setControlType(controlName, containerType);
             const target = $util$4.hasValue(node.dataset.target) && !$util$4.hasValue(node.dataset.use);
             switch (node.element && node.element.tagName) {
                 case 'IMG': {
@@ -3822,7 +3819,7 @@ var android = (function () {
         }
         processConstraintHorizontal(node, children) {
             const baseline = $NodeList$1.baseline(children)[0];
-            const textBaseline = $NodeList$1.baseline(children, true)[0];
+            const baselineText = $NodeList$1.baseline(children, true)[0];
             let textBottom = getTextBottom(children);
             const reverse = node.hasAlign(512 /* RIGHT */);
             if (baseline) {
@@ -3847,8 +3844,8 @@ var android = (function () {
                 if (item.inlineVertical) {
                     switch (item.verticalAlign) {
                         case 'text-top':
-                            if (textBaseline && item !== textBaseline) {
-                                item.anchor('top', textBaseline.documentId);
+                            if (baselineText && item !== baselineText) {
+                                item.anchor('top', baselineText.documentId);
                             }
                             break;
                         case 'super':
@@ -3859,8 +3856,8 @@ var android = (function () {
                             item.anchorParent(AXIS_ANDROID.VERTICAL);
                             break;
                         case 'text-bottom':
-                            if (textBaseline && item !== textBaseline && item !== textBottom) {
-                                item.anchor('bottom', textBaseline.documentId);
+                            if (baselineText && item !== baselineText && item !== textBottom) {
+                                item.anchor('bottom', baselineText.documentId);
                             }
                             break;
                         case 'sub':
@@ -4560,21 +4557,21 @@ var android = (function () {
     }
     function getGridSize(mainData, direction, node) {
         const dimension = direction === 'column' ? 'width' : 'height';
-        let result = 0;
+        let value = 0;
         for (let i = 0; i < mainData[direction].count; i++) {
-            const value = mainData[direction].unit[i];
-            if (value.endsWith('px')) {
-                result += parseInt(value);
+            const unit = mainData[direction].unit[i];
+            if (unit.endsWith('px')) {
+                value += parseInt(unit);
             }
             else {
                 let size = 0;
                 $util$7.captureMap(mainData.rowData[i], item => item && item.length > 0, item => size = Math.min(size, item[0].bounds[dimension]));
-                result += size;
+                value += size;
             }
         }
-        result += (mainData[direction].count - 1) * mainData[direction].gap;
-        result = node[dimension] - result;
-        return result;
+        value += (mainData[direction].count - 1) * mainData[direction].gap;
+        value = node[dimension] - value;
+        return value;
     }
     function setContentSpacing(mainData, node, alignment, direction) {
         const MARGIN_START = direction === 'column' ? 16 /* MARGIN_LEFT */ : 2 /* MARGIN_TOP */;
@@ -4985,7 +4982,7 @@ var android = (function () {
                     let previous;
                     node.each((item) => {
                         if (item.hasAlign(128 /* SEGMENTED */)) {
-                            const pageFlow = $util$8.filterArray(item.renderChildren, child => child.pageFlow);
+                            const pageFlow = item.renderFilter(child => child.pageFlow);
                             if (mainData.rowDirection) {
                                 item.android('layout_width', 'match_parent');
                                 if (node.hasHeight) {
@@ -5227,7 +5224,10 @@ var android = (function () {
                 layout.columnCount = mainData.columnCount;
                 output = this.application.renderNode(layout);
             }
-            return { output, complete: output !== '' };
+            return {
+                output,
+                complete: output !== ''
+            };
         }
         processChild(node, parent) {
             const mainData = parent.data($const$2.EXT_NAME.GRID, 'mainData');
@@ -5287,7 +5287,8 @@ var android = (function () {
                                             mainData.paddingBottom = heightBottom;
                                         }
                                         else {
-                                            this.application.controllerHandler.appendAfter(item.id, this.application.controllerHandler.renderSpace(item.renderDepth, 'match_parent', $util$9.formatPX(heightBottom), mainData.columnCount));
+                                            const controller = this.application.controllerHandler;
+                                            controller.appendAfter(item.id, controller.renderSpace(item.renderDepth, 'match_parent', $util$9.formatPX(heightBottom), mainData.columnCount));
                                         }
                                     }
                                     mainData.paddingRight = Math.max(actualParent.marginRight + actualParent.paddingRight, mainData.paddingRight);
@@ -5484,7 +5485,7 @@ var android = (function () {
             super.postBaseLayout(node);
             const columnCount = node.android('columnCount');
             for (let i = 0; i < node.renderChildren.length; i++) {
-                const current = node.renderChildren[i];
+                const item = node.renderChildren[i];
                 const previous = node.renderChildren[i - 1];
                 let spaceHeight = 0;
                 if (previous) {
@@ -5495,20 +5496,21 @@ var android = (function () {
                         previous.modifyBox(8 /* MARGIN_BOTTOM */, null);
                     }
                 }
-                const marginTop = $util$a.convertInt(current.android(BOX_ANDROID.MARGIN_TOP));
+                const marginTop = $util$a.convertInt(item.android(BOX_ANDROID.MARGIN_TOP));
                 if (marginTop > 0) {
                     spaceHeight += marginTop;
-                    current.delete('android', BOX_ANDROID.MARGIN_TOP);
-                    current.modifyBox(2 /* MARGIN_TOP */, null);
+                    item.delete('android', BOX_ANDROID.MARGIN_TOP);
+                    item.modifyBox(2 /* MARGIN_TOP */, null);
                 }
                 if (spaceHeight > 0) {
+                    const controller = this.application.controllerHandler;
                     const options = createViewAttribute({
                         android: {
                             layout_columnSpan: columnCount.toString()
                         }
                     });
-                    const output = this.application.controllerHandler.renderNodeStatic(CONTAINER_ANDROID.SPACE, current.renderDepth, options, 'match_parent', $util$a.formatPX(spaceHeight));
-                    this.application.controllerHandler.prependBefore(current.id, output, 0);
+                    const output = controller.renderNodeStatic(CONTAINER_ANDROID.SPACE, item.renderDepth, options, 'match_parent', $util$a.formatPX(spaceHeight));
+                    controller.prependBefore(item.id, output, 0);
                 }
             }
         }
@@ -5679,7 +5681,8 @@ var android = (function () {
             }
             node.mergeGravity('layout_gravity', 'fill');
             if (spaceSpan > 0) {
-                this.application.controllerHandler.appendAfter(node.id, this.application.controllerHandler.renderSpace(parent.renderDepth + 1, 'wrap_content', 'wrap_content', spaceSpan));
+                const controller = this.application.controllerHandler;
+                controller.appendAfter(node.id, controller.renderSpace(parent.renderDepth + 1, 'wrap_content', 'wrap_content', spaceSpan));
             }
             return { output: '' };
         }
@@ -5690,10 +5693,10 @@ var android = (function () {
                     node.android('layout_width', $util$c.formatPX(node.bounds.width));
                 }
                 if (layoutWidth > 0 && node.cssInitial('width') === 'auto' && node.renderChildren.every(item => item.inlineWidth)) {
-                    for (const item of node.renderChildren) {
+                    node.renderEach((item) => {
                         item.android('layout_width', '0px');
                         item.android('layout_columnWeight', '1');
-                    }
+                    });
                 }
             }
         }
@@ -5795,7 +5798,7 @@ var android = (function () {
                         controller.addGuideline(anchor, node);
                     }
                     node.each((item) => {
-                        if (anchor && item !== anchor) {
+                        if (item !== anchor) {
                             const center1 = item.center;
                             const center2 = anchor.center;
                             const x = Math.abs(center1.x - center2.x);
@@ -5947,8 +5950,7 @@ var android = (function () {
             node.resetBox(480 /* PADDING */ | (node.documentBody ? 30 /* MARGIN */ : 0), container, true);
             node.companion = container;
             const layout = new $Layout$8(parent, node, CONTAINER_NODE.CONSTRAINT, 32 /* ABSOLUTE */, children.length, children);
-            const output = this.application.renderLayout(layout);
-            return { output };
+            return { output: this.application.renderLayout(layout) };
         }
         postBaseLayout(node) {
             if (node.hasWidth && node.companion) {
@@ -5983,8 +5985,7 @@ var android = (function () {
             return !node.textElement && !node.imageElement && !node.svgElement && (node.has('maxWidth') || node.has('maxHeight'));
         }
         processNode(node, parent) {
-            const controller = this.application.controllerHandler;
-            const container = controller.createNodeWrapper(node, parent);
+            const container = this.application.controllerHandler.createNodeWrapper(node, parent);
             container.css('display', 'block', true);
             if (node.has('maxWidth')) {
                 const maxWidth = node.css('maxWidth');
@@ -6001,7 +6002,12 @@ var android = (function () {
                 }, true);
             }
             const layout = new $Layout$9(parent, container, CONTAINER_NODE.FRAME, 2048 /* SINGLE */, 1, container.children);
-            return { output: '', parent: container, renderAs: container, outputAs: this.application.renderLayout(layout) };
+            return {
+                output: '',
+                parent: container,
+                renderAs: container,
+                outputAs: this.application.renderLayout(layout)
+            };
         }
     }
 
@@ -6013,15 +6019,19 @@ var android = (function () {
             return parent.layoutVertical && !node.documentBody && node.pageFlow && !node.imageElement && node.has('width', 32 /* PERCENT */, { not: '100%' });
         }
         processNode(node, parent) {
-            const controller = this.application.controllerHandler;
-            const container = controller.createNodeWrapper(node, parent);
+            const container = this.application.controllerHandler.createNodeWrapper(node, parent);
             container.android('layout_width', 'match_parent');
             container.android('layout_height', 'wrap_content');
             if (!node.has('height', 2 /* UNIT */)) {
                 node.css('height', $util$f.formatPX(node.bounds.height), true);
             }
             const layout = new $Layout$a(parent, container, CONTAINER_NODE.CONSTRAINT, 2048 /* SINGLE */, 1, container.children);
-            return { output: '', parent: container, renderAs: container, outputAs: this.application.renderLayout(layout) };
+            return {
+                output: '',
+                parent: container,
+                renderAs: container,
+                outputAs: this.application.renderLayout(layout)
+            };
         }
     }
 
@@ -6057,7 +6067,8 @@ var android = (function () {
                 return null;
             });
             if (children.length > 1) {
-                const container = this.application.controllerHandler.createNodeGroup(node, children, parent, replaceWith);
+                const controller = this.application.controllerHandler;
+                const container = controller.createNodeGroup(node, children, parent, replaceWith);
                 container.alignmentType |= 8 /* HORIZONTAL */ | (parent.length !== children.length ? 128 /* SEGMENTED */ : 0);
                 if (parent.layoutConstraint) {
                     container.companion = replaceWith || node;
@@ -6079,8 +6090,14 @@ var android = (function () {
                 container.android('orientation', $NodeList$5.linearX(children) ? AXIS_ANDROID.HORIZONTAL : AXIS_ANDROID.VERTICAL);
                 container.render(target ? container : parent);
                 this.subscribers.add(container);
-                const outputAs = this.application.controllerHandler.getEnclosingTag(RADIO_GROUP, container.id, target ? -1 : container.renderDepth, $xml$4.formatPlaceholder(container.id));
-                return { output: '', complete: true, parent: container, renderAs: container, outputAs };
+                const outputAs = controller.getEnclosingTag(RADIO_GROUP, container.id, target ? -1 : container.renderDepth, $xml$4.formatPlaceholder(container.id));
+                return {
+                    output: '',
+                    complete: true,
+                    parent: container,
+                    renderAs: container,
+                    outputAs
+                };
             }
             return { output: '' };
         }
@@ -6208,7 +6225,12 @@ var android = (function () {
             node.overflow = 0;
             node.resetBox(30 /* MARGIN */);
             node.exclude({ resource: $enum$f.NODE_RESOURCE.BOX_STYLE });
-            return { output: '', parent: node.parent, renderAs: scrollView[0], outputAs };
+            return {
+                output: '',
+                parent: node.parent,
+                renderAs: scrollView[0],
+                outputAs
+            };
         }
     }
 
@@ -6550,7 +6572,7 @@ var android = (function () {
                         Resource.isBorderVisible(stored.borderRight) ||
                         Resource.isBorderVisible(stored.borderBottom) ||
                         Resource.isBorderVisible(stored.borderLeft) ||
-                        stored.borderRadius !== undefined);
+                        !!stored.borderRadius);
                     if (hasBorder || backgroundImage.length || backgroundGradient.length) {
                         const borders = [
                             stored.borderTop,
@@ -7195,8 +7217,7 @@ var android = (function () {
             for (const tag in nameMap) {
                 const sorted = [];
                 for (let node of nameMap[tag]) {
-                    const controlId = node.id;
-                    const companion = node.companion;
+                    const { id, companion } = node;
                     if (companion && !companion.visible && companion.tagName === 'LABEL') {
                         node = companion;
                     }
@@ -7211,8 +7232,7 @@ var android = (function () {
                         if (this.options.fontResourceValue && FONTREPLACE_ANDROID[fontFamily]) {
                             fontFamily = FONTREPLACE_ANDROID[fontFamily];
                         }
-                        if (FONT_ANDROID[fontFamily] && node.localSettings.targetAPI >= FONT_ANDROID[fontFamily] ||
-                            this.options.fontResourceValue && FONTALIAS_ANDROID[fontFamily] && node.localSettings.targetAPI >= FONT_ANDROID[FONTALIAS_ANDROID[fontFamily]]) {
+                        if (FONT_ANDROID[fontFamily] && node.localSettings.targetAPI >= FONT_ANDROID[fontFamily] || this.options.fontResourceValue && FONTALIAS_ANDROID[fontFamily] && node.localSettings.targetAPI >= FONT_ANDROID[FONTALIAS_ANDROID[fontFamily]]) {
                             system = true;
                             stored.fontFamily = fontFamily;
                             if (stored.fontStyle === 'normal') {
@@ -7247,7 +7267,7 @@ var android = (function () {
                             if (sorted[i][attr] === undefined) {
                                 sorted[i][attr] = [];
                             }
-                            sorted[i][attr].push(controlId);
+                            sorted[i][attr].push(id);
                         }
                     }
                 }
@@ -7498,9 +7518,10 @@ var android = (function () {
                     const match = name.match(/^(\w*?)(?:_(\d+))?$/);
                     if (match) {
                         const data = resource[match[1].toUpperCase()];
-                        const index = match[2] ? parseInt(match[2]) : 0;
+                        const index = $util$k.convertInt(match[2]);
                         if (data[index]) {
-                            STORED$3.styles.set(name, Object.assign({}, data[index], { name, parent }));
+                            STORED$3.styles.set(name, Object.assign({}, data[index], { name,
+                                parent }));
                             parent = name;
                         }
                     }
@@ -7548,11 +7569,11 @@ var android = (function () {
                     for (let i = open.length - 1; i >= 0; i--) {
                         const openData = open[i];
                         for (let j = 0; j < close.length; j++) {
-                            const closeData = close[j];
-                            if (closeData.index >= openData.index) {
+                            const index = close[j].index;
+                            if (index >= openData.index) {
                                 const location = new Map();
                                 let valid = true;
-                                for (let k = openData.index; k <= closeData.index; k++) {
+                                for (let k = openData.index; k <= index; k++) {
                                     const item = node.renderChildren[k];
                                     const depthMap = processing.depthMap.get(node.id);
                                     if (depthMap && depthMap.has(item.renderPositionId)) {
@@ -7743,14 +7764,14 @@ var android = (function () {
             const styles = {};
             for (const node of this.application.session.cache) {
                 if (node.visible) {
-                    const children = node.renderChildren;
-                    if (node.controlId && children.length > 1) {
+                    const renderChildren = node.renderChildren;
+                    if (node.controlId && renderChildren.length > 1) {
                         const attrMap = new Map();
                         let style = '';
                         let valid = true;
-                        for (let i = 0; i < children.length; i++) {
+                        for (let i = 0; i < renderChildren.length; i++) {
                             let found = false;
-                            children[i].combine('_', 'android').some(value => {
+                            renderChildren[i].combine('_', 'android').some(value => {
                                 if (value.startsWith('style=')) {
                                     if (i === 0) {
                                         style = value;
@@ -7773,7 +7794,7 @@ var android = (function () {
                         }
                         if (valid) {
                             for (const [attr, value] of attrMap.entries()) {
-                                if (value !== children.length) {
+                                if (value !== renderChildren.length) {
                                     attrMap.delete(attr);
                                 }
                             }
@@ -7785,7 +7806,7 @@ var android = (function () {
                                 for (const attr of attrMap.keys()) {
                                     const match = attr.match(/(\w+):(\w+)="([^"]+)"/);
                                     if (match) {
-                                        for (const item of children) {
+                                        for (const item of renderChildren) {
                                             item.delete(match[1], match[2]);
                                         }
                                         common.push(match[0]);
@@ -7803,7 +7824,7 @@ var android = (function () {
                                     name = $util$m.convertCamelCase((style !== '' ? `${style}.` : '') + $util$m.capitalize(node.controlId), '_');
                                     styles[name] = common;
                                 }
-                                for (const item of children) {
+                                for (const item of renderChildren) {
                                     item.attr('_', 'style', `@style/${name}`);
                                 }
                             }
@@ -7819,7 +7840,8 @@ var android = (function () {
                         items.push({ name: match[1], value: match[2] });
                     }
                 }
-                STORED$4.styles.set(name, Object.assign({}, createStyleAttribute(), { name, items, ids: [] }));
+                STORED$4.styles.set(name, Object.assign({}, createStyleAttribute(), { name,
+                    items, ids: [] }));
             }
         }
     }
@@ -7831,56 +7853,63 @@ var android = (function () {
 <<A>>
 </animated-vector>`;
 
+    const PARTIAL_FILLREPEAT = `<<fillBefore>>
+	<set>
+	<<values>><<values>>
+	</set>
+<<fillBefore>>
+<<repeating>>
+	<objectAnimator
+		android:propertyName="{~propertyName}"
+		android:interpolator="{~interpolator}"
+		android:valueType="{~valueType}"
+		android:valueFrom="{~valueFrom}"
+		android:valueTo="{~valueTo}"
+		android:startOffset="{~startOffset}"
+		android:duration="{&duration}"
+		android:repeatCount="{&repeatCount}">
+	<<propertyValues>>
+		<propertyValuesHolder android:propertyName="{&propertyName}">
+		<<keyframes>>
+			<keyframe android:interpolator="{~interpolator}" android:fraction="{~fraction}" android:value="{~value}" />
+		<<keyframes>>
+		</propertyValuesHolder>
+	<<propertyValues>>
+	</objectAnimator>
+<<repeating>>
+<<fillCustom>>
+	<set android:ordering="{~ordering}">
+	<<values>><<values>>
+	</set>
+<<fillCustom>>
+<<fillAfter>>
+	<set>
+	<<values>>
+		<objectAnimator
+			android:propertyName="{&propertyName}"
+			android:interpolator="{~interpolator}"
+			android:valueType="{~valueType}"
+			android:valueFrom="{~valueFrom}"
+			android:valueTo="{&valueTo}"
+			android:startOffset="{~startOffset}"
+			android:duration="{&duration}"
+			android:repeatCount="{&repeatCount}" />
+	<<values>>
+	</set>
+<<fillAfter>>`;
+    var OBJECTANIMATOR_TMPL = `<?xml version="1.0" encoding="utf-8"?>
+<set xmlns:android="http://schemas.android.com/apk/res/android" android:ordering="{~ordering}">
+${PARTIAL_FILLREPEAT}
+</set>`;
+
+    const $xml$9 = squared.lib.xml;
     var SETOBJECTANIMATOR_TMPL = `<?xml version="1.0" encoding="utf-8"?>
 <set xmlns:android="http://schemas.android.com/apk/res/android">
 <<A>>
 	<set android:ordering="{~ordering}">
 	<<AA>>
 		<set android:ordering="{~ordering}">
-		<<fillBefore>>
-			<set>
-			<<values>><<values>>
-			</set>
-		<<fillBefore>>
-		<<repeating>>
-			<objectAnimator
-				android:propertyName="{~propertyName}"
-				android:interpolator="{~interpolator}"
-				android:valueType="{~valueType}"
-				android:valueFrom="{~valueFrom}"
-				android:valueTo="{~valueTo}"
-				android:startOffset="{~startOffset}"
-				android:duration="{&duration}"
-				android:repeatCount="{&repeatCount}">
-			<<propertyValues>>
-				<propertyValuesHolder android:propertyName="{&propertyName}">
-				<<keyframes>>
-					<keyframe android:interpolator="{~interpolator}" android:fraction="{~fraction}" android:value="{~value}" />
-				<<keyframes>>
-				</propertyValuesHolder>
-			<<propertyValues>>
-			</objectAnimator>
-		<<repeating>>
-		<<fillCustom>>
-			<set android:ordering="{~ordering}">
-			<<values>><<values>>
-			</set>
-		<<fillCustom>>
-		<<fillAfter>>
-			<set>
-			<<values>>
-				<objectAnimator
-					android:propertyName="{&propertyName}"
-					android:interpolator="{~interpolator}"
-					android:valueType="{~valueType}"
-					android:valueFrom="{~valueFrom}"
-					android:valueTo="{&valueTo}"
-					android:startOffset="{~startOffset}"
-					android:duration="{&duration}"
-					android:repeatCount="{&repeatCount}" />
-			<<values>>
-			</set>
-		<<fillAfter>>
+${$xml$9.pushIndent(PARTIAL_FILLREPEAT, 2)}
 		</set>
 	<<AA>>
 	<<BB>>
@@ -7912,7 +7941,7 @@ var android = (function () {
     var $SvgShape = squared.svg.SvgShape;
     const $util$n = squared.lib.util;
     const $math$2 = squared.lib.math;
-    const $xml$9 = squared.lib.xml;
+    const $xml$a = squared.lib.xml;
     const $constS = squared.svg.lib.constant;
     const $utilS$1 = squared.svg.lib.util;
     const TEMPLATES$1 = {};
@@ -7986,35 +8015,33 @@ var android = (function () {
     }
     function createTransformData(transform) {
         const result = {};
-        if (transform) {
-            for (let i = 0; i < transform.length; i++) {
-                const item = transform[i];
-                const m = item.matrix;
-                switch (item.type) {
-                    case SVGTransform.SVG_TRANSFORM_SCALE:
-                        result.scaleX = m.a.toString();
-                        result.scaleY = m.d.toString();
-                        if (item.origin) {
-                            result.pivotX = item.origin.x.toString();
-                            result.pivotY = item.origin.y.toString();
-                        }
-                        break;
-                    case SVGTransform.SVG_TRANSFORM_ROTATE:
-                        result.rotation = item.angle.toString();
-                        if (item.origin) {
-                            result.pivotX = item.origin.x.toString();
-                            result.pivotY = item.origin.y.toString();
-                        }
-                        else {
-                            result.pivotX = '0';
-                            result.pivotY = '0';
-                        }
-                        break;
-                    case SVGTransform.SVG_TRANSFORM_TRANSLATE:
-                        result.translateX = m.e.toString();
-                        result.translateY = m.f.toString();
-                        break;
-                }
+        for (let i = 0; i < transform.length; i++) {
+            const item = transform[i];
+            const m = item.matrix;
+            switch (item.type) {
+                case SVGTransform.SVG_TRANSFORM_SCALE:
+                    result.scaleX = m.a.toString();
+                    result.scaleY = m.d.toString();
+                    if (item.origin) {
+                        result.pivotX = item.origin.x.toString();
+                        result.pivotY = item.origin.y.toString();
+                    }
+                    break;
+                case SVGTransform.SVG_TRANSFORM_ROTATE:
+                    result.rotation = item.angle.toString();
+                    if (item.origin) {
+                        result.pivotX = item.origin.x.toString();
+                        result.pivotY = item.origin.y.toString();
+                    }
+                    else {
+                        result.pivotX = '0';
+                        result.pivotY = '0';
+                    }
+                    break;
+                case SVGTransform.SVG_TRANSFORM_TRANSLATE:
+                    result.translateX = m.e.toString();
+                    result.translateY = m.f.toString();
+                    break;
             }
         }
         return result;
@@ -8043,16 +8070,16 @@ var android = (function () {
         return { x, y };
     }
     function getOuterOpacity(target) {
-        let result = parseFloat(target.opacity);
+        let value = parseFloat(target.opacity);
         let current = target.parent;
         while (current) {
             const opacity = parseFloat(current['opacity'] || '1');
             if (!isNaN(opacity) && opacity < 1) {
-                result *= opacity;
+                value *= opacity;
             }
             current = current['parent'];
         }
-        return result;
+        return value;
     }
     function partitionTransforms(element, transforms, rx = 1, ry = 1) {
         if (transforms.length && ($utilS$1.SVG.circle(element) || $utilS$1.SVG.ellipse(element))) {
@@ -8144,15 +8171,15 @@ var android = (function () {
         return [[], transforms];
     }
     function getPropertyValue(values, index, propertyIndex, keyFrames = false, baseValue) {
-        let result;
-        const value = values[index];
-        if (value) {
-            result = Array.isArray(value) ? value[propertyIndex].toString() : value;
+        let value;
+        const property = values[index];
+        if (property) {
+            value = Array.isArray(property) ? property[propertyIndex].toString() : property;
         }
         else if (!keyFrames && index === 0) {
-            result = baseValue;
+            value = baseValue;
         }
-        return result || '';
+        return value || '';
     }
     function getValueType(attr) {
         switch (attr) {
@@ -8196,7 +8223,7 @@ var android = (function () {
         result.attributeName = attributeName;
         result.delay = delay;
         result.duration = 1;
-        result.from = from !== undefined ? from : to;
+        result.from = from || to;
         result.to = to;
         result.fillForwards = true;
         result.convertToValues();
@@ -8287,9 +8314,10 @@ var android = (function () {
         beforeInit() {
             if ($SvgBuild$2) {
                 if (TEMPLATES$1.ANIMATED === undefined) {
-                    TEMPLATES$1.ANIMATED = $xml$9.parseTemplate(ANIMATEDVECTOR_TMPL);
-                    TEMPLATES$1.LAYER_LIST = $xml$9.parseTemplate(LAYERLIST_TMPL);
-                    TEMPLATES$1.SET_OBJECTANIMATOR = $xml$9.parseTemplate(SETOBJECTANIMATOR_TMPL);
+                    TEMPLATES$1.ANIMATED = $xml$a.parseTemplate(ANIMATEDVECTOR_TMPL);
+                    TEMPLATES$1.LAYER_LIST = $xml$a.parseTemplate(LAYERLIST_TMPL);
+                    TEMPLATES$1.OBJECTANIMATOR = $xml$a.parseTemplate(OBJECTANIMATOR_TMPL);
+                    TEMPLATES$1.SET_OBJECTANIMATOR = $xml$a.parseTemplate(SETOBJECTANIMATOR_TMPL);
                 }
                 $SvgBuild$2.setName();
                 this.application.controllerHandler.localSettings.unsupported.tagName.delete('svg');
@@ -8323,8 +8351,8 @@ var android = (function () {
                     let drawable = '';
                     let vectorName = '';
                     {
-                        const template = $xml$9.parseTemplate(VECTOR_TMPL);
-                        let xml = $xml$9.createTemplate(template, {
+                        const template = $xml$a.parseTemplate(VECTOR_TMPL);
+                        let xml = $xml$a.createTemplate(template, {
                             namespace: this.NAMESPACE_AAPT ? getXmlNs('aapt') : '',
                             name: svg.name,
                             width: $util$n.formatPX(svg.width),
@@ -8338,7 +8366,7 @@ var android = (function () {
                         const output = new Map();
                         template['__ROOT__'] = template['A'];
                         for (const [name, data] of this.VECTOR_DATA.entries()) {
-                            output.set(name, $xml$9.createTemplate(template, data));
+                            output.set(name, $xml$a.createTemplate(template, data));
                         }
                         const entries = Array.from(output.entries()).reverse();
                         for (let i = 0; i < entries.length; i++) {
@@ -8352,7 +8380,7 @@ var android = (function () {
                             }
                             xml = xml.replace(`!!${entries[i][0]}!!`, partial);
                         }
-                        xml = $xml$9.formatTemplate(xml);
+                        xml = $xml$a.formatTemplate(xml);
                         vectorName = Resource.getStoredName('drawables', xml);
                         if (vectorName === '') {
                             vectorName = getFilename();
@@ -8360,7 +8388,9 @@ var android = (function () {
                         }
                     }
                     if (this.ANIMATE_DATA.size) {
-                        const data = { vectorName, A: []
+                        const data = {
+                            vectorName,
+                            A: []
                         };
                         for (const [name, group] of this.ANIMATE_DATA.entries()) {
                             const targetData = { name };
@@ -8531,12 +8561,7 @@ var android = (function () {
                                                             valueTo = getTransformInitialValue(propertyName);
                                                         }
                                                         else if (item.parent && $SvgBuild$2.isShape(item.parent) && item.parent.path) {
-                                                            if (propertyName === 'pathData') {
-                                                                valueTo = item.parent.path.value;
-                                                            }
-                                                            else {
-                                                                valueTo = item.parent.path[getPaintAttribute(propertyName)];
-                                                            }
+                                                            valueTo = propertyName === 'pathData' ? item.parent.path.value : item.parent.path[getPaintAttribute(propertyName)];
                                                         }
                                                         if (!valueTo) {
                                                             valueTo = item.baseValue;
@@ -8635,12 +8660,11 @@ var android = (function () {
                                                         options.interpolator = this.options.animateInterpolator;
                                                     }
                                                 }
+                                                const beforeValues = [];
                                                 let propertyNames;
                                                 let values;
-                                                const beforeValues = [];
                                                 if (!synchronized && options.valueType === 'pathType') {
                                                     if (group.pathData) {
-                                                        propertyNames = ['pathData'];
                                                         let transforms;
                                                         let companion;
                                                         if (item.parent && $SvgBuild$2.isShape(item.parent)) {
@@ -8649,7 +8673,8 @@ var android = (function () {
                                                                 transforms = item.parent.path.transformed;
                                                             }
                                                         }
-                                                        values = $SvgPath.extrapolate(item.attributeName, group.pathData, item.values, companion, transforms, this.options.floatPrecisionValue);
+                                                        propertyNames = ['pathData'];
+                                                        values = $SvgPath.extrapolate(item.attributeName, group.pathData, item.values, transforms, companion, this.options.floatPrecisionValue);
                                                     }
                                                 }
                                                 else if ($SvgBuild$2.asAnimateTransform(item)) {
@@ -8720,9 +8745,13 @@ var android = (function () {
                                                                     if (value !== '') {
                                                                         value = $math$2.truncateString(value, this.options.floatPrecisionValue);
                                                                     }
+                                                                    let interpolator = j > 0 && value !== '' && propertyName !== 'pivotX' && propertyName !== 'pivotY' ? getPathInterpolator(item.keySplines, j - 1) : '';
+                                                                    if (interpolator === '' && item.isLoop(j)) {
+                                                                        interpolator = createPathInterpolator($constS.KEYSPLINE_NAME['step-start']);
+                                                                    }
                                                                     keyframes.push({
-                                                                        interpolator: j > 0 && value !== '' && propertyName !== 'pivotX' && propertyName !== 'pivotY' ? getPathInterpolator(item.keySplines, j - 1) : '',
-                                                                        fraction: item.keyTimes[j] === 0 && value === '' ? '' : $math$2.truncateRange(item.keyTimes[j], this.options.floatPrecisionKeyTime),
+                                                                        interpolator,
+                                                                        fraction: item.keyTimes[j] === 0 && value === '' ? '' : $math$2.truncate(item.keyTimes[j], this.options.floatPrecisionKeyTime),
                                                                         value
                                                                     });
                                                                 }
@@ -8748,19 +8777,23 @@ var android = (function () {
                                                                     const propertyOptions = Object.assign({}, options, { propertyName, startOffset: j === 0 ? (item.delay + (item.keyTimes[j] > 0 ? Math.floor(item.keyTimes[j] * item.duration) : 0)).toString() : '', propertyValues: false });
                                                                     const valueTo = getPropertyValue(values, j, i, false, options.valueType === 'pathType' ? group.pathData : item.baseValue);
                                                                     if (valueTo) {
-                                                                        if (options.valueType === 'pathType') {
-                                                                            const pathData = j === 0 ? group.pathData : getPropertyValue(values, j - 1, i);
-                                                                            if (pathData) {
-                                                                                propertyOptions.valueFrom = pathData;
+                                                                        let duration;
+                                                                        if (j === 0) {
+                                                                            if (!fillBefore && requireBefore) {
+                                                                                propertyOptions.valueFrom = beforeValues[i];
+                                                                            }
+                                                                            else if (options.valueType === 'pathType') {
+                                                                                propertyOptions.valueFrom = group.pathData || values[0].toString();
                                                                             }
                                                                             else {
-                                                                                continue;
+                                                                                propertyOptions.valueFrom = item.baseValue || item.replaceValue || '';
                                                                             }
+                                                                            duration = 0;
                                                                         }
-                                                                        else if (j === 0 && !fillBefore && requireBefore) {
-                                                                            propertyOptions.valueFrom = beforeValues[i];
+                                                                        else {
+                                                                            propertyOptions.valueFrom = getPropertyValue(values, j - 1, i).toString();
+                                                                            duration = Math.floor((item.keyTimes[j] - item.keyTimes[j - 1]) * item.duration);
                                                                         }
-                                                                        const duration = j === 0 ? 0 : Math.floor((item.keyTimes[j] - (j > 0 ? item.keyTimes[j - 1] : 0)) * item.duration);
                                                                         if (transformOrigin && transformOrigin[j]) {
                                                                             let direction;
                                                                             let translateTo = 0;
@@ -8778,7 +8811,11 @@ var android = (function () {
                                                                                 translateData.repeating.push(valueData);
                                                                             }
                                                                         }
-                                                                        propertyOptions.interpolator = j > 0 ? getPathInterpolator(item.keySplines, j - 1) : '';
+                                                                        let interpolator = j > 0 ? getPathInterpolator(item.keySplines, j - 1) : '';
+                                                                        if (interpolator === '' && item.isLoop(j)) {
+                                                                            interpolator = createPathInterpolator($constS.KEYSPLINE_NAME['step-start']);
+                                                                        }
+                                                                        propertyOptions.interpolator = interpolator;
                                                                         propertyOptions.duration = duration.toString();
                                                                         propertyOptions.valueTo = valueTo;
                                                                         animatorData.repeating.push(propertyOptions);
@@ -8879,7 +8916,20 @@ var android = (function () {
                                 }
                             });
                             if (targetSetData.A.length) {
-                                const xml = $xml$9.createTemplate(TEMPLATES$1.SET_OBJECTANIMATOR, targetSetData);
+                                let animatorData;
+                                if (targetSetData.A.length === 1) {
+                                    const A = targetSetData.A[0];
+                                    if (A.ordering === '' && A.BB && A.BB.length === 0 && A.AA && A.AA.length === 1) {
+                                        animatorData = A.AA[0];
+                                    }
+                                }
+                                let xml;
+                                if (animatorData) {
+                                    xml = $xml$a.createTemplate(TEMPLATES$1.OBJECTANIMATOR, animatorData);
+                                }
+                                else {
+                                    xml = $xml$a.createTemplate(TEMPLATES$1.SET_OBJECTANIMATOR, targetSetData);
+                                }
                                 targetData.animationName = Resource.getStoredName('animators', xml);
                                 if (targetData.animationName === '') {
                                     targetData.animationName = getFilename('anim', name);
@@ -8889,7 +8939,7 @@ var android = (function () {
                             }
                         }
                         if (data.A.length) {
-                            const xml = $xml$9.createTemplate(TEMPLATES$1.ANIMATED, data);
+                            const xml = $xml$a.createTemplate(TEMPLATES$1.ANIMATED, data);
                             vectorName = Resource.getStoredName('drawables', xml);
                             if (vectorName === '') {
                                 vectorName = getFilename('anim');
@@ -8932,7 +8982,7 @@ var android = (function () {
                             }
                             D.push(data);
                         }
-                        const xml = $xml$9.formatTemplate($xml$9.createTemplate(TEMPLATES$1.LAYER_LIST, {
+                        const xml = $xml$a.formatTemplate($xml$a.createTemplate(TEMPLATES$1.LAYER_LIST, {
                             A: [],
                             B: false,
                             C: [{ src: vectorName }],
@@ -8982,7 +9032,7 @@ var android = (function () {
                         if (pathData.strokeWidth && (pathData.strokeDasharray || pathData.strokeDashoffset)) {
                             const animateData = this.ANIMATE_DATA.get(item.name);
                             if (animateData === undefined || animateData.animate.every(animate => animate.attributeName.startsWith('stroke-dash'))) {
-                                const [strokeDash, pathValue, clipPathData] = item.path.extractStrokeDash(animateData && animateData.animate, false, this.options.floatPrecisionValue);
+                                const [strokeDash, pathValue, clipPathData] = item.path.extractStrokeDash(animateData && animateData.animate, true, 0, this.options.floatPrecisionValue);
                                 if (strokeDash) {
                                     const groupName = getVectorName(item, 'stroke');
                                     if (pathValue) {
@@ -9000,8 +9050,8 @@ var android = (function () {
                                                 animate: $util$n.filterArray(animateData.animate, animate => animate.id === undefined || animate.id === i)
                                             });
                                         }
-                                        pathObject.trimPathStart = $math$2.truncateRange(strokeDash[i].start, this.options.floatPrecisionValue);
-                                        pathObject.trimPathEnd = $math$2.truncateRange(strokeDash[i].end, this.options.floatPrecisionValue);
+                                        pathObject.trimPathStart = $math$2.truncate(strokeDash[i].start, this.options.floatPrecisionValue);
+                                        pathObject.trimPathEnd = $math$2.truncate(strokeDash[i].end, this.options.floatPrecisionValue);
                                         CCC.push(pathObject);
                                     }
                                     if (animateData) {
