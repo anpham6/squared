@@ -964,8 +964,12 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                 if (value !== '') {
                                                                     value = $math.truncateString(value, this.options.floatPrecisionValue);
                                                                 }
+                                                                let interpolator = j > 0 && value !== '' && propertyName !== 'pivotX' && propertyName !== 'pivotY' ? getPathInterpolator(item.keySplines, j - 1) : '';
+                                                                if (interpolator === '' && item.isLoop(j)) {
+                                                                    interpolator = createPathInterpolator($constS.KEYSPLINE_NAME['step-start']);
+                                                                }
                                                                 keyframes.push({
-                                                                    interpolator: j > 0 && value !== '' && propertyName !== 'pivotX' && propertyName !== 'pivotY' ? getPathInterpolator(item.keySplines, j - 1) : '',
+                                                                    interpolator,
                                                                     fraction: item.keyTimes[j] === 0 && value === '' ? '' : $math.truncate(item.keyTimes[j], this.options.floatPrecisionKeyTime),
                                                                     value
                                                                 });
@@ -997,19 +1001,23 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                 };
                                                                 const valueTo = getPropertyValue(values, j, i, false, options.valueType === 'pathType' ? group.pathData : item.baseValue);
                                                                 if (valueTo) {
-                                                                    if (options.valueType === 'pathType') {
-                                                                        const pathData = j === 0 ? group.pathData : getPropertyValue(values, j - 1, i);
-                                                                        if (pathData) {
-                                                                            propertyOptions.valueFrom = pathData;
+                                                                    let duration: number;
+                                                                    if (j === 0) {
+                                                                        if (!fillBefore && requireBefore) {
+                                                                            propertyOptions.valueFrom = beforeValues[i];
+                                                                        }
+                                                                        else if (options.valueType === 'pathType') {
+                                                                            propertyOptions.valueFrom = group.pathData || values[0].toString();
                                                                         }
                                                                         else {
-                                                                            continue;
+                                                                            propertyOptions.valueFrom = item.baseValue || item.replaceValue || '';
                                                                         }
+                                                                        duration = 0;
                                                                     }
-                                                                    else if (j === 0 && !fillBefore && requireBefore) {
-                                                                        propertyOptions.valueFrom = beforeValues[i];
+                                                                    else {
+                                                                        propertyOptions.valueFrom = getPropertyValue(values, j - 1, i).toString();
+                                                                        duration = Math.floor((item.keyTimes[j] - item.keyTimes[j - 1]) * item.duration);
                                                                     }
-                                                                    const duration = j === 0 ? 0 : Math.floor((item.keyTimes[j] - (j > 0 ? item.keyTimes[j - 1] : 0)) * item.duration);
                                                                     if (transformOrigin && transformOrigin[j]) {
                                                                         let direction: string | undefined;
                                                                         let translateTo = 0;
@@ -1027,7 +1035,11 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                             translateData.repeating.push(valueData);
                                                                         }
                                                                     }
-                                                                    propertyOptions.interpolator = j > 0 ? getPathInterpolator(item.keySplines, j - 1) : '';
+                                                                    let interpolator = j > 0 ? getPathInterpolator(item.keySplines, j - 1) : '';
+                                                                    if (interpolator === '' && item.isLoop(j)) {
+                                                                        interpolator = createPathInterpolator($constS.KEYSPLINE_NAME['step-start']);
+                                                                    }
+                                                                    propertyOptions.interpolator = interpolator;
                                                                     propertyOptions.duration = duration.toString();
                                                                     propertyOptions.valueTo = valueTo;
                                                                     animatorData.repeating.push(propertyOptions);
@@ -1253,7 +1265,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                     if (pathData.strokeWidth && (pathData.strokeDasharray || pathData.strokeDashoffset)) {
                         const animateData = this.ANIMATE_DATA.get(item.name);
                         if (animateData === undefined || animateData.animate.every(animate => animate.attributeName.startsWith('stroke-dash'))) {
-                            const [strokeDash, pathValue, clipPathData] = item.path.extractStrokeDash(animateData && animateData.animate, true, this.options.floatPrecisionValue);
+                            const [strokeDash, pathValue, clipPathData] = item.path.extractStrokeDash(animateData && animateData.animate, true, 0, this.options.floatPrecisionValue);
                             if (strokeDash) {
                                 const groupName = getVectorName(item, 'stroke');
                                 if (pathValue) {

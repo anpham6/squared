@@ -1,4 +1,4 @@
-import { SvgBuildOptions, SvgSynchronizeOptions, SvgTransformExclude, SvgTransformResidual } from '../svg/@types/object';
+import { SvgBuildOptions, SvgSynchronizeOptions } from '../svg/@types/object';
 
 declare global {
     namespace squared.svg {

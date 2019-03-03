@@ -70,9 +70,9 @@ declare global {
             function truncate(value: number, precision?: number): string;
             function truncateFraction(value: number): number;
             function truncateString(value: string, precision?: number): string;
-            function getAngle(start: Point, end: Point): number;
+            function offsetAngle(start: Point, end: Point): number;
             function clampRange(value: number, min?: number, max?: number): number;
-            function getLeastCommonMultiple(values: number[], offset?: number[]): number;
+            function nextMultiple(values: number[], offset?: number[]): number;
         }
 
         namespace util {

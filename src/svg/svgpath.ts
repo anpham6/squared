@@ -447,7 +447,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         }
                                     }
                                     else {
-                                        const angle = $math.getAngle(afterStartPoint, pathStartPoint);
+                                        const angle = $math.offsetAngle(afterStartPoint, pathStartPoint);
                                         const x = pathStart.coordinates[0] - $math.distanceFromX(leading, angle);
                                         const y = pathStart.coordinates[1] - $math.distanceFromY(leading, angle);
                                         if (negative || x >= 0 && y >= 0) {
@@ -500,7 +500,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                                 }
                                             }
                                             else {
-                                                const angle = $math.getAngle(beforeEndPoint, pathEndPoint);
+                                                const angle = $math.offsetAngle(beforeEndPoint, pathEndPoint);
                                                 const x = pathEnd.coordinates[0] + $math.distanceFromX(trailing, angle);
                                                 const y = pathEnd.coordinates[1] + $math.distanceFromY(trailing, angle);
                                                 if (negative || x >= 0 && y >= 0) {
@@ -545,113 +545,116 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     }
 
     public flattenStrokeDash(valueArray: number[], valueOffset: number, totalLength: number, pathLength?: number, data?: SvgPathExtendData) {
-        if (valueArray.length === 1) {
-            valueArray.push(valueArray[0]);
-        }
         if (!pathLength) {
             pathLength = totalLength;
         }
-        const extendedLength = data && data.extendedLength || pathLength;
-        const result: SvgPathExtendData = {
-            items: [],
-            leading: 0,
-            trailing: 0,
-            extendedLength,
-            dashArrayTotal: valueArray.reduce((a, b) => a + b, 0),
-            lengthRatio: totalLength / (pathLength || totalLength)
-        };
-        function getTrailing() {
-            return result.items[result.items.length - 1];
-        }
+        let arrayLength: number;
+        let dashArray: number[];
+        let dashArrayTotal: number;
+        let extendedLength: number;
         let j = 0;
+        function getDash(index: number) {
+            return dashArray[index % arrayLength];
+        }
         if (data === undefined) {
-            if (valueOffset < 0) {
+            arrayLength = valueArray.length;
+            dashArray = valueArray.slice(0);
+            const dashLength = $math.nextMultiple([2, arrayLength]);
+            dashArrayTotal = 0;
+            for (let i = 0; i < dashLength; i++) {
+                const value = valueArray[i % arrayLength];
+                dashArrayTotal += value;
+                if (i >= arrayLength) {
+                    dashArray.push(value);
+                }
+            }
+            arrayLength = dashLength;
+            if (valueOffset > 0) {
+                let length = getDash(0);
+                while (valueOffset - length >= 0) {
+                    valueOffset -= length;
+                    length = getDash(++j);
+                }
+                j %= arrayLength;
+            }
+            else if (valueOffset < 0) {
+                dashArray.reverse();
                 while (valueOffset < 0) {
-                    valueOffset += result.dashArrayTotal;
+                    valueOffset += getDash(j++);
+                }
+                j = arrayLength - (j % arrayLength);
+                dashArray.reverse();
+            }
+            extendedLength = pathLength;
+            data = {
+                dashArray,
+                dashArrayTotal,
+                items: [],
+                leading: 0,
+                trailing: 0,
+                startIndex: j,
+                extendedLength,
+                lengthRatio: totalLength / (pathLength || totalLength)
+            };
+        }
+        else {
+            ({ dashArray, dashArrayTotal, extendedLength, startIndex: j } = data);
+            arrayLength = dashArray.length;
+            data.items = [];
+            data.leading = 0;
+        }
+        let dashTotal = 0;
+        let end: number;
+        for (let i = 0, length = 0; ; i += length, j++) {
+            length = getDash(j);
+            let startOffset: number;
+            let actualLength: number;
+            if (i < valueOffset) {
+                data.leading = valueOffset - i;
+                startOffset = 0;
+                actualLength = length - data.leading;
+            }
+            else {
+                startOffset = i - valueOffset;
+                actualLength = length;
+            }
+            const start = $math.truncateFraction(startOffset / extendedLength);
+            end = $math.truncateFraction(start + (actualLength / extendedLength));
+            if (j % 2 === 0) {
+                if (start < 1) {
+                    data.items.push({
+                        start,
+                        end: Math.min(end, 1),
+                        length
+                    });
+                    dashTotal += length;
                 }
             }
             else {
-                while (valueOffset - result.dashArrayTotal >= 0) {
-                    valueOffset -= result.dashArrayTotal;
-                }
+                dashTotal += length;
+            }
+            if (end >= 1) {
+                break;
             }
         }
-        else if (data.leadingOffset) {
-            j = 1;
+        data.trailing = $math.truncateFraction((end - 1) * extendedLength);
+        while (dashTotal % dashArrayTotal !== 0) {
+            const value = getDash(++j);
+            data.trailing += value;
+            dashTotal += value;
         }
-        const arrayLength = valueArray.length;
-        let endSpace = false;
-        for (let i = 0, dashLength = 0; ; i += dashLength, j++) {
-            dashLength = valueArray[j % arrayLength];
-            if (i + dashLength > valueOffset) {
-                let startOffset: number;
-                let actualLength: number;
-                if (i < valueOffset) {
-                    result.leading = valueOffset - i;
-                    startOffset = 0;
-                    actualLength = dashLength - result.leading;
-                }
-                else {
-                    startOffset = i - valueOffset;
-                    actualLength = dashLength;
-                }
-                const start = $math.truncateFraction(startOffset / extendedLength);
-                const end = $math.truncateFraction(start + (actualLength / extendedLength));
-                if (j % 2 === 0) {
-                    if (start < 1) {
-                        result.items.push({
-                            start,
-                            end: Math.min(end, 1),
-                            length: dashLength
-                        });
-                    }
-                    else {
-                        if (start === 1) {
-                            endSpace = true;
-                            j--;
-                        }
-                        else {
-                            result.trailing = $math.truncateFraction((start - 1) * extendedLength);
-                            if (getTrailing().end < 1) {
-                                endSpace = true;
-                                j++;
-                            }
-                        }
-                        break;
-                    }
-                }
-                else if (start >= 1) {
-                    result.trailing = $math.truncateFraction((end - 1) * extendedLength);
-                    endSpace = true;
-                    break;
-                }
-            }
+        if (data.items.length === 0) {
+            data.items.push({ start: 1, end: 1 });
         }
-        if (data === undefined) {
-            if (result.items.length === 0) {
-                result.items.push({ start: 1, end: 1 });
-            }
-            else {
-                result.leadingOffset = $math.truncateFraction(result.items[0].start * extendedLength);
-                result.trailingOffset = $math.truncateFraction((1 - getTrailing().end) * extendedLength);
-                if (endSpace) {
-                    if (result.leadingOffset > 0) {
-                        result.trailing += valueArray[++j % arrayLength];
-                    }
-                }
-                else {
-                    if (result.leadingOffset > 0) {
-                        result.trailing -= result.leadingOffset + result.leading;
-                    }
-                }
-                result.leading *= result.lengthRatio;
-                result.trailing *= result.lengthRatio;
-            }
+        else {
+            data.leadingOffset = $math.truncateFraction(data.items[0].start * extendedLength);
+            data.leading *= data.lengthRatio;
+            data.trailing *= data.lengthRatio;
         }
-        return result;
+        return data;
     }
 
-    public extractStrokeDash(animations?: SvgAnimation[], negative = true, precision?: number): [SvgStrokeDash[] | undefined, string | undefined, string | undefined] {
+    public extractStrokeDash(animations?: SvgAnimation[], negative = true, loopInterval = 0, precision?: number): [SvgStrokeDash[] | undefined, string | undefined, string | undefined] {
         const strokeWidth = $util.convertInt(this.strokeWidth);
         let result: SvgStrokeDash[] | undefined;
         let path: string | undefined;
@@ -808,20 +811,20 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                 }
                                 case 'stroke-dashoffset': {
                                     const duration = item.duration;
-                                    const repeatFraction = 1 / 1000;
+                                    const repeatFraction = loopInterval / 1000;
                                     const values: string[] = [];
                                     const keyTimes: number[] = [];
                                     const loopIntervals: boolean[] = [];
+                                    const startOffset = parseFloat(item.values[0]);
                                     let keyTime = 0;
                                     let previousRemaining = 0;
-                                    const startOffset = parseFloat(item.values[0]);
                                     let baseValue: SvgStrokeDash[] | undefined;
                                     if (valueOffset !== startOffset) {
                                         if (modified || item.delay > 0) {
-                                            baseValue = createDashGroup(valueArray, startOffset, item.delay, 0, item);
+                                            baseValue = createDashGroup(flattenData.dashArray, startOffset, item.delay, 0, item);
                                         }
                                         else {
-                                            flattenData = this.flattenStrokeDash(valueArray, startOffset, totalLength, pathLength);
+                                            flattenData = this.flattenStrokeDash(flattenData.dashArray, startOffset, totalLength, pathLength);
                                             result = flattenData.items;
                                             dashGroup[0].items = result;
                                             baseValue = result;
@@ -847,7 +850,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                                 flattenData.extendedLength = extendedLength;
                                             }
                                             if (baseValue === result) {
-                                                const data = this.flattenStrokeDash(valueArray, 0, totalLength, pathLength, flattenData);
+                                                const data = this.flattenStrokeDash(flattenData.dashArray, 0, totalLength, pathLength, flattenData);
                                                 result = data.items;
                                                 dashGroup[0].items = result;
                                                 baseValue = result;
@@ -855,7 +858,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                             else {
                                                 for (const group of dashGroup) {
                                                     if (group.items === baseValue) {
-                                                        const data = this.flattenStrokeDash(valueArray, 0, totalLength, pathLength, flattenData);
+                                                        const data = this.flattenStrokeDash(flattenData.dashArray, 0, totalLength, pathLength, flattenData);
                                                         baseValue = data.items;
                                                         group.items = baseValue;
                                                         break;
@@ -873,10 +876,24 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     for (let j = 0; j < iterationCount; j++) {
                                         const offsetFrom = parseFloat(item.values[j]);
                                         const offsetTo = parseFloat(item.values[j + 1]);
-                                        const increasing = offsetTo > offsetFrom;
+                                        const offsetValue = Math.abs(offsetTo - offsetFrom);
                                         const keyTimeTo = item.keyTimes[j + 1];
+                                        if (offsetValue === 0) {
+                                            keyTime = keyTimeTo;
+                                            keyTimes.push(keyTime);
+                                            if (values.length) {
+                                                values.push(values[values.length - 1]);
+                                                previousRemaining = parseFloat(values[values.length - 1]);
+                                            }
+                                            else {
+                                                values.push('0');
+                                                previousRemaining = 0;
+                                            }
+                                            continue;
+                                        }
+                                        const increasing = offsetTo > offsetFrom;
                                         const segDuration = (keyTimeTo - item.keyTimes[j]) * duration;
-                                        const offsetTotal = Math.abs(offsetTo - offsetFrom) * flattenData.lengthRatio;
+                                        const offsetTotal = offsetValue * flattenData.lengthRatio;
                                         let iterationTotal = offsetTotal / extendedLength;
                                         function getKeyTimeIncrement(offset: number) {
                                             return (offset / offsetTotal * segDuration) / duration;

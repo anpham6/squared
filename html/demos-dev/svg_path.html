@@ -55,8 +55,8 @@
             fill: none;
             stroke: black;
             stroke-width: 2;
-            stroke-dasharray: 5 3;
-            stroke-dashoffset: 0;
+            stroke-dasharray: 4 8 2;
+            stroke-dashoffset: -301;
         }
         #dash1 {
             animation: dash2 10s linear 0s forwards
@@ -98,19 +98,19 @@
         }
         @keyframes dash2 {
             from {
-                stroke-dashoffset: 50;
-            }
-            25% {
                 stroke-dashoffset: 25;
             }
+            25% {
+                stroke-dashoffset: 21;
+            }
             50% {
-                stroke-dashoffset: 0;
+                stroke-dashoffset: -77;
             }
             75% {
-                stroke-dashoffset: 50;
+                stroke-dashoffset: -78;
             }
             to {
-                stroke-dashoffset: 150;
+                stroke-dashoffset: 108;
             }
         }
     </style>

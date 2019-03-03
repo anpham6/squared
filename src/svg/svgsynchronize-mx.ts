@@ -38,7 +38,7 @@ const ELLIPSE_ARGS = ['cx', 'cy', 'rx', 'ry'];
 
 function insertAdjacentSplitValue(map: TimelineIndex, insertMap: TimelineIndex, time: number) {
     let previousTime = 0;
-    let previousValue!: AnimateValue;
+    let previousValue: AnimateValue | undefined;
     let previous: NumberValue<AnimateValue> | undefined;
     let next: NumberValue<AnimateValue> | undefined;
     for (const [index, value] of map.entries()) {
@@ -46,7 +46,7 @@ function insertAdjacentSplitValue(map: TimelineIndex, insertMap: TimelineIndex, 
             previous = { index, value };
             break;
         }
-        else if (time > previousTime && time < index) {
+        else if (time > previousTime && time < index && previousValue !== undefined) {
             previous = { index: previousTime, value: previousValue };
             next = { index, value };
             break;
@@ -535,12 +535,12 @@ function playableAnimation(item: SvgAnimate) {
 
 function getFreezeValue(map: TimelineIndex, time: number) {
     let lastTime = 0;
-    let lastValue!: AnimateValue;
+    let lastValue: AnimateValue | undefined;
     for (const [freezeTime, value] of map.entries()) {
         if (time === freezeTime) {
             return value;
         }
-        else if (time > lastTime && time < freezeTime) {
+        else if (time > lastTime && time < freezeTime && lastValue !== undefined) {
             return lastValue;
         }
         lastTime = freezeTime;
@@ -1553,7 +1553,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                             }
                             else {
                                 if (duration.length > 1) {
-                                    repeatingEndTime = $math.getLeastCommonMultiple(duration, delay);
+                                    repeatingEndTime = $math.nextMultiple(duration, delay);
                                 }
                                 else if ((repeatingEndTime - delay[0]) % duration[0] !== 0) {
                                     repeatingEndTime = duration[0] * Math.ceil(repeatingEndTime / duration[0]);
@@ -1645,7 +1645,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                             duration.push(infiniteMap[attr].duration);
                             infiniteAnimations.push(infiniteMap[attr]);
                         }
-                        const maxDuration = $math.getLeastCommonMultiple(duration);
+                        const maxDuration = $math.nextMultiple(duration);
                         for (const item of infiniteAnimations) {
                             const attr = item.attributeName;
                             timelineMap[attr] = new Map<number, AnimateValue>();

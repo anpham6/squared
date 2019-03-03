@@ -134,12 +134,13 @@ export interface SvgSynchronizeOptions {
 
 export interface SvgPathExtendData {
     items: SvgStrokeDash[];
+    dashArray: number[];
+    dashArrayTotal: number;
+    extendedLength: number;
+    startIndex: number;
     leading: number;
     trailing: number;
     lengthRatio: number;
-    dashArrayTotal: number;
-    extendedLength: number;
     path?: string;
     leadingOffset?: number;
-    trailingOffset?: number;
 }

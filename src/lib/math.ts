@@ -33,33 +33,23 @@ export function lessEqual(valueA: number, valueB: number, precision = 8) {
 }
 
 export function truncate(value: number, precision = 3) {
-    if (value === Math.floor(value)) {
-        return value.toString();
-    }
-    else {
-        return value.toPrecision(precision).replace(/\.?0+$/, '');
-    }
+    return value === Math.floor(value) ? value.toString() : value.toPrecision(precision).replace(/\.?0+$/, '');
 }
 
 export function truncateFraction(value: number) {
     if (value !== Math.floor(value)) {
         const match = /^(\d+)\.(\d*?)(0{5,}|9{5,})\d*$/.exec(value.toString());
         if (match) {
-            return parseFloat(
-                value.toPrecision(match[2] === ''
-                    ? match[1].length
-                    : (match[1] !== '0' ? match[1].length : 0) + match[2].length
-                )
-            );
+            return match[2] === '' ? Math.round(value) : parseFloat(value.toPrecision((match[1] !== '0' ? match[1].length : 0) + match[2].length));
         }
     }
     return value;
 }
 
 export function truncateString(value: string, precision = 3) {
-    let output = value;
     const pattern = new RegExp(`(\\d+\\.\\d{${precision}})(\\d)\\d*`, 'g');
     let match: RegExpExecArray | null;
+    let output = value;
     while ((match = pattern.exec(value)) !== null) {
         if (parseInt(match[2]) >= 5) {
             match[1] = truncateFraction((parseFloat(match[1]) + 1 / Math.pow(10, precision))).toString();
@@ -73,7 +63,7 @@ export function convertRadian(value: number) {
     return value * Math.PI / 180;
 }
 
-export function getAngle(start: Point, end: Point) {
+export function offsetAngle(start: Point, end: Point) {
     const y = end.y - start.y;
     const value = Math.atan2(y, end.x - start.x) * 180 / Math.PI;
     if (value < 0) {
@@ -94,7 +84,7 @@ export function clampRange(value: number, min = 0, max = 1) {
     return value;
 }
 
-export function getLeastCommonMultiple(values: number[], offset?: number[]) {
+export function nextMultiple(values: number[], offset?: number[]) {
     if (values.length > 1) {
         const increment = minArray(values);
         let minimum = 0;
