@@ -64,9 +64,9 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
     });
     const groove = style === 'groove';
     if (borderWidth > 1 && (groove || style === 'ridge')) {
-        const color = $color.parseRGBA(border.color);
+        const color = $color.parseColor(border.color);
         if (color) {
-            const reduced = $color.reduceRGBA(color.valueRGBA, groove || color.valueRGB === '#000000' ? 0.5 : -0.5);
+            const reduced = $color.reduceColor(color.valueAsRGBA, groove || color.valueAsRGB === '#000000' ? 0.5 : -0.5);
             if (reduced) {
                 const colorValue = Resource.addColor(reduced);
                 if (colorValue !== '') {
@@ -74,7 +74,7 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
                     if (direction === 0 || direction === 2) {
                         halfSize = !halfSize;
                     }
-                    if (color.valueRGB === '#000000' && (groove && (direction === 1 || direction === 3) || !groove && (direction === 0 || direction === 2))) {
+                    if (color.valueAsRGB === '#000000' && (groove && (direction === 1 || direction === 3) || !groove && (direction === 0 || direction === 2))) {
                         halfSize = !halfSize;
                     }
                     if (halfSize) {

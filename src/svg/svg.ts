@@ -17,10 +17,10 @@ function getColorStop(element: SVGGradientElement) {
     const result: ColorStop[] = [];
     const stops = element.getElementsByTagName('stop');
     for (let i = 0; i < stops.length; i++) {
-        const color = $color.parseRGBA($dom.cssAttribute(stops[i], 'stop-color'), $dom.cssAttribute(stops[i], 'stop-opacity'));
+        const color = $color.parseColor($dom.cssAttribute(stops[i], 'stop-color'), $dom.cssAttribute(stops[i], 'stop-opacity'));
         if (color) {
             result.push({
-                color: color.valueRGBA,
+                color: color.valueAsRGBA,
                 offset: $dom.cssAttribute(stops[i], 'offset'),
                 opacity: color.alpha
             });
@@ -30,7 +30,7 @@ function getColorStop(element: SVGGradientElement) {
 }
 
 function getBaseValue(element: SVGElement, ...attrs: string[]) {
-    const result: ObjectMap<string | number> = {};
+    const result: ObjectMap<any> = {};
     for (const attr of attrs) {
         if (element[attr]) {
             result[attr] = element[attr].baseVal.value;

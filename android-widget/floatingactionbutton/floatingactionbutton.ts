@@ -25,7 +25,7 @@ export default class FloatingActionButton<T extends android.base.View> extends s
         const element = <HTMLElement> node.element;
         const target = $util.hasValue(node.dataset.target);
         const options = $utilA.createViewAttribute(this.options[element.id]);
-        const backgroundColor = $color.parseRGBA(node.css('backgroundColor'), node.css('opacity'));
+        const backgroundColor = $color.parseColor(node.css('backgroundColor'), node.css('opacity'));
         let colorValue = '';
         if (backgroundColor) {
             colorValue = $Resource.addColor(backgroundColor);

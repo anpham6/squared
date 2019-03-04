@@ -22,9 +22,9 @@ interface HSL {
 }
 
 interface ColorData {
-    valueRGB: string;
-    valueRGBA: string;
-    valueARGB: string;
+    valueAsRGB: string;
+    valueAsRGBA: string;
+    valueAsARGB: string;
     rgba: RGBA;
     alpha: number;
     opaque: boolean;

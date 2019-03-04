@@ -1042,7 +1042,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     [/^(rgba?\(\d+, \d+, \d+(?:, [\d.]+)?\)) ([\d.]+[a-z]+) ([\d.]+[a-z]+) ([\d.]+[a-z]+)$/, /^([\d.]+[a-z]+) ([\d.]+[a-z]+) ([\d.]+[a-z]+) (.+)$/].some((pattern, index) => {
                         const match = value.match(pattern);
                         if (match) {
-                            const color = $color.parseRGBA(match[index === 0 ? 1 : 4]);
+                            const color = $color.parseColor(match[index === 0 ? 1 : 4]);
                             if (color) {
                                 const colorName = Resource.addColor(color);
                                 if (colorName !== '') {

@@ -32,10 +32,10 @@ function getColorStops(value: string, opacity: string, conic = false) {
     const pattern = new RegExp(REGEXP_COLORSTOP, 'g');
     let match: RegExpExecArray | null;
     while ((match = pattern.exec(value)) !== null) {
-        const color = $color.parseRGBA(match[1], opacity, true);
+        const color = $color.parseColor(match[1], opacity, true);
         if (color) {
             const item: ColorStop = {
-                color: color.valueRGBA,
+                color: color.valueAsRGBA,
                 opacity: color.alpha,
                 offset: ''
             };
@@ -298,13 +298,13 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                         width = '1px';
                                     }
                                 default:
-                                    color = $color.parseRGBA(borderColor, node.css('opacity'));
+                                    color = $color.parseColor(borderColor, node.css('opacity'));
                                     break;
                             }
                             boxStyle[attr] = <BorderAttribute> {
                                 width,
                                 style,
-                                color: color ? color.valueRGBA : ''
+                                color: color ? color.valueAsRGBA : ''
                             };
                             break;
                         }
@@ -326,8 +326,8 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                 boxStyle.backgroundColor = '';
                             }
                             else {
-                                const color = $color.parseRGBA(value, node.css('opacity'));
-                                boxStyle.backgroundColor = color ? color.valueRGBA : '';
+                                const color = $color.parseColor(value, node.css('opacity'));
+                                boxStyle.backgroundColor = color ? color.valueAsRGBA : '';
                             }
                             break;
                         case 'background':
@@ -477,13 +477,13 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                 node.inlineText && !backgroundImage && !node.preserveWhiteSpace && node.element.innerHTML.trim() === ''))
             {
                 const opacity = node.css('opacity');
-                const color = $color.parseRGBA(node.css('color'), opacity);
+                const color = $color.parseColor(node.css('color'), opacity);
                 let backgroundColor: ColorData | undefined;
                 if (!(backgroundImage ||
                     node.css('backgroundColor') === node.cssAscend('backgroundColor', false, true) && (node.plainText || node.style.backgroundColor !== node.cssInitial('backgroundColor')) ||
                     node.documentParent.visible && !node.has('backgroundColor') && $dom.cssFromParent(node.element, 'backgroundColor')))
                 {
-                    backgroundColor = $color.parseRGBA(node.css('backgroundColor'), opacity);
+                    backgroundColor = $color.parseColor(node.css('backgroundColor'), opacity);
                 }
                 let fontFamily = node.css('fontFamily');
                 let fontSize = node.css('fontSize');
@@ -544,8 +544,8 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                     fontStyle: node.css('fontStyle'),
                     fontSize,
                     fontWeight,
-                    color: color ? color.valueRGBA : '',
-                    backgroundColor: backgroundColor ? backgroundColor.valueRGBA : ''
+                    color: color ? color.valueAsRGBA : '',
+                    backgroundColor: backgroundColor ? backgroundColor.valueAsRGBA : ''
                 };
                 node.data(Resource.KEY_NAME, 'fontStyle', result);
             }

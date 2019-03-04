@@ -4,12 +4,13 @@ import * as $util from '../lib/util';
 declare global {
     namespace squared.lib {
         namespace color {
-            function getColorByName(value: string): ColorResult | undefined;
-            function getColorByShade(value: string): ColorResult | undefined;
+            function findColorName(value: string): ColorResult | undefined;
+            function findColorShade(value: string): ColorResult | undefined;
+            function parseColor(value: string, opacity?: string, transparency?: boolean): ColorData | undefined;
+            function reduceColor(value: string, percent: number): ColorData | undefined;
             function convertHex(...values: string[] | number[]): string;
             function convertRGBA(value: string): RGBA | undefined;
-            function parseRGBA(value: string, opacity?: string, transparency?: boolean): ColorData | undefined;
-            function reduceRGBA(value: string, percent: number): ColorData | undefined;
+            function formatRGBA(rgba: RGBA): string;
         }
 
         namespace dom {

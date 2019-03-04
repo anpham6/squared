@@ -221,15 +221,16 @@ function sortHSL(a: ColorResult, b: ColorResult) {
     return 0;
 }
 
-function formatRGBA(rgba: RGBA) {
-    return `rgb${rgba.a < 255 ? 'a' : ''}(${rgba.r}, ${rgba.g}, ${rgba.b}${rgba.a < 255 ? `, ${(rgba.a / 255).toPrecision(2)}` : ''})`;
+function convertAlpha(value: number) {
+    return value < 1 ? convertHex(255 * value) : 'FF';
 }
 
-function convertAlpha(value: string) {
-    return parseFloat(value) < 1 ? convertHex(255 * parseFloat(value)) : 'FF';
+function parseOpacity(value: string) {
+    const opacity = parseFloat(value.trim() || '1');
+    return opacity < 1 ? opacity : 1;
 }
 
-export function getColorByName(value: string) {
+export function findColorName(value: string) {
     for (const color in X11_CSS3) {
         if (color.toLowerCase() === value.trim().toLowerCase()) {
             return <ColorResult> X11_CSS3[color];
@@ -238,30 +239,91 @@ export function getColorByName(value: string) {
     return undefined;
 }
 
-export function getColorByShade(value: string) {
-    const sorted = HSL_SORTED.slice(0);
-    let index = sorted.findIndex(item => item.value === value);
+export function findColorShade(value: string) {
+    let index = HSL_SORTED.findIndex(item => item.value === value);
     if (index !== -1) {
-        return sorted[index];
+        return HSL_SORTED[index];
     }
     else {
         const rgb = convertRGBA(value);
         if (rgb) {
             const hsl = convertHSL(rgb);
             if (hsl) {
-                sorted.push({
+                const result = HSL_SORTED.slice(0);
+                result.push({
                     name: '',
                     value: '',
                     hsl,
                     rgba: { r: -1, g: -1, b: -1, a: 1 },
                 });
-                sorted.sort(sortHSL);
-                index = sorted.findIndex(item => item.name === '');
-                return sorted[Math.min(index + 1, sorted.length - 1)];
+                result.sort(sortHSL);
+                index = result.findIndex(item => item.name === '');
+                return result[Math.min(index + 1, result.length - 1)];
             }
         }
         return undefined;
     }
+}
+
+export function parseColor(value: string, opacity = '1', transparency = false) {
+    if (value && (value !== 'transparent' || transparency)) {
+        let rgba: RGBA | undefined;
+        if (value.charAt(0) === '#') {
+            rgba = convertRGBA(value);
+        }
+        else if (value === 'initial') {
+            rgba = { r: 0, g: 0, b: 0, a: 1 };
+        }
+        else if (value === 'transparent') {
+            rgba = { r: 0, g: 0, b: 0, a: 0 };
+        }
+        else if (value.startsWith('rgb')) {
+            const match = value.match(REGEXP_RGBA);
+            if (match) {
+                rgba = {
+                    r: parseInt(match[1]),
+                    g: parseInt(match[2]),
+                    b: parseInt(match[3]),
+                    a: match[4] ? parseFloat(match[4]) : parseOpacity(opacity)
+                };
+            }
+        }
+        else {
+            const color = findColorName(value);
+            if (color) {
+                rgba = <RGBA> color.rgba;
+                rgba.a = parseOpacity(opacity);
+            }
+        }
+        if (rgba && (rgba.a > 0 || transparency)) {
+            const valueHex = convertHex(rgba.r) + convertHex(rgba.g) + convertHex(rgba.b);
+            const valueAlpha = convertAlpha(rgba.a);
+            const alpha = rgba.a;
+            return <ColorData> {
+                valueAsRGB: `#${valueHex}`,
+                valueAsRGBA: `#${valueHex + valueAlpha}`,
+                valueAsARGB: `#${valueAlpha + valueHex}`,
+                alpha,
+                rgba,
+                opaque: alpha < 1,
+                visible: alpha > 0
+            };
+        }
+    }
+    return undefined;
+}
+
+export function reduceColor(value: string, percent: number) {
+    const rgba = convertRGBA(value);
+    if (rgba) {
+        const base = percent < 0 ? 0 : 255;
+        percent = Math.abs(percent);
+        rgba.r = Math.round((base - rgba.r) * percent) + rgba.r;
+        rgba.g = Math.round((base - rgba.g) * percent) + rgba.g;
+        rgba.b = Math.round((base - rgba.b) * percent) + rgba.b;
+        return parseColor(formatRGBA(rgba));
+    }
+    return undefined;
 }
 
 export function convertHex(...values: string[] | number[]) {
@@ -269,10 +331,12 @@ export function convertHex(...values: string[] | number[]) {
     for (const value of values) {
         let rgb = typeof value === 'string' ? parseInt(value) : value;
         if (isNaN(rgb)) {
-            return '00';
+            output += '00';
         }
-        rgb = Math.max(0, Math.min(rgb, 255));
-        output += HEX_CHAR.charAt((rgb - (rgb % 16)) / 16) + HEX_CHAR.charAt(rgb % 16);
+        else {
+            rgb = Math.max(0, Math.min(rgb, 255));
+            output += HEX_CHAR.charAt((rgb - (rgb % 16)) / 16) + HEX_CHAR.charAt(rgb % 16);
+        }
     }
     return output;
 }
@@ -309,62 +373,6 @@ export function convertRGBA(value: string) {
     return undefined;
 }
 
-export function parseRGBA(value: string, opacity = '1', transparency = false) {
-    if (value && (value !== 'transparent' || transparency)) {
-        if (opacity.trim() === '') {
-            opacity = '1';
-        }
-        if (value.charAt(0) === '#') {
-            const rgba = convertRGBA(value);
-            if (rgba) {
-                value = formatRGBA(rgba);
-            }
-        }
-        else if (value === 'initial') {
-            value = formatRGBA({ r: 0, g: 0, b: 0, a: 1 });
-        }
-        else if (value === 'transparent') {
-            value = formatRGBA({ r: 0, g: 0, b: 0, a: 0 });
-        }
-        else if (!value.startsWith('rgb')) {
-            const color = getColorByName(value);
-            if (color && color.rgba) {
-                color.rgba.a = parseFloat(convertAlpha(opacity));
-                value = formatRGBA(color.rgba);
-            }
-        }
-        const match = value.match(REGEXP_RGBA);
-        if (match && match.length >= 4 && (match[4] === undefined || parseFloat(match[4]) > 0 || transparency)) {
-            if (match[4] === undefined) {
-                match[4] = parseFloat(opacity).toPrecision(2);
-            }
-            const valueHEX = convertHex(match[1]) + convertHex(match[2]) + convertHex(match[3]);
-            const valueAlpha = convertAlpha(match[4]);
-            const valueRGBA = `#${valueHEX + valueAlpha}`;
-            const alpha = parseFloat(match[4]);
-            return <ColorData> {
-                valueRGB: `#${valueHEX}`,
-                valueRGBA,
-                valueARGB: `#${valueAlpha + valueHEX}`,
-                alpha,
-                rgba: convertRGBA(valueRGBA),
-                opaque: alpha < 1,
-                visible: alpha > 0
-            };
-        }
-    }
-    return undefined;
-}
-
-export function reduceRGBA(value: string, percent: number) {
-    const rgba = convertRGBA(value);
-    if (rgba) {
-        const base = percent < 0 ? 0 : 255;
-        percent = Math.abs(percent);
-        rgba.r = Math.round((base - rgba.r) * percent) + rgba.r;
-        rgba.g = Math.round((base - rgba.g) * percent) + rgba.g;
-        rgba.b = Math.round((base - rgba.b) * percent) + rgba.b;
-        return parseRGBA(formatRGBA(rgba));
-    }
-    return undefined;
+export function formatRGBA(rgba: RGBA) {
+    return `rgb${rgba.a < 255 ? 'a' : ''}(${rgba.r}, ${rgba.g}, ${rgba.b}${rgba.a < 255 ? `, ${(rgba.a / 255).toPrecision(2)}` : ''})`;
 }

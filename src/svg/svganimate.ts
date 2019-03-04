@@ -24,8 +24,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         switch (name) {
             case 'fill':
             case 'stroke':
-                const colorStart = $color.parseRGBA(values[index]);
-                const colorEnd = $color.parseRGBA(values[index + 1]);
+                const colorStart = $color.parseColor(values[index]);
+                const colorEnd = $color.parseColor(values[index + 1]);
                 if (colorStart && colorEnd) {
                     currentValue = [colorStart];
                     nextValue = [colorEnd];

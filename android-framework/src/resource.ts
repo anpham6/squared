@@ -231,7 +231,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                                 }
                                 break;
                         }
-                        const color = $color.parseRGBA(value);
+                        const color = $color.parseColor(value);
                         if (color) {
                             const colorValue = this.addColor(color);
                             if (colorValue !== '') {
@@ -420,16 +420,16 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
 
     public static addColor(value: ColorData | string | undefined, transparency = false) {
         if (typeof value === 'string') {
-            value = $color.parseRGBA(value, undefined, transparency);
+            value = $color.parseColor(value, undefined, transparency);
         }
-        if (value && (value.valueRGBA !== '#00000000' || transparency)) {
-            const argb = value.opaque ? value.valueARGB : value.valueRGB;
+        if (value && (value.valueAsRGBA !== '#00000000' || transparency)) {
+            const argb = value.opaque ? value.valueAsARGB : value.valueAsRGB;
             let name = STORED.colors.get(argb) || '';
             if (name === '') {
-                const shade = $color.getColorByShade(value.valueRGB);
+                const shade = $color.findColorShade(value.valueAsRGB);
                 if (shade) {
                     shade.name = $util.convertUnderscore(shade.name);
-                    if (!value.opaque && shade.value === value.valueRGB) {
+                    if (!value.opaque && shade.value === value.valueAsRGB) {
                         name = shade.name;
                     }
                     else {

@@ -183,14 +183,14 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     this[attr] = '';
                                     break;
                                 case 'currentcolor':
-                                    color = $color.parseRGBA(this.color || $dom.cssAttribute(this.element, attr, true));
+                                    color = $color.parseColor(this.color || $dom.cssAttribute(this.element, attr, true));
                                     break;
                                 default:
-                                    color = $color.parseRGBA(value);
+                                    color = $color.parseColor(value);
                                     break;
                             }
                             if (color) {
-                                this[attr] = color.valueRGB;
+                                this[attr] = color.valueAsRGB;
                             }
                         }
                         return;
