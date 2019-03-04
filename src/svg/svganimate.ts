@@ -271,8 +271,17 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         }
     }
 
-    public getPartialDuration(iteration?: number) {
-        return (iteration === 0 ? this.delay : 0) + this.keyTimes[this.keyTimes.length - 1] * this.duration;
+    public getIntervalEndTime(leadTime: number) {
+        const endTime = this.getTotalDuration();
+        if (leadTime < endTime) {
+            const duration = this.duration;
+            let time = this.delay;
+            while (time + duration <= leadTime) {
+                time += duration;
+            }
+            return Math.min(time + this.keyTimes[this.keyTimes.length - 1] * this.duration, endTime);
+        }
+        return endTime;
     }
 
     public getTotalDuration(minimum = false) {

@@ -20,7 +20,7 @@ function getAttributeName(value: string) {
 }
 
 export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimationIntervalMap {
-    public static getGroupDuration(item: SvgAnimationAttribute) {
+    public static getGroupEndTime(item: SvgAnimationAttribute) {
         return item.iterationCount === 'infinite' ? Number.POSITIVE_INFINITY : item.delay + item.duration * parseInt(item.iterationCount);
     }
 
@@ -51,7 +51,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
         this.map = {};
         const intervalMap: ObjectMap<ObjectIndex<SvgAnimationIntervalValue[]>> = {};
         const intervalTimes: ObjectMap<Set<number>> = {};
-        function insertIntervalValue(keyName: string, time: number, value: string, duration = 0, animation?: SvgAnimation, start = false, end = false, fillMode = 0, infinite = false, valueFrom?: string) {
+        function insertIntervalValue(keyName: string, time: number, value: string, endTime = 0, animation?: SvgAnimation, start = false, end = false, fillMode = 0, infinite = false, valueFrom?: string) {
             if (value) {
                 if (intervalMap[keyName][time] === undefined) {
                     intervalMap[keyName][time] = [];
@@ -62,7 +62,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                     animation,
                     start,
                     end,
-                    duration,
+                    endTime,
                     fillMode,
                     infinite,
                     valueFrom
@@ -178,7 +178,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                                     if (sibling.name === itemA.animation.group.name) {
                                         forwarded = true;
                                     }
-                                    else if (SvgAnimationIntervalMap.getGroupDuration(sibling) >= duration) {
+                                    else if (SvgAnimationIntervalMap.getGroupEndTime(sibling) >= duration) {
                                         break;
                                     }
                                 }
@@ -255,6 +255,35 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
             }
         }
         return value;
+    }
+
+    public paused(attr: string, time: number) {
+        let paused = 0;
+        if (this.map[attr]) {
+            for (const [interval, data] of this.map[attr].entries()) {
+                if (interval <= time) {
+                    for (const previous of data) {
+                        if (previous.start && (previous.infinite || previous.fillMode === 0 && previous.endTime > time)) {
+                            if (previous.animation) {
+                                paused = 2;
+                            }
+                            else {
+                                paused = 1;
+                                break;
+                            }
+                        }
+                        else if (previous.end && (previous.fillMode === FILL_MODE.FORWARDS || paused === 1 && previous.fillMode === FILL_MODE.FREEZE)) {
+                            paused = 0;
+                            break;
+                        }
+                    }
+                }
+                else {
+                    break;
+                }
+            }
+        }
+        return paused === 0;
     }
 
     public evaluateStart(item: SvgAnimate, otherValue?: any) {

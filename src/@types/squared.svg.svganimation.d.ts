@@ -58,7 +58,7 @@ declare global {
             convertToValues(keyTimes?: number[]): void;
             isLoop(index: number): boolean;
             setGroupOrdering(value: SvgAnimationAttribute[]): void;
-            getPartialDuration(iteration?: number): number;
+            getIntervalEndTime(leadTime: number): number;
             getTotalDuration(minimum?: boolean): number;
         }
 
@@ -84,6 +84,7 @@ declare global {
             map: SvgAnimationIntervalAttributeMap;
             has(attr: string): boolean;
             get(attr: string, time: number, playing?: boolean): string | undefined;
+            paused(attr: string, time: number): boolean;
             evaluateStart(item: SvgAnimate, otherValue?: any): string[];
         }
 
@@ -94,7 +95,7 @@ declare global {
         interface SvgAnimationIntervalValue {
             time: number;
             value: string;
-            duration: number;
+            endTime: number;
             start: boolean;
             end: boolean;
             fillMode: number;
@@ -128,7 +129,7 @@ declare global {
         }
 
         class SvgAnimationIntervalMap implements SvgAnimationIntervalMap {
-            public static getGroupDuration(item: SvgAnimationAttribute): number;
+            public static getGroupEndTime(item: SvgAnimationAttribute): number;
             public static getKeyName(item: SvgAnimation): string;
             constructor(animations: SvgAnimation[], ...attrs: string[]);
         }
