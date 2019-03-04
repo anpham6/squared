@@ -84,10 +84,10 @@ declare global {
             function convertWord(value: string, dash?: boolean): string;
             function convertInt(value: string): number;
             function convertFloat(value: string): number;
-            function convertPercent(value: number, precision?: number): string;
             function convertAngle(value: string, unit?: string): number;
             function convertPX(value: string, fontSize?: number): string;
-            function convertPercentPX(value: string, dimension: number, fontSize?: number, percent?: boolean): number;
+            function convertPercent(value: string, dimension: number, fontSize?: number): number;
+            function convertUnit(value: string, dimension: number, fontSize?: number): number;
             function convertAlpha(value: number): string;
             function convertRoman(value: number): string;
             function convertEnum(value: number, base: {}, derived: {}): string;

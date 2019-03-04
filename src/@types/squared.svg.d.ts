@@ -15,6 +15,7 @@ declare global {
         }
 
         interface SvgTransformable {
+            readonly transforms: SvgTransform[];
             rotateAngle?: number;
             transformed?: SvgTransform[];
             transformResidual?: SvgTransform[][];
@@ -65,6 +66,7 @@ declare global {
             setAttribute(attr: string, computed?: boolean): void;
             getAttribute(attr: string, computed?: boolean, inherited?: boolean): string;
             resetPaint(): void;
+            convertUnit(value: string): string;
         }
 
         class SvgBuild {

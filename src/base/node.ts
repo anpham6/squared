@@ -894,7 +894,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (!this.positionStatic) {
             const unit = this.cssInitial(attr);
             if ($util.isUnit(unit) || $util.isPercent(unit)) {
-                value = $util.convertInt(this.percentValue(attr, unit, attr === 'left' || attr === 'right'));
+                value = $util.convertInt(this.convertUnit(attr, unit, attr === 'left' || attr === 'right'));
             }
         }
         return value;
@@ -902,10 +902,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     private convertBox(region: string, direction: string) {
         const attr = region + direction;
-        return $util.convertInt(this.percentValue(attr, this.css(attr), direction === 'Left' || direction === 'Right'));
+        return $util.convertInt(this.convertUnit(attr, this.css(attr), direction === 'Left' || direction === 'Right'));
     }
 
-    private percentValue(attr: string, value: string, horizontal: boolean, parent = true): string {
+    private convertUnit(attr: string, value: string, horizontal: boolean, parent = true): string {
         if ($util.isPercent(value)) {
             return $util.isUnit(this.style[attr]) ? this.style[attr] : this.convertPercent(value, horizontal, parent);
         }

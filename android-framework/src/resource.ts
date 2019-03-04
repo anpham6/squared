@@ -37,6 +37,10 @@ function getTileMode(value: number) {
     return '';
 }
 
+function convertPercent(value: number) {
+    return value < 1 ? `${Math.round(value * 100)}%` : `100%`;
+}
+
 export default class Resource<T extends View> extends squared.base.Resource<T> implements android.base.Resource<T> {
     public static createBackgroundGradient<T extends View>(node: T, gradients: Gradient[], path?: SvgPath) {
         const result: BackgroundGradient[] = [];
@@ -124,8 +128,8 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                         }
                         else {
                             gradient.gradientRadius = $util.formatPX(node.bounds.width);
-                            gradient.centerX = $util.convertPercent(position.left);
-                            gradient.centerY = $util.convertPercent(position.top);
+                            gradient.centerX = convertPercent(position.left);
+                            gradient.centerY = convertPercent(position.top);
                         }
                     }
                     break;
@@ -164,8 +168,8 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                             gradient.centerY = position.top.toString();
                         }
                         else {
-                            gradient.centerX = $util.convertPercent(position.left);
-                            gradient.centerY = $util.convertPercent(position.top);
+                            gradient.centerX = convertPercent(position.left);
+                            gradient.centerY = convertPercent(position.top);
                         }
                         break;
                     }

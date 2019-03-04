@@ -966,7 +966,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         if ($math.isEqual(offsetRemaining, extendedLength)) {
                                             offsetRemaining = extendedLength;
                                         }
-                                        if (offsetRemaining >= extendedLength) {
+                                        if (offsetRemaining > extendedLength) {
                                             iterationTotal = Math.floor(iterationTotal);
                                             const iterationOffset = iterationTotal * extendedLength;
                                             if (iterationOffset === offsetRemaining) {

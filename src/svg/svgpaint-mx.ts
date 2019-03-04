@@ -70,24 +70,24 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             const width = boxRect.right - boxRect.left;
                             const height = boxRect.bottom - boxRect.top;
                             const parent = this.parent;
-                            function convertUnit(value: string, index: number) {
-                                return $util.convertPercentPX(value, index === 0 ? width : height, fontSize);
+                            function convertUnit(value: string, horizontal = true) {
+                                return $util.convertUnit(value, horizontal ? width : height, fontSize);
                             }
                             switch (name) {
                                 case 'inset': {
                                     let x1 = 0;
                                     let x2 = 0;
-                                    let y1 = convertUnit(match[1], 1);
+                                    let y1 = convertUnit(match[1], false);
                                     let y2 = 0;
                                     if (match[4]) {
-                                        x1 = boxRect.left + convertUnit(match[4], 0);
-                                        x2 = boxRect.right - convertUnit(match[2], 0);
-                                        y2 = boxRect.bottom - convertUnit(match[3], 1);
+                                        x1 = boxRect.left + convertUnit(match[4]);
+                                        x2 = boxRect.right - convertUnit(match[2]);
+                                        y2 = boxRect.bottom - convertUnit(match[3], false);
                                     }
                                     else if (match[2]) {
-                                        x1 = convertUnit(match[2], 0);
+                                        x1 = convertUnit(match[2]);
                                         x2 = boxRect.right - x1;
-                                        y2 = boxRect.bottom - (match[3] ? convertUnit(match[3], 1) : y1);
+                                        y2 = boxRect.bottom - (match[3] ? convertUnit(match[3], false) : y1);
                                         x1 += boxRect.left;
                                     }
                                     else {
@@ -110,7 +110,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 }
                                 case 'polygon': {
                                     const points = $util.objectMap<string, Point>(match[1].split(','), values => {
-                                        let [x, y] = $util.replaceMap<string, number>(values.trim().split(' '), (value, index) => convertUnit(value, index));
+                                        let [x, y] = $util.replaceMap<string, number>(values.trim().split(' '), (value, index) => convertUnit(value, index === 0));
                                         x += boxRect.left;
                                         y += boxRect.top;
                                         return <Point> { x, y };
@@ -126,19 +126,19 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                         let rx: number;
                                         let ry: number;
                                         if (name === 'circle') {
-                                            rx = convertUnit(match[1], width < height ? 0 : 1);
+                                            rx = convertUnit(match[1], width < height);
                                             ry = rx;
                                         }
                                         else  {
-                                            rx = convertUnit(match[1], 0);
-                                            ry = convertUnit(match[2], 1);
+                                            rx = convertUnit(match[1]);
+                                            ry = convertUnit(match[2], false);
                                         }
                                         let cx = boxRect.left;
                                         let cy = boxRect.top;
                                         if (match.length >= 4) {
-                                            const index = width < height ? 0 : 1;
-                                            cx += convertUnit(match[match.length - 2], index);
-                                            cy += convertUnit(match[match.length - 1], index);
+                                            const horizontal = width < height;
+                                            cx += convertUnit(match[match.length - 2], horizontal);
+                                            cy += convertUnit(match[match.length - 1], horizontal);
                                         }
                                         if (parent) {
                                             cx = parent.refitX(cx);
@@ -158,9 +158,16 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
         }
 
         public setAttribute(attr: string, computed = false) {
-            const value = this.getAttribute(attr, computed);
+            let value = this.getAttribute(attr, computed);
             if ($util.isString(value)) {
                 switch (attr) {
+                    case 'stroke-dasharray':
+                        value = $util.joinMap(value.split(/,\s*/), item => this.convertUnit(item), ', ');
+                        break;
+                    case 'stroke-dashoffset':
+                    case 'stroke-width':
+                        value = this.convertUnit(value);
+                        break;
                     case 'fill':
                     case 'stroke':
                         const url = getAttributeUrl(value);
@@ -186,11 +193,9 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 this[attr] = color.valueRGB;
                             }
                         }
-                        break;
-                    default:
-                        this[$util.convertCamelCase(attr)] = value;
-                        break;
+                        return;
                 }
+                this[$util.convertCamelCase(attr)] = value;
             }
         }
 
@@ -214,6 +219,16 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                     }
                     current = current.parent;
                 }
+            }
+            return value;
+        }
+
+        public convertUnit(value: string) {
+            if ($util.isUnit(value)) {
+                return $util.convertUnit(value, 0, $dom.getFontSize(this.element)).toString();
+            }
+            else if ($util.isPercent(value)) {
+                return $util.convertUnit(value, this.element.getBoundingClientRect().width).toString();
             }
             return value;
         }

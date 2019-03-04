@@ -131,10 +131,6 @@ export function convertAngle(value: string, unit = 'deg') {
     return angle;
 }
 
-export function convertPercent(value: number, precision = 0) {
-    return value < 1 ? `${precision === 0 ? Math.round(value * 100) : parseFloat((value * 100).toPrecision(precision))}%` : `100%`;
-}
-
 export function convertPX(value: string, fontSize?: number) {
     if (value) {
         if (isNumber(value)) {
@@ -185,13 +181,12 @@ export function convertPX(value: string, fontSize?: number) {
     return '0px';
 }
 
-export function convertPercentPX(value: string, dimension: number, fontSize?: number, percent = false) {
-    if (percent) {
-        return isPercent(value) ? convertFloat(value) / 100 : parseFloat(convertPX(value, fontSize)) / dimension;
-    }
-    else {
-        return isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseFloat(convertPX(value, fontSize));
-    }
+export function convertPercent(value: string, dimension: number, fontSize?: number) {
+    return isPercent(value) ? convertFloat(value) / 100 : parseFloat(convertPX(value, fontSize)) / dimension;
+}
+
+export function convertUnit(value: string, dimension: number, fontSize?: number) {
+    return isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseFloat(convertPX(value, fontSize));
 }
 
 export function convertAlpha(value: number) {
@@ -248,7 +243,10 @@ export function formatPercent(value: string | number) {
     if (isNaN(value)) {
         return '0%';
     }
-    return value < 1 ? convertPercent(value) : `${Math.round(value)}%`;
+    if (value < 1) {
+        value *= 100;
+    }
+    return `${Math.round(value)}%`;
 }
 
 export function formatString(value: string, ...params: string[]) {

@@ -22,6 +22,7 @@ type ForwardMap = ObjectMap<ForwardValue>;
 type InterpolatorMap = Map<number, string>;
 type TransformOriginMap = Map<number, Point>;
 type TimelineEntries = [number, TimelineValue][];
+type TimeRangeMap = Map<number, number>;
 
 interface ForwardValue extends NumberValue<AnimateValue> {
     time: number;
@@ -110,7 +111,7 @@ function convertToString(value: AnimateValue) {
     return value.toString();
 }
 
-function getPathData(entries: TimelineEntries, path: SvgPath, parent: SvgContainer | undefined, precision?: number) {
+function getPathData(entries: TimelineEntries, path: SvgPath, parent: SvgContainer | undefined, intervalMap: SvgAnimationIntervalMap, precision?: number) {
     const result: NumberValue<string>[] = [];
     const tagName = path.element.tagName;
     let baseVal: string[];
@@ -142,7 +143,7 @@ function getPathData(entries: TimelineEntries, path: SvgPath, parent: SvgContain
         for (const attr of baseVal) {
             let value = data.get(attr);
             if (value === undefined) {
-                value = path.getBaseValue(attr);
+                value = intervalMap.get(attr, index, true);
             }
             if (value !== undefined) {
                 values.push(value);
@@ -227,12 +228,12 @@ function createKeyTimeMap(map: TimelineMap, keyTimes: number[], forwardMap: Forw
     const result = new Map<number, Map<string, AnimateValue>>();
     for (const keyTime of keyTimes) {
         const values = new Map<string, AnimateValue>();
-        for (const attr in (forwardMap || map)) {
+        for (const attr in forwardMap) {
             let value: AnimateValue | undefined;
             if (map[attr] && map[attr].has(keyTime)) {
-                value = map[attr].get(keyTime);
+                value = <AnimateValue> map[attr].get(keyTime);
             }
-            else {
+            else if (forwardMap[attr]) {
                 value = forwardMap[attr].value;
             }
             if (value !== undefined) {
@@ -242,6 +243,15 @@ function createKeyTimeMap(map: TimelineMap, keyTimes: number[], forwardMap: Forw
         result.set(keyTime, values);
     }
     return result;
+}
+
+function setTimeRange(map: TimeRangeMap, type: number | undefined, startTime: number, endTime?: number) {
+    if (type) {
+        map.set(startTime, type);
+        if (endTime !== undefined) {
+            map.set(endTime, type);
+        }
+    }
 }
 
 function getItemTime(delay: number, duration: number, keyTimes: number[], iteration: number, index: number) {
@@ -542,10 +552,10 @@ function cloneKeyTimes(item: SvgAnimate): [number[], string[], string[] | undefi
     return [item.keyTimes.slice(0), item.values.slice(0), item.keySplines ? item.keySplines.slice(0) : undefined];
 }
 
-function checkPartialKeyTimes(keyTimes: number[], values: string[], keySplines: string[] | undefined, baseValue: AnimateValue) {
+function checkPartialKeyTimes(keyTimes: number[], values: string[], keySplines: string[] | undefined, baseValue?: AnimateValue) {
     if (keyTimes[keyTimes.length - 1] < 1) {
         keyTimes.push(1);
-        values.push(baseValue ? convertToString(baseValue) : values[0]);
+        values.push(baseValue !== undefined ? convertToString(baseValue) : values[0]);
         if (keySplines) {
             keySplines.push('');
         }
@@ -765,14 +775,6 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                     let repeatingResult: KeyTimeMap | undefined;
                     let repeatingAsInfinite: number | undefined;
                     let infiniteResult: KeyTimeMap | undefined;
-                    function setTimeRange(type: number | undefined, startTime: number, endTime?: number) {
-                        if (type) {
-                            animateTimeRangeMap.set(startTime, type);
-                            if (endTime !== undefined) {
-                                animateTimeRangeMap.set(endTime, type);
-                            }
-                        }
-                    }
                     for (const attr in groupName) {
                         repeatingMap[attr] = new Map<number, AnimateValue>();
                         if (!transforming) {
@@ -820,7 +822,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                     if (replaceValue !== undefined && item.fillReplace && nextDelay > actualMaxTime && incomplete.length === 0) {
                                         currentMaxTime = setTimelineValue(repeatingMap[attr], currentMaxTime, replaceValue);
                                         if (transforming) {
-                                            setTimeRange(item.type, currentMaxTime);
+                                            setTimeRange(animateTimeRangeMap, item.type, currentMaxTime);
                                         }
                                         baseValue = replaceValue;
                                         maxTime = currentMaxTime;
@@ -963,7 +965,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                 }
                                 maxTime = setTimelineValue(repeatingMap[attr], resetTime, value);
                                 if (resetTime !== maxTime) {
-                                    setTimeRange(previousTransform.type, maxTime);
+                                    setTimeRange(animateTimeRangeMap, previousTransform.type, maxTime);
                                 }
                             }
                             previousTransform = undefined;
@@ -988,7 +990,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                             baseValue = getItemValue(backwards, backwards.values, 0, 0);
                             maxTime = setTimelineValue(repeatingMap[attr], 0, baseValue);
                             if (transforming) {
-                                setTimeRange(backwards.type, 0);
+                                setTimeRange(animateTimeRangeMap, backwards.type, 0);
                                 previousTransform = backwards;
                             }
                             let playing = true;
@@ -1052,10 +1054,19 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                             const previousTime = set.delay - 1;
                                             if (previous === undefined) {
                                                 if (!repeatingMap[attr].has(0)) {
-                                                    setSetterValue(set, 0, baseValueMap[attr]);
-                                                    setSetterValue(set, previousTime, baseValueMap[attr]);
+                                                    let value: AnimateValue | undefined;
+                                                    if (transforming && SvgBuild.asAnimateTransform(set)) {
+                                                        value = TRANSFORM.typeAsValue(set.type);
+                                                    }
+                                                    else {
+                                                        value = baseValueMap[attr];
+                                                    }
+                                                    if (value !== undefined) {
+                                                        setSetterValue(set, 0, value);
+                                                        setSetterValue(set, previousTime, value);
+                                                    }
                                                 }
-                                                else {
+                                                else if (!transforming) {
                                                     setSetterValue(set, previousTime, baseValue);
                                                 }
                                             }
@@ -1336,7 +1347,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                     if (lastValue !== undefined) {
                                         baseValue = lastValue;
                                         if (transforming) {
-                                            setTimeRange(item.type, startTime, maxTime);
+                                            setTimeRange(animateTimeRangeMap, item.type, startTime, maxTime);
                                             previousTransform = item;
                                         }
                                     }
@@ -1348,7 +1359,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                             setFreezeValue(actualMaxTime, lastValue, (<SvgAnimate> setterInterrupt).type, setterInterrupt);
                                         }
                                         else if (item.hasState(SYNCHRONIZE_STATE.INVALID)) {
-                                            setTimeRange(maxTime, (<SvgAnimate> setterInterrupt).type);
+                                            setTimeRange(animateTimeRangeMap, maxTime, (<SvgAnimate> setterInterrupt).type);
                                         }
                                         removeIncomplete();
                                         complete = true;
@@ -1471,7 +1482,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         }
                                         while (maxTime < maxThreadTime && ++j);
                                         if (transforming) {
-                                            setTimeRange(item.type, startTime, maxTime);
+                                            setTimeRange(animateTimeRangeMap, item.type, startTime, maxTime);
                                         }
                                     }
                                     if (item.iterationCount === -1) {
@@ -1512,7 +1523,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                 if (value !== undefined && JSON.stringify(repeatingMap[attr].get(maxTime)) !== JSON.stringify(value)) {
                                     maxTime = setTimelineValue(repeatingMap[attr], maxTime, value);
                                     if (transforming) {
-                                        setTimeRange(type, maxTime);
+                                        setTimeRange(animateTimeRangeMap, type, maxTime);
                                     }
                                 }
                             }
@@ -1583,7 +1594,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         while (maxTime < repeatingEndTime && ++i);
                                         repeatingMaxTime[attr] = maxTime;
                                         if (transforming) {
-                                            setTimeRange(item.type, startTime, maxTime);
+                                            setTimeRange(animateTimeRangeMap, item.type, startTime, maxTime);
                                         }
                                     }
                                 }
@@ -1793,7 +1804,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                             item[0] -= delay;
                                         }
                                         if (path) {
-                                            const pathData = getPathData(convertToFraction(entries), path, this.parent, precision);
+                                            const pathData = getPathData(convertToFraction(entries), path, this.parent, intervalMap, precision);
                                             if (pathData) {
                                                 object = new SvgAnimate();
                                                 object.attributeName = 'd';
@@ -1863,7 +1874,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         }
                                         else {
                                             if (path) {
-                                                const pathData = getPathData([[keyTimeFrom, dataFrom], [keyTimeTo, dataTo]], path, this.parent, precision);
+                                                const pathData = getPathData([[keyTimeFrom, dataFrom], [keyTimeTo, dataTo]], path, this.parent, intervalMap, precision);
                                                 if (pathData) {
                                                     object = new SvgAnimate();
                                                     object.attributeName = 'd';

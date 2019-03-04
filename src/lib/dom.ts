@@ -1,4 +1,4 @@
-import { REGEXP_PATTERN, capitalize, convertCamelCase, convertPercentPX, convertPX, formatPercent, formatPX, hasBit, isPercent, isString, resolvePath, spliceArray, withinFraction } from './util';
+import { REGEXP_PATTERN, capitalize, convertCamelCase, convertPercent, convertPX, convertUnit, formatPercent, formatPX, hasBit, isPercent, isString, resolvePath, spliceArray, withinFraction } from './util';
 
 type T = squared.base.Node;
 
@@ -493,7 +493,7 @@ export function getBackgroundPosition(value: string, dimension: RectDimension, f
                     break;
                 case 1:
                 case 3:
-                    const clientXY = convertPercentPX(position, i === 1 ? dimension.width : dimension.height, fontSize, percent);
+                    const location = percent ? convertPercent(position, i === 1 ? dimension.width : dimension.height, fontSize) : convertUnit(position, i === 1 ? dimension.width : dimension.height, fontSize);
                     if (i === 1) {
                         if (leftPerspective) {
                             if (result.horizontal === 'right') {
@@ -503,17 +503,17 @@ export function getBackgroundPosition(value: string, dimension: RectDimension, f
                                 else {
                                     result.originalX = formatPX(dimension.width - parseInt(convertPX(position, fontSize)));
                                 }
-                                result.right = clientXY;
-                                result.left = percent ? 1 - clientXY : dimension.width - clientXY;
+                                result.right = location;
+                                result.left = percent ? 1 - location : dimension.width - location;
                             }
                             else {
-                                result.left = clientXY;
+                                result.left = location;
                                 result.originalX = position;
                             }
                         }
                         else {
                             if (result.horizontal !== 'center') {
-                                result[result.horizontal] = clientXY;
+                                result[result.horizontal] = location;
                             }
                         }
                     }
@@ -526,17 +526,17 @@ export function getBackgroundPosition(value: string, dimension: RectDimension, f
                                 else {
                                     result.originalY = formatPX(dimension.height - parseInt(convertPX(position, fontSize)));
                                 }
-                                result.bottom = clientXY;
-                                result.top = percent ? 1 - clientXY : dimension.height - clientXY;
+                                result.bottom = location;
+                                result.top = percent ? 1 - location : dimension.height - location;
                             }
                             else {
-                                result.top = clientXY;
+                                result.top = location;
                                 result.originalY = position;
                             }
                         }
                         else {
                             if (result.vertical !== 'center') {
-                                result[result.vertical] = clientXY;
+                                result[result.vertical] = location;
                             }
                         }
                     }
@@ -560,9 +560,9 @@ export function getBackgroundPosition(value: string, dimension: RectDimension, f
                 direction = 'top';
                 original = 'originalY';
             }
-            const clientXY = convertPercentPX(position, offsetParent, fontSize, percent);
+            const location = percent ? convertPercent(position, offsetParent, fontSize) : convertUnit(position, offsetParent, fontSize);
             if (isPercent(position)) {
-                result[direction] = clientXY;
+                result[direction] = location;
                 result[original] = position;
             }
             else {
@@ -587,7 +587,7 @@ export function getBackgroundPosition(value: string, dimension: RectDimension, f
                     }
                 }
                 else {
-                    result[direction] = clientXY;
+                    result[direction] = location;
                     result[original] = position;
                 }
             }

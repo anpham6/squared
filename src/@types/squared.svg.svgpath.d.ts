@@ -5,7 +5,6 @@ declare global {
         interface SvgPath extends SvgBaseVal, SvgPaint, SvgTransformable, NameValue {
             value: string;
             baseValue: string;
-            transforms: SvgTransform[];
             readonly element: SVGGeometryElement;
             readonly pathLength: number;
             readonly totalLength: number;
