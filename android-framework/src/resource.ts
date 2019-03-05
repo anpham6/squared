@@ -146,16 +146,81 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                     }
                     else {
                         const linear = <LinearGradient> item;
+                        const angle = linear.angle;
                         if (hasStop) {
-                            const x = Math.round(node.bounds.width / 2);
-                            const y = Math.round(node.bounds.height / 2);
-                            gradient.startX = Math.round(x + $math.distanceFromX(x, linear.angle + 180)).toString();
-                            gradient.startY = Math.round(y + $math.distanceFromY(y, linear.angle + 180)).toString();
-                            gradient.endX = Math.round(x + $math.distanceFromX(x, linear.angle)).toString();
-                            gradient.endY = Math.round(y + $math.distanceFromY(y, linear.angle)).toString();
+                            const width = Math.round(node.bounds.width);
+                            const height = Math.round(node.bounds.height);
+                            const x = $math.truncateFraction($math.offsetAngleX(angle, width));
+                            const y = $math.truncateFraction($math.offsetAngleY(angle, height));
+                            let positionX = x;
+                            let positionY = y;
+                            switch (angle) {
+                                case 0:
+                                case 90:
+                                    positionY += height;
+                                    gradient.startX = '0';
+                                    gradient.startY = height.toString();
+                                    break;
+                                case 180:
+                                    gradient.startX = '0';
+                                    gradient.startY = '0';
+                                    break;
+                                case 270:
+                                    positionX += width;
+                                    gradient.startX = width.toString();
+                                    gradient.startY = '0';
+                                    break;
+                                default:
+                                    if (!$math.isEqual(Math.abs(x), Math.abs(y))) {
+                                        let oppositeAngle: number;
+                                        if (angle < 90) {
+                                            oppositeAngle = $math.offsetAngle({ x: 0, y: height }, { x: width, y: 0 });
+                                        }
+                                        else if (angle < 180) {
+                                            oppositeAngle = $math.offsetAngle({ x: 0, y: 0 }, { x: width, y: height });
+                                        }
+                                        else if (angle < 270) {
+                                            oppositeAngle = $math.offsetAngle({ x: 0, y: 0 }, { x: -width, y: height });
+                                        }
+                                        else {
+                                            oppositeAngle = $math.offsetAngle({ x: 0, y: height }, { x: -width, y: 0 });
+                                        }
+                                        let a = Math.abs(oppositeAngle - angle);
+                                        let b = 90 - a;
+                                        const lenX = $math.triangulateASA(a, b, Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2)));
+                                        positionX = $math.truncateFraction($math.offsetAngleX(angle, lenX[1]));
+                                        a = 90;
+                                        b = 90 - angle;
+                                        const lenY = $math.triangulateASA(a, b, positionX);
+                                        positionY = $math.truncateFraction($math.offsetAngleY(angle, lenY[0]));
+                                    }
+                                    if (angle > 0 && angle < 90) {
+                                        positionY += height;
+                                        gradient.startX = '0';
+                                        gradient.startY = height.toString();
+                                    }
+                                    else if (angle > 90 && angle < 180) {
+                                        gradient.startX = '0';
+                                        gradient.startY = '0';
+                                    }
+                                    else if (angle > 180 && angle < 270) {
+                                        positionX += width;
+                                        gradient.startX = width.toString();
+                                        gradient.startY = '0';
+                                    }
+                                    else {
+                                        positionX += width;
+                                        positionY += height;
+                                        gradient.startX = width.toString();
+                                        gradient.startY = height.toString();
+                                    }
+                                    break;
+                            }
+                            gradient.endX = $math.truncate(positionX);
+                            gradient.endY = $math.truncate(positionY);
                         }
                         else {
-                            gradient.angle = (Math.floor(linear.angle / 45) * 45).toString();
+                            gradient.angle = (Math.floor(angle / 45) * 45).toString();
                         }
                     }
                     break;

@@ -448,8 +448,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     }
                                     else {
                                         const angle = $math.offsetAngle(afterStartPoint, pathStartPoint);
-                                        const x = pathStart.coordinates[0] - $math.distanceFromX(leading, angle);
-                                        const y = pathStart.coordinates[1] - $math.distanceFromY(leading, angle);
+                                        const x = pathStart.coordinates[0] - $math.offsetAngleX(angle, leading);
+                                        const y = pathStart.coordinates[1] - $math.offsetAngleY(angle, leading);
                                         if (negative || x >= 0 && y >= 0) {
                                             pathStart.coordinates[0] = x;
                                             pathStart.coordinates[1] = y;
@@ -501,8 +501,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                             }
                                             else {
                                                 const angle = $math.offsetAngle(beforeEndPoint, pathEndPoint);
-                                                const x = pathEnd.coordinates[0] + $math.distanceFromX(trailing, angle);
-                                                const y = pathEnd.coordinates[1] + $math.distanceFromY(trailing, angle);
+                                                const x = pathEnd.coordinates[0] + $math.offsetAngleX(angle, trailing);
+                                                const y = pathEnd.coordinates[1] + $math.offsetAngleY(angle, trailing);
                                                 if (negative || x >= 0 && y >= 0) {
                                                     pathEnd.coordinates[0] = x;
                                                     pathEnd.coordinates[1] = y;

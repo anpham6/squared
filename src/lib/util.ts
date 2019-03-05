@@ -236,7 +236,7 @@ export function formatPX(value: string | number) {
     return isNaN(value) ? '0px' : `${Math.round(value)}px`;
 }
 
-export function formatPercent(value: string | number) {
+export function formatPercent(value: string | number, round = true) {
     if (typeof value === 'string') {
         value = parseFloat(value);
     }
@@ -246,7 +246,7 @@ export function formatPercent(value: string | number) {
     if (value < 1) {
         value *= 100;
     }
-    return `${Math.round(value)}%`;
+    return `${round ? Math.round(value) : value}%`;
 }
 
 export function formatString(value: string, ...params: string[]) {

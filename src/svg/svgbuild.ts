@@ -590,11 +590,11 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     case SVGTransform.SVG_TRANSFORM_ROTATE:
                         if (item.method.x) {
                             x1 -= origin.x;
-                            x2 = origin.x + $math.distanceFromY(origin.x, item.angle);
+                            x2 = origin.x + $math.offsetAngleY(item.angle, origin.x);
                         }
                         if (item.method.y) {
                             y1 -= origin.y;
-                            y2 = origin.y + $math.distanceFromY(origin.y, item.angle);
+                            y2 = origin.y + $math.offsetAngleY(item.angle, origin.y);
                         }
                         break;
                 }

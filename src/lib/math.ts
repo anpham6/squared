@@ -12,14 +12,6 @@ export function maxArray(list: number[]): number {
     return Number.NEGATIVE_INFINITY;
 }
 
-export function distanceFromX(value: number, angle: number) {
-    return value * Math.sin(convertRadian(angle));
-}
-
-export function distanceFromY(value: number, angle: number) {
-    return value * Math.cos(convertRadian(angle)) * -1;
-}
-
 export function isEqual(valueA: number, valueB: number, precision = 8) {
     return valueA.toPrecision(precision) === valueB.toPrecision(precision);
 }
@@ -33,7 +25,19 @@ export function lessEqual(valueA: number, valueB: number, precision = 8) {
 }
 
 export function truncate(value: number, precision = 3) {
-    return value === Math.floor(value) ? value.toString() : value.toPrecision(precision).replace(/\.?0+$/, '');
+    if (value === Math.floor(value)) {
+        return value.toString();
+    }
+    else {
+        if (value > 1) {
+            precision += 1;
+            let i = 1;
+            while (value / Math.pow(10, i++) >= 1) {
+                precision += 1;
+            }
+        }
+        return value.toPrecision(precision).replace(/\.?0+$/, '');
+    }
 }
 
 export function truncateFraction(value: number) {
@@ -63,15 +67,30 @@ export function convertRadian(value: number) {
     return value * Math.PI / 180;
 }
 
+export function triangulateASA(a: number, b: number, clen: number) {
+    const c = 180 - a - b;
+    return [
+        (clen / Math.sin(convertRadian(c))) * Math.sin(convertRadian(a)),
+        (clen / Math.sin(convertRadian(c))) * Math.sin(convertRadian(b))
+    ];
+}
+
 export function offsetAngle(start: Point, end: Point) {
+    const x = end.x - start.x;
     const y = end.y - start.y;
-    const value = Math.atan2(y, end.x - start.x) * 180 / Math.PI;
+    let value = (Math.atan2(y, x) * 180 / Math.PI) + 90;
     if (value < 0) {
-        return 270 + (y < 0 ? value : Math.abs(value)) % 360;
+        value += 360;
     }
-    else {
-        return (value + 90) % 360;
-    }
+    return value;
+}
+
+export function offsetAngleX(angle: number, value: number) {
+    return value * Math.sin(convertRadian(angle));
+}
+
+export function offsetAngleY(angle: number, value: number) {
+    return value * Math.cos(convertRadian(angle)) * -1;
 }
 
 export function clampRange(value: number, min = 0, max = 1) {

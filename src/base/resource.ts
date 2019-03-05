@@ -27,9 +27,10 @@ function replaceExcluded<T extends Node>(element: HTMLElement, attr: string) {
     return value;
 }
 
-function getColorStops(value: string, opacity: string, conic = false) {
+function parseColorStops<T extends Node>(node: T, type: string, value: string, opacity: string, repeating = false, horizontal = true) {
     const result: ColorStop[] = [];
     const pattern = new RegExp(REGEXP_COLORSTOP, 'g');
+    const conic = type === 'conic';
     let match: RegExpExecArray | null;
     while ((match = pattern.exec(value)) !== null) {
         const color = $color.parseColor(match[1], opacity, true);
@@ -44,9 +45,12 @@ function getColorStops(value: string, opacity: string, conic = false) {
                     item.offset = $util.convertAngle(match[3], match[4]).toString();
                 }
             }
-            else {
-                if (match[2] && $util.isPercent(match[2])) {
+            else if (match[2]) {
+                if ($util.isPercent(match[2])) {
                     item.offset = match[2];
+                }
+                else if (repeating && $util.isUnit(match[2])) {
+                    item.offset = $util.formatPercent(parseFloat(node.convertPX(match[2], horizontal, false)) / (horizontal ? node.bounds.width : node.bounds.height), false);
                 }
             }
             result.push(item);
@@ -56,7 +60,7 @@ function getColorStops(value: string, opacity: string, conic = false) {
     if (lastStop.offset === '') {
         lastStop.offset = conic ? '360' : '100%';
     }
-    let previousIncrement = 0;
+    let percent = 0;
     for (let i = 0; i < result.length; i++) {
         const item = result[i];
         if (item.offset === '') {
@@ -66,24 +70,44 @@ function getColorStops(value: string, opacity: string, conic = false) {
             else {
                 for (let j = i + 1, k = 2; j < result.length - 1; j++, k++) {
                     if (result[j].offset !== '') {
-                        item.offset = ((previousIncrement + parseInt(result[j].offset)) / k).toString();
+                        item.offset = ((percent + parseFloat(result[j].offset)) / k).toString();
                         break;
                     }
                 }
                 if (item.offset === '') {
-                    item.offset = (previousIncrement + parseInt(lastStop.offset) / (result.length - 1)).toString();
+                    item.offset = (percent + parseFloat(lastStop.offset) / (result.length - 1)).toString();
                 }
             }
             if (!conic) {
                 item.offset += '%';
             }
         }
-        previousIncrement = parseInt(item.offset);
+        percent = parseFloat(item.offset);
     }
-    if (conic && previousIncrement < 360 || !conic && previousIncrement < 100) {
-        const colorFill = Object.assign({}, result[result.length - 1]);
-        colorFill.offset = conic ? '360' : '100%';
-        result.push(colorFill);
+    if (repeating) {
+        if (percent < 100) {
+            const original = result.slice(0);
+            complete: {
+                let basePercent = percent;
+                while (percent < 100) {
+                    for (let i = 0; i < original.length; i++) {
+                        percent = Math.min(basePercent + parseFloat(original[i].offset), 100);
+                        result.push({ ...original[i], offset: `${percent}%` });
+                        if (percent === 100) {
+                            break complete;
+                        }
+                    }
+                    basePercent = percent;
+                }
+            }
+        }
+    }
+    else {
+        if (conic && percent < 360 || !conic && percent < 100) {
+            const colorFill = Object.assign({}, result[result.length - 1]);
+            colorFill.offset = conic ? '360' : '100%';
+            result.push(colorFill);
+        }
     }
     return result;
 }
@@ -92,7 +116,7 @@ function parseAngle(value: string | undefined) {
     if (value) {
         const match = new RegExp($util.REGEXP_STRING.DEGREE).exec(value.trim());
         if (match) {
-            return $util.convertAngle(match[1], match[2]);
+            return $util.convertAngle(match[1], match[2]) % 360;
         }
     }
     return 0;
@@ -335,17 +359,18 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                             if (value !== 'none' && !node.hasBit('excludeResource', NODE_RESOURCE.IMAGE_SOURCE)) {
                                 const gradients: Gradient[] = [];
                                 const opacity = node.css('opacity');
-                                let pattern = new RegExp(`(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|circle|ellipse|closest-side|closest-corner|farthest-side|farthest-corner)?(?:\\s*at [\\w %]+)?),?\\s*(${REGEXP_COLORSTOP}+)\\)`, 'g');
+                                let pattern = new RegExp(`(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|circle|ellipse|closest-side|closest-corner|farthest-side|farthest-corner)?(?:\\s*at [\\w %]+)?),?\\s*(${REGEXP_COLORSTOP}+)\\)`, 'g');
                                 let match: RegExpExecArray | null;
                                 while ((match = pattern.exec(value)) !== null) {
+                                    const repeating = match[1] === 'repeating';
                                     let gradient!: Gradient;
-                                    switch (match[1]) {
+                                    switch (match[2]) {
                                         case 'linear': {
-                                            if (match[2] === undefined) {
-                                                match[2] = 'to bottom';
+                                            if (!match[3]) {
+                                                match[3] = 'to bottom';
                                             }
                                             let angle: number;
-                                            switch (match[2]) {
+                                            switch (match[3]) {
                                                 case 'to top':
                                                     angle = 0;
                                                     break;
@@ -371,23 +396,26 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                                     angle = 315;
                                                     break;
                                                 default:
-                                                    angle = parseAngle(match[2]);
+                                                    angle = parseAngle(match[3]);
                                                     break;
                                             }
+                                            const horizontal = angle >= 45 && angle <= 135 || angle >= 225 && angle <= 315;
                                             gradient = <LinearGradient> {
-                                                type: match[1],
+                                                type: match[2],
                                                 angle,
-                                                colorStops: getColorStops(match[3], opacity)
+                                                horizontal,
+                                                colorStops: parseColorStops(node, match[2], match[4], opacity, repeating, horizontal)
                                             };
                                             break;
                                         }
                                         case 'radial': {
+                                            const horizontal = node.bounds.width <= node.bounds.height;
                                             gradient = <RadialGradient> {
-                                                type: match[1],
+                                                type: match[2],
                                                 position: (() => {
                                                     const result = ['center', 'ellipse'];
-                                                    if (match[2]) {
-                                                        const position = REGEXP_POSITION.exec(match[2]);
+                                                    if (match[3]) {
+                                                        const position = REGEXP_POSITION.exec(match[3]);
                                                         if (position) {
                                                             if (position[1]) {
                                                                 switch (position[1]) {
@@ -408,24 +436,25 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                                     }
                                                     return result;
                                                 })(),
-                                                colorStops: getColorStops(match[3], opacity)
+                                                horizontal,
+                                                colorStops: parseColorStops(node, match[2], match[4], opacity, repeating, horizontal)
                                             };
                                             break;
                                         }
                                         case 'conic': {
                                             gradient = <ConicGradient> {
-                                                type: match[1],
-                                                angle: parseAngle(match[2]),
+                                                type: match[2],
+                                                angle: parseAngle(match[3]),
                                                 position: (() => {
-                                                    if (match[2]) {
-                                                        const position = REGEXP_POSITION.exec(match[2]);
+                                                    if (match[3]) {
+                                                        const position = REGEXP_POSITION.exec(match[3]);
                                                         if (position) {
                                                             return [position[2]];
                                                         }
                                                     }
                                                     return ['center'];
                                                 })(),
-                                                colorStops: getColorStops(match[3], opacity, true)
+                                                colorStops: parseColorStops(node, match[2], match[4], opacity)
                                             };
                                             break;
                                         }

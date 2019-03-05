@@ -63,15 +63,16 @@ declare global {
             function minArray(list: number[]): number;
             function maxArray(list: number[]): number;
             function convertRadian(value: number): number;
-            function distanceFromX(value: number, angle: number): number;
-            function distanceFromY(value: number, angle: number): number;
             function isEqual(valueA: number, valueB: number, precision?: number): number;
             function moreEqual(valueA: number, valueB: number, precision?: number): number;
             function lessEqual(valueA: number, valueB: number, precision?: number): number;
             function truncate(value: number, precision?: number): string;
             function truncateFraction(value: number): number;
             function truncateString(value: string, precision?: number): string;
+            function triangulateASA(a: number, b: number, clen: number): [number, number];
             function offsetAngle(start: Point, end: Point): number;
+            function offsetAngleX(angle: number, value: number): number;
+            function offsetAngleY(angle: number, value: number): number;
             function clampRange(value: number, min?: number, max?: number): number;
             function nextMultiple(values: number[], offset?: number[], minumum?: number): number;
         }
@@ -93,7 +94,7 @@ declare global {
             function convertRoman(value: number): string;
             function convertEnum(value: number, base: {}, derived: {}): string;
             function formatPX(value: string | number): string;
-            function formatPercent(value: string | number): string;
+            function formatPercent(value: string | number, round?: boolean): string;
             function formatString(value: string, ...params: string[]): string;
             function hasBit(value: number, type: number): boolean;
             function isNumber(value: string): boolean;
