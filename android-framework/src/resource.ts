@@ -42,228 +42,227 @@ function convertPercent(value: number) {
 }
 
 export default class Resource<T extends View> extends squared.base.Resource<T> implements android.base.Resource<T> {
-    public static createBackgroundGradient<T extends View>(node: T, gradients: Gradient[], path?: SvgPath) {
-        const result: BackgroundGradient[] = [];
-        for (const item of gradients) {
-            const gradient: BackgroundGradient = { type: item.type, colorStops: [] };
-            let hasStop: boolean;
-            if (!node.svgElement && parseFloat(item.colorStops[0].offset) === 0 && ['100%', '360'].includes(item.colorStops[item.colorStops.length - 1].offset) && (item.colorStops.length === 2 || item.colorStops.length === 3 && ['50%', '180'].includes(item.colorStops[1].offset))) {
-                gradient.startColor = Resource.addColor(item.colorStops[0].color, true);
-                gradient.endColor = Resource.addColor(item.colorStops[item.colorStops.length - 1].color, true);
-                if (item.colorStops.length === 3) {
-                    gradient.centerColor = Resource.addColor(item.colorStops[1].color, true);
+    public static createBackgroundGradient<T extends View>(node: T, gradient: Gradient, path?: SvgPath) {
+        const result: BackgroundGradient = {
+            type: gradient.type,
+            colorStops: []
+        };
+        let hasStop: boolean;
+        if (!node.svgElement && parseFloat(gradient.colorStops[0].offset) === 0 && ['100%', '360'].includes(gradient.colorStops[gradient.colorStops.length - 1].offset) && (gradient.colorStops.length === 2 || gradient.colorStops.length === 3 && ['50%', '180'].includes(gradient.colorStops[1].offset))) {
+            result.startColor = Resource.addColor(gradient.colorStops[0].color, true);
+            result.endColor = Resource.addColor(gradient.colorStops[gradient.colorStops.length - 1].color, true);
+            if (gradient.colorStops.length === 3) {
+                result.centerColor = Resource.addColor(gradient.colorStops[1].color, true);
+            }
+            hasStop = false;
+        }
+        else {
+            hasStop = true;
+        }
+        switch (gradient.type) {
+            case 'radial':
+                if (node.svgElement) {
+                    if (path && $SvgBuild && $utilS) {
+                        const radial = <SvgRadialGradient> gradient;
+                        const points: Point[] = [];
+                        let cx!: number;
+                        let cy!: number;
+                        let cxDiameter!: number;
+                        let cyDiameter!: number;
+                        switch (path.element.tagName) {
+                            case 'path':
+                                for (const command of $SvgBuild.getPathCommands(path.value)) {
+                                    points.push(...command.value);
+                                }
+                            case 'polygon':
+                                if (path.element instanceof SVGPolygonElement) {
+                                    points.push(...$SvgBuild.clonePoints(path.element.points));
+                                }
+                                if (!points.length) {
+                                    break;
+                                }
+                                [cx, cy, cxDiameter, cyDiameter] = $SvgBuild.minMaxPoints(points);
+                                cxDiameter -= cx;
+                                cyDiameter -= cy;
+                                break;
+                            default:
+                                if ($utilS.SVG.rect(path.element)) {
+                                    const rect = path.element;
+                                    cx = rect.x.baseVal.value;
+                                    cy = rect.y.baseVal.value;
+                                    cxDiameter = rect.width.baseVal.value;
+                                    cyDiameter = rect.height.baseVal.value;
+                                }
+                                else if ($utilS.SVG.circle(path.element)) {
+                                    const circle = path.element;
+                                    cx = circle.cx.baseVal.value - circle.r.baseVal.value;
+                                    cy = circle.cy.baseVal.value - circle.r.baseVal.value;
+                                    cxDiameter = circle.r.baseVal.value * 2;
+                                    cyDiameter = cxDiameter;
+                                }
+                                else if ($utilS.SVG.ellipse(path.element)) {
+                                    const ellipse = path.element;
+                                    cx = ellipse.cx.baseVal.value - ellipse.rx.baseVal.value;
+                                    cy = ellipse.cy.baseVal.value - ellipse.ry.baseVal.value;
+                                    cxDiameter = ellipse.rx.baseVal.value * 2;
+                                    cyDiameter = ellipse.ry.baseVal.value * 2;
+                                }
+                                else {
+                                    return result;
+                                }
+                                break;
+                        }
+                        result.centerX = (cx + cxDiameter * getRadiusPercent(radial.cxAsString)).toString();
+                        result.centerY = (cy + cyDiameter * getRadiusPercent(radial.cyAsString)).toString();
+                        result.gradientRadius = (((cxDiameter + cyDiameter) / 2) * ($util.isPercent(radial.rAsString) ? (parseFloat(radial.rAsString) / 100) : 1)).toString();
+                        if (radial.spreadMethod) {
+                            result.tileMode = getTileMode(radial.spreadMethod);
+                        }
+                    }
                 }
-                hasStop = false;
-            }
-            else {
-                hasStop = true;
-            }
-            switch (item.type) {
-                case 'radial':
-                    if (node.svgElement) {
-                        if (path && $SvgBuild && $utilS) {
-                            const radial = <SvgRadialGradient> item;
-                            const points: Point[] = [];
-                            let cx!: number;
-                            let cy!: number;
-                            let cxDiameter!: number;
-                            let cyDiameter!: number;
-                            switch (path.element.tagName) {
-                                case 'path':
-                                    for (const command of $SvgBuild.getPathCommands(path.value)) {
-                                        points.push(...command.value);
+                else {
+                    const position = $dom.getBackgroundPosition((<RadialGradient> gradient).position[0], node.bounds, node.fontSize, true, !hasStop);
+                    if (hasStop) {
+                        result.gradientRadius = node.bounds.width.toString();
+                        result.centerX = position.left.toString();
+                        result.centerY = position.top.toString();
+                    }
+                    else {
+                        result.gradientRadius = $util.formatPX(node.bounds.width);
+                        result.centerX = convertPercent(position.left);
+                        result.centerY = convertPercent(position.top);
+                    }
+                }
+                break;
+            case 'linear':
+                if (node.svgElement) {
+                    const linear = <SvgLinearGradient> gradient;
+                    result.startX = linear.x1.toString();
+                    result.startY = linear.y1.toString();
+                    result.endX = linear.x2.toString();
+                    result.endY = linear.y2.toString();
+                    if (linear.spreadMethod) {
+                        result.tileMode = getTileMode(linear.spreadMethod);
+                    }
+                }
+                else {
+                    const linear = <LinearGradient> gradient;
+                    const angle = linear.angle;
+                    if (hasStop) {
+                        const width = Math.round(node.bounds.width);
+                        const height = Math.round(node.bounds.height);
+                        const x = $math.truncateFraction($math.offsetAngleX(angle, width));
+                        const y = $math.truncateFraction($math.offsetAngleY(angle, height));
+                        let positionX = x;
+                        let positionY = y;
+                        switch (angle) {
+                            case 0:
+                            case 90:
+                                positionY += height;
+                                result.startX = '0';
+                                result.startY = height.toString();
+                                break;
+                            case 180:
+                                result.startX = '0';
+                                result.startY = '0';
+                                break;
+                            case 270:
+                                positionX += width;
+                                result.startX = width.toString();
+                                result.startY = '0';
+                                break;
+                            default:
+                                if (!$math.isEqual(Math.abs(x), Math.abs(y))) {
+                                    let oppositeAngle: number;
+                                    if (angle < 90) {
+                                        oppositeAngle = $math.offsetAngle({ x: 0, y: height }, { x: width, y: 0 });
                                     }
-                                case 'polygon':
-                                    if (path.element instanceof SVGPolygonElement) {
-                                        points.push(...$SvgBuild.clonePoints(path.element.points));
+                                    else if (angle < 180) {
+                                        oppositeAngle = $math.offsetAngle({ x: 0, y: 0 }, { x: width, y: height });
                                     }
-                                    if (!points.length) {
-                                        break;
-                                    }
-                                    [cx, cy, cxDiameter, cyDiameter] = $SvgBuild.minMaxPoints(points);
-                                    cxDiameter -= cx;
-                                    cyDiameter -= cy;
-                                    break;
-                                default:
-                                    if ($utilS.SVG.rect(path.element)) {
-                                        const rect = path.element;
-                                        cx = rect.x.baseVal.value;
-                                        cy = rect.y.baseVal.value;
-                                        cxDiameter = rect.width.baseVal.value;
-                                        cyDiameter = rect.height.baseVal.value;
-                                    }
-                                    else if ($utilS.SVG.circle(path.element)) {
-                                        const circle = path.element;
-                                        cx = circle.cx.baseVal.value - circle.r.baseVal.value;
-                                        cy = circle.cy.baseVal.value - circle.r.baseVal.value;
-                                        cxDiameter = circle.r.baseVal.value * 2;
-                                        cyDiameter = cxDiameter;
-                                    }
-                                    else if ($utilS.SVG.ellipse(path.element)) {
-                                        const ellipse = path.element;
-                                        cx = ellipse.cx.baseVal.value - ellipse.rx.baseVal.value;
-                                        cy = ellipse.cy.baseVal.value - ellipse.ry.baseVal.value;
-                                        cxDiameter = ellipse.rx.baseVal.value * 2;
-                                        cyDiameter = ellipse.ry.baseVal.value * 2;
+                                    else if (angle < 270) {
+                                        oppositeAngle = $math.offsetAngle({ x: 0, y: 0 }, { x: -width, y: height });
                                     }
                                     else {
-                                        return result;
+                                        oppositeAngle = $math.offsetAngle({ x: 0, y: height }, { x: -width, y: 0 });
                                     }
-                                    break;
-                            }
-                            gradient.centerX = (cx + cxDiameter * getRadiusPercent(radial.cxAsString)).toString();
-                            gradient.centerY = (cy + cyDiameter * getRadiusPercent(radial.cyAsString)).toString();
-                            gradient.gradientRadius = (((cxDiameter + cyDiameter) / 2) * ($util.isPercent(radial.rAsString) ? (parseFloat(radial.rAsString) / 100) : 1)).toString();
-                            if (radial.spreadMethod) {
-                                gradient.tileMode = getTileMode(radial.spreadMethod);
-                            }
-                        }
-                    }
-                    else {
-                        const position = $dom.getBackgroundPosition((<RadialGradient> item).position[0], node.bounds, node.fontSize, true, !hasStop);
-                        if (hasStop) {
-                            gradient.gradientRadius = node.bounds.width.toString();
-                            gradient.centerX = position.left.toString();
-                            gradient.centerY = position.top.toString();
-                        }
-                        else {
-                            gradient.gradientRadius = $util.formatPX(node.bounds.width);
-                            gradient.centerX = convertPercent(position.left);
-                            gradient.centerY = convertPercent(position.top);
-                        }
-                    }
-                    break;
-                case 'linear':
-                    if (node.svgElement) {
-                        const linear = <SvgLinearGradient> item;
-                        gradient.startX = linear.x1.toString();
-                        gradient.startY = linear.y1.toString();
-                        gradient.endX = linear.x2.toString();
-                        gradient.endY = linear.y2.toString();
-                        if (linear.spreadMethod) {
-                            gradient.tileMode = getTileMode(linear.spreadMethod);
-                        }
-                    }
-                    else {
-                        const linear = <LinearGradient> item;
-                        const angle = linear.angle;
-                        if (hasStop) {
-                            const width = Math.round(node.bounds.width);
-                            const height = Math.round(node.bounds.height);
-                            const x = $math.truncateFraction($math.offsetAngleX(angle, width));
-                            const y = $math.truncateFraction($math.offsetAngleY(angle, height));
-                            let positionX = x;
-                            let positionY = y;
-                            switch (angle) {
-                                case 0:
-                                case 90:
+                                    let a = Math.abs(oppositeAngle - angle);
+                                    let b = 90 - a;
+                                    const lenX = $math.trianguleASA(a, b, Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2)));
+                                    positionX = $math.truncateFraction($math.offsetAngleX(angle, lenX[1]));
+                                    a = 90;
+                                    b = 90 - angle;
+                                    const lenY = $math.trianguleASA(a, b, positionX);
+                                    positionY = $math.truncateFraction($math.offsetAngleY(angle, lenY[0]));
+                                }
+                                if (angle > 0 && angle < 90) {
                                     positionY += height;
-                                    gradient.startX = '0';
-                                    gradient.startY = height.toString();
-                                    break;
-                                case 180:
-                                    gradient.startX = '0';
-                                    gradient.startY = '0';
-                                    break;
-                                case 270:
+                                    result.startX = '0';
+                                    result.startY = height.toString();
+                                }
+                                else if (angle > 90 && angle < 180) {
+                                    result.startX = '0';
+                                    result.startY = '0';
+                                }
+                                else if (angle > 180 && angle < 270) {
                                     positionX += width;
-                                    gradient.startX = width.toString();
-                                    gradient.startY = '0';
-                                    break;
-                                default:
-                                    if (!$math.isEqual(Math.abs(x), Math.abs(y))) {
-                                        let oppositeAngle: number;
-                                        if (angle < 90) {
-                                            oppositeAngle = $math.offsetAngle({ x: 0, y: height }, { x: width, y: 0 });
-                                        }
-                                        else if (angle < 180) {
-                                            oppositeAngle = $math.offsetAngle({ x: 0, y: 0 }, { x: width, y: height });
-                                        }
-                                        else if (angle < 270) {
-                                            oppositeAngle = $math.offsetAngle({ x: 0, y: 0 }, { x: -width, y: height });
-                                        }
-                                        else {
-                                            oppositeAngle = $math.offsetAngle({ x: 0, y: height }, { x: -width, y: 0 });
-                                        }
-                                        let a = Math.abs(oppositeAngle - angle);
-                                        let b = 90 - a;
-                                        const lenX = $math.triangulateASA(a, b, Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2)));
-                                        positionX = $math.truncateFraction($math.offsetAngleX(angle, lenX[1]));
-                                        a = 90;
-                                        b = 90 - angle;
-                                        const lenY = $math.triangulateASA(a, b, positionX);
-                                        positionY = $math.truncateFraction($math.offsetAngleY(angle, lenY[0]));
-                                    }
-                                    if (angle > 0 && angle < 90) {
-                                        positionY += height;
-                                        gradient.startX = '0';
-                                        gradient.startY = height.toString();
-                                    }
-                                    else if (angle > 90 && angle < 180) {
-                                        gradient.startX = '0';
-                                        gradient.startY = '0';
-                                    }
-                                    else if (angle > 180 && angle < 270) {
-                                        positionX += width;
-                                        gradient.startX = width.toString();
-                                        gradient.startY = '0';
-                                    }
-                                    else {
-                                        positionX += width;
-                                        positionY += height;
-                                        gradient.startX = width.toString();
-                                        gradient.startY = height.toString();
-                                    }
-                                    break;
-                            }
-                            gradient.endX = $math.truncate(positionX);
-                            gradient.endY = $math.truncate(positionY);
+                                    result.startX = width.toString();
+                                    result.startY = '0';
+                                }
+                                else {
+                                    positionX += width;
+                                    positionY += height;
+                                    result.startX = width.toString();
+                                    result.startY = height.toString();
+                                }
+                                break;
                         }
-                        else {
-                            gradient.angle = (Math.floor(angle / 45) * 45).toString();
-                        }
+                        result.endX = $math.truncate(positionX);
+                        result.endY = $math.truncate(positionY);
+                    }
+                    else {
+                        result.angle = (Math.floor(angle / 45) * 45).toString();
+                    }
+                }
+                break;
+            case 'conic':
+                if (!node.svgElement) {
+                    result.type = 'sweep';
+                    const position = $dom.getBackgroundPosition((<ConicGradient> gradient).position[0], node.bounds, node.fontSize, true, !hasStop);
+                    if (hasStop) {
+                        result.centerX = position.left.toString();
+                        result.centerY = position.top.toString();
+                    }
+                    else {
+                        result.centerX = convertPercent(position.left);
+                        result.centerY = convertPercent(position.top);
                     }
                     break;
-                case 'conic':
-                    if (!node.svgElement) {
-                        gradient.type = 'sweep';
-                        const position = $dom.getBackgroundPosition((<ConicGradient> item).position[0], node.bounds, node.fontSize, true, !hasStop);
-                        if (hasStop) {
-                            gradient.centerX = position.left.toString();
-                            gradient.centerY = position.top.toString();
-                        }
-                        else {
-                            gradient.centerX = convertPercent(position.left);
-                            gradient.centerY = convertPercent(position.top);
-                        }
-                        break;
-                    }
-                default:
-                    return result;
-            }
-            if (hasStop) {
-                for (let i = 0; i < item.colorStops.length; i++) {
-                    const stop = item.colorStops[i];
-                    const color = `@color/${Resource.addColor(stop.color, true)}`;
-                    let offset = parseInt(stop.offset);
-                    if (gradient.type === 'sweep') {
-                        offset *= 100 / 360;
-                    }
-                    else if (i === 0 && offset !== 0 && !node.svgElement) {
-                        gradient.colorStops.push({
-                            color,
-                            offset: '0',
-                            opacity: stop.opacity
-                        });
-                    }
-                    gradient.colorStops.push({
+                }
+            default:
+                return undefined;
+        }
+        if (hasStop) {
+            for (let i = 0; i < gradient.colorStops.length; i++) {
+                const stop = gradient.colorStops[i];
+                const color = `@color/${Resource.addColor(stop.color, true)}`;
+                let offset = parseFloat(stop.offset);
+                if (result.type === 'sweep') {
+                    offset *= 100 / 360;
+                }
+                else if (i === 0 && offset !== 0 && !node.svgElement) {
+                    result.colorStops.push({
                         color,
-                        offset: $math.truncate(offset / 100),
+                        offset: '0',
                         opacity: stop.opacity
                     });
                 }
+                result.colorStops.push({
+                    color,
+                    offset: $math.truncate(offset / 100),
+                    opacity: stop.opacity
+                });
             }
-            result.push(gradient);
         }
         return result;
     }
@@ -476,11 +475,8 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
     }
 
     public static addImageUrl(value: string, prefix = '') {
-        const url = $dom.cssResolveUrl(value);
-        if (url !== '') {
-            return this.addImage({ mdpi: url }, prefix);
-        }
-        return '';
+        value = $dom.resolveURL(value) || $util.resolvePath(value);
+        return value !== '' ? this.addImage({ mdpi: value }, prefix) : '';
     }
 
     public static addColor(value: ColorData | string | undefined, transparency = false) {

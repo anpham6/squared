@@ -9,7 +9,7 @@ declare global {
 
         class Resource<T extends View> implements Resource<T> {
             public static STORED: ResourceStoredMapAndroid;
-            public static createBackgroundGradient<T extends View>(node: T, gradients: Gradient[], path?: squared.svg.SvgPath): BackgroundGradient[];
+            public static createBackgroundGradient<T extends View>(node: T, gradient: Gradient, path?: squared.svg.SvgPath): BackgroundGradient | undefined;
             public static formatOptions(options: ExternalData, numberAlias?: boolean): ExternalData;
             public static getOptionArray(element: HTMLSelectElement): (string[] | null)[];
             public static addTheme(...options: Required<StyleAttribute>[]): void;

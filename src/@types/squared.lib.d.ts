@@ -34,7 +34,7 @@ declare global {
             function assignBounds(bounds: RectDimension | DOMRect): RectDimension;
             function getStyle(element: Element | null, cache?: boolean): CSSStyleDeclaration;
             function getFontSize(element: Element | null): number;
-            function cssResolveUrl(value: string): string;
+            function resolveURL(value: string): string;
             function cssParent(element: Element | null, attr: string, ...styles: string[]): boolean;
             function cssFromParent(element: Element | null, attr: string): boolean;
             function cssInline(element: Element, attr: string): string;
@@ -69,12 +69,12 @@ declare global {
             function truncate(value: number, precision?: number): string;
             function truncateFraction(value: number): number;
             function truncateString(value: string, precision?: number): string;
-            function triangulateASA(a: number, b: number, clen: number): [number, number];
+            function trianguleASA(a: number, b: number, clen: number): [number, number];
             function offsetAngle(start: Point, end: Point): number;
             function offsetAngleX(angle: number, value: number): number;
             function offsetAngleY(angle: number, value: number): number;
             function clampRange(value: number, min?: number, max?: number): number;
-            function nextMultiple(values: number[], offset?: number[], minumum?: number): number;
+            function nextMultiple(values: number[], minumum?: number, offset?: number[]): number;
         }
 
         namespace util {

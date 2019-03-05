@@ -1406,10 +1406,10 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                             case 'polyline':
                             case 'circle':
                             case 'ellipse': {
-                                const gradients = Resource.createBackgroundGradient(this.NODE_INSTANCE, [gradient], path);
-                                if (gradients.length) {
+                                const backgroundGradient = Resource.createBackgroundGradient(this.NODE_INSTANCE, gradient, path);
+                                if (backgroundGradient) {
                                     result[attr] = '';
-                                    result[pattern] = [{ gradients }];
+                                    result[pattern] = [{ gradients: [backgroundGradient] }];
                                     this.NAMESPACE_AAPT = true;
                                     return;
                                 }

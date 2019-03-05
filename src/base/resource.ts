@@ -15,6 +15,7 @@ const $xml = squared.lib.xml;
 
 const REGEXP_COLORSTOP = `(?:\\s*(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[a-zA-Z\\d]{3,}|[a-z]+)\\s*(\\d+%|${$util.REGEXP_STRING.DEGREE}|${$util.REGEXP_STRING.UNIT})?,?\\s*)`;
 const REGEXP_POSITION = /(.+?)?\s*at (.+?)$/;
+const REGEXP_BACKGROUNDIMAGE = `(?:url\\("?.+?"?\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|circle|ellipse|closest-side|closest-corner|farthest-side|farthest-corner)?(?:\\s*at [\\w %]+)?),?\\s*(${REGEXP_COLORSTOP}+)\\))`;
 
 function replaceExcluded<T extends Node>(element: HTMLElement, attr: string) {
     let value: string = element[attr];
@@ -248,8 +249,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
             this.isBorderVisible(object.borderBottom) ||
             this.isBorderVisible(object.borderLeft) ||
             !!object.backgroundImage ||
-            !!object.borderRadius ||
-            !!object.backgroundGradient
+            !!object.borderRadius
         );
     }
 
@@ -281,7 +281,6 @@ export default abstract class Resource<T extends Node> implements squared.base.R
         for (const node of this.cache) {
             if (node.visible && node.styleElement) {
                 const boxStyle: Nullable<BoxStyle> = {
-                    background: null,
                     borderTop: null,
                     borderRight: null,
                     borderBottom: null,
@@ -289,13 +288,13 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                     borderRadius: null,
                     backgroundColor: null,
                     backgroundSize: null,
-                    backgroundImage: null,
                     backgroundRepeat: null,
                     backgroundPositionX: null,
-                    backgroundPositionY: null
+                    backgroundPositionY: null,
+                    backgroundImage: null
                 };
                 for (const attr in boxStyle) {
-                    const value = node.css(attr);
+                    let value = node.css(attr);
                     switch (attr) {
                         case 'borderTop':
                         case 'borderRight':
@@ -354,127 +353,119 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                 boxStyle.backgroundColor = color ? color.valueAsRGBA : '';
                             }
                             break;
-                        case 'background':
                         case 'backgroundImage':
+                            if (value === '' || value === 'none') {
+                                value = node.css('background');
+                            }
                             if (value !== 'none' && !node.hasBit('excludeResource', NODE_RESOURCE.IMAGE_SOURCE)) {
-                                const gradients: Gradient[] = [];
+                                const images: (string | Gradient)[] = [];
                                 const opacity = node.css('opacity');
-                                let pattern = new RegExp(`(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|circle|ellipse|closest-side|closest-corner|farthest-side|farthest-corner)?(?:\\s*at [\\w %]+)?),?\\s*(${REGEXP_COLORSTOP}+)\\)`, 'g');
+                                const pattern = new RegExp(REGEXP_BACKGROUNDIMAGE, 'g');
                                 let match: RegExpExecArray | null;
                                 while ((match = pattern.exec(value)) !== null) {
-                                    const repeating = match[1] === 'repeating';
-                                    let gradient!: Gradient;
-                                    switch (match[2]) {
-                                        case 'linear': {
-                                            if (!match[3]) {
-                                                match[3] = 'to bottom';
+                                    const [complete, repeating, type, direction, colorStop] = match;
+                                    if (complete.startsWith('url')) {
+                                        images.push(complete);
+                                    }
+                                    else {
+                                        let gradient!: Gradient;
+                                        switch (type) {
+                                            case 'linear': {
+                                                let angle: number;
+                                                switch (direction) {
+                                                    case 'to top':
+                                                        angle = 0;
+                                                        break;
+                                                    case 'to right top':
+                                                        angle = 45;
+                                                        break;
+                                                    case 'to right':
+                                                        angle = 90;
+                                                        break;
+                                                    case 'to right bottom':
+                                                        angle = 135;
+                                                        break;
+                                                    case 'to bottom':
+                                                        angle = 180;
+                                                        break;
+                                                    case 'to left bottom':
+                                                        angle = 225;
+                                                        break;
+                                                    case 'to left':
+                                                        angle = 270;
+                                                        break;
+                                                    case 'to left top':
+                                                        angle = 315;
+                                                        break;
+                                                    default:
+                                                        angle = direction ? parseAngle(direction) : 180;
+                                                        break;
+                                                }
+                                                const horizontal = angle >= 45 && angle <= 135 || angle >= 225 && angle <= 315;
+                                                gradient = <LinearGradient> {
+                                                    type,
+                                                    angle,
+                                                    horizontal,
+                                                    colorStops: parseColorStops(node, type, colorStop, opacity, !!repeating, horizontal)
+                                                };
+                                                break;
                                             }
-                                            let angle: number;
-                                            switch (match[3]) {
-                                                case 'to top':
-                                                    angle = 0;
-                                                    break;
-                                                case 'to right top':
-                                                    angle = 45;
-                                                    break;
-                                                case 'to right':
-                                                    angle = 90;
-                                                    break;
-                                                case 'to right bottom':
-                                                    angle = 135;
-                                                    break;
-                                                case 'to bottom':
-                                                    angle = 180;
-                                                    break;
-                                                case 'to left bottom':
-                                                    angle = 225;
-                                                    break;
-                                                case 'to left':
-                                                    angle = 270;
-                                                    break;
-                                                case 'to left top':
-                                                    angle = 315;
-                                                    break;
-                                                default:
-                                                    angle = parseAngle(match[3]);
-                                                    break;
-                                            }
-                                            const horizontal = angle >= 45 && angle <= 135 || angle >= 225 && angle <= 315;
-                                            gradient = <LinearGradient> {
-                                                type: match[2],
-                                                angle,
-                                                horizontal,
-                                                colorStops: parseColorStops(node, match[2], match[4], opacity, repeating, horizontal)
-                                            };
-                                            break;
-                                        }
-                                        case 'radial': {
-                                            const horizontal = node.bounds.width <= node.bounds.height;
-                                            gradient = <RadialGradient> {
-                                                type: match[2],
-                                                position: (() => {
-                                                    const result = ['center', 'ellipse'];
-                                                    if (match[3]) {
-                                                        const position = REGEXP_POSITION.exec(match[3]);
-                                                        if (position) {
-                                                            if (position[1]) {
-                                                                switch (position[1]) {
-                                                                    case 'ellipse':
-                                                                    case 'circle':
-                                                                    case 'closest-side':
-                                                                    case 'closest-corner':
-                                                                    case 'farthest-side':
-                                                                    case 'farthest-corner':
-                                                                        result[1] = position[1];
-                                                                        break;
+                                            case 'radial': {
+                                                const horizontal = node.bounds.width <= node.bounds.height;
+                                                gradient = <RadialGradient> {
+                                                    type,
+                                                    position: (() => {
+                                                        const result = ['center', 'ellipse'];
+                                                        if (direction) {
+                                                            const position = REGEXP_POSITION.exec(direction);
+                                                            if (position) {
+                                                                if (position[1]) {
+                                                                    switch (position[1]) {
+                                                                        case 'ellipse':
+                                                                        case 'circle':
+                                                                        case 'closest-side':
+                                                                        case 'closest-corner':
+                                                                        case 'farthest-side':
+                                                                        case 'farthest-corner':
+                                                                            result[1] = position[1];
+                                                                            break;
+                                                                    }
+                                                                }
+                                                                if (position[2]) {
+                                                                    result[0] = position[2];
                                                                 }
                                                             }
-                                                            if (position[2]) {
-                                                                result[0] = position[2];
+                                                        }
+                                                        return result;
+                                                    })(),
+                                                    horizontal,
+                                                    colorStops: parseColorStops(node, type, colorStop, opacity, !!repeating, horizontal)
+                                                };
+                                                break;
+                                            }
+                                            case 'conic': {
+                                                gradient = <ConicGradient> {
+                                                    type,
+                                                    angle: parseAngle(direction),
+                                                    position: (() => {
+                                                        if (direction) {
+                                                            const position = REGEXP_POSITION.exec(direction);
+                                                            if (position) {
+                                                                return [position[2]];
                                                             }
                                                         }
-                                                    }
-                                                    return result;
-                                                })(),
-                                                horizontal,
-                                                colorStops: parseColorStops(node, match[2], match[4], opacity, repeating, horizontal)
-                                            };
-                                            break;
+                                                        return ['center'];
+                                                    })(),
+                                                    colorStops: parseColorStops(node, type, colorStop, opacity)
+                                                };
+                                                break;
+                                            }
                                         }
-                                        case 'conic': {
-                                            gradient = <ConicGradient> {
-                                                type: match[2],
-                                                angle: parseAngle(match[3]),
-                                                position: (() => {
-                                                    if (match[3]) {
-                                                        const position = REGEXP_POSITION.exec(match[3]);
-                                                        if (position) {
-                                                            return [position[2]];
-                                                        }
-                                                    }
-                                                    return ['center'];
-                                                })(),
-                                                colorStops: parseColorStops(node, match[2], match[4], opacity)
-                                            };
-                                            break;
-                                        }
-                                    }
-                                    if (gradient.colorStops.length > 1) {
-                                        gradients.push(gradient);
+                                        images.push(gradient);
                                     }
                                 }
-                                if (gradients.length) {
-                                    boxStyle.backgroundGradient = gradients;
-                                }
-                                else {
-                                    const images: string[] = [];
-                                    pattern = new RegExp($util.REGEXP_PATTERN.URL, 'g');
-                                    while ((match = pattern.exec(value)) !== null) {
-                                        images.push(match[0]);
-                                    }
-                                    if (images.length) {
-                                        boxStyle.backgroundImage = images;
-                                    }
+                                if (images.length) {
+                                    boxStyle.backgroundImage = images;
                                 }
                             }
                             break;

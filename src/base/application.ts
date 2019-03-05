@@ -260,11 +260,13 @@ export default class Application<T extends Node> implements squared.base.Applica
             for (const element of this.parseElements) {
                 element.querySelectorAll('svg image').forEach((image: SVGImageElement) => {
                     const uri = $util.resolvePath(image.href.baseVal);
-                    this.session.image.set(uri, {
-                        width: image.width.baseVal.value,
-                        height: image.height.baseVal.value,
-                        uri
-                    });
+                    if (uri !== '') {
+                        this.session.image.set(uri, {
+                            width: image.width.baseVal.value,
+                            height: image.height.baseVal.value,
+                            uri
+                        });
+                    }
                 });
             }
             for (const image of this.session.image.values()) {
@@ -1972,7 +1974,7 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
             if (this.userSettings.preloadImages && $util.hasValue(styleMap.backgroundImage) && styleMap.backgroundImage !== 'initial') {
                 for (const value of styleMap.backgroundImage.split(',')) {
-                    const uri = $dom.cssResolveUrl(value.trim());
+                    const uri = $dom.resolveURL(value.trim());
                     if (uri !== '' && !this.session.image.has(uri)) {
                         this.session.image.set(uri, { width: 0, height: 0, uri });
                     }

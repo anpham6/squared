@@ -220,27 +220,36 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 const backgroundSize = $util.replaceMap<string, string>(stored.backgroundSize.split(','), value => value.trim());
                 const backgroundPositionX = $util.replaceMap<string, string>(stored.backgroundPositionX.split(','), value => value.trim());
                 const backgroundPositionY = $util.replaceMap<string, string>(stored.backgroundPositionY.split(','), value => value.trim());
-                const backgroundImage: string[] = [];
+                const backgroundImage: (string | BackgroundGradient)[] = [];
                 const backgroundVector: StringMap[] = [];
                 const backgroundDimensions: Undefined<ImageAsset>[] = [];
                 const backgroundGradient: (BackgroundGradient & TemplateDataAA)[] = [];
                 const backgroundPosition: string[] = [];
-                if (!node.hasBit('excludeResource', $enum.NODE_RESOURCE.IMAGE_SOURCE)) {
-                    if (stored.backgroundImage) {
-                        for (let i = 0; i < stored.backgroundImage.length; i++) {
-                            const value = stored.backgroundImage[i];
-                            const x = backgroundPositionX[i] || backgroundPositionX[i - 1];
-                            const y = backgroundPositionY[i] || backgroundPositionY[i - 1];
-                            backgroundImage[i] = Resource.addImageUrl(value);
-                            backgroundDimensions[i] = Resource.ASSETS.images.get($dom.cssResolveUrl(value));
-                            backgroundPosition[i] = `${checkBackgroundPosition(x, y, 'left')} ${checkBackgroundPosition(y, x, 'top')}`;
+                if (stored.backgroundImage && !node.hasBit('excludeResource', $enum.NODE_RESOURCE.IMAGE_SOURCE)) {
+                    for (let i = 0, j = 0; i < stored.backgroundImage.length; i++) {
+                        const value = stored.backgroundImage[i];
+                        if (typeof value === 'string') {
+                            backgroundImage[j] = Resource.addImageUrl(value);
+                            backgroundDimensions[j] = Resource.ASSETS.images.get($dom.resolveURL(value));
                         }
-                    }
-                    else if (stored.backgroundGradient) {
-                        const gradients = Resource.createBackgroundGradient(node, stored.backgroundGradient);
-                        if (gradients.length) {
-                            backgroundGradient.push(gradients[0] as BackgroundGradient & TemplateDataAA);
+                        else {
+                            let gradient: BackgroundGradient | undefined;
+                            if (value.colorStops.length > 1) {
+                                gradient = Resource.createBackgroundGradient(node, value);
+                                if (gradient) {
+                                    backgroundImage[j] = gradient;
+                                }
+                            }
+                            if (gradient === undefined) {
+                                backgroundRepeat.splice(i, 1);
+                                backgroundSize.splice(i, 1);
+                                continue;
+                            }
                         }
+                        const x = backgroundPositionX[i] || backgroundPositionX[i - 1];
+                        const y = backgroundPositionY[i] || backgroundPositionY[i - 1];
+                        backgroundPosition[j] = `${checkBackgroundPosition(x, y, 'left')} ${checkBackgroundPosition(y, x, 'top')}`;
+                        j++;
                     }
                 }
                 const companion = node.companion;
@@ -284,189 +293,193 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     let data: TemplateDataA;
                     let resourceName = '';
                     for (let i = 0; i < backgroundImage.length; i++) {
-                        const image = backgroundDimensions[i];
-                        const boxPosition = $dom.getBackgroundPosition(backgroundPosition[i], node.bounds, node.fontSize);
-                        let gravity = (() => {
-                            if (boxPosition.horizontal === 'center' && boxPosition.vertical === 'center') {
-                                return 'center';
+                        const value = backgroundImage[i];
+                        if (typeof value === 'string') {
+                            const image = backgroundDimensions[i];
+                            const boxPosition = $dom.getBackgroundPosition(backgroundPosition[i], node.bounds, node.fontSize);
+                            let gravity = (() => {
+                                if (boxPosition.horizontal === 'center' && boxPosition.vertical === 'center') {
+                                    return 'center';
+                                }
+                                return `${boxPosition.horizontal === 'center' ? 'center_horizontal' : boxPosition.horizontal}|${boxPosition.vertical === 'center' ? 'center_vertical' : boxPosition.vertical}`;
+                            })();
+                            let width = '';
+                            let height = '';
+                            let tileMode = '';
+                            let tileModeX = '';
+                            let tileModeY = '';
+                            const imageRepeat = !image || image.width < node.bounds.width || image.height < node.bounds.height;
+                            switch (backgroundRepeat[i]) {
+                                case 'repeat-x':
+                                    if (imageRepeat) {
+                                        tileModeX = 'repeat';
+                                    }
+                                    break;
+                                case 'repeat-y':
+                                    if (imageRepeat) {
+                                        tileModeY = 'repeat';
+                                    }
+                                    break;
+                                case 'no-repeat':
+                                    tileMode = 'disabled';
+                                    break;
+                                case 'repeat':
+                                    if (imageRepeat) {
+                                        tileMode = 'repeat';
+                                    }
+                                    break;
                             }
-                            return `${boxPosition.horizontal === 'center' ? 'center_horizontal' : boxPosition.horizontal}|${boxPosition.vertical === 'center' ? 'center_vertical' : boxPosition.vertical}`;
-                        })();
-                        let width = '';
-                        let height = '';
-                        let tileMode = '';
-                        let tileModeX = '';
-                        let tileModeY = '';
-                        const imageRepeat = !image || image.width < node.bounds.width || image.height < node.bounds.height;
-                        switch (backgroundRepeat[i]) {
-                            case 'repeat-x':
-                                if (imageRepeat) {
-                                    tileModeX = 'repeat';
-                                }
-                                break;
-                            case 'repeat-y':
-                                if (imageRepeat) {
-                                    tileModeY = 'repeat';
-                                }
-                                break;
-                            case 'no-repeat':
-                                tileMode = 'disabled';
-                                break;
-                            case 'repeat':
-                                if (imageRepeat) {
-                                    tileMode = 'repeat';
-                                }
-                                break;
-                        }
-                        if (gravity !== '' && image && image.width > 0 && image.height > 0 && node.renderChildren.length === 0) {
-                            if (tileModeY === 'repeat') {
-                                let tileWidth = 0;
-                                if (node.hasWidth) {
-                                    tileWidth = node.width + node.paddingLeft + node.paddingRight;
-                                }
-                                else {
-                                    tileWidth = node.bounds.width - (node.borderLeftWidth + node.borderRightWidth);
-                                }
-                                if (image.width < tileWidth) {
-                                    const layoutWidth = $util.convertInt(node.android('layout_width'));
-                                    if (gravity.indexOf('left') !== -1) {
-                                        boxPosition.right = tileWidth - image.width;
-                                        if (node.hasWidth && tileWidth > layoutWidth) {
-                                            node.android('layout_width', $util.formatPX(node.bounds.width));
-                                        }
+                            if (gravity !== '' && image && image.width > 0 && image.height > 0 && node.renderChildren.length === 0) {
+                                if (tileModeY === 'repeat') {
+                                    let tileWidth = 0;
+                                    if (node.hasWidth) {
+                                        tileWidth = node.width + node.paddingLeft + node.paddingRight;
                                     }
-                                    else if (gravity.indexOf('right') !== -1) {
-                                        boxPosition.left = tileWidth - image.width;
-                                        if (node.hasWidth && tileWidth > layoutWidth) {
-                                            node.android('layout_width', $util.formatPX(node.bounds.width));
-                                        }
+                                    else {
+                                        tileWidth = node.bounds.width - (node.borderLeftWidth + node.borderRightWidth);
                                     }
-                                    else if (gravity === 'center' || gravity.indexOf('center_horizontal') !== -1) {
-                                        boxPosition.left = Math.floor((tileWidth - image.width) / 2);
-                                        width = $util.formatPX(image.width);
-                                        if (node.hasWidth && tileWidth > layoutWidth) {
-                                            node.android('layout_width', $util.formatPX(node.bounds.width));
+                                    if (image.width < tileWidth) {
+                                        const layoutWidth = $util.convertInt(node.android('layout_width'));
+                                        if (gravity.indexOf('left') !== -1) {
+                                            boxPosition.right = tileWidth - image.width;
+                                            if (node.hasWidth && tileWidth > layoutWidth) {
+                                                node.android('layout_width', $util.formatPX(node.bounds.width));
+                                            }
+                                        }
+                                        else if (gravity.indexOf('right') !== -1) {
+                                            boxPosition.left = tileWidth - image.width;
+                                            if (node.hasWidth && tileWidth > layoutWidth) {
+                                                node.android('layout_width', $util.formatPX(node.bounds.width));
+                                            }
+                                        }
+                                        else if (gravity === 'center' || gravity.indexOf('center_horizontal') !== -1) {
+                                            boxPosition.left = Math.floor((tileWidth - image.width) / 2);
+                                            width = $util.formatPX(image.width);
+                                            if (node.hasWidth && tileWidth > layoutWidth) {
+                                                node.android('layout_width', $util.formatPX(node.bounds.width));
+                                            }
                                         }
                                     }
                                 }
-                            }
-                            if (tileModeX === 'repeat') {
-                                let tileHeight = 0;
-                                if (node.hasHeight) {
-                                    tileHeight = node.height + node.paddingTop + node.paddingBottom;
-                                }
-                                else {
-                                    tileHeight = node.bounds.height - (node.borderTopWidth + node.borderBottomWidth);
-                                }
-                                if (image.height < tileHeight) {
-                                    const layoutHeight = $util.convertInt(node.android('layout_height'));
-                                    if (gravity.indexOf('top') !== -1) {
-                                        boxPosition.bottom = tileHeight - image.height;
-                                        if (!node.hasHeight && tileHeight > layoutHeight) {
-                                            node.android('layout_height', $util.formatPX(node.bounds.height));
+                                if (tileModeX === 'repeat') {
+                                    let tileHeight = 0;
+                                    if (node.hasHeight) {
+                                        tileHeight = node.height + node.paddingTop + node.paddingBottom;
+                                    }
+                                    else {
+                                        tileHeight = node.bounds.height - (node.borderTopWidth + node.borderBottomWidth);
+                                    }
+                                    if (image.height < tileHeight) {
+                                        const layoutHeight = $util.convertInt(node.android('layout_height'));
+                                        if (gravity.indexOf('top') !== -1) {
+                                            boxPosition.bottom = tileHeight - image.height;
+                                            if (!node.hasHeight && tileHeight > layoutHeight) {
+                                                node.android('layout_height', $util.formatPX(node.bounds.height));
+                                            }
+                                        }
+                                        else if (gravity.indexOf('bottom') !== -1) {
+                                            boxPosition.top = tileHeight - image.height;
+                                            if (!node.hasHeight && tileHeight > layoutHeight) {
+                                                node.android('layout_height', $util.formatPX(node.bounds.height));
+                                            }
+                                        }
+                                        else if (gravity === 'center' || gravity.indexOf('center_vertical') !== -1) {
+                                            boxPosition.top = Math.floor((tileHeight - image.height) / 2);
+                                            height = $util.formatPX(image.height);
+                                            if (!node.hasHeight && tileHeight > layoutHeight) {
+                                                node.android('layout_height', $util.formatPX(node.bounds.height));
+                                            }
                                         }
                                     }
-                                    else if (gravity.indexOf('bottom') !== -1) {
-                                        boxPosition.top = tileHeight - image.height;
-                                        if (!node.hasHeight && tileHeight > layoutHeight) {
-                                            node.android('layout_height', $util.formatPX(node.bounds.height));
-                                        }
+                                }
+                                if (backgroundImage.length === 1 && node.of(CONTAINER_NODE.IMAGE, $enum.NODE_ALIGNMENT.SINGLE)) {
+                                    if (boxPosition.left > 0) {
+                                        node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, boxPosition.left);
                                     }
-                                    else if (gravity === 'center' || gravity.indexOf('center_vertical') !== -1) {
-                                        boxPosition.top = Math.floor((tileHeight - image.height) / 2);
-                                        height = $util.formatPX(image.height);
-                                        if (!node.hasHeight && tileHeight > layoutHeight) {
-                                            node.android('layout_height', $util.formatPX(node.bounds.height));
-                                        }
+                                    if (boxPosition.top > 0) {
+                                        node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, boxPosition.top);
                                     }
-                                }
-                            }
-                        }
-                        if (backgroundImage.length) {
-                            if (node.of(CONTAINER_NODE.IMAGE, $enum.NODE_ALIGNMENT.SINGLE) && backgroundImage.length === 1) {
-                                if (boxPosition.left > 0) {
-                                    node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, boxPosition.left);
-                                }
-                                if (boxPosition.top > 0) {
-                                    node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, boxPosition.top);
-                                }
-                                let scaleType = '';
-                                switch (gravity) {
-                                    case 'left|top':
-                                    case 'left|center_vertical':
-                                    case 'left|bottom':
-                                        scaleType = 'fitStart';
-                                        break;
-                                    case 'right|top':
-                                    case 'right|center_vertical':
-                                    case 'right|bottom':
-                                        scaleType = 'fitEnd';
-                                        break;
-                                    case 'center':
-                                    case 'center_horizontal|top':
-                                    case 'center_horizontal|bottom':
-                                        scaleType = 'center';
-                                        break;
-                                }
-                                node.android('scaleType', scaleType);
-                                node.android('src', `@drawable/${backgroundImage[0]}`);
-                                if (!hasBorder) {
-                                    return;
-                                }
-                            }
-                            else {
-                                const imageData: BackgroundImage = {
-                                    top: boxPosition.top !== 0 ? $util.formatPX(boxPosition.top) : '',
-                                    right: boxPosition.right !== 0 ? $util.formatPX(boxPosition.right) : '',
-                                    bottom: boxPosition.bottom !== 0 ? $util.formatPX(boxPosition.bottom) : '',
-                                    left: boxPosition.left !== 0 ? $util.formatPX(boxPosition.left) : '',
-                                    width,
-                                    height,
-                                    bitmap: []
-                                };
-                                if (!(backgroundSize[i] === 'auto' || backgroundSize[i] === 'auto auto' || backgroundSize[i] === 'initial')) {
-                                    switch (backgroundSize[i]) {
-                                        case 'cover':
-                                        case 'contain':
-                                        case '100% 100%':
-                                            width = '';
-                                            height = '';
-                                            tileMode = '';
-                                            tileModeX = '';
-                                            tileModeY = '';
-                                            gravity = '';
+                                    let scaleType = '';
+                                    switch (gravity) {
+                                        case 'left|top':
+                                        case 'left|center_vertical':
+                                        case 'left|bottom':
+                                            scaleType = 'fitStart';
                                             break;
-                                        default:
-                                            const dimensions = backgroundSize[i].split(' ');
-                                            if (dimensions[0] === '100%') {
+                                        case 'right|top':
+                                        case 'right|center_vertical':
+                                        case 'right|bottom':
+                                            scaleType = 'fitEnd';
+                                            break;
+                                        case 'center':
+                                        case 'center_horizontal|top':
+                                        case 'center_horizontal|bottom':
+                                            scaleType = 'center';
+                                            break;
+                                    }
+                                    node.android('scaleType', scaleType);
+                                    node.android('src', `@drawable/${value}`);
+                                    if (!hasBorder) {
+                                        return;
+                                    }
+                                }
+                                else {
+                                    const imageData: BackgroundImage = {
+                                        top: boxPosition.top !== 0 ? $util.formatPX(boxPosition.top) : '',
+                                        right: boxPosition.right !== 0 ? $util.formatPX(boxPosition.right) : '',
+                                        bottom: boxPosition.bottom !== 0 ? $util.formatPX(boxPosition.bottom) : '',
+                                        left: boxPosition.left !== 0 ? $util.formatPX(boxPosition.left) : '',
+                                        width,
+                                        height,
+                                        bitmap: []
+                                    };
+                                    if (!(backgroundSize[i] === 'auto' || backgroundSize[i] === 'auto auto' || backgroundSize[i] === 'initial')) {
+                                        switch (backgroundSize[i]) {
+                                            case 'cover':
+                                            case 'contain':
+                                            case '100% 100%':
+                                                width = '';
+                                                height = '';
+                                                tileMode = '';
                                                 tileModeX = '';
-                                            }
-                                            else if (dimensions[1] === '100%') {
                                                 tileModeY = '';
-                                            }
-                                            for (let j = 0; j < dimensions.length; j++) {
-                                                if (dimensions[j] !== 'auto' && dimensions[j] !== '100%') {
-                                                    imageData[j === 0 ? 'width' : 'height'] = node.convertPX(backgroundSize[i], j === 0, false);
+                                                gravity = '';
+                                                break;
+                                            default:
+                                                const dimensions = backgroundSize[i].split(' ');
+                                                if (dimensions[0] === '100%') {
+                                                    tileModeX = '';
                                                 }
-                                            }
-                                            break;
+                                                else if (dimensions[1] === '100%') {
+                                                    tileModeY = '';
+                                                }
+                                                for (let j = 0; j < dimensions.length; j++) {
+                                                    if (dimensions[j] !== 'auto' && dimensions[j] !== '100%') {
+                                                        imageData[j === 0 ? 'width' : 'height'] = node.convertPX(backgroundSize[i], j === 0, false);
+                                                    }
+                                                }
+                                                break;
+                                        }
+                                    }
+                                    if (gravity !== '' || tileMode !== '' || tileModeX !== '' || tileModeY !== '') {
+                                        imageData.bitmap.push({
+                                            src: value,
+                                            gravity,
+                                            tileMode,
+                                            tileModeX,
+                                            tileModeY,
+                                        });
+                                        imagesD.push(imageData);
+                                    }
+                                    else {
+                                        imageData.src = value;
+                                        imagesE.push(imageData);
                                     }
                                 }
-                                if (gravity !== '' || tileMode !== '' || tileModeX !== '' || tileModeY !== '') {
-                                    imageData.bitmap.push({
-                                        src: backgroundImage[i],
-                                        gravity,
-                                        tileMode,
-                                        tileModeX,
-                                        tileModeY,
-                                    });
-                                    imagesD.push(imageData);
-                                }
-                                else {
-                                    imageData.src = backgroundImage[i];
-                                    imagesE.push(imageData);
-                                }
                             }
+                        }
+                        else {
+                            backgroundGradient.push(value as BackgroundGradient & TemplateDataAA);
                         }
                     }
                     imagesD.sort((a, b) => {
@@ -492,10 +505,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     });
                     const backgroundColor = getShapeAttribute(stored, 'backgroundColor') || [];
                     const borderRadius = getShapeAttribute(stored, 'radius');
-                    const vectorGradient = $SvgBuild && backgroundGradient.length > 0 && backgroundGradient.some(gradient => gradient.colorStops.length > 0);
-                    if (vectorGradient) {
-                        const width = node.bounds.width;
-                        const height = node.bounds.height;
+                    const hasVector = $SvgBuild && backgroundImage.some(item => typeof item !== 'string' && item.colorStops.length > 0);
+                    if (hasVector) {
+                        const width = Math.round(node.bounds.width);
+                        const height = Math.round(node.bounds.height);
                         const vectorData: TemplateDataA = {
                             namespace: getXmlNs('aapt'),
                             width: $util.formatPX(width),
@@ -528,11 +541,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                         backgroundVector.push({ src: vectorName });
                     }
-                    let template: StringMap;
                     const border = stored.border;
+                    let template: StringMap;
                     if (border && !(border.style === 'double' && parseInt(border.width) > 2 || (border.style === 'groove' || border.style === 'ridge') && parseInt(border.width) > 1)) {
                         const stroke = getShapeAttribute(stored, 'stroke') || [];
-                        if (backgroundImage.length === 0 && backgroundGradient.length <= 1 && !vectorGradient) {
+                        if (backgroundImage.length === 0 && backgroundGradient.length <= 1 && !hasVector) {
                             if (borderRadius && borderRadius[0]['radius'] === undefined) {
                                 borderRadius[0]['radius'] = '1px';
                             }
@@ -548,7 +561,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             template = TEMPLATES.LAYER_LIST;
                             data = {
                                 A: backgroundColor,
-                                B: !vectorGradient && backgroundGradient.length ? backgroundGradient : false,
+                                B: !hasVector && backgroundGradient.length ? backgroundGradient : false,
                                 C: backgroundVector,
                                 D: imagesD.length ? imagesD : false,
                                 E: imagesE.length ? imagesE : false,
@@ -560,7 +573,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         template = TEMPLATES.LAYER_LIST;
                         data = {
                             A: backgroundColor,
-                            B: !vectorGradient && backgroundGradient.length ? backgroundGradient : false,
+                            B: !hasVector && backgroundGradient.length ? backgroundGradient : false,
                             C: backgroundVector,
                             D: imagesD.length ? imagesD : false,
                             E: imagesE.length ? imagesE : false,

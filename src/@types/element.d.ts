@@ -75,10 +75,8 @@ interface BoxBorder {
 
 interface BoxStyle extends BoxBorder {
     border?: BorderAttribute;
-    background?: string;
     borderRadius?: string[];
-    backgroundImage?: string[];
-    backgroundGradient?: Gradient[];
+    backgroundImage?: (string | Gradient)[];
     backgroundColor: string;
     backgroundSize: string;
     backgroundRepeat: string;

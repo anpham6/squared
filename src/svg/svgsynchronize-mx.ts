@@ -1602,7 +1602,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                             }
                             else {
                                 if (duration.length > 1 && duration.every(value => value % 250 === 0)) {
-                                    repeatingEndTime = $math.nextMultiple(duration, delay, repeatingEndTime);
+                                    repeatingEndTime = $math.nextMultiple(duration, repeatingEndTime, delay);
                                 }
                                 else if ((repeatingEndTime - delay[0]) % duration[0] !== 0) {
                                     repeatingEndTime = duration[0] * Math.ceil(repeatingEndTime / duration[0]);

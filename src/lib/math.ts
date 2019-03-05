@@ -67,7 +67,7 @@ export function convertRadian(value: number) {
     return value * Math.PI / 180;
 }
 
-export function triangulateASA(a: number, b: number, clen: number) {
+export function trianguleASA(a: number, b: number, clen: number) {
     const c = 180 - a - b;
     return [
         (clen / Math.sin(convertRadian(c))) * Math.sin(convertRadian(a)),
@@ -103,7 +103,7 @@ export function clampRange(value: number, min = 0, max = 1) {
     return value;
 }
 
-export function nextMultiple(values: number[], offset?: number[], minimum = 0) {
+export function nextMultiple(values: number[], minimum = 0, offset?: number[]) {
     if (values.length > 1) {
         const increment = minArray(values);
         if (offset && offset.length === values.length) {

@@ -375,7 +375,7 @@ export function getFontSize(element: Element | null) {
     return parseInt(getStyle(element).fontSize || '16px');
 }
 
-export function cssResolveUrl(value: string) {
+export function resolveURL(value: string) {
     const match = value.match(REGEXP_PATTERN.URL);
     if (match) {
         return resolvePath(match[1]);

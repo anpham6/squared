@@ -1,4 +1,5 @@
 interface UtilRegExpString {
+    URL: string;
     DECIMAL: string;
     ZERO_ONE: string;
     UNIT: string;
@@ -56,6 +57,7 @@ function compareObject(obj1: {}, obj2: {}, attr: string, numeric: boolean) {
 }
 
 export const REGEXP_STRING: UtilRegExpString = <any> {
+    URL: 'url\\("?(.+?)"?\\)',
     DECIMAL: '-?\\d+(?:.\\d+)?',
     ZERO_ONE: '0(?:\\.\\d+)?|1(?:\\.0+)?'
 };
@@ -65,7 +67,7 @@ REGEXP_STRING.DEGREE = `(${REGEXP_STRING.DECIMAL})(deg|rad|turn|grad)`;
 REGEXP_STRING.LENGTH = `(${REGEXP_STRING.DECIMAL}(?:[a-z]{2,}|%)?)`;
 
 export const REGEXP_PATTERN: UtilRegExpPattern = {
-    URL: /url\("?(.+?)"?\)/,
+    URL: new RegExp(REGEXP_STRING.URL),
     URI: /^[A-Za-z]+:\/\//,
     UNIT: new RegExp(`^${REGEXP_STRING.UNIT}$`),
     ATTRIBUTE: /([^\s]+)="([^"]+)"/
@@ -425,8 +427,9 @@ export function resolvePath(value: string) {
                 value = `${location.origin + pathname.join('/')}/${value}`;
             }
         }
+        return value;
     }
-    return value;
+    return '';
 }
 
 export function trimNull(value: string | undefined) {

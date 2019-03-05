@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Language" content="en">
+    <title>https://github.com/anpham6/squared</title>
+    <link rel="stylesheet" type="text/css" href="common/dev.css">
+    <style>
+        #squared_ui {
+            padding: 10px;
+        }
+        #gradient1 {
+            width: 400px;
+            height: 50px;
+            background-image: url(images/android.png), repeating-linear-gradient(135deg, black, black .25em, #0092b7 0, #0092b7 .75em);
+            background-repeat: no-repeat, no-repeat;
+            background-position: right top, 0% 0%;
+        }
+        #gradient2 {
+            width: 400px;
+            height: 50px;
+            background: repeating-linear-gradient(120deg, #0092b7 0, #000 1px, #000 .25em, #0092b7 5px /* calc(.25em + 1px) */, #0092b7 .75em);
+        }
+    </style>
+    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="common/dev.js"></script>
+    <script src="../dist/squared.js"></script>
+    <script>
+        System.import('/build/src/base/main.js').then(result => {
+            squared.base = result;
+            System.import('/build/src/svg/main.js').then(result => {
+                squared.svg = result;
+                System.import('/build/android-framework/src/main.js').then(result => {
+                    android = result.default;
+                    squared.setFramework(android);
+                    squared.parseDocument('squared_ui').then(function() {
+                        squared.close();
+
+                        var views = squared.system.writeLayoutAllXml();
+                        document.getElementById('output').innerHTML = stringify(views).replace(/</g, '&lt;');
+
+                        var resource = squared.system.writeResourceAllXml();
+                        document.getElementById('resource').innerHTML = stringify(resource).replace(/</g, '&lt;');
+                    });
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <!-- START: DEMO -->
+    <div id="squared_ui">
+        <div id="gradient1"></div>
+        <br /><br />
+        <div id="gradient2"></div>
+    </div>
+    <!-- END: DEMO -->
+
+    <div>
+        <div class="output">
+            <pre id="output"></pre>
+            <div>
+                <button onclick="copy('output');">Copy</button>
+                <button onclick="squared.system.writeLayoutAllXml(true);">Save</button>
+                <button onclick="squared.saveAllToDisk();">Save All</button>
+            </div>
+        </div>
+        <div class="output">
+            <pre id="resource"></pre>
+            <div>
+                <button onclick="copy('resource');">Copy</button>
+                <button onclick="squared.system.writeResourceAllXml(true);">Save</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
