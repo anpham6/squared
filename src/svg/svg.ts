@@ -20,9 +20,8 @@ function getColorStop(element: SVGGradientElement) {
         const color = $color.parseColor($dom.cssAttribute(stops[i], 'stop-color'), $dom.cssAttribute(stops[i], 'stop-opacity'));
         if (color) {
             result.push({
-                color: color.valueAsRGBA,
-                offset: $dom.cssAttribute(stops[i], 'offset'),
-                opacity: color.alpha
+                color,
+                offset: parseFloat($dom.cssAttribute(stops[i], 'offset')) / 100
             });
         }
     }

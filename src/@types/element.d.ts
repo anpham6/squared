@@ -91,9 +91,8 @@ interface Gradient {
 }
 
 interface ColorStop {
-    color: string;
-    offset: string;
-    opacity: number;
+    color: ColorData;
+    offset: number;
 }
 
 type CSSRuleData = Map<string, ObjectMap<StringMap>>;

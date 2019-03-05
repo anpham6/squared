@@ -37,53 +37,49 @@ function parseColorStops<T extends Node>(node: T, type: string, value: string, o
         const color = $color.parseColor(match[1], opacity, true);
         if (color) {
             const item: ColorStop = {
-                color: color.valueAsRGBA,
-                opacity: color.alpha,
-                offset: ''
+                color,
+                offset: -1
             };
             if (conic) {
                 if (match[3] && match[4]) {
-                    item.offset = $util.convertAngle(match[3], match[4]).toString();
+                    item.offset = $util.convertAngle(match[3], match[4]) / 360;
                 }
             }
             else if (match[2]) {
                 if ($util.isPercent(match[2])) {
-                    item.offset = match[2];
+                    item.offset = parseFloat(match[2]) / 100;
                 }
                 else if (repeating && $util.isUnit(match[2])) {
-                    item.offset = $util.formatPercent(parseFloat(node.convertPX(match[2], horizontal, false)) / (horizontal ? node.bounds.width : node.bounds.height), false);
+                    item.offset = parseFloat(node.convertPX(match[2], horizontal, false)) / (horizontal ? node.bounds.width : node.bounds.height);
                 }
             }
             result.push(item);
         }
     }
     const lastStop = result[result.length - 1];
-    if (lastStop.offset === '') {
-        lastStop.offset = conic ? '360' : '100%';
+    if (lastStop.offset === -1) {
+        lastStop.offset = 1;
     }
     let percent = 0;
     for (let i = 0; i < result.length; i++) {
         const item = result[i];
-        if (item.offset === '') {
+        if (item.offset === -1) {
             if (i === 0) {
-                item.offset = '0';
+                item.offset = 0;
             }
             else {
                 for (let j = i + 1, k = 2; j < result.length - 1; j++, k++) {
-                    if (result[j].offset !== '') {
-                        item.offset = ((percent + parseFloat(result[j].offset)) / k).toString();
+                    if (result[j].offset !== -1) {
+                        item.offset = (percent + result[j].offset) / k;
                         break;
                     }
                 }
-                if (item.offset === '') {
-                    item.offset = (percent + parseFloat(lastStop.offset) / (result.length - 1)).toString();
+                if (item.offset === -1) {
+                    item.offset = percent + lastStop.offset / (result.length - 1);
                 }
             }
-            if (!conic) {
-                item.offset += '%';
-            }
         }
-        percent = parseFloat(item.offset);
+        percent = item.offset;
     }
     if (repeating) {
         if (percent < 100) {
@@ -92,9 +88,9 @@ function parseColorStops<T extends Node>(node: T, type: string, value: string, o
                 let basePercent = percent;
                 while (percent < 100) {
                     for (let i = 0; i < original.length; i++) {
-                        percent = Math.min(basePercent + parseFloat(original[i].offset), 100);
-                        result.push({ ...original[i], offset: `${percent}%` });
-                        if (percent === 100) {
+                        percent = Math.min(basePercent + original[i].offset, 1);
+                        result.push({ ...original[i], offset: percent });
+                        if (percent === 1) {
                             break complete;
                         }
                     }
@@ -104,10 +100,10 @@ function parseColorStops<T extends Node>(node: T, type: string, value: string, o
         }
     }
     else {
-        if (conic && percent < 360 || !conic && percent < 100) {
-            const colorFill = Object.assign({}, result[result.length - 1]);
-            colorFill.offset = conic ? '360' : '100%';
-            result.push(colorFill);
+        if (percent < 1) {
+            const color = Object.assign({}, result[result.length - 1]);
+            color.offset = 1;
+            result.push(color);
         }
     }
     return result;

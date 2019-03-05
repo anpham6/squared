@@ -48,7 +48,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
             colorStops: []
         };
         let hasStop: boolean;
-        if (!node.svgElement && parseFloat(gradient.colorStops[0].offset) === 0 && ['100%', '360'].includes(gradient.colorStops[gradient.colorStops.length - 1].offset) && (gradient.colorStops.length === 2 || gradient.colorStops.length === 3 && ['50%', '180'].includes(gradient.colorStops[1].offset))) {
+        if (!node.svgElement && (gradient.type !== 'linear' || (<LinearGradient> gradient).angle % 45 === 0) && (gradient.colorStops.length === 2 || gradient.colorStops.length === 3 && gradient.colorStops[1].offset === 0.5) && gradient.colorStops[0].offset <= 0 && gradient.colorStops[gradient.colorStops.length - 1].offset === 1) {
             result.startColor = Resource.addColor(gradient.colorStops[0].color, true);
             result.endColor = Resource.addColor(gradient.colorStops[gradient.colorStops.length - 1].color, true);
             if (gradient.colorStops.length === 3) {
@@ -195,16 +195,16 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                                     const lenY = $math.trianguleASA(a, b, positionX);
                                     positionY = $math.truncateFraction($math.offsetAngleY(angle, lenY[0]));
                                 }
-                                if (angle > 0 && angle < 90) {
+                                if (angle < 90) {
                                     positionY += height;
                                     result.startX = '0';
                                     result.startY = height.toString();
                                 }
-                                else if (angle > 90 && angle < 180) {
+                                else if (angle < 180) {
                                     result.startX = '0';
                                     result.startY = '0';
                                 }
-                                else if (angle > 180 && angle < 270) {
+                                else if (angle < 270) {
                                     positionX += width;
                                     result.startX = width.toString();
                                     result.startY = '0';
@@ -228,7 +228,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
             case 'conic':
                 if (!node.svgElement) {
                     result.type = 'sweep';
-                    const position = $dom.getBackgroundPosition((<ConicGradient> gradient).position[0], node.bounds, node.fontSize, true, !hasStop);
+                    const position = $dom.getBackgroundPosition((<ConicGradient> gradient).position[0], <DOMRect> { width: node.bounds.width * 2, height: node.bounds.height * 2 }, node.fontSize, true, !hasStop);
                     if (hasStop) {
                         result.centerX = position.left.toString();
                         result.centerY = position.top.toString();
@@ -243,24 +243,20 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                 return undefined;
         }
         if (hasStop) {
+            let offset = 0;
             for (let i = 0; i < gradient.colorStops.length; i++) {
                 const stop = gradient.colorStops[i];
                 const color = `@color/${Resource.addColor(stop.color, true)}`;
-                let offset = parseFloat(stop.offset);
-                if (result.type === 'sweep') {
-                    offset *= 100 / 360;
-                }
-                else if (i === 0 && offset !== 0 && !node.svgElement) {
+                offset = Math.max(stop.offset, offset);
+                if (i === 0 && offset > 0) {
                     result.colorStops.push({
                         color,
-                        offset: '0',
-                        opacity: stop.opacity
+                        offset: '0'
                     });
                 }
                 result.colorStops.push({
                     color,
-                    offset: $math.truncate(offset / 100),
-                    opacity: stop.opacity
+                    offset: $math.truncate(offset)
                 });
             }
         }
