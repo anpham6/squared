@@ -180,8 +180,8 @@ export default class Application<T extends Node> implements squared.base.Applica
     public reset() {
         this.session.cache.each(node => node.element && $dom.deleteElementCache(node.element, 'node', 'style', 'styleMap'));
         for (const element of this.parseElements) {
-            delete element.dataset.iteration;
-            delete element.dataset.layoutName;
+            element.dataset.iteration = undefined;
+            element.dataset.layoutName = undefined;
         }
         this.appName = '';
         this.session.renderQueue.clear();

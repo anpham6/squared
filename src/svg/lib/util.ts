@@ -198,11 +198,11 @@ export const TRANSFORM = {
         if (value === undefined) {
             value = $dom.cssAttribute(element, 'transform-origin');
         }
-        const result: Nullable<Point> = { x: null, y: null };
+        const result: Point = { x: NaN, y: NaN };
         if (value !== '') {
             const viewBox = getNearestViewBox(element);
-            let width!: number;
-            let height!: number;
+            let width = 0;
+            let height = 0;
             if (viewBox) {
                 width = viewBox.width;
                 height = viewBox.height;
@@ -216,16 +216,12 @@ export const TRANSFORM = {
             }
             if (!width || !height) {
                 const bounds = element.getBoundingClientRect();
-                if (!width) {
-                    width = bounds.width;
-                }
-                if (!height) {
-                    height = bounds.height;
-                }
+                width = bounds.width;
+                height = bounds.height;
             }
             let positions = value.split(' ');
             function setPosition(attr: string) {
-                if (result[attr] === null) {
+                if (isNaN(result[attr])) {
                     for (let i = 0; i < positions.length; i++) {
                         let position = positions[i];
                         if (position !== '') {
@@ -238,7 +234,7 @@ export const TRANSFORM = {
                             else if ($util.isPercent(position)) {
                                 result[attr] = (attr === 'x' ? width : height) * (parseInt(position) / 100);
                             }
-                            if (result[attr] !== null) {
+                            if (!isNaN(result[attr])) {
                                 positions[i] = '';
                                 break;
                             }

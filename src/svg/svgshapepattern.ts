@@ -193,7 +193,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
     }
 
     get offsetX() {
-        let value: number | undefined;
+        let value = 0;
         if (this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX) {
             value = this.patternWidth * getPercent(this.patternElement.x.baseVal.valueAsString);
         }
@@ -201,7 +201,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
     }
 
     get offsetY() {
-        let value: number | undefined;
+        let value = 0;
         if (this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX) {
             value = this.patternHeight * getPercent(this.patternElement.y.baseVal.valueAsString);
         }
@@ -209,7 +209,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
     }
 
     get tileWidth() {
-        let value: number | undefined;
+        let value = 0;
         if (this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX) {
             value = this.patternWidth * getPercent(this.patternElement.width.baseVal.valueAsString);
         }
@@ -217,7 +217,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
     }
 
     get tileHeight() {
-        let value: number | undefined;
+        let value = 0;
         if (this.patternUnits === REGION_UNIT.OBJECT_BOUNDING_BOX) {
             value = this.patternHeight * getPercent(this.patternElement.height.baseVal.valueAsString);
         }

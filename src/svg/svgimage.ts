@@ -60,7 +60,7 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
                             if (m.d < 0) {
                                 y += m.d * height;
                             }
-                            if (this.rotateAngle !== undefined) {
+                            if (this.rotateAngle) {
                                 this.rotateAngle += item.angle;
                             }
                             else {

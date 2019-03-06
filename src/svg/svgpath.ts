@@ -24,6 +24,79 @@ interface DashGroup {
 const $math = squared.lib.math;
 const $util = squared.lib.util;
 
+function updatePathLocation(path: SvgPathCommand[], attr: string, x?: number, y?: number) {
+    const commandA = path[0];
+    const commandB = path[path.length - 1];
+    if (x !== undefined) {
+        switch (attr) {
+            case 'x':
+                x -= commandA.start.x;
+                break;
+            case 'x1':
+            case 'cx':
+                commandA.start.x = x;
+                commandA.coordinates[0] = x;
+                return;
+            case 'x2':
+                commandB.end.x = x;
+                commandB.coordinates[0] = x;
+                return;
+        }
+    }
+    if (y !== undefined) {
+        switch (attr) {
+            case 'y':
+                y -= commandA.start.y;
+                break;
+            case 'y1':
+            case 'cy':
+                commandA.start.y = y;
+                commandA.coordinates[1] = y;
+                return;
+            case 'y2':
+                commandB.end.y = y;
+                commandB.coordinates[1] = y;
+                return;
+        }
+    }
+    for (const seg of path) {
+        for (let j = 0, k = 0; j < seg.coordinates.length; j += 2, k++) {
+            if (x !== undefined) {
+                if (!seg.relative) {
+                    seg.coordinates[j] += x;
+                }
+                seg.value[k].x += x;
+            }
+            if (y !== undefined) {
+                if (!seg.relative) {
+                    seg.coordinates[j + 1] += y;
+                }
+                seg.value[k].y += y;
+            }
+        }
+    }
+}
+
+function updatePathRadius(path: SvgPathCommand[], rx?: number, ry?: number) {
+    for (let i = 0; i < path.length; i++) {
+        const seg = path[i];
+        if (seg.name.toUpperCase() === 'A') {
+            if (rx !== undefined) {
+                const offset = rx - <number> seg.radiusX;
+                seg.radiusX = rx;
+                seg.coordinates[0] = rx * 2 * (seg.coordinates[0] < 0 ? -1 : 1);
+                if (i === 1) {
+                    path[0].coordinates[0] -= offset;
+                    path[0].end.x -= offset;
+                }
+            }
+            if (ry !== undefined) {
+                seg.radiusY = ry;
+            }
+        }
+    }
+}
+
 export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) implements squared.svg.SvgPath {
     public static extrapolate(attr: string, pathData: string, values: string[], transforms?: SvgTransform[], companion?: SvgShape, precision?: number) {
         const transformRefit = !!transforms || !!companion && !!companion.parent && companion.parent.requireRefit();
@@ -46,155 +119,65 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 const value = parseFloat(values[i]);
                 if (!isNaN(value)) {
                     const path = i < values.length - 1 ? <SvgPathCommand[]> $util.cloneArray(commands, [], true) : commands;
-                    let x: number | undefined;
-                    let y: number | undefined;
-                    let rx: number | undefined;
-                    let ry: number | undefined;
-                    let width: number | undefined;
-                    let height: number | undefined;
                     switch (attr) {
                         case 'x':
                         case 'x1':
                         case 'x2':
                         case 'cx':
-                            x = value;
+                            updatePathLocation(path, attr, value);
                             break;
                         case 'y':
                         case 'y1':
                         case 'y2':
                         case 'cy':
-                            y = value;
+                            updatePathLocation(path, attr, undefined, value);
                             break;
                         case 'r':
-                            rx = value;
-                            ry = rx;
+                            updatePathRadius(path, value, value);
                             break;
                         case 'rx':
-                            rx = value;
+                            updatePathRadius(path, value);
                             break;
                         case 'ry':
-                            ry = value;
+                            updatePathRadius(path, undefined, value);
+                            break;
                         case 'width':
-                            width = value;
+                            for (const index of [1, 2]) {
+                                const seg = path[index];
+                                switch (seg.name) {
+                                    case 'm':
+                                    case 'l':
+                                    case 'h':
+                                        seg.coordinates[0] = value * (seg.coordinates[0] < 0 ? -1 : 1);
+                                        break;
+                                    case 'M':
+                                    case 'L':
+                                    case 'H':
+                                        seg.coordinates[0] = path[0].end.x + value;
+                                        break;
+                                }
+                            }
                             break;
                         case 'height':
-                            height = value;
+                            for (const index of [2, 3]) {
+                                const seg = path[index];
+                                switch (seg.name) {
+                                    case 'm':
+                                    case 'l':
+                                    case 'v':
+                                        seg.coordinates[1] = value * (seg.coordinates[1] < 0 ? -1 : 1);
+                                        break;
+                                    case 'M':
+                                    case 'L':
+                                    case 'V':
+                                        seg.coordinates[1] = path[0].end.y + value;
+                                        break;
+                                }
+                            }
                             break;
                         default:
                             result[i] = '';
                             continue;
-                    }
-                    if (x !== undefined || y !== undefined) {
-                        const commandA = path[0];
-                        const commandB = path[path.length - 1];
-                        const pointA = commandA.start;
-                        const pointB = commandB.end;
-                        let recalibrate = false;
-                        if (x !== undefined) {
-                            switch (attr) {
-                                case 'x':
-                                    x -= pointA.x;
-                                    recalibrate = true;
-                                    break;
-                                case 'x1':
-                                case 'cx':
-                                    pointA.x = x;
-                                    commandA.coordinates[0] = x;
-                                    break;
-                                case 'x2':
-                                    pointB.x = x;
-                                    commandB.coordinates[0] = x;
-                                    break;
-                            }
-                        }
-                        if (y !== undefined) {
-                            switch (attr) {
-                                case 'y':
-                                    y -= pointA.y;
-                                    recalibrate = true;
-                                    break;
-                                case 'y1':
-                                case 'cy':
-                                    pointA.y = y;
-                                    commandA.coordinates[1] = y;
-                                    break;
-                                case 'y2':
-                                    pointB.y = y;
-                                    commandB.coordinates[1] = y;
-                                    break;
-                            }
-                        }
-                        if (recalibrate) {
-                            for (const seg of path) {
-                                for (let j = 0, k = 0; j < seg.coordinates.length; j += 2, k++) {
-                                    if (x !== undefined) {
-                                        if (!seg.relative) {
-                                            seg.coordinates[j] += x;
-                                        }
-                                        seg.value[k].x += x;
-                                    }
-                                    if (y !== undefined) {
-                                        if (!seg.relative) {
-                                            seg.coordinates[j + 1] += y;
-                                        }
-                                        seg.value[k].y += y;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    else if (rx !== undefined || ry !== undefined) {
-                        for (let j = 0; j < path.length; j++) {
-                            const seg = path[j];
-                            if (seg.name.toUpperCase() === 'A') {
-                                if (rx !== undefined && seg.radiusX) {
-                                    const offset = rx - seg.radiusX;
-                                    seg.radiusX = rx;
-                                    seg.coordinates[0] = rx * 2 * (seg.coordinates[0] < 0 ? -1 : 1);
-                                    if (j === 1) {
-                                        path[0].coordinates[0] -= offset;
-                                        path[0].end.x -= offset;
-                                    }
-                                }
-                                if (ry !== undefined && seg.radiusY) {
-                                    seg.radiusY = ry;
-                                }
-                            }
-                        }
-                    }
-                    else if (width !== undefined) {
-                        for (const index of [1, 2]) {
-                            const seg = path[index];
-                            switch (seg.name) {
-                                case 'm':
-                                case 'l':
-                                case 'h':
-                                    seg.coordinates[0] = width * (seg.coordinates[0] < 0 ? -1 : 1);
-                                    break;
-                                case 'M':
-                                case 'L':
-                                case 'H':
-                                    seg.coordinates[0] = path[0].end.x + width;
-                                    break;
-                            }
-                        }
-                    }
-                    else if (height !== undefined) {
-                        for (const index of [2, 3]) {
-                            const seg = path[index];
-                            switch (seg.name) {
-                                case 'm':
-                                case 'l':
-                                case 'v':
-                                    seg.coordinates[1] = height * (seg.coordinates[1] < 0 ? -1 : 1);
-                                    break;
-                                case 'M':
-                                case 'L':
-                                case 'V':
-                                    seg.coordinates[1] = path[0].end.y + height;
-                                    break;
-                            }
-                        }
                     }
                     result[i] = SvgBuild.drawPath(path, precision);
                 }
@@ -653,11 +636,11 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         return data;
     }
 
-    public extractStrokeDash(animations?: SvgAnimation[], negative = true, loopInterval = 0, precision?: number): [SvgStrokeDash[] | undefined, string | undefined, string | undefined] {
+    public extractStrokeDash(animations?: SvgAnimation[], negative = true, loopInterval = 0, precision?: number): [SvgStrokeDash[] | undefined, string, string] {
         const strokeWidth = $util.convertInt(this.strokeWidth);
         let result: SvgStrokeDash[] | undefined;
-        let path: string | undefined;
-        let clipPath: string | undefined;
+        let path = '';
+        let clipPath = '';
         if (strokeWidth > 0) {
             let valueArray = SvgBuild.parseCoordinates(this.strokeDasharray);
             if (valueArray.length) {
@@ -735,29 +718,22 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                     for (let i = 0; i < sorted.length; i++) {
                         const item = sorted[i];
                         if (item.setterType) {
-                            let valid = true;
+                            function setDashGroup(values: number[], offset: number) {
+                                createDashGroup(values, offset, item.delay, item.fillReplace && item.duration > 0 ? item.duration : 0);
+                                modified = true;
+                            }
                             switch (item.attributeName) {
                                 case 'stroke-dasharray':
                                     valueArray = SvgBuild.parseCoordinates(item.to);
-                                    valueOffset = getDashOffset(item.delay);
-                                    break;
+                                    setDashGroup(valueArray, getDashOffset(item.delay));
+                                    continue;
                                 case 'stroke-dashoffset':
                                     valueOffset = $util.convertInt(item.to);
-                                    valueArray = getDashArray(item.delay);
-                                    break;
-                                default:
-                                    valid = false;
-                                    break;
-                            }
-                            if (valid) {
-                                createDashGroup(valueArray, valueOffset, item.delay, item.fillReplace && item.duration > 0 ? item.duration : 0);
-                                modified = true;
-                                continue;
+                                    setDashGroup(getDashArray(item.delay), valueOffset);
+                                    continue;
                             }
                         }
                         else if (SvgBuild.asAnimate(item) && item.playable) {
-                            valueArray = getDashArray(item.delay);
-                            valueOffset = getDashOffset(item.delay);
                             intervalMap.evaluateStart(item);
                             switch (item.attributeName) {
                                 case 'stroke-dasharray': {
@@ -765,9 +741,10 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         setDashLength(i);
                                         setDashLength = undefined;
                                     }
+                                    const delayOffset = getDashOffset(item.delay);
+                                    const baseValue = this.flattenStrokeDash(getDashArray(item.delay), delayOffset, totalLength, pathLength).items;
                                     const group: SvgAnimate[] = [];
                                     const values: string[][] = [];
-                                    const baseValue = this.flattenStrokeDash(valueArray, valueOffset, totalLength, pathLength).items;
                                     for (let j = 0; j < dashTotal; j++) {
                                         const animate = new SvgAnimate(this.element);
                                         animate.id = j;
@@ -780,20 +757,23 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         values[j] = [];
                                         group.push(animate);
                                     }
-                                    for (let j = 0; j < item.keyTimes.length; j++) {
-                                        const dashValue = this.flattenStrokeDash(SvgBuild.parseCoordinates(item.values[j]), valueOffset, totalLength, pathLength).items;
-                                        for (let k = 0; k < dashTotal; k++) {
-                                            values[k].push(getFromToValue(dashValue[k]));
+                                    for (const value of item.values) {
+                                        const dashValue = this.flattenStrokeDash(SvgBuild.parseCoordinates(value), delayOffset, totalLength, pathLength).items;
+                                        for (let j = 0; j < dashTotal; j++) {
+                                            values[j].push(getFromToValue(dashValue[j]));
                                         }
                                     }
+                                    const keyTimes = item.keyTimes;
+                                    const keySplines = item.keySplines;
+                                    const timingFunction = item.timingFunction;
                                     for (let j = 0; j < dashTotal; j++) {
                                         group[j].values = values[j];
-                                        group[j].keyTimes = item.keyTimes;
-                                        if (item.keySplines) {
-                                            group[j].keySplines = item.keySplines;
+                                        group[j].keyTimes = keyTimes;
+                                        if (keySplines) {
+                                            group[j].keySplines = keySplines;
                                         }
-                                        else {
-                                            group[j].timingFunction = item.timingFunction;
+                                        else if (timingFunction) {
+                                            group[j].timingFunction = timingFunction;
                                         }
                                     }
                                     if (item.fillReplace) {
@@ -810,13 +790,13 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                 case 'stroke-dashoffset': {
                                     const duration = item.duration;
                                     const repeatFraction = loopInterval / 1000;
+                                    const startOffset = parseFloat(item.values[0]);
                                     const values: string[] = [];
                                     const keyTimes: number[] = [];
                                     const loopIntervals: boolean[] = [];
-                                    const startOffset = parseFloat(item.values[0]);
                                     let keyTime = 0;
                                     let previousRemaining = 0;
-                                    if (valueOffset !== startOffset && item.delay === 0) {
+                                    if (valueOffset !== startOffset && item.delay === 0 && !item.fillReplace) {
                                         flattenData = this.flattenStrokeDash(flattenData.dashArray, startOffset, totalLength, pathLength);
                                         result = flattenData.items;
                                         dashGroup[0].items = result;
@@ -830,8 +810,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         if (flattenData.path) {
                                             const boxRect = SvgBuild.parseBoxRect([this.value]);
                                             extendedLength = $math.truncateFraction(getPathLength(flattenData.path));
-                                            flattenData.extendedLength = this.pathLength;
                                             extendedRatio = extendedLength / totalLength;
+                                            flattenData.extendedLength = this.pathLength;
                                             if (flattenData.extendedLength > 0) {
                                                 flattenData.extendedLength *= extendedRatio;
                                             }
@@ -845,6 +825,17 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                             const strokeOffset = Math.ceil(strokeWidth / 2);
                                             path = flattenData.path;
                                             clipPath = SvgBuild.drawRect(boxRect.right - boxRect.left, boxRect.bottom - boxRect.top + strokeOffset * 2, boxRect.left, boxRect.top - strokeOffset);
+                                        }
+                                    }
+                                    let replaceValue: string | undefined;
+                                    if (item.fillReplace && item.iterationCount !== -1) {
+                                        const offsetForward = $util.convertFloat(intervalMap.get(item.attributeName, item.getTotalDuration()) as string);
+                                        if (offsetForward !== valueOffset) {
+                                            let offsetReplace = (Math.abs(offsetForward - valueOffset) % extendedLength) / extendedLength;
+                                            if (offsetForward > valueOffset) {
+                                                offsetReplace = 1 - offsetReplace;
+                                            }
+                                            replaceValue = offsetReplace.toString();
                                         }
                                     }
                                     for (let j = 0; j < item.keyTimes.length; j++) {
@@ -975,7 +966,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         }
                                     }
                                     item.baseValue = '0';
-                                    item.replaceValue = '0';
+                                    item.replaceValue = replaceValue;
                                     item.values = values;
                                     item.keyTimes = keyTimes;
                                     item.loopIntervals = loopIntervals;

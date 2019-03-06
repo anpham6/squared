@@ -30,16 +30,37 @@ import $SvgShape = squared.svg.SvgShape;
 type SvgAnimation = squared.svg.SvgAnimation;
 type SvgGroup = squared.svg.SvgGroup;
 type SvgImage = squared.svg.SvgImage;
-type SvgView = squared.svg.SvgView;
 
-interface AnimatedTargetData extends TemplateDataAA {
-    name: string;
-    animationName?: string;
-}
+type SvgView = squared.svg.SvgView;
 
 interface SetOrdering {
     name?: string;
     ordering?: string;
+}
+
+interface AnimatedTargetTemplate extends TemplateDataAA {
+    name: string;
+    animationName?: string;
+}
+
+interface SetTemplateData extends SetOrdering, TemplateDataAA {
+    AA: AnimatorData<boolean>[];
+    BB: TogetherData[];
+}
+
+interface AnimatorData<T> extends SetOrdering, TemplateDataAAA {
+    fillBefore: T extends true ? FillData[] : false;
+    repeating: PropertyValue[];
+    fillCustom: T extends true ? FillData[] : false;
+    fillAfter: T extends true ? FillData[] : false;
+}
+
+interface FillData extends SetOrdering, ExternalData {
+    values: PropertyValue[];
+}
+
+interface TogetherData extends SetOrdering, ExternalData {
+    together: PropertyValue[];
 }
 
 interface GroupTemplateData extends TemplateDataAA {
@@ -50,27 +71,7 @@ interface GroupTemplateData extends TemplateDataAA {
     BB: TemplateData[];
 }
 
-interface SetTemplateData extends SetOrdering, TemplateDataAA {
-    AA: AnimatorTemplateData<boolean>[];
-    BB: TogetherTemplateData[];
-}
-
-interface AnimatorTemplateData<T> extends SetOrdering, TemplateDataAAA {
-    fillBefore: T extends true ? FillTemplateData[] : false;
-    repeating: PropertyValue[];
-    fillCustom: T extends true ? FillTemplateData[] : false;
-    fillAfter: T extends true ? FillTemplateData[] : false;
-}
-
-interface FillTemplateData extends SetOrdering, ExternalData {
-    values: PropertyValue[];
-}
-
-interface TogetherTemplateData extends SetOrdering, ExternalData {
-    together: PropertyValue[];
-}
-
-interface PathTemplateData extends Partial<$SvgPath> {
+interface PathData extends Partial<$SvgPath> {
     name: string;
     clipElement: StringMap[];
     fillPattern: any;
@@ -611,7 +612,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                         A: []
                     };
                     for (const [name, group] of this.ANIMATE_DATA.entries()) {
-                        const targetData: AnimatedTargetData = { name };
+                        const targetData: AnimatedTargetTemplate = { name };
                         const targetSetData: TemplateDataA = { A: [] };
                         const sequentialMap = new Map<string, $SvgAnimate[]>();
                         const transformMap = new Map<string, $SvgAnimateTransform[]>();
@@ -714,45 +715,44 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                 BB: []
                             };
                             for (const items of targets) {
-                                let ordering: string;
-                                let synchronized: boolean;
-                                let fillBefore: boolean;
-                                let useKeyFrames: boolean;
+                                let ordering = '';
+                                let synchronized = false;
+                                let fillBefore = false;
+                                let useKeyFrames = true;
                                 if (index <= 1 && items.some((item: $SvgAnimate) => item.synchronized !== undefined && item.synchronized.value !== '')) {
-                                    ordering = $SvgBuild.asAnimateTransform(items[0]) ? '' : 'sequentially';
+                                    if (!$SvgBuild.asAnimateTransform(items[0])) {
+                                        ordering = 'sequentially';
+                                    }
                                     synchronized = true;
-                                    fillBefore = false;
                                     useKeyFrames = false;
                                 }
                                 else if (index <= 1 && items.some((item: $SvgAnimate) => item.synchronized !== undefined && item.synchronized.value === '')) {
                                     ordering = 'sequentially';
                                     synchronized = true;
                                     fillBefore = true;
-                                    useKeyFrames = true;
                                 }
                                 else if (index <= 1 && items.some(item => item.companion !== undefined)) {
                                     ordering = 'sequentially';
-                                    synchronized = false;
-                                    fillBefore = false;
-                                    useKeyFrames = true;
                                 }
                                 else {
-                                    ordering = index === 0 ? '' : 'sequentially';
-                                    synchronized = false;
-                                    fillBefore = index > 1 && $SvgBuild.asAnimateTransform(items[0]);
-                                    useKeyFrames = true;
+                                    if (index > 0) {
+                                        ordering = 'sequentially';
+                                    }
+                                    if (index > 1 && $SvgBuild.asAnimateTransform(items[0])) {
+                                        fillBefore = true;
+                                    }
                                 }
-                                const animatorData: AnimatorTemplateData<true> = {
+                                const animatorData: AnimatorData<true> = {
                                     ordering,
                                     fillBefore: [],
                                     repeating: [],
                                     fillCustom: [],
                                     fillAfter: []
                                 };
-                                const fillBeforeData: FillTemplateData = { values: [] };
-                                const fillCustomData: FillTemplateData = { values: [] };
-                                const fillAfterData: FillTemplateData = { values: [] };
-                                const togetherData: TogetherTemplateData = { together: [] };
+                                const fillBeforeData: FillData = { values: [] };
+                                const fillCustomData: FillData = { values: [] };
+                                const fillAfterData: FillData = { values: [] };
+                                const togetherData: TogetherData = { together: [] };
                                 (synchronized ? $util.partitionArray(items, (animate: $SvgAnimate) => animate.iterationCount !== -1) : [items]).forEach((partition, section) => {
                                     if (section === 1 && partition.length > 1) {
                                         fillCustomData.ordering = 'sequentially';
@@ -771,7 +771,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                         const requireBefore = item.delay > 0;
                                         let transforming = false;
                                         let transformOrigin: Point[] | undefined;
-                                        const setFillAfter = (propertyName: string, fillAfter: FillTemplateData, propertyValues?: PropertyValue[], startOffset?: number) => {
+                                        const setFillAfter = (propertyName: string, fillAfter: FillData, propertyValues?: PropertyValue[], startOffset?: number) => {
                                             if (!synchronized && item.fillReplace && valueType !== undefined) {
                                                 let valueTo = item.replaceValue;
                                                 if (!valueTo) {
@@ -824,8 +824,8 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                             if (propertyNames) {
                                                 const values = isColorType(item.attributeName) ? getColorValue<true>(item.to, true) : item.to.trim().split(' ');
                                                 if (values.length === propertyNames.length && !values.some(value => value === '')) {
-                                                    let companionBefore: FillTemplateData | undefined;
-                                                    let companionAfter: FillTemplateData | undefined;
+                                                    let companionBefore: FillData | undefined;
+                                                    let companionAfter: FillData | undefined;
                                                     for (let i = 0; i < propertyNames.length; i++) {
                                                         let valueFrom: string | undefined;
                                                         if (valueType === 'pathType') {
@@ -985,7 +985,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                         }
                                                         else {
                                                             animatorData.ordering = 'sequentially';
-                                                            const translateData: AnimatorTemplateData<false> = {
+                                                            const translateData: AnimatorData<false> = {
                                                                 ordering: 'sequentially',
                                                                 fillBefore: false,
                                                                 repeating: [],
@@ -1145,11 +1145,11 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                             }
                         });
                         if (targetSetData.A.length) {
-                            let animatorData: AnimatorTemplateData<true> | undefined;
+                            let animatorData: AnimatorData<true> | undefined;
                             if (targetSetData.A.length === 1) {
                                 const A = targetSetData.A[0];
                                 if (A.ordering === '' && A.BB && A.BB.length === 0 && A.AA && A.AA.length === 1) {
-                                    animatorData = <AnimatorTemplateData<true>> A.AA[0];
+                                    animatorData = <AnimatorData<true>> A.AA[0];
                                 }
                             }
                             const xml = animatorData ? $xml.createTemplate(TEMPLATES.OBJECTANIMATOR, animatorData) : $xml.createTemplate(TEMPLATES.SET_OBJECTANIMATOR, targetSetData);
@@ -1258,10 +1258,10 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                             const [strokeDash, pathValue, clipPathData] = item.path.extractStrokeDash(animateData && animateData.animate, true, 0, this.options.floatPrecisionValue);
                             if (strokeDash) {
                                 const groupName = getVectorName(item, 'stroke');
-                                if (pathValue) {
+                                if (pathValue !== '') {
                                     pathData.value = pathValue;
                                 }
-                                if (clipPathData) {
+                                if (clipPathData !== '') {
                                     clipGroup.push({ clipPathData });
                                 }
                                 for (let i = 0; i < strokeDash.length; i++) {
@@ -1335,17 +1335,17 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
             clipPath,
             BB: []
         };
-        const groupData: TransformData = {};
+        const transformData: TransformData = {};
         if ((target !== this.SVG_INSTANCE && $SvgBuild.asSvg(target) || $SvgBuild.asUseSymbol(target) || $SvgBuild.asUsePattern(target)) && (target.x !== 0 || target.y !== 0)) {
-            groupData.groupName = getVectorName(target, 'main');
-            groupData.translateX = target.x.toString();
-            groupData.translateY = target.y.toString();
+            transformData.groupName = getVectorName(target, 'main');
+            transformData.translateX = target.x.toString();
+            transformData.translateY = target.y.toString();
         }
         if (target.clipRegion !== '') {
             this.createClipPath(target, clipRegion, target.clipRegion);
         }
-        if (clipRegion.length || Object.keys(groupData).length) {
-            region[0].push(groupData);
+        if (clipRegion.length || Object.keys(transformData).length) {
+            region[0].push(transformData);
         }
         if (target !== this.SVG_INSTANCE) {
             const baseData: TransformData = {};
@@ -1374,7 +1374,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
 
     private createPath(target: $SvgShape, path: $SvgPath, render: TransformData[][]) {
         const clipElement: StringMap[] = [];
-        const result: PathTemplateData = {
+        const result: PathData = {
             name: target.name,
             clipElement,
             fillPattern: false
@@ -1549,7 +1549,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                     }
                 }
                 else {
-                    const itemTotal: (number | undefined)[] = [];
+                    const itemTotal: number[] = [];
                     const previousType = new Set<number>();
                     for (let j = 0; j < i; j++) {
                         const previous = replaceData[j];

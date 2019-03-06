@@ -4,13 +4,13 @@ import Node from './node';
 import NodeList from './nodelist';
 import Resource from './resource';
 
-type ExpressResult = {
+const $util = squared.lib.util;
+
+export interface ExpressResult {
     zipname: string;
     application: string;
     system: string;
-};
-
-const $util = squared.lib.util;
+}
 
 export default abstract class File<T extends Node> implements squared.base.File<T> {
     public static downloadToDisk(data: Blob, filename: string, mime = '') {

@@ -296,8 +296,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         super.delay = value;
         const end = $dom.getNamedItem(this.animationElement, 'end');
         if (end !== '') {
-            const endTime = $util.sortNumber($util.replaceMap<string, number>(end.split(';'), time => SvgAnimation.convertClockTime(time)))[0] as number | undefined;
-            if (endTime !== undefined && (this.iterationCount === -1 || this.duration > 0 && endTime < this.duration * this.iterationCount)) {
+            const endTime = $util.sortNumber($util.replaceMap<string, number>(end.split(';'), time => SvgAnimation.convertClockTime(time)))[0];
+            if (!isNaN(endTime) && (this.iterationCount === -1 || this.duration > 0 && endTime < this.duration * this.iterationCount)) {
                 if (this.delay > endTime) {
                     this.end = endTime;
                     if (this.iterationCount === -1) {

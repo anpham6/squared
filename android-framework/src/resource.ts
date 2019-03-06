@@ -47,7 +47,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
             type: gradient.type,
             colorStops: []
         };
-        let hasStop: boolean;
+        let hasStop = true;
         if (!node.svgElement && (gradient.type !== 'linear' || (<LinearGradient> gradient).angle % 45 === 0) && (gradient.colorStops.length === 2 || gradient.colorStops.length === 3 && gradient.colorStops[1].offset === 0.5) && gradient.colorStops[0].offset <= 0 && gradient.colorStops[gradient.colorStops.length - 1].offset === 1) {
             result.startColor = Resource.addColor(gradient.colorStops[0].color, true);
             result.endColor = Resource.addColor(gradient.colorStops[gradient.colorStops.length - 1].color, true);
@@ -56,19 +56,16 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
             }
             hasStop = false;
         }
-        else {
-            hasStop = true;
-        }
         switch (gradient.type) {
-            case 'radial':
+            case 'radial': {
                 if (node.svgElement) {
-                    if (path && $SvgBuild && $utilS) {
+                    if (path && $SvgBuild) {
                         const radial = <SvgRadialGradient> gradient;
                         const points: Point[] = [];
-                        let cx!: number;
-                        let cy!: number;
-                        let cxDiameter!: number;
-                        let cyDiameter!: number;
+                        let cx = 0;
+                        let cy = 0;
+                        let cxDiameter = 0;
+                        let cyDiameter = 0;
                         switch (path.element.tagName) {
                             case 'path':
                                 for (const command of $SvgBuild.getPathCommands(path.value)) {
@@ -108,7 +105,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                                     cyDiameter = ellipse.ry.baseVal.value * 2;
                                 }
                                 else {
-                                    return result;
+                                    return undefined;
                                 }
                                 break;
                         }
@@ -134,7 +131,8 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                     }
                 }
                 break;
-            case 'linear':
+            }
+            case 'linear': {
                 if (node.svgElement) {
                     const linear = <SvgLinearGradient> gradient;
                     result.startX = linear.x1.toString();
@@ -151,71 +149,50 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                     if (hasStop) {
                         const width = Math.round(node.bounds.width);
                         const height = Math.round(node.bounds.height);
-                        const x = $math.truncateFraction($math.offsetAngleX(angle, width));
-                        const y = $math.truncateFraction($math.offsetAngleY(angle, height));
-                        let positionX = x;
-                        let positionY = y;
-                        switch (angle) {
-                            case 0:
-                            case 90:
-                                positionY += height;
-                                result.startX = '0';
-                                result.startY = height.toString();
-                                break;
-                            case 180:
-                                result.startX = '0';
-                                result.startY = '0';
-                                break;
-                            case 270:
-                                positionX += width;
-                                result.startX = width.toString();
-                                result.startY = '0';
-                                break;
-                            default:
-                                if (!$math.isEqual(Math.abs(x), Math.abs(y))) {
-                                    let oppositeAngle: number;
-                                    if (angle < 90) {
-                                        oppositeAngle = $math.offsetAngle({ x: 0, y: height }, { x: width, y: 0 });
-                                    }
-                                    else if (angle < 180) {
-                                        oppositeAngle = $math.offsetAngle({ x: 0, y: 0 }, { x: width, y: height });
-                                    }
-                                    else if (angle < 270) {
-                                        oppositeAngle = $math.offsetAngle({ x: 0, y: 0 }, { x: -width, y: height });
-                                    }
-                                    else {
-                                        oppositeAngle = $math.offsetAngle({ x: 0, y: height }, { x: -width, y: 0 });
-                                    }
-                                    let a = Math.abs(oppositeAngle - angle);
-                                    let b = 90 - a;
-                                    const lenX = $math.trianguleASA(a, b, Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2)));
-                                    positionX = $math.truncateFraction($math.offsetAngleX(angle, lenX[1]));
-                                    a = 90;
-                                    b = 90 - angle;
-                                    const lenY = $math.trianguleASA(a, b, positionX);
-                                    positionY = $math.truncateFraction($math.offsetAngleY(angle, lenY[0]));
-                                }
-                                if (angle < 90) {
-                                    positionY += height;
-                                    result.startX = '0';
-                                    result.startY = height.toString();
-                                }
-                                else if (angle < 180) {
-                                    result.startX = '0';
-                                    result.startY = '0';
-                                }
-                                else if (angle < 270) {
-                                    positionX += width;
-                                    result.startX = width.toString();
-                                    result.startY = '0';
-                                }
-                                else {
-                                    positionX += width;
-                                    positionY += height;
-                                    result.startX = width.toString();
-                                    result.startY = height.toString();
-                                }
-                                break;
+                        let positionX = $math.truncateFraction($math.offsetAngleX(angle, width));
+                        let positionY = $math.truncateFraction($math.offsetAngleY(angle, height));
+                        if (!$math.isEqual(Math.abs(positionX), Math.abs(positionY))) {
+                            let oppositeAngle: number;
+                            if (angle <= 90) {
+                                oppositeAngle = $math.offsetAngle({ x: 0, y: height }, { x: width, y: 0 });
+                            }
+                            else if (angle <= 180) {
+                                oppositeAngle = $math.offsetAngle({ x: 0, y: 0 }, { x: width, y: height });
+                            }
+                            else if (angle <= 270) {
+                                oppositeAngle = $math.offsetAngle({ x: 0, y: 0 }, { x: -width, y: height });
+                            }
+                            else {
+                                oppositeAngle = $math.offsetAngle({ x: 0, y: height }, { x: -width, y: 0 });
+                            }
+                            let a = Math.abs(oppositeAngle - angle);
+                            let b = 90 - a;
+                            const lenX = $math.trianguleASA(a, b, Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2)));
+                            positionX = $math.truncateFraction($math.offsetAngleX(angle, lenX[1]));
+                            a = 90;
+                            b = 90 - angle;
+                            const lenY = $math.trianguleASA(a, b, positionX);
+                            positionY = $math.truncateFraction($math.offsetAngleY(angle, lenY[0]));
+                        }
+                        if (angle <= 90) {
+                            positionY += height;
+                            result.startX = '0';
+                            result.startY = height.toString();
+                        }
+                        else if (angle <= 180) {
+                            result.startX = '0';
+                            result.startY = '0';
+                        }
+                        else if (angle <= 270) {
+                            positionX += width;
+                            result.startX = width.toString();
+                            result.startY = '0';
+                        }
+                        else {
+                            positionX += width;
+                            positionY += height;
+                            result.startX = width.toString();
+                            result.startY = height.toString();
                         }
                         result.endX = $math.truncate(positionX);
                         result.endY = $math.truncate(positionY);
@@ -225,20 +202,20 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                     }
                 }
                 break;
-            case 'conic':
-                if (!node.svgElement) {
-                    result.type = 'sweep';
-                    const position = $dom.getBackgroundPosition((<ConicGradient> gradient).position[0], <DOMRect> { width: node.bounds.width * 2, height: node.bounds.height * 2 }, node.fontSize, true, !hasStop);
-                    if (hasStop) {
-                        result.centerX = position.left.toString();
-                        result.centerY = position.top.toString();
-                    }
-                    else {
-                        result.centerX = convertPercent(position.left);
-                        result.centerY = convertPercent(position.top);
-                    }
-                    break;
+            }
+            case 'conic': {
+                result.type = 'sweep';
+                const position = $dom.getBackgroundPosition((<ConicGradient> gradient).position[0], <DOMRect> { width: node.bounds.width * 2, height: node.bounds.height * 2 }, node.fontSize, true, !hasStop);
+                if (hasStop) {
+                    result.centerX = position.left.toString();
+                    result.centerY = position.top.toString();
                 }
+                else {
+                    result.centerX = convertPercent(position.left);
+                    result.centerY = convertPercent(position.top);
+                }
+                break;
+            }
             default:
                 return undefined;
         }
@@ -339,12 +316,12 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
             const stored = STORED.themes.get(filename) || new Map<string, StyleAttribute>();
             let appTheme = '';
             if (theme.name === '' || theme.name.charAt(0) === '.') {
-                foundTheme: {
+                found: {
                     for (const data of STORED.themes.values()) {
                         for (const style of data.values()) {
                             if (style.name) {
                                 appTheme = style.name;
-                                break foundTheme;
+                                break found;
                             }
                         }
                     }
@@ -383,13 +360,21 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                         return resourceName;
                     }
                 }
-                name = name.toLowerCase()
-                    .replace(/[^a-z\d]/g, '_')
-                    .replace(/_+/g, '_')
-                    .split('_')
-                    .slice(0, 4)
-                    .join('_')
-                    .replace(/_+$/g, '');
+                const partial = name
+                    .replace(/[^\w]/g, '_')
+                    .replace(/^_+/, '')
+                    .replace(/_+$/, '')
+                    .split(/_+/);
+                if (partial.length > 1) {
+                    if (partial.length > 4) {
+                        partial.length = 4;
+                    }
+                    name = partial.join('_');
+                }
+                else {
+                    name = partial[0];
+                }
+                name = name.toLowerCase();
                 if (numeric || /^\d/.test(name) || RESERVED_JAVA.includes(name)) {
                     name = `__${name}`;
                 }
@@ -412,31 +397,30 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
         if (srcset !== '') {
             const filepath = element.src.substring(0, element.src.lastIndexOf('/') + 1);
             for (const value of srcset.split(',')) {
-                const match = /^(.+?)\s*(\d+\.?\d*x)?$/.exec(value.trim());
+                const match = /^(.+?)\s*(?:(\d*\.?\d*)x)?$/.exec(value.trim());
                 if (match) {
                     if (!$util.hasValue(match[2])) {
-                        match[2] = '1x';
+                        match[2] = '1';
                     }
                     const src = filepath + $util.lastIndexOf(match[1]);
-                    switch (match[2]) {
-                        case '0.75x':
-                            images.ldpi = src;
-                            break;
-                        case '1x':
-                            images.mdpi = src;
-                            break;
-                        case '1.5x':
-                            images.hdpi = src;
-                            break;
-                        case '2x':
-                            images.xhdpi = src;
-                            break;
-                        case '3x':
-                            images.xxhdpi = src;
-                            break;
-                        case '4x':
-                            images.xxxhdpi = src;
-                            break;
+                    const size = parseFloat(match[2]);
+                    if (size <= 0.75) {
+                        images.ldpi = src;
+                    }
+                    else if (size <= 1) {
+                        images.mdpi = src;
+                    }
+                    else if (size <= 1.5) {
+                        images.hdpi = src;
+                    }
+                    else if (size <= 2) {
+                        images.xhdpi = src;
+                    }
+                    else if (size <= 3) {
+                        images.xxhdpi = src;
+                    }
+                    else {
+                        images.xxxhdpi = src;
                     }
                 }
             }
@@ -449,10 +433,9 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
 
     public static addImage(images: StringMap, prefix = '') {
         let src = '';
-        if (images && images.mdpi) {
+        if (images.mdpi) {
             src = $util.lastIndexOf(images.mdpi);
             const format = $util.lastIndexOf(src, '.').toLowerCase();
-            src = src.replace(/.\w+$/, '').replace(/-/g, '_');
             switch (format) {
                 case 'bmp':
                 case 'cur':
@@ -460,7 +443,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                 case 'ico':
                 case 'jpg':
                 case 'png':
-                    src = Resource.insertStoredAsset('images', prefix + src, images);
+                    src = Resource.insertStoredAsset('images', prefix + src.substring(0, src.length - format.length - 1).replace(/[^\w+]/g, '_'), images);
                     break;
                 default:
                     src = '';

@@ -818,9 +818,9 @@ export default (Base: Constructor<squared.base.Node>) => {
                 const localizeLeft = this.localizeString('Left');
                 const localizeRight = this.localizeString('Right');
                 const renderParent = this.renderParent;
-                let mergeAll: number | undefined;
-                let mergeHorizontal: number | undefined;
-                let mergeVertical: number | undefined;
+                let mergeAll = 0;
+                let mergeHorizontal = 0;
+                let mergeVertical = 0;
                 if (this.supported('android', 'layout_marginHorizontal') && !(i === 0 && renderParent && renderParent.is(CONTAINER_NODE.GRID))) {
                     if (boxModel[top] === boxModel[right] && boxModel[right] === boxModel[bottom] && boxModel[bottom] === boxModel[left]) {
                         mergeAll = boxModel[top];
@@ -834,35 +834,29 @@ export default (Base: Constructor<squared.base.Node>) => {
                         }
                     }
                 }
-                if (mergeAll !== undefined) {
-                    if (mergeAll !== 0) {
-                        this.android(prefix, $util.formatPX(mergeAll));
-                    }
+                if (mergeAll > 0) {
+                    this.android(prefix, $util.formatPX(mergeAll));
                 }
                 else {
-                    if (mergeHorizontal !== undefined) {
-                        if (mergeHorizontal !== 0) {
-                            this.android(`${prefix}Horizontal`, $util.formatPX(mergeHorizontal));
-                        }
+                    if (mergeHorizontal > 0) {
+                        this.android(`${prefix}Horizontal`, $util.formatPX(mergeHorizontal));
                     }
                     else {
-                        if (boxModel[left] !== 0) {
+                        if (boxModel[left] > 0) {
                             this.android(prefix + localizeLeft, $util.formatPX(boxModel[left]));
                         }
-                        if (boxModel[right] !== 0) {
+                        if (boxModel[right] > 0) {
                             this.android(prefix + localizeRight, $util.formatPX(boxModel[right]));
                         }
                     }
-                    if (mergeVertical !== undefined) {
-                        if (mergeVertical !== 0) {
-                            this.android(`${prefix}Vertical`, $util.formatPX(mergeVertical));
-                        }
+                    if (mergeVertical > 0) {
+                        this.android(`${prefix}Vertical`, $util.formatPX(mergeVertical));
                     }
                     else {
-                        if (boxModel[top] !== 0) {
+                        if (boxModel[top] > 0) {
                             this.android(`${prefix}Top`, $util.formatPX(boxModel[top]));
                         }
-                        if (boxModel[bottom] !== 0) {
+                        if (boxModel[bottom] > 0) {
                             this.android(`${prefix}Bottom`, $util.formatPX(boxModel[bottom]));
                         }
                     }

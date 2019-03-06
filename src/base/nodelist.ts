@@ -129,30 +129,39 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
         }
         const result = new Map<T, string>();
         const floated = new Set<string>();
-        const previous: ObjectMap<Null<T>> = { left: null, right: null };
+        const previous: ObjectMap<Undefined<T>> = {};
         for (const node of list) {
             if (node.pageFlow) {
                 const clear = node.css('clear');
                 if (floated.size) {
-                    const previousFloat = clear === 'both' ? [previous.left, previous.right]
-                                        : clear === 'left' ? [previous.left, null]
-                                        : clear === 'right' ? [null, previous.right] : [];
+                    const previousFloat = [];
+                    switch (clear) {
+                        case 'left':
+                            previousFloat.push(previous.left);
+                            break;
+                        case 'right':
+                            previousFloat.push(previous.right);
+                            break;
+                        case 'both':
+                            previousFloat.push(previous.left, previous.right);
+                            break;
+                    }
                     for (const item of previousFloat) {
                         if (item && !node.floating && node.linear.top > item.linear.bottom && floated.has(item.float)) {
                             floated.delete(item.float);
-                            previous[item.float] = null;
+                            previous[item.float] = undefined;
                         }
                     }
                     if (clear === 'both') {
                         result.set(node, floated.size === 2 ? 'both' : floated.values().next().value);
                         floated.clear();
-                        previous.left = null;
-                        previous.right = null;
+                        previous.left = undefined;
+                        previous.right = undefined;
                     }
                     else if (floated.has(clear)) {
                         result.set(node, clear);
                         floated.delete(clear);
-                        previous[clear] = null;
+                        previous[clear] = undefined;
                     }
                 }
                 if (node.floating) {

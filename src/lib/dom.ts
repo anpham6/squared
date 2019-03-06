@@ -775,7 +775,7 @@ export function getElementCache(element: Element, attr: string) {
 
 export function deleteElementCache(element: Element, ...attrs: string[]) {
     for (const attr of attrs) {
-        delete element[`__${attr}`];
+        element[`__${attr}`] = undefined;
     }
 }
 

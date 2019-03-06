@@ -16,8 +16,23 @@ import STYLE_TMPL from './template/resource/style';
 
 import $NodeList = squared.base.NodeList;
 
+type StyleXML = {
+    filename: string;
+    data: TemplateDataA;
+};
+
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
+
+const TEMPLATES = {
+    color: $xml.parseTemplate(COLOR_TMPL),
+    dimen: $xml.parseTemplate(DIMEN_TMPL),
+    drawable: $xml.parseTemplate(DRAWABLE_TMPL),
+    font: $xml.parseTemplate(FONT_TMPL),
+    string: $xml.parseTemplate(STRING_TMPL),
+    string_array: $xml.parseTemplate(STRINGARRAY_TMPL),
+    style: $xml.parseTemplate(STYLE_TMPL)
+};
 
 function parseImageDetails(files: string[]) {
     const result: FileAsset[] = [];
@@ -66,8 +81,8 @@ function caseInsensitive(a: string | string[], b: string | string[]) {
 
 export default class File<T extends View> extends squared.base.File<T> implements android.base.File<T> {
     public saveAllToDisk(data: SessionData<$NodeList<T>>) {
-        const files: FileAsset[] = [];
         const views = [...data.views, ...data.includes];
+        const files: FileAsset[] = [];
         for (let i = 0; i < views.length; i++) {
             const view = views[i];
             files.push(createFileAsset(view.pathname, i === 0 ? this.userSettings.outputMainFileName : `${view.filename}.xml`, view.content));
@@ -85,9 +100,9 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     public layoutAllToXml(data: SessionData<$NodeList<T>>, saveToDisk = false) {
+        const views = [...data.views, ...data.includes];
         const result = {};
         const files: FileAsset[] = [];
-        const views = [...data.views, ...data.includes];
         for (let i = 0; i < views.length; i++) {
             const view = views[i];
             result[view.filename] = [view.content];
@@ -113,19 +128,19 @@ export default class File<T extends View> extends squared.base.File<T> implement
             drawableImage: this.resourceDrawableImageToXml(),
             anim: this.resourceAnimToXml()
         };
-        for (const resource in result) {
-            if (result[resource].length === 0) {
-                delete result[resource];
+        for (const name in result) {
+            if (result[name].length === 0) {
+                delete result[name];
             }
         }
         if (saveToDisk) {
             const files: FileAsset[] = [];
-            for (const resource in result) {
-                if (resource === 'image') {
-                    files.push(...parseImageDetails(result[resource]));
+            for (const name in result) {
+                if (name === 'image') {
+                    files.push(...parseImageDetails(result[name]));
                 }
                 else {
-                    files.push(...parseFileDetails(result[resource]));
+                    files.push(...parseFileDetails(result[name]));
                 }
             }
             this.saveToDisk(files);
@@ -145,7 +160,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         }
         result.push(
             replaceTab(
-                $xml.createTemplate($xml.parseTemplate(STRING_TMPL), data),
+                $xml.createTemplate(TEMPLATES.string, data),
                 this.userSettings.insertSpaces,
                 true
             )
@@ -162,11 +177,14 @@ export default class File<T extends View> extends squared.base.File<T> implement
             const data: TemplateDataA = { A: [] };
             this.stored.arrays = new Map([...this.stored.arrays.entries()].sort());
             for (const [name, values] of this.stored.arrays.entries()) {
-                data.A.push({ name, AA: $util.objectMap<string, {}>(values, value => ({ value })) });
+                data.A.push({
+                    name,
+                    AA: $util.objectMap<string, {}>(values, value => ({ value }))
+                });
             }
             result.push(
                 replaceTab(
-                    $xml.createTemplate($xml.parseTemplate(STRINGARRAY_TMPL), data),
+                    $xml.createTemplate(TEMPLATES.string_array, data),
                     this.userSettings.insertSpaces,
                     true
                 )
@@ -199,9 +217,9 @@ export default class File<T extends View> extends squared.base.File<T> implement
                         font: `@font/${name + (style === 'normal' && weight === 'normal' ? `_${style}` : (style !== 'normal' ? `_${style}` : '') + (weight !== 'normal' ? `_${weight}` : ''))}`
                     });
                 }
-                xml += $xml.createTemplate($xml.parseTemplate(FONT_TMPL), data);
+                xml += $xml.createTemplate(TEMPLATES.font, data);
                 if (settings.targetAPI < BUILD_ANDROID.OREO) {
-                    xml = xml.replace(/android/g, 'app');
+                    xml = xml.replace(/\s+android:/g, ' app:');
                 }
                 result.push(
                     replaceTab(
@@ -227,7 +245,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             }
             result.push(
                 replaceTab(
-                    $xml.createTemplate($xml.parseTemplate(COLOR_TMPL), data),
+                    $xml.createTemplate(TEMPLATES.color, data),
                     this.userSettings.insertSpaces
                 )
             );
@@ -239,22 +257,20 @@ export default class File<T extends View> extends squared.base.File<T> implement
     }
 
     public resourceStyleToXml(saveToDisk = false) {
+        const settings = this.userSettings;
         const result: string[] = [];
+        const files: StyleXML[] = [];
         if (this.stored.styles.size) {
-            const settings = this.userSettings;
-            const template = $xml.parseTemplate(STYLE_TMPL);
-            const files: { filename: string, data: TemplateDataA}[] = [];
-            {
-                const styles = Array.from(this.stored.styles.values()).sort((a, b) => a.name.toString().toLowerCase() >= b.name.toString().toLowerCase() ? 1 : -1);
-                const data: TemplateDataA = { A: [] };
-                for (const style of styles) {
-                    if (Array.isArray(style.items)) {
-                        style.items.sort((a, b) => a.name >= b.name ? 1 : -1);
-                        data.A.push(<ExternalData> style);
-                    }
+            const data: TemplateDataA = { A: [] };
+            for (const style of Array.from(this.stored.styles.values()).sort((a, b) => a.name.toString().toLowerCase() >= b.name.toString().toLowerCase() ? 1 : -1)) {
+                if (Array.isArray(style.items)) {
+                    style.items.sort((a, b) => a.name >= b.name ? 1 : -1);
+                    data.A.push(<ExternalData> style);
                 }
-                files.push({ filename: 'res/values/styles.xml', data });
             }
+            files.push({ filename: 'res/values/styles.xml', data });
+        }
+        if (this.stored.themes.size) {
             const appTheme: ObjectMap<boolean> = {};
             for (const [filename, theme] of this.stored.themes.entries()) {
                 const data: TemplateDataA = { A: [] };
@@ -276,22 +292,22 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 }
                 files.push({ filename, data });
             }
-            for (const style of files) {
-                result.push(
-                    replaceTab(
-                        replaceUnit(
-                            $xml.createTemplate(template, style.data).replace('filename: {0}', `filename: ${style.filename}`),
-                            settings.resolutionDPI,
-                            settings.convertPixels,
-                            true
-                        ),
-                        settings.insertSpaces
-                    )
-                );
-            }
-            if (saveToDisk) {
-                this.saveToDisk(parseFileDetails(result));
-            }
+        }
+        for (const style of files) {
+            result.push(
+                replaceTab(
+                    replaceUnit(
+                        $xml.createTemplate(TEMPLATES.style, style.data).replace('filename: {0}', `filename: ${style.filename}`),
+                        settings.resolutionDPI,
+                        settings.convertPixels,
+                        true
+                    ),
+                    settings.insertSpaces
+                )
+            );
+        }
+        if (saveToDisk) {
+            this.saveToDisk(parseFileDetails(result));
         }
         return result;
     }
@@ -308,7 +324,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             result.push(
                 replaceTab(
                     replaceUnit(
-                        $xml.createTemplate($xml.parseTemplate(DIMEN_TMPL), data),
+                        $xml.createTemplate(TEMPLATES.dimen, data),
                         settings.resolutionDPI,
                         settings.convertPixels
                     ),
@@ -326,12 +342,11 @@ export default class File<T extends View> extends squared.base.File<T> implement
         const result: string[] = [];
         if (this.stored.drawables.size) {
             const settings = this.userSettings;
-            const template = $xml.parseTemplate(DRAWABLE_TMPL);
             for (const [name, value] of this.stored.drawables.entries()) {
                 result.push(
                     replaceTab(
                         replaceUnit(
-                            $xml.createTemplate(template, { name: `res/drawable/${name}.xml`, value }),
+                            $xml.createTemplate(TEMPLATES.drawable, { name: `res/drawable/${name}.xml`, value }),
                             settings.resolutionDPI,
                             settings.convertPixels
                         ),
@@ -350,13 +365,12 @@ export default class File<T extends View> extends squared.base.File<T> implement
         const result: string[] = [];
         if (this.stored.images.size) {
             const settings = this.userSettings;
-            const template = $xml.parseTemplate(DRAWABLE_TMPL);
             for (const [name, images] of this.stored.images.entries()) {
                 if (Object.keys(images).length > 1) {
                     for (const dpi in images) {
                         result.push(
                             replaceTab(
-                                $xml.createTemplate(template, { name: `res/drawable-${dpi}/${name}.${$util.lastIndexOf(images[dpi], '.')}`, value: `<!-- image: ${images[dpi]} -->` }),
+                                $xml.createTemplate(TEMPLATES.drawable, { name: `res/drawable-${dpi}/${name}.${$util.lastIndexOf(images[dpi], '.')}`, value: `<!-- image: ${images[dpi]} -->` }),
                                 settings.insertSpaces
                             )
                         );
@@ -365,7 +379,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 else if (images.mdpi) {
                     result.push(
                         replaceTab(
-                            $xml.createTemplate(template, { name: `res/drawable/${name}.${$util.lastIndexOf(images.mdpi, '.')}`, value: `<!-- image: ${images.mdpi} -->` }),
+                            $xml.createTemplate(TEMPLATES.drawable, { name: `res/drawable/${name}.${$util.lastIndexOf(images.mdpi, '.')}`, value: `<!-- image: ${images.mdpi} -->` }),
                             settings.insertSpaces
                         )
                     );
@@ -381,11 +395,10 @@ export default class File<T extends View> extends squared.base.File<T> implement
     public resourceAnimToXml(saveToDisk = false) {
         const result: string[] = [];
         if (this.stored.animators.size) {
-            const template = $xml.parseTemplate(DRAWABLE_TMPL);
             for (const [name, value] of this.stored.animators.entries()) {
                 result.push(
                     replaceTab(
-                        $xml.createTemplate(template, { name: `res/anim/${name}.xml`, value }),
+                        $xml.createTemplate(TEMPLATES.drawable, { name: `res/anim/${name}.xml`, value }),
                         this.userSettings.insertSpaces
                     )
                 );

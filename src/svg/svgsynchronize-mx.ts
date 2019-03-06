@@ -267,7 +267,7 @@ function createKeyTimeMap(map: TimelineMap, keyTimes: number[], forwardMap: Forw
     return result;
 }
 
-function setTimeRange(map: TimeRangeMap, type: number | undefined, startTime: number, endTime?: number) {
+function setTimeRange(map: TimeRangeMap, type: number, startTime: number, endTime?: number) {
     if (type) {
         map.set(startTime, type);
         if (endTime !== undefined) {
@@ -1283,7 +1283,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                 }
                                                 for (let l = 0; l < keyTimes.length; l++) {
                                                     const keyTime = keyTimes[l];
-                                                    let time: number | undefined;
+                                                    let time = -1;
                                                     let value = getItemValue(item, values, k, l, baseValue);
                                                     if (k === iterationTotal - 1 && iterationFraction > 0) {
                                                         if (iterationFraction === keyTime) {
@@ -1307,7 +1307,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                             }
                                                         }
                                                     }
-                                                    if (time === undefined) {
+                                                    if (time === -1) {
                                                         time = getItemTime(delay, duration, keyTimes, k, l);
                                                         if (time < 0 || time < maxTime) {
                                                             continue;
@@ -1579,7 +1579,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                         const keyTimesRepeating = new Set<number>();
                         let repeatingEndTime = 0;
                         for (const attr in repeatingMap) {
-                            let maxTime!: number;
+                            let maxTime = 0;
                             for (const time of repeatingMap[attr].keys()) {
                                 keyTimesRepeating.add(time);
                                 maxTime = time;

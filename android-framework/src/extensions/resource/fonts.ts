@@ -88,24 +88,22 @@ const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 function deleteStyleAttribute(sorted: AttributeMap[], attrs: string, ids: number[]) {
     for (const value of attrs.split(';')) {
         for (let i = 0; i < sorted.length; i++) {
-            if (sorted[i]) {
-                let index = -1;
-                let key = '';
-                for (const j in sorted[i]) {
-                    if (j === value) {
-                        index = i;
-                        key = j;
-                        i = sorted.length;
-                        break;
-                    }
-                }
-                if (index !== -1) {
-                    sorted[index][key] = $util.filterArray(sorted[index][key], id => !ids.includes(id));
-                    if (sorted[index][key].length === 0) {
-                        delete sorted[index][key];
-                    }
+            let index = -1;
+            let key = '';
+            for (const j in sorted[i]) {
+                if (j === value) {
+                    index = i;
+                    key = j;
+                    i = sorted.length;
                     break;
                 }
+            }
+            if (index !== -1) {
+                sorted[index][key] = $util.filterArray(sorted[index][key], id => !ids.includes(id));
+                if (sorted[index][key].length === 0) {
+                    delete sorted[index][key];
+                }
+                break;
             }
         }
     }
@@ -130,6 +128,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 nameMap[node.tagName].push(node);
             }
         }
+        const styleKeys = Object.keys(FONT_STYLE);
         for (const tag in nameMap) {
             const sorted: StyleList[] = [];
             for (let node of nameMap[tag]) {
@@ -152,10 +151,10 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         system = true;
                         stored.fontFamily = fontFamily;
                         if (stored.fontStyle === 'normal') {
-                            delete stored.fontStyle;
+                            stored.fontStyle = '';
                         }
                         if (stored.fontWeight === '400') {
-                            delete stored.fontWeight;
+                            stored.fontWeight = '';
                         }
                     }
                     else {
@@ -163,8 +162,8 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         stored.fontFamily = `@font/${fontFamily + (stored.fontStyle !== 'normal' ? `_${stored.fontStyle}` : '') + (stored.fontWeight !== '400' ? `_${FONTWEIGHT_ANDROID[stored.fontWeight] || stored.fontWeight}` : '')}`;
                         fontStyle = stored.fontStyle;
                         fontWeight = stored.fontWeight;
-                        delete stored.fontStyle;
-                        delete stored.fontWeight;
+                        stored.fontStyle = '';
+                        stored.fontWeight = '';
                     }
                     if (!system) {
                         const fonts = Resource.STORED.fonts.get(fontFamily) || {};
@@ -172,14 +171,14 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         Resource.STORED.fonts.set(fontFamily, fonts);
                     }
                 }
-                const keys = Object.keys(FONT_STYLE);
-                for (let i = 0; i < keys.length; i++) {
-                    if (sorted[i] === undefined) {
-                        sorted[i] = {};
-                    }
-                    const value: string = stored[keys[i]];
-                    if ($util.hasValue(value) && node.supported('android', keys[i])) {
-                        const attr = $util.formatString(FONT_STYLE[keys[i]], value);
+
+                for (let i = 0; i < styleKeys.length; i++) {
+                    const value: string = stored[styleKeys[i]];
+                    if (value !== '' && node.supported('android', styleKeys[i])) {
+                        if (sorted[i] === undefined) {
+                            sorted[i] = {};
+                        }
+                        const attr = $util.formatString(FONT_STYLE[styleKeys[i]], value);
                         if (sorted[i][attr] === undefined) {
                             sorted[i][attr] = [];
                         }
@@ -194,8 +193,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         for (const tag in groupMap) {
             style[tag] = {};
             layout[tag] = {};
-            const count = nameMap[tag].length;
-            const sorted = $util.filterArray(groupMap[tag], item => Object.keys(item).length > 0).sort((a, b) => {
+            const sorted = $util.filterArray(groupMap[tag], item => item !== undefined).sort((a, b) => {
                 let maxA = 0;
                 let maxB = 0;
                 let countA = 0;
@@ -235,85 +233,85 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     const styleKey: AttributeMap = {};
                     const layoutKey: AttributeMap = {};
                     for (let i = 0; i < sorted.length; i++) {
-                        if (!sorted[i]) {
-                            continue;
-                        }
                         const filtered: AttributeMap = {};
-                        const combined: ObjectMap<Set<string>> = {};
-                        const deleteKeys = new Set<string>();
                         for (const attr1 in sorted[i]) {
-                            const ids: number[] = sorted[i][attr1];
-                            let revalidate = false;
-                            if (!ids || ids.length === 0) {
+                            const ids = sorted[i][attr1];
+                            if (ids.length === 0) {
                                 continue;
                             }
-                            else if (ids.length === count) {
-                                styleKey[attr1] = ids.slice(0);
-                                sorted[i] = {};
-                                revalidate = true;
-                            }
                             else if (ids.length === 1) {
-                                layoutKey[attr1] = ids.slice(0);
-                                sorted[i][attr1] = [];
-                                revalidate = true;
+                                layoutKey[attr1] = [ids[0]];
+                                sorted[i][attr1].length = 0;
+                                continue;
                             }
-                            if (!revalidate) {
-                                const found: AttributeMap = {};
-                                let merged = false;
-                                for (let j = 0; j < sorted.length; j++) {
-                                    if (i !== j && sorted[j]) {
-                                        for (const attr in sorted[j]) {
-                                            const compare = sorted[j][attr];
-                                            if (compare.length) {
-                                                for (const controlId of ids) {
-                                                    if (compare.includes(controlId)) {
-                                                        if (found[attr] === undefined) {
-                                                            found[attr] = [];
-                                                        }
-                                                        found[attr].push(controlId);
+                            else if (ids.length === nameMap[tag].length) {
+                                styleKey[attr1] = ids;
+                                sorted[i] = {};
+                                break;
+                            }
+                            const found: AttributeMap = {};
+                            let merged = false;
+                            for (let j = 0; j < sorted.length; j++) {
+                                if (i !== j) {
+                                    for (const attr in sorted[j]) {
+                                        const compare = sorted[j][attr];
+                                        if (compare.length) {
+                                            for (const id of ids) {
+                                                if (compare.includes(id)) {
+                                                    if (found[attr] === undefined) {
+                                                        found[attr] = [];
                                                     }
+                                                    found[attr].push(id);
                                                 }
                                             }
                                         }
                                     }
                                 }
-                                for (const attr2 in found) {
-                                    if (found[attr2].length > 1) {
-                                        filtered[[attr1, attr2].sort().join(';')] = found[attr2];
-                                        merged = true;
-                                    }
-                                }
-                                if (!merged) {
-                                    filtered[attr1] = ids;
+                            }
+                            for (const attr2 in found) {
+                                if (found[attr2].length > 1) {
+                                    filtered[[attr1, attr2].sort().join(';')] = found[attr2];
+                                    merged = true;
                                 }
                             }
-                        }
-                        for (const attr1 in filtered) {
-                            for (const attr2 in filtered) {
-                                if (attr1 !== attr2 && filtered[attr1].join('') === filtered[attr2].join('')) {
-                                    const index = filtered[attr1].join(',');
-                                    if (combined[index]) {
-                                        combined[index] = new Set([...combined[index], ...attr2.split(';')]);
-                                    }
-                                    else {
-                                        combined[index] = new Set([...attr1.split(';'), ...attr2.split(';')]);
-                                    }
-                                    deleteKeys.add(attr1).add(attr2);
-                                }
+                            if (!merged) {
+                                filtered[attr1] = ids;
                             }
                         }
-                        for (const value of deleteKeys) {
-                            delete filtered[value];
-                        }
-                        for (const attrs in filtered) {
-                            deleteStyleAttribute(sorted, attrs, filtered[attrs]);
-                            style[tag][attrs] = filtered[attrs];
-                        }
-                        for (const index in combined) {
-                            const attrs = Array.from(combined[index]).sort().join(';');
-                            const ids = $util.replaceMap<string, number>(index.split(','), value => parseInt(value));
-                            deleteStyleAttribute(sorted, attrs, ids);
-                            style[tag][attrs] = ids;
+                        if (Object.keys(filtered).length) {
+                            const combined: ObjectMap<Set<string>> = {};
+                            const deleteKeys = new Set<string>();
+                            const joinMap: StringMap = {};
+                            for (const attr in filtered) {
+                                joinMap[attr] = filtered[attr].join(',');
+                            }
+                            for (const attr1 in filtered) {
+                                for (const attr2 in filtered) {
+                                    const index = joinMap[attr1];
+                                    if (attr1 !== attr2 && index === joinMap[attr2]) {
+                                        if (combined[index] === undefined) {
+                                            combined[index] = new Set(attr1.split(';'));
+                                        }
+                                        for (const value of attr2.split(';')) {
+                                            combined[index].add(value);
+                                        }
+                                        deleteKeys.add(attr1).add(attr2);
+                                    }
+                                }
+                            }
+                            for (const attr of deleteKeys) {
+                                delete filtered[attr];
+                            }
+                            for (const attr in filtered) {
+                                deleteStyleAttribute(sorted, attr, filtered[attr]);
+                                style[tag][attr] = filtered[attr];
+                            }
+                            for (const attr in combined) {
+                                const attrs = Array.from(combined[attr]).sort().join(';');
+                                const ids = $util.replaceMap<string, number>(attr.split(','), value => parseInt(value));
+                                deleteStyleAttribute(sorted, attrs, ids);
+                                style[tag][attrs] = ids;
+                            }
                         }
                     }
                     const shared = Object.keys(styleKey);
@@ -328,17 +326,10 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     for (const attr in layoutKey) {
                         layout[tag][attr] = layoutKey[attr];
                     }
-                    for (let i = 0; i < sorted.length; i++) {
-                        if (sorted[i] && Object.keys(sorted[i]).length === 0) {
-                            delete sorted[i];
-                        }
-                    }
                     $util.spliceArray(sorted, item => {
-                        if (item) {
-                            for (const attr in item) {
-                                if (item[attr] && item[attr].length) {
-                                    return false;
-                                }
+                        for (const attr in item) {
+                            if (item[attr].length) {
+                                return false;
                             }
                         }
                         return true;
