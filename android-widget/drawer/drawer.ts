@@ -31,7 +31,7 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
             for (let i = 0; i < element.children.length; i++) {
                 const item = <HTMLElement> element.children[i];
                 if (item.tagName === 'NAV' && !$util.includes(item.dataset.use, $const.EXT_NAME.EXTERNAL)) {
-                    item.dataset.use = ($util.hasValue(item.dataset.use) ? `${item.dataset.use}, ` : '') + $const.EXT_NAME.EXTERNAL;
+                    item.dataset.use = (item.dataset.use ? `${item.dataset.use}, ` : '') + $const.EXT_NAME.EXTERNAL;
                 }
             }
             this.application.parseElements.add(element);

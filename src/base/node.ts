@@ -187,9 +187,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
     }
 
-    public render(parent: T) {
+    public render(parent?: T) {
         this.renderParent = parent;
-        this.renderDepth = this.documentRoot || this === parent || $util.hasValue(parent.dataset.target) ? 0 : parent.renderDepth + 1;
+        this.renderDepth = this.documentRoot || parent === undefined || parent.dataset.target ? 0 : parent.renderDepth + 1;
         this.rendered = true;
     }
 
@@ -958,6 +958,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this._element;
     }
 
+    get elementId() {
+        return this._element && this._element.id || '';
+    }
+
     get htmlElement() {
         if (this._cached.htmlElement === undefined) {
             this._cached.htmlElement = this._element instanceof HTMLElement;
@@ -1393,7 +1397,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                             value = true;
                             for (let i = 0; i < element.children.length; i++) {
                                 const node = $dom.getElementAsNode<T>(element.children[i]);
-                                if (!(node === undefined || node.excluded || $util.hasValue(node.dataset.target))) {
+                                if (!(node === undefined || node.excluded || node.dataset.target)) {
                                     value = false;
                                     break;
                                 }

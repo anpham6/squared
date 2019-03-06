@@ -21,7 +21,7 @@ function replaceExcluded<T extends Node>(element: HTMLElement, attr: string) {
     let value: string = element[attr];
     for (let i = 0; i < element.children.length; i++) {
         const item = $dom.getElementAsNode<T>(<HTMLElement> element.children[i]);
-        if (item && (item.excluded || $util.hasValue(item.dataset.target) && $util.isString(item[attr]))) {
+        if (item && (item.excluded || item.dataset.target && $util.isString(item[attr]))) {
             value = value.replace(item[attr], '');
         }
     }

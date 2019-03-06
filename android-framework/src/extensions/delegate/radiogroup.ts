@@ -18,8 +18,8 @@ export default class ScrollView<T extends android.base.View> extends squared.bas
     }
 
     public processNode(node: T, parent: T): ExtensionResult<T> {
-        const target = $util.hasValue(node.dataset.target) && !$util.hasValue(node.dataset.use);
         const element = <HTMLInputElement> node.element;
+        const target = !node.dataset.use ? node.dataset.target : undefined;
         const pending: T[] = [];
         let replaceWith: T | undefined;
         const children = parent.flatMap((item: T) => {
@@ -60,7 +60,7 @@ export default class ScrollView<T extends android.base.View> extends squared.bas
                 item.hide();
             }
             container.android('orientation', $NodeList.linearX(children) ? AXIS_ANDROID.HORIZONTAL : AXIS_ANDROID.VERTICAL);
-            container.render(target ? container : parent);
+            container.render(target ? this.application.resolveTarget(target, container) : parent);
             this.subscribers.add(container);
             const outputAs = controller.getEnclosingTag(
                 RADIO_GROUP,

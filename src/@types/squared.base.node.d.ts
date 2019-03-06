@@ -42,6 +42,7 @@ declare global {
             readonly bounds: RectDimension;
             readonly linear: RectDimension;
             readonly element: Element | null;
+            readonly elementId: string;
             readonly htmlElement: boolean;
             readonly styleElement: boolean;
             readonly naturalElement: boolean;
@@ -140,7 +141,7 @@ declare global {
             namespace(obj: string): StringMap;
             delete(obj: string, ...attrs: string[]): void;
             apply(options: {}): void;
-            render(parent: Node): void;
+            render(parent?: Node): void;
             renderEach(predicate: IteratorPredicate<Node, void>): this;
             renderFilter(predicate: IteratorPredicate<Node, boolean>): Node[];
             hide(invisible?: boolean): void;

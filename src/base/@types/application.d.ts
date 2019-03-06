@@ -59,6 +59,7 @@ export interface AppSession<T extends squared.base.Node, U> {
     image: Map<string, ImageAsset>;
     renderQueue: Map<string, string[]>;
     excluded: squared.base.NodeList<T>;
+    targeted: Map<string, T[]>;
 }
 
 export interface AppProcessing<T extends squared.base.Node, U> {

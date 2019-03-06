@@ -403,92 +403,92 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         }
                                     }
                                 }
-                                if (backgroundImage.length === 1 && node.of(CONTAINER_NODE.IMAGE, $enum.NODE_ALIGNMENT.SINGLE)) {
-                                    if (position.left > 0) {
-                                        node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, position.left);
-                                    }
-                                    if (position.top > 0) {
-                                        node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, position.top);
-                                    }
-                                    let scaleType = '';
-                                    switch (gravity) {
-                                        case 'left|top':
-                                        case 'left|center_vertical':
-                                        case 'left|bottom':
-                                            scaleType = 'fitStart';
+                            }
+                            if (backgroundImage.length === 1 && node.of(CONTAINER_NODE.IMAGE, $enum.NODE_ALIGNMENT.SINGLE)) {
+                                if (position.left > 0) {
+                                    node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, position.left);
+                                }
+                                if (position.top > 0) {
+                                    node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, position.top);
+                                }
+                                let scaleType = '';
+                                switch (gravity) {
+                                    case 'left|top':
+                                    case 'left|center_vertical':
+                                    case 'left|bottom':
+                                        scaleType = 'fitStart';
+                                        break;
+                                    case 'right|top':
+                                    case 'right|center_vertical':
+                                    case 'right|bottom':
+                                        scaleType = 'fitEnd';
+                                        break;
+                                    case 'center':
+                                    case 'center_horizontal|top':
+                                    case 'center_horizontal|bottom':
+                                        scaleType = 'center';
+                                        break;
+                                }
+                                node.android('scaleType', scaleType);
+                                node.android('src', `@drawable/${value}`);
+                                if (borderData === undefined) {
+                                    return;
+                                }
+                            }
+                            else {
+                                if (position.top !== 0) {
+                                    imageData.top = $util.formatPX(position.top);
+                                }
+                                if (position.right !== 0) {
+                                    imageData.right = $util.formatPX(position.right);
+                                }
+                                if (position.bottom !== 0) {
+                                    imageData.bottom = $util.formatPX(position.bottom);
+                                }
+                                if (position.left !== 0) {
+                                    imageData.left = $util.formatPX(position.left);
+                                }
+                                imageData.width = width;
+                                imageData.height = height;
+                                if (!(backgroundSize[i] === 'auto' || backgroundSize[i] === 'auto auto' || backgroundSize[i] === 'initial')) {
+                                    switch (backgroundSize[i]) {
+                                        case 'cover':
+                                        case 'contain':
+                                        case '100% 100%':
+                                            width = '';
+                                            height = '';
+                                            tileMode = '';
+                                            tileModeX = '';
+                                            tileModeY = '';
+                                            gravity = '';
                                             break;
-                                        case 'right|top':
-                                        case 'right|center_vertical':
-                                        case 'right|bottom':
-                                            scaleType = 'fitEnd';
+                                        default:
+                                            const dimensions = backgroundSize[i].split(' ');
+                                            if (dimensions[0] === '100%') {
+                                                tileModeX = '';
+                                            }
+                                            else if (dimensions[1] === '100%') {
+                                                tileModeY = '';
+                                            }
+                                            for (let j = 0; j < dimensions.length; j++) {
+                                                if (dimensions[j] !== 'auto' && dimensions[j] !== '100%') {
+                                                    imageData[j === 0 ? 'width' : 'height'] = node.convertPX(backgroundSize[i], j === 0, false);
+                                                }
+                                            }
                                             break;
-                                        case 'center':
-                                        case 'center_horizontal|top':
-                                        case 'center_horizontal|bottom':
-                                            scaleType = 'center';
-                                            break;
-                                    }
-                                    node.android('scaleType', scaleType);
-                                    node.android('src', `@drawable/${value}`);
-                                    if (borderData === undefined) {
-                                        return;
                                     }
                                 }
+                                if (gravity !== '' || tileMode !== '' || tileModeX !== '' || tileModeY !== '') {
+                                    imageData.bitmap = [{
+                                        src: value,
+                                        gravity,
+                                        tileMode,
+                                        tileModeX,
+                                        tileModeY,
+                                    }];
+                                }
                                 else {
-                                    if (position.top !== 0) {
-                                        imageData.top = $util.formatPX(position.top);
-                                    }
-                                    if (position.right !== 0) {
-                                        imageData.right = $util.formatPX(position.right);
-                                    }
-                                    if (position.bottom !== 0) {
-                                        imageData.bottom = $util.formatPX(position.bottom);
-                                    }
-                                    if (position.left !== 0) {
-                                        imageData.left = $util.formatPX(position.left);
-                                    }
-                                    imageData.width = width;
-                                    imageData.height = height;
-                                    if (!(backgroundSize[i] === 'auto' || backgroundSize[i] === 'auto auto' || backgroundSize[i] === 'initial')) {
-                                        switch (backgroundSize[i]) {
-                                            case 'cover':
-                                            case 'contain':
-                                            case '100% 100%':
-                                                width = '';
-                                                height = '';
-                                                tileMode = '';
-                                                tileModeX = '';
-                                                tileModeY = '';
-                                                gravity = '';
-                                                break;
-                                            default:
-                                                const dimensions = backgroundSize[i].split(' ');
-                                                if (dimensions[0] === '100%') {
-                                                    tileModeX = '';
-                                                }
-                                                else if (dimensions[1] === '100%') {
-                                                    tileModeY = '';
-                                                }
-                                                for (let j = 0; j < dimensions.length; j++) {
-                                                    if (dimensions[j] !== 'auto' && dimensions[j] !== '100%') {
-                                                        imageData[j === 0 ? 'width' : 'height'] = node.convertPX(backgroundSize[i], j === 0, false);
-                                                    }
-                                                }
-                                                break;
-                                        }
-                                    }
-                                    if (gravity !== '' || tileMode !== '' || tileModeX !== '' || tileModeY !== '') {
-                                        imageData.bitmap = [{
-                                            src: value,
-                                            gravity,
-                                            tileMode,
-                                            tileModeX,
-                                            tileModeY,
-                                        }];
-                                    }
-                                    else {
-                                        imageData.src = value;
-                                    }
+                                    imageData.src = value;
                                 }
                             }
                         }

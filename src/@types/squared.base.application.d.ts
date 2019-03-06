@@ -36,6 +36,7 @@ declare global {
             addImagePreload(element: HTMLImageElement): void;
             saveRenderPosition(parent: T, required: boolean): void;
             createNode(element: Element): T;
+            resolveTarget(target: string, node: T): T | undefined;
             toString(): string;
         }
 

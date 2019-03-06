@@ -5,7 +5,6 @@ import { WIDGET_NAME } from '../lib/constant';
 import $Resource = android.base.Resource;
 
 type ToolbarThemeData = {
-    target: boolean;
     appBarOverlay: string;
     popupOverlay: string;
 };
@@ -35,7 +34,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             for (let i = 0; i < element.children.length; i++) {
                 const item = <HTMLElement> element.children[i];
                 if (item.tagName === 'NAV' && !$util.includes(item.dataset.use, $const.EXT_NAME.EXTERNAL)) {
-                    item.dataset.use = ($util.hasValue(item.dataset.use) ? `${item.dataset.use}, ` : '') + $const.EXT_NAME.EXTERNAL;
+                    item.dataset.use = (item.dataset.use ? `${item.dataset.use}, ` : '') + $const.EXT_NAME.EXTERNAL;
                     break;
                 }
             }
@@ -53,7 +52,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         const application = this.application;
         const controller = application.controllerHandler;
         const element = <HTMLElement> node.element;
-        const target = $util.hasValue(node.dataset.target);
+        const target = node.dataset.target;
         const options: ExternalData = Object.assign({}, this.options[element.id]);
         const toolbarOptions = $utilA.createViewAttribute(options.self);
         const appBarOptions = $utilA.createViewAttribute(options.appBar);
@@ -86,7 +85,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                     }
                 }
             }
-            if ($util.hasValue(item.dataset.target)) {
+            if (item.dataset.target) {
                 children--;
             }
             else {
@@ -132,13 +131,11 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             $util.defaultWhenNull(toolbarOptions, 'android', 'layout_height', '?android:attr/actionBarSize');
             node.exclude({ procedure: $enum.NODE_PROCEDURE.LAYOUT });
         }
-        if (hasMenu) {
-            if (hasAppBar) {
-                if (toolbarOptions.app.popupTheme) {
-                    popupOverlay = toolbarOptions.app.popupTheme.replace('@style/', '');
-                }
-                toolbarOptions.app.popupTheme = '@style/AppTheme.PopupOverlay';
+        if (hasMenu && hasAppBar) {
+            if (toolbarOptions.app.popupTheme) {
+                popupOverlay = toolbarOptions.app.popupTheme.replace('@style/', '');
             }
+            toolbarOptions.app.popupTheme = '@style/AppTheme.PopupOverlay';
         }
         const innerDepth = depth + (hasAppBar ? 1 : 0) + (hasCollapsingToolbar ? 1 : 0);
         const numberResourceValue = application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue');
@@ -197,11 +194,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                     appBarOverlay = appBarOptions.android.theme;
                 }
                 appBarOptions.android.theme = '@style/AppTheme.AppBarOverlay';
-                node.data(WIDGET_NAME.TOOLBAR, 'themeData', <ToolbarThemeData> {
-                    target,
-                    appBarOverlay,
-                    popupOverlay
-                });
+                node.data(WIDGET_NAME.TOOLBAR, 'themeData', <ToolbarThemeData> { appBarOverlay, popupOverlay });
             }
             else {
                 $util.defaultWhenNull(appBarOptions, 'android', 'theme', '@style/ThemeOverlay.AppCompat.Dark.ActionBar');
@@ -250,7 +243,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         }
         if (appBarNode) {
             output = $xml.replacePlaceholder(outer, collapsingToolbarNode ? collapsingToolbarNode.id : appBarNode.id, output);
-            appBarNode.render(target ? appBarNode : parent);
+            appBarNode.render(target ? this.application.resolveTarget(target, appBarNode) : parent);
             if (!collapsingToolbarNode) {
                 node.parent = appBarNode;
             }
@@ -263,12 +256,12 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             node.render(node.parent);
         }
         else if (collapsingToolbarNode) {
-            collapsingToolbarNode.render(target ? collapsingToolbarNode : parent);
+            collapsingToolbarNode.render(target ? this.application.resolveTarget(target, collapsingToolbarNode) : parent);
             node.parent = collapsingToolbarNode;
             node.render(collapsingToolbarNode);
         }
         else {
-            node.render(target ? node : parent);
+            node.render(target ? this.application.resolveTarget(target, node) : parent);
         }
         node.containerType = $enumA.CONTAINER_NODE.BLOCK;
         node.exclude({ resource: $enum.NODE_RESOURCE.FONT_STYLE });
@@ -287,7 +280,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
     public postProcedure(node: T) {
         const menu = $util.optionalAsString(Toolbar.findNestedByName(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
         if (menu !== '') {
-            const options: ExternalData = node.element && this.options[node.element.id] || {};
+            const options: ExternalData = this.options[node.elementId] || {};
             const toolbarOptions = $utilA.createViewAttribute(options.self);
             $util.defaultWhenNull(toolbarOptions, 'app', 'menu', `@menu/${menu}`);
             node.app('menu', toolbarOptions.app.menu);

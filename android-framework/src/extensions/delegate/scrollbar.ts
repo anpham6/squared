@@ -6,7 +6,6 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 
 const $enum = squared.base.lib.enumeration;
 const $dom = squared.lib.dom;
-const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
 const SCROLL_HORIZONTAL = 'HorizontalScrollView';
@@ -22,7 +21,7 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
     }
 
     public processNode(node: T, parent: T): ExtensionResult<T> {
-        const target = $util.hasValue(node.dataset.target) && !$util.hasValue(node.dataset.use);
+        const target = !node.dataset.use ? node.dataset.target : undefined ;
         const overflow: string[] = [];
         const scrollView: T[] = [];
         let outputAs = '';

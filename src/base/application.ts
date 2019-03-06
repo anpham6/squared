@@ -92,6 +92,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         image: new Map<string, ImageAsset>(),
         renderQueue: new Map<string, string[]>(),
         excluded: new NodeList<T>(),
+        targeted: new Map<string, T[]>()
     };
     public readonly processing: AppProcessing<T, NodeList<T>> = {
         cache: new NodeList<T>(),
@@ -188,6 +189,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         this.session.image.clear();
         this.session.cache.reset();
         this.session.excluded.reset();
+        this.session.targeted.clear();
         this.processing.cache.reset();
         this.controllerHandler.reset();
         this.resourceHandler.reset();
@@ -413,8 +415,9 @@ export default class Application<T extends Node> implements squared.base.Applica
                 else if (parent.dataset.target) {
                     const target = document.getElementById(parent.dataset.target);
                     if (target) {
-                        this.addRenderQueue(parent.controlId, output);
-                        node.dataset.target = parent.controlId;
+                        const id = parent.elementId || parent.controlId;
+                        this.addRenderQueue(id, output);
+                        node.dataset.target = id;
                         return;
                     }
                 }
@@ -495,6 +498,23 @@ export default class Application<T extends Node> implements squared.base.Applica
 
     public createNode(element: Element) {
         return new this.nodeConstructor(this.nextId, element, this.controllerHandler.afterInsertNode);
+    }
+
+    public resolveTarget(target: string, node: T) {
+        for (const parent of this.processing.cache) {
+            if (parent.elementId === target || parent.controlId === target) {
+                return parent;
+            }
+        }
+        for (const parent of this.session.cache) {
+            if (parent.elementId === target || parent.controlId === target) {
+                return parent;
+            }
+        }
+        const nodes = this.session.targeted.get(target) || [];
+        nodes.push(node);
+        this.session.targeted.set(target, nodes);
+        return undefined;
     }
 
     public toString() {
@@ -702,6 +722,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                     }
                 }
             }
+            const checkTargeted = this.session.targeted.size > 0;
             for (const node of this.processing.cache) {
                 if (node.htmlElement && node.length) {
                     let i = 0;
@@ -754,6 +775,15 @@ export default class Application<T extends Node> implements squared.base.Applica
                     node.sort(NodeList.siblingIndex);
                 }
                 node.saveAsInitial();
+                if (checkTargeted && node.elementId) {
+                    const children = this.session.targeted.get(node.elementId);
+                    if (children) {
+                        for (const target of children) {
+                            target.render(node);
+                        }
+                        this.session.targeted.delete(node.elementId);
+                    }
+                }
             }
             $util.sortArray(this.processing.cache.children, true, 'depth', 'id');
             for (const ext of extensions) {
@@ -1139,7 +1169,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 }
             }
         }
-        if (documentRoot.dataset.layoutName && (!$util.hasValue(documentRoot.dataset.target) || documentRoot.renderExtension.size === 0)) {
+        if (documentRoot.dataset.layoutName && (!documentRoot.dataset.target || documentRoot.renderExtension.size === 0)) {
             this.addLayoutFile(
                 documentRoot.dataset.layoutName,
                 !empty ? baseTemplate : '',
@@ -1808,7 +1838,7 @@ export default class Application<T extends Node> implements squared.base.Applica
 
     protected conditionElement(element: Element) {
         if ($dom.hasComputedStyle(element)) {
-            if ($dom.hasVisibleRect(element, true) || $util.hasValue(element.dataset.use)) {
+            if ($dom.hasVisibleRect(element, true) || element.dataset.use) {
                 return true;
             }
             else {

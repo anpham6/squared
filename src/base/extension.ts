@@ -90,13 +90,7 @@ export default abstract class Extension<T extends Node> implements squared.base.
 
     public condition(node: T, parent?: T) {
         if ($dom.hasComputedStyle(node.element)) {
-            const ext = node.dataset.use;
-            if (!ext) {
-                return this.tagNames.length > 0;
-            }
-            else {
-                return this.included(node.element);
-            }
+            return node.dataset.use ? this.included(node.element) : this.tagNames.length > 0;
         }
         return false;
     }

@@ -335,14 +335,14 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
             }
             theme.name = appTheme + (theme.name.charAt(0) === '.' ? theme.name : '');
             Resource.formatOptions(theme.items);
-            if (!stored.has(theme.name)) {
-                stored.set(theme.name, theme);
+            const storedTheme = <StyleAttribute> stored.get(theme.name);
+            if (storedTheme) {
+                for (const attr in theme.items) {
+                    storedTheme.items[attr] = theme.items[attr];
+                }
             }
             else {
-                const data = <StyleAttribute> stored.get(theme.name);
-                for (const attr in theme.items) {
-                    data.items[attr] = theme.items[attr];
-                }
+                stored.set(theme.name, theme);
             }
             STORED.themes.set(filename, stored);
         }

@@ -23,7 +23,7 @@ export default class FloatingActionButton<T extends android.base.View> extends s
 
     public processNode(node: T, parent: T): ExtensionResult<T> {
         const element = <HTMLElement> node.element;
-        const target = $util.hasValue(node.dataset.target);
+        const target = node.dataset.target;
         const options = $utilA.createViewAttribute(this.options[element.id]);
         const backgroundColor = $color.parseColor(node.css('backgroundColor'), node.css('opacity'));
         let colorValue = '';
@@ -111,7 +111,7 @@ export default class FloatingActionButton<T extends android.base.View> extends s
                     node.delete('android', 'layout_gravity');
                 }
                 node.exclude({ procedure: $enum.NODE_PROCEDURE.ALIGNMENT });
-                node.render(node);
+                node.render(this.application.resolveTarget(target, node));
             }
             else {
                 node.render(parent);
