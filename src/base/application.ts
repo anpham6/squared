@@ -97,8 +97,8 @@ export default class Application<T extends Node> implements squared.base.Applica
     public readonly processing: AppProcessing<T, NodeList<T>> = {
         cache: new NodeList<T>(),
         depthMap: new Map<number, Map<string, string>>(),
-        node: null,
-        layout: null,
+        node: undefined,
+        layout: undefined,
         excluded: new NodeList<T>()
     };
 
@@ -538,7 +538,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         this.processing.cache.afterAppend = undefined;
         this.processing.cache.clear();
         this.processing.excluded.clear();
-        this.processing.node = null;
+        this.processing.node = undefined;
         const extensions = Array.from(this.extensions);
         for (const ext of extensions) {
             ext.beforeInit(documentRoot);

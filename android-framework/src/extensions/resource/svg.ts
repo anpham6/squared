@@ -1205,9 +1205,6 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                             });
                             imageData.src = '';
                         }
-                        else if (!item.visible) {
-                            continue;
-                        }
                         B.push(imageData);
                     }
                     const xml = $xml.formatTemplate($xml.createTemplate(TEMPLATES.LAYER_LIST, data));
@@ -1245,80 +1242,80 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
     private parseVectorData(group: SvgGroup) {
         const groupData = this.createGroup(group);
         for (const item of group) {
-            const CCC: ExternalData[] = [];
-            const DDD: StringMap[] = [];
-            const render: TransformData[][] = [[]];
-            const clipGroup: StringMap[] = [];
-            if ($SvgBuild.isShape(item)) {
-                if (item.visible && item.path && item.path.value) {
-                    const pathData = this.createPath(item, item.path, render);
-                    if (pathData.strokeWidth && (pathData.strokeDasharray || pathData.strokeDashoffset)) {
-                        const animateData = this.ANIMATE_DATA.get(item.name);
-                        if (animateData === undefined || animateData.animate.every(animate => animate.attributeName.startsWith('stroke-dash'))) {
-                            const [strokeDash, pathValue, clipPathData] = item.path.extractStrokeDash(animateData && animateData.animate, true, 0, this.options.floatPrecisionValue);
-                            if (strokeDash) {
-                                const groupName = getVectorName(item, 'stroke');
-                                if (pathValue !== '') {
-                                    pathData.value = pathValue;
-                                }
-                                if (clipPathData !== '') {
-                                    clipGroup.push({ clipPathData });
-                                }
-                                for (let i = 0; i < strokeDash.length; i++) {
-                                    const pathObject = i === 0 ? pathData : Object.assign({}, pathData);
-                                    pathObject.name = `${groupName}_${i}`;
-                                    if (animateData) {
-                                        this.ANIMATE_DATA.set(pathObject.name, {
-                                            element: animateData.element,
-                                            animate: $util.filterArray(animateData.animate, animate => animate.id === undefined || animate.id === i)
-                                        });
+            if (item.visible) {
+                const CCC: ExternalData[] = [];
+                const DDD: StringMap[] = [];
+                const render: TransformData[][] = [[]];
+                const clipGroup: StringMap[] = [];
+                if ($SvgBuild.isShape(item)) {
+                    if (item.path && item.path.value) {
+                        const pathData = this.createPath(item, item.path, render);
+                        if (pathData.strokeWidth && (pathData.strokeDasharray || pathData.strokeDashoffset)) {
+                            const animateData = this.ANIMATE_DATA.get(item.name);
+                            if (animateData === undefined || animateData.animate.every(animate => animate.attributeName.startsWith('stroke-dash'))) {
+                                const [strokeDash, pathValue, clipPathData] = item.path.extractStrokeDash(animateData && animateData.animate, this.options.floatPrecisionValue);
+                                if (strokeDash) {
+                                    const groupName = getVectorName(item, 'stroke');
+                                    if (pathValue !== '') {
+                                        pathData.value = pathValue;
                                     }
-                                    pathObject.trimPathStart = $math.truncate(strokeDash[i].start, this.options.floatPrecisionValue);
-                                    pathObject.trimPathEnd = $math.truncate(strokeDash[i].end, this.options.floatPrecisionValue);
-                                    CCC.push(pathObject);
+                                    if (clipPathData !== '') {
+                                        clipGroup.push({ clipPathData });
+                                    }
+                                    for (let i = 0; i < strokeDash.length; i++) {
+                                        const pathObject = i === 0 ? pathData : Object.assign({}, pathData);
+                                        pathObject.name = `${groupName}_${i}`;
+                                        if (animateData) {
+                                            this.ANIMATE_DATA.set(pathObject.name, {
+                                                element: animateData.element,
+                                                animate: $util.filterArray(animateData.animate, animate => animate.id === undefined || animate.id === i)
+                                            });
+                                        }
+                                        pathObject.trimPathStart = $math.truncate(strokeDash[i].start, this.options.floatPrecisionValue);
+                                        pathObject.trimPathEnd = $math.truncate(strokeDash[i].end, this.options.floatPrecisionValue);
+                                        CCC.push(pathObject);
+                                    }
+                                    if (animateData) {
+                                        this.ANIMATE_DATA.delete(item.name);
+                                    }
+                                    render[0].push({ groupName });
                                 }
-                                if (animateData) {
-                                    this.ANIMATE_DATA.delete(item.name);
-                                }
-                                render[0].push({ groupName });
                             }
                         }
-                    }
-                    if (CCC.length === 0) {
-                        CCC.push(pathData);
-                    }
-                }
-                else {
-                    continue;
-                }
-            }
-            else if ($SvgBuild.asImage(item)) {
-                if (!$SvgBuild.asPattern(group)) {
-                    if (item.width === 0 || item.height === 0) {
-                        const image = this.application.session.image.get(item.href);
-                        if (image && image.width > 0 && image.height > 0) {
-                            item.width = image.width;
-                            item.height = image.height;
-                            item.setRect();
+                        if (CCC.length === 0) {
+                            CCC.push(pathData);
                         }
                     }
-                    item.extract(this.options.transformExclude.image);
-                    if (item.visible || item.rotateAngle !== undefined) {
-                        this.IMAGE_DATA.push(item);
+                    else {
+                        continue;
                     }
                 }
-                continue;
-            }
-            else if ($SvgBuild.isContainer(item)) {
-                if (item.visible && item.length) {
-                    this.parseVectorData(<SvgGroup> item);
-                    DDD.push({ templateName: item.name });
-                }
-                else {
+                else if ($SvgBuild.asImage(item)) {
+                    if (!$SvgBuild.asPattern(group)) {
+                        if (item.width === 0 || item.height === 0) {
+                            const image = this.application.session.image.get(item.href);
+                            if (image && image.width > 0 && image.height > 0) {
+                                item.width = image.width;
+                                item.height = image.height;
+                                item.setRect();
+                            }
+                        }
+                        item.extract(this.options.transformExclude.image);
+                        this.IMAGE_DATA.push(item);
+                    }
                     continue;
                 }
+                else if ($SvgBuild.isContainer(item)) {
+                    if (item.length) {
+                        this.parseVectorData(<SvgGroup> item);
+                        DDD.push({ templateName: item.name });
+                    }
+                    else {
+                        continue;
+                    }
+                }
+                groupData.BB.push({ render, clipGroup, CCC, DDD });
             }
-            groupData.BB.push({ render, clipGroup, CCC, DDD });
         }
         this.VECTOR_DATA.set(group.name, groupData);
     }

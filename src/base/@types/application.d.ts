@@ -65,8 +65,8 @@ export interface AppSession<T extends squared.base.Node, U> {
 export interface AppProcessing<T extends squared.base.Node, U> {
     cache: U;
     depthMap: Map<number, Map<string, string>>;
-    node: T | null;
-    layout: FileAsset | null;
+    node: T | undefined;
+    layout: FileAsset | undefined;
     excluded: squared.base.NodeList<T>;
 }
 

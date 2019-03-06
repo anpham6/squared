@@ -383,7 +383,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         return d;
     }
 
-    public extendLength(data: SvgPathExtendData, negative = true, precision?: number) {
+    public extendLength(data: SvgPathExtendData, precision?: number) {
         if (this.value !== '') {
             switch (this.element.tagName) {
                 case 'path':
@@ -395,10 +395,11 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                         const pathStartPoint = pathStart.start;
                         const pathEnd = commands[commands.length - 1];
                         const pathEndPoint = pathEnd.end;
+                        const name = pathEnd.name.toUpperCase();
+                        const leading = data.leading;
+                        const trailing = data.trailing;
                         let modified = false;
-                        let leading = data.leading;
-                        let trailing = data.trailing;
-                        if (pathStartPoint.x !== pathEndPoint.x || pathStartPoint.y !== pathEndPoint.y) {
+                        if (name !== 'Z' && (pathStartPoint.x !== pathEndPoint.x || pathStartPoint.y !== pathEndPoint.y)) {
                             if (leading > 0) {
                                 let afterStartPoint: SvgPoint | undefined;
                                 if (pathStart.value.length > 1) {
@@ -410,40 +411,24 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                 if (afterStartPoint) {
                                     if (afterStartPoint.x === pathStartPoint.x) {
                                         const y = pathStart.coordinates[1] + (pathStartPoint.y > afterStartPoint.y ? leading : -leading);
-                                        if (negative || y >= 0) {
-                                            pathStart.coordinates[1] = y;
-                                            modified = true;
-                                        }
-                                        else {
-                                            leading = 0;
-                                        }
+                                        pathStart.coordinates[1] = y;
+                                        modified = true;
                                     }
                                     else if (afterStartPoint.y === pathStartPoint.y) {
                                         const x = pathStart.coordinates[0] + (pathStartPoint.x > afterStartPoint.x ? leading : -leading);
-                                        if (negative || x >= 0) {
-                                            pathStart.coordinates[0] = x;
-                                            modified = true;
-                                        }
-                                        else {
-                                            leading = 0;
-                                        }
+                                        pathStart.coordinates[0] = x;
+                                        modified = true;
                                     }
                                     else {
                                         const angle = $math.offsetAngle(afterStartPoint, pathStartPoint);
                                         const x = pathStart.coordinates[0] - $math.offsetAngleX(angle, leading);
                                         const y = pathStart.coordinates[1] - $math.offsetAngleY(angle, leading);
-                                        if (negative || x >= 0 && y >= 0) {
-                                            pathStart.coordinates[0] = x;
-                                            pathStart.coordinates[1] = y;
-                                            modified = true;
-                                        }
-                                        else {
-                                            leading = 0;
-                                        }
+                                        pathStart.coordinates[0] = x;
+                                        pathStart.coordinates[1] = y;
+                                        modified = true;
                                     }
                                 }
                             }
-                            const name = pathEnd.name.toUpperCase();
                             switch (name) {
                                 case 'M':
                                 case 'L': {
@@ -463,36 +448,21 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         if (beforeEndPoint) {
                                             if (beforeEndPoint.x === pathEndPoint.x) {
                                                 const y = pathEnd.coordinates[1] + (pathEndPoint.y > beforeEndPoint.y ? trailing : -trailing);
-                                                if (negative || y >= 0) {
-                                                    pathEnd.coordinates[1] = y;
-                                                    modified = true;
-                                                }
-                                                else {
-                                                    trailing = 0;
-                                                }
+                                                pathEnd.coordinates[1] = y;
+                                                modified = true;
                                             }
                                             else if (beforeEndPoint.y === pathEndPoint.y) {
                                                 const x = pathEnd.coordinates[0] + (pathEndPoint.x > beforeEndPoint.x ? trailing : -trailing);
-                                                if (negative || x >= 0) {
-                                                    pathEnd.coordinates[0] = x;
-                                                    modified = true;
-                                                }
-                                                else {
-                                                    trailing = 0;
-                                                }
+                                                pathEnd.coordinates[0] = x;
+                                                modified = true;
                                             }
                                             else {
                                                 const angle = $math.offsetAngle(beforeEndPoint, pathEndPoint);
                                                 const x = pathEnd.coordinates[0] + $math.offsetAngleX(angle, trailing);
                                                 const y = pathEnd.coordinates[1] + $math.offsetAngleY(angle, trailing);
-                                                if (negative || x >= 0 && y >= 0) {
-                                                    pathEnd.coordinates[0] = x;
-                                                    pathEnd.coordinates[1] = y;
-                                                    modified = true;
-                                                }
-                                                else {
-                                                    trailing = 0;
-                                                }
+                                                pathEnd.coordinates[0] = x;
+                                                pathEnd.coordinates[1] = y;
+                                                modified = true;
                                             }
                                         }
                                     }
@@ -502,13 +472,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                 case 'V': {
                                     const index = name === 'H' ? 0 : 1;
                                     const pt = pathEnd.coordinates[index] + (leading + trailing) * (pathEnd.coordinates[index] >= 0 ? 1 : -1);
-                                    if (negative || pt >= 0) {
-                                        pathEnd.coordinates[index] = pt;
-                                        modified = true;
-                                    }
-                                    else {
-                                        trailing = 0;
-                                    }
+                                    pathEnd.coordinates[index] = pt;
+                                    modified = true;
                                     break;
                                 }
                             }
@@ -636,7 +601,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         return data;
     }
 
-    public extractStrokeDash(animations?: SvgAnimation[], negative = true, loopInterval = 0, precision?: number): [SvgStrokeDash[] | undefined, string, string] {
+    public extractStrokeDash(animations?: SvgAnimation[], precision?: number, loopInterval = 0): [SvgStrokeDash[] | undefined, string, string] {
         const strokeWidth = $util.convertInt(this.strokeWidth);
         let result: SvgStrokeDash[] | undefined;
         let path = '';
@@ -806,7 +771,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     let extendedLength = totalLength;
                                     let extendedRatio = 1;
                                     if (flattenData.leading > 0 || flattenData.trailing > 0) {
-                                        this.extendLength(flattenData, negative, precision);
+                                        this.extendLength(flattenData, precision);
                                         if (flattenData.path) {
                                             const boxRect = SvgBuild.parseBoxRect([this.value]);
                                             extendedLength = $math.truncateFraction(getPathLength(flattenData.path));

@@ -9,9 +9,9 @@ declare global {
             readonly pathLength: number;
             readonly totalLength: number;
             draw(transforms?: SvgTransform[], options?: SvgBuildOptions): string;
-            extendLength(data: SvgPathExtendData, negative?: boolean, precision?: number): SvgPathExtendData | undefined;
+            extendLength(data: SvgPathExtendData, precision?: number): SvgPathExtendData | undefined;
             flattenStrokeDash(valueArray: number[], valueOffset: number, totalLength: number, pathLength?: number): SvgPathExtendData;
-            extractStrokeDash(animations?: SvgAnimation[], negative?: boolean, loopInterval?: number, precision?: number): [SvgStrokeDash[] | undefined, string, string];
+            extractStrokeDash(animations?: SvgAnimation[], precision?: number, loopInterval?: number): [SvgStrokeDash[] | undefined, string, string];
         }
 
         class SvgPath implements SvgPath {
