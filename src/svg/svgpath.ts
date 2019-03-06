@@ -19,7 +19,6 @@ interface DashGroup {
     items: SvgStrokeDash[];
     delay: number;
     duration: number;
-    companion?: SvgAnimation;
 }
 
 const $math = squared.lib.math;
@@ -668,14 +667,13 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 let valueOffset = $util.convertInt(this.strokeDashoffset);
                 let dashTotal = 0;
                 let flattenData!: SvgPathExtendData;
-                const requireExtend = () => flattenData.leading > 0 || flattenData.trailing > 0;
-                const createDashGroup = (values: number[], offset: number, delay: number, duration = 0, companion?: SvgAnimation) => {
+                const createDashGroup = (values: number[], offset: number, delay: number, duration = 0) => {
                     const data = this.flattenStrokeDash(values, offset, totalLength, pathLength);
-                    if (dashGroup.length === 0 || companion) {
+                    if (dashGroup.length === 0) {
                         flattenData = data;
                     }
                     dashTotal = Math.max(dashTotal, data.items.length);
-                    dashGroup.push({ items: data.items, delay, duration, companion });
+                    dashGroup.push({ items: data.items, delay, duration });
                     return data.items;
                 };
                 result = createDashGroup(valueArray, valueOffset, 0);
@@ -818,25 +816,16 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     const startOffset = parseFloat(item.values[0]);
                                     let keyTime = 0;
                                     let previousRemaining = 0;
-                                    let baseValue: SvgStrokeDash[] | undefined;
-                                    if (valueOffset !== startOffset) {
-                                        if (modified || item.delay > 0) {
-                                            baseValue = createDashGroup(flattenData.dashArray, startOffset, item.delay, 0, item);
-                                        }
-                                        else {
-                                            flattenData = this.flattenStrokeDash(flattenData.dashArray, startOffset, totalLength, pathLength);
-                                            result = flattenData.items;
-                                            dashGroup[0].items = result;
-                                            baseValue = result;
-                                            dashTotal = Math.max(dashTotal, flattenData.items.length);
-                                        }
-                                    }
-                                    else if (requireExtend()) {
-                                        baseValue = result;
+                                    if (valueOffset !== startOffset && item.delay === 0) {
+                                        flattenData = this.flattenStrokeDash(flattenData.dashArray, startOffset, totalLength, pathLength);
+                                        result = flattenData.items;
+                                        dashGroup[0].items = result;
+                                        dashTotal = Math.max(dashTotal, flattenData.items.length);
+                                        valueOffset = startOffset;
                                     }
                                     let extendedLength = totalLength;
                                     let extendedRatio = 1;
-                                    if (baseValue && requireExtend()) {
+                                    if (flattenData.leading > 0 || flattenData.trailing > 0) {
                                         this.extendLength(flattenData, negative, precision);
                                         if (flattenData.path) {
                                             const boxRect = SvgBuild.parseBoxRect([this.value]);
@@ -849,50 +838,37 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                             else {
                                                 flattenData.extendedLength = extendedLength;
                                             }
-                                            if (baseValue === result) {
-                                                const data = this.flattenStrokeDash(flattenData.dashArray, 0, totalLength, pathLength, flattenData);
-                                                result = data.items;
-                                                dashGroup[0].items = result;
-                                                baseValue = result;
-                                            }
-                                            else {
-                                                for (const group of dashGroup) {
-                                                    if (group.items === baseValue) {
-                                                        const data = this.flattenStrokeDash(flattenData.dashArray, 0, totalLength, pathLength, flattenData);
-                                                        baseValue = data.items;
-                                                        group.items = baseValue;
-                                                        break;
-                                                    }
-                                                }
-                                            }
-                                            dashTotal = Math.max(dashTotal, baseValue.length);
+                                            const data = this.flattenStrokeDash(flattenData.dashArray, 0, totalLength, pathLength, flattenData);
+                                            result = data.items;
+                                            dashGroup[0].items = result;
+                                            dashTotal = Math.max(dashTotal, result.length);
                                             const strokeOffset = Math.ceil(strokeWidth / 2);
                                             path = flattenData.path;
                                             clipPath = SvgBuild.drawRect(boxRect.right - boxRect.left, boxRect.bottom - boxRect.top + strokeOffset * 2, boxRect.left, boxRect.top - strokeOffset);
                                         }
                                     }
-                                    $util.replaceMap<string, string>(item.values, value => (parseFloat(value) - startOffset).toString());
-                                    const iterationCount = item.keyTimes.length - 1;
-                                    for (let j = 0; j < iterationCount; j++) {
-                                        const offsetFrom = parseFloat(item.values[j]);
-                                        const offsetTo = parseFloat(item.values[j + 1]);
+                                    for (let j = 0; j < item.keyTimes.length; j++) {
+                                        const offsetFrom = j === 0 ? valueOffset : parseFloat(item.values[j - 1]);
+                                        const offsetTo = parseFloat(item.values[j]);
                                         const offsetValue = Math.abs(offsetTo - offsetFrom);
-                                        const keyTimeTo = item.keyTimes[j + 1];
+                                        const keyTimeTo = item.keyTimes[j];
                                         if (offsetValue === 0) {
-                                            keyTime = keyTimeTo;
-                                            keyTimes.push(keyTime);
-                                            if (values.length) {
-                                                values.push(values[values.length - 1]);
-                                                previousRemaining = parseFloat(values[values.length - 1]);
-                                            }
-                                            else {
-                                                values.push('0');
-                                                previousRemaining = 0;
+                                            if (j > 0) {
+                                                keyTime = keyTimeTo;
+                                                keyTimes.push(keyTime);
+                                                if (values.length) {
+                                                    values.push(values[values.length - 1]);
+                                                    previousRemaining = parseFloat(values[values.length - 1]);
+                                                }
+                                                else {
+                                                    values.push('0');
+                                                    previousRemaining = 0;
+                                                }
                                             }
                                             continue;
                                         }
                                         const increasing = offsetTo > offsetFrom;
-                                        const segDuration = (keyTimeTo - item.keyTimes[j]) * duration;
+                                        const segDuration = j > 0 ? (keyTimeTo - item.keyTimes[j - 1]) * duration : 0;
                                         const offsetTotal = offsetValue * flattenData.lengthRatio;
                                         let iterationTotal = offsetTotal / extendedLength;
                                         function getKeyTimeIncrement(offset: number) {
@@ -941,54 +917,64 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         }
                                         let offsetRemaining = offsetTotal;
                                         let finalValue = 0;
-                                        if (previousRemaining > 0) {
-                                            const remaining = increasing ? previousRemaining : 1 - previousRemaining;
-                                            const remainingValue = $math.truncateFraction(remaining * extendedLength);
-                                            if ($math.lessEqual(offsetRemaining, remainingValue)) {
-                                                setFinalValue(0);
-                                                if (increasing) {
-                                                    finalValue = previousRemaining - finalValue;
-                                                }
-                                                else {
-                                                    finalValue += previousRemaining;
-                                                }
-                                                insertFinalKeyTime();
-                                                continue;
+                                        if (j === 0) {
+                                            offsetRemaining %= extendedLength;
+                                            setFinalValue(0);
+                                            if (increasing) {
+                                                finalValue = 1 - finalValue;
                                             }
-                                            else {
-                                                values.push(increasing ? '0' : '1');
-                                                keyTime += getKeyTimeIncrement(remainingValue);
-                                                keyTimes.push($math.truncateFraction(keyTime));
-                                                iterationTotal = $math.truncateFraction(iterationTotal - remaining);
-                                                offsetRemaining = $math.truncateFraction(offsetRemaining - remainingValue);
-                                            }
-                                        }
-                                        if ($math.isEqual(offsetRemaining, extendedLength)) {
-                                            offsetRemaining = extendedLength;
-                                        }
-                                        if (offsetRemaining > extendedLength) {
-                                            iterationTotal = Math.floor(iterationTotal);
-                                            const iterationOffset = iterationTotal * extendedLength;
-                                            if (iterationOffset === offsetRemaining) {
-                                                iterationTotal--;
-                                            }
-                                            setFinalValue(iterationOffset, true);
+                                            insertFinalKeyTime();
                                         }
                                         else {
-                                            iterationTotal = 0;
-                                            setFinalValue(0, true);
-                                        }
-                                        while (iterationTotal > 0) {
+                                            if (previousRemaining > 0) {
+                                                const remaining = increasing ? previousRemaining : 1 - previousRemaining;
+                                                const remainingValue = $math.truncateFraction(remaining * extendedLength);
+                                                if ($math.lessEqual(offsetRemaining, remainingValue)) {
+                                                    setFinalValue(0);
+                                                    if (increasing) {
+                                                        finalValue = previousRemaining - finalValue;
+                                                    }
+                                                    else {
+                                                        finalValue += previousRemaining;
+                                                    }
+                                                    insertFinalKeyTime();
+                                                    continue;
+                                                }
+                                                else {
+                                                    values.push(increasing ? '0' : '1');
+                                                    keyTime += getKeyTimeIncrement(remainingValue);
+                                                    keyTimes.push($math.truncateFraction(keyTime));
+                                                    iterationTotal = $math.truncateFraction(iterationTotal - remaining);
+                                                    offsetRemaining = $math.truncateFraction(offsetRemaining - remainingValue);
+                                                }
+                                            }
+                                            if ($math.isEqual(offsetRemaining, extendedLength)) {
+                                                offsetRemaining = extendedLength;
+                                            }
+                                            if (offsetRemaining > extendedLength) {
+                                                iterationTotal = Math.floor(iterationTotal);
+                                                const iterationOffset = iterationTotal * extendedLength;
+                                                if (iterationOffset === offsetRemaining) {
+                                                    iterationTotal--;
+                                                }
+                                                setFinalValue(iterationOffset, true);
+                                            }
+                                            else {
+                                                iterationTotal = 0;
+                                                setFinalValue(0, true);
+                                            }
+                                            while (iterationTotal > 0) {
+                                                insertFractionKeyTime();
+                                                values.push(increasing ? '0' : '1');
+                                                keyTime += getKeyTimeIncrement(extendedLength);
+                                                keyTimes.push($math.truncateFraction(keyTime));
+                                                iterationTotal--;
+                                            }
                                             insertFractionKeyTime();
-                                            values.push(increasing ? '0' : '1');
-                                            keyTime += getKeyTimeIncrement(extendedLength);
-                                            keyTimes.push($math.truncateFraction(keyTime));
-                                            iterationTotal--;
+                                            insertFinalKeyTime();
                                         }
-                                        insertFractionKeyTime();
-                                        insertFinalKeyTime();
                                     }
-                                    item.baseValue = undefined;
+                                    item.baseValue = '0';
                                     item.replaceValue = '0';
                                     item.values = values;
                                     item.keyTimes = keyTimes;
@@ -1016,7 +1002,6 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                             else {
                                 const delay = dashGroup[i].delay;
                                 const duration = dashGroup[i].duration;
-                                const companion = dashGroup[i].companion;
                                 const baseValue = dashGroup.length > 2 ? this.flattenStrokeDash(getDashArray(delay - 1), getDashOffset(delay - 1), totalLength, pathLength).items : result;
                                 for (let j = 0; j < dashTotal; j++) {
                                     const animate = new SvgAnimation(this.element);
@@ -1027,9 +1012,6 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     animate.to = getFromToValue(items[j]);
                                     animate.duration = duration;
                                     animate.fillFreeze = duration === 0;
-                                    if (companion) {
-                                        animate.companion = { index: -1, value: companion };
-                                    }
                                     extracted.push(animate);
                                 }
                             }

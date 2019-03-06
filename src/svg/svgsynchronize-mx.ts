@@ -505,7 +505,7 @@ function setTimelineValue(map: TimelineIndex, time: number, value: AnimateValue,
         }
         if (stored !== value || duplicate) {
             if (!duplicate) {
-                if (typeof value === 'number' && Math.round(stored as number) === Math.round(value)) {
+                if (typeof value === 'number' && $math.isEqual(value, stored as number)) {
                     return time;
                 }
                 while (time > 0 && map.has(time)) {
@@ -794,8 +794,8 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                     const baseValueMap: ObjectMap<AnimateValue> = {};
                     const forwardMap: ForwardMap = {};
                     const animateTimeRangeMap = new Map<number, number>();
+                    let repeatingAsInfinite = -1;
                     let repeatingResult: KeyTimeMap | undefined;
-                    let repeatingAsInfinite: number | undefined;
                     let infiniteResult: KeyTimeMap | undefined;
                     function getForwardItem(attr: string): ForwardValue | undefined {
                         return forwardMap[attr] ? forwardMap[attr][forwardMap[attr].length - 1] : undefined;
@@ -823,10 +823,10 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                         const incomplete: SvgAnimate[] = [];
                         let maxTime = -1;
                         let actualMaxTime = 0;
+                        let nextDelayTime = Number.POSITIVE_INFINITY;
                         let baseValue!: AnimateValue;
                         let previousTransform: SvgAnimate | undefined;
                         let previousComplete: SvgAnimate | undefined;
-                        let nextDelayTime: number | undefined;
                         function checkComplete(item: SvgAnimate, nextDelay?: number) {
                             repeatingAnimations.add(item);
                             item.addState(SYNCHRONIZE_STATE.COMPLETE);
@@ -1167,7 +1167,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         maxTime = setTimelineValue(repeatingMap[attr], delay - 1, baseValue);
                                         actualMaxTime = delay;
                                     }
-                                    nextDelayTime = undefined;
+                                    nextDelayTime = Number.POSITIVE_INFINITY;
                                     if (item.group.ordering && item.group.ordering.length > 1) {
                                         let checkDelay = true;
                                         for (const order of item.group.ordering) {
@@ -1214,10 +1214,10 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                     }
                                     const actualStartTime = actualMaxTime;
                                     let startTime = maxTime + 1;
-                                    let maxThreadTime = Math.min(nextDelayTime || Number.POSITIVE_INFINITY, item.end || Number.POSITIVE_INFINITY);
+                                    let maxThreadTime = Math.min(nextDelayTime, item.end || Number.POSITIVE_INFINITY);
                                     let setterInterrupt: SvgAnimation | undefined;
                                     if (setterData.length && item.animationElement) {
-                                        const interruptTime = Math.min(nextDelayTime || Number.POSITIVE_INFINITY, totalDuration, maxThreadTime);
+                                        const interruptTime = Math.min(nextDelayTime, totalDuration, maxThreadTime);
                                         setterInterrupt = setterData.find(set => set.delay >= actualMaxTime && set.delay <= interruptTime);
                                         if (setterInterrupt) {
                                             switch (setterInterrupt.delay) {
@@ -1428,7 +1428,6 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         }
                                     }
                                     if (complete) {
-                                        nextDelayTime = nextDelayTime || Number.POSITIVE_INFINITY;
                                         if (!infinite && checkComplete(item, nextDelayTime)) {
                                             break attributeEnd;
                                         }
@@ -1548,7 +1547,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                 }
                             }
                             if (previousComplete && previousComplete.fillReplace && infiniteMap[attr] === undefined) {
-                                let type: number | undefined;
+                                let type = 0;
                                 let value: AnimateValue | undefined;
                                 if (forwardMap[attr]) {
                                     const item = getForwardItem(attr);
@@ -1609,7 +1608,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                 }
                             }
                         }
-                        if (repeatingAsInfinite === undefined) {
+                        if (repeatingAsInfinite === -1) {
                             for (const attr in repeatingMap) {
                                 if (infiniteMap[attr]) {
                                     let maxTime = repeatingMaxTime[attr];
@@ -1697,7 +1696,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                         }
                         repeatingResult = createKeyTimeMap(repeatingMap, keyTimes, forwardMap);
                     }
-                    if (repeatingAsInfinite === undefined && Object.keys(infiniteMap).length) {
+                    if (repeatingAsInfinite === -1 && Object.keys(infiniteMap).length) {
                         const timelineMap: TimelineMap = {};
                         const infiniteAnimations: SvgAnimate[] = [];
                         const keyTimes: number[] = [];
@@ -1858,7 +1857,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                     }
                                     else {
                                         const entries = Array.from(result.entries());
-                                        const delay = repeatingAsInfinite || 0;
+                                        const delay = repeatingAsInfinite !== -1 ? repeatingAsInfinite : 0;
                                         let object: SvgAnimate | undefined;
                                         for (const item of entries) {
                                             keySplines.push(interpolatorMap.get(item[0]) || '');

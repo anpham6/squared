@@ -1152,13 +1152,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                     animatorData = <AnimatorTemplateData<true>> A.AA[0];
                                 }
                             }
-                            let xml: string;
-                            if (animatorData) {
-                                xml = $xml.createTemplate(TEMPLATES.OBJECTANIMATOR, animatorData);
-                            }
-                            else {
-                                xml = $xml.createTemplate(TEMPLATES.SET_OBJECTANIMATOR, targetSetData);
-                            }
+                            const xml = animatorData ? $xml.createTemplate(TEMPLATES.OBJECTANIMATOR, animatorData) : $xml.createTemplate(TEMPLATES.SET_OBJECTANIMATOR, targetSetData);
                             targetData.animationName = Resource.getStoredName('animators', xml);
                             if (targetData.animationName === '') {
                                 targetData.animationName = getFilename('anim', name);
