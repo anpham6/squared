@@ -17,7 +17,7 @@ const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
 const $SvgBuild = squared.svg && squared.svg.SvgBuild;
-const $utilS = squared.svg && squared.svg.lib && squared.svg.lib.util;
+const $utilS = squared.svg && squared.svg.lib.util;
 
 const STORED = <ResourceStoredMapAndroid> $Resource.STORED;
 
@@ -510,6 +510,6 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
     }
 
     get userSettings() {
-        return this.application.userSettings as UserSettingsAndroid;
+        return <UserSettingsAndroid> this.application.userSettings;
     }
 }

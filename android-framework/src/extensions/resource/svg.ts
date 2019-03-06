@@ -1171,7 +1171,12 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                     }
                 }
                 if (this.IMAGE_DATA.length) {
-                    const D: StringMap[] = [];
+                    const B: StringMap[] = [{ src: vectorName }];
+                    const data = <ExternalData> {
+                        A: false,
+                        B,
+                        C: false
+                    };
                     for (const item of this.IMAGE_DATA) {
                         const scaleX = svg.width / svg.viewBox.width;
                         const scaleY = svg.height / svg.viewBox.height;
@@ -1184,7 +1189,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                         y += offset.y;
                         width *= scaleX;
                         height *= scaleY;
-                        const data: ExternalData = {
+                        const imageData: ExternalData = {
                             width: $util.formatPX(width),
                             height: $util.formatPX(height),
                             left: x !== 0 ? $util.formatPX(x) : '',
@@ -1193,28 +1198,19 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                             rotate: []
                         };
                         if (item.rotateAngle) {
-                            data.rotate.push({
-                                src: data.src,
+                            imageData.rotate.push({
+                                src: imageData.src,
                                 fromDegrees: item.rotateAngle.toString(),
                                 visible: item.visible ? 'true' : 'false'
                             });
-                            data.src = '';
+                            imageData.src = '';
                         }
                         else if (!item.visible) {
                             continue;
                         }
-                        D.push(data);
+                        B.push(imageData);
                     }
-                    const xml = $xml.formatTemplate(
-                        $xml.createTemplate(TEMPLATES.LAYER_LIST, <TemplateDataA> {
-                            A: [],
-                            B: false,
-                            C: [{ src: vectorName }],
-                            D,
-                            E: false,
-                            F: false
-                        })
-                    );
+                    const xml = $xml.formatTemplate($xml.createTemplate(TEMPLATES.LAYER_LIST, data));
                     drawable = Resource.getStoredName('drawables', xml);
                     if (drawable === '') {
                         drawable = templateName;
