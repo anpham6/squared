@@ -45,7 +45,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                         item.inherit(section[0], 'styleMap');
                     }
                 }
-                table.push(...section[0].children as T[]);
+                $util.concatArray(table, section[0].children as T[]);
                 for (const item of section) {
                     item.hide();
                 }
@@ -69,7 +69,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
         });
         inheritStyles(thead);
         for (const section of tbody) {
-            table.push(...section.children as T[]);
+            $util.concatArray(table, section.children as T[]);
             section.hide();
         }
         inheritStyles(tfoot);

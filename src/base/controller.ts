@@ -7,6 +7,9 @@ import NodeList from './nodelist';
 
 const $xml = squared.lib.xml;
 
+const REGEXP_INDENT = /^({[^}]+})(\t*)(<.*)/;
+const REGEXP_PLACEHOLDER = /{[<:@#>]\d+(\^\d+)?}\n?/g;
+
 export default abstract class Controller<T extends Node> implements squared.base.Controller<T> {
     public abstract readonly localSettings: ControllerSettings;
 
@@ -96,11 +99,11 @@ export default abstract class Controller<T extends Node> implements squared.base
     }
 
     public removePlaceholders(value: string) {
-        return value.replace(/{[<:@#>]\d+(\^\d+)?}\n?/g, '').trim();
+        return value.replace(REGEXP_PLACEHOLDER, '').trim();
     }
 
     public replaceIndent(value: string, depth: number, cache: T[]) {
-        value = $xml.replaceIndent(value, depth, /^({[^}]+})(\t*)(<.*)/);
+        value = $xml.replaceIndent(value, depth, REGEXP_INDENT);
         if (cache) {
             const pattern = /{@(\d+)}/g;
             let match: RegExpExecArray | null;

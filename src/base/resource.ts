@@ -20,7 +20,7 @@ const REGEXP_BACKGROUNDIMAGE = `(?:url\\("?.+?"?\\)|(repeating)?-?(linear|radial
 function replaceExcluded<T extends Node>(element: HTMLElement, attr: string) {
     let value: string = element[attr];
     for (let i = 0; i < element.children.length; i++) {
-        const item = $dom.getElementAsNode<T>(<HTMLElement> element.children[i]);
+        const item = $dom.getElementAsNode<T>(element.children[i]);
         if (item && (item.excluded || item.dataset.target && $util.isString(item[attr]))) {
             value = value.replace(item[attr], '');
         }
@@ -36,10 +36,7 @@ function parseColorStops<T extends Node>(node: T, type: string, value: string, o
     while ((match = pattern.exec(value)) !== null) {
         const color = $color.parseColor(match[1], opacity, true);
         if (color) {
-            const item: ColorStop = {
-                color,
-                offset: -1
-            };
+            const item: ColorStop = { color, offset: -1 };
             if (conic) {
                 if (match[3] && match[4]) {
                     item.offset = $util.convertAngle(match[3], match[4]) / 360;
@@ -101,7 +98,7 @@ function parseColorStops<T extends Node>(node: T, type: string, value: string, o
     }
     else {
         if (percent < 1) {
-            const color = Object.assign({}, result[result.length - 1]);
+            const color = { ...result[result.length - 1] };
             color.offset = 1;
             result.push(color);
         }
@@ -119,7 +116,7 @@ function parseAngle(value: string | undefined) {
     return 0;
 }
 
-function replaceWhiteSpace<T extends Node>(node: T, value: string): [string, boolean] {
+function replaceWhiteSpace<T extends Node>(node: T, element: Element, value: string): [string, boolean] {
     const renderParent = node.renderParent;
     if (node.multiline && renderParent && !renderParent.layoutVertical) {
         value = value.replace(/^\s*\n/, '');
@@ -133,20 +130,21 @@ function replaceWhiteSpace<T extends Node>(node: T, value: string): [string, boo
             if (renderParent && !renderParent.layoutVertical) {
                 value = value.replace(/^\n/, '');
             }
-            value = value.replace(/\n/g, '\\n').replace(/\s/g, '&#160;');
+            value = value
+                .replace(/\n/g, '\\n')
+                .replace(/\s/g, '&#160;');
             break;
         case 'pre-line':
-            value = value.replace(/\n/g, '\\n').replace(/\s+/g, ' ');
+            value = value
+                .replace(/\n/g, '\\n')
+                .replace(/\s+/g, ' ');
             break;
         default:
-            const element = node.element;
-            if (element) {
-                if ($dom.isLineBreak(<Element> element.previousSibling)) {
-                    value = value.replace(/^\s+/, '');
-                }
-                if ($dom.isLineBreak(<Element> element.nextSibling)) {
-                    value = value.replace(/\s+$/, '');
-                }
+            if ($dom.isLineBreak(<Element> element.previousSibling)) {
+                value = value.replace(/^\s+/, '');
+            }
+            if ($dom.isLineBreak(<Element> element.nextSibling)) {
+                value = value.replace(/\s+$/, '');
             }
             return [value, false];
     }
@@ -230,23 +228,11 @@ export default abstract class Resource<T extends Node> implements squared.base.R
     }
 
     public static isBorderVisible(border: BorderAttribute | undefined) {
-        return !!border && !(
-            border.style === 'none' ||
-            border.width === '0px' ||
-            border.color === '' ||
-            border.color.length === 9 && border.color.endsWith('00')
-        );
+        return !!border && !(border.style === 'none' || border.width === '0px' || border.color === '' || border.color.length === 9 && border.color.endsWith('00'));
     }
 
     public static hasDrawableBackground(object: BoxStyle | undefined) {
-        return !!object && (
-            this.isBorderVisible(object.borderTop) ||
-            this.isBorderVisible(object.borderRight) ||
-            this.isBorderVisible(object.borderBottom) ||
-            this.isBorderVisible(object.borderLeft) ||
-            !!object.backgroundImage ||
-            !!object.borderRadius
-        );
+        return !!object && (!!object.backgroundImage || this.isBorderVisible(object.borderTop) || this.isBorderVisible(object.borderRight) || this.isBorderVisible(object.borderBottom) || this.isBorderVisible(object.borderLeft) || !!object.borderRadius);
     }
 
     public fileHandler?: File<T>;
@@ -276,18 +262,18 @@ export default abstract class Resource<T extends Node> implements squared.base.R
     public setBoxStyle() {
         for (const node of this.cache) {
             if (node.visible && node.styleElement) {
-                const boxStyle: Nullable<BoxStyle> = {
-                    borderTop: null,
-                    borderRight: null,
-                    borderBottom: null,
-                    borderLeft: null,
-                    borderRadius: null,
-                    backgroundColor: null,
-                    backgroundSize: null,
-                    backgroundRepeat: null,
-                    backgroundPositionX: null,
-                    backgroundPositionY: null,
-                    backgroundImage: null
+                const boxStyle: Optional<BoxStyle> = {
+                    borderTop: undefined,
+                    borderRight: undefined,
+                    borderBottom: undefined,
+                    borderLeft: undefined,
+                    borderRadius: undefined,
+                    backgroundColor: undefined,
+                    backgroundSize: undefined,
+                    backgroundRepeat: undefined,
+                    backgroundPositionX: undefined,
+                    backgroundPositionY: undefined,
+                    backgroundImage: undefined
                 };
                 for (const attr in boxStyle) {
                     let value = node.css(attr);
@@ -415,17 +401,15 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                                         if (direction) {
                                                             const position = REGEXP_POSITION.exec(direction);
                                                             if (position) {
-                                                                if (position[1]) {
-                                                                    switch (position[1]) {
-                                                                        case 'ellipse':
-                                                                        case 'circle':
-                                                                        case 'closest-side':
-                                                                        case 'closest-corner':
-                                                                        case 'farthest-side':
-                                                                        case 'farthest-corner':
-                                                                            result[1] = position[1];
-                                                                            break;
-                                                                    }
+                                                                switch (position[1]) {
+                                                                    case 'ellipse':
+                                                                    case 'circle':
+                                                                    case 'closest-side':
+                                                                    case 'closest-corner':
+                                                                    case 'farthest-side':
+                                                                    case 'farthest-corner':
+                                                                        result[1] = position[1];
+                                                                        break;
                                                                 }
                                                                 if (position[2]) {
                                                                     result[0] = position[2];
@@ -494,13 +478,6 @@ export default abstract class Resource<T extends Node> implements squared.base.R
             {
                 const opacity = node.css('opacity');
                 const color = $color.parseColor(node.css('color'), opacity);
-                let backgroundColor: ColorData | undefined;
-                if (!(backgroundImage ||
-                    node.css('backgroundColor') === node.cssAscend('backgroundColor', false, true) && (node.plainText || node.style.backgroundColor !== node.cssInitial('backgroundColor')) ||
-                    node.documentParent.visible && !node.has('backgroundColor') && $dom.cssFromParent(node.element, 'backgroundColor')))
-                {
-                    backgroundColor = $color.parseColor(node.css('backgroundColor'), opacity);
-                }
                 let fontFamily = node.css('fontFamily');
                 let fontSize = node.css('fontSize');
                 let fontWeight = node.css('fontWeight');
@@ -560,8 +537,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                     fontStyle: node.css('fontStyle'),
                     fontSize,
                     fontWeight,
-                    color: color ? color.valueAsRGBA : '',
-                    backgroundColor: backgroundColor ? backgroundColor.valueAsRGBA : ''
+                    color: color ? color.valueAsRGBA : ''
                 };
                 node.data(Resource.KEY_NAME, 'fontStyle', result);
             }
@@ -576,56 +552,60 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                 let value = '';
                 let inlineTrim = false;
                 let performTrim = true;
-                if (element.tagName === 'INPUT') {
-                    switch (element.type) {
-                        case 'text':
-                        case 'number':
-                        case 'email':
-                        case 'search':
-                        case 'submit':
-                        case 'reset':
-                        case 'button':
-                            value = element.value.trim();
-                            break;
-                        default:
-                            if (node.companion && !node.companion.visible) {
-                                value = node.companion.textContent.trim();
-                            }
-                            break;
-                    }
-                }
-                else if (element.tagName === 'TEXTAREA') {
-                    value = element.value.trim();
-                }
-                else if (node.htmlElement) {
-                    if (element.tagName === 'BUTTON') {
+                switch (element.tagName) {
+                    case 'INPUT':
+                        switch (element.type) {
+                            case 'text':
+                            case 'number':
+                            case 'email':
+                            case 'search':
+                            case 'submit':
+                            case 'reset':
+                            case 'button':
+                                value = element.value.trim();
+                                break;
+                            default:
+                                if (node.companion && !node.companion.visible) {
+                                    value = node.companion.textContent.trim();
+                                }
+                                break;
+                        }
+                        break;
+                    case 'BUTTON':
                         value = element.innerText;
-                    }
-                    else if (node.inlineText) {
-                        name = node.textContent.trim();
-                        if (element.tagName === 'CODE') {
-                            value = $xml.replaceEntity(replaceExcluded(element, 'innerHTML'));
+                        break;
+                    case 'TEXTAREA':
+                        value = element.value.trim();
+                        break;
+                    default:
+                        if (node.plainText) {
+                            name = node.textContent.trim();
+                            value = node.textContent.replace(/&[A-Za-z]+;/g, match => match.replace('&', '&amp;'));
+                            [value, inlineTrim] = replaceWhiteSpace(node, element, value);
                         }
-                        else if ($dom.hasLineBreak(element, true)) {
-                            value = $xml.replaceEntity(replaceExcluded(element, 'innerHTML'))
-                                .replace(/\s*<br[^>]*>\s*/g, '\\n')
-                                .replace(/(<([^>]+)>)/ig, '');
+                        else if (node.inlineText) {
+                            name = node.textContent.trim();
+                            if (element.tagName === 'CODE') {
+                                value = replaceExcluded(element, 'innerHTML');
+                            }
+                            else if ($dom.hasLineBreak(element, true)) {
+                                value = replaceExcluded(element, 'innerHTML')
+                                    .replace(/\s*<br[^>]*>\s*/g, '\\n')
+                                    .replace(/(<([^>]+)>)/ig, '');
+                            }
+                            else {
+                                value = replaceExcluded(element, 'textContent');
+                            }
+                            [value, inlineTrim] = replaceWhiteSpace(node, element, value);
                         }
-                        else {
-                            value = $xml.replaceEntity(replaceExcluded(element, 'textContent'));
+                        else if (node.htmlElement && element.innerText.trim() === '' && Resource.hasDrawableBackground(node.data(Resource.KEY_NAME, 'boxStyle'))) {
+                            value = element.innerText;
+                            performTrim = false;
                         }
-                        [value, inlineTrim] = replaceWhiteSpace(node, value);
-                    }
-                    else if (element.innerText.trim() === '' && Resource.hasDrawableBackground(node.data(Resource.KEY_NAME, 'boxStyle'))) {
-                        value = $xml.replaceEntity(element.innerText);
-                        performTrim = false;
-                    }
+                        break;
                 }
-                else if (node.plainText) {
-                    name = node.textContent.trim();
-                    value = $xml.replaceEntity(node.textContent);
-                    value = value.replace(/&[A-Za-z]+;/g, match => match.replace('&', '&amp;'));
-                    [value, inlineTrim] = replaceWhiteSpace(node, value);
+                if (this.application.userSettings.replaceCharacterEntities) {
+                    value = $xml.replaceEntity(value);
                 }
                 if (value !== '') {
                     if (performTrim) {
@@ -650,13 +630,11 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         }
                         else {
                             if (!/^\s+$/.test(value)) {
-                                value = value.replace(/^\s+/,
-                                    previousSibling && (
-                                        previousSibling.block ||
-                                        previousSibling.lineBreak ||
-                                        previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
-                                        node.multiline && $dom.hasLineBreak(element)
-                                    ) ? '' : '&#160;'
+                                value = value.replace(/^\s+/, previousSibling && (
+                                    previousSibling.block ||
+                                    previousSibling.lineBreak ||
+                                    previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
+                                    node.multiline && $dom.hasLineBreak(element)) ? '' : '&#160;'
                                 );
                                 value = value.replace(/\s+$/, node.display === 'table-cell' || nextSibling && nextSibling.lineBreak || node.blockStatic ? '' : '&#160;');
                             }

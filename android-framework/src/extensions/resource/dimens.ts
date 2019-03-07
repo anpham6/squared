@@ -7,6 +7,10 @@ const $util = squared.lib.util;
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 const NAMESPACE_ATTR = ['android', 'app'];
 
+const REGEXP_WIDGETNAME = /[\s\n]+<[^<]*?(\w+):(\w+)="(-?[\d.]+(?:px|dp|sp))"/;
+const REGEXP_CONTROLNAME = /^[\s\n]+<([\w\-.]+)[\s\n]/;
+const REGEXP_DEVICEUNIT = /^-?[\d.]+(px|dp|sp)$/;
+
 function getResourceName(map: Map<string, string>, name: string, value: string) {
     for (const [storedName, storedValue] of map.entries()) {
         if (storedName.startsWith(name) && value === storedValue) {
@@ -21,7 +25,7 @@ function getAttributeName(value: string) {
 }
 
 function getDisplayName(value: string) {
-    return $util.lastIndexOf(value, '.');
+    return $util.fromLastIndexOf(value, '.');
 }
 
 export default class ResourceDimens<T extends android.base.View> extends squared.base.Extension<T> {
@@ -39,7 +43,7 @@ export default class ResourceDimens<T extends android.base.View> extends squared
                     const obj = node.namespace(namespace);
                     for (const attr in obj) {
                         const value = obj[attr].trim();
-                        if (/^-?[\d.]+(px|dp|sp)$/.test(value)) {
+                        if (REGEXP_DEVICEUNIT.test(value)) {
                             const dimen = `${namespace},${attr},${value}`;
                             if (groups[tagName][dimen] === undefined) {
                                 groups[tagName][dimen] = [];
@@ -65,11 +69,10 @@ export default class ResourceDimens<T extends android.base.View> extends squared
 
     public afterFinalize() {
         for (const view of this.application.viewData) {
-            const pattern = /[\s\n]+<[^<]*?(\w+):(\w+)="(-?[\d.]+(?:px|dp|sp))"/;
             let match: RegExpExecArray | null;
             let content = view.content;
-            while ((match = pattern.exec(content)) !== null) {
-                const controlName = /^[\s\n]+<([\w\-.]+)[\s\n]/.exec(match[0]);
+            while ((match = REGEXP_WIDGETNAME.exec(content)) !== null) {
+                const controlName = REGEXP_CONTROLNAME.exec(match[0]);
                 if (controlName) {
                     const key = getResourceName(STORED.dimens, `${getDisplayName(controlName[1]).toLowerCase()}_${getAttributeName(match[2])}`, match[3]);
                     STORED.dimens.set(key, match[3]);

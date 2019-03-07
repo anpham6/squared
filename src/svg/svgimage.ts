@@ -144,7 +144,7 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
         const transforms = super.transforms;
         if (!this.__get_transforms) {
             if (this.imageElement) {
-                transforms.push(...this.getTransforms(this.imageElement));
+                $util.concatArray(transforms, this.getTransforms(this.imageElement));
             }
             this.__get_transforms = true;
         }
@@ -155,7 +155,7 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
         const animations = super.animations;
         if (!this.__get_animations) {
             if (this.imageElement) {
-                animations.push(...this.getAnimations(this.imageElement));
+                $util.concatArray(animations, this.getAnimations(this.imageElement));
             }
             this.__get_animations = true;
         }

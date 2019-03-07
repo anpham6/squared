@@ -156,7 +156,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         values.push(ANIMATION_DEFAULT[name]);
                     }
                     while (values.length < animationName.length) {
-                        values.push(...values.slice(0));
+                        $util.concatArray(values, values.slice(0));
                     }
                     values.length = animationName.length;
                     cssData[name] = values;

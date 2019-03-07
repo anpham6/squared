@@ -79,7 +79,7 @@
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@+id/textview_18"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol22781"
+                    android:text="@string/__symbol35380"
                     style="@style/Plaintext" />
             </RelativeLayout>
             <LinearLayout
@@ -228,7 +228,7 @@
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@+id/textview_21"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol22781"
+                    android:text="@string/__symbol35380"
                     style="@style/Plaintext" />
             </RelativeLayout>
             <LinearLayout
@@ -665,7 +665,7 @@
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@+id/textview_24"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol22781"
+                    android:text="@string/__symbol35380"
                     style="@style/Plaintext" />
             </RelativeLayout>
             <LinearLayout
@@ -794,7 +794,7 @@
     <string name="app_name">squared_ui</string>
     <string name="__00_inactive">00 - Inactive</string>
     <string name="__01_active">01 - Active</string>
-    <string name="__symbol22781">):</string>
+    <string name="__symbol35380">):</string>
     <string name="active">Active:</string>
     <string name="add">Add</string>
     <string name="all">All</string>
@@ -825,6 +825,7 @@
     <string name="version">Version:</string>
     <string name="yes">Yes</string>
 </resources>
+<!-- filename: res/values/strings.xml -->
 
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
@@ -966,6 +967,7 @@
         <item>2018</item>
     </string-array>
 </resources>
+<!-- filename: res/values/string_arrays.xml -->
 
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
@@ -979,6 +981,7 @@
     <color name="white_smoke_1">#DDDDDD</color>
     <color name="white">#FFFFFF</color>
 </resources>
+<!-- filename: res/values/colors.xml -->
 
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
@@ -1057,18 +1060,7 @@
         <item name="android:textSize">13sp</item>
     </style>
 </resources>
-
-<?xml version="1.0" encoding="utf-8"?>
-<font-family xmlns:android="http://schemas.android.com/apk/res/android">
-    <font android:fontStyle="italic" android:fontWeight="400" android:font="@font/arial_italic" />
-    <font android:fontStyle="normal" android:fontWeight="400" android:font="@font/arial_normal" />
-</font-family>
-<!-- filename: res/font/arial.xml -->
-
-<?xml version="1.0" encoding="utf-8"?>
-<font-family xmlns:android="http://schemas.android.com/apk/res/android">
-    <font android:fontStyle="normal" android:fontWeight="700" android:font="@font/tahoma_bold" />
-</font-family>
+<!-- filename: res/values/styles.xml -->
 
 <?xml version="1.0" encoding="utf-8"?>
 <resources>

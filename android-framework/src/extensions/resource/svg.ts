@@ -654,7 +654,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                         }
                                     }
                                     sequentially.push(item);
-                                    sequentially.push(...after);
+                                    $util.concatArray(sequentially, after);
                                     sequentialMap.set(`sequentially_companion_${i}`, <$SvgAnimate[]> sequentially);
                                 }
                                 else {
@@ -719,14 +719,14 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                 let synchronized = false;
                                 let fillBefore = false;
                                 let useKeyFrames = true;
-                                if (index <= 1 && items.some((item: $SvgAnimate) => item.synchronized !== undefined && item.synchronized.value !== '')) {
+                                if (index <= 1 && items.some((item: $SvgAnimate) => !!item.synchronized && item.synchronized.value !== '')) {
                                     if (!$SvgBuild.asAnimateTransform(items[0])) {
                                         ordering = 'sequentially';
                                     }
                                     synchronized = true;
                                     useKeyFrames = false;
                                 }
-                                else if (index <= 1 && items.some((item: $SvgAnimate) => item.synchronized !== undefined && item.synchronized.value === '')) {
+                                else if (index <= 1 && items.some((item: $SvgAnimate) => !!item.synchronized && item.synchronized.value === '')) {
                                     ordering = 'sequentially';
                                     synchronized = true;
                                     fillBefore = true;
@@ -903,7 +903,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                 }
                                                 values = getTransformValues(item);
                                                 if (fillBefore || requireBefore) {
-                                                    beforeValues.push(...$util.objectMap<string, string>(propertyNames, value => getTransformInitialValue(value) || '0'));
+                                                    $util.concatArray(beforeValues, $util.objectMap<string, string>(propertyNames, value => getTransformInitialValue(value) || '0'));
                                                 }
                                                 transformOrigin = item.transformOrigin;
                                                 transforming = true;
@@ -914,7 +914,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                     case 'intType':
                                                         values = $util.objectMap<string, string>(item.values, value => $util.convertInt(value).toString());
                                                         if (requireBefore && item.baseValue) {
-                                                            beforeValues.push(...$util.replaceMap<number, string>($SvgBuild.parseCoordinates(item.baseValue), value => Math.trunc(value).toString()));
+                                                            $util.concatArray(beforeValues, $util.replaceMap<number, string>($SvgBuild.parseCoordinates(item.baseValue), value => Math.trunc(value).toString()));
                                                         }
                                                         break;
                                                     case 'floatType':
@@ -927,14 +927,14 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                                                 break;
                                                         }
                                                         if (requireBefore && item.baseValue) {
-                                                            beforeValues.push(...$util.replaceMap<number, string>($SvgBuild.parseCoordinates(item.baseValue), value => value.toString()));
+                                                            $util.concatArray(beforeValues, $util.replaceMap<number, string>($SvgBuild.parseCoordinates(item.baseValue), value => value.toString()));
                                                         }
                                                         break;
                                                     default:
                                                         values = item.values.slice(0);
                                                         if (isColorType(item.attributeName)) {
                                                             if (requireBefore && item.baseValue) {
-                                                                beforeValues.push(...getColorValue<true>(item.baseValue, true));
+                                                                $util.concatArray(beforeValues, getColorValue<true>(item.baseValue, true));
                                                             }
                                                             for (let i = 0; i < values.length; i++) {
                                                                 if (values[i] !== '') {
@@ -1130,7 +1130,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                     animatorData.ordering = '';
                                 }
                                 if (!filled && setData.ordering !== 'sequentially' && animatorData.ordering !== 'sequentially' && animatorData.repeating.every(repeat => repeat.propertyValues === false)) {
-                                    togetherData.together.push(...animatorData.repeating);
+                                    $util.concatArray(togetherData.together, animatorData.repeating);
                                     animatorData.repeating.length = 0;
                                 }
                                 else if (valid) {
@@ -1263,7 +1263,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                         clipGroup.push({ clipPathData });
                                     }
                                     for (let i = 0; i < strokeDash.length; i++) {
-                                        const pathObject = i === 0 ? pathData : Object.assign({}, pathData);
+                                        const pathObject = i === 0 ? pathData : { ...pathData };
                                         pathObject.name = `${groupName}_${i}`;
                                         if (animateData) {
                                             this.ANIMATE_DATA.set(pathObject.name, {
@@ -1361,7 +1361,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 const transformed: SvgTransform[] = [];
                 for (const data of transforms) {
                     path[0].push(createTransformData(data));
-                    transformed.push(...data);
+                    $util.concatArray(transformed, data);
                 }
                 target.transformed = transformed.reverse();
             }
@@ -1582,13 +1582,13 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
         if (transformResult.length) {
             const data = this.ANIMATE_DATA.get(groupName);
             if (data) {
-                data.animate.push(...transformResult);
+                $util.concatArray(data.animate, transformResult);
             }
         }
         if (replaceResult.length) {
             const data = this.ANIMATE_DATA.get(result.name);
             if (data) {
-                data.animate.push(...replaceResult);
+                $util.concatArray(data.animate, replaceResult);
             }
             else {
                 this.ANIMATE_DATA.set(result.name, {

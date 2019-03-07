@@ -668,14 +668,20 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static centerPoints(values: SvgPoint[]): SvgPoint {
         const result = this.minMaxPoints(values);
-        return { x: (result[0] + result[2]) / 2, y: (result[1] + result[3]) / 2 };
+        return {
+            x: (result[0] + result[2]) / 2,
+            y: (result[1] + result[3]) / 2
+        };
     }
 
     public static convertPoints(values: number[]) {
         const result: Point[] = [];
         if (values.length % 2 === 0) {
             for (let i = 0; i < values.length; i += 2) {
-                result.push({ x: values[i], y: values[i + 1] });
+                result.push({
+                    x: values[i],
+                    y: values[i + 1]
+                });
             }
         }
         return result;
@@ -706,7 +712,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     public static parseBoxRect(values: string[]): BoxRect {
         const points: SvgPoint[] = [];
         for (const value of values) {
-            points.push(...SvgBuild.extractPathPoints(SvgBuild.getPathCommands(value), true));
+            $util.concatArray(points, SvgBuild.extractPathPoints(SvgBuild.getPathCommands(value), true));
         }
         const result = this.minMaxPoints(points);
         return { top: result[1], right: result[2], bottom: result[3], left: result[0] };

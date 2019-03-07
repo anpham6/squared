@@ -63,21 +63,20 @@ const TEMPLATES = {
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 
 function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = false): string {
+    const borderWidth = parseInt(border.width);
+    const solid = `android:color="@color/${border.color}"`;
+    const dashed = `${solid} android:dashWidth="${borderWidth}px" android:dashGap="${borderWidth}px"`;
     const result = {
-        solid: `android:color="@color/${border.color}"`,
+        solid,
+        double: solid,
+        inset: solid,
+        outset: solid,
+        dashed,
+        dotted: dashed,
         groove: '',
         ridge: ''
     };
     const style = border.style;
-    const borderWidth = parseInt(border.width);
-    const dashed = `${result.solid} android:dashWidth="${borderWidth}px" android:dashGap="${borderWidth}px"`;
-    Object.assign(result, {
-        double: result.solid,
-        inset: result.solid,
-        outset: result.solid,
-        dashed,
-        dotted: dashed
-    });
     const groove = style === 'groove';
     if (borderWidth > 1 && (groove || style === 'ridge')) {
         const color = $color.parseColor(border.color);
@@ -132,8 +131,8 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
     return result[style] || result.solid;
 }
 
-function getShapeAttribute(boxStyle: BoxStyle, name: string, direction = -1, hasInset = false, isInset = false): {}[] | false {
-    switch (name) {
+function getShapeAttribute(boxStyle: BoxStyle, attr: string, direction = -1, hasInset = false, isInset = false): StringMap[] | false {
+    switch (attr) {
         case 'stroke':
             if (boxStyle.border && Resource.isBorderVisible(boxStyle.border)) {
                 if (!hasInset || isInset) {
@@ -233,7 +232,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         for (const node of this.application.processing.cache.duplicate().sort(a => !a.visible ? -1 : 0)) {
             const stored: BoxStyle = node.data(Resource.KEY_NAME, 'boxStyle');
             if (stored && !node.hasBit('excludeResource', $enum.NODE_RESOURCE.BOX_STYLE)) {
-                stored.backgroundColor = Resource.addColor(stored.backgroundColor);
                 const backgroundRepeat = $util.replaceMap<string, string>(stored.backgroundRepeat.split(','), value => value.trim());
                 const backgroundSize = $util.replaceMap<string, string>(stored.backgroundSize.split(','), value => value.trim());
                 const backgroundPositionX = $util.replaceMap<string, string>(stored.backgroundPositionX.split(','), value => value.trim());
@@ -536,7 +534,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             layerList.B.push(imageData);
                         }
                     }
-                    const backgroundColor = getShapeAttribute(stored, 'backgroundColor') || [];
+                    stored.backgroundColor = Resource.addColor(stored.backgroundColor);
+                    const backgroundColor = getShapeAttribute(stored, 'backgroundColor');
                     const borderRadius = getShapeAttribute(stored, 'radius');
                     let template: StringMap;
                     let shape: TemplateDataA | undefined;
@@ -557,7 +556,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         else {
                             template = TEMPLATES.LAYER_LIST;
                             layerList.A = backgroundColor;
-                            if (Resource.isBorderVisible(border) || borderRadius) {
+                            if (borderData || borderRadius) {
                                 layerList.C = [{ stroke, corners: borderRadius }];
                             }
                         }
@@ -707,8 +706,17 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                     node.android('background', `@drawable/${resourceName}`, false);
                 }
-                else if (!node.data(Resource.KEY_NAME, 'fontStyle') && $util.hasValue(stored.backgroundColor)) {
-                    node.android('background', `@color/${stored.backgroundColor}`, false);
+                else if (stored.backgroundColor) {
+                    const fontStyle: FontAttribute = node.data(Resource.KEY_NAME, 'fontStyle');
+                    if (fontStyle) {
+                        fontStyle.backgroundColor = stored.backgroundColor;
+                    }
+                    else {
+                        stored.backgroundColor = Resource.addColor(stored.backgroundColor);
+                        if (stored.backgroundColor !== '') {
+                            node.android('background', `@color/${stored.backgroundColor}`, false);
+                        }
+                    }
                 }
             }
         }

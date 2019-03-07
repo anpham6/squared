@@ -21,11 +21,11 @@ export default class ScrollView<T extends android.base.View> extends squared.bas
         const element = <HTMLInputElement> node.element;
         const target = !node.dataset.use ? node.dataset.target : undefined;
         const pending: T[] = [];
-        let replaceWith: T | undefined;
+        let replacement: T | undefined;
         const children = parent.flatMap((item: T) => {
             if (item.renderAs) {
                 if (item.renderAs === node) {
-                    replaceWith = item;
+                    replacement = item;
                 }
                 else {
                     pending.push(item);
@@ -33,17 +33,14 @@ export default class ScrollView<T extends android.base.View> extends squared.bas
                 item = item.renderAs as T;
             }
             const input = <HTMLInputElement> item.element;
-            if (input.type === 'radio' && input.name === element.name && !item.rendered) {
-                return item;
-            }
-            return null;
+            return input.type === 'radio' && input.name === element.name && !item.rendered ? item : undefined;
         }) as T[];
         if (children.length > 1) {
             const controller = this.application.controllerHandler;
-            const container = controller.createNodeGroup(node, children, parent, replaceWith);
+            const container = controller.createNodeGroup(node, children, parent, replacement);
             container.alignmentType |= $enum.NODE_ALIGNMENT.HORIZONTAL | (parent.length !== children.length ? $enum.NODE_ALIGNMENT.SEGMENTED : 0);
             if (parent.layoutConstraint) {
-                container.companion = replaceWith || node;
+                container.companion = replacement || node;
             }
             container.setControlType(RADIO_GROUP, CONTAINER_NODE.INLINE);
             container.inherit(node, 'alignment');

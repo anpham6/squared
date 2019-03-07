@@ -69,7 +69,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                 offsetY = tileHeight - offsetY;
                 remainingHeight += tileHeight;
             }
-            options = Object.assign({}, options);
+            options = { ...options };
             while (remainingHeight > 0) {
                 const y = boundingY + j * tileHeight - offsetY;
                 let remainingWidth = width;
@@ -185,7 +185,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                             break;
                     }
                 }
-                super.transforms.push(...SvgBuild.filterTransforms(transforms));
+                $util.concatArray(super.transforms, SvgBuild.filterTransforms(transforms));
             }
             this.__get_transforms = true;
         }

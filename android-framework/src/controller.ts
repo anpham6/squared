@@ -81,7 +81,7 @@ function sortHorizontalFloat<T extends View>(list: T[]) {
         });
         if (!$util.isEqual(list, result)) {
             list.length = 0;
-            list.push(...result);
+            $util.concatArray(list, result);
             return true;
         }
     }
@@ -373,16 +373,16 @@ export default class Controller<T extends View> extends squared.base.Controller<
     };
 
     public finalize(data: SessionData<$NodeList<T>>) {
-        const views = [...data.views, ...data.includes];
+        const templates = data.templates;
         if (this.userSettings.showAttributes) {
             for (const node of data.cache) {
                 if (node.visible) {
                     const hash = $xml.formatPlaceholder(node.id, '@');
-                    if (views.length === 1) {
-                        views[0].content = views[0].content.replace(hash, parseAttributes(node));
+                    if (templates.length === 1) {
+                        templates[0].content = templates[0].content.replace(hash, parseAttributes(node));
                     }
                     else {
-                        for (const view of views) {
+                        for (const view of templates) {
                             if (view.content.indexOf(hash) !== -1) {
                                 view.content = view.content.replace(hash, parseAttributes(node));
                                 break;
@@ -392,7 +392,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 }
             }
         }
-        for (const view of views) {
+        for (const view of templates) {
             view.content = this.removePlaceholders(
                 replaceTab(
                     replaceUnit(
@@ -588,7 +588,6 @@ export default class Controller<T extends View> extends squared.base.Controller<
 
     public sortRenderPosition(parent: T, children: T[]) {
         if (parent.layoutConstraint && children.some(item => !item.pageFlow)) {
-            const ordered: T[] = [];
             const below: T[] = [];
             const middle: T[] = [];
             const above: T[] = [];
@@ -605,10 +604,11 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     }
                 }
             }
-            ordered.push(...$util.sortArray(below, true, 'zIndex', 'id'));
-            ordered.push(...middle);
-            ordered.push(...$util.sortArray(above, true, 'zIndex', 'id'));
-            return ordered;
+            return $util.concatMultiArray(
+                $util.sortArray(below, true, 'zIndex', 'id'),
+                middle,
+                $util.sortArray(above, true, 'zIndex', 'id')
+            );
         }
         return [];
     }
@@ -1789,7 +1789,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     if (aboveEnd) {
                         nodes.push(aboveEnd);
                         if (chain.element) {
-                            nodes.push(...$util.flatMap($dom.getElementsBetween(aboveEnd.element, chain.element), element => $dom.getElementAsNode<T>(element) as T));
+                            $util.concatArray(nodes, $util.flatMap($dom.getElementsBetween(aboveEnd.element, chain.element), element => $dom.getElementAsNode<T>(element) as T));
                         }
                     }
                     else {

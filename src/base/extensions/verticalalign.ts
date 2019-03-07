@@ -67,7 +67,7 @@ export default class VerticalAlign<T extends Node> extends Extension<T> {
                 baseline.modifyBox(BOX_STANDARD.MARGIN_TOP, baseline.linear.top - mainData.aboveBaseline[0].linear.top);
             }
             else {
-                [...mainData.belowBaseline, ...mainData.aboveBaseline].some(item => {
+                ([] as T[]).concat(mainData.belowBaseline, mainData.aboveBaseline).some(item => {
                     const verticalAlign = $util.convertInt(item.cssInitial('verticalAlign'));
                     if (verticalAlign > 0) {
                         item.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, verticalAlign);

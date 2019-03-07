@@ -96,7 +96,7 @@ declare global {
             function formatPX(value: string | number): string;
             function formatPercent(value: string | number, round?: boolean): string;
             function formatString(value: string, ...params: string[]): string;
-            function hasBit(value: number, type: number): boolean;
+            function hasBit(value: number, offset: number): boolean;
             function isNumber(value: string): boolean;
             function isString(value: any): value is string;
             function isArray<T>(value: any): value is Array<T>;
@@ -114,11 +114,11 @@ declare global {
             function optionalAsBoolean(obj: UndefNull<object>, value: string): boolean;
             function resolvePath(value: string): string;
             function trimNull(value: string | undefined): string;
-            function trimString(value: string | undefined, char: string): string;
-            function trimStart(value: string | undefined, char: string): string;
-            function trimEnd(value: string | undefined, char: string): string;
-            function indexOf(value: string, ...terms: string[]): number;
-            function lastIndexOf(value: string, char?: string): string;
+            function trimString(value: string, char: string): string;
+            function trimStart(value: string, char: string): string;
+            function trimEnd(value: string, char: string): string;
+            function firstIndexOf(value: string, ...terms: string[]): number;
+            function fromLastIndexOf(value: string, char?: string): string;
             function searchObject(obj: StringMap, value: string | StringMap): any[][];
             function hasValue<T>(value: T): value is T;
             function hasInSet<T>(list: Set<T>, condition: (x: T) => boolean): boolean;
@@ -133,6 +133,8 @@ declare global {
             function partitionArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): [T[], T[]];
             function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>): T[];
             function filterArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): T[];
+            function concatArray<T>(dest: T[], source: T[]): T[];
+            function concatMultiArray<T>(dest: T[], ...source: T[][]): T[];
             function flatMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[];
             function filterMap<T, U>(list: T[], predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, U>): U[];
             function objectMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[];
@@ -150,7 +152,7 @@ declare global {
             function replaceEntity(value: string): string;
             function replaceCharacter(value: string): string;
             function parseTemplate(value: string): StringMap;
-            function createTemplate(value: StringMap, data: ExternalData, format?: boolean): string;
+            function createTemplate(templates: StringMap, data: ExternalData, format?: boolean): string;
             function formatTemplate(value: string, closeEmpty?: boolean, char?: string): string;
         }
     }

@@ -29,24 +29,21 @@ export function setFramework(value: AppFramework<T>, cached = false) {
         settings = appBase.userSettings;
         main = appBase.application;
         main.userSettings = settings;
-        if (Array.isArray(settings.builtInExtensions)) {
-            const register = new Set<Extension>();
-            for (let namespace of settings.builtInExtensions) {
-                namespace = namespace.trim();
-                if (main.builtInExtensions[namespace]) {
-                    register.add(main.builtInExtensions[namespace]);
-                }
-                else {
-                    for (const extension in main.builtInExtensions) {
-                        if (extension.startsWith(`${namespace}.`)) {
-                            register.add(main.builtInExtensions[extension]);
-                        }
+        const register = new Set<Extension>();
+        for (const namespace of settings.builtInExtensions) {
+            if (main.builtInExtensions[namespace]) {
+                register.add(main.builtInExtensions[namespace]);
+            }
+            else {
+                for (const extension in main.builtInExtensions) {
+                    if (extension.startsWith(`${namespace}.`)) {
+                        register.add(main.builtInExtensions[extension]);
                     }
                 }
             }
-            for (const extension of register) {
-                main.extensionManager.include(extension);
-            }
+        }
+        for (const extension of register) {
+            main.extensionManager.include(extension);
         }
         framework = value;
         system = value.system;

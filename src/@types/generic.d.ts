@@ -2,6 +2,7 @@ type Undefined<T> = T | undefined;
 type Null<T> = T | null;
 type UndefNull<T> = Undefined<T> | Null<T>;
 type Nullable<T> = { [P in keyof T]: T[P] | null; };
+type Optional<T> = { [P in keyof T]: T[P] | undefined; };
 
 type Constructor<T> = new(...args: any[]) => T;
 

@@ -157,7 +157,7 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         public apply(options: {}) {
-            const data = Object.assign({}, options);
+            const data = { ...options };
             super.apply(data);
             for (const obj in data) {
                 this.formatted(`${obj}="${data[obj]}"`);
@@ -197,7 +197,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                             }
                             this.constraint.current[position] = {
                                 documentId,
-                                horizontal: $util.indexOf(position.toLowerCase(), 'left', 'right') !== -1
+                                horizontal: $util.firstIndexOf(position.toLowerCase(), 'left', 'right') !== -1
                             };
                             return true;
                         }
@@ -478,7 +478,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                         name = `_${name}`;
                     }
                 }
-                this.controlId = $util.convertWord($Resource.generateId('android', name || $util.lastIndexOf(this.controlName, '.').toLowerCase(), name ? 0 : 1));
+                this.controlId = $util.convertWord($Resource.generateId('android', name || $util.fromLastIndexOf(this.controlName, '.').toLowerCase(), name ? 0 : 1));
                 this.android('id', this.documentId);
             }
         }

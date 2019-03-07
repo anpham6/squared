@@ -18,7 +18,7 @@ export default class ResourceStrings<T extends android.base.View> extends square
             if (!node.hasBit('excludeResource', $enum.NODE_RESOURCE.VALUE_STRING)) {
                 const element = node.element;
                 if (element && element.tagName === 'SELECT') {
-                    const [stringArray, numberArray] = Resource.getOptionArray(<HTMLSelectElement> element);
+                    const [stringArray, numberArray] = Resource.getOptionArray(<HTMLSelectElement> element, this.application.userSettings.replaceCharacterEntities);
                     let result: string[] | undefined;
                     if (!this.options.numberResourceValue && numberArray && numberArray.length) {
                         result = numberArray;

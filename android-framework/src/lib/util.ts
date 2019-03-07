@@ -15,7 +15,7 @@ export function createViewAttribute(options?: ExternalData): ViewAttribute {
     return {
         android: {},
         app: {},
-        ...(options && typeof options === 'object' ? options : {})
+        ...options
     };
 }
 
@@ -44,13 +44,11 @@ export function validateString(value: string) {
 }
 
 export function convertUnit(value: string, dpi = 160, font = false) {
-    if (value) {
-        let result = parseFloat(value);
-        if (!isNaN(result)) {
-            result /= dpi / 160;
-            value = result >= 1 || result === 0 ? Math.floor(result).toString() : result.toPrecision(2);
-            return value + (font ? 'sp' : 'dp');
-        }
+    let result = parseFloat(value);
+    if (!isNaN(result)) {
+        result /= dpi / 160;
+        value = result >= 1 || result === 0 ? Math.floor(result).toString() : result.toPrecision(2);
+        return value + (font ? 'sp' : 'dp');
     }
     return '0dp';
 }
@@ -79,10 +77,12 @@ export function calculateBias(start: number, end: number, accuracy = 4) {
 }
 
 export function replaceRTL(value: string, rtl = true, api = BUILD_ANDROID.OREO) {
-    value = value ? value.trim() : '';
     if (rtl && api >= BUILD_ANDROID.JELLYBEAN_1) {
-        value = value.replace(/left/g, 'start').replace(/right/g, 'end');
-        value = value.replace(/Left/g, 'Start').replace(/Right/g, 'End');
+        value = value
+            .replace(/left/, 'start')
+            .replace(/Left/g, 'Start')
+            .replace(/right/, 'end')
+            .replace(/Right/g, 'End');
     }
     return value;
 }

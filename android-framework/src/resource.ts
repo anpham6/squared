@@ -69,11 +69,11 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                         switch (path.element.tagName) {
                             case 'path':
                                 for (const command of $SvgBuild.getPathCommands(path.value)) {
-                                    points.push(...command.value);
+                                    $util.concatArray(points, command.value);
                                 }
                             case 'polygon':
                                 if (path.element instanceof SVGPolygonElement) {
-                                    points.push(...$SvgBuild.clonePoints(path.element.points));
+                                    $util.concatArray(points, $SvgBuild.clonePoints(path.element.points));
                                 }
                                 if (!points.length) {
                                     break;
@@ -282,7 +282,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
         return options;
     }
 
-    public static getOptionArray(element: HTMLSelectElement) {
+    public static getOptionArray(element: HTMLSelectElement, replaceEntities = false) {
         const stringArray: string[] = [];
         let numberArray: string[] | undefined = [];
         let i = -1;
@@ -300,7 +300,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                         continue;
                     }
                     if (value !== '') {
-                        stringArray.push($xml.replaceEntity(value));
+                        stringArray.push(replaceEntities ? $xml.replaceEntity(value) : value);
                     }
                 }
             }
@@ -402,7 +402,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                     if (!$util.hasValue(match[2])) {
                         match[2] = '1';
                     }
-                    const src = filepath + $util.lastIndexOf(match[1]);
+                    const src = filepath + $util.fromLastIndexOf(match[1]);
                     const size = parseFloat(match[2]);
                     if (size <= 0.75) {
                         images.ldpi = src;
@@ -434,8 +434,8 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
     public static addImage(images: StringMap, prefix = '') {
         let src = '';
         if (images.mdpi) {
-            src = $util.lastIndexOf(images.mdpi);
-            const format = $util.lastIndexOf(src, '.').toLowerCase();
+            src = $util.fromLastIndexOf(images.mdpi);
+            const format = $util.fromLastIndexOf(src, '.').toLowerCase();
             switch (format) {
                 case 'bmp':
                 case 'cur':
@@ -464,21 +464,22 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
         }
         if (value && (value.valueAsRGBA !== '#00000000' || transparency)) {
             const argb = value.opaque ? value.valueAsARGB : value.valueAsRGB;
-            let name = STORED.colors.get(argb) || '';
-            if (name === '') {
-                const shade = $color.findColorShade(value.valueAsRGB);
-                if (shade) {
-                    shade.name = $util.convertUnderscore(shade.name);
-                    if (!value.opaque && shade.value === value.valueAsRGB) {
-                        name = shade.name;
-                    }
-                    else {
-                        name = Resource.generateId('color', shade.name);
-                    }
-                    STORED.colors.set(argb, name);
-                }
+            let name = STORED.colors.get(argb);
+            if (name) {
+                return name;
             }
-            return name;
+            const shade = $color.findColorShade(value.valueAsRGB);
+            if (shade) {
+                shade.name = $util.convertUnderscore(shade.name);
+                if (!value.opaque && shade.value === value.valueAsRGB) {
+                    name = shade.name;
+                }
+                else {
+                    name = Resource.generateId('color', shade.name);
+                }
+                STORED.colors.set(argb, name);
+                return name;
+            }
         }
         return '';
     }

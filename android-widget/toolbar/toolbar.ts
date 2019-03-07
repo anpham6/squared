@@ -53,7 +53,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         const controller = application.controllerHandler;
         const element = <HTMLElement> node.element;
         const target = node.dataset.target;
-        const options: ExternalData = Object.assign({}, this.options[element.id]);
+        const options: ExternalData = { ...this.options[element.id] };
         const toolbarOptions = $utilA.createViewAttribute(options.self);
         const appBarOptions = $utilA.createViewAttribute(options.appBar);
         const collapsingToolbarOptions = $utilA.createViewAttribute(options.collapsingToolbar);
@@ -292,7 +292,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
     }
 
     private setStyleTheme(themeData: ToolbarThemeData) {
-        const options = $utilA.createStyleAttribute(Object.assign({}, this.options.resource));
+        const options = $utilA.createStyleAttribute(this.options.resource);
         const optionsActionBar = $utilA.createStyleAttribute({ name: '.NoActionBar', output: options.output });
         const optionsAppBar = $utilA.createStyleAttribute({ name: '.AppBarOverlay', output: options.output });
         const optionsPopup = $utilA.createStyleAttribute({ name: '.PopupOverlay', output: options.output });

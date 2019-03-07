@@ -63,7 +63,7 @@ interface FontAttribute {
     fontSize: string;
     fontWeight: string;
     color: string;
-    backgroundColor: string;
+    backgroundColor?: string;
 }
 
 interface BoxBorder {

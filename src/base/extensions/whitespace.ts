@@ -246,7 +246,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                     const previous: T[] = [];
                     let current = node;
                     while (true) {
-                        previous.push(...current.previousSiblings() as T[]);
+                        $util.concatArray(previous, current.previousSiblings());
                         if (previous.length && !previous.some(item => item.lineBreak || item.excluded && item.blockStatic)) {
                             const previousSibling = previous[previous.length - 1];
                             if (previousSibling.inlineVertical) {

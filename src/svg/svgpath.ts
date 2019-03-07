@@ -748,7 +748,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                             group[j].replaceValue = getFromToValue(replaceValue[j]);
                                         }
                                     }
-                                    extracted.push(...group);
+                                    $util.concatArray(extracted, group);
                                     modified = true;
                                     continue;
                                 }
@@ -973,7 +973,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                             }
                         }
                         animations.length = 0;
-                        animations.push(...extracted);
+                        $util.concatArray(animations, extracted);
                     }
                 }
             }

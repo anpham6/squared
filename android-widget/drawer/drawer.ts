@@ -106,7 +106,7 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
     }
 
     private setStyleTheme(api: number) {
-        const options = $utilA.createStyleAttribute(Object.assign({}, this.options.resource));
+        const options = $utilA.createStyleAttribute(this.options.resource);
         $util.defaultWhenNull(options, 'parent', 'Theme.AppCompat.Light.NoActionBar');
         $util.defaultWhenNull(options.items, 'android:windowTranslucentStatus', 'true');
         $Resource.addTheme(options);

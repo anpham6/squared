@@ -118,10 +118,14 @@ const appBase: AppFramework<T> = {
             if (customization.API_ANDROID[build]) {
                 const assign = customization.API_ANDROID[build].assign;
                 if (assign[widget] === undefined) {
-                    assign[widget] = {};
+                    assign[widget] = options;
                 }
-                Object.assign(assign[widget], options);
+                else {
+                    Object.assign(assign[widget], options);
+                }
+                return assign[widget];
             }
+            return undefined;
         },
         addXmlNs(name: string, uri: string) {
             constant.XMLNS_ANDROID[name] = uri;
@@ -198,7 +202,7 @@ const appBase: AppFramework<T> = {
         const EA = constant.EXT_ANDROID;
         application = new squared.base.Application(framework, View, Controller, Resource, ExtensionManager);
         fileHandler = new File(application.resourceHandler);
-        userSettings = Object.assign({}, SETTINGS);
+        userSettings = { ...SETTINGS };
         Object.assign(application.builtInExtensions, {
             [EN.EXTERNAL]: new External(EN.EXTERNAL, framework),
             [EN.SUBSTITUTE]: new Substitute(EN.SUBSTITUTE, framework),

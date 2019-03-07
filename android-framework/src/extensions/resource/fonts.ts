@@ -1,16 +1,15 @@
-import { ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from '../../@types/application';
+import { ResourceStoredMapAndroid, StyleAttribute } from '../../@types/application';
 
 import Resource from '../../resource';
 import View from '../../view';
 
 import { BUILD_ANDROID } from '../../lib/enumeration';
-import { replaceUnit } from '../../lib/util';
 
 type StyleList = ObjectMap<number[]>;
 type SharedAttributes = ObjectMapNested<number[]>;
 type AttributeMap = ObjectMap<number[]>;
 type TagNameMap = ObjectMap<StyleAttribute[]>;
-type NodeStyleMap = ObjectMapNested<string[]>;
+type NodeStyleMap = ObjectMap<string[]>;
 
 const $enum = squared.base.lib.enumeration;
 const $dom = squared.lib.dom;
@@ -117,7 +116,6 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
     public readonly eventOnly = true;
 
     public afterParseDocument() {
-        const settings = <UserSettingsAndroid> this.application.userSettings;
         const nameMap: ObjectMap<T[]> = {};
         const groupMap: ObjectMap<StyleList[]> = {};
         for (const node of this.application.session.cache) {
@@ -136,9 +134,11 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 if (companion && !companion.visible && companion.tagName === 'LABEL') {
                     node = companion as T;
                 }
-                const stored: FontAttribute = Object.assign({}, node.data(Resource.KEY_NAME, 'fontStyle'));
+                const stored: FontAttribute = { ...node.data(Resource.KEY_NAME, 'fontStyle') };
                 let system = false;
-                stored.backgroundColor = Resource.addColor(stored.backgroundColor);
+                if (stored.backgroundColor) {
+                    stored.backgroundColor = Resource.addColor(stored.backgroundColor);
+                }
                 if (stored.fontFamily) {
                     let fontFamily = stored.fontFamily.split(',')[0].replace(/"/g, '').toLowerCase().trim();
                     let fontStyle = '';
@@ -153,7 +153,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         if (stored.fontStyle === 'normal') {
                             stored.fontStyle = '';
                         }
-                        if (stored.fontWeight === '400') {
+                        if (stored.fontWeight === '400' || !node.supported('android', 'fontWeight')) {
                             stored.fontWeight = '';
                         }
                     }
@@ -171,14 +171,13 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         Resource.STORED.fonts.set(fontFamily, fonts);
                     }
                 }
-
                 for (let i = 0; i < styleKeys.length; i++) {
                     const value: string = stored[styleKeys[i]];
-                    if (value !== '' && node.supported('android', styleKeys[i])) {
+                    if (value) {
+                        const attr = $util.formatString(FONT_STYLE[styleKeys[i]], value);
                         if (sorted[i] === undefined) {
                             sorted[i] = {};
                         }
-                        const attr = $util.formatString(FONT_STYLE[styleKeys[i]], value);
                         if (sorted[i][attr] === undefined) {
                             sorted[i][attr] = [];
                         }
@@ -189,10 +188,8 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             groupMap[tag] = sorted;
         }
         const style: SharedAttributes = {};
-        const layout: SharedAttributes = {};
         for (const tag in groupMap) {
             style[tag] = {};
-            layout[tag] = {};
             const sorted = $util.filterArray(groupMap[tag], item => item !== undefined).sort((a, b) => {
                 let maxA = 0;
                 let maxB = 0;
@@ -219,29 +216,19 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             do {
                 if (sorted.length === 1) {
                     for (const attr in sorted[0]) {
-                        const value = sorted[0][attr];
-                        if (value.length === 1) {
-                            layout[tag][attr] = value;
-                        }
-                        else if (value.length > 1) {
-                            style[tag][attr] = value;
+                        if (sorted[0][attr].length) {
+                            style[tag][attr] = sorted[0][attr];
                         }
                     }
                     sorted.length = 0;
                 }
                 else {
                     const styleKey: AttributeMap = {};
-                    const layoutKey: AttributeMap = {};
                     for (let i = 0; i < sorted.length; i++) {
                         const filtered: AttributeMap = {};
                         for (const attr1 in sorted[i]) {
                             const ids = sorted[i][attr1];
                             if (ids.length === 0) {
-                                continue;
-                            }
-                            else if (ids.length === 1) {
-                                layoutKey[attr1] = [ids[0]];
-                                sorted[i][attr1].length = 0;
                                 continue;
                             }
                             else if (ids.length === nameMap[tag].length) {
@@ -316,15 +303,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     }
                     const shared = Object.keys(styleKey);
                     if (shared.length) {
-                        if (shared.length > 1 || styleKey[shared[0]].length > 1) {
-                            style[tag][shared.join(';')] = styleKey[shared[0]];
-                        }
-                        else {
-                            Object.assign(layoutKey, styleKey);
-                        }
-                    }
-                    for (const attr in layoutKey) {
-                        layout[tag][attr] = layoutKey[attr];
+                        style[tag][shared.join(';')] = styleKey[shared[0]];
                     }
                     $util.spliceArray(sorted, item => {
                         for (const attr in item) {
@@ -336,7 +315,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     });
                 }
             }
-            while (sorted.length);
+            while (sorted.length > 0);
         }
         const resource: TagNameMap = {};
         const nodeMap: NodeStyleMap = {};
@@ -390,19 +369,9 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 if (group.ids) {
                     for (const id of group.ids) {
                         if (nodeMap[id] === undefined) {
-                            nodeMap[id] = { styles: [], attrs: [] };
+                            nodeMap[id] = [];
                         }
-                        nodeMap[id].styles.push(group.name);
-                    }
-                }
-            }
-            if (layout[tag]) {
-                for (const attr in layout[tag]) {
-                    for (const id of layout[tag][attr]) {
-                        if (nodeMap[id] === undefined) {
-                            nodeMap[id] = { styles: [], attrs: [] };
-                        }
-                        nodeMap[id].attrs.push(attr);
+                        nodeMap[id].push(group.name);
                     }
                 }
             }
@@ -410,13 +379,10 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         for (const id in nodeMap) {
             const node = this.application.session.cache.find('id', parseInt(id));
             if (node) {
-                const styles = nodeMap[id].styles;
+                const styles = nodeMap[id];
                 if (styles.length) {
                     parentStyle.add(styles.join('.'));
                     node.attr('_', 'style', `@style/${styles.pop()}`);
-                }
-                for (const value of nodeMap[id].attrs.sort()) {
-                    node.formatted(replaceUnit(value, settings.resolutionDPI, settings.convertPixels, true), false);
                 }
             }
         }

@@ -7,8 +7,8 @@ const REGEXP_KEYFRAMERULE = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
 export const enum USER_AGENT {
     CHROME = 2,
     SAFARI = 4,
-    EDGE = 8,
-    FIREFOX = 16
+    FIREFOX = 8,
+    EDGE = 16
 }
 
 export const ELEMENT_BLOCK = [
@@ -246,7 +246,14 @@ export function newBoxRect(): BoxRect {
 }
 
 export function newRectDimension(): RectDimension {
-    return { width: 0, height: 0, ...newBoxRect() };
+    return {
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: 0,
+        height: 0
+    };
 }
 
 export function newBoxModel(): BoxModel {
@@ -296,7 +303,7 @@ export function removeElementsByClassName(className: string) {
     }
 }
 
-export function getRangeClientRect(element: Element): TextDimension {
+export function getRangeClientRect(element: Element) {
     const range = document.createRange();
     range.selectNodeContents(element);
     const clientRects = range.getClientRects();
@@ -333,7 +340,8 @@ export function getRangeClientRect(element: Element): TextDimension {
             }
         }
     }
-    return { ...bounds, multiline };
+    (<TextDimension> bounds).multiline = multiline;
+    return <TextDimension> bounds;
 }
 
 export function assignBounds(bounds: RectDimension | DOMRect): RectDimension {

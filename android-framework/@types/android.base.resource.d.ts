@@ -11,7 +11,7 @@ declare global {
             public static STORED: ResourceStoredMapAndroid;
             public static createBackgroundGradient<T extends View>(node: T, gradient: Gradient, path?: squared.svg.SvgPath): BackgroundGradient | undefined;
             public static formatOptions(options: ExternalData, numberAlias?: boolean): ExternalData;
-            public static getOptionArray(element: HTMLSelectElement): (string[] | null)[];
+            public static getOptionArray(element: HTMLSelectElement, replaceEntities?: boolean): (string[] | null)[];
             public static addTheme(...options: Required<StyleAttribute>[]): void;
             public static addString(value: string, name?: string, numberAlias?: boolean): string;
             public static addImageSrcSet(element: HTMLImageElement, prefix?: string): string;

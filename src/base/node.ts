@@ -115,7 +115,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public saveAsInitial() {
         if (this._initial.iteration === -1) {
             this._initial.children = this.duplicate();
-            this._initial.styleMap = Object.assign({}, this._styleMap);
+            this._initial.styleMap = { ...this._styleMap };
             this._initial.documentParent = this._documentParent;
         }
         if (this._bounds) {
@@ -302,7 +302,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public inherit(node: T, ...props: string[]) {
-        const initial = node.unsafe('initial');
+        const initial = <InitialData<T>> node.unsafe('initial');
         for (const type of props) {
             switch (type) {
                 case 'initial':

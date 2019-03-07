@@ -198,9 +198,17 @@ export const TRANSFORM = {
         if (value === undefined) {
             value = $dom.cssAttribute(element, 'transform-origin');
         }
-        const result: Point = { x: NaN, y: NaN };
+        const result: Point = { x: 0, y: 0 };
         if (value !== '') {
             const viewBox = getNearestViewBox(element);
+            function setPosition(attr: string, position: string, dimension: number) {
+                if ($util.isUnit(position)) {
+                    result[attr] = parseFloat($util.convertPX(position, $dom.getFontSize(element)));
+                }
+                else if ($util.isPercent(position)) {
+                    result[attr] = (parseFloat(position) / 100) * dimension;
+                }
+            }
             let width = 0;
             let height = 0;
             if (viewBox) {
@@ -219,51 +227,40 @@ export const TRANSFORM = {
                 width = bounds.width;
                 height = bounds.height;
             }
-            let positions = value.split(' ');
-            function setPosition(attr: string) {
-                if (isNaN(result[attr])) {
-                    for (let i = 0; i < positions.length; i++) {
-                        let position = positions[i];
-                        if (position !== '') {
-                            if (position === 'center') {
-                                position = '50%';
-                            }
-                            if ($util.isUnit(position)) {
-                                result[attr] = parseInt(position.endsWith('px') ? position : $util.convertPX(position, $dom.getFontSize(element)));
-                            }
-                            else if ($util.isPercent(position)) {
-                                result[attr] = (attr === 'x' ? width : height) * (parseInt(position) / 100);
-                            }
-                            if (!isNaN(result[attr])) {
-                                positions[i] = '';
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
+            const positions = value.split(' ');
             if (positions.length === 1) {
                 positions.push('center');
             }
-            positions = positions.slice(0, 2);
-            if (positions.includes('left')) {
-                result.x = 0;
+            switch (positions[0]) {
+                case '0%':
+                case 'left':
+                    break;
+                case '100%':
+                case 'right':
+                    result.x = width;
+                    break;
+                case 'center':
+                    positions[0] = '50%';
+                default:
+                    setPosition('x', positions[0], width);
+                    break;
             }
-            else if (positions.includes('right')) {
-                result.x = width;
+            switch (positions[1]) {
+                case '0%':
+                case 'top':
+                    break;
+                case '100%':
+                case 'bottom':
+                    result.y = height;
+                    break;
+                case 'center':
+                    positions[1] = '50%';
+                default:
+                    setPosition('y', positions[1], height);
+                    break;
             }
-            if (positions.includes('top')) {
-                result.y = 0;
-            }
-            else if (positions.includes('bottom')) {
-                result.y = height;
-            }
-            setPosition('x');
-            setPosition('y');
         }
-        result.x = result.x || 0;
-        result.y = result.y || 0;
-        return <Point> result;
+        return result;
     },
     rotateOrigin(element: SVGElement, attr = 'transform'): SvgPoint[] {
         const value = $dom.getNamedItem(element, attr);
@@ -296,8 +293,9 @@ export const TRANSFORM = {
                 return 'skewY';
             case SVGTransform.SVG_TRANSFORM_TRANSLATE:
                 return 'translate';
+            default:
+                return '';
         }
-        return '';
     },
     typeAsValue(type: string | number) {
         switch (type) {
@@ -315,8 +313,9 @@ export const TRANSFORM = {
             case 'translate':
             case SVGTransform.SVG_TRANSFORM_TRANSLATE:
                 return '0 0';
+            default:
+                return '';
         }
-        return '';
     }
 };
 
@@ -396,8 +395,9 @@ export function getTargetElement(element: Element, rootElement?: SVGElement) {
         if (parent) {
             const elements = parent.querySelectorAll('*');
             for (let i = 0; i < elements.length; i++) {
-                if (elements[i].id === id && elements[i] instanceof SVGElement) {
-                    return elements[i];
+                const target = elements[i];
+                if (target.id === id && target instanceof SVGElement) {
+                    return target;
                 }
             }
         }

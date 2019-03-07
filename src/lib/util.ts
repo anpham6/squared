@@ -3,6 +3,7 @@ interface UtilRegExpString {
     DECIMAL: string;
     ZERO_ONE: string;
     UNIT: string;
+    PERCENT: string;
     DEGREE: string;
     LENGTH: string;
 }
@@ -11,6 +12,7 @@ interface UtilRegExpPattern {
     URL: RegExp;
     URI: RegExp;
     UNIT: RegExp;
+    PERCENT: RegExp;
     ATTRIBUTE: RegExp;
 }
 
@@ -20,6 +22,10 @@ const NUMERALS = [
     '', 'X', 'XX', 'XXX', 'XL', 'L', 'LX', 'LXX', 'LXXX', 'XC',
     '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'
 ];
+
+const REGEXP_UNDERSCORE = /([a-z][A-Z])/g;
+const REGEXP_WORD = /[^\w]+/g;
+const REGEXP_WORD_DASH = /[^a-zA-Z\d]+/g;
 
 function compareObject(obj1: {}, obj2: {}, attr: string, numeric: boolean) {
     const namespaces = attr.split('.');
@@ -41,8 +47,8 @@ function compareObject(obj1: {}, obj2: {}, attr: string, numeric: boolean) {
         }
     }
     if (numeric) {
-        const value1 = parseInt(current1);
-        const value2 = parseInt(current2);
+        const value1 = parseFloat(current1);
+        const value2 = parseFloat(current2);
         if (!isNaN(value1) && !isNaN(value2)) {
             return [value1, value2];
         }
@@ -59,7 +65,8 @@ function compareObject(obj1: {}, obj2: {}, attr: string, numeric: boolean) {
 export const REGEXP_STRING: UtilRegExpString = <any> {
     URL: 'url\\("?(.+?)"?\\)',
     DECIMAL: '-?\\d+(?:.\\d+)?',
-    ZERO_ONE: '0(?:\\.\\d+)?|1(?:\\.0+)?'
+    ZERO_ONE: '0(?:\\.\\d+)?|1(?:\\.0+)?',
+    PERCENT: '\\d+(\\.\\d+)?%'
 };
 
 REGEXP_STRING.UNIT = `(${REGEXP_STRING.DECIMAL})(px|em|ch|pc|pt|vw|vh|vmin|vmax|mm|cm|in)`;
@@ -70,6 +77,7 @@ export const REGEXP_PATTERN: UtilRegExpPattern = {
     URL: new RegExp(REGEXP_STRING.URL),
     URI: /^[A-Za-z]+:\/\//,
     UNIT: new RegExp(`^${REGEXP_STRING.UNIT}$`),
+    PERCENT: new RegExp(`^${REGEXP_STRING.PERCENT}$`),
     ATTRIBUTE: /([^\s]+)="([^"]+)"/
 };
 
@@ -87,7 +95,7 @@ export function capitalize(value: string, upper = true) {
 
 export function convertUnderscore(value: string) {
     value = value.charAt(0).toLowerCase() + value.substring(1);
-    const match = value.match(/([a-z][A-Z])/g);
+    const match = value.match(REGEXP_UNDERSCORE);
     if (match) {
         for (const capture of match) {
             value = value.replace(capture, `${capture[0]}_${capture[1].toLowerCase()}`);
@@ -107,7 +115,7 @@ export function convertCamelCase(value: string, char = '-') {
 }
 
 export function convertWord(value: string, dash = false) {
-    return value ? (dash ? value.replace(/[^a-zA-Z\d]+/g, '_') : value.replace(/[^\w]+/g, '_')).trim() : '';
+    return dash ? value.trim().replace(REGEXP_WORD_DASH, '_') : value.replace(REGEXP_WORD, '_');
 }
 
 export function convertInt(value: string) {
@@ -223,8 +231,7 @@ export function convertRoman(value: number) {
 
 export function convertEnum(value: number, base: {}, derived: {}): string {
     for (const key of Object.keys(base)) {
-        const index: number = base[key];
-        if (value === index) {
+        if (value === base[key]) {
             return derived[key];
         }
     }
@@ -258,8 +265,8 @@ export function formatString(value: string, ...params: string[]) {
     return value;
 }
 
-export function hasBit(value: number, type: number) {
-    return (value & type) === type;
+export function hasBit(value: number, offset: number) {
+    return (value & offset) === offset;
 }
 
 export function isNumber(value: string): boolean {
@@ -279,7 +286,7 @@ export function isUnit(value: string) {
 }
 
 export function isPercent(value: string) {
-    return /^\d+(\.\d+)?%$/.test(value);
+    return REGEXP_PATTERN.PERCENT.test(value);
 }
 
 export function isEqual(source: any, values: any) {
@@ -362,21 +369,15 @@ export function optional(obj: UndefNull<object>, value: string, type?: string) {
         do {
             result = result[attrs[i]];
         }
-        while (
-            result !== null &&
-            result !== undefined &&
-            ++i < attrs.length &&
-            typeof result !== 'string' &&
-            typeof result !== 'number' &&
-            typeof result !== 'boolean'
-        );
-        valid = result !== undefined && result !== null && i === attrs.length;
+        while (typeof result === 'object' && result !== null && ++i < attrs.length);
+        valid = i === attrs.length && result !== undefined && result !== null;
     }
     switch (type) {
         case 'object':
             return valid ? result : null;
         case 'number':
-            return valid && !isNaN(parseInt(result)) ? parseInt(result) : 0;
+            result = parseInt(result);
+            return valid && !isNaN(result) ? result : 0;
         case 'boolean':
             return valid && result === true;
         default:
@@ -419,8 +420,7 @@ export function resolvePath(value: string) {
                         segments.push(dir);
                     }
                 }
-                pathname = pathname.slice(0, Math.max(pathname.length - levels, 0));
-                pathname.push(...segments);
+                pathname = concatArray(pathname.slice(0, Math.max(pathname.length - levels, 0)), segments);
                 value = location.origin + pathname.join('/');
             }
             else {
@@ -436,19 +436,19 @@ export function trimNull(value: string | undefined) {
     return value ? value.trim() : '';
 }
 
-export function trimString(value: string | undefined, char: string) {
-    return value ? trimStart(trimEnd(value, char), char) : '';
+export function trimString(value: string, char: string) {
+    return trimStart(trimEnd(value, char), char);
 }
 
-export function trimStart(value: string | undefined, char: string) {
-    return value ? value.replace(new RegExp(`^${char}+`), '') : '';
+export function trimStart(value: string, char: string) {
+    return value.replace(new RegExp(`^${char}+`), '');
 }
 
-export function trimEnd(value: string | undefined, char: string) {
-    return value ? value.replace(new RegExp(`${char}+$`), '') : '';
+export function trimEnd(value: string, char: string) {
+    return value.replace(new RegExp(`${char}+$`), '');
 }
 
-export function indexOf(value: string, ...terms: string[]) {
+export function firstIndexOf(value: string, ...terms: string[]) {
     for (const term of terms) {
         const index = value.indexOf(term);
         if (index !== -1) {
@@ -458,7 +458,7 @@ export function indexOf(value: string, ...terms: string[]) {
     return -1;
 }
 
-export function lastIndexOf(value: string, char = '/') {
+export function fromLastIndexOf(value: string, char = '/') {
     return value.substring(value.lastIndexOf(char) + 1);
 }
 
@@ -496,7 +496,7 @@ export function searchObject(obj: StringMap, value: string | StringMap) {
 }
 
 export function hasValue<T>(value: T): value is T {
-    return typeof value !== 'undefined' && value !== null && value.toString().trim() !== '';
+    return value !== undefined && value !== null && value.toString().trim() !== '';
 }
 
 export function hasInSet<T>(list: Set<T>, condition: (x: T) => boolean) {
@@ -621,6 +621,22 @@ export function filterArray<T>(list: T[], predicate: IteratorPredicate<T, boolea
         }
     }
     return result;
+}
+
+export function concatArray<T>(dest: T[], source: T[]) {
+    for (const item of source) {
+        dest.push(item);
+    }
+    return dest;
+}
+
+export function concatMultiArray<T>(dest: T[], ...source: T[][]) {
+    for (const list of source) {
+        for (const item of list) {
+            dest.push(item);
+        }
+    }
+    return dest;
 }
 
 export function flatMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[] {

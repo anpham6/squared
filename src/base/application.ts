@@ -40,9 +40,7 @@ function prioritizeExtensions<T extends Node>(documentRoot: HTMLElement, element
                 untagged.push(ext);
             }
         }
-        $util.spliceArray(result, item => item === undefined);
-        result.push(...untagged);
-        return result;
+        return $util.concatArray($util.spliceArray(result, item => item === undefined), untagged);
     }
     else {
         return extensions;
@@ -163,8 +161,9 @@ export default class Application<T extends Node> implements squared.base.Applica
             ext.afterProcedure();
         }
         this.processRenderQueue();
-        this.resourceHandler.finalize(this.sessionData);
-        this.controllerHandler.finalize(this.sessionData);
+        const sessionData = this.sessionData;
+        this.resourceHandler.finalize(sessionData);
+        this.controllerHandler.finalize(sessionData);
         for (const ext of this.extensions) {
             ext.afterFinalize();
         }
@@ -181,8 +180,8 @@ export default class Application<T extends Node> implements squared.base.Applica
     public reset() {
         this.session.cache.each(node => node.element && $dom.deleteElementCache(node.element, 'node', 'style', 'styleMap'));
         for (const element of this.parseElements) {
-            element.dataset.iteration = undefined;
-            element.dataset.layoutName = undefined;
+            element.dataset.iteration = '';
+            element.dataset.layoutName = '';
         }
         this.appName = '';
         this.session.renderQueue.clear();
@@ -233,10 +232,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 if (this.appName === '') {
                     this.appName = element.id || 'untitled';
                 }
-                let filename = $util.trimNull(element.dataset.filename).replace(new RegExp(`\.${this.controllerHandler.localSettings.layout.fileExtension}$`), '');
-                if (filename === '') {
-                    filename = element.id || `document_${this.size}`;
-                }
+                const filename = element.dataset.filename && element.dataset.filename.replace(new RegExp(`\.${this.controllerHandler.localSettings.layout.fileExtension}$`), '') || element.id || `document_${this.size}`;
                 const iteration = parseInt(element.dataset.iteration || '0') + 1;
                 element.dataset.iteration = iteration.toString();
                 element.dataset.layoutName = $util.convertWord(iteration > 1 ? `${filename}_${iteration}` : filename, true);
@@ -486,8 +482,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         if (required) {
             const renderMap = this._renderPosition.get(parent.id);
             if (renderMap) {
-                children = $util.filterArray(renderMap.children, item => !parent.contains(item));
-                children.push(...parent.children as T[]);
+                children = $util.concatArray($util.filterArray(renderMap.children, item => !parent.contains(item)), parent.children as T[]);
             }
             else {
                 children = parent.duplicate() as T[];
@@ -939,7 +934,15 @@ export default class Application<T extends Node> implements squared.base.Applica
                                     }
                                     else if (previous) {
                                         if (hasFloat) {
-                                            const startNewRow = item.alignedVertically(previousSiblings, [...horizontal, ...vertical, item], cleared, false);
+                                            const siblings: T[] = [];
+                                            if (horizontal.length) {
+                                                $util.concatArray(siblings, horizontal);
+                                            }
+                                            else if (vertical.length) {
+                                                $util.concatArray(siblings, vertical);
+                                            }
+                                            siblings.push(item);
+                                            const startNewRow = item.alignedVertically(previousSiblings, siblings, cleared, false);
                                             if (startNewRow || settings.floatOverlapDisabled && previous.floating && item.blockStatic && floatSegment.size === 2) {
                                                 if (horizontal.length) {
                                                     if (!settings.floatOverlapDisabled && floatSegment.size && !previous.autoMargin.horizontal && !previousSiblings.some(node => node.lineBreak && !cleared.has(node)) && cleared.get(item) !== 'both') {
@@ -1042,7 +1045,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         if (extensionsParent.length || extensionsChild.length) {
                             const combined = extensionsParent.slice(0);
                             if (extensionsChild.length) {
-                                combined.push(...$util.filterArray(extensionsChild, item => item.subscribersChild.has(nodeY)));
+                                $util.concatArray(combined, $util.filterArray(extensionsChild, item => item.subscribersChild.has(nodeY)));
                             }
                             for (const ext of combined) {
                                 const result = ext.processChild(nodeY, parentY);
@@ -1194,8 +1197,8 @@ export default class Application<T extends Node> implements squared.base.Applica
                 return a.siblingIndex < b.siblingIndex ? -1 : 1;
             }
         });
-        this.session.cache.children.push(...this.processing.cache);
-        this.session.excluded.children.push(...this.processing.excluded);
+        this.session.cache.concat(this.processing.cache.children);
+        this.session.excluded.concat(this.processing.excluded.children);
         for (const ext of this.extensions) {
             for (const node of ext.subscribers) {
                 ext.postBaseLayout(node);
@@ -1293,13 +1296,13 @@ export default class Application<T extends Node> implements squared.base.Applica
             else if ((left.length === 0 || right.length === 0) && (this.userSettings.floatOverlapDisabled || !inline.some(item => item.blockStatic))) {
                 const subgroup: T[] = [];
                 if (right.length === 0) {
-                    subgroup.push(...left, ...inline);
+                    $util.concatMultiArray(subgroup, left, inline);
                     const horizontal = this.controllerHandler.containerTypeHorizontal;
                     layout.setType(horizontal.containerType, horizontal.alignmentType);
                     layerIndex = [left, inline];
                 }
                 else {
-                    subgroup.push(...inline, ...right);
+                    $util.concatMultiArray(subgroup, inline, right);
                     const vertical = this.controllerHandler.containerTypeVerticalMargin;
                     layout.setType(vertical.containerType, vertical.alignmentType);
                     layerIndex = [inline, right];
@@ -1543,7 +1546,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                     segments = item as T[][];
                     const grouping: T[] = [];
                     for (const seg of segments) {
-                        grouping.push(...seg);
+                        $util.concatArray(grouping, seg);
                     }
                     grouping.sort(NodeList.siblingIndex);
                     floatgroup = this.controllerHandler.createNodeGroup(grouping[0], grouping, data.node);
@@ -2048,14 +2051,13 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     get viewData() {
-        return [...this._views, ...this._includes];
+        return (<FileAsset[]> []).concat(this._views, this._includes);
     }
 
     get sessionData(): SessionData<NodeList<T>> {
         return {
             cache: this.session.cache,
-            views: this._views,
-            includes: this._includes
+            templates: this.viewData
         };
     }
 

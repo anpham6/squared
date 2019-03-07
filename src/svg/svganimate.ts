@@ -212,8 +212,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                     for (let i = 0; i < this.keyTimes.length - 1; i++) {
                         const result = SvgAnimate.convertStepTimingFunction(name, 'step-end', this.keyTimes, this.values, i, $dom.getFontSize(this.animationElement));
                         if (result) {
-                            keyTimes.push(...result[0]);
-                            values.push(...result[1]);
+                            $util.concatArray(keyTimes, result[0]);
+                            $util.concatArray(values, result[1]);
                         }
                     }
                     keyTimes.push(this.keyTimes.pop() as number);

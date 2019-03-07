@@ -8,6 +8,8 @@ import SvgShape from './svgshape';
 
 import { INSTANCE_TYPE } from './lib/constant';
 
+const $util = squared.lib.util;
+
 export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgShape))) implements squared.svg.SvgUse {
     private __get_transforms = false;
     private __get_animations = false;
@@ -34,7 +36,7 @@ export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(Svg
     }
 
     public synchronize(options?: SvgSynchronizeOptions) {
-        options = Object.assign({}, options);
+        options = { ...options };
         options.element = this.shapeElement;
         if (this.animations.length) {
             this.animateSequentially(this.getAnimateViewRect(), this.getAnimateTransform(), undefined, options);
@@ -45,7 +47,7 @@ export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(Svg
     get transforms() {
         const transforms = super.transforms;
         if (!this.__get_transforms) {
-            transforms.push(...this.getTransforms(this.shapeElement));
+            $util.concatArray(transforms, this.getTransforms(this.shapeElement));
             this.__get_transforms = true;
         }
         return transforms;
@@ -54,7 +56,7 @@ export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(Svg
     get animations() {
         const animations = super.animations;
         if (!this.__get_animations) {
-            animations.push(...this.getAnimations(this.shapeElement));
+            $util.concatArray(animations, this.getAnimations(this.shapeElement));
             this.__get_animations = true;
         }
         return animations;

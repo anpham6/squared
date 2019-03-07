@@ -15,10 +15,7 @@ function transferData<T extends View>(parent: T, siblings: T[])  {
     let destination: GridCellData<T> | undefined;
     for (let i = 0; i < siblings.length; i++) {
         const item = siblings[i];
-        if (destination === undefined) {
-            destination = item.data($const.EXT_NAME.GRID, 'cellData');
-        }
-        else if (destination) {
+        if (destination) {
             const source: GridCellData<T> = item.data($const.EXT_NAME.GRID, 'cellData');
             if (source) {
                 for (const attr in source) {
@@ -35,6 +32,9 @@ function transferData<T extends View>(parent: T, siblings: T[])  {
                 }
             }
         }
+        else {
+            destination = item.data($const.EXT_NAME.GRID, 'cellData');
+        }
         item.siblingIndex = i;
         item.data($const.EXT_NAME.GRID, 'cellData', null);
     }
@@ -45,7 +45,6 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
     public processNode(node: T, parent: T): ExtensionResult<T> {
         super.processNode(node, parent);
         const mainData: GridData = node.data($const.EXT_NAME.GRID, 'mainData');
-        let output = '';
         if (mainData) {
             const layout = new $Layout(
                 parent,
@@ -56,12 +55,12 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                 node.children as T[]
             );
             layout.columnCount = mainData.columnCount;
-            output = this.application.renderNode(layout);
+            return {
+                output: this.application.renderNode(layout),
+                complete: true
+            };
         }
-        return {
-            output,
-            complete: output !== ''
-        };
+        return { output: '' };
     }
 
     public processChild(node: T, parent: T): ExtensionResult<T> {
@@ -100,8 +99,11 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                 }
                 if (layout.containerType !== 0) {
                     transferData(layout.node, siblings);
-                    const output = this.application.renderNode(layout);
-                    return { output, parent: layout.node, complete: true };
+                    return {
+                        output: this.application.renderNode(layout),
+                        parent: layout.node,
+                        complete: true
+                    };
                 }
             }
         }

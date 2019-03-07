@@ -68,7 +68,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
         }
         if (files.length) {
             const settings = this.userSettings;
-            files.push(...this.assets);
+            $util.concatArray(files, this.assets);
             fetch(`/api/savetodisk` +
                 `?directory=${encodeURIComponent($util.trimString(settings.outputDirectory, '/'))}` +
                 `&appname=${encodeURIComponent(this.appName.trim())}` +
@@ -89,7 +89,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
                     if (result.zipname) {
                         fetch(`/api/downloadtobrowser?filename=${encodeURIComponent(result.zipname)}`)
                             .then((responseBlob: Response) => responseBlob.blob())
-                            .then((blob: Blob) => File.downloadToDisk(blob, $util.lastIndexOf(result.zipname)));
+                            .then((blob: Blob) => File.downloadToDisk(blob, $util.fromLastIndexOf(result.zipname)));
                     }
                     else if (result.system) {
                         alert(`${result.application}\n\n${result.system}`);

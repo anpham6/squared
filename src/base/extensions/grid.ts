@@ -112,8 +112,8 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                     else {
                         for (let m = 0; m < columns.length; m++) {
                             if (columns[m].length > base.length) {
-                                const removed = columns[m].splice(assigned[m] + (every ? 2 : 1), columns[m].length - base.length);
-                                columns[m][assigned[m] + (every ? 1 : 0)].data(EXT_NAME.GRID, 'cellData', { siblings: [...removed] });
+                                const siblings = columns[m].splice(assigned[m] + (every ? 2 : 1), columns[m].length - base.length);
+                                columns[m][assigned[m] + (every ? 1 : 0)].data(EXT_NAME.GRID, 'cellData', { siblings });
                             }
                         }
                     }
@@ -123,8 +123,8 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                         if (maxIndex > minIndex) {
                             for (let m = 0; m < columns.length; m++) {
                                 if (found[m] > minIndex) {
-                                    const removed = columns[m].splice(minIndex, found[m] - minIndex);
-                                    columns[m][assigned[m] + (every ? 1 : 0)].data(EXT_NAME.GRID, 'cellData', { siblings: [...removed] });
+                                    const siblings = columns[m].splice(minIndex, found[m] - minIndex);
+                                    columns[m][assigned[m] + (every ? 1 : 0)].data(EXT_NAME.GRID, 'cellData', { siblings });
                                 }
                             }
                         }

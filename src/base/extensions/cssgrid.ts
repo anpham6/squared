@@ -21,17 +21,14 @@ type RepeatItem = {
 
 const $util = squared.lib.util;
 
-const REGEXP_PARTIAL: StringMap = {
-    UNIT: '[\\d.]+[a-z%]+|auto|max-content|min-content',
-    MINMAX: 'minmax\\(([^,]+), ([^)]+)\\)',
-    FIT_CONTENT: 'fit-content\\(([\\d.]+[a-z%]+)\\)',
-    NAMED: '\\[([\\w\\-\\s]+)\\]'
-};
-
-const PATTERN_GRID: ObjectMap<RegExp> = {
-    UNIT: new RegExp(`^(${REGEXP_PARTIAL.UNIT})$`),
-    NAMED: new RegExp(`\\s*(repeat\\((auto-fit|auto-fill|[0-9]+), (.+)\\)|${REGEXP_PARTIAL.NAMED}|${REGEXP_PARTIAL.MINMAX}|${REGEXP_PARTIAL.FIT_CONTENT}|${REGEXP_PARTIAL.UNIT})\\s*`, 'g'),
-    REPEAT: new RegExp(`\\s*(${REGEXP_PARTIAL.NAMED}|${REGEXP_PARTIAL.MINMAX}|${REGEXP_PARTIAL.FIT_CONTENT}|${REGEXP_PARTIAL.UNIT})\\s*`, 'g'),
+const REGEXP_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
+const REGEXP_MINMAX = 'minmax\\(([^,]+), ([^)]+)\\)';
+const REGEXP_FIT_CONTENT = 'fit-content\\(([\\d.]+[a-z%]+)\\)';
+const REGEXP_NAMED = '\\[([\\w\\-\\s]+)\\]';
+const REGEXP_GRID = {
+    UNIT: new RegExp(`^(${REGEXP_UNIT})$`),
+    NAMED: `\\s*(repeat\\((auto-fit|auto-fill|[0-9]+), (.+)\\)|${REGEXP_NAMED}|${REGEXP_MINMAX}|${REGEXP_FIT_CONTENT}|${REGEXP_UNIT})\\s*`,
+    REPEAT: `\\s*(${REGEXP_NAMED}|${REGEXP_MINMAX}|${REGEXP_FIT_CONTENT}|${REGEXP_UNIT})\\s*`
 };
 
 function repeatUnit(data: CssGridDirectionData, dimension: string[]) {
@@ -152,9 +149,10 @@ export default class CssGrid<T extends Node> extends Extension<T> {
         }
         [node.cssInitial('gridTemplateRows', true), node.cssInitial('gridTemplateColumns', true), node.css('gridAutoRows'), node.css('gridAutoColumns')].forEach((value, index) => {
             if (value && value !== 'none' && value !== 'auto') {
-                let i = 1;
+                const patternA = new RegExp(REGEXP_GRID.NAMED, 'g');
                 let matchA: RegExpMatchArray | null;
-                while ((matchA = PATTERN_GRID.NAMED.exec(value)) !== null) {
+                let i = 1;
+                while ((matchA = patternA.exec(value)) !== null) {
                     if (index < 2) {
                         const data = mainData[index === 0 ? 'row' : 'column'];
                         if (matchA[1].startsWith('repeat')) {
@@ -172,22 +170,23 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                             }
                             if (iterations > 0) {
                                 const repeating: RepeatItem[] = [];
+                                const patternB = new RegExp(REGEXP_GRID.REPEAT, 'g');
                                 let matchB: RegExpMatchArray | null;
-                                while ((matchB = PATTERN_GRID.REPEAT.exec(matchA[3])) !== null) {
+                                while ((matchB = patternB.exec(matchA[3])) !== null) {
                                     let matchC: RegExpMatchArray | null;
-                                    if ((matchC = new RegExp(REGEXP_PARTIAL.NAMED).exec(matchB[1])) !== null) {
+                                    if ((matchC = new RegExp(REGEXP_NAMED).exec(matchB[1])) !== null) {
                                         if (data.name[matchC[1]] === undefined) {
                                             data.name[matchC[1]] = [];
                                         }
                                         repeating.push({ name: matchC[1] });
                                     }
-                                    else if ((matchC = new RegExp(REGEXP_PARTIAL.MINMAX).exec(matchB[1])) !== null) {
+                                    else if ((matchC = new RegExp(REGEXP_MINMAX).exec(matchB[1])) !== null) {
                                         repeating.push({ unit: convertUnit(node, matchC[2]), unitMin: convertUnit(node, matchC[1]) });
                                     }
-                                    else if ((matchC = new RegExp(REGEXP_PARTIAL.FIT_CONTENT).exec(matchB[1])) !== null) {
+                                    else if ((matchC = new RegExp(REGEXP_FIT_CONTENT).exec(matchB[1])) !== null) {
                                         repeating.push({ unit: convertUnit(node, matchC[1]), unitMin: '0px' });
                                     }
-                                    else if ((matchC = new RegExp(REGEXP_PARTIAL.UNIT).exec(matchB[1])) !== null) {
+                                    else if ((matchC = new RegExp(REGEXP_UNIT).exec(matchB[1])) !== null) {
                                         repeating.push({ unit: convertUnit(node, matchC[0]) });
                                     }
                                 }
@@ -226,7 +225,7 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                             data.repeat.push(false);
                             i++;
                         }
-                        else if (PATTERN_GRID.UNIT.test(matchA[1])) {
+                        else if (REGEXP_GRID.UNIT.test(matchA[1])) {
                             data.unit.push(convertUnit(node, matchA[1]));
                             data.unitMin.push('');
                             data.repeat.push(false);

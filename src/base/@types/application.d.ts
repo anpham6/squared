@@ -3,6 +3,7 @@ export interface UserSettings {
     preloadImages: boolean;
     supportNegativeLeftTop: boolean;
     floatOverlapDisabled: boolean;
+    replaceCharacterEntities: boolean;
     insertSpaces: number;
     handleExtensionsAsync: boolean;
     autoCloseOnWrite: boolean;
@@ -72,8 +73,7 @@ export interface AppProcessing<T extends squared.base.Node, U> {
 
 export interface SessionData<T> {
     cache: T;
-    views: FileAsset[];
-    includes: FileAsset[];
+    templates: FileAsset[];
 }
 
 export interface ExtensionDependency {

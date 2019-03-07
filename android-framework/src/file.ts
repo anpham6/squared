@@ -81,30 +81,32 @@ function caseInsensitive(a: string | string[], b: string | string[]) {
 
 export default class File<T extends View> extends squared.base.File<T> implements android.base.File<T> {
     public saveAllToDisk(data: SessionData<$NodeList<T>>) {
-        const views = [...data.views, ...data.includes];
         const files: FileAsset[] = [];
-        for (let i = 0; i < views.length; i++) {
-            const view = views[i];
+        for (let i = 0; i < data.templates.length; i++) {
+            const view = data.templates[i];
             files.push(createFileAsset(view.pathname, i === 0 ? this.userSettings.outputMainFileName : `${view.filename}.xml`, view.content));
         }
-        files.push(...parseFileDetails(this.resourceStringToXml()));
-        files.push(...parseFileDetails(this.resourceStringArrayToXml()));
-        files.push(...parseFileDetails(this.resourceFontToXml()));
-        files.push(...parseFileDetails(this.resourceColorToXml()));
-        files.push(...parseFileDetails(this.resourceStyleToXml()));
-        files.push(...parseFileDetails(this.resourceDimenToXml()));
-        files.push(...parseFileDetails(this.resourceDrawableToXml()));
-        files.push(...parseImageDetails(this.resourceDrawableImageToXml()));
-        files.push(...parseFileDetails(this.resourceAnimToXml()));
-        this.saveToDisk(files);
+        this.saveToDisk(
+            $util.concatMultiArray(
+                files,
+                parseFileDetails(this.resourceStringToXml()),
+                parseFileDetails(this.resourceStringArrayToXml()),
+                parseFileDetails(this.resourceFontToXml()),
+                parseFileDetails(this.resourceColorToXml()),
+                parseFileDetails(this.resourceStyleToXml()),
+                parseFileDetails(this.resourceDimenToXml()),
+                parseFileDetails(this.resourceDrawableToXml()),
+                parseImageDetails(this.resourceDrawableImageToXml()),
+                parseFileDetails(this.resourceAnimToXml())
+            )
+        );
     }
 
     public layoutAllToXml(data: SessionData<$NodeList<T>>, saveToDisk = false) {
-        const views = [...data.views, ...data.includes];
         const result = {};
         const files: FileAsset[] = [];
-        for (let i = 0; i < views.length; i++) {
-            const view = views[i];
+        for (let i = 0; i < data.templates.length; i++) {
+            const view = data.templates[i];
             result[view.filename] = [view.content];
             if (saveToDisk) {
                 files.push(createFileAsset(view.pathname, i === 0 ? this.userSettings.outputMainFileName : `${view.filename}.xml`, view.content));
@@ -137,10 +139,10 @@ export default class File<T extends View> extends squared.base.File<T> implement
             const files: FileAsset[] = [];
             for (const name in result) {
                 if (name === 'image') {
-                    files.push(...parseImageDetails(result[name]));
+                    $util.concatArray(files, parseImageDetails(result[name]));
                 }
                 else {
-                    files.push(...parseFileDetails(result[name]));
+                    $util.concatArray(files, parseFileDetails(result[name]));
                 }
             }
             this.saveToDisk(files);
@@ -151,7 +153,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
     public resourceStringToXml(saveToDisk = false) {
         const result: string[] = [];
         const data: TemplateDataA = { A: [] };
-        this.stored.strings = new Map([...this.stored.strings.entries()].sort(caseInsensitive));
+        this.stored.strings = new Map(Array.from(this.stored.strings.entries()).sort(caseInsensitive));
         if (this.appName !== '' && !this.stored.strings.has('app_name')) {
             data.A.push({ name: 'app_name', value: this.appName });
         }
@@ -175,7 +177,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         const result: string[] = [];
         if (this.stored.arrays.size) {
             const data: TemplateDataA = { A: [] };
-            this.stored.arrays = new Map([...this.stored.arrays.entries()].sort());
+            this.stored.arrays = new Map(Array.from(this.stored.arrays.entries()).sort());
             for (const [name, values] of this.stored.arrays.entries()) {
                 data.A.push({
                     name,
@@ -200,7 +202,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         const result: string[] = [];
         if (this.stored.fonts.size) {
             const settings = this.userSettings;
-            this.stored.fonts = new Map([...this.stored.fonts.entries()].sort());
+            this.stored.fonts = new Map(Array.from(this.stored.fonts.entries()).sort());
             const namespace = settings.targetAPI < BUILD_ANDROID.OREO ? 'app' : 'android';
             for (const [name, font] of this.stored.fonts.entries()) {
                 const data: TemplateDataA = {
@@ -239,7 +241,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         const result: string[] = [];
         if (this.stored.colors.size) {
             const data: TemplateDataA = { A: [] };
-            this.stored.colors = new Map([...this.stored.colors.entries()].sort());
+            this.stored.colors = new Map(Array.from(this.stored.colors.entries()).sort());
             for (const [name, value] of this.stored.colors.entries()) {
                 data.A.push({ name, value });
             }
@@ -317,7 +319,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         if (this.stored.dimens.size) {
             const settings = this.userSettings;
             const data: TemplateDataA = { A: [] };
-            this.stored.dimens = new Map([...this.stored.dimens.entries()].sort());
+            this.stored.dimens = new Map(Array.from(this.stored.dimens.entries()).sort());
             for (const [name, value] of this.stored.dimens.entries()) {
                 data.A.push({ name, value });
             }
@@ -370,7 +372,10 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     for (const dpi in images) {
                         result.push(
                             replaceTab(
-                                $xml.createTemplate(TEMPLATES.drawable, { name: `res/drawable-${dpi}/${name}.${$util.lastIndexOf(images[dpi], '.')}`, value: `<!-- image: ${images[dpi]} -->` }),
+                                $xml.createTemplate(TEMPLATES.drawable, {
+                                    name: `res/drawable-${dpi}/${name}.${$util.fromLastIndexOf(images[dpi], '.')}`,
+                                    value: `<!-- image: ${images[dpi]} -->`
+                                }),
                                 settings.insertSpaces
                             )
                         );
@@ -379,7 +384,10 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 else if (images.mdpi) {
                     result.push(
                         replaceTab(
-                            $xml.createTemplate(TEMPLATES.drawable, { name: `res/drawable/${name}.${$util.lastIndexOf(images.mdpi, '.')}`, value: `<!-- image: ${images.mdpi} -->` }),
+                            $xml.createTemplate(TEMPLATES.drawable, {
+                                name: `res/drawable/${name}.${$util.fromLastIndexOf(images.mdpi, '.')}`,
+                                value: `<!-- image: ${images.mdpi} -->`
+                            }),
                             settings.insertSpaces
                         )
                     );

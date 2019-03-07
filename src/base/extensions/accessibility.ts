@@ -27,7 +27,7 @@ export default abstract class Accessibility<T extends Node> extends Extension<T>
                                         labelParent.renderAs = node;
                                     }
                                     if (node.companion) {
-                                        if (this.options && !this.options.showLabel) {
+                                        if (!this.options.showLabel) {
                                             label.hide();
                                         }
                                         return true;

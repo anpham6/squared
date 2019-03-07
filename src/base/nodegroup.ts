@@ -32,7 +32,11 @@ export default abstract class NodeGroup extends Node {
         if (!calibrate) {
             if (this.length) {
                 const bounds = this.outerRegion;
-                this._bounds = { width: bounds.right - bounds.left, height: bounds.bottom - bounds.top, ...bounds };
+                this._bounds = {
+                    ...bounds,
+                    width: bounds.right - bounds.left,
+                    height: bounds.bottom - bounds.top
+                };
             }
         }
     }
