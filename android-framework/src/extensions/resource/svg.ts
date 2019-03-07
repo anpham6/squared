@@ -521,7 +521,6 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
     };
     public readonly eventOnly = true;
 
-    private NODE_INSTANCE!: T;
     private SVG_INSTANCE!: $Svg;
     private VECTOR_DATA = new Map<string, GroupTemplateData>();
     private ANIMATE_DATA = new Map<string, AnimateGroup>();
@@ -547,7 +546,6 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
             if (node.svgElement) {
                 const svg = new $Svg(<SVGSVGElement> node.element);
                 const supportedKeyFrames = node.localSettings.targetAPI >= BUILD_ANDROID.MARSHMALLOW;
-                this.NODE_INSTANCE = node;
                 this.SVG_INSTANCE = svg;
                 this.VECTOR_DATA.clear();
                 this.ANIMATE_DATA.clear();
@@ -1393,7 +1391,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                             case 'polyline':
                             case 'circle':
                             case 'ellipse': {
-                                const backgroundGradient = Resource.createBackgroundGradient(this.NODE_INSTANCE, gradient, path);
+                                const backgroundGradient = Resource.createBackgroundGradient(gradient, undefined, path, this.options.floatPrecisionValue);
                                 if (backgroundGradient) {
                                     result[attr] = '';
                                     result[pattern] = [{ gradients: [backgroundGradient] }];

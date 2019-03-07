@@ -141,7 +141,7 @@ export function getKeyframeRules(): CSSRuleData {
                             for (let k = 0; k < item.cssRules.length; k++) {
                                 const match = REGEXP_KEYFRAMERULE.exec(item.cssRules[k].cssText);
                                 if (match) {
-                                    for (let percent of (item.cssRules[k]['keyText'] as string || match[1].trim()).split(',')) {
+                                    for (let percent of (item.cssRules[k]['keyText'] as string || match[1].trim()).split(REGEXP_PATTERN.SEPARATOR)) {
                                         percent = percent.trim();
                                         switch (percent) {
                                             case 'from':
@@ -344,14 +344,14 @@ export function getRangeClientRect(element: Element) {
     return <TextDimension> bounds;
 }
 
-export function assignBounds(bounds: RectDimension | DOMRect): RectDimension {
+export function assignBounds(dimension: RectDimension | DOMRect): RectDimension {
     return {
-        top: bounds.top,
-        right: bounds.right,
-        bottom: bounds.bottom,
-        left: bounds.left,
-        width: bounds.width,
-        height: bounds.height
+        top: dimension.top,
+        right: dimension.right,
+        bottom: dimension.bottom,
+        left: dimension.left,
+        width: dimension.width,
+        height: dimension.height
     };
 }
 
@@ -765,12 +765,12 @@ export function hasComputedStyle(element: Element | null): element is HTMLElemen
 }
 
 export function hasVisibleRect(element: Element, checkViewport = false) {
-    const bounds = element.getBoundingClientRect();
-    return bounds.width !== 0 && bounds.height !== 0 && (!checkViewport || withinViewport(bounds));
+    const dimension = element.getBoundingClientRect();
+    return dimension.width !== 0 && dimension.height !== 0 && (!checkViewport || withinViewport(dimension));
 }
 
-export function withinViewport(bounds: ClientRect | DOMRect) {
-    return !(bounds.left < 0 && bounds.top < 0 && Math.abs(bounds.left) >= bounds.width && Math.abs(bounds.top) >= bounds.height);
+export function withinViewport(dimension: ClientRect | DOMRect) {
+    return !(dimension.left < 0 && dimension.top < 0 && Math.abs(dimension.left) >= dimension.width && Math.abs(dimension.top) >= dimension.height);
 }
 
 export function setElementCache(element: Element, attr: string, data: any) {

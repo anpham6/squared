@@ -13,6 +13,7 @@ interface UtilRegExpPattern {
     URI: RegExp;
     UNIT: RegExp;
     PERCENT: RegExp;
+    SEPARATOR: RegExp;
     ATTRIBUTE: RegExp;
 }
 
@@ -78,6 +79,7 @@ export const REGEXP_PATTERN: UtilRegExpPattern = {
     URI: /^[A-Za-z]+:\/\//,
     UNIT: new RegExp(`^${REGEXP_STRING.UNIT}$`),
     PERCENT: new RegExp(`^${REGEXP_STRING.PERCENT}$`),
+    SEPARATOR: /\s*,\s*/,
     ATTRIBUTE: /([^\s]+)="([^"]+)"/
 };
 
@@ -251,9 +253,6 @@ export function formatPercent(value: string | number, round = true) {
     }
     if (isNaN(value)) {
         return '0%';
-    }
-    if (value < 1) {
-        value *= 100;
     }
     return `${round ? Math.round(value) : value}%`;
 }

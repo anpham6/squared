@@ -23,7 +23,7 @@ function reduceContainerWidth<T extends View>(node: T, value: string, offset: nu
     if ($util.isPercent(value)) {
         const actualParent = node.actualParent;
         if (actualParent) {
-            const width = parseInt(value) - (offset / actualParent.box.width) * 100;
+            const width = parseFloat(value) - (offset / actualParent.box.width) * 100;
             if (width > 0) {
                 return $util.formatPercent(width);
             }

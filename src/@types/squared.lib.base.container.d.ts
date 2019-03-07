@@ -14,7 +14,7 @@ declare global {
             each(predicate: IteratorPredicate<T, void>): this;
             find(predicate: IteratorPredicate<T, boolean> | string, value?: any): T | undefined;
             sort(predicate: (a: T, b: T) => number): this;
-            concat(list: T[]): T[];
+            concat(list: T[]): this;
             every(predicate: IteratorPredicate<T, boolean>): boolean;
             some(predicate: IteratorPredicate<T, boolean>): boolean;
             filter(predicate: IteratorPredicate<T, void>): T[];

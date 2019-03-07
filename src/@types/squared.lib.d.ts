@@ -26,12 +26,12 @@ declare global {
             function newRectDimension(): RectDimension;
             function newBoxModel(): BoxModel;
             function hasVisibleRect(element: Element, checkViewport?: boolean): boolean;
-            function withinViewport(bounds: ClientRect | DOMRect): boolean;
+            function withinViewport(dimension: ClientRect | DOMRect): boolean;
             function getDOMRect(element: Element): DOMRect;
             function createElement(parent: Element | null, block?: boolean): HTMLElement;
             function removeElementsByClassName(className: string): void;
             function getRangeClientRect(element: Element): TextDimension;
-            function assignBounds(bounds: RectDimension | DOMRect): RectDimension;
+            function assignBounds(dimension: RectDimension | DOMRect): RectDimension;
             function getStyle(element: Element | null, cache?: boolean): CSSStyleDeclaration;
             function getFontSize(element: Element | null): number;
             function resolveURL(value: string): string;

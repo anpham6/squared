@@ -109,7 +109,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     return;
                                 }
                                 case 'polygon': {
-                                    const points = $util.objectMap<string, Point>(match[1].split(','), values => {
+                                    const points = $util.objectMap<string, Point>(match[1].split($util.REGEXP_PATTERN.SEPARATOR), values => {
                                         let [x, y] = $util.replaceMap<string, number>(values.trim().split(' '), (value, index) => convertUnit(value, index === 0));
                                         x += boxRect.left;
                                         y += boxRect.top;

@@ -87,7 +87,9 @@ interface BoxStyle extends BoxBorder {
 interface Gradient {
     type: string;
     colorStops: ColorStop[];
+    repeating?: boolean;
     horizontal?: boolean;
+    dimension?: Dimension;
 }
 
 interface ColorStop {

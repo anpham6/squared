@@ -205,20 +205,40 @@ function insertDoubleBorder(layerList: LayerListTemplate, border: BorderAttribut
     }
 }
 
-function checkBackgroundPosition(current: string, adjacent: string, defaultPosition: string) {
-    const initial = current === 'initial' || current === 'unset';
-    if (current.indexOf(' ') === -1 && adjacent.indexOf(' ') !== -1) {
-        if (/^[a-z]+$/.test(current)) {
-            return `${initial ? defaultPosition : current} 0px`;
+function checkBackgroundPosition(value: string, adjacent: string, defaultPosition: string) {
+    const initial = value === 'initial' || value === 'unset';
+    if (value.indexOf(' ') === -1 && adjacent.indexOf(' ') !== -1) {
+        if (/^[a-z]+$/.test(value)) {
+            return `${initial ? defaultPosition : value} 0px`;
         }
         else {
-            return `${defaultPosition} ${current}`;
+            return `${defaultPosition} ${value}`;
         }
     }
     else if (initial) {
         return '0px';
     }
-    return current;
+    return value;
+}
+
+function getPercentOffset(position: RectPosition, direction: string, bounds: RectDimension, dimension?: Dimension) {
+    if (dimension) {
+        switch (direction) {
+            case 'left':
+            case 'right':
+                if ($util.isPercent(position.originalX)) {
+                    return parseInt(position.originalX) / 100 * (bounds.width - dimension.width);
+                }
+                break;
+            case 'top':
+            case 'bottom':
+                if ($util.isPercent(position.originalY)) {
+                    return parseInt(position.originalY) / 100 * (bounds.height - dimension.height);
+                }
+                break;
+        }
+    }
+    return position[direction];
 }
 
 export default class ResourceBackground<T extends View> extends squared.base.Extension<T> {
@@ -232,38 +252,50 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         for (const node of this.application.processing.cache.duplicate().sort(a => !a.visible ? -1 : 0)) {
             const stored: BoxStyle = node.data(Resource.KEY_NAME, 'boxStyle');
             if (stored && !node.hasBit('excludeResource', $enum.NODE_RESOURCE.BOX_STYLE)) {
-                const backgroundRepeat = $util.replaceMap<string, string>(stored.backgroundRepeat.split(','), value => value.trim());
-                const backgroundSize = $util.replaceMap<string, string>(stored.backgroundSize.split(','), value => value.trim());
-                const backgroundPositionX = $util.replaceMap<string, string>(stored.backgroundPositionX.split(','), value => value.trim());
-                const backgroundPositionY = $util.replaceMap<string, string>(stored.backgroundPositionY.split(','), value => value.trim());
+                const backgroundRepeat = stored.backgroundRepeat.split($util.REGEXP_PATTERN.SEPARATOR);
+                const backgroundSize = stored.backgroundSize.split($util.REGEXP_PATTERN.SEPARATOR);
+                const backgroundPositionX = stored.backgroundPositionX.split($util.REGEXP_PATTERN.SEPARATOR);
+                const backgroundPositionY = stored.backgroundPositionY.split($util.REGEXP_PATTERN.SEPARATOR);
                 const backgroundImage: (string | BackgroundGradient)[] = [];
-                const backgroundDimensions: Undefined<ImageAsset>[] = [];
                 const backgroundPosition: string[] = [];
+                const imageDimensions: Undefined<ImageAsset>[] = [];
+                let imageLength = 0;
                 if (stored.backgroundImage && !node.hasBit('excludeResource', $enum.NODE_RESOURCE.IMAGE_SOURCE)) {
-                    for (let i = 0, j = 0; i < stored.backgroundImage.length; i++) {
+                    imageLength = stored.backgroundImage.length;
+                    while (backgroundSize.length < imageLength) {
+                        $util.concatArray(backgroundSize, backgroundSize.slice(0));
+                    }
+                    backgroundSize.length = imageLength;
+                    for (let i = 0, j = 0; i < imageLength; i++) {
                         const value = stored.backgroundImage[i];
+                        let remove = true;
                         if (typeof value === 'string') {
-                            backgroundImage[j] = Resource.addImageUrl(value);
-                            backgroundDimensions[j] = Resource.ASSETS.images.get($dom.resolveURL(value));
-                        }
-                        else {
-                            let gradient: BackgroundGradient | undefined;
-                            if (value.colorStops.length > 1) {
-                                gradient = Resource.createBackgroundGradient(node, value);
-                                if (gradient) {
-                                    backgroundImage[j] = gradient;
+                            if (value !== 'initial') {
+                                backgroundImage[j] = Resource.addImageUrl(value);
+                                if (backgroundImage[j] !== '') {
+                                    imageDimensions[j] = Resource.ASSETS.images.get($dom.resolveURL(value));
+                                    remove = false;
                                 }
                             }
-                            if (gradient === undefined) {
-                                backgroundRepeat.splice(i, 1);
-                                backgroundSize.splice(i, 1);
-                                continue;
+                        }
+                        else if (value.colorStops.length > 1) {
+                            const gradient = Resource.createBackgroundGradient(value, node);
+                            if (gradient) {
+                                backgroundImage[j] = gradient;
+                                remove = false;
                             }
                         }
-                        const x = backgroundPositionX[i] || backgroundPositionX[i - 1];
-                        const y = backgroundPositionY[i] || backgroundPositionY[i - 1];
-                        backgroundPosition[j] = `${checkBackgroundPosition(x, y, 'left')} ${checkBackgroundPosition(y, x, 'top')}`;
-                        j++;
+                        if (remove) {
+                            backgroundRepeat.splice(i, 1);
+                            backgroundSize.splice(i, 1);
+                            imageLength--;
+                        }
+                        else {
+                            const x = backgroundPositionX[i] || backgroundPositionX[i - 1];
+                            const y = backgroundPositionY[i] || backgroundPositionY[i - 1];
+                            backgroundPosition[j] = `${checkBackgroundPosition(x, y, 'left')} ${checkBackgroundPosition(y, x, 'top')}`;
+                            j++;
+                        }
                     }
                 }
                 const companion = node.companion;
@@ -294,25 +326,26 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         borderData = item;
                     }
                 }
-                if (borderData !== undefined || backgroundImage.length) {
+                if (borderData !== undefined || imageLength) {
                     const layerList: LayerListTemplate = {
                         A: false,
                         B: [],
                         C: false
                     };
                     let resourceName = '';
-                    for (let i = backgroundImage.length - 1; i >= 0; i--) {
+                    for (let i = imageLength - 1; i >= 0; i--) {
                         const value = backgroundImage[i];
                         const imageData: BackgroundImage = {
                             bitmap: false,
                             rotate: false,
                             gradient: false
                         };
+                        const position = $dom.getBackgroundPosition(backgroundPosition[i], node.bounds, node.fontSize);
+                        let gravity = position.horizontal === 'center' && position.vertical === 'center' ? 'center' : `${position.horizontal === 'center' ? 'center_horizontal' : position.horizontal}|${position.vertical === 'center' ? 'center_vertical' : position.vertical}`;
+                        let dimension: ImageAsset | Dimension | undefined;
                         if (typeof value === 'string') {
-                            const image = backgroundDimensions[i];
-                            const position = $dom.getBackgroundPosition(backgroundPosition[i], node.bounds, node.fontSize);
-                            const imageRepeat = !image || image.width < node.bounds.width || image.height < node.bounds.height;
-                            let gravity = position.horizontal === 'center' && position.vertical === 'center' ? 'center' : `${position.horizontal === 'center' ? 'center_horizontal' : position.horizontal}|${position.vertical === 'center' ? 'center_vertical' : position.vertical}`;
+                            dimension = imageDimensions[i];
+                            const imageRepeat = !dimension || dimension.width < node.bounds.width || dimension.height < node.bounds.height;
                             let width = '';
                             let height = '';
                             let tileMode = '';
@@ -338,7 +371,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     }
                                     break;
                             }
-                            if (gravity !== '' && image && image.width > 0 && image.height > 0 && node.renderChildren.length === 0) {
+                            if (gravity !== '' && dimension && dimension.width > 0 && dimension.height > 0 && node.renderChildren.length === 0) {
                                 if (tileModeY === 'repeat') {
                                     let tileWidth = 0;
                                     if (node.hasWidth) {
@@ -347,23 +380,23 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     else {
                                         tileWidth = node.bounds.width - (node.borderLeftWidth + node.borderRightWidth);
                                     }
-                                    if (image.width < tileWidth) {
+                                    if (dimension.width < tileWidth) {
                                         const layoutWidth = $util.convertInt(node.android('layout_width'));
                                         if (gravity.indexOf('left') !== -1) {
-                                            position.right = tileWidth - image.width;
+                                            position.right = tileWidth - dimension.width;
                                             if (node.hasWidth && tileWidth > layoutWidth) {
                                                 node.android('layout_width', $util.formatPX(node.bounds.width));
                                             }
                                         }
                                         else if (gravity.indexOf('right') !== -1) {
-                                            position.left = tileWidth - image.width;
+                                            position.left = tileWidth - dimension.width;
                                             if (node.hasWidth && tileWidth > layoutWidth) {
                                                 node.android('layout_width', $util.formatPX(node.bounds.width));
                                             }
                                         }
                                         else if (gravity === 'center' || gravity.indexOf('center_horizontal') !== -1) {
-                                            position.left = Math.floor((tileWidth - image.width) / 2);
-                                            width = $util.formatPX(image.width);
+                                            position.left = Math.floor((tileWidth - dimension.width) / 2);
+                                            width = $util.formatPX(dimension.width);
                                             if (node.hasWidth && tileWidth > layoutWidth) {
                                                 node.android('layout_width', $util.formatPX(node.bounds.width));
                                             }
@@ -378,23 +411,23 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     else {
                                         tileHeight = node.bounds.height - (node.borderTopWidth + node.borderBottomWidth);
                                     }
-                                    if (image.height < tileHeight) {
+                                    if (dimension.height < tileHeight) {
                                         const layoutHeight = $util.convertInt(node.android('layout_height'));
                                         if (gravity.indexOf('top') !== -1) {
-                                            position.bottom = tileHeight - image.height;
+                                            position.bottom = tileHeight - dimension.height;
                                             if (!node.hasHeight && tileHeight > layoutHeight) {
                                                 node.android('layout_height', $util.formatPX(node.bounds.height));
                                             }
                                         }
                                         else if (gravity.indexOf('bottom') !== -1) {
-                                            position.top = tileHeight - image.height;
+                                            position.top = tileHeight - dimension.height;
                                             if (!node.hasHeight && tileHeight > layoutHeight) {
                                                 node.android('layout_height', $util.formatPX(node.bounds.height));
                                             }
                                         }
                                         else if (gravity === 'center' || gravity.indexOf('center_vertical') !== -1) {
-                                            position.top = Math.floor((tileHeight - image.height) / 2);
-                                            height = $util.formatPX(image.height);
+                                            position.top = Math.floor((tileHeight - dimension.height) / 2);
+                                            height = $util.formatPX(dimension.height);
                                             if (!node.hasHeight && tileHeight > layoutHeight) {
                                                 node.android('layout_height', $util.formatPX(node.bounds.height));
                                             }
@@ -434,20 +467,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 }
                             }
                             else {
-                                if (position.top !== 0) {
-                                    imageData.top = $util.formatPX(position.top);
-                                }
-                                if (position.right !== 0) {
-                                    imageData.right = $util.formatPX(position.right);
-                                }
-                                if (position.bottom !== 0) {
-                                    imageData.bottom = $util.formatPX(position.bottom);
-                                }
-                                if (position.left !== 0) {
-                                    imageData.left = $util.formatPX(position.left);
-                                }
-                                imageData.width = width;
-                                imageData.height = height;
                                 if (!(backgroundSize[i] === 'auto' || backgroundSize[i] === 'auto auto' || backgroundSize[i] === 'initial')) {
                                     switch (backgroundSize[i]) {
                                         case 'cover':
@@ -470,11 +489,20 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                             }
                                             for (let j = 0; j < dimensions.length; j++) {
                                                 if (dimensions[j] !== 'auto' && dimensions[j] !== '100%') {
-                                                    imageData[j === 0 ? 'width' : 'height'] = node.convertPX(backgroundSize[i], j === 0, false);
+                                                    if (j === 0) {
+                                                        width = node.convertPX(backgroundSize[i], true, false);
+                                                    }
+                                                    else {
+                                                        height = node.convertPX(backgroundSize[i], false, false);
+                                                    }
                                                 }
                                             }
                                             break;
                                     }
+                                }
+                                if (width !== '' && height !== '') {
+                                    imageData.width = width;
+                                    imageData.height = height;
                                 }
                                 if (gravity !== '' || tileMode !== '' || tileModeX !== '' || tileModeY !== '') {
                                     imageData.bitmap = [{
@@ -492,12 +520,23 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                         else {
                             if (value.colorStops.length > 0) {
-                                const width = Math.round(node.bounds.width);
-                                const height = Math.round(node.bounds.height);
+                                dimension = Resource.getBackgroundSize(node, backgroundSize[i]);
+                                let width: number;
+                                let height: number;
+                                if (dimension) {
+                                    width = dimension.width;
+                                    height = dimension.height;
+                                    imageData.width = $util.formatPX(dimension.width);
+                                    imageData.height = $util.formatPX(dimension.height.toString());
+                                }
+                                else {
+                                    width = Math.round(node.bounds.width);
+                                    height = Math.round(node.bounds.height);
+                                }
                                 const vectorData: TemplateDataA = {
                                     namespace: getXmlNs('aapt'),
-                                    width: $util.formatPX(width),
-                                    height: $util.formatPX(height),
+                                    width: imageData.width || $util.formatPX(width),
+                                    height: imageData.height || $util.formatPX(height),
                                     viewportWidth: width.toString(),
                                     viewportHeight: height.toString(),
                                     alpha: '',
@@ -521,7 +560,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 const xml = $xml.createTemplate(TEMPLATES.VECTOR, vectorData, true);
                                 let vectorName = Resource.getStoredName('drawables', xml);
                                 if (vectorName === '') {
-                                    vectorName = `${node.tagName.toLowerCase()}_${node.controlId}_gradient`;
+                                    vectorName = `${node.tagName.toLowerCase()}_${node.controlId}_gradient_${i}`;
                                     STORED.drawables.set(vectorName, xml);
                                 }
                                 imageData.src = vectorName;
@@ -531,6 +570,18 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             }
                         }
                         if (imageData.src || imageData.bitmap || imageData.gradient) {
+                            if (position.top !== 0) {
+                                imageData.top = $util.formatPX(getPercentOffset(position, 'top', node.bounds, dimension));
+                            }
+                            if (position.right !== 0) {
+                                imageData.right = $util.formatPX(getPercentOffset(position, 'right', node.bounds, dimension));
+                            }
+                            if (position.bottom !== 0) {
+                                imageData.bottom = $util.formatPX(getPercentOffset(position, 'bottom', node.bounds, dimension));
+                            }
+                            if (position.left !== 0) {
+                                imageData.left = $util.formatPX(getPercentOffset(position, 'left', node.bounds, dimension));
+                            }
                             layerList.B.push(imageData);
                         }
                     }
@@ -663,10 +714,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             !node.hasBit('excludeProcedure', $enum.NODE_PROCEDURE.AUTOFIT))
                         {
                             const sizeParent: ImageAsset = { width: 0, height: 0 };
-                            for (const item of backgroundDimensions) {
-                                if (item) {
-                                    sizeParent.width = Math.max(sizeParent.width, item.width);
-                                    sizeParent.height = Math.max(sizeParent.height, item.height);
+                            for (const image of imageDimensions) {
+                                if (image) {
+                                    sizeParent.width = Math.max(sizeParent.width, image.width);
+                                    sizeParent.height = Math.max(sizeParent.height, image.height);
                                 }
                             }
                             if (sizeParent.width === 0) {

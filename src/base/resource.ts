@@ -15,7 +15,7 @@ const $xml = squared.lib.xml;
 
 const REGEXP_COLORSTOP = `(?:\\s*(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[a-zA-Z\\d]{3,}|[a-z]+)\\s*(\\d+%|${$util.REGEXP_STRING.DEGREE}|${$util.REGEXP_STRING.UNIT})?,?\\s*)`;
 const REGEXP_POSITION = /(.+?)?\s*at (.+?)$/;
-const REGEXP_BACKGROUNDIMAGE = `(?:url\\("?.+?"?\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|circle|ellipse|closest-side|closest-corner|farthest-side|farthest-corner)?(?:\\s*at [\\w %]+)?),?\\s*(${REGEXP_COLORSTOP}+)\\))`;
+const REGEXP_BACKGROUNDIMAGE = `(?:initial|url\\("?.+?"?\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|circle|ellipse|closest-side|closest-corner|farthest-side|farthest-corner)?(?:\\s*at [\\w %]+)?),?\\s*(${REGEXP_COLORSTOP}+)\\))`;
 
 function replaceExcluded<T extends Node>(element: HTMLElement, attr: string) {
     let value: string = element[attr];
@@ -28,11 +28,22 @@ function replaceExcluded<T extends Node>(element: HTMLElement, attr: string) {
     return value;
 }
 
-function parseColorStops<T extends Node>(node: T, type: string, value: string, opacity: string, repeating = false, horizontal = true) {
+function parseColorStops<T extends Node>(node: T, gradient: Gradient, value: string, opacity: string, index: number, backgroundSize?: string) {
     const result: ColorStop[] = [];
     const pattern = new RegExp(REGEXP_COLORSTOP, 'g');
-    const conic = type === 'conic';
+    const conic = gradient.type === 'conic';
     let match: RegExpExecArray | null;
+    let width = node.bounds.width;
+    let height = node.bounds.height;
+    if (backgroundSize) {
+        const sizes = backgroundSize.split($util.REGEXP_PATTERN.SEPARATOR);
+        const dimension = Resource.getBackgroundSize(node, sizes[index % sizes.length]);
+        if (dimension) {
+            width = dimension.width;
+            height = dimension.height;
+            gradient.dimension = dimension;
+        }
+    }
     while ((match = pattern.exec(value)) !== null) {
         const color = $color.parseColor(match[1], opacity, true);
         if (color) {
@@ -46,8 +57,8 @@ function parseColorStops<T extends Node>(node: T, type: string, value: string, o
                 if ($util.isPercent(match[2])) {
                     item.offset = parseFloat(match[2]) / 100;
                 }
-                else if (repeating && $util.isUnit(match[2])) {
-                    item.offset = parseFloat(node.convertPX(match[2], horizontal, false)) / (horizontal ? node.bounds.width : node.bounds.height);
+                else if (gradient.repeating && $util.isUnit(match[2])) {
+                    item.offset = parseFloat(node.convertPX(match[2], gradient.horizontal, false)) / (gradient.horizontal ? width : height);
                 }
             }
             result.push(item);
@@ -78,7 +89,7 @@ function parseColorStops<T extends Node>(node: T, type: string, value: string, o
         }
         percent = item.offset;
     }
-    if (repeating) {
+    if (gradient.repeating) {
         if (percent < 100) {
             const original = result.slice(0);
             complete: {
@@ -110,7 +121,11 @@ function parseAngle(value: string | undefined) {
     if (value) {
         const match = new RegExp($util.REGEXP_STRING.DEGREE).exec(value.trim());
         if (match) {
-            return $util.convertAngle(match[1], match[2]) % 360;
+            let angle = $util.convertAngle(match[1], match[2]) % 360;
+            if (angle < 0) {
+                angle += 360;
+            }
+            return angle;
         }
     }
     return 0;
@@ -235,6 +250,39 @@ export default abstract class Resource<T extends Node> implements squared.base.R
         return !!object && (!!object.backgroundImage || this.isBorderVisible(object.borderTop) || this.isBorderVisible(object.borderRight) || this.isBorderVisible(object.borderBottom) || this.isBorderVisible(object.borderLeft) || !!object.borderRadius);
     }
 
+    public static getBackgroundSize<T extends Node>(node: T, value: string): Dimension | undefined {
+        let width = 0;
+        let height = 0;
+        switch (value) {
+            case '':
+            case 'cover':
+            case 'contain':
+            case '100% 100%':
+            case 'auto':
+            case 'auto auto':
+            case 'initial':
+                return undefined;
+            default:
+                const dimensions = value.split(' ');
+                if (dimensions.length === 1) {
+                    dimensions[1] = dimensions[0];
+                }
+                for (let i = 0; i < dimensions.length; i++) {
+                    if (dimensions[i] === 'auto') {
+                        dimensions[i] = '100%';
+                    }
+                    if (i === 0) {
+                        width = parseFloat(node.convertPX(dimensions[i], true, false));
+                    }
+                    else {
+                        height = parseFloat(node.convertPX(dimensions[i], false, false));
+                    }
+                }
+                break;
+        }
+        return width > 0 && height > 0 ? { width: Math.round(width), height: Math.round(height) } : undefined;
+    }
+
     public fileHandler?: File<T>;
 
     protected constructor(
@@ -276,7 +324,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                     backgroundImage: undefined
                 };
                 for (const attr in boxStyle) {
-                    let value = node.css(attr);
+                    const value = node.css(attr);
                     switch (attr) {
                         case 'borderTop':
                         case 'borderRight':
@@ -336,24 +384,26 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                             }
                             break;
                         case 'backgroundImage':
-                            if (value === '' || value === 'none') {
-                                value = node.css('background');
-                            }
                             if (value !== 'none' && !node.hasBit('excludeResource', NODE_RESOURCE.IMAGE_SOURCE)) {
                                 const images: (string | Gradient)[] = [];
                                 const opacity = node.css('opacity');
                                 const pattern = new RegExp(REGEXP_BACKGROUNDIMAGE, 'g');
                                 let match: RegExpExecArray | null;
+                                let i = 0;
                                 while ((match = pattern.exec(value)) !== null) {
                                     const [complete, repeating, type, direction, colorStop] = match;
-                                    if (complete.startsWith('url')) {
+                                    if (complete === 'initial' || complete.startsWith('url')) {
                                         images.push(complete);
                                     }
                                     else {
-                                        let gradient!: Gradient;
+                                        const gradient: Gradient = {
+                                            type,
+                                            repeating: repeating === 'repeating',
+                                            colorStops: []
+                                        };
                                         switch (type) {
                                             case 'linear': {
-                                                let angle: number;
+                                                let angle = 180;
                                                 switch (direction) {
                                                     case 'to top':
                                                         angle = 0;
@@ -368,7 +418,6 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                                         angle = 135;
                                                         break;
                                                     case 'to bottom':
-                                                        angle = 180;
                                                         break;
                                                     case 'to left bottom':
                                                         angle = 225;
@@ -380,69 +429,61 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                                         angle = 315;
                                                         break;
                                                     default:
-                                                        angle = direction ? parseAngle(direction) : 180;
+                                                        if (direction) {
+                                                            angle = parseAngle(direction);
+                                                        }
                                                         break;
                                                 }
-                                                const horizontal = angle >= 45 && angle <= 135 || angle >= 225 && angle <= 315;
-                                                gradient = <LinearGradient> {
-                                                    type,
-                                                    angle,
-                                                    horizontal,
-                                                    colorStops: parseColorStops(node, type, colorStop, opacity, !!repeating, horizontal)
-                                                };
+                                                gradient.horizontal = angle >= 45 && angle <= 135 || angle >= 225 && angle <= 315;
+                                                gradient.colorStops = parseColorStops(node, gradient, colorStop, opacity, i, boxStyle.backgroundSize);
+                                                (<LinearGradient> gradient).angle = angle;
                                                 break;
                                             }
                                             case 'radial': {
-                                                const horizontal = node.bounds.width <= node.bounds.height;
-                                                gradient = <RadialGradient> {
-                                                    type,
-                                                    position: (() => {
-                                                        const result = ['center', 'ellipse'];
-                                                        if (direction) {
-                                                            const position = REGEXP_POSITION.exec(direction);
-                                                            if (position) {
-                                                                switch (position[1]) {
-                                                                    case 'ellipse':
-                                                                    case 'circle':
-                                                                    case 'closest-side':
-                                                                    case 'closest-corner':
-                                                                    case 'farthest-side':
-                                                                    case 'farthest-corner':
-                                                                        result[1] = position[1];
-                                                                        break;
-                                                                }
-                                                                if (position[2]) {
-                                                                    result[0] = position[2];
-                                                                }
+                                                gradient.horizontal = node.bounds.width <= node.bounds.height;
+                                                gradient.colorStops = parseColorStops(node, gradient, colorStop, opacity, i, boxStyle.backgroundSize);
+                                                (<RadialGradient> gradient).position = (() => {
+                                                    const result = ['center', 'ellipse'];
+                                                    if (direction) {
+                                                        const position = REGEXP_POSITION.exec(direction);
+                                                        if (position) {
+                                                            switch (position[1]) {
+                                                                case 'ellipse':
+                                                                case 'circle':
+                                                                case 'closest-side':
+                                                                case 'closest-corner':
+                                                                case 'farthest-side':
+                                                                case 'farthest-corner':
+                                                                    result[1] = position[1];
+                                                                    break;
+                                                            }
+                                                            if (position[2]) {
+                                                                result[0] = position[2];
                                                             }
                                                         }
-                                                        return result;
-                                                    })(),
-                                                    horizontal,
-                                                    colorStops: parseColorStops(node, type, colorStop, opacity, !!repeating, horizontal)
-                                                };
+                                                    }
+                                                    return result;
+                                                })();
                                                 break;
                                             }
                                             case 'conic': {
-                                                gradient = <ConicGradient> {
-                                                    type,
-                                                    angle: parseAngle(direction),
-                                                    position: (() => {
-                                                        if (direction) {
-                                                            const position = REGEXP_POSITION.exec(direction);
-                                                            if (position) {
-                                                                return [position[2]];
-                                                            }
+                                                gradient.colorStops = parseColorStops(node, gradient, colorStop, opacity, i, boxStyle.backgroundSize);
+                                                (<ConicGradient> gradient).angle = parseAngle(direction),
+                                                (<ConicGradient> gradient).position = (() => {
+                                                    if (direction) {
+                                                        const position = REGEXP_POSITION.exec(direction);
+                                                        if (position) {
+                                                            return [position[2]];
                                                         }
-                                                        return ['center'];
-                                                    })(),
-                                                    colorStops: parseColorStops(node, type, colorStop, opacity)
-                                                };
+                                                    }
+                                                    return ['center'];
+                                                })();
                                                 break;
                                             }
                                         }
                                         images.push(gradient);
                                     }
+                                    i++;
                                 }
                                 if (images.length) {
                                     boxStyle.backgroundImage = images;

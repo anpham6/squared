@@ -49,7 +49,7 @@ function parseAttribute(element: SVGElement, attr: string) {
         return result;
     }
     else {
-        return $util.flatMap(value.split(','), item => item.trim());
+        return value.split($util.REGEXP_PATTERN.SEPARATOR);
     }
 }
 

@@ -140,7 +140,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     stored.backgroundColor = Resource.addColor(stored.backgroundColor);
                 }
                 if (stored.fontFamily) {
-                    let fontFamily = stored.fontFamily.split(',')[0].replace(/"/g, '').toLowerCase().trim();
+                    let fontFamily = stored.fontFamily.split($util.REGEXP_PATTERN.SEPARATOR)[0].replace(/"/g, '').toLowerCase();
                     let fontStyle = '';
                     let fontWeight = '';
                     stored.color = Resource.addColor(stored.color);
@@ -295,7 +295,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             }
                             for (const attr in combined) {
                                 const attrs = Array.from(combined[attr]).sort().join(';');
-                                const ids = $util.replaceMap<string, number>(attr.split(','), value => parseInt(value));
+                                const ids = $util.replaceMap<string, number>(attr.split($util.REGEXP_PATTERN.SEPARATOR), value => parseInt(value));
                                 deleteStyleAttribute(sorted, attrs, ids);
                                 style[tag][attrs] = ids;
                             }

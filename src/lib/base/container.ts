@@ -101,10 +101,8 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     }
 
     public concat(list: T[]) {
-        for (const item of list) {
-            this._children.push(item);
-        }
-        return this._children;
+        concatArray(this._children, list);
+        return this;
     }
 
     public every(predicate: IteratorPredicate<T, boolean>) {

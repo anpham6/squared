@@ -25,11 +25,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
     }
 
     public static getKeyName(item: SvgAnimation) {
-        let value = item.attributeName;
-        if (SvgBuild.asAnimateTransform(item)) {
-            value += `:${TRANSFORM.typeAsName(item.type)}`;
-        }
-        return value;
+        return item.attributeName + (SvgBuild.asAnimateTransform(item) ? `:${TRANSFORM.typeAsName(item.type)}` : '');
     }
 
     public map: SvgAnimationIntervalAttributeMap;

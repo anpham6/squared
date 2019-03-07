@@ -21,6 +21,32 @@
             height: 50px;
             background: repeating-linear-gradient(120deg, #0092b7 0, #000 1px, #000 .25em, #0092b7 5px /* calc(.25em + 1px) */, #0092b7 .75em);
         }
+        #gradient3 {
+            width: 400px;
+            height: 50px;
+            background: repeating-linear-gradient(-60deg, #000 0, #000 5px, transparent 0, transparent 35px), repeating-linear-gradient(60deg, #000 0, #000 5px, #fff 0, #fff 35px);
+        }
+        #gradient4 {
+            width: 400px;
+            height: 50px;
+            background: linear-gradient(red, transparent), repeating-linear-gradient(90deg,red, red 1em, transparent 0, transparent 4em);
+        }
+        #gradient5 {
+            width: 350px;
+            height: 50px;
+            background: repeating-linear-gradient(90deg, #6b4c1e, #6b4c1e 1px, #e1ba75 0, #e1ba75 2px, transparent 0, transparent 4px) 15% 0%,
+                        repeating-linear-gradient(90deg, #6b4c1e, #6b4c1e 1px, #e1ba75 0, #e1ba75 2px, transparent 0, transparent 4px) 50% 50%,
+                        repeating-linear-gradient(90deg, #6b4c1e, #6b4c1e 1px, #e1ba75 0, #e1ba75 2px, transparent 0, transparent 4px) 100% 100%,
+                        orange;
+            background-repeat: no-repeat;
+            background-size: 10px 10px, 20px 20px;
+        }
+        #gradient6 {
+            width: 400px;
+            height: 200px;
+            background: repeating-linear-gradient(60deg, transparent 0, transparent 5px, tan 0, tan 35px),
+                        repeating-linear-gradient(-60deg, transparent 0, transparent 5px, tan 0, tan 35px);
+        }
     </style>
     <script src="/node_modules/systemjs/dist/system.js"></script>
     <script src="common/dev.js"></script>
@@ -53,6 +79,14 @@
         <div id="gradient1"></div>
         <br /><br />
         <div id="gradient2"></div>
+        <br /><br />
+        <div id="gradient3"></div>
+        <br /><br />
+        <div id="gradient4"></div>
+        <br /><br />
+        <div id="gradient5"></div>
+        <br /><br />
+        <div id="gradient6"></div>
     </div>
     <!-- END: DEMO -->
 
