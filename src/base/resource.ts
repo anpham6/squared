@@ -61,6 +61,17 @@ function parseColorStops<T extends Node>(node: T, gradient: Gradient, value: str
                     item.offset = parseFloat(node.convertPX(match[2], gradient.horizontal, false)) / (gradient.horizontal ? width : height);
                 }
             }
+            if (result.length === 0) {
+                if (item.offset === -1) {
+                    item.offset = 0;
+                }
+                else if (item.offset > 0) {
+                    result.push({
+                        color,
+                        offset: 0
+                    });
+                }
+            }
             result.push(item);
         }
     }
@@ -399,8 +410,8 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                         const gradient: Gradient = {
                                             type,
                                             repeating: repeating === 'repeating',
-                                            colorStops: []
-                                        };
+                                            fontSize: node.fontSize
+                                        } as any;
                                         switch (type) {
                                             case 'linear': {
                                                 let angle = 180;

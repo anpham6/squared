@@ -20,20 +20,3 @@ export interface ViewAttribute {
     android: StringMap;
     app: StringMap;
 }
-
-export interface BackgroundGradient {
-    type: string;
-    colorStops: { color: string, offset: string }[];
-    startColor?: string;
-    endColor?: string;
-    centerColor?: string;
-    angle?: string;
-    startX?: string;
-    startY?: string;
-    endX?: string;
-    endY?: string;
-    centerX?: string;
-    centerY?: string;
-    gradientRadius?: string;
-    tileMode?: string;
-}

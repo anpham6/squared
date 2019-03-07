@@ -1,7 +1,7 @@
 import { ImageAsset, TemplateDataA } from '../../../../src/base/@types/application';
 import { ResourceStoredMapAndroid } from '../../@types/application';
 import { ResourceBackgroundOptions } from '../../@types/extension';
-import { BackgroundGradient } from '../../@types/node';
+import { GradientTemplate } from '../../resource';
 
 import Resource from '../../resource';
 import View from '../../view';
@@ -15,7 +15,7 @@ import VECTOR_TMPL from '../../template/resource/embedded/vector';
 
 interface LayerListTemplate {
     A: StringMap[] | false;
-    B: BackgroundImage[];
+    B: BackgroundImageData[];
     C: BorderData[] | false;
 }
 
@@ -31,16 +31,16 @@ interface BorderData extends PositionAttribute {
     corners: StringMap[] | false;
 }
 
-interface BackgroundImage extends PositionAttribute {
+interface BackgroundImageData extends PositionAttribute {
     src?: string;
     width?: string;
     height?: string;
-    bitmap: ImageBitmap[] | false;
+    bitmap: BitmapData[] | false;
     rotate: StringMap[] | false;
-    gradient: BackgroundGradient[] | false;
+    gradient: GradientTemplate[] | false;
 }
 
-interface ImageBitmap {
+interface BitmapData {
     src: string;
     gravity: string;
     tileMode: string;
@@ -256,7 +256,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 const backgroundSize = stored.backgroundSize.split($util.REGEXP_PATTERN.SEPARATOR);
                 const backgroundPositionX = stored.backgroundPositionX.split($util.REGEXP_PATTERN.SEPARATOR);
                 const backgroundPositionY = stored.backgroundPositionY.split($util.REGEXP_PATTERN.SEPARATOR);
-                const backgroundImage: (string | BackgroundGradient)[] = [];
+                const backgroundImage: (string | GradientTemplate)[] = [];
                 const backgroundPosition: string[] = [];
                 const imageDimensions: Undefined<ImageAsset>[] = [];
                 let imageLength = 0;
@@ -279,9 +279,13 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             }
                         }
                         else if (value.colorStops.length > 1) {
-                            const gradient = Resource.createBackgroundGradient(value, node);
+                            if (value.dimension === undefined) {
+                                value.dimension = node.bounds;
+                            }
+                            const gradient = Resource.createBackgroundGradient(value);
                             if (gradient) {
                                 backgroundImage[j] = gradient;
+                                imageDimensions[j] = value.dimension;
                                 remove = false;
                             }
                         }
@@ -335,7 +339,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     let resourceName = '';
                     for (let i = imageLength - 1; i >= 0; i--) {
                         const value = backgroundImage[i];
-                        const imageData: BackgroundImage = {
+                        const imageData: BackgroundImageData = {
                             bitmap: false,
                             rotate: false,
                             gradient: false
@@ -519,8 +523,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             }
                         }
                         else {
-                            if (value.colorStops.length > 0) {
-                                dimension = Resource.getBackgroundSize(node, backgroundSize[i]);
+                            if (value.colorStops) {
+                                dimension = imageDimensions[i] || Resource.getBackgroundSize(node, backgroundSize[i]);
                                 let width: number;
                                 let height: number;
                                 if (dimension) {

@@ -1,13 +1,9 @@
 import { ConicGradient, LinearGradient, RadialGradient } from '../../src/base/@types/node';
 import { ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from './@types/application';
-import { BackgroundGradient } from './@types/node';
-import { SvgLinearGradient, SvgRadialGradient } from '../../src/svg/@types/object';
 
 import View from './view';
 
 import { RESERVED_JAVA } from './lib/constant';
-
-type SvgPath = squared.svg.SvgPath;
 
 const $Resource = squared.base.Resource;
 const $color = squared.lib.color;
@@ -16,33 +12,54 @@ const $math = squared.lib.math;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
-const $SvgBuild = squared.svg && squared.svg.SvgBuild;
-const $utilS = $SvgBuild && squared.svg.lib.util;
-
 const STORED = <ResourceStoredMapAndroid> $Resource.STORED;
 
-function getTileMode(value: number) {
-    switch (value) {
-        case SVGGradientElement.SVG_SPREADMETHOD_PAD:
-            return 'clamp';
-        case SVGGradientElement.SVG_SPREADMETHOD_REFLECT:
-            return 'mirror';
-        case SVGGradientElement.SVG_SPREADMETHOD_REPEAT:
-            return 'repeat';
-    }
-    return '';
+type GradientColorStop = {
+    color: string;
+    offset: string;
+};
+
+export interface GradientTemplate {
+    type: string;
+    colorStops: GradientColorStop[] | false;
+    startColor?: string;
+    endColor?: string;
+    centerColor?: string;
+    angle?: string;
+    startX?: string;
+    startY?: string;
+    endX?: string;
+    endY?: string;
+    centerX?: string;
+    centerY?: string;
+    gradientRadius?: string;
+    tileMode?: string;
 }
 
-const getRadiusPercent = (value: string) => $util.isPercent(value) ? parseInt(value) / 100 : 0.5;
-
 export default class Resource<T extends View> extends squared.base.Resource<T> implements android.base.Resource<T> {
-    public static createBackgroundGradient<T extends View>(gradient: Gradient, node?: T, path?: SvgPath, precision?: number) {
-        const result: BackgroundGradient = {
+    public static convertColorStops(list: ColorStop[], precision?: number) {
+        const result: GradientColorStop[] = [];
+        for (const stop of list) {
+            const color = `@color/${Resource.addColor(stop.color, true)}`;
+            result.push({
+                color,
+                offset: $math.truncate(stop.offset, precision)
+            });
+        }
+        return result;
+    }
+
+    public static createBackgroundGradient(gradient: Gradient, precision?: number) {
+        if (gradient.dimension === undefined) {
+            return undefined;
+        }
+        const dimension = gradient.dimension;
+        const result: GradientTemplate = {
             type: gradient.type,
-            colorStops: []
+            colorStops: false
         };
         let hasStop = true;
-        if (node && gradient.type !== 'linear' && (gradient.colorStops.length === 2 || gradient.colorStops.length === 3 && gradient.colorStops[1].offset === 0.5) && gradient.colorStops[0].offset <= 0 && gradient.colorStops[gradient.colorStops.length - 1].offset === 1) {
+        if (gradient.type !== 'linear' && (gradient.colorStops.length === 2 || gradient.colorStops.length === 3 && gradient.colorStops[1].offset === 0.5) && gradient.colorStops[0].offset <= 0 && gradient.colorStops[gradient.colorStops.length - 1].offset === 1) {
             result.startColor = Resource.addColor(gradient.colorStops[0].color, true);
             result.endColor = Resource.addColor(gradient.colorStops[gradient.colorStops.length - 1].color, true);
             if (gradient.colorStops.length === 3) {
@@ -52,188 +69,97 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
         }
         switch (gradient.type) {
             case 'radial': {
-                if (path && $SvgBuild) {
-                    const radial = <SvgRadialGradient> gradient;
-                    const points: Point[] = [];
-                    let cx!: number;
-                    let cy!: number;
-                    let cxDiameter!: number;
-                    let cyDiameter!: number;
-                    switch (path.element.tagName) {
-                        case 'path':
-                            for (const command of $SvgBuild.getPathCommands(path.value)) {
-                                $util.concatArray(points, command.value);
-                            }
-                        case 'polygon':
-                            if ($utilS.SVG.polygon(path.element)) {
-                                $util.concatArray(points, $SvgBuild.clonePoints(path.element.points));
-                            }
-                            if (!points.length) {
-                                break;
-                            }
-                            [cx, cy, cxDiameter, cyDiameter] = $SvgBuild.minMaxPoints(points);
-                            cxDiameter -= cx;
-                            cyDiameter -= cy;
-                            break;
-                        default:
-                            if ($utilS.SVG.rect(path.element)) {
-                                const rect = path.element;
-                                cx = rect.x.baseVal.value;
-                                cy = rect.y.baseVal.value;
-                                cxDiameter = rect.width.baseVal.value;
-                                cyDiameter = rect.height.baseVal.value;
-                            }
-                            else if ($utilS.SVG.circle(path.element)) {
-                                const circle = path.element;
-                                cx = circle.cx.baseVal.value - circle.r.baseVal.value;
-                                cy = circle.cy.baseVal.value - circle.r.baseVal.value;
-                                cxDiameter = circle.r.baseVal.value * 2;
-                                cyDiameter = cxDiameter;
-                            }
-                            else if ($utilS.SVG.ellipse(path.element)) {
-                                const ellipse = path.element;
-                                cx = ellipse.cx.baseVal.value - ellipse.rx.baseVal.value;
-                                cy = ellipse.cy.baseVal.value - ellipse.ry.baseVal.value;
-                                cxDiameter = ellipse.rx.baseVal.value * 2;
-                                cyDiameter = ellipse.ry.baseVal.value * 2;
-                            }
-                            else {
-                                return undefined;
-                            }
-                            break;
-                    }
-                    result.centerX = (cx + cxDiameter * getRadiusPercent(radial.cxAsString)).toString();
-                    result.centerY = (cy + cyDiameter * getRadiusPercent(radial.cyAsString)).toString();
-                    result.gradientRadius = (((cxDiameter + cyDiameter) / 2) * ($util.isPercent(radial.rAsString) ? (parseFloat(radial.rAsString) / 100) : 1)).toString();
-                    if (radial.spreadMethod) {
-                        result.tileMode = getTileMode(radial.spreadMethod);
-                    }
+                const position = $dom.getBackgroundPosition((<RadialGradient> gradient).position[0], dimension, gradient.fontSize, true, !hasStop);
+                if (hasStop) {
+                    result.gradientRadius = dimension.width.toString();
+                    result.centerX = position.left.toString();
+                    result.centerY = position.top.toString();
                 }
-                else if (node) {
-                    const position = $dom.getBackgroundPosition((<RadialGradient> gradient).position[0], node.bounds, node.fontSize, true, !hasStop);
-                    if (hasStop) {
-                        result.gradientRadius = node.bounds.width.toString();
-                        result.centerX = position.left.toString();
-                        result.centerY = position.top.toString();
-                    }
-                    else {
-                        result.gradientRadius = $util.formatPX(node.bounds.width);
-                        result.centerX = $util.formatPercent(position.left * 100);
-                        result.centerY = $util.formatPercent(position.top * 100);
-                    }
+                else {
+                    result.gradientRadius = $util.formatPX(dimension.width);
+                    result.centerX = $util.formatPercent(position.left * 100);
+                    result.centerY = $util.formatPercent(position.top * 100);
                 }
                 break;
             }
             case 'linear': {
-                if (path && $SvgBuild) {
-                    const linear = <SvgLinearGradient> gradient;
-                    result.startX = linear.x1.toString();
-                    result.startY = linear.y1.toString();
-                    result.endX = linear.x2.toString();
-                    result.endY = linear.y2.toString();
-                    if (linear.spreadMethod) {
-                        result.tileMode = getTileMode(linear.spreadMethod);
-                    }
+                const linear = <LinearGradient> gradient;
+                const angle = linear.angle;
+                let width: number;
+                let height: number;
+                if (linear.dimension) {
+                    width = linear.dimension.width;
+                    height = linear.dimension.height;
                 }
-                else if (node) {
-                    const linear = <LinearGradient> gradient;
-                    const angle = linear.angle;
-                    let width: number;
-                    let height: number;
-                    if (linear.dimension) {
-                        width = linear.dimension.width;
-                        height = linear.dimension.height;
-                    }
-                    else {
-                        width = Math.round(node.bounds.width);
-                        height = Math.round(node.bounds.height);
-                    }
-                    let positionX = $math.offsetAngleX(angle, width);
-                    let positionY = $math.offsetAngleY(angle, height);
-                    if (!$math.isEqual(Math.abs(positionX), Math.abs(positionY))) {
-                        let oppositeAngle: number;
-                        if (angle <= 90) {
-                            oppositeAngle = $math.offsetAngle({ x: 0, y: height }, { x: width, y: 0 });
-                        }
-                        else if (angle <= 180) {
-                            oppositeAngle = $math.offsetAngle({ x: 0, y: 0 }, { x: width, y: height });
-                        }
-                        else if (angle <= 270) {
-                            oppositeAngle = $math.offsetAngle({ x: 0, y: 0 }, { x: -width, y: height });
-                        }
-                        else {
-                            oppositeAngle = $math.offsetAngle({ x: 0, y: height }, { x: -width, y: 0 });
-                        }
-                        let a = Math.abs(oppositeAngle - angle);
-                        let b = 90 - a;
-                        const lenX = $math.trianguleASA(a, b, Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2)));
-                        positionX = $math.truncateFraction($math.offsetAngleX(angle, lenX[1]));
-                        a = 90;
-                        b = 90 - angle;
-                        const lenY = $math.trianguleASA(a, b, positionX);
-                        positionY = $math.truncateFraction($math.offsetAngleY(angle, lenY[0]));
-                    }
+                else {
+                    width = Math.round(dimension.width);
+                    height = Math.round(dimension.height);
+                }
+                let positionX = $math.offsetAngleX(angle, width);
+                let positionY = $math.offsetAngleY(angle, height);
+                if (!$math.isEqual(Math.abs(positionX), Math.abs(positionY))) {
+                    let oppositeAngle: number;
                     if (angle <= 90) {
-                        positionY += height;
-                        result.startX = '0';
-                        result.startY = height.toString();
+                        oppositeAngle = $math.offsetAngle({ x: 0, y: height }, { x: width, y: 0 });
                     }
                     else if (angle <= 180) {
-                        result.startX = '0';
-                        result.startY = '0';
+                        oppositeAngle = $math.offsetAngle({ x: 0, y: 0 }, { x: width, y: height });
                     }
                     else if (angle <= 270) {
-                        positionX += width;
-                        result.startX = width.toString();
-                        result.startY = '0';
+                        oppositeAngle = $math.offsetAngle({ x: 0, y: 0 }, { x: -width, y: height });
                     }
                     else {
-                        positionX += width;
-                        positionY += height;
-                        result.startX = width.toString();
-                        result.startY = height.toString();
+                        oppositeAngle = $math.offsetAngle({ x: 0, y: height }, { x: -width, y: 0 });
                     }
-                    result.endX = $math.truncate(positionX, precision);
-                    result.endY = $math.truncate(positionY, precision);
+                    let a = Math.abs(oppositeAngle - angle);
+                    let b = 90 - a;
+                    const lenX = $math.trianguleASA(a, b, Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2)));
+                    positionX = $math.truncateFraction($math.offsetAngleX(angle, lenX[1]));
+                    a = 90;
+                    b = 90 - angle;
+                    const lenY = $math.trianguleASA(a, b, positionX);
+                    positionY = $math.truncateFraction($math.offsetAngleY(angle, lenY[0]));
                 }
+                if (angle <= 90) {
+                    positionY += height;
+                    result.startX = '0';
+                    result.startY = height.toString();
+                }
+                else if (angle <= 180) {
+                    result.startX = '0';
+                    result.startY = '0';
+                }
+                else if (angle <= 270) {
+                    positionX += width;
+                    result.startX = width.toString();
+                    result.startY = '0';
+                }
+                else {
+                    positionX += width;
+                    positionY += height;
+                    result.startX = width.toString();
+                    result.startY = height.toString();
+                }
+                result.endX = $math.truncate(positionX, precision);
+                result.endY = $math.truncate(positionY, precision);
                 break;
             }
             case 'conic': {
-                if (node) {
-                    result.type = 'sweep';
-                    const position = $dom.getBackgroundPosition((<ConicGradient> gradient).position[0], <DOMRect> { width: node.bounds.width * 2, height: node.bounds.height * 2 }, node.fontSize, true, !hasStop);
-                    if (hasStop) {
-                        result.centerX = position.left.toString();
-                        result.centerY = position.top.toString();
-                    }
-                    else {
-                        result.centerX = $util.formatPercent(position.left * 100);
-                        result.centerY = $util.formatPercent(position.top * 100);
-                    }
+                result.type = 'sweep';
+                const position = $dom.getBackgroundPosition((<ConicGradient> gradient).position[0], <DOMRect> { width: dimension.width * 2, height: dimension.height * 2 }, gradient.fontSize, true, !hasStop);
+                if (hasStop) {
+                    result.centerX = position.left.toString();
+                    result.centerY = position.top.toString();
                 }
                 else {
-                    return undefined;
+                    result.centerX = $util.formatPercent(position.left * 100);
+                    result.centerY = $util.formatPercent(position.top * 100);
                 }
                 break;
             }
         }
         if (hasStop) {
-            let offset = 0;
-            for (let i = 0; i < gradient.colorStops.length; i++) {
-                const stop = gradient.colorStops[i];
-                const color = `@color/${Resource.addColor(stop.color, true)}`;
-                offset = Math.max(stop.offset, offset);
-                if (i === 0 && offset > 0) {
-                    result.colorStops.push({
-                        color,
-                        offset: '0'
-                    });
-                }
-                result.colorStops.push({
-                    color,
-                    offset: $math.truncate(offset)
-                });
-            }
+            result.colorStops = Resource.convertColorStops(gradient.colorStops);
         }
         return result;
     }

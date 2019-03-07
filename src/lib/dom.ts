@@ -477,7 +477,7 @@ export function getNamedItem(element: Element | null, attr: string) {
     return '';
 }
 
-export function getBackgroundPosition(value: string, dimension: RectDimension, fontSize?: number, leftPerspective = false, percent = false) {
+export function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number, leftPerspective = false, percent = false) {
     const result: RectPosition = {
         top: 0,
         left: 0,

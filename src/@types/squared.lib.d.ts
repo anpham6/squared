@@ -42,7 +42,7 @@ declare global {
             function cssInheritAttribute(element: Element | null, attr: string): string;
             function cssInheritStyle(element: Element | null, attr: string, exclude?: string[], tagNames?: string[]): string;
             function getNamedItem(element: Element | null, attr: string): string;
-            function getBackgroundPosition(value: string, dimension: RectDimension, fontSize?: number, leftPerspective?: boolean, percent?: boolean): RectPosition;
+            function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number, leftPerspective?: boolean, percent?: boolean): RectPosition;
             function getFirstChildElement(elements: Element | null, lineBreak?: boolean): Element | null;
             function getLastChildElement(elements: Element | null, lineBreak?: boolean): Element | null;
             function hasFreeFormText(element: Element, whiteSpace?: boolean): boolean;
