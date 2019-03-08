@@ -15,6 +15,7 @@ interface UtilRegExpPattern {
     PERCENT: RegExp;
     SEPARATOR: RegExp;
     ATTRIBUTE: RegExp;
+    CUSTOMPROPERTY: RegExp;
 }
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -80,7 +81,8 @@ export const REGEXP_PATTERN: UtilRegExpPattern = {
     UNIT: new RegExp(`^${REGEXP_STRING.UNIT}$`),
     PERCENT: new RegExp(`^${REGEXP_STRING.PERCENT}$`),
     SEPARATOR: /\s*,\s*/,
-    ATTRIBUTE: /([^\s]+)="([^"]+)"/
+    ATTRIBUTE: /([^\s]+)="([^"]+)"/,
+    CUSTOMPROPERTY: /^(?:var|calc)\(.+\)$/
 };
 
 export function capitalize(value: string, upper = true) {

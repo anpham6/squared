@@ -2001,7 +2001,7 @@ export default class Application<T extends Node> implements squared.base.Applica
             const styleMap: StringMap = {};
             for (const attr of fromRule) {
                 const value = $dom.checkStyleAttribute(element, attr, item.style[attr], style, fontSize);
-                if (value !== '') {
+                if (value) {
                     styleMap[attr] = value;
                 }
             }

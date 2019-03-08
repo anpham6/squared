@@ -181,7 +181,7 @@ export function checkStyleAttribute(element: Element, attr: string, value: strin
     if (value === 'inherit') {
         value = cssInheritStyle(element.parentElement, attr);
     }
-    if (value !== 'initial') {
+    if (value && value !== 'initial') {
         if (value !== style[attr]) {
             switch (attr) {
                 case 'backgroundColor':
@@ -193,6 +193,11 @@ export function checkStyleAttribute(element: Element, attr: string, value: strin
                 case 'fontSize':
                 case 'fontWeight':
                     return style[attr] || value;
+            }
+            if (REGEXP_PATTERN.CUSTOMPROPERTY.test(value)) {
+                value = style[attr];
+            }
+            switch (attr) {
                 case 'width':
                 case 'height':
                 case 'minWidth':
