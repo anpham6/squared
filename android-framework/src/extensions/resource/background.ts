@@ -344,7 +344,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             rotate: false,
                             gradient: false
                         };
-                        const position = $dom.getBackgroundPosition(backgroundPosition[i], node.bounds, node.fontSize);
+                        const position = $dom.cssBackgroundPosition(backgroundPosition[i], node.bounds, node.fontSize);
                         let gravity = position.horizontal === 'center' && position.vertical === 'center' ? 'center' : `${position.horizontal === 'center' ? 'center_horizontal' : position.horizontal}|${position.vertical === 'center' ? 'center_vertical' : position.vertical}`;
                         let dimension: ImageAsset | Dimension | undefined;
                         if (typeof value === 'string') {

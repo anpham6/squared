@@ -1280,7 +1280,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     const documentId: string = options['documentId'];
                     node.anchor(LT, documentId, true);
                     node.anchorDelete(RB);
-                    $util.defaultWhenNull(guideline, value, beginPercent, LT, documentId, location.toString());
+                    $util.assignEmptyValue(guideline, value, beginPercent, LT, documentId, location.toString());
                     parent.constraint.guideline = guideline;
                     node.constraint[horizontal ? 'guidelineHorizontal' : 'guidelineVertical'] = documentId;
                 }

@@ -44,8 +44,8 @@ declare global {
             function cssAttribute(element: Element, attr: string, computed?: boolean): string;
             function cssInheritAttribute(element: Element | null, attr: string): string;
             function cssInheritStyle(element: Element | null, attr: string, exclude?: string[], tagNames?: string[]): string;
+            function cssBackgroundPosition(value: string, dimension: Dimension, fontSize?: number, percent?: boolean): RectPosition;
             function getNamedItem(element: Element | null, attr: string): string;
-            function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number, leftPerspective?: boolean, percent?: boolean): RectPosition;
             function getFirstChildElement(elements: Element | null, lineBreak?: boolean): Element | null;
             function getLastChildElement(elements: Element | null, lineBreak?: boolean): Element | null;
             function hasFreeFormText(element: Element, whiteSpace?: boolean): boolean;
@@ -128,8 +128,8 @@ declare global {
             function hasInSet<T>(list: Set<T>, condition: (x: T) => boolean): boolean;
             function compareRange(operation: string, range: number, value: number): boolean;
             function withinRange(a: number, b: number, offset?: number): boolean;
-            function assignWhenNull(destination: {}, source: {}): void;
-            function defaultWhenNull(options: {}, ...attrs: string[]): void;
+            function assignEmptyProperty(dest: {}, source: {}): {};
+            function assignEmptyValue(dest: {}, ...attrs: string[]): void;
             function sortNumber(values: number[], descending?: boolean): number[];
             function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]): T[];
             function flatArray<T>(list: any[]): T[];

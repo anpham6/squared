@@ -30,9 +30,9 @@ export default class FloatingActionButton<T extends android.base.View> extends s
         if (backgroundColor) {
             colorValue = $Resource.addColor(backgroundColor);
         }
-        $util.defaultWhenNull(options, 'android', 'backgroundTint', colorValue !== '' ? `@color/${colorValue}` : '?attr/colorAccent');
+        $util.assignEmptyValue(options, 'android', 'backgroundTint', colorValue !== '' ? `@color/${colorValue}` : '?attr/colorAccent');
         if (node.hasBit('excludeProcedure', $enum.NODE_PROCEDURE.ACCESSIBILITY)) {
-            $util.defaultWhenNull(options, 'android', 'focusable', 'false');
+            $util.assignEmptyValue(options, 'android', 'focusable', 'false');
         }
         let src = '';
         switch (element.tagName) {
@@ -52,7 +52,7 @@ export default class FloatingActionButton<T extends android.base.View> extends s
                 break;
         }
         if (src !== '') {
-            $util.defaultWhenNull(options, 'app', 'srcCompat', `@drawable/${src}`);
+            $util.assignEmptyValue(options, 'app', 'srcCompat', `@drawable/${src}`);
         }
         node.setControlType($constA.SUPPORT_ANDROID.FLOATING_ACTION_BUTTON, $enumA.CONTAINER_NODE.BUTTON);
         node.exclude({ resource: $enum.NODE_RESOURCE.BOX_STYLE | $enum.NODE_RESOURCE.ASSET });

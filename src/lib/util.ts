@@ -352,14 +352,15 @@ export function cloneArray(data: any[], result: any[] = [], object = false) {
 
 export function cloneObject(data: {}, result = {}, array = false) {
     for (const attr in data) {
-        if (Array.isArray(data[attr])) {
-            result[attr] = array ? cloneArray(data[attr], [], true) : data[attr];
+        const item = data[attr];
+        if (Array.isArray(item)) {
+            result[attr] = array ? cloneArray(item, [], true) : item;
         }
-        else if (typeof data[attr] === 'object') {
-            result[attr] = cloneObject(data[attr], {}, array);
+        else if (item && typeof item === 'object') {
+            result[attr] = cloneObject(item, {}, array);
         }
         else {
-            result[attr] = data[attr];
+            result[attr] = item;
         }
     }
     return result;
@@ -375,14 +376,19 @@ export function optional(obj: UndefNull<object>, value: string, type?: string) {
         do {
             result = result[attrs[i]];
         }
-        while (typeof result === 'object' && result !== null && ++i < attrs.length);
+        while (
+            result !== null &&
+            result !== undefined &&
+            ++i < attrs.length &&
+            typeof result === 'object'
+        );
         valid = i === attrs.length && result !== undefined && result !== null;
     }
     switch (type) {
         case 'object':
             return valid ? result : null;
         case 'number':
-            result = parseInt(result);
+            result = parseFloat(result);
             return valid && !isNaN(result) ? result : 0;
         case 'boolean':
             return valid && result === true;
@@ -514,41 +520,45 @@ export function hasInSet<T>(list: Set<T>, condition: (x: T) => boolean) {
     return false;
 }
 
-export function withinRange(a: number, b: number, offset = 1) {
+export function withinRange(a: number, b: number, offset = 0.5) {
     return b >= (a - offset) && b <= (a + offset);
 }
 
-export function assignWhenNull(destination: {}, source: {}) {
+export function assignEmptyProperty(dest: {}, source: {}) {
     for (const attr in source) {
-        if (!hasValue(destination[attr])) {
-            destination[attr] = source[attr];
+        if (!dest.hasOwnProperty(dest[attr])) {
+            dest[attr] = source[attr];
         }
     }
+    return dest;
 }
 
-export function defaultWhenNull(options: {}, ...attrs: string[]) {
-    let current = options;
-    for (let i = 0 ; i < attrs.length - 1; i++) {
-        const name = attrs[i];
-        if (i === attrs.length - 2) {
-            if (!hasValue(current[name])) {
-                current[name] = attrs[i + 1];
+export function assignEmptyValue(dest: {}, ...attrs: string[]) {
+    if (attrs.length > 1) {
+        let current = dest;
+        for (let i = 0 ; ; i++) {
+            const name = attrs[i];
+            if (i === attrs.length - 2) {
+                if (!hasValue(current[name])) {
+                    current[name] = attrs[i + 1];
+                }
+                break;
             }
-        }
-        else if (isString(name)) {
-            if (typeof current[name] === 'object') {
-                current = current[name];
-            }
-            else if (current[name] === undefined) {
-                current[name] = {};
-                current = current[name];
+            else if (isString(name)) {
+                if (current[name] && typeof current[name] === 'object') {
+                    current = current[name];
+                }
+                else if (current[name] === undefined || current[name] === null) {
+                    current[name] = {};
+                    current = current[name];
+                }
+                else {
+                    break;
+                }
             }
             else {
                 break;
             }
-        }
-        else {
-            break;
         }
     }
 }

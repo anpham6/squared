@@ -69,7 +69,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
         }
         switch (gradient.type) {
             case 'radial': {
-                const position = $dom.getBackgroundPosition((<RadialGradient> gradient).position[0], dimension, gradient.fontSize, true, !hasStop);
+                const position = $dom.cssBackgroundPosition((<RadialGradient> gradient).position[0], dimension, gradient.fontSize, !hasStop);
                 if (hasStop) {
                     result.gradientRadius = dimension.width.toString();
                     result.centerX = position.left.toString();
@@ -146,7 +146,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
             }
             case 'conic': {
                 result.type = 'sweep';
-                const position = $dom.getBackgroundPosition((<ConicGradient> gradient).position[0], <DOMRect> { width: dimension.width * 2, height: dimension.height * 2 }, gradient.fontSize, true, !hasStop);
+                const position = $dom.cssBackgroundPosition((<ConicGradient> gradient).position[0], <DOMRect> { width: dimension.width * 2, height: dimension.height * 2 }, gradient.fontSize, !hasStop);
                 if (hasStop) {
                     result.centerX = position.left.toString();
                     result.centerY = position.top.toString();

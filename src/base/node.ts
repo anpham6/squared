@@ -333,7 +333,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     }
                     break;
                 case 'styleMap':
-                    $util.assignWhenNull(this._styleMap, node.unsafe('styleMap'));
+                    $util.assignEmptyProperty(this._styleMap, node.unsafe('styleMap'));
                     break;
                 case 'textStyle':
                     const style = { whiteSpace: node.css('whiteSpace') };

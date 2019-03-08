@@ -23,7 +23,7 @@ export default class BottomNavigation<T extends android.base.View> extends squar
 
     public processNode(node: T, parent: T): ExtensionResult<T> {
         const options = $utilA.createViewAttribute(this.options[node.elementId]);
-        $util.defaultWhenNull(options, 'android', 'background', `?android:attr/windowBackground`);
+        $util.assignEmptyValue(options, 'android', 'background', `?android:attr/windowBackground`);
         for (let i = 5; i < node.length; i++) {
             const item = node.item(i) as T;
             item.hide();
@@ -62,14 +62,14 @@ export default class BottomNavigation<T extends android.base.View> extends squar
         const menu = $util.optionalAsString(BottomNavigation.findNestedByName(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
         if (menu !== '') {
             const options = $utilA.createViewAttribute(this.options[node.elementId]);
-            $util.defaultWhenNull(options, 'app', 'menu', `@menu/${menu}`);
+            $util.assignEmptyValue(options, 'app', 'menu', `@menu/${menu}`);
             node.app('menu', options.app.menu);
         }
     }
 
     private setStyleTheme() {
         const options = $utilA.createStyleAttribute(this.options.resource);
-        $util.defaultWhenNull(options, 'parent', 'Theme.AppCompat.Light.DarkActionBar');
+        $util.assignEmptyValue(options, 'parent', 'Theme.AppCompat.Light.DarkActionBar');
         $Resource.addTheme(options);
     }
 }

@@ -43,12 +43,12 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
     public processNode(node: T): ExtensionResult<T> {
         const options = $utilA.createViewAttribute(this.options.self);
         if (Drawer.findNestedByName(node.element, WIDGET_NAME.MENU)) {
-            $util.defaultWhenNull(options, 'android', 'fitsSystemWindows', 'true');
+            $util.assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');
             this.setStyleTheme(node.localSettings.targetAPI);
         }
         else {
             const navigationViewOptions = $utilA.createViewAttribute(this.options.navigationView);
-            $util.defaultWhenNull(navigationViewOptions, 'android', 'layout_gravity', node.localizeString('left'));
+            $util.assignEmptyValue(navigationViewOptions, 'android', 'layout_gravity', node.localizeString('left'));
             const navView = node.item() as T;
             navView.android('layout_gravity', navigationViewOptions.android.layout_gravity);
             navView.android('layout_height', 'match_parent');
@@ -71,19 +71,19 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
 
     public postParseDocument(node: T) {
         const application = this.application;
-        const options = $utilA.createViewAttribute(this.options.navigation);
+        const options = $utilA.createViewAttribute(this.options.navigationView);
         const menu = $util.optionalAsString(Drawer.findNestedByName(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
         const headerLayout = $util.optionalAsString(Drawer.findNestedByName(node.element, $const.EXT_NAME.EXTERNAL), 'dataset.layoutName');
         if (menu !== '') {
-            $util.defaultWhenNull(options, 'app', 'menu', `@menu/${menu}`);
+            $util.assignEmptyValue(options, 'app', 'menu', `@menu/${menu}`);
         }
         if (headerLayout !== '') {
-            $util.defaultWhenNull(options, 'app', 'headerLayout', `@layout/${headerLayout}`);
+            $util.assignEmptyValue(options, 'app', 'headerLayout', `@layout/${headerLayout}`);
         }
         if (menu !== '' || headerLayout !== '') {
-            $util.defaultWhenNull(options, 'android', 'id', `${node.documentId}_navigation`);
-            $util.defaultWhenNull(options, 'android', 'fitsSystemWindows', 'true');
-            $util.defaultWhenNull(options, 'android', 'layout_gravity', node.localizeString('left'));
+            $util.assignEmptyValue(options, 'android', 'id', `${node.documentId}_navigation`);
+            $util.assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');
+            $util.assignEmptyValue(options, 'android', 'layout_gravity', node.localizeString('left'));
             const output = application.controllerHandler.renderNodeStatic(
                 $constA.SUPPORT_ANDROID.NAVIGATION_VIEW,
                 1,
@@ -107,15 +107,15 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
 
     private setStyleTheme(api: number) {
         const options = $utilA.createStyleAttribute(this.options.resource);
-        $util.defaultWhenNull(options, 'parent', 'Theme.AppCompat.Light.NoActionBar');
-        $util.defaultWhenNull(options.items, 'android:windowTranslucentStatus', 'true');
+        $util.assignEmptyValue(options, 'parent', 'Theme.AppCompat.Light.NoActionBar');
+        $util.assignEmptyValue(options.items, 'android:windowTranslucentStatus', 'true');
         $Resource.addTheme(options);
         if (api >= 21) {
             const lollipop = $utilA.createStyleAttribute($util.cloneObject(options));
             lollipop.items = {};
-            $util.defaultWhenNull(lollipop.output, 'path', 'res/values-v21');
-            $util.defaultWhenNull(lollipop.items, 'android:windowDrawsSystemBarBackgrounds', 'true');
-            $util.defaultWhenNull(lollipop.items, 'android:statusBarColor', '@android:color/transparent');
+            $util.assignEmptyValue(lollipop.output, 'path', 'res/values-v21');
+            $util.assignEmptyValue(lollipop.items, 'android:windowDrawsSystemBarBackgrounds', 'true');
+            $util.assignEmptyValue(lollipop.items, 'android:statusBarColor', '@android:color/transparent');
             $Resource.addTheme(lollipop);
         }
     }

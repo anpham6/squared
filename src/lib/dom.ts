@@ -441,7 +441,7 @@ export function cssFromParent(element: Element | null, attr: string) {
 
 export function cssInline(element: Element, attr: string) {
     let value = '';
-    if (typeof element['style'] === 'object') {
+    if (hasComputedStyle(element)) {
         value = element['style'][attr];
     }
     if (!value) {
@@ -472,17 +472,7 @@ export function cssInheritAttribute(element: Element | null, attr: string) {
     return value;
 }
 
-export function getNamedItem(element: Element | null, attr: string) {
-    if (element) {
-        const item = element.attributes.getNamedItem(attr);
-        if (item) {
-            return item.value.trim();
-        }
-    }
-    return '';
-}
-
-export function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number, leftPerspective = false, percent = false) {
+export function cssBackgroundPosition(value: string, dimension: Dimension, fontSize?: number, percent = false) {
     const result: RectPosition = {
         top: 0,
         left: 0,
@@ -508,49 +498,35 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                 case 3:
                     const location = percent ? convertPercent(position, i === 1 ? dimension.width : dimension.height, fontSize) : convertUnit(position, i === 1 ? dimension.width : dimension.height, fontSize);
                     if (i === 1) {
-                        if (leftPerspective) {
-                            if (result.horizontal === 'right') {
-                                if (isPercent(position)) {
-                                    result.originalX = formatPercent(100 - parseInt(position));
-                                }
-                                else {
-                                    result.originalX = formatPX(dimension.width - parseInt(convertPX(position, fontSize)));
-                                }
-                                result.right = location;
-                                result.left = percent ? 1 - location : dimension.width - location;
+                        if (result.horizontal === 'right') {
+                            if (isPercent(position)) {
+                                result.originalX = formatPercent(100 - parseInt(position));
                             }
                             else {
-                                result.left = location;
-                                result.originalX = position;
+                                result.originalX = formatPX(dimension.width - parseInt(convertPX(position, fontSize)));
                             }
+                            result.right = location;
+                            result.left = percent ? 1 - location : dimension.width - location;
                         }
                         else {
-                            if (result.horizontal !== 'center') {
-                                result[result.horizontal] = location;
-                            }
+                            result.left = location;
+                            result.originalX = position;
                         }
                     }
                     else {
-                        if (leftPerspective) {
-                            if (result.vertical === 'bottom') {
-                                if (isPercent(position)) {
-                                    result.originalY = formatPercent(100 - parseInt(position));
-                                }
-                                else {
-                                    result.originalY = formatPX(dimension.height - parseInt(convertPX(position, fontSize)));
-                                }
-                                result.bottom = location;
-                                result.top = percent ? 1 - location : dimension.height - location;
+                        if (result.vertical === 'bottom') {
+                            if (isPercent(position)) {
+                                result.originalY = formatPercent(100 - parseInt(position));
                             }
                             else {
-                                result.top = location;
-                                result.originalY = position;
+                                result.originalY = formatPX(dimension.height - parseInt(convertPX(position, fontSize)));
                             }
+                            result.bottom = location;
+                            result.top = percent ? 1 - location : dimension.height - location;
                         }
                         else {
-                            if (result.vertical !== 'center') {
-                                result[result.vertical] = location;
-                            }
+                            result.top = location;
+                            result.originalY = position;
                         }
                     }
                     break;
@@ -581,22 +557,20 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
             else {
                 if (/^[a-z]+$/.test(position)) {
                     result[i === 0 ? 'horizontal' : 'vertical'] = position;
-                    if (leftPerspective) {
-                        switch (position) {
-                            case 'left':
-                            case 'top':
-                                result[original] = '0%';
-                                break;
-                            case 'right':
-                            case 'bottom':
-                                result[direction] = percent ? 1 : offsetParent;
-                                result[original] = '100%';
-                                break;
-                            case 'center':
-                                result[direction] = percent ? 0.5 : Math.round(offsetParent / 2);
-                                result[original] = '50%';
-                                break;
-                        }
+                    switch (position) {
+                        case 'left':
+                        case 'top':
+                            result[original] = '0%';
+                            break;
+                        case 'right':
+                        case 'bottom':
+                            result[direction] = percent ? 1 : offsetParent;
+                            result[original] = '100%';
+                            break;
+                        case 'center':
+                            result[direction] = percent ? 0.5 : Math.round(offsetParent / 2);
+                            result[original] = '50%';
+                            break;
                     }
                 }
                 else {
@@ -607,6 +581,16 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
         }
     }
     return result;
+}
+
+export function getNamedItem(element: Element | null, attr: string) {
+    if (element) {
+        const item = element.attributes.getNamedItem(attr);
+        if (item) {
+            return item.value.trim();
+        }
+    }
+    return '';
 }
 
 export function getFirstChildElement(element: Element | null, lineBreak = false) {
@@ -766,7 +750,10 @@ export function getNextElementSibling(element: Element | null) {
 }
 
 export function hasComputedStyle(element: Element | null): element is HTMLElement {
-    return !!element && typeof element['style'] === 'object';
+    if (element) {
+        return typeof element['style'] === 'object' && element['style'] !== null;
+    }
+    return false;
 }
 
 export function hasVisibleRect(element: Element, checkViewport = false) {

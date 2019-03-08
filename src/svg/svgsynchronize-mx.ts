@@ -505,7 +505,7 @@ function setTimelineValue(map: TimelineIndex, time: number, value: AnimateValue,
         }
         if (stored !== value || duplicate) {
             if (!duplicate) {
-                if (typeof value === 'number' && $math.isEqual(value, stored as number)) {
+                if (typeof stored === 'number' && $math.isEqual(value as number, stored)) {
                     return time;
                 }
                 while (time > 0 && map.has(time)) {
