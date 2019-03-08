@@ -501,8 +501,8 @@ export default (Base: Constructor<squared.base.Node>) => {
                 if (!this.inlineStatic && this.has('height') || this.toInt('height') > 0 && !this.cssInitial('height')) {
                     const height = this.css('height');
                     if ($util.isUnit(height)) {
-                        const value = this.convertPX(height, false);
-                        this.android('layout_height', this.css('overflow') === 'hidden' && parseInt(value) < Math.floor(this.box.height) ? 'wrap_content' : value);
+                        const value = this.calculateUnit(height, false);
+                        this.android('layout_height', this.css('overflow') === 'hidden' && value < Math.floor(this.box.height) ? 'wrap_content' : $util.formatPX(value));
                     }
                     else if ($util.isPercent(height)) {
                         if (height === '100%') {
@@ -532,12 +532,12 @@ export default (Base: Constructor<squared.base.Node>) => {
                     const width = this.css('width');
                     if ($util.isUnit(width)) {
                         const widthParent = renderParent ? $util.convertInt((renderParent as T).android('layout_width')) : 0;
-                        const value = this.convertPX(width);
-                        if (parent === renderParent && widthParent > 0 && $util.convertInt(value) >= widthParent) {
+                        const value = this.calculateUnit(width);
+                        if (parent === renderParent && widthParent > 0 && value >= widthParent) {
                             this.android('layout_width', 'match_parent');
                         }
                         else {
-                            this.android('layout_width', value);
+                            this.android('layout_width', $util.formatPX(value));
                         }
                     }
                     else if ($util.isPercent(width)) {
@@ -549,7 +549,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                             this.android('layout_width', 'match_parent');
                         }
                         else {
-                            this.android('layout_width', this.convertPercent(width, true));
+                            this.android('layout_width', this.convertPX(width));
                         }
                     }
                     else {
@@ -1074,7 +1074,7 @@ export default (Base: Constructor<squared.base.Node>) => {
 
         get fontSize() {
             if (this._fontSize === 0) {
-                this._fontSize = parseInt($util.convertPX(this.css('fontSize'), 0)) || 16;
+                this._fontSize = $util.calculateUnit(this.css('fontSize')) || 16;
             }
             return this._fontSize;
         }

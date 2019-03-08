@@ -150,7 +150,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
         if (!node.hasWidth) {
             let maxRight = Number.NEGATIVE_INFINITY;
             $util.captureMap(node.renderChildren, item => item.inlineFlow || !item.blockStatic, item => maxRight = Math.max(maxRight, item.linear.right));
-            if ($util.withinFraction(node.box.right, maxRight)) {
+            if ($util.withinRange(node.box.right, maxRight)) {
                 node.android('layout_width', 'wrap_content');
             }
         }

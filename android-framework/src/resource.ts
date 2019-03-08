@@ -183,7 +183,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                                 break;
                             case 'src':
                             case 'srcCompat':
-                                if ($util.REGEXP_PATTERN.URI.test(value)) {
+                                if ($util.REGEXP_COMPILED.URI.test(value)) {
                                     value = this.addImage({ mdpi: value });
                                     if (value !== '') {
                                         obj[attr] = `@drawable/${value}`;
@@ -320,7 +320,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
         const srcset = element.srcset.trim();
         if (srcset !== '') {
             const filepath = element.src.substring(0, element.src.lastIndexOf('/') + 1);
-            for (const value of srcset.split($util.REGEXP_PATTERN.SEPARATOR)) {
+            for (const value of srcset.split($util.REGEXP_COMPILED.SEPARATOR)) {
                 const match = /^(.+?)\s*(?:(\d*\.?\d*)x)?$/.exec(value.trim());
                 if (match) {
                     if (!$util.hasValue(match[2])) {

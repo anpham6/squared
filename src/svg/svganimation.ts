@@ -5,6 +5,14 @@ import { FILL_MODE, INSTANCE_TYPE } from './lib/constant';
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
+const REGEXP_TIME = {
+    MS: /-?\d+ms$/,
+    S: /-?\d+s$/,
+    MIN: /-?\d+min$/,
+    H: /-?\d+(.\d+)?h$/,
+    CLOCK: /^(?:(-?)(\d?\d):)?(?:(\d?\d):)?(\d?\d)\.?(\d?\d?\d)?$/
+};
+
 export default class SvgAnimation implements squared.svg.SvgAnimation {
     public static convertClockTime(value: string) {
         let s = 0;
@@ -13,20 +21,20 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
             s = parseInt(value);
         }
         else {
-            if (/-?\d+ms$/.test(value)) {
+            if (REGEXP_TIME.MS.test(value)) {
                 ms = parseFloat(value);
             }
-            else if (/-?\d+s$/.test(value)) {
+            else if (REGEXP_TIME.S.test(value)) {
                 s = parseFloat(value);
             }
-            else if (/-?\d+min$/.test(value)) {
+            else if (REGEXP_TIME.MIN.test(value)) {
                 s = parseFloat(value) * 60;
             }
-            else if (/-?\d+(.\d+)?h$/.test(value)) {
+            else if (REGEXP_TIME.H.test(value)) {
                 s = parseFloat(value) * 60 * 60;
             }
             else {
-                const match = /^(?:(-?)(\d?\d):)?(?:(\d?\d):)?(\d?\d)\.?(\d?\d?\d)?$/.exec(value);
+                const match = REGEXP_TIME.CLOCK.exec(value);
                 if (match) {
                     if (match[2]) {
                         s += parseInt(match[2]) * 60 * 60;
@@ -135,7 +143,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
             if (baseElement) {
                 this.baseValue = $util.optionalAsString(baseElement, `${value}.baseVal.valueAsString`) || $dom.cssInheritAttribute(baseElement, value);
                 if ($util.isUnit(this.baseValue)) {
-                    this.baseValue = parseFloat($util.convertPX(this.baseValue, $dom.getFontSize(baseElement))).toString();
+                    this.baseValue = $util.calculateUnit(this.baseValue, $dom.getFontSize(baseElement)).toString();
                 }
             }
         }

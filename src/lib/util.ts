@@ -9,10 +9,11 @@ interface UtilRegExpString {
 }
 
 interface UtilRegExpPattern {
+    UNIT: RegExp;
+    DECIMAL: RegExp;
+    PERCENT: RegExp;
     URL: RegExp;
     URI: RegExp;
-    UNIT: RegExp;
-    PERCENT: RegExp;
     SEPARATOR: RegExp;
     ATTRIBUTE: RegExp;
     CUSTOMPROPERTY: RegExp;
@@ -75,11 +76,12 @@ REGEXP_STRING.UNIT = `(${REGEXP_STRING.DECIMAL})(px|em|ch|pc|pt|vw|vh|vmin|vmax|
 REGEXP_STRING.DEGREE = `(${REGEXP_STRING.DECIMAL})(deg|rad|turn|grad)`;
 REGEXP_STRING.LENGTH = `(${REGEXP_STRING.DECIMAL}(?:[a-z]{2,}|%)?)`;
 
-export const REGEXP_PATTERN: UtilRegExpPattern = {
+export const REGEXP_COMPILED: UtilRegExpPattern = {
+    UNIT: new RegExp(`^${REGEXP_STRING.UNIT}$`),
+    DECIMAL: new RegExp(`^${REGEXP_STRING.DECIMAL}$`),
+    PERCENT: new RegExp(`^${REGEXP_STRING.PERCENT}$`),
     URL: new RegExp(REGEXP_STRING.URL),
     URI: /^[A-Za-z]+:\/\//,
-    UNIT: new RegExp(`^${REGEXP_STRING.UNIT}$`),
-    PERCENT: new RegExp(`^${REGEXP_STRING.PERCENT}$`),
     SEPARATOR: /\s*,\s*/,
     ATTRIBUTE: /([^\s]+)="([^"]+)"/,
     CUSTOMPROPERTY: /^(?:var|calc)\(.+\)$/
@@ -147,50 +149,11 @@ export function convertAngle(value: string, unit = 'deg') {
 
 export function convertPX(value: string, fontSize?: number) {
     if (value) {
-        if (isNumber(value)) {
-            return `${value}px`;
+        value = value.trim();
+        if (value.endsWith('%') || value === 'auto') {
+            return value;
         }
-        else {
-            value = value.trim();
-            if (value.endsWith('px') || value.endsWith('%') || value === 'auto') {
-                return value;
-            }
-        }
-        const match = value.match(REGEXP_PATTERN.UNIT);
-        if (match) {
-            let result = parseFloat(match[1]);
-            switch (match[2]) {
-                case 'em':
-                case 'ch':
-                    result *= fontSize || 16;
-                    break;
-                case 'pc':
-                    result *= 12;
-                case 'pt':
-                    result *= 4 / 3;
-                    break;
-                case 'vw':
-                    result *= window.innerWidth / 100;
-                    break;
-                case 'vh':
-                    result *= window.innerHeight / 100;
-                    break;
-                case 'vmin':
-                    result *= Math.min(window.innerWidth, window.innerHeight) / 100;
-                    break;
-                case 'vmax':
-                    result *= Math.max(window.innerWidth, window.innerHeight) / 100;
-                    break;
-                case 'mm':
-                    result /= 10;
-                case 'cm':
-                    result /= 2.54;
-                case 'in':
-                    result *= window.devicePixelRatio * 96;
-                    break;
-            }
-            return `${result}px`;
-        }
+        return `${calculateUnit(value, fontSize)}px`;
     }
     return '0px';
 }
@@ -242,6 +205,48 @@ export function convertEnum(value: number, base: {}, derived: {}): string {
     return '';
 }
 
+export function calculateUnit(value: string, fontSize?: number) {
+    const match = value.match(REGEXP_COMPILED.UNIT);
+    if (match) {
+        let result = parseFloat(match[1]);
+        switch (match[2]) {
+            case 'em':
+            case 'ch':
+                result *= fontSize || 16;
+                break;
+            case 'pc':
+                result *= 12;
+            case 'pt':
+                result *= 4 / 3;
+                break;
+            case 'vw':
+                result *= window.innerWidth / 100;
+                break;
+            case 'vh':
+                result *= window.innerHeight / 100;
+                break;
+            case 'vmin':
+                result *= Math.min(window.innerWidth, window.innerHeight) / 100;
+                break;
+            case 'vmax':
+                result *= Math.max(window.innerWidth, window.innerHeight) / 100;
+                break;
+            case 'mm':
+                result /= 10;
+            case 'cm':
+                result /= 2.54;
+            case 'in':
+                result *= window.devicePixelRatio * 96;
+                break;
+        }
+        return result;
+    }
+    else if (isNumber(value)) {
+        return parseFloat(value);
+    }
+    return 0;
+}
+
 export function formatPX(value: string | number) {
     if (typeof value === 'string') {
         value = parseFloat(value);
@@ -271,7 +276,7 @@ export function hasBit(value: number, offset: number) {
 }
 
 export function isNumber(value: string): boolean {
-    return value !== '' && /^-?\d+(\.\d+)?$/.test(value.trim());
+    return value !== '' && REGEXP_COMPILED.DECIMAL.test(value.trim());
 }
 
 export function isString(value: any): value is string {
@@ -283,11 +288,11 @@ export function isArray<T>(value: any): value is Array<T> {
 }
 
 export function isUnit(value: string) {
-    return REGEXP_PATTERN.UNIT.test(value);
+    return REGEXP_COMPILED.UNIT.test(value);
 }
 
 export function isPercent(value: string) {
-    return REGEXP_PATTERN.PERCENT.test(value);
+    return REGEXP_COMPILED.PERCENT.test(value);
 }
 
 export function isEqual(source: any, values: any) {
@@ -403,7 +408,7 @@ export function optionalAsBoolean(obj: UndefNull<object>, value: string): boolea
 }
 
 export function resolvePath(value: string) {
-    if (!REGEXP_PATTERN.URI.test(value)) {
+    if (!REGEXP_COMPILED.URI.test(value)) {
         let pathname = location.pathname.split('/');
         pathname.pop();
         if (value.charAt(0) === '/') {
@@ -509,18 +514,8 @@ export function hasInSet<T>(list: Set<T>, condition: (x: T) => boolean) {
     return false;
 }
 
-export function withinRange(a: number, b: number, offset = 0) {
+export function withinRange(a: number, b: number, offset = 1) {
     return b >= (a - offset) && b <= (a + offset);
-}
-
-export function withinFraction(lower: number, upper: number) {
-    return (
-        lower === upper ||
-        Math.floor(lower) === Math.floor(upper) ||
-        Math.ceil(lower) === Math.ceil(upper) ||
-        Math.ceil(lower) === Math.floor(upper) ||
-        Math.floor(lower) === Math.ceil(upper)
-    );
 }
 
 export function assignWhenNull(destination: {}, source: {}) {

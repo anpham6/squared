@@ -1,4 +1,4 @@
-import { REGEXP_PATTERN, capitalize, convertCamelCase, convertPercent, convertPX, convertUnit, formatPercent, formatPX, hasBit, isPercent, isString, resolvePath, spliceArray, withinFraction } from './util';
+import { REGEXP_COMPILED, capitalize, convertCamelCase, convertPercent, convertPX, convertUnit, formatPercent, formatPX, hasBit, isPercent, isString, isUnit, resolvePath, spliceArray, withinRange } from './util';
 
 type T = squared.base.Node;
 
@@ -141,7 +141,7 @@ export function getKeyframeRules(): CSSRuleData {
                             for (let k = 0; k < item.cssRules.length; k++) {
                                 const match = REGEXP_KEYFRAMERULE.exec(item.cssRules[k].cssText);
                                 if (match) {
-                                    for (let percent of (item.cssRules[k]['keyText'] as string || match[1].trim()).split(REGEXP_PATTERN.SEPARATOR)) {
+                                    for (let percent of (item.cssRules[k]['keyText'] as string || match[1].trim()).split(REGEXP_COMPILED.SEPARATOR)) {
                                         percent = percent.trim();
                                         switch (percent) {
                                             case 'from':
@@ -192,10 +192,10 @@ export function checkStyleAttribute(element: Element, attr: string, value: strin
                 case 'color':
                 case 'fontSize':
                 case 'fontWeight':
-                    return style[attr] || value;
+                    return style[attr];
             }
-            if (REGEXP_PATTERN.CUSTOMPROPERTY.test(value)) {
-                value = style[attr];
+            if (REGEXP_COMPILED.CUSTOMPROPERTY.test(value)) {
+                return style[attr];
             }
             switch (attr) {
                 case 'width':
@@ -220,7 +220,7 @@ export function checkStyleAttribute(element: Element, attr: string, value: strin
                 case 'paddingRight':
                 case 'paddingBottom':
                 case 'paddingLeft':
-                    return /^[A-Za-z\-]+$/.test(value) || isPercent(value) ? value : convertPX(value, fontSize);
+                    return isUnit(value) ? convertPX(value, fontSize) : value;
             }
         }
         return value;
@@ -315,7 +315,7 @@ export function getRangeClientRect(element: Element) {
     const domRect: ClientRect[] = [];
     for (let i = 0; i < clientRects.length; i++) {
         const item = <ClientRect> clientRects.item(i);
-        if (!(Math.round(item.width) === 0 && withinFraction(item.left, item.right))) {
+        if (!(Math.round(item.width) === 0 && withinRange(item.left, item.right))) {
             domRect.push(item);
         }
     }
@@ -389,7 +389,7 @@ export function getFontSize(element: Element | null) {
 }
 
 export function resolveURL(value: string) {
-    const match = value.match(REGEXP_PATTERN.URL);
+    const match = value.match(REGEXP_COMPILED.URL);
     if (match) {
         return resolvePath(match[1]);
     }

@@ -167,8 +167,8 @@ declare global {
             cssFinally(attr: string): boolean;
             appendTry(node: Node, withNode: Node, append?: boolean): void;
             toInt(attr: string, initial?: boolean, defaultValue?: number): number;
+            calculateUnit(value: string, horizontal?: boolean, parent?: boolean): number;
             convertPX(value: string, horizontal?: boolean, parent?: boolean): string;
-            convertPercent(value: string, horizontal: boolean, parent?: boolean): string;
             has(attr: string, checkType?: number, options?: {}): boolean;
             hasBit(attr: string, value: number): boolean;
             hasAlign(value: number): boolean;

@@ -57,7 +57,7 @@ export default class ResourceDimens<T extends android.base.View> extends squared
         for (const tagName in groups) {
             const group = groups[tagName];
             for (const name in group) {
-                const [namespace, attr, value] = name.split($util.REGEXP_PATTERN.SEPARATOR);
+                const [namespace, attr, value] = name.split($util.REGEXP_COMPILED.SEPARATOR);
                 const key = getResourceName(STORED.dimens, `${getDisplayName(tagName)}_${getAttributeName(attr)}`, value);
                 for (const node of group[name]) {
                     node[namespace](attr, `@dimen/${key}`);

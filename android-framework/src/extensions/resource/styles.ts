@@ -87,7 +87,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
         for (const name in styles) {
             const items: NameValue[] = [];
             for (const attr in styles[name]) {
-                const match = $util.REGEXP_PATTERN.ATTRIBUTE.exec(styles[name][attr]);
+                const match = $util.REGEXP_COMPILED.ATTRIBUTE.exec(styles[name][attr]);
                 if (match) {
                     items.push({ name: match[1], value: match[2] });
                 }

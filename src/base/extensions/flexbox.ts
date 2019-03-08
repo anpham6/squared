@@ -49,7 +49,7 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
             function setDirection(align: string, sort: string, size: string) {
                 const map = new Map<number, T[]>();
                 pageFlow.sort((a, b) => {
-                    if (!$util.withinFraction(a.linear[align], b.linear[align])) {
+                    if (!$util.withinRange(a.linear[align], b.linear[align])) {
                         return a.linear[align] < b.linear[align] ? -1 : 1;
                     }
                     return a.linear[sort] >= b.linear[sort] ? 1 : -1;

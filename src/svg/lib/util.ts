@@ -144,8 +144,8 @@ export const TRANSFORM = {
                     }
                     else if (match[1].startsWith('translate')) {
                         const fontSize = $dom.getFontSize(element);
-                        const arg1 = parseFloat($util.convertPX(match[2], fontSize));
-                        const arg2 = (!isX && match[3] ? parseFloat($util.convertPX(match[3], fontSize)) : 0);
+                        const arg1 = $util.calculateUnit(match[2], fontSize);
+                        const arg2 = (!isX && match[3] ? $util.calculateUnit(match[3], fontSize) : 0);
                         const x = isY ? 0 : arg1;
                         const y = isY ? arg1 : arg2;
                         const matrix = MATRIX.translate(x, y);
@@ -203,7 +203,7 @@ export const TRANSFORM = {
             const viewBox = getNearestViewBox(element);
             function setPosition(attr: string, position: string, dimension: number) {
                 if ($util.isUnit(position)) {
-                    result[attr] = parseFloat($util.convertPX(position, $dom.getFontSize(element)));
+                    result[attr] = $util.calculateUnit(position, $dom.getFontSize(element));
                 }
                 else if ($util.isPercent(position)) {
                     result[attr] = (parseFloat(position) / 100) * dimension;

@@ -36,7 +36,7 @@ function parseColorStops<T extends Node>(node: T, gradient: Gradient, value: str
     let width = node.bounds.width;
     let height = node.bounds.height;
     if (backgroundSize) {
-        const sizes = backgroundSize.split($util.REGEXP_PATTERN.SEPARATOR);
+        const sizes = backgroundSize.split($util.REGEXP_COMPILED.SEPARATOR);
         const dimension = Resource.getBackgroundSize(node, sizes[index % sizes.length]);
         if (dimension) {
             width = dimension.width;
@@ -58,7 +58,7 @@ function parseColorStops<T extends Node>(node: T, gradient: Gradient, value: str
                     item.offset = parseFloat(match[2]) / 100;
                 }
                 else if (gradient.repeating && $util.isUnit(match[2])) {
-                    item.offset = parseFloat(node.convertPX(match[2], gradient.horizontal, false)) / (gradient.horizontal ? width : height);
+                    item.offset = node.calculateUnit(match[2], gradient.horizontal, false) / (gradient.horizontal ? width : height);
                 }
             }
             if (result.length === 0) {
@@ -283,10 +283,10 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         dimensions[i] = '100%';
                     }
                     if (i === 0) {
-                        width = parseFloat(node.convertPX(dimensions[i], true, false));
+                        width = node.calculateUnit(dimensions[i], true, false);
                     }
                     else {
-                        height = parseFloat(node.convertPX(dimensions[i], false, false));
+                        height = node.calculateUnit(dimensions[i], false, false);
                     }
                 }
                 break;

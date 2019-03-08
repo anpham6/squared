@@ -22,7 +22,7 @@ declare global {
             renderNode(layout: Layout<T>): string;
             renderNodeGroup(layout: Layout<T>): string;
             renderNodeStatic(controlName: string, depth: number, options?: ExternalData, width?: string, height?: string, node?: T, children?: boolean): string;
-            createNodeGroup(node: T, children: T[], parent?: T, replaceWith?: T): T;
+            createNodeGroup(node: T, children: T[], parent?: T, replacement?: T): T;
             replaceRenderQueue(output: string): string;
             prependBefore(id: number, output: string, index?: number): void;
             appendAfter(id: number, output: string, index?: number): void;

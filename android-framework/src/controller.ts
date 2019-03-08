@@ -23,6 +23,7 @@ const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
 const GUIDELINE_AXIS = [AXIS_ANDROID.HORIZONTAL, AXIS_ANDROID.VERTICAL];
+const REGEXP_DATASETATTR = /^attr[A-Z]/;
 
 function createColumnLayout<T extends View>(partition: T[][], horizontal: boolean) {
     for (const seg of partition) {
@@ -101,7 +102,7 @@ function adjustBaseline<T extends View>(baseline: T, nodes: T[]) {
     for (const node of nodes) {
         if (node !== baseline) {
             if (node.imageElement && node.actualHeight > baseline.actualHeight) {
-                if (node.renderParent && $util.withinFraction(node.linear.top, node.renderParent.box.top)) {
+                if (node.renderParent && $util.withinRange(node.linear.top, node.renderParent.box.top)) {
                     node.anchor('top', 'true');
                 }
             }
@@ -180,7 +181,7 @@ function constraintMinMax<T extends View>(node: T, dimension: string) {
 function constraintPercentValue<T extends View>(node: T, dimension: string, value: string, requirePX: boolean) {
     if ($util.isPercent(value)) {
         if (requirePX) {
-            node.android(`layout_${dimension.toLowerCase()}`, node.convertPercent(value, dimension === 'Width'));
+            node.android(`layout_${dimension.toLowerCase()}`, node.convertPX(value, dimension === 'Width'));
         }
         else if (value !== '100%') {
             const percent = parseInt(value) / 100 + (node.actualParent ? node.contentBoxWidth / node.actualParent.box.width : 0);
@@ -226,7 +227,7 @@ function parseAttributes<T extends View>(node: T) {
     }
     const dataset = $dom.getDataSet(node.element, 'android');
     for (const name in dataset) {
-        if (/^attr[A-Z]/.test(name)) {
+        if (REGEXP_DATASETATTR.test(name)) {
             const obj = $util.capitalize(name.substring(4), false);
             for (const values of dataset[name].split(';')) {
                 const [key, value] = values.split('::');
@@ -751,10 +752,10 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                 else if (item.rightAligned) {
                                     item.anchor('right', 'parent');
                                 }
-                                else if ($util.withinFraction(item.linear.left, node.box.left) || item.linear.left < node.box.left) {
+                                else if ($util.withinRange(item.linear.left, node.box.left) || item.linear.left < node.box.left) {
                                     item.anchor('left', 'parent');
                                 }
-                                if ($util.withinFraction(item.linear.top, node.box.top) || item.linear.top < node.box.top) {
+                                if ($util.withinRange(item.linear.top, node.box.top) || item.linear.top < node.box.top) {
                                     item.anchor('top', 'parent');
                                 }
                                 if (this.withinParentBottom(item.linear.bottom, bottomParent) && item.actualParent && !item.actualParent.documentBody) {
@@ -1149,7 +1150,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     LTRB = !opposite ? 'topBottom' : 'bottomTop';
                     RBLT = !opposite ? 'bottomTop' : 'topBottom';
                 }
-                if ($util.withinFraction(node.linear[LT], documentParent.box[LT])) {
+                if ($util.withinRange(node.linear[LT], documentParent.box[LT])) {
                     node.anchor(LT, 'parent', true);
                     return;
                 }
@@ -1169,21 +1170,21 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                 const pageFlow = node.pageFlow && item.pageFlow;
                                 let valid = false;
                                 if (pageFlow) {
-                                    if ($util.withinFraction(node.linear[LT], item.linear[RB])) {
+                                    if ($util.withinRange(node.linear[LT], item.linear[RB])) {
                                         node.anchor(LTRB, item.documentId, true);
                                         valid = true;
                                     }
-                                    else if ($util.withinFraction(node.linear[RB], item.linear[LT])) {
+                                    else if ($util.withinRange(node.linear[RB], item.linear[LT])) {
                                         node.anchor(RBLT, item.documentId, true);
                                         valid = true;
                                     }
                                 }
                                 if (pageFlow || !node.pageFlow && !item.pageFlow) {
-                                    if ($util.withinFraction(node.bounds[LT], item.bounds[LT])) {
+                                    if ($util.withinRange(node.bounds[LT], item.bounds[LT])) {
                                         node.anchor(!horizontal && node.textElement && node.baseline && item.textElement && item.baseline ? 'baseline' : LT, item.documentId, true);
                                         valid = true;
                                     }
-                                    else if ($util.withinFraction(node.bounds[RB], item.bounds[RB])) {
+                                    else if ($util.withinRange(node.bounds[RB], item.bounds[RB])) {
                                         node.anchor(RB, item.documentId, true);
                                         valid = true;
                                     }
@@ -1287,11 +1288,11 @@ export default class Controller<T extends View> extends squared.base.Controller<
         });
     }
 
-    public createNodeGroup(node: T, children: T[], parent?: T, replaceWith?: T) {
+    public createNodeGroup(node: T, children: T[], parent?: T, replacement?: T) {
         const group = new ViewGroup(this.cache.nextId, node, children, this.afterInsertNode) as T;
         group.siblingIndex = node.siblingIndex;
         if (parent) {
-            parent.appendTry(replaceWith || node, group);
+            parent.appendTry(replacement || node, group);
             group.init();
         }
         this.cache.append(group);
@@ -1708,15 +1709,15 @@ export default class Controller<T extends View> extends squared.base.Controller<
         for (const item of children) {
             if (!floating) {
                 if (item.rightAligned) {
-                    if ($util.withinFraction(item.linear.right, boxParent.box.right) || item.linear.right > boxParent.box.right) {
+                    if ($util.withinRange(item.linear.right, boxParent.box.right) || item.linear.right > boxParent.box.right) {
                         item.anchor('right', 'parent');
                     }
                 }
-                else if ($util.withinFraction(item.linear.left, boxParent.box.left) || item.linear.left < boxParent.box.left) {
+                else if ($util.withinRange(item.linear.left, boxParent.box.left) || item.linear.left < boxParent.box.left) {
                     item.anchor('left', 'parent');
                 }
             }
-            if ($util.withinFraction(item.linear.top, node.box.top) || item.linear.top < node.box.top || item.floating && chainHorizontal.length === 1) {
+            if ($util.withinRange(item.linear.top, node.box.top) || item.linear.top < node.box.top || item.floating && chainHorizontal.length === 1) {
                 item.anchor('top', 'parent');
             }
             if (this.withinParentBottom(item.linear.bottom, bottomParent) && !boxParent.documentBody && (boxParent.hasHeight || !item.alignParent('top'))) {
@@ -1724,15 +1725,21 @@ export default class Controller<T extends View> extends squared.base.Controller<
             }
         }
         const previousSiblings: T[] = [];
-        let anchorStart = 'left';
-        let anchorEnd = 'right';
-        let chainStart = 'leftRight';
-        let chainEnd = 'rightLeft';
+        let anchorStart: string;
+        let anchorEnd: string;
+        let chainStart: string;
+        let chainEnd: string;
         if (reverse) {
             anchorStart = 'right';
             anchorEnd = 'left';
             chainStart = 'rightLeft';
             chainEnd = 'leftRight';
+        }
+        else {
+            anchorStart = 'left';
+            anchorEnd = 'right';
+            chainStart = 'leftRight';
+            chainEnd = 'rightLeft';
         }
         for (let i = 0; i < chainHorizontal.length; i++) {
             const seg = chainHorizontal[i];

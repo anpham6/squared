@@ -34,11 +34,13 @@ const TEMPLATES = {
     style: $xml.parseTemplate(STYLE_TMPL)
 };
 
+const REGEXP_IMAGE = /^<!-- image: (.+) -->\n<!-- filename: (.+)\/(.+?\.\w+) -->$/;
+const REGEXP_FILE = /^[\w\W]*?(<!-- filename: (.+)\/(.+?\.xml) -->)$/;
+
 function parseImageDetails(files: string[]) {
     const result: FileAsset[] = [];
-    const pattern = /^<!-- image: (.+) -->\n<!-- filename: (.+)\/(.+?\.\w+) -->$/;
     for (const xml of files) {
-        const match = pattern.exec(xml);
+        const match = REGEXP_IMAGE.exec(xml);
         if (match) {
             result.push({
                 uri: match[1],
@@ -53,9 +55,8 @@ function parseImageDetails(files: string[]) {
 
 function parseFileDetails(files: string[]) {
     const result: FileAsset[] = [];
-    const pattern = /^[\w\W]*?(<!-- filename: (.+)\/(.+?\.xml) -->)$/;
     for (const xml of files) {
-        const match = pattern.exec(xml);
+        const match = REGEXP_FILE.exec(xml);
         if (match) {
             result.push({
                 content: match[0].replace(match[1], '').trim(),

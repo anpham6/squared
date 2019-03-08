@@ -252,10 +252,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         for (const node of this.application.processing.cache.duplicate().sort(a => !a.visible ? -1 : 0)) {
             const stored: BoxStyle = node.data(Resource.KEY_NAME, 'boxStyle');
             if (stored && !node.hasBit('excludeResource', $enum.NODE_RESOURCE.BOX_STYLE)) {
-                const backgroundRepeat = stored.backgroundRepeat.split($util.REGEXP_PATTERN.SEPARATOR);
-                const backgroundSize = stored.backgroundSize.split($util.REGEXP_PATTERN.SEPARATOR);
-                const backgroundPositionX = stored.backgroundPositionX.split($util.REGEXP_PATTERN.SEPARATOR);
-                const backgroundPositionY = stored.backgroundPositionY.split($util.REGEXP_PATTERN.SEPARATOR);
+                const backgroundRepeat = stored.backgroundRepeat.split($util.REGEXP_COMPILED.SEPARATOR);
+                const backgroundSize = stored.backgroundSize.split($util.REGEXP_COMPILED.SEPARATOR);
+                const backgroundPositionX = stored.backgroundPositionX.split($util.REGEXP_COMPILED.SEPARATOR);
+                const backgroundPositionY = stored.backgroundPositionY.split($util.REGEXP_COMPILED.SEPARATOR);
                 const backgroundImage: (string | GradientTemplate)[] = [];
                 const backgroundPosition: string[] = [];
                 const imageDimensions: Undefined<ImageAsset>[] = [];

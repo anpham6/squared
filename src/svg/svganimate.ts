@@ -46,13 +46,13 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                     currentValue = [parseFloat(values[index])];
                 }
                 else if ($util.isUnit(values[index])) {
-                    currentValue = [parseFloat($util.convertPX(values[index], fontSize))];
+                    currentValue = [$util.calculateUnit(values[index], fontSize)];
                 }
                 if ($util.isNumber(values[index + 1])) {
                     nextValue = [parseFloat(values[index + 1])];
                 }
                 else if ($util.isUnit(values[index + 1])) {
-                    nextValue = [parseFloat($util.convertPX(values[index + 1], fontSize))];
+                    nextValue = [$util.calculateUnit(values[index + 1], fontSize)];
                 }
                 break;
         }

@@ -38,10 +38,10 @@ export default class Guideline<T extends android.base.View> extends squared.base
             const alignParent = new Map<T, string[]>();
             node.each((item: T) => {
                 const alignment: string[] = [];
-                if ($util.withinFraction(item.linear.left, node.box.left)) {
+                if ($util.withinRange(item.linear.left, node.box.left)) {
                     alignment.push('left');
                 }
-                if ($util.withinFraction(item.linear.top, node.box.top)) {
+                if ($util.withinRange(item.linear.top, node.box.top)) {
                     alignment.push('top');
                 }
                 alignParent.set(item, alignment);

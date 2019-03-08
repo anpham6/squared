@@ -21,7 +21,7 @@ function prioritizeExtensions<T extends Node>(documentRoot: HTMLElement, element
     let current: HTMLElement | null = element;
     do {
         if (current.dataset.use) {
-            for (const value of current.dataset.use.split($util.REGEXP_PATTERN.SEPARATOR)) {
+            for (const value of current.dataset.use.split($util.REGEXP_COMPILED.SEPARATOR)) {
                 tagged.push(value.trim());
             }
         }
@@ -1916,7 +1916,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                                 case 'height':
                                                 case 'min-height':
                                                 case 'max-height':
-                                                    valid = compareRange(operation, attr.indexOf('width') !== -1 ? window.innerWidth : window.innerHeight, parseFloat($util.convertPX(value, $util.convertInt($dom.getStyle(document.body).fontSize as string))));
+                                                    valid = compareRange(operation, attr.indexOf('width') !== -1 ? window.innerWidth : window.innerHeight, $util.calculateUnit(value, $util.convertInt($dom.getStyle(document.body).fontSize as string)));
                                                     break;
                                                 case 'orientation':
                                                     valid = value === 'portrait' && window.innerWidth <= window.innerHeight || value === 'landscape' && window.innerWidth > window.innerHeight;
@@ -1997,7 +1997,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         }
         document.querySelectorAll(item.selectorText).forEach((element: HTMLElement) => {
             const style = $dom.getStyle(element);
-            const fontSize = parseInt($util.convertPX(style.fontSize as string, 0));
+            const fontSize = $util.calculateUnit(style.fontSize as string);
             const styleMap: StringMap = {};
             for (const attr of fromRule) {
                 const value = $dom.checkStyleAttribute(element, attr, item.style[attr], style, fontSize);
@@ -2006,7 +2006,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 }
             }
             if (this.userSettings.preloadImages && $util.hasValue(styleMap.backgroundImage) && styleMap.backgroundImage !== 'initial') {
-                for (const value of styleMap.backgroundImage.split($util.REGEXP_PATTERN.SEPARATOR)) {
+                for (const value of styleMap.backgroundImage.split($util.REGEXP_COMPILED.SEPARATOR)) {
                     const uri = $dom.resolveURL(value.trim());
                     if (uri !== '' && !this.session.image.has(uri)) {
                         this.session.image.set(uri, { width: 0, height: 0, uri });

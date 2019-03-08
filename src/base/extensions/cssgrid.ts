@@ -124,8 +124,8 @@ export default class CssGrid<T extends Node> extends Extension<T> {
         const cellsPerRow: number[] = [];
         const gridPosition: GridPosition[] = [];
         let rowInvalid: ObjectIndex<boolean> = {};
-        mainData.row.gap = parseInt(node.convertPX(node.css('rowGap'), false, false));
-        mainData.column.gap = parseInt(node.convertPX(node.css('columnGap'), true, false));
+        mainData.row.gap = node.calculateUnit(node.css('rowGap'), false, false);
+        mainData.column.gap = node.calculateUnit(node.css('columnGap'), true, false);
         function setDataRows(item: T, placement: number[]) {
             if (placement.every(value => value > 0)) {
                 for (let i = placement[horizontal ? 0 : 1] - 1; i < placement[horizontal ? 2 : 3] - 1; i++) {

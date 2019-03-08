@@ -360,7 +360,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 }
                 if (checkFloat) {
                     const previous = siblings[siblings.length - 1];
-                    if (this.floating && (this.linear.top >= previous.linear.bottom || this.float === 'left' && siblings.find(node => node.siblingIndex < this.siblingIndex && $util.withinFraction(this.linear.left, node.linear.left)) !== undefined || this.float === 'right' && siblings.find(node => node.siblingIndex < this.siblingIndex && $util.withinFraction(this.linear.right, node.linear.right)) !== undefined)) {
+                    if (this.floating && (this.linear.top >= previous.linear.bottom || this.float === 'left' && siblings.find(node => node.siblingIndex < this.siblingIndex && $util.withinRange(this.linear.left, node.linear.left)) !== undefined || this.float === 'right' && siblings.find(node => node.siblingIndex < this.siblingIndex && $util.withinRange(this.linear.right, node.linear.right)) !== undefined)) {
                         return true;
                     }
                 }
@@ -508,7 +508,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public cssPX(attr: string, value: number, negative = false, cache = false) {
         const current = this._styleMap[attr];
         if (current && $util.isUnit(current)) {
-            value += parseFloat($util.convertPX(current, this.fontSize));
+            value += $util.calculateUnit(current, this.fontSize);
             if (!negative) {
                 value = Math.max(0, value);
             }
@@ -553,11 +553,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return parseInt(value) || defaultValue;
     }
 
-    public convertPX(value: string, horizontal = true, parent = true) {
-        return this.convertPercent(value, horizontal, parent) || $util.convertPX(value, this.fontSize);
-    }
-
-    public convertPercent(value: string, horizontal: boolean, parent = true) {
+    public calculateUnit(value: string, horizontal = true, parent = true) {
         if ($util.isPercent(value)) {
             const node = parent && this.absoluteParent || this;
             const attr = horizontal ? 'width' : 'height';
@@ -569,9 +565,15 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 dimension = node[parent ? 'box' : 'bounds'][attr];
             }
             const percent = parseFloat(value) >= 1 ? parseInt(value) / 100 : parseFloat(value);
-            return `${Math.round(percent * dimension)}px`;
+            return percent * dimension;
         }
-        return '';
+        else {
+            return $util.calculateUnit(value, this.fontSize);
+        }
+    }
+
+    public convertPX(value: string, horizontal = true, parent = true) {
+        return `${Math.round(this.calculateUnit(value, horizontal, parent))}px`;
     }
 
     public has(attr: string, checkType: number = 0, options?: ObjectMap<string | string[]>): boolean {
@@ -907,7 +909,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     private convertUnit(attr: string, value: string, horizontal: boolean, parent = true): string {
         if ($util.isPercent(value)) {
-            return $util.isUnit(this.style[attr]) ? this.style[attr] : this.convertPercent(value, horizontal, parent);
+            return $util.isUnit(this.style[attr]) ? this.style[attr] : this.convertPX(value, horizontal, parent);
         }
         return value;
     }
@@ -1127,7 +1129,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             let width = 0;
             for (const value of [this._styleMap.width, this._styleMap.minWidth]) {
                 if ($util.isUnit(value) || $util.isPercent(value)) {
-                    width = $util.convertInt(this.convertPX(value));
+                    width = this.calculateUnit(value);
                     if (width > 0) {
                         break;
                     }
@@ -1142,7 +1144,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             let height = 0;
             for (const value of [this._styleMap.height, this._styleMap.minHeight]) {
                 if ($util.isUnit(value) || this.hasHeight && $util.isPercent(value)) {
-                    height = $util.convertInt(this.convertPX(value, true));
+                    height = this.calculateUnit(value, false);
                     if (height > 0) {
                         break;
                     }
@@ -1600,7 +1602,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get visibleStyle() {
         if (this._cached.visibleStyle === undefined) {
             const borderWidth = this.borderTopWidth > 0 || this.borderRightWidth > 0 || this.borderBottomWidth > 0 || this.borderLeftWidth > 0;
-            const backgroundImage = $util.REGEXP_PATTERN.URL.test(this.css('backgroundImage')) || $util.REGEXP_PATTERN.URL.test(this.css('background'));
+            const backgroundImage = $util.REGEXP_COMPILED.URL.test(this.css('backgroundImage')) || $util.REGEXP_COMPILED.URL.test(this.css('background'));
             const backgroundColor = this.has('backgroundColor');
             const backgroundRepeat = this.css('backgroundRepeat');
             const paddingHorizontal = this.paddingLeft + this.paddingRight > 0;

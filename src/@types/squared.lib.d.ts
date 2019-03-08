@@ -78,7 +78,7 @@ declare global {
         }
 
         namespace util {
-            export import REGEXP_PATTERN = $util.REGEXP_PATTERN;
+            export import REGEXP_COMPILED = $util.REGEXP_COMPILED;
             export import REGEXP_STRING = $util.REGEXP_STRING;
             function capitalize(value: string, upper?: boolean): string;
             function convertUnderscore(value: string): string;
@@ -93,6 +93,7 @@ declare global {
             function convertAlpha(value: number): string;
             function convertRoman(value: number): string;
             function convertEnum(value: number, base: {}, derived: {}): string;
+            function calculateUnit(value: string, fontSize?: number): number;
             function formatPX(value: string | number): string;
             function formatPercent(value: string | number, round?: boolean): string;
             function formatString(value: string, ...params: string[]): string;
@@ -124,7 +125,6 @@ declare global {
             function hasInSet<T>(list: Set<T>, condition: (x: T) => boolean): boolean;
             function compareRange(operation: string, range: number, value: number): boolean;
             function withinRange(a: number, b: number, offset?: number): boolean;
-            function withinFraction(lower: number, upper: number): boolean;
             function assignWhenNull(destination: {}, source: {}): void;
             function defaultWhenNull(options: {}, ...attrs: string[]): void;
             function sortNumber(values: number[], descending?: boolean): number[];

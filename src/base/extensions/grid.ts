@@ -13,7 +13,7 @@ const $util = squared.lib.util;
 
 function getRowIndex<T extends Node>(columns: T[][], target: T) {
     for (const column of columns) {
-        const index = column.findIndex(item => $util.withinFraction(target.linear.top, item.linear.top) || target.linear.top > item.linear.top && target.linear.top < item.linear.bottom);
+        const index = column.findIndex(item => $util.withinRange(target.linear.top, item.linear.top) || target.linear.top > item.linear.top && target.linear.top < item.linear.bottom);
         if (index !== -1) {
             return index;
         }

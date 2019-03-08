@@ -11,7 +11,7 @@ const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 const REGEXP_CLIPPATH: ObjectMap<RegExp> = {
-    url: $util.REGEXP_PATTERN.URL,
+    url: $util.REGEXP_COMPILED.URL,
     inset: new RegExp(`inset\\(${$util.REGEXP_STRING.LENGTH}\\s?${$util.REGEXP_STRING.LENGTH}?\\s?${$util.REGEXP_STRING.LENGTH}?\\s?${$util.REGEXP_STRING.LENGTH}?\\)`),
     polygon: /polygon\(([^)]+)\)/,
     circle: new RegExp(`circle\\(${$util.REGEXP_STRING.LENGTH}(?: at ${$util.REGEXP_STRING.LENGTH} ${$util.REGEXP_STRING.LENGTH})?\\)`),
@@ -109,7 +109,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     return;
                                 }
                                 case 'polygon': {
-                                    const points = $util.objectMap<string, Point>(match[1].split($util.REGEXP_PATTERN.SEPARATOR), values => {
+                                    const points = $util.objectMap<string, Point>(match[1].split($util.REGEXP_COMPILED.SEPARATOR), values => {
                                         let [x, y] = $util.replaceMap<string, number>(values.trim().split(' '), (value, index) => convertUnit(value, index === 0));
                                         x += boxRect.left;
                                         y += boxRect.top;

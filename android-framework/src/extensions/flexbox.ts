@@ -260,7 +260,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 break;
                         }
                     }
-                    if (seg.length > 1 && (horizontal && $util.withinFraction(node.box.left, chainStart.linear.left) && $util.withinFraction(chainEnd.linear.right, node.box.right) || !horizontal && $util.withinFraction(node.box.top, chainStart.linear.top) && $util.withinFraction(chainEnd.linear.bottom, node.box.bottom))) {
+                    if (seg.length > 1 && (horizontal && $util.withinRange(node.box.left, chainStart.linear.left) && $util.withinRange(chainEnd.linear.right, node.box.right) || !horizontal && $util.withinRange(node.box.top, chainStart.linear.top) && $util.withinRange(chainEnd.linear.bottom, node.box.bottom))) {
                         chainStart.app(chainStyle, 'spread_inside', false);
                     }
                     else {

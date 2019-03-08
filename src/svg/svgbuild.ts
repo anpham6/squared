@@ -690,7 +690,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     public static parsePoints(value: string) {
         const result: Point[] = [];
         for (const coords of value.trim().split(/\s+/)) {
-            const [x, y] = $util.replaceMap<string, number>(coords.split($util.REGEXP_PATTERN.SEPARATOR), pt => parseFloat(pt));
+            const [x, y] = $util.replaceMap<string, number>(coords.split($util.REGEXP_COMPILED.SEPARATOR), pt => parseFloat(pt));
             result.push({ x, y });
         }
         return result;
