@@ -1,8 +1,12 @@
-import { REGEXP_COMPILED, capitalize, convertCamelCase, convertPercent, convertPX, convertUnit, formatPercent, formatPX, hasBit, isPercent, isString, isUnit, resolvePath, spliceArray, withinRange } from './util';
+import { REGEXP_COMPILED, calculateUnit, capitalize, convertCamelCase, convertPX, convertUnit, formatPercent, formatPX, hasBit, isPercent, isString, isUnit, resolvePath, spliceArray, withinRange } from './util';
 
 type T = squared.base.Node;
 
 const REGEXP_KEYFRAMERULE = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
+
+function convertPercent(value: string, dimension: number, fontSize?: number) {
+    return isPercent(value) ? parseFloat(value) / 100 : calculateUnit(value, fontSize) / dimension;
+}
 
 export const enum USER_AGENT {
     CHROME = 2,
@@ -388,14 +392,6 @@ export function getFontSize(element: Element | null) {
     return parseInt(getStyle(element).fontSize || '16px');
 }
 
-export function resolveURL(value: string) {
-    const match = value.match(REGEXP_COMPILED.URL);
-    if (match) {
-        return resolvePath(match[1]);
-    }
-    return '';
-}
-
 export function cssInheritStyle(element: Element | null, attr: string, exclude?: string[], tagNames?: string[]) {
     let value = '';
     if (element) {
@@ -581,6 +577,14 @@ export function cssBackgroundPosition(value: string, dimension: Dimension, fontS
         }
     }
     return result;
+}
+
+export function cssResolveURL(value: string) {
+    const match = value.match(REGEXP_COMPILED.URL);
+    if (match) {
+        return resolvePath(match[1]);
+    }
+    return '';
 }
 
 export function getNamedItem(element: Element | null, attr: string) {

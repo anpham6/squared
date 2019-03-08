@@ -19,6 +19,13 @@ interface UtilRegExpPattern {
     CUSTOMPROPERTY: RegExp;
 }
 
+interface UtilRegExpSingle {
+    NUMBER: RegExp;
+    SPACE: RegExp;
+    LOWERCASE: RegExp;
+    PLACEHOLDER: RegExp;
+}
+
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const NUMERALS = [
     '', 'C', 'CC', 'CCC', 'CD', 'D', 'DC', 'DCC', 'DCCC', 'CM',
@@ -85,6 +92,13 @@ export const REGEXP_COMPILED: UtilRegExpPattern = {
     SEPARATOR: /\s*,\s*/,
     ATTRIBUTE: /([^\s]+)="([^"]+)"/,
     CUSTOMPROPERTY: /^(?:var|calc)\(.+\)$/
+};
+
+export const REGEXP_SINGLE: UtilRegExpSingle = {
+    NUMBER: /\d/,
+    SPACE: /\s/,
+    LOWERCASE: /[a-z]/,
+    PLACEHOLDER: /{(\d+)}/
 };
 
 export function capitalize(value: string, upper = true) {
@@ -158,12 +172,8 @@ export function convertPX(value: string, fontSize?: number) {
     return '0px';
 }
 
-export function convertPercent(value: string, dimension: number, fontSize?: number) {
-    return isPercent(value) ? convertFloat(value) / 100 : parseFloat(convertPX(value, fontSize)) / dimension;
-}
-
 export function convertUnit(value: string, dimension: number, fontSize?: number) {
-    return isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseFloat(convertPX(value, fontSize));
+    return isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : calculateUnit(value, fontSize);
 }
 
 export function convertAlpha(value: number) {
@@ -203,6 +213,127 @@ export function convertEnum(value: number, base: {}, derived: {}): string {
         }
     }
     return '';
+}
+
+export function calculate(value: string, dimension = 0, fontSize?: number) {
+    value = value.trim();
+    if (value.charAt(0) !== '(' || value.charAt(value.length - 1) !== ')') {
+        value = `(${value})`;
+    }
+    const opening: boolean[] = [];
+    const closing: number[] = [];
+    let opened = 0;
+    for (let i = 0; i < value.length; i++) {
+        switch (value.charAt(i)) {
+            case '(':
+                opened++;
+                opening[i] = true;
+                break;
+            case ')':
+                closing.push(i);
+                break;
+        }
+    }
+    if (opened === closing.length) {
+        const symbol = /(\s+[+\-]\s+|\s*[*/]\s*)/;
+        const equated: number[] = [];
+        let equation = value;
+        let index = 0;
+        while (true) {
+            for (let i = 0; i < closing.length; i++) {
+                let j = closing[i] - 1;
+                let valid = false;
+                for ( ; j >= 0; j--) {
+                    if (opening[j] === true) {
+                        valid = true;
+                        opening[j] = false;
+                        break;
+                    }
+                    else if (closing.includes(j)) {
+                        break;
+                    }
+                }
+                if (valid) {
+                    const seg: number[] = [];
+                    const evaluate: string[] = [];
+                    for (let partial of equation.substring(j + 1, closing[i]).split(symbol)) {
+                        partial = partial.trim();
+                        switch (partial) {
+                            case '+':
+                            case '-':
+                            case '*':
+                            case '/':
+                                evaluate.push(partial);
+                                break;
+                            default:
+                                const match = REGEXP_SINGLE.PLACEHOLDER.exec(partial);
+                                if (match) {
+                                    seg.push(equated[parseInt(match[1])]);
+                                }
+                                else if (isPercent(partial)) {
+                                    seg.push(parseFloat(partial) / 100 * dimension);
+                                }
+                                else if (isUnit(partial)) {
+                                    seg.push(calculateUnit(partial, fontSize));
+                                }
+                                else {
+                                    return undefined;
+                                }
+                                break;
+                        }
+                    }
+                    if (seg.length !== evaluate.length + 1) {
+                        return undefined;
+                    }
+                    for (let k = 0; k < evaluate.length; k++) {
+                        if (evaluate[k] === '/') {
+                            if (Math.abs(seg[k + 1]) !== 0) {
+                                const result = seg[k] / seg[k + 1];
+                                seg.splice(k, 2, result);
+                                evaluate.splice(k--, 1);
+                            }
+                            else {
+                                return undefined;
+                            }
+                        }
+                    }
+                    for (let k = 0; k < evaluate.length; k++) {
+                        if (evaluate[k] === '*') {
+                            const result = seg[k] * seg[k + 1];
+                            seg.splice(k, 2, result);
+                            evaluate.splice(k--, 1);
+                        }
+                    }
+                    for (let k = 0; k < evaluate.length; k++) {
+                        let result: number;
+                        if (evaluate[k] === '-') {
+                            result = seg[k] - seg[k + 1];
+                        }
+                        else {
+                            result = seg[k] + seg[k + 1];
+                        }
+                        seg.splice(k, 2, result);
+                        evaluate.splice(k--, 1);
+                    }
+                    if (seg.length === 1) {
+                        if (closing.length === 1) {
+                            return seg[0];
+                        }
+                        else {
+                            equated[index] = seg[0];
+                            const partial = `{${index++}}`;
+                            equation = equation.substring(0, j) + `${partial + ' '.repeat((closing[i] + 1) - j - partial.length)}` + equation.substring(closing[i] + 1);
+                            closing.splice(i--, 1);
+                        }
+                    }
+                    else {
+                        return undefined;
+                    }
+                }
+            }
+        }
+    }
+    return undefined;
 }
 
 export function calculateUnit(value: string, fontSize?: number) {

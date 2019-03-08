@@ -37,7 +37,6 @@ declare global {
             function assignBounds(dimension: RectDimension | DOMRect): RectDimension;
             function getStyle(element: Element | null, cache?: boolean): CSSStyleDeclaration;
             function getFontSize(element: Element | null): number;
-            function resolveURL(value: string): string;
             function cssParent(element: Element | null, attr: string, ...styles: string[]): boolean;
             function cssFromParent(element: Element | null, attr: string): boolean;
             function cssInline(element: Element, attr: string): string;
@@ -45,6 +44,7 @@ declare global {
             function cssInheritAttribute(element: Element | null, attr: string): string;
             function cssInheritStyle(element: Element | null, attr: string, exclude?: string[], tagNames?: string[]): string;
             function cssBackgroundPosition(value: string, dimension: Dimension, fontSize?: number, percent?: boolean): RectPosition;
+            function cssResolveURL(value: string): string;
             function getNamedItem(element: Element | null, attr: string): string;
             function getFirstChildElement(elements: Element | null, lineBreak?: boolean): Element | null;
             function getLastChildElement(elements: Element | null, lineBreak?: boolean): Element | null;
@@ -91,11 +91,11 @@ declare global {
             function convertFloat(value: string): number;
             function convertAngle(value: string, unit?: string): number;
             function convertPX(value: string, fontSize?: number): string;
-            function convertPercent(value: string, dimension: number, fontSize?: number): number;
             function convertUnit(value: string, dimension: number, fontSize?: number): number;
             function convertAlpha(value: number): string;
             function convertRoman(value: number): string;
             function convertEnum(value: number, base: {}, derived: {}): string;
+            function calculate(value: string, dimension?: number, fontSize?: number): number;
             function calculateUnit(value: string, fontSize?: number): number;
             function formatPX(value: string | number): string;
             function formatPercent(value: string | number, round?: boolean): string;

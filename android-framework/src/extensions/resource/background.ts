@@ -273,7 +273,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             if (value !== 'initial') {
                                 backgroundImage[j] = Resource.addImageUrl(value);
                                 if (backgroundImage[j] !== '') {
-                                    imageDimensions[j] = Resource.ASSETS.images.get($dom.resolveURL(value));
+                                    imageDimensions[j] = Resource.ASSETS.images.get($dom.cssResolveURL(value));
                                     remove = false;
                                 }
                             }

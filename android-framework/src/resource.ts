@@ -378,7 +378,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
     }
 
     public static addImageUrl(value: string, prefix = '') {
-        value = $dom.resolveURL(value) || $util.resolvePath(value);
+        value = $dom.cssResolveURL(value) || $util.resolvePath(value);
         return value !== '' ? this.addImage({ mdpi: value }, prefix) : '';
     }
 

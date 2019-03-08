@@ -2007,7 +2007,7 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
             if (this.userSettings.preloadImages && $util.hasValue(styleMap.backgroundImage) && styleMap.backgroundImage !== 'initial') {
                 for (const value of styleMap.backgroundImage.split($util.REGEXP_COMPILED.SEPARATOR)) {
-                    const uri = $dom.resolveURL(value.trim());
+                    const uri = $dom.cssResolveURL(value.trim());
                     if (uri !== '' && !this.session.image.has(uri)) {
                         this.session.image.set(uri, { width: 0, height: 0, uri });
                     }

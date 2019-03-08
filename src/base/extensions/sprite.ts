@@ -21,7 +21,7 @@ export default abstract class Sprite<T extends Node> extends Extension<T> {
                 }
             }
             if (url !== '') {
-                url = $dom.resolveURL(url);
+                url = $dom.cssResolveURL(url);
                 const image = <ImageAsset> this.application.session.image.get(url);
                 if (image) {
                     const fontSize = node.fontSize;
