@@ -8,11 +8,10 @@ type NumberValue<T> = {
     value: T;
 };
 
-interface RGBA {
+interface RGB {
     r: number;
     g: number;
     b: number;
-    a: number;
 }
 
 interface HSL {
@@ -21,19 +20,29 @@ interface HSL {
     l: number;
 }
 
-interface ColorData {
-    valueAsRGB: string;
+interface RGBA extends RGB {
+    a: number;
+}
+
+interface HSLA extends HSL {
+    a: number;
+}
+
+interface ColorData extends NameValue {
+    name: string;
+    value: string;
     valueAsRGBA: string;
     valueAsARGB: string;
     rgba: RGBA;
+    hsl: HSL;
     alpha: number;
     opaque: boolean;
-    visible: boolean;
+    transparent: boolean;
 }
 
 interface ColorResult extends NameValue {
-    rgba?: RGBA;
-    hsl?: HSL;
+    rgb: RGB;
+    hsl: HSL;
 }
 
 interface Point {

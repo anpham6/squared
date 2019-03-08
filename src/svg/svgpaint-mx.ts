@@ -190,7 +190,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     break;
                             }
                             if (color) {
-                                this[attr] = color.valueAsRGB;
+                                this[attr] = color.value;
                             }
                         }
                         return;

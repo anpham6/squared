@@ -10,7 +10,10 @@ declare global {
             function reduceColor(value: string, percent: number): ColorData | undefined;
             function convertHex(...values: string[] | number[]): string;
             function convertRGBA(value: string): RGBA | undefined;
-            function formatRGBA(rgba: RGBA): string;
+            function convertHSLA(value: RGBA): HSL;
+            function formatHex(value: RGB): string;
+            function formatRGBA(value: RGBA): string;
+            function formatHSLA(value: HSLA): string;
         }
 
         namespace dom {

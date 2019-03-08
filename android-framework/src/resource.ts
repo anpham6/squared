@@ -382,27 +382,26 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
         return value !== '' ? this.addImage({ mdpi: value }, prefix) : '';
     }
 
-    public static addColor(value: ColorData | string | undefined, transparency = false) {
-        if (typeof value === 'string') {
-            value = $color.parseColor(value, undefined, transparency);
+    public static addColor(color: ColorData | string | undefined, transparency = false) {
+        if (typeof color === 'string') {
+            color = $color.parseColor(color, undefined, transparency);
         }
-        if (value && (value.valueAsRGBA !== '#00000000' || transparency)) {
-            const argb = value.opaque ? value.valueAsARGB : value.valueAsRGB;
-            let name = STORED.colors.get(argb);
-            if (name) {
-                return name;
+        if (color && (!color.transparent || transparency)) {
+            const keyName = color.opaque ? color.valueAsARGB : color.value;
+            let colorName = STORED.colors.get(keyName);
+            if (colorName) {
+                return colorName;
             }
-            const shade = $color.findColorShade(value.valueAsRGB);
+            const shade = $color.findColorShade(color.value);
             if (shade) {
-                shade.name = $util.convertUnderscore(shade.name);
-                if (!value.opaque && shade.value === value.valueAsRGB) {
-                    name = shade.name;
+                if (color.value === shade.value && !color.opaque) {
+                    colorName = shade.name;
                 }
                 else {
-                    name = Resource.generateId('color', shade.name);
+                    colorName = Resource.generateId('color', shade.name);
                 }
-                STORED.colors.set(argb, name);
-                return name;
+                STORED.colors.set(keyName, colorName);
+                return colorName;
             }
         }
         return '';

@@ -972,13 +972,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="black">#000000</color>
-    <color name="dark_blue">#00008B</color>
+    <color name="darkblue">#00008B</color>
     <color name="blue">#0000FF</color>
     <color name="gray">#808080</color>
-    <color name="yellow_green">#9ACD32</color>
-    <color name="dark_gray">#A9A9A9</color>
-    <color name="light_gray_1">#CCCCCC</color>
-    <color name="white_smoke_1">#DDDDDD</color>
+    <color name="yellowgreen">#9ACD32</color>
+    <color name="darkgray">#A9A9A9</color>
+    <color name="lightgray_1">#CCCCCC</color>
+    <color name="gainsboro_1">#DDDDDD</color>
     <color name="white">#FFFFFF</color>
 </resources>
 <!-- filename: res/values/colors.xml -->
