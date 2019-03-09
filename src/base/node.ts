@@ -120,7 +120,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
         if (this.styleElement) {
             const styleMap = $dom.getElementCache(element, 'styleMap') || {};
-            const fontSize = $util.convertInt(this.style.fontSize as string);
+            const fontSize = parseInt(this.style.fontSize as string) || undefined;
             for (let attr of Array.from(element.style)) {
                 attr = $util.convertCamelCase(attr);
                 const value = $css.checkStyleValue(element, attr, element.style[attr], this.style, fontSize);

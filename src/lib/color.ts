@@ -2081,7 +2081,7 @@ export function findColorName(value: string) {
 }
 
 export function findColorShade(value: string) {
-    const rgba = convertRGBA(value);
+    const rgba = parseRGBA(value);
     if (rgba) {
         const hsl = convertHSLA(rgba);
         const result: ColorResult[] = [];
@@ -2135,7 +2135,7 @@ export function parseColor(value: string, opacity = '1', transparency = false) {
         let name = '';
         let rgba: RGBA | undefined;
         if (value.charAt(0) === '#') {
-            rgba = convertRGBA(value);
+            rgba = parseRGBA(value);
         }
         else if (value.startsWith('rgb')) {
             const match = value.match(REGEXP_RGBA);
@@ -2193,7 +2193,7 @@ export function parseColor(value: string, opacity = '1', transparency = false) {
 }
 
 export function reduceColor(value: string, percent: number) {
-    const rgba = convertRGBA(value);
+    const rgba = parseRGBA(value);
     if (rgba) {
         const base = percent < 0 ? 0 : 255;
         percent = Math.abs(percent);
@@ -2227,7 +2227,7 @@ export function convertHex(value: RGBA) {
     return `#${getHexCode(value.r, value.g, value.b) + (value.a < 255 ? getHexCode(value.a) : '')}`;
 }
 
-export function convertRGBA(value: string) {
+export function parseRGBA(value: string) {
     value = value.replace(/#/g, '').trim();
     if (REGEXP_HEX.test(value)) {
         let a = 255;

@@ -126,12 +126,13 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                         }
                     }
                     else {
-                        let value = $css.getInheritedStyle(element, 'background', ['rgba(0, 0, 0, 0)', 'transparent'], ['TABLE']);
+                        const exclude = /rgba\(0, 0, 0, 0\)|transparent/;
+                        let value = $css.getInheritedStyle(element, 'background', exclude, 'TABLE');
                         if (value !== '') {
                             element.style.background = value;
                         }
                         else {
-                            value = $css.getInheritedStyle(element, 'backgroundColor', ['rgba(0, 0, 0, 0)', 'transparent'], ['TABLE']);
+                            value = $css.getInheritedStyle(element, 'backgroundColor', exclude, 'TABLE');
                             if (value !== '') {
                                 element.style.backgroundColor = value;
                             }

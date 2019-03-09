@@ -8,10 +8,10 @@ declare global {
             function findColorName(value: string): ColorResult | undefined;
             function findColorShade(value: string): ColorResult | undefined;
             function parseColor(value: string, opacity?: string, transparency?: boolean): ColorData | undefined;
+            function parseRGBA(value: string): RGBA | undefined;
             function reduceColor(value: string, percent: number): ColorData | undefined;
             function getHexCode(...values: number[]): string;
             function convertHex(value: RGBA): string;
-            function convertRGBA(value: string): RGBA | undefined;
             function convertHSLA(value: RGBA): HSLA;
             function formatRGBA(value: RGBA): string;
             function formatHSLA(value: HSLA): string;
@@ -25,13 +25,13 @@ declare global {
             function getStyle(element: Element | null, cache?: boolean): CSSStyleDeclaration;
             function getFontSize(element: Element | null): number;
             function isParentStyle(element: Element | null, attr: string, ...styles: string[]): boolean;
-            function getInheritedStyle(element: Element | null, attr: string, exclude?: string[], tagNames?: string[]): string;
+            function getInheritedStyle(element: Element | null, attr: string, exclude?: RegExp, ...tagNames: string[]): string;
             function isInheritedStyle(element: Element | null, attr: string): boolean;
             function getInlineStyle(element: Element, attr: string): string;
             function getAttribute(element: Element, attr: string, computed?: boolean): string;
             function getParentAttribute(element: Element | null, attr: string): string;
             function getNamedItem(element: Element | null, attr: string): string;
-            function calculateVar(element: Element, value: string, attr?: string, dimension?: number): number;
+            function calculateVar(element: HTMLElement | SVGElement, value: string, attr?: string, dimension?: number): number;
             function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number, percent?: boolean): RectPosition;
             function resolveURL(value: string): string;
         }

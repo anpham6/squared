@@ -104,7 +104,22 @@
                 transform: translate(100px, 100px);
             }
         }
+        :root {
+            --transparency: 0;
+        }
         @keyframes opacity {
+            from {
+                fill-opacity: calc(var(--transparency) + 0.2);
+            }
+            25% {
+                fill-opacity: calc(var(--transparency) + 0.4);
+            }
+            50% {
+                fill-opacity: calc(var(--transparency) + 0.6);
+            }
+            75% {
+                fill-opacity: calc(var(--transparency) + 0.8);
+            }
             to {
                 fill: yellow;
                 fill-opacity: 1;

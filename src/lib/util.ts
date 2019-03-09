@@ -329,8 +329,7 @@ export function calculate(value: string, dimension = 0, fontSize?: number) {
                     for (let k = 0; k < evaluate.length; k++) {
                         if (evaluate[k] === '/') {
                             if (Math.abs(seg[k + 1]) !== 0) {
-                                const result = seg[k] / seg[k + 1];
-                                seg.splice(k, 2, result);
+                                seg.splice(k, 2, seg[k] / seg[k + 1]);
                                 evaluate.splice(k--, 1);
                             }
                             else {
@@ -340,20 +339,12 @@ export function calculate(value: string, dimension = 0, fontSize?: number) {
                     }
                     for (let k = 0; k < evaluate.length; k++) {
                         if (evaluate[k] === '*') {
-                            const result = seg[k] * seg[k + 1];
-                            seg.splice(k, 2, result);
+                            seg.splice(k, 2, seg[k] * seg[k + 1]);
                             evaluate.splice(k--, 1);
                         }
                     }
                     for (let k = 0; k < evaluate.length; k++) {
-                        let result: number;
-                        if (evaluate[k] === '-') {
-                            result = seg[k] - seg[k + 1];
-                        }
-                        else {
-                            result = seg[k] + seg[k + 1];
-                        }
-                        seg.splice(k, 2, result);
+                        seg.splice(k, 2, seg[k] + (evaluate[k] === '-' ? -seg[k + 1] : seg[k + 1]));
                         evaluate.splice(k--, 1);
                     }
                     if (seg.length === 1) {
@@ -363,7 +354,8 @@ export function calculate(value: string, dimension = 0, fontSize?: number) {
                         else {
                             equated[index] = seg[0];
                             const placeholder = `{${index++}}`;
-                            value = value.substring(0, j) + `${placeholder + ' '.repeat((closing[i] + 1) - j - placeholder.length)}` + value.substring(closing[i] + 1);
+                            const remaining = closing[i] + 1;
+                            value = value.substring(0, j) + `${placeholder + ' '.repeat(remaining - (j + placeholder.length))}` + value.substring(remaining);
                             closing.splice(i--, 1);
                         }
                     }

@@ -24,7 +24,7 @@ export function getKeyframeRules(): CSSRuleData {
                             for (let k = 0; k < item.cssRules.length; k++) {
                                 const match = REGEXP_KEYFRAMERULE.exec(item.cssRules[k].cssText);
                                 if (match) {
-                                    for (let percent of (item.cssRules[k]['keyText'] as string || match[1].trim()).split(REGEXP_COMPILED.SEPARATOR)) {
+                                    for (let percent of (item.cssRules[k]['keyText'] || match[1].trim()).split(REGEXP_COMPILED.SEPARATOR)) {
                                         percent = percent.trim();
                                         switch (percent) {
                                             case 'from':
@@ -161,25 +161,18 @@ export function getFontSize(element: Element | null) {
 
 export function isParentStyle(element: Element | null, attr: string, ...styles: string[]) {
     if (element) {
-        if (element.nodeName.charAt(0) !== '#') {
-            if (styles.includes(getStyle(element)[attr])) {
-                return true;
-            }
-        }
-        if (element.parentElement) {
-            return styles.includes(getStyle(element.parentElement)[attr]);
-        }
+        return element.nodeName.charAt(0) !== '#' && styles.includes(getStyle(element)[attr]) || element.parentElement && styles.includes(getStyle(element.parentElement)[attr]);
     }
     return false;
 }
 
-export function getInheritedStyle(element: Element | null, attr: string, exclude?: string[], tagNames?: string[]) {
+export function getInheritedStyle(element: Element | null, attr: string, exclude?: RegExp, ...tagNames: string[]) {
     let value = '';
     if (element) {
         let current = element.parentElement;
-        while (current && (tagNames === undefined || !tagNames.includes(current.tagName))) {
+        while (current && !tagNames.includes(current.tagName)) {
             value = getStyle(current)[attr] || '';
-            if (value === 'inherit' || exclude && exclude.some(style => value.indexOf(style) !== -1)) {
+            if (value === 'inherit' || exclude && exclude.test(value)) {
                 value = '';
             }
             if (value !== '' || current === document.body) {
@@ -194,21 +187,17 @@ export function getInheritedStyle(element: Element | null, attr: string, exclude
 export function isInheritedStyle(element: Element | null, attr: string) {
     if (hasComputedStyle(element) && element.parentElement) {
         const node = getElementAsNode<T>(element);
-        const style = getStyle(element);
-        if (node && style) {
-            return style[attr] === getStyle(element.parentElement)[attr] && !node.cssInitial(attr);
+        if (node && !node.cssInitial(attr)) {
+            return getStyle(element)[attr] === getStyle(element.parentElement)[attr];
         }
     }
     return false;
 }
 
 export function getInlineStyle(element: Element, attr: string) {
-    let value = '';
-    if (hasComputedStyle(element)) {
-        value = element['style'][attr];
-    }
+    let value: string = hasComputedStyle(element) ? element['style'][attr] : '';
     if (!value) {
-        const styleMap = getElementCache(element, 'styleMap');
+        const styleMap: StringMap = getElementCache(element, 'styleMap');
         if (styleMap) {
             value = styleMap[attr];
         }
@@ -235,7 +224,7 @@ export function getParentAttribute(element: Element | null, attr: string) {
     return value;
 }
 
-export function calculateVar(element: HTMLElement, value: string, attr?: string, dimension?: number) {
+export function calculateVar(element: HTMLElement | SVGElement, value: string, attr?: string, dimension?: number) {
     const style = getComputedStyle(element);
     let result = value;
     let match: RegExpMatchArray | null;
@@ -249,8 +238,14 @@ export function calculateVar(element: HTMLElement, value: string, attr?: string,
         }
     }
     if (attr && !dimension) {
-        const rect = (element.parentElement || element).getBoundingClientRect();
-        dimension = attr.toLowerCase().indexOf('height') !== -1 ? rect.height : rect.width;
+        if (element instanceof SVGElement) {
+            const rect = element.getBoundingClientRect();
+            dimension = attr === 'height' || (attr.length <= 2 && attr.indexOf('y') !== -1) ? rect.height : rect.width;
+        }
+        else {
+            const rect = (element.parentElement || element).getBoundingClientRect();
+            dimension = attr.toLowerCase().indexOf('height') !== -1 ? rect.height : rect.width;
+        }
     }
     return calculate(result, dimension, getFontSize(element));
 }
@@ -336,40 +331,35 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                 offsetParent = dimension.width;
                 direction = 'left';
                 original = 'originalX';
+                result.horizontal = position;
             }
             else {
                 offsetParent = dimension.height;
                 direction = 'top';
                 original = 'originalY';
+                result.vertical = position;
             }
-            const location = percent ? convertPercent(position, offsetParent, fontSize) : convertUnit(position, offsetParent, fontSize);
-            if (isPercent(position)) {
-                result[direction] = location;
-                result[original] = position;
+            if (/^[a-z]+$/.test(position)) {
+                switch (position) {
+                    case 'left':
+                    case 'top':
+                        result[original] = '0%';
+                        break;
+                    case 'right':
+                    case 'bottom':
+                        result[direction] = percent ? 1 : offsetParent;
+                        result[original] = '100%';
+                        break;
+                    case 'center':
+                        result[direction] = percent ? 0.5 : Math.round(offsetParent / 2);
+                        result[original] = '50%';
+                        break;
+                }
             }
             else {
-                if (/^[a-z]+$/.test(position)) {
-                    result[i === 0 ? 'horizontal' : 'vertical'] = position;
-                    switch (position) {
-                        case 'left':
-                        case 'top':
-                            result[original] = '0%';
-                            break;
-                        case 'right':
-                        case 'bottom':
-                            result[direction] = percent ? 1 : offsetParent;
-                            result[original] = '100%';
-                            break;
-                        case 'center':
-                            result[direction] = percent ? 0.5 : Math.round(offsetParent / 2);
-                            result[original] = '50%';
-                            break;
-                    }
-                }
-                else {
-                    result[direction] = location;
-                    result[original] = position;
-                }
+                const location = percent ? convertPercent(position, offsetParent, fontSize) : convertUnit(position, offsetParent, fontSize);
+                result[direction] = location;
+                result[original] = position;
             }
         }
     }

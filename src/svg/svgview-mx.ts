@@ -190,7 +190,16 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 if (map[name] === undefined) {
                                     map[name] = [];
                                 }
-                                map[name].push({ index: fraction, value: keyframes[percent][name] });
+                                let value: string | number | undefined = keyframes[percent][name];
+                                if ($util.isCalc(value)) {
+                                    value = $css.calculateVar(element, value, name);
+                                }
+                                if (value !== undefined) {
+                                    map[name].push({
+                                        index: fraction,
+                                        value: value.toString()
+                                    });
+                                }
                             }
                         }
                         if (attrMap['transform']) {
