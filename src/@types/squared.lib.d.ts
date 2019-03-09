@@ -1,4 +1,5 @@
 import * as $dom from '../lib/dom';
+import * as $element from '../lib/element';
 import * as $util from '../lib/util';
 
 declare global {
@@ -16,50 +17,52 @@ declare global {
             function formatHSLA(value: HSLA): string;
         }
 
-        namespace dom {
-            export import USER_AGENT = $dom.USER_AGENT;
-            export import ELEMENT_BLOCK = $dom.ELEMENT_BLOCK;
-            export import ELEMENT_INLINE = $dom.ELEMENT_INLINE;
-            function isUserAgent(value: string | number): boolean;
-            function getDeviceDPI(): number;
+        namespace css {
             function getKeyframeRules(): CSSRuleData;
-            function checkStyleAttribute(element: Element, attr: string, value: string, style?: CSSStyleDeclaration, fontSize?: number): string;
-            function getDataSet(element: Element | null, prefix: string): StringMap;
+            function checkStyleValue(element: Element, attr: string, value: string, style?: CSSStyleDeclaration, fontSize?: number): string;
+            function hasComputedStyle(element: Element | null): element is HTMLElement;
+            function getDataSet(element: HTMLElement | null, prefix: string): StringMap;
+            function getStyle(element: Element | null, cache?: boolean): CSSStyleDeclaration;
+            function getFontSize(element: Element | null): number;
+            function isParentStyle(element: Element | null, attr: string, ...styles: string[]): boolean;
+            function getInheritedStyle(element: Element | null, attr: string, exclude?: string[], tagNames?: string[]): string;
+            function isInheritedStyle(element: Element | null, attr: string): boolean;
+            function getInlineStyle(element: Element, attr: string): string;
+            function getAttribute(element: Element, attr: string, computed?: boolean): string;
+            function getParentAttribute(element: Element | null, attr: string): string;
+            function getNamedItem(element: Element | null, attr: string): string;
+            function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number, percent?: boolean): RectPosition;
+            function resolveURL(value: string): string;
+        }
+
+        namespace dom {
             function newBoxRect(): BoxRect;
             function newRectDimension(): RectDimension;
             function newBoxModel(): BoxModel;
-            function hasVisibleRect(element: Element, checkViewport?: boolean): boolean;
-            function withinViewport(dimension: ClientRect | DOMRect): boolean;
             function getDOMRect(element: Element): DOMRect;
-            function createElement(parent: Element | null, block?: boolean): HTMLElement;
-            function removeElementsByClassName(className: string): void;
             function getRangeClientRect(element: Element): TextDimension;
-            function assignBounds(dimension: RectDimension | DOMRect): RectDimension;
-            function getStyle(element: Element | null, cache?: boolean): CSSStyleDeclaration;
-            function getFontSize(element: Element | null): number;
-            function cssParent(element: Element | null, attr: string, ...styles: string[]): boolean;
-            function cssFromParent(element: Element | null, attr: string): boolean;
-            function cssInline(element: Element, attr: string): string;
-            function cssAttribute(element: Element, attr: string, computed?: boolean): string;
-            function cssInheritAttribute(element: Element | null, attr: string): string;
-            function cssInheritStyle(element: Element | null, attr: string, exclude?: string[], tagNames?: string[]): string;
-            function cssBackgroundPosition(value: string, dimension: Dimension, fontSize?: number, percent?: boolean): RectPosition;
-            function cssResolveURL(value: string): string;
-            function getNamedItem(element: Element | null, attr: string): string;
+            function assignBounds(rect: RectDimension | DOMRect): RectDimension;
+            function removeElementsByClassName(className: string): void;
             function getFirstChildElement(elements: Element | null, lineBreak?: boolean): Element | null;
             function getLastChildElement(elements: Element | null, lineBreak?: boolean): Element | null;
-            function hasFreeFormText(element: Element, whiteSpace?: boolean): boolean;
-            function isPlainText(element: Element, whiteSpace?: boolean): boolean;
-            function hasLineBreak(element: Element | null, lineBreak?: boolean, trimString?: boolean): boolean;
-            function isLineBreak(element: Element | null, excluded?: boolean): boolean;
-            function getElementsBetween(elementStart: Element | null, elementEnd: Element, whiteSpace?: boolean): Element[];
+            function getElementsBetweenSiblings(elementStart: Element | null, elementEnd: Element, whiteSpace?: boolean): Element[];
             function getPreviousElementSibling(element: Element | null): Element | null;
             function getNextElementSibling(element: Element | null): Element | null;
-            function hasComputedStyle(element: Element | null): element is HTMLElement;
+            function hasVisibleRect(element: Element, viewport?: boolean): boolean;
+            function withinViewport(rect: ClientRect | DOMRect): boolean;
             function setElementCache(element: Element, attr: string, data: any): void;
             function getElementCache(element: Element, attr: string): any;
             function deleteElementCache(element: Element, ...attrs: string[]): void;
             function getElementAsNode<T>(element: Element): T | undefined;
+        }
+
+        namespace element {
+            export import ELEMENT_BLOCK = $element.ELEMENT_BLOCK;
+            export import ELEMENT_INLINE = $element.ELEMENT_INLINE;
+            function createElement(parent: Element | null, block?: boolean): HTMLElement;
+            function isPlainText(element: Element, whiteSpace?: boolean): boolean;
+            function isLineBreak(element: Element, excluded?: boolean): boolean;
+            function hasLineBreak(element: Element, lineBreak?: boolean, trim?: boolean): boolean;
         }
 
         namespace math {
@@ -83,6 +86,9 @@ declare global {
         namespace util {
             export import REGEXP_COMPILED = $util.REGEXP_COMPILED;
             export import REGEXP_STRING = $util.REGEXP_STRING;
+            export import USER_AGENT = $util.USER_AGENT;
+            function isUserAgent(value: string | number): boolean;
+            function getDeviceDPI(): number;
             function capitalize(value: string, upper?: boolean): string;
             function convertUnderscore(value: string): string;
             function convertCamelCase(value: string, char?: string): string;
@@ -106,6 +112,7 @@ declare global {
             function isArray<T>(value: any): value is Array<T>;
             function isUnit(value: string): boolean;
             function isPercent(value: string): boolean;
+            function isCalc(value: string): boolean;
             function isEqual(source: any, values: any): boolean;
             function includes(source: string | undefined, value: string, delimiter?: string): boolean;
             function cloneInstance<T>(value: T): T;

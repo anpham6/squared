@@ -7,7 +7,7 @@ import Node from '../node';
 import { EXT_NAME } from '../lib/constant';
 import { BOX_STANDARD, CSS_STANDARD } from '../lib/enumeration';
 
-const $dom = squared.lib.dom;
+const $css = squared.lib.css;
 const $math = squared.lib.math;
 const $util = squared.lib.util;
 
@@ -117,7 +117,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                 }
                 if (!td.visibleStyle.backgroundImage && !td.visibleStyle.backgroundColor) {
                     if (colgroup) {
-                        const style = $dom.getStyle(colgroup.children[columnIndex[i]]);
+                        const style = $css.getStyle(colgroup.children[columnIndex[i]]);
                         if (style.background) {
                             element.style.background = style.background;
                         }
@@ -126,12 +126,12 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                         }
                     }
                     else {
-                        let value = $dom.cssInheritStyle(element, 'background', ['rgba(0, 0, 0, 0)', 'transparent'], ['TABLE']);
+                        let value = $css.getInheritedStyle(element, 'background', ['rgba(0, 0, 0, 0)', 'transparent'], ['TABLE']);
                         if (value !== '') {
                             element.style.background = value;
                         }
                         else {
-                            value = $dom.cssInheritStyle(element, 'backgroundColor', ['rgba(0, 0, 0, 0)', 'transparent'], ['TABLE']);
+                            value = $css.getInheritedStyle(element, 'backgroundColor', ['rgba(0, 0, 0, 0)', 'transparent'], ['TABLE']);
                             if (value !== '') {
                                 element.style.backgroundColor = value;
                             }
@@ -260,7 +260,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
         const caption = node.find(item => item.tagName === 'CAPTION') as T | undefined;
         node.clear();
         if (caption) {
-            if (!caption.hasWidth && !$dom.isUserAgent($dom.USER_AGENT.EDGE)) {
+            if (!caption.hasWidth && !$util.isUserAgent($util.USER_AGENT.EDGE)) {
                 if (caption.textElement) {
                     if (!caption.has('maxWidth')) {
                         caption.css('maxWidth', $util.formatPX(caption.bounds.width));

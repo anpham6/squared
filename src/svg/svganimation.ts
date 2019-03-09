@@ -2,7 +2,7 @@ import { SvgAnimationGroup } from './@types/object';
 
 import { FILL_MODE, INSTANCE_TYPE } from './lib/constant';
 
-const $dom = squared.lib.dom;
+const $css = squared.lib.css;
 const $util = squared.lib.util;
 
 const REGEXP_TIME = {
@@ -84,7 +84,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
             this.setAttribute('attributeName');
             this.setAttribute('to');
             this.setAttribute('fill', 'freeze');
-            const dur = $dom.getNamedItem(animationElement, 'dur');
+            const dur = $css.getNamedItem(animationElement, 'dur');
             if (dur !== '' && dur !== 'indefinite') {
                 this.duration = SvgAnimation.convertClockTime(dur);
             }
@@ -92,13 +92,15 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     public setAttribute(attr: string, equality?: string) {
-        const value = $dom.getNamedItem(this.animationElement, attr);
-        if (value !== '') {
-            if (equality !== undefined) {
-                this[attr + $util.capitalize(equality)] = value === equality;
-            }
-            else {
-                this[attr] = value;
+        if (this.animationElement) {
+            const value = $css.getNamedItem(this.animationElement, attr);
+            if (value !== '') {
+                if (equality !== undefined) {
+                    this[attr + $util.capitalize(equality)] = value === equality;
+                }
+                else {
+                    this[attr] = value;
+                }
             }
         }
     }
@@ -141,9 +143,9 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
         if (value !== 'transform' && !this.baseValue) {
             const baseElement = this.animationElement && this.animationElement.parentElement || this.element;
             if (baseElement) {
-                this.baseValue = $util.optionalAsString(baseElement, `${value}.baseVal.valueAsString`) || $dom.cssInheritAttribute(baseElement, value);
+                this.baseValue = $util.optionalAsString(baseElement, `${value}.baseVal.valueAsString`) || $css.getParentAttribute(baseElement, value);
                 if ($util.isUnit(this.baseValue)) {
-                    this.baseValue = $util.calculateUnit(this.baseValue, $dom.getFontSize(baseElement)).toString();
+                    this.baseValue = $util.calculateUnit(this.baseValue, $css.getFontSize(baseElement)).toString();
                 }
             }
         }

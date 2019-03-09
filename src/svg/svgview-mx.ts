@@ -15,10 +15,10 @@ interface AttributeData extends NumberValue<string> {
 
 type AttributeMap = ObjectMap<AttributeData[]>;
 
-const $dom = squared.lib.dom;
+const $css = squared.lib.css;
 const $util = squared.lib.util;
 
-const KEYFRAME_NAME = $dom.getKeyframeRules();
+const KEYFRAME_NAME = $css.getKeyframeRules();
 const ANIMATION_DEFAULT: StringMap = {
     'animation-delay': '0s',
     'animation-duration': '0s',
@@ -38,7 +38,7 @@ function setAttribute(element: SVGElement, attr: string, value: string) {
 }
 
 function parseAttribute(element: SVGElement, attr: string) {
-    const value = $dom.cssAttribute(element, attr);
+    const value = $css.getAttribute(element, attr);
     if (attr === 'animation-timing-function') {
         const pattern = new RegExp(REGEXP_TIMINGFUNCTION, 'g');
         let match: RegExpMatchArray | null;
@@ -63,8 +63,8 @@ function setVisible(element: SVGGraphicsElement, value: boolean) {
 }
 
 function isVisible(element: Element) {
-    const value = $dom.cssAttribute(element, 'visibility', true);
-    return value !== 'hidden' && value !== 'collapse' && $dom.cssAttribute(element, 'display', true) !== 'none';
+    const value = $css.getAttribute(element, 'visibility', true);
+    return value !== 'hidden' && value !== 'collapse' && $css.getAttribute(element, 'display', true) !== 'none';
 }
 
 function setOpacity(element: SVGGraphicsElement, value: string) {
@@ -334,7 +334,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                         }
                                         else if (keySplines[j].startsWith('step')) {
                                             if (values[j] !== '') {
-                                                const steps = SvgAnimate.convertStepTimingFunction(name, keySplines[j], keyTimes, values, j, $dom.getFontSize(element));
+                                                const steps = SvgAnimate.convertStepTimingFunction(name, keySplines[j], keyTimes, values, j, $css.getFontSize(element));
                                                 if (steps) {
                                                     const offset = keyTimes[j + 1] === 1 ? 1 : 0;
                                                     for (let k = 0; k < steps[0].length - offset; k++) {
@@ -423,7 +423,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             setOpacity(this.element, value);
         }
         get opacity() {
-            return $dom.cssAttribute(this.element, 'opacity') || '1';
+            return $css.getAttribute(this.element, 'opacity') || '1';
         }
     };
 };

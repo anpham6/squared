@@ -11,7 +11,7 @@ import $Layout = squared.base.Layout;
 
 const $const = squared.base.lib.constant;
 const $enum = squared.base.lib.enumeration;
-const $dom = squared.lib.dom;
+const $element = squared.lib.element;
 const $util = squared.lib.util;
 
 function getRowData<T extends View>(mainData: CssGridData<T>, direction: string) {
@@ -288,7 +288,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             const alignItems = node.has('alignSelf') ? node.css('alignSelf') : mainData.alignItems;
             const justifyItems = node.has('justifySelf') ? node.css('justifySelf') : mainData.justifyItems;
             if (/(start|end|center|baseline)/.test(alignItems) || /(start|end|center|baseline|left|right)/.test(justifyItems)) {
-                container = this.application.createNode($dom.createElement(node.actualParent ? node.actualParent.element : null));
+                container = this.application.createNode($element.createElement(node.actualParent ? node.actualParent.element : null));
                 container.tagName = node.tagName;
                 container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                 container.inherit(node, 'initial', 'base');

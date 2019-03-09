@@ -8,14 +8,18 @@ type XMLTagData = {
 };
 
 const TEMPLATE_ROOT = '__ROOT__';
-const REGEXP_INDENT = /^(\t+)(.*)$/;
+
 const REGEXP_CREATE = {
     ATTRIBUTE: /\s*((\w+:)?\w+="[^"]*)?{~\w+}"?/g,
     COLLECTION: /\n*\t*{%\w+}\n+/g,
     LINEBREAK: /\n\n/g
 };
-const REGEXP_OPENTAG = /\s*>$/;
-const REGEXP_CLOSETAG = /\/>\n*$/;
+const REGEXP_FORAMT = {
+    ITEM: /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g,
+    OPENTAG: /\s*>$/,
+    CLOSETAG: /\/>\n*$/
+};
+const REGEXP_INDENT = /^(\t+)(.*)$/;
 
 function replaceSectionTag(data: StringMap, value: string) {
     for (const index in data) {
@@ -203,9 +207,8 @@ export function createTemplate(templates: StringMap, data: ExternalData, format 
 
 export function formatTemplate(value: string, closeEmpty = true, char = '\t') {
     const lines: XMLTagData[] = [];
-    const pattern = /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g;
     let match: RegExpExecArray | null;
-    while ((match = pattern.exec(value)) !== null) {
+    while ((match = REGEXP_FORAMT.ITEM.exec(value)) !== null) {
         lines.push({
             tag: match[1],
             closing: !!match[2],
@@ -224,11 +227,11 @@ export function formatTemplate(value: string, closeEmpty = true, char = '\t') {
             }
             else {
                 previous++;
-                if (!REGEXP_CLOSETAG.exec(line.tag)) {
+                if (!REGEXP_FORAMT.CLOSETAG.exec(line.tag)) {
                     if (closeEmpty && line.value.trim() === '') {
                         const next = lines[i + 1];
                         if (next && next.closing && next.tagName === line.tagName) {
-                            line.tag = line.tag.replace(REGEXP_OPENTAG, ' />');
+                            line.tag = line.tag.replace(REGEXP_FORAMT.OPENTAG, ' />');
                             i++;
                         }
                         else {

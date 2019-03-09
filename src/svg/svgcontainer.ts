@@ -10,7 +10,7 @@ type SvgGroup = squared.svg.SvgGroup;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
 type SvgView = squared.svg.SvgView;
 
-const $dom = squared.lib.dom;
+const $css = squared.lib.css;
 const $util = squared.lib.util;
 
 function getNearestViewBox(instance: SvgContainer | undefined) {
@@ -24,7 +24,7 @@ function getNearestViewBox(instance: SvgContainer | undefined) {
 }
 
 function getFillPattern(element: SVGGraphicsElement, viewport?: Svg): SVGPatternElement | undefined {
-    const value = getAttributeUrl($dom.cssInheritAttribute(element, 'fill'));
+    const value = getAttributeUrl($css.getParentAttribute(element, 'fill'));
     if (value !== '') {
         if (viewport && viewport.definitions.pattern.has(value)) {
             return viewport.definitions.pattern.get(value);

@@ -13,7 +13,8 @@ import $NodeList = squared.base.NodeList;
 
 const $const = squared.base.lib.constant;
 const $enum = squared.base.lib.enumeration;
-const $dom = squared.lib.dom;
+const $css = squared.lib.css;
+const $element = squared.lib.element;
 const $util = squared.lib.util;
 
 export default class <T extends View> extends squared.base.extensions.List<T> {
@@ -93,9 +94,9 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 let top = 0;
                 let image = '';
                 if (mainData.imageSrc !== '') {
-                    const boxPosition = $dom.cssBackgroundPosition(mainData.imagePosition, node.bounds, node.fontSize);
-                    left = boxPosition.left;
-                    top = boxPosition.top;
+                    const position = $css.getBackgroundPosition(mainData.imagePosition, node.bounds, node.fontSize);
+                    left = position.left;
+                    top = position.top;
                     image = Resource.addImageUrl(mainData.imageSrc);
                 }
                 const gravity = image !== '' && !node.has('listStyleImage') || parentLeft === 0 && node.marginLeft === 0 ? '' : 'right';
@@ -170,7 +171,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     else {
                         options.android.text = mainData.ordinal;
                     }
-                    const companion = this.application.createNode($dom.createElement(node.actualParent ? node.actualParent.element : null));
+                    const companion = this.application.createNode($element.createElement(node.actualParent ? node.actualParent.element : null));
                     companion.tagName = `${node.tagName}_ORDINAL`;
                     companion.inherit(node, 'textStyle');
                     if (mainData.ordinal !== '' && !/[A-Za-z\d]+\./.test(mainData.ordinal) && companion.toInt('fontSize') > 12) {

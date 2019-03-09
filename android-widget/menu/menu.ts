@@ -7,6 +7,7 @@ type View = android.base.View;
 
 const $const = squared.base.lib.constant;
 const $enum = squared.base.lib.enumeration;
+const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 const $constA = android.lib.constant;
@@ -19,7 +20,7 @@ const VIEW_NAVIGATION = {
     GROUP: 'group'
 };
 
-const VALIDATE_ITEM = {
+const REGEXP_ITEM = {
     id: /^@\+id\/\w+$/,
     title: /^.+$/,
     titleCondensed: /^.+$/,
@@ -39,8 +40,7 @@ const VALIDATE_ITEM = {
     menuCategory: /^(container|system|secondary|alternative)$/,
     orderInCategory: /^[0-9]+$/
 };
-
-const VALIDATE_GROUP = {
+const REGEXP_GROUP = {
     id: /^@\+id\/\w+$/,
     checkableBehavior: /^(none|all|single)$/,
     visible: /^(true|false)$/,
@@ -118,7 +118,7 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
             }
             if (valid) {
                 element.querySelectorAll('NAV').forEach((item: HTMLElement) => {
-                    if ($dom.getStyle(element).display === 'none') {
+                    if ($css.getStyle(element).display === 'none') {
                         $dom.setElementCache(item, 'squaredExternalDisplay', 'none');
                         item.style.display = 'block';
                     }
@@ -193,12 +193,12 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
                 break;
             case VIEW_NAVIGATION.GROUP:
                 node.alignmentType |= $enum.NODE_ALIGNMENT.AUTO_LAYOUT;
-                parseDataSet(VALIDATE_GROUP, element, options);
+                parseDataSet(REGEXP_GROUP, element, options);
                 break;
             case VIEW_NAVIGATION.ITEM:
-                parseDataSet(VALIDATE_ITEM, element, options);
+                parseDataSet(REGEXP_ITEM, element, options);
                 if (!$util.hasValue(options.android.icon)) {
-                    const style = $dom.getStyle(element);
+                    const style = $css.getStyle(element);
                     let src = $Resource.addImageUrl((style.backgroundImage !== 'none' ? style.backgroundImage : style.background) as string, $constA.PREFIX_ANDROID.MENU);
                     if (src !== '') {
                         options.android.icon = `@drawable/${src}`;

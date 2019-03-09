@@ -1,10 +1,10 @@
-const $dom = squared.lib.dom;
+const $util = squared.lib.util;
 
 function hasUnsupportedAccess(element: SVGElement) {
     const domElement = element.parentElement instanceof HTMLElement;
     return element.tagName === 'svg' && (
-        $dom.isUserAgent($dom.USER_AGENT.SAFARI) && !domElement ||
-        $dom.isUserAgent($dom.USER_AGENT.FIREFOX) && domElement
+        $util.isUserAgent($util.USER_AGENT.SAFARI) && !domElement ||
+        $util.isUserAgent($util.USER_AGENT.FIREFOX) && domElement
     );
 }
 

@@ -7,6 +7,15 @@ import { BUILD_ANDROID } from './enumeration';
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
+const REGEXP_RTL = {
+    LEFT: /left/,
+    LEFT_UPPER: /Left/g,
+    RIGHT: /right/,
+    RIGHT_UPPER: /Right/g
+};
+const REGEXP_UNIT = /([">])(-)?(\d+(?:\.\d+)?px)(["<])/g;
+const REGEXP_VALIDSTRING = /[^\w$\-_.]/g;
+
 export function stripId(value: string) {
     return value ? value.replace(/@\+?id\//, '') : '';
 }
@@ -40,7 +49,7 @@ export function createStyleAttribute(options?: ExternalData) {
 }
 
 export function validateString(value: string) {
-    return value ? value.trim().replace(/[^\w$\-_.]/g, '_') : '';
+    return value ? value.trim().replace(REGEXP_VALIDSTRING, '_') : '';
 }
 
 export function convertUnit(value: string, dpi = 160, font = false) {
@@ -55,7 +64,7 @@ export function convertUnit(value: string, dpi = 160, font = false) {
 
 export function replaceUnit(value: string, dpi = 160, format = 'dp', font = false) {
     if (format === 'dp' || font) {
-        return value.replace(/([">])(-)?(\d+(?:\.\d+)?px)(["<])/g, (match, ...capture) => capture[0] + (capture[1] || '') + convertUnit(capture[2], dpi, font) + capture[3]);
+        return value.replace(REGEXP_UNIT, (match, ...capture) => capture[0] + (capture[1] || '') + convertUnit(capture[2], dpi, font) + capture[3]);
     }
     return value;
 }
@@ -79,10 +88,10 @@ export function calculateBias(start: number, end: number, accuracy = 4) {
 export function replaceRTL(value: string, rtl = true, api = BUILD_ANDROID.OREO) {
     if (rtl && api >= BUILD_ANDROID.JELLYBEAN_1) {
         value = value
-            .replace(/left/, 'start')
-            .replace(/Left/g, 'Start')
-            .replace(/right/, 'end')
-            .replace(/Right/g, 'End');
+            .replace(REGEXP_RTL.LEFT, 'start')
+            .replace(REGEXP_RTL.LEFT_UPPER, 'Start')
+            .replace(REGEXP_RTL.RIGHT, 'end')
+            .replace(REGEXP_RTL.RIGHT_UPPER, 'End');
     }
     return value;
 }

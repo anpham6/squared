@@ -11,7 +11,9 @@ type ToolbarThemeData = {
 
 const $const = squared.base.lib.constant;
 const $enum = squared.base.lib.enumeration;
+const $css = squared.lib.css;
 const $dom = squared.lib.dom;
+const $element = squared.lib.element;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 const $constA = android.lib.constant;
@@ -70,7 +72,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                     const result = $Resource.addImageSrcSet(<HTMLImageElement> item, $constA.PREFIX_ANDROID.MENU);
                     if (result !== '') {
                         $util.assignEmptyValue(toolbarOptions, 'app', 'navigationIcon', `@drawable/${result}`);
-                        if ($dom.getStyle(item).display !== 'none') {
+                        if ($css.getStyle(item).display !== 'none') {
                             children--;
                         }
                     }
@@ -79,7 +81,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                     const result = $Resource.addImageSrcSet(<HTMLImageElement> item, $constA.PREFIX_ANDROID.MENU);
                     if (result !== '') {
                         $util.assignEmptyValue(toolbarOptions, 'app', 'collapseIcon', `@drawable/${result}`);
-                        if ($dom.getStyle(item).display !== 'none') {
+                        if ($css.getStyle(item).display !== 'none') {
                             children--;
                         }
                     }
@@ -301,7 +303,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
     }
 
     private createPlaceholder(node: T, children: T[]) {
-        const placeholder = this.application.createNode($dom.createElement(node.actualParent ? node.actualParent.element : null, node.block));
+        const placeholder = this.application.createNode($element.createElement(node.actualParent ? node.actualParent.element : null, node.block));
         placeholder.inherit(node, 'base');
         placeholder.exclude({ resource: $enum.NODE_RESOURCE.ALL });
         placeholder.positioned = true;

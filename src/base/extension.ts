@@ -3,12 +3,12 @@ import { ExtensionDependency, ExtensionResult } from './@types/application';
 import Application from './application';
 import Node from './node';
 
-const $dom = squared.lib.dom;
+const $css = squared.lib.css;
 const $util = squared.lib.util;
 
 export default abstract class Extension<T extends Node> implements squared.base.Extension<T> {
     public static findNestedByName(element: Element | null, name: string) {
-        if ($dom.hasComputedStyle(element)) {
+        if ($css.hasComputedStyle(element)) {
             for (let i = 0; i < element.children.length; i++) {
                 const item = <HTMLElement> element.children[i];
                 if ($util.includes(item.dataset.use, name)) {
@@ -89,7 +89,7 @@ export default abstract class Extension<T extends Node> implements squared.base.
     }
 
     public condition(node: T, parent?: T) {
-        if ($dom.hasComputedStyle(node.element)) {
+        if ($css.hasComputedStyle(node.element)) {
             return node.dataset.use ? this.included(node.element) : this.tagNames.length > 0;
         }
         return false;

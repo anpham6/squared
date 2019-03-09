@@ -1,6 +1,7 @@
 import Extension from '../extension';
 import Node from '../node';
 
+const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 
 export default abstract class External<T extends Node> extends Extension<T> {
@@ -10,7 +11,7 @@ export default abstract class External<T extends Node> extends Extension<T> {
                 const display: string[] = [];
                 let current: HTMLElement | null = <HTMLElement> element;
                 while (current) {
-                    display.push($dom.getStyle(current).display as string);
+                    display.push($css.getStyle(current).display as string);
                     current.style.display = 'block';
                     current = current.parentElement;
                 }

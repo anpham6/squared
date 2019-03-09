@@ -17,7 +17,7 @@
         android:id="@+id/entry"
         android:background="@drawable/form_entry"
         android:layout_height="wrap_content"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:orientation="vertical"
         android:paddingHorizontal="@dimen/form_padding_horizontal"
         android:paddingVertical="@dimen/form_padding_vertical">
@@ -79,7 +79,7 @@
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@+id/textview_18"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol35380"
+                    android:text="@string/__symbol46930"
                     style="@style/Plaintext" />
             </RelativeLayout>
             <LinearLayout
@@ -228,7 +228,7 @@
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@+id/textview_21"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol35380"
+                    android:text="@string/__symbol46930"
                     style="@style/Plaintext" />
             </RelativeLayout>
             <LinearLayout
@@ -331,7 +331,7 @@
         </GridLayout>
         <View
             android:id="@+id/view_1"
-            android:background="@color/light_gray_1"
+            android:background="@color/lightgray_1"
             android:layout_gravity="center_horizontal"
             android:layout_height="@dimen/hr_height"
             android:layout_marginVertical="@dimen/hr_margin_vertical"
@@ -665,7 +665,7 @@
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@+id/textview_24"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol35380"
+                    android:text="@string/__symbol46930"
                     style="@style/Plaintext" />
             </RelativeLayout>
             <LinearLayout
@@ -794,7 +794,7 @@
     <string name="app_name">squared_ui</string>
     <string name="__00_inactive">00 - Inactive</string>
     <string name="__01_active">01 - Active</string>
-    <string name="__symbol35380">):</string>
+    <string name="__symbol46930">):</string>
     <string name="active">Active:</string>
     <string name="add">Add</string>
     <string name="all">All</string>
@@ -1110,14 +1110,14 @@
 
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <stroke android:width="1dp" android:color="@color/yellow_green" />
-    <solid android:color="@color/dark_blue" />
+    <stroke android:width="1dp" android:color="@color/yellowgreen" />
+    <solid android:color="@color/darkblue" />
 </shape>
 <!-- filename: res/drawable/h2_textview_1.xml -->
 
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <stroke android:width="1dp" android:color="@color/light_gray_1" />
+    <stroke android:width="1dp" android:color="@color/lightgray_1" />
     <solid android:color="@color/white" />
 </shape>
 <!-- filename: res/drawable/form_entry.xml -->
@@ -1130,13 +1130,13 @@
 
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <stroke android:width="1dp" android:color="@color/dark_gray" />
+    <stroke android:width="1dp" android:color="@color/darkgray" />
 </shape>
 <!-- filename: res/drawable/select_typeofentry.xml -->
 
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <stroke android:width="2dp" android:color="@color/white_smoke_1" />
-    <solid android:color="@color/white_smoke_1" />
+    <stroke android:width="2dp" android:color="@color/gainsboro_1" />
+    <solid android:color="@color/gainsboro_1" />
 </shape>
 <!-- filename: res/drawable/button_button_1.xml -->

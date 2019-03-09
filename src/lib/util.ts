@@ -17,12 +17,6 @@ interface UtilRegExpPattern {
     SEPARATOR: RegExp;
     ATTRIBUTE: RegExp;
     CUSTOMPROPERTY: RegExp;
-}
-
-interface UtilRegExpSingle {
-    NUMBER: RegExp;
-    SPACE: RegExp;
-    LOWERCASE: RegExp;
     PLACEHOLDER: RegExp;
 }
 
@@ -72,6 +66,13 @@ function compareObject(obj1: {}, obj2: {}, attr: string, numeric: boolean) {
     return [current1, current2];
 }
 
+export const enum USER_AGENT {
+    CHROME = 2,
+    SAFARI = 4,
+    FIREFOX = 8,
+    EDGE = 16
+}
+
 export const REGEXP_STRING: UtilRegExpString = <any> {
     URL: 'url\\("?(.+?)"?\\)',
     DECIMAL: '-?\\d+(?:.\\d+)?',
@@ -91,15 +92,47 @@ export const REGEXP_COMPILED: UtilRegExpPattern = {
     URI: /^[A-Za-z]+:\/\//,
     SEPARATOR: /\s*,\s*/,
     ATTRIBUTE: /([^\s]+)="([^"]+)"/,
-    CUSTOMPROPERTY: /^(?:var|calc)\(.+\)$/
-};
-
-export const REGEXP_SINGLE: UtilRegExpSingle = {
-    NUMBER: /\d/,
-    SPACE: /\s/,
-    LOWERCASE: /[a-z]/,
+    CUSTOMPROPERTY: /^(?:var|calc)\(.+\)$/,
     PLACEHOLDER: /{(\d+)}/
 };
+
+export function isUserAgent(value: string | number) {
+    if (typeof value === 'string') {
+        const name = value.toUpperCase();
+        value = 0;
+        if (name.indexOf('CHROME') !== -1) {
+            value |= USER_AGENT.CHROME;
+        }
+        if (name.indexOf('SAFARI') !== -1) {
+            value |= USER_AGENT.SAFARI;
+        }
+        if (name.indexOf('FIREFOX') !== -1) {
+            value |= USER_AGENT.FIREFOX;
+        }
+        if (name.indexOf('EDGE') !== -1) {
+            value |= USER_AGENT.EDGE;
+        }
+    }
+    let client: number;
+    const userAgent = navigator.userAgent;
+    if (userAgent.indexOf('Safari') !== -1 && userAgent.indexOf('Chrome') === -1) {
+        client = USER_AGENT.SAFARI;
+    }
+    else if (userAgent.indexOf('Firefox') !== -1) {
+        client = USER_AGENT.FIREFOX;
+    }
+    else if (userAgent.indexOf('Edge') !== -1) {
+        client = USER_AGENT.EDGE;
+    }
+    else {
+        client = USER_AGENT.CHROME;
+    }
+    return hasBit(value, client);
+}
+
+export function getDeviceDPI() {
+    return window.devicePixelRatio * 96;
+}
 
 export function capitalize(value: string, upper = true) {
     if (value !== '') {
@@ -237,7 +270,6 @@ export function calculate(value: string, dimension = 0, fontSize?: number) {
     if (opened === closing.length) {
         const symbol = /(\s+[+\-]\s+|\s*[*/]\s*)/;
         const equated: number[] = [];
-        let equation = value;
         let index = 0;
         while (true) {
             for (let i = 0; i < closing.length; i++) {
@@ -256,7 +288,7 @@ export function calculate(value: string, dimension = 0, fontSize?: number) {
                 if (valid) {
                     const seg: number[] = [];
                     const evaluate: string[] = [];
-                    for (let partial of equation.substring(j + 1, closing[i]).split(symbol)) {
+                    for (let partial of value.substring(j + 1, closing[i]).split(symbol)) {
                         partial = partial.trim();
                         switch (partial) {
                             case '+':
@@ -266,15 +298,18 @@ export function calculate(value: string, dimension = 0, fontSize?: number) {
                                 evaluate.push(partial);
                                 break;
                             default:
-                                const match = REGEXP_SINGLE.PLACEHOLDER.exec(partial);
+                                const match = REGEXP_COMPILED.PLACEHOLDER.exec(partial);
                                 if (match) {
                                     seg.push(equated[parseInt(match[1])]);
+                                }
+                                else if (isUnit(partial)) {
+                                    seg.push(calculateUnit(partial, fontSize));
                                 }
                                 else if (isPercent(partial)) {
                                     seg.push(parseFloat(partial) / 100 * dimension);
                                 }
-                                else if (isUnit(partial)) {
-                                    seg.push(calculateUnit(partial, fontSize));
+                                else if (isNumber(partial)) {
+                                    seg.push(parseFloat(partial));
                                 }
                                 else {
                                     return undefined;
@@ -321,8 +356,8 @@ export function calculate(value: string, dimension = 0, fontSize?: number) {
                         }
                         else {
                             equated[index] = seg[0];
-                            const partial = `{${index++}}`;
-                            equation = equation.substring(0, j) + `${partial + ' '.repeat((closing[i] + 1) - j - partial.length)}` + equation.substring(closing[i] + 1);
+                            const placeholder = `{${index++}}`;
+                            value = value.substring(0, j) + `${placeholder + ' '.repeat((closing[i] + 1) - j - placeholder.length)}` + value.substring(closing[i] + 1);
                             closing.splice(i--, 1);
                         }
                     }
@@ -367,7 +402,7 @@ export function calculateUnit(value: string, fontSize?: number) {
             case 'cm':
                 result /= 2.54;
             case 'in':
-                result *= window.devicePixelRatio * 96;
+                result *= getDeviceDPI();
                 break;
         }
         return result;

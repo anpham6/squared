@@ -887,7 +887,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                 else if (renderParent) {
                     let borderWidth = false;
                     if (this.tableElement) {
-                        borderWidth = this.css('boxSizing') === 'content-box' || $dom.isUserAgent($dom.USER_AGENT.FIREFOX | $dom.USER_AGENT.EDGE);
+                        borderWidth = this.css('boxSizing') === 'content-box' || $util.isUserAgent($util.USER_AGENT.FIREFOX | $util.USER_AGENT.EDGE);
                     }
                     else if (this.styleElement && !this.hasBit('excludeResource', $enum.NODE_RESOURCE.BOX_SPACING)) {
                         if (this.css('boxSizing') !== 'border-box' && !renderParent.tableElement) {

@@ -20,7 +20,7 @@ type SvgUse = squared.svg.SvgUse;
 type SvgUsePattern = squared.svg.SvgUsePattern;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
 
-const $dom = squared.lib.dom;
+const $css = squared.lib.css;
 const $math = squared.lib.math;
 const $util = squared.lib.util;
 
@@ -186,7 +186,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     public static drawRefit(element: SVGGraphicsElement, parent?: SvgContainer, precision?: number) {
         let value: string;
         if (SVG.path(element)) {
-            value = $dom.getNamedItem(element, 'd');
+            value = $css.getNamedItem(element, 'd');
             if (parent && parent.requireRefit()) {
                 const commands = SvgBuild.getPathCommands(value);
                 if (commands.length) {

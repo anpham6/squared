@@ -51,7 +51,7 @@ interface BitmapData {
 const $SvgBuild = squared.svg && squared.svg.SvgBuild;
 const $enum = squared.base.lib.enumeration;
 const $color = squared.lib.color;
-const $dom = squared.lib.dom;
+const $css = squared.lib.css;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
@@ -273,7 +273,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             if (value !== 'initial') {
                                 backgroundImage[j] = Resource.addImageUrl(value);
                                 if (backgroundImage[j] !== '') {
-                                    imageDimensions[j] = Resource.ASSETS.images.get($dom.cssResolveURL(value));
+                                    imageDimensions[j] = Resource.ASSETS.images.get($css.resolveURL(value));
                                     remove = false;
                                 }
                             }
@@ -303,7 +303,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                 }
                 const companion = node.companion;
-                if (companion && !companion.visible && companion.htmlElement && !$dom.cssFromParent(companion.element, 'backgroundColor')) {
+                if (companion && !companion.visible && companion.htmlElement && !$css.isInheritedStyle(companion.element, 'backgroundColor')) {
                     const boxStyle: BoxStyle = companion.data(Resource.KEY_NAME, 'boxStyle');
                     const backgroundColor = Resource.addColor(boxStyle.backgroundColor);
                     if (backgroundColor !== '') {
@@ -344,7 +344,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             rotate: false,
                             gradient: false
                         };
-                        const position = $dom.cssBackgroundPosition(backgroundPosition[i], node.bounds, node.fontSize);
+                        const position = $css.getBackgroundPosition(backgroundPosition[i], node.bounds, node.fontSize);
                         let gravity = position.horizontal === 'center' && position.vertical === 'center' ? 'center' : `${position.horizontal === 'center' ? 'center_horizontal' : position.horizontal}|${position.vertical === 'center' ? 'center_vertical' : position.vertical}`;
                         let dimension: ImageAsset | Dimension | undefined;
                         if (typeof value === 'string') {

@@ -10,6 +10,7 @@ import { INSTANCE_TYPE } from './lib/constant';
 import { SVG, getTargetElement } from './lib/util';
 
 const $color = squared.lib.color;
+const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
@@ -17,11 +18,11 @@ function getColorStop(element: SVGGradientElement) {
     const result: ColorStop[] = [];
     const stops = element.getElementsByTagName('stop');
     for (let i = 0; i < stops.length; i++) {
-        const color = $color.parseColor($dom.cssAttribute(stops[i], 'stop-color'), $dom.cssAttribute(stops[i], 'stop-opacity'));
+        const color = $color.parseColor($css.getAttribute(stops[i], 'stop-color'), $css.getAttribute(stops[i], 'stop-opacity'));
         if (color) {
             result.push({
                 color,
-                offset: parseFloat($dom.cssAttribute(stops[i], 'offset')) / 100
+                offset: parseFloat($css.getAttribute(stops[i], 'offset')) / 100
             });
         }
     }

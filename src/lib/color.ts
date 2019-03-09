@@ -24,7 +24,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 0,
             s: 0,
-            l: 41.176
+            l: 41
         }
     },
     {
@@ -38,7 +38,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 0,
             s: 0,
-            l: 41.176
+            l: 41
         }
     },
     {
@@ -52,7 +52,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 0,
             s: 0,
-            l: 50.196
+            l: 50
         }
     },
     {
@@ -66,7 +66,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 0,
             s: 0,
-            l: 50.196
+            l: 50
         }
     },
     {
@@ -80,7 +80,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 0,
             s: 0,
-            l: 66.275
+            l: 66
         }
     },
     {
@@ -94,7 +94,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 0,
             s: 0,
-            l: 66.275
+            l: 66
         }
     },
     {
@@ -108,7 +108,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 0,
             s: 0,
-            l: 75.294
+            l: 75
         }
     },
     {
@@ -122,7 +122,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 0,
             s: 0,
-            l: 82.745
+            l: 83
         }
     },
     {
@@ -136,7 +136,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 0,
             s: 0,
-            l: 82.745
+            l: 83
         }
     },
     {
@@ -150,7 +150,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 0,
             s: 0,
-            l: 86.275
+            l: 86
         }
     },
     {
@@ -164,7 +164,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 0,
             s: 0,
-            l: 96.078
+            l: 96
         }
     },
     {
@@ -191,8 +191,8 @@ const X11_CSS3: ColorResult[] = [
         },
         hsl: {
             h: 0,
-            s: 25.14,
-            l: 64.902
+            s: 25,
+            l: 65
         }
     },
     {
@@ -205,8 +205,8 @@ const X11_CSS3: ColorResult[] = [
         },
         hsl: {
             h: 0,
-            s: 53.052,
-            l: 58.235
+            s: 53,
+            l: 58
         }
     },
     {
@@ -219,8 +219,8 @@ const X11_CSS3: ColorResult[] = [
         },
         hsl: {
             h: 0,
-            s: 59.420,
-            l: 40.588
+            s: 59,
+            l: 41
         }
     },
     {
@@ -233,8 +233,8 @@ const X11_CSS3: ColorResult[] = [
         },
         hsl: {
             h: 0,
-            s: 67.925,
-            l: 41.569
+            s: 68,
+            l: 42
         }
     },
     {
@@ -247,8 +247,8 @@ const X11_CSS3: ColorResult[] = [
         },
         hsl: {
             h: 0,
-            s: 78.873,
-            l: 72.157
+            s: 79,
+            l: 72
         }
     },
     {
@@ -262,7 +262,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 0,
             s: 100,
-            l: 25.098
+            l: 25
         }
     },
     {
@@ -276,7 +276,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 0,
             s: 100,
-            l: 27.255
+            l: 27
         }
     },
     {
@@ -304,7 +304,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 0,
             s: 100,
-            l: 99.02
+            l: 99
         }
     },
     {
@@ -318,7 +318,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 6,
             s: 100,
-            l: 94.118
+            l: 94
         }
     },
     {
@@ -330,9 +330,9 @@ const X11_CSS3: ColorResult[] = [
             b: 114
         },
         hsl: {
-            h: 6.176,
-            s: 93.151,
-            l: 71.373
+            h: 6,
+            s: 93,
+            l: 71
         }
     },
     {
@@ -344,9 +344,9 @@ const X11_CSS3: ColorResult[] = [
             b: 71
         },
         hsl: {
-            h: 9.13,
+            h: 9,
             s: 100,
-            l: 63.922
+            l: 64
         }
     },
     {
@@ -358,9 +358,9 @@ const X11_CSS3: ColorResult[] = [
             b: 122
         },
         hsl: {
-            h: 15.135,
-            s: 71.613,
-            l: 69.608
+            h: 15,
+            s: 72,
+            l: 70
         }
     },
     {
@@ -372,9 +372,9 @@ const X11_CSS3: ColorResult[] = [
             b: 80
         },
         hsl: {
-            h: 16.114,
+            h: 16,
             s: 100,
-            l: 65.686
+            l: 66
         }
     },
     {
@@ -386,7 +386,7 @@ const X11_CSS3: ColorResult[] = [
             b: 0
         },
         hsl: {
-            h: 16.235,
+            h: 16,
             s: 100,
             l: 50
         }
@@ -400,9 +400,9 @@ const X11_CSS3: ColorResult[] = [
             b: 122
         },
         hsl: {
-            h: 17.143,
+            h: 17,
             s: 100,
-            l: 73.922
+            l: 74
         }
     },
     {
@@ -414,9 +414,9 @@ const X11_CSS3: ColorResult[] = [
             b: 45
         },
         hsl: {
-            h: 19.304,
-            s: 56.098,
-            l: 40.196
+            h: 19,
+            s: 56,
+            l: 40
         }
     },
     {
@@ -428,9 +428,9 @@ const X11_CSS3: ColorResult[] = [
             b: 238
         },
         hsl: {
-            h: 24.706,
+            h: 25,
             s: 100,
-            l: 96.667
+            l: 97
         }
     },
     {
@@ -444,7 +444,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 25,
             s: 75,
-            l: 47.059
+            l: 47
         }
     },
     {
@@ -457,8 +457,8 @@ const X11_CSS3: ColorResult[] = [
         },
         hsl: {
             h: 25,
-            s: 75.95,
-            l: 30.98
+            s: 76,
+            l: 31
         }
     },
     {
@@ -470,9 +470,9 @@ const X11_CSS3: ColorResult[] = [
             b: 96
         },
         hsl: {
-            h: 27.568,
-            s: 87.058,
-            l: 66.667
+            h: 28,
+            s: 87,
+            l: 67
         }
     },
     {
@@ -484,9 +484,9 @@ const X11_CSS3: ColorResult[] = [
             b: 185
         },
         hsl: {
-            h: 28.286,
+            h: 28,
             s: 100,
-            l: 86.275
+            l: 86
         }
     },
     {
@@ -498,9 +498,9 @@ const X11_CSS3: ColorResult[] = [
             b: 63
         },
         hsl: {
-            h: 29.577,
-            s: 58.678,
-            l: 52.549
+            h: 30,
+            s: 59,
+            l: 53
         }
     },
     {
@@ -513,8 +513,8 @@ const X11_CSS3: ColorResult[] = [
         },
         hsl: {
             h: 30,
-            s: 66.667,
-            l: 94.118
+            s: 67,
+            l: 94
         }
     },
     {
@@ -526,9 +526,9 @@ const X11_CSS3: ColorResult[] = [
             b: 196
         },
         hsl: {
-            h: 32.542,
+            h: 33,
             s: 100,
-            l: 88.431
+            l: 88
         }
     },
     {
@@ -540,7 +540,7 @@ const X11_CSS3: ColorResult[] = [
             b: 0
         },
         hsl: {
-            h: 32.942,
+            h: 33,
             s: 100,
             l: 50
         }
@@ -554,8 +554,8 @@ const X11_CSS3: ColorResult[] = [
             b: 135
         },
         hsl: {
-            h: 33.793,
-            s: 56.863,
+            h: 34,
+            s: 57,
             l: 70
         }
     },
@@ -568,9 +568,9 @@ const X11_CSS3: ColorResult[] = [
             b: 215
         },
         hsl: {
-            h: 34.286,
-            s: 77.778,
-            l: 91.176
+            h: 34,
+            s: 78,
+            l: 91
         }
     },
     {
@@ -582,9 +582,9 @@ const X11_CSS3: ColorResult[] = [
             b: 140
         },
         hsl: {
-            h: 34.286,
-            s: 43.77,
-            l: 68.627
+            h: 34,
+            s: 44,
+            l: 69
         }
     },
     {
@@ -596,9 +596,9 @@ const X11_CSS3: ColorResult[] = [
             b: 173
         },
         hsl: {
-            h: 35.854,
+            h: 36,
             s: 100,
-            l: 83.922
+            l: 84
         }
     },
     {
@@ -612,7 +612,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 36,
             s: 100,
-            l: 90.196
+            l: 90
         }
     },
     {
@@ -624,9 +624,9 @@ const X11_CSS3: ColorResult[] = [
             b: 213
         },
         hsl: {
-            h: 37.143,
+            h: 37,
             s: 100,
-            l: 91.765
+            l: 92
         }
     },
     {
@@ -638,9 +638,9 @@ const X11_CSS3: ColorResult[] = [
             b: 181
         },
         hsl: {
-            h: 38.108,
+            h: 38,
             s: 100,
-            l: 85.49
+            l: 85
         }
     },
     {
@@ -652,7 +652,7 @@ const X11_CSS3: ColorResult[] = [
             b: 0
         },
         hsl: {
-            h: 38.824,
+            h: 39,
             s: 100,
             l: 50
         }
@@ -666,9 +666,9 @@ const X11_CSS3: ColorResult[] = [
             b: 179
         },
         hsl: {
-            h: 39.091,
-            s: 76.744,
-            l: 83.137
+            h: 39,
+            s: 77,
+            l: 83
         }
     },
     {
@@ -680,9 +680,9 @@ const X11_CSS3: ColorResult[] = [
             b: 230
         },
         hsl: {
-            h: 39.130,
-            s: 85.185,
-            l: 94.706
+            h: 39,
+            s: 85,
+            l: 95
         }
     },
     {
@@ -696,7 +696,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 40,
             s: 100,
-            l: 97.059
+            l: 97
         }
     },
     {
@@ -708,9 +708,9 @@ const X11_CSS3: ColorResult[] = [
             b: 11
         },
         hsl: {
-            h: 42.659,
-            s: 88.718,
-            l: 38.235
+            h: 43,
+            s: 89,
+            l: 38
         }
     },
     {
@@ -722,9 +722,9 @@ const X11_CSS3: ColorResult[] = [
             b: 32
         },
         hsl: {
-            h: 42.903,
-            s: 74.4,
-            l: 49.02
+            h: 43,
+            s: 74,
+            l: 49
         }
     },
     {
@@ -738,7 +738,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 48,
             s: 100,
-            l: 93.137
+            l: 93
         }
     },
     {
@@ -750,7 +750,7 @@ const X11_CSS3: ColorResult[] = [
             b: 0
         },
         hsl: {
-            h: 50.588,
+            h: 51,
             s: 100,
             l: 50
         }
@@ -766,7 +766,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 54,
             s: 100,
-            l: 90.196
+            l: 90
         }
     },
     {
@@ -779,8 +779,8 @@ const X11_CSS3: ColorResult[] = [
         },
         hsl: {
             h: 54,
-            s: 76.923,
-            l: 74.51
+            s: 77,
+            l: 75
         }
     },
     {
@@ -792,8 +792,8 @@ const X11_CSS3: ColorResult[] = [
             b: 170
         },
         hsl: {
-            h: 54.706,
-            s: 66.667,
+            h: 55,
+            s: 67,
             l: 80
         }
     },
@@ -806,9 +806,9 @@ const X11_CSS3: ColorResult[] = [
             b: 107
         },
         hsl: {
-            h: 55.61,
-            s: 38.318,
-            l: 58.039
+            h: 56,
+            s: 38,
+            l: 58
         }
     },
     {
@@ -821,8 +821,8 @@ const X11_CSS3: ColorResult[] = [
         },
         hsl: {
             h: 60,
-            s: 55.556,
-            l: 91.176
+            s: 56,
+            l: 91
         }
     },
     {
@@ -836,7 +836,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 60,
             s: 80,
-            l: 90.196
+            l: 90
         }
     },
     {
@@ -850,7 +850,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 60,
             s: 100,
-            l: 25.098
+            l: 25
         }
     },
     {
@@ -878,7 +878,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 60,
             s: 100,
-            l: 93.922
+            l: 94
         }
     },
     {
@@ -892,7 +892,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 60,
             s: 100,
-            l: 97.059
+            l: 97
         }
     },
     {
@@ -904,9 +904,9 @@ const X11_CSS3: ColorResult[] = [
             b: 35
         },
         hsl: {
-            h: 79.626,
-            s: 60.452,
-            l: 34.706
+            h: 80,
+            s: 60,
+            l: 35
         }
     },
     {
@@ -918,8 +918,8 @@ const X11_CSS3: ColorResult[] = [
             b: 50
         },
         hsl: {
-            h: 79.742,
-            s: 60.784,
+            h: 80,
+            s: 61,
             l: 50
         }
     },
@@ -933,8 +933,8 @@ const X11_CSS3: ColorResult[] = [
         },
         hsl: {
             h: 82,
-            s: 38.961,
-            l: 30.196
+            s: 39,
+            l: 30
         }
     },
     {
@@ -946,9 +946,9 @@ const X11_CSS3: ColorResult[] = [
             b: 47
         },
         hsl: {
-            h: 83.654,
+            h: 84,
             s: 100,
-            l: 59.216
+            l: 59
         }
     },
     {
@@ -960,7 +960,7 @@ const X11_CSS3: ColorResult[] = [
             b: 0
         },
         hsl: {
-            h: 90.118,
+            h: 90,
             s: 100,
             l: 50
         }
@@ -974,9 +974,9 @@ const X11_CSS3: ColorResult[] = [
             b: 0
         },
         hsl: {
-            h: 90.476,
+            h: 90,
             s: 100,
-            l: 49.412
+            l: 49
         }
     },
     {
@@ -989,8 +989,8 @@ const X11_CSS3: ColorResult[] = [
         },
         hsl: {
             h: 120,
-            s: 25.14,
-            l: 64.902
+            s: 25,
+            l: 65
         }
     },
     {
@@ -1003,8 +1003,8 @@ const X11_CSS3: ColorResult[] = [
         },
         hsl: {
             h: 120,
-            s: 60.694,
-            l: 33.922
+            s: 61,
+            l: 34
         }
     },
     {
@@ -1017,7 +1017,7 @@ const X11_CSS3: ColorResult[] = [
         },
         hsl: {
             h: 120,
-            s: 60.784,
+            s: 61,
             l: 50
         }
     },
@@ -1031,8 +1031,8 @@ const X11_CSS3: ColorResult[] = [
         },
         hsl: {
             h: 120,
-            s: 73.438,
-            l: 74.902
+            s: 73,
+            l: 75
         }
     },
     {
@@ -1045,8 +1045,8 @@ const X11_CSS3: ColorResult[] = [
         },
         hsl: {
             h: 120,
-            s: 92.523,
-            l: 79.02
+            s: 93,
+            l: 79
         }
     },
     {
@@ -1060,7 +1060,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 120,
             s: 100,
-            l: 19.608
+            l: 20
         }
     },
     {
@@ -1074,7 +1074,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 120,
             s: 100,
-            l: 25.098
+            l: 25
         }
     },
     {
@@ -1102,7 +1102,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 120,
             s: 100,
-            l: 97.059
+            l: 97
         }
     },
     {
@@ -1114,9 +1114,9 @@ const X11_CSS3: ColorResult[] = [
             b: 87
         },
         hsl: {
-            h: 146.452,
-            s: 50.27,
-            l: 36.275
+            h: 146,
+            s: 50,
+            l: 36
         }
     },
     {
@@ -1128,9 +1128,9 @@ const X11_CSS3: ColorResult[] = [
             b: 113
         },
         hsl: {
-            h: 146.723,
-            s: 49.791,
-            l: 46.863
+            h: 147,
+            s: 50,
+            l: 47
         }
     },
     {
@@ -1142,7 +1142,7 @@ const X11_CSS3: ColorResult[] = [
             b: 127
         },
         hsl: {
-            h: 149.882,
+            h: 150,
             s: 100,
             l: 50
         }
@@ -1158,7 +1158,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 150,
             s: 100,
-            l: 98.04
+            l: 98
         }
     },
     {
@@ -1170,9 +1170,9 @@ const X11_CSS3: ColorResult[] = [
             b: 154
         },
         hsl: {
-            h: 156.96,
+            h: 157,
             s: 100,
-            l: 49.02
+            l: 49
         }
     },
     {
@@ -1184,9 +1184,9 @@ const X11_CSS3: ColorResult[] = [
             b: 170
         },
         hsl: {
-            h: 159.612,
-            s: 50.739,
-            l: 60.196
+            h: 160,
+            s: 51,
+            l: 60
         }
     },
     {
@@ -1198,9 +1198,9 @@ const X11_CSS3: ColorResult[] = [
             b: 212
         },
         hsl: {
-            h: 159.844,
+            h: 160,
             s: 100,
-            l: 74.902
+            l: 75
         }
     },
     {
@@ -1213,8 +1213,8 @@ const X11_CSS3: ColorResult[] = [
         },
         hsl: {
             h: 174,
-            s: 72.072,
-            l: 56.471
+            s: 72,
+            l: 56
         }
     },
     {
@@ -1226,9 +1226,9 @@ const X11_CSS3: ColorResult[] = [
             b: 170
         },
         hsl: {
-            h: 176.712,
-            s: 69.524,
-            l: 41.176
+            h: 177,
+            s: 70,
+            l: 41
         }
     },
     {
@@ -1240,9 +1240,9 @@ const X11_CSS3: ColorResult[] = [
             b: 204
         },
         hsl: {
-            h: 177.81,
-            s: 59.825,
-            l: 55.098
+            h: 178,
+            s: 60,
+            l: 55
         }
     },
     {
@@ -1255,8 +1255,8 @@ const X11_CSS3: ColorResult[] = [
         },
         hsl: {
             h: 180,
-            s: 25.397,
-            l: 24.706
+            s: 25,
+            l: 25
         }
     },
     {
@@ -1269,8 +1269,8 @@ const X11_CSS3: ColorResult[] = [
         },
         hsl: {
             h: 180,
-            s: 25.397,
-            l: 24.706
+            s: 25,
+            l: 25
         }
     },
     {
@@ -1283,8 +1283,8 @@ const X11_CSS3: ColorResult[] = [
         },
         hsl: {
             h: 180,
-            s: 64.948,
-            l: 80.98
+            s: 65,
+            l: 81
         }
     },
     {
@@ -1298,7 +1298,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 180,
             s: 100,
-            l: 25.098
+            l: 25
         }
     },
     {
@@ -1312,7 +1312,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 180,
             s: 100,
-            l: 27.255
+            l: 27
         }
     },
     {
@@ -1354,7 +1354,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 180,
             s: 100,
-            l: 93.922
+            l: 94
         }
     },
     {
@@ -1368,7 +1368,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 180,
             s: 100,
-            l: 97.059
+            l: 97
         }
     },
     {
@@ -1380,9 +1380,9 @@ const X11_CSS3: ColorResult[] = [
             b: 209
         },
         hsl: {
-            h: 180.861,
+            h: 181,
             s: 100,
-            l: 40.98
+            l: 41
         }
     },
     {
@@ -1394,8 +1394,8 @@ const X11_CSS3: ColorResult[] = [
             b: 160
         },
         hsl: {
-            h: 181.846,
-            s: 25.49,
+            h: 182,
+            s: 25,
             l: 50
         }
     },
@@ -1408,9 +1408,9 @@ const X11_CSS3: ColorResult[] = [
             b: 230
         },
         hsl: {
-            h: 186.667,
-            s: 51.923,
-            l: 79.608
+            h: 187,
+            s: 52,
+            l: 80
         }
     },
     {
@@ -1422,9 +1422,9 @@ const X11_CSS3: ColorResult[] = [
             b: 230
         },
         hsl: {
-            h: 194.737,
-            s: 53.271,
-            l: 79.02
+            h: 195,
+            s: 53,
+            l: 79
         }
     },
     {
@@ -1436,7 +1436,7 @@ const X11_CSS3: ColorResult[] = [
             b: 255
         },
         hsl: {
-            h: 195.059,
+            h: 195,
             s: 100,
             l: 50
         }
@@ -1450,9 +1450,9 @@ const X11_CSS3: ColorResult[] = [
             b: 235
         },
         hsl: {
-            h: 197.4,
-            s: 71.429,
-            l: 72.549
+            h: 197,
+            s: 71,
+            l: 73
         }
     },
     {
@@ -1464,9 +1464,9 @@ const X11_CSS3: ColorResult[] = [
             b: 250
         },
         hsl: {
-            h: 202.957,
+            h: 203,
             s: 92,
-            l: 75.49
+            l: 75
         }
     },
     {
@@ -1478,9 +1478,9 @@ const X11_CSS3: ColorResult[] = [
             b: 180
         },
         hsl: {
-            h: 207.273,
+            h: 207,
             s: 44,
-            l: 49.02
+            l: 49
         }
     },
     {
@@ -1494,7 +1494,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 208,
             s: 100,
-            l: 97.059
+            l: 97
         }
     },
     {
@@ -1506,9 +1506,9 @@ const X11_CSS3: ColorResult[] = [
             b: 255
         },
         hsl: {
-            h: 209.6,
+            h: 210,
             s: 100,
-            l: 55.882
+            l: 56
         }
     },
     {
@@ -1521,8 +1521,8 @@ const X11_CSS3: ColorResult[] = [
         },
         hsl: {
             h: 210,
-            s: 12.598,
-            l: 50.196
+            s: 13,
+            l: 50
         }
     },
     {
@@ -1535,8 +1535,8 @@ const X11_CSS3: ColorResult[] = [
         },
         hsl: {
             h: 210,
-            s: 12.598,
-            l: 50.196
+            s: 13,
+            l: 50
         }
     },
     {
@@ -1549,8 +1549,8 @@ const X11_CSS3: ColorResult[] = [
         },
         hsl: {
             h: 210,
-            s: 14.286,
-            l: 53.333
+            s: 14,
+            l: 53
         }
     },
     {
@@ -1563,8 +1563,8 @@ const X11_CSS3: ColorResult[] = [
         },
         hsl: {
             h: 210,
-            s: 14.286,
-            l: 53.333
+            s: 14,
+            l: 53
         }
     },
     {
@@ -1576,9 +1576,9 @@ const X11_CSS3: ColorResult[] = [
             b: 222
         },
         hsl: {
-            h: 213.913,
-            s: 41.071,
-            l: 78.039
+            h: 214,
+            s: 41,
+            l: 78
         }
     },
     {
@@ -1590,9 +1590,9 @@ const X11_CSS3: ColorResult[] = [
             b: 237
         },
         hsl: {
-            h: 218.54,
-            s: 79.191,
-            l: 66.078
+            h: 219,
+            s: 79,
+            l: 66
         }
     },
     {
@@ -1605,8 +1605,8 @@ const X11_CSS3: ColorResult[] = [
         },
         hsl: {
             h: 225,
-            s: 72.727,
-            l: 56.863
+            s: 73,
+            l: 57
         }
     },
     {
@@ -1619,8 +1619,8 @@ const X11_CSS3: ColorResult[] = [
         },
         hsl: {
             h: 240,
-            s: 63.504,
-            l: 26.863
+            s: 64,
+            l: 27
         }
     },
     {
@@ -1633,8 +1633,8 @@ const X11_CSS3: ColorResult[] = [
         },
         hsl: {
             h: 240,
-            s: 66.667,
-            l: 94.118
+            s: 67,
+            l: 94
         }
     },
     {
@@ -1648,7 +1648,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 240,
             s: 100,
-            l: 25.098
+            l: 25
         }
     },
     {
@@ -1662,7 +1662,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 240,
             s: 100,
-            l: 27.255
+            l: 27
         }
     },
     {
@@ -1676,7 +1676,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 240,
             s: 100,
-            l: 40.196
+            l: 40
         }
     },
     {
@@ -1704,7 +1704,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 240,
             s: 100,
-            l: 98.627
+            l: 99
         }
     },
     {
@@ -1716,9 +1716,9 @@ const X11_CSS3: ColorResult[] = [
             b: 205
         },
         hsl: {
-            h: 248.348,
-            s: 53.488,
-            l: 57.843
+            h: 248,
+            s: 53,
+            l: 58
         }
     },
     {
@@ -1730,9 +1730,9 @@ const X11_CSS3: ColorResult[] = [
             b: 139
         },
         hsl: {
-            h: 248.462,
+            h: 248,
             s: 39,
-            l: 39.216
+            l: 39
         }
     },
     {
@@ -1744,9 +1744,9 @@ const X11_CSS3: ColorResult[] = [
             b: 238
         },
         hsl: {
-            h: 248.507,
-            s: 79.762,
-            l: 67.059
+            h: 249,
+            s: 80,
+            l: 67
         }
     },
     {
@@ -1758,9 +1758,9 @@ const X11_CSS3: ColorResult[] = [
             b: 219
         },
         hsl: {
-            h: 259.626,
-            s: 59.777,
-            l: 64.902
+            h: 260,
+            s: 60,
+            l: 65
         }
     },
     {
@@ -1772,9 +1772,9 @@ const X11_CSS3: ColorResult[] = [
             b: 226
         },
         hsl: {
-            h: 271.148,
-            s: 75.934,
-            l: 52.745
+            h: 271,
+            s: 76,
+            l: 53
         }
     },
     {
@@ -1786,9 +1786,9 @@ const X11_CSS3: ColorResult[] = [
             b: 130
         },
         hsl: {
-            h: 274.615,
+            h: 275,
             s: 100,
-            l: 25.49
+            l: 25
         }
     },
     {
@@ -1800,9 +1800,9 @@ const X11_CSS3: ColorResult[] = [
             b: 204
         },
         hsl: {
-            h: 280.13,
-            s: 60.63,
-            l: 49.804
+            h: 280,
+            s: 61,
+            l: 50
         }
     },
     {
@@ -1814,9 +1814,9 @@ const X11_CSS3: ColorResult[] = [
             b: 211
         },
         hsl: {
-            h: 282.085,
+            h: 282,
             s: 100,
-            l: 41.373
+            l: 41
         }
     },
     {
@@ -1828,9 +1828,9 @@ const X11_CSS3: ColorResult[] = [
             b: 211
         },
         hsl: {
-            h: 288.095,
-            s: 58.879,
-            l: 58.039
+            h: 288,
+            s: 59,
+            l: 58
         }
     },
     {
@@ -1843,8 +1843,8 @@ const X11_CSS3: ColorResult[] = [
         },
         hsl: {
             h: 300,
-            s: 24.272,
-            l: 79.804
+            s: 24,
+            l: 80
         }
     },
     {
@@ -1857,8 +1857,8 @@ const X11_CSS3: ColorResult[] = [
         },
         hsl: {
             h: 300,
-            s: 47.287,
-            l: 74.706
+            s: 47,
+            l: 75
         }
     },
     {
@@ -1871,8 +1871,8 @@ const X11_CSS3: ColorResult[] = [
         },
         hsl: {
             h: 300,
-            s: 76.056,
-            l: 72.157
+            s: 76,
+            l: 72
         }
     },
     {
@@ -1886,7 +1886,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 300,
             s: 100,
-            l: 25.098
+            l: 25
         }
     },
     {
@@ -1900,7 +1900,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 300,
             s: 100,
-            l: 27.255
+            l: 27
         }
     },
     {
@@ -1940,9 +1940,9 @@ const X11_CSS3: ColorResult[] = [
             b: 214
         },
         hsl: {
-            h: 302.264,
-            s: 58.889,
-            l: 64.706
+            h: 302,
+            s: 59,
+            l: 65
         }
     },
     {
@@ -1954,9 +1954,9 @@ const X11_CSS3: ColorResult[] = [
             b: 133
         },
         hsl: {
-            h: 322.247,
-            s: 80.91,
-            l: 43.137
+            h: 322,
+            s: 81,
+            l: 43
         }
     },
     {
@@ -1968,9 +1968,9 @@ const X11_CSS3: ColorResult[] = [
             b: 147
         },
         hsl: {
-            h: 327.574,
+            h: 328,
             s: 100,
-            l: 53.922
+            l: 54
         }
     },
     {
@@ -1984,7 +1984,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 330,
             s: 100,
-            l: 70.588
+            l: 71
         }
     },
     {
@@ -1998,7 +1998,7 @@ const X11_CSS3: ColorResult[] = [
         hsl: {
             h: 340,
             s: 100,
-            l: 97.059
+            l: 97
         }
     },
     {
@@ -2010,9 +2010,9 @@ const X11_CSS3: ColorResult[] = [
             b: 147
         },
         hsl: {
-            h: 340.374,
-            s: 59.777,
-            l: 64.902
+            h: 340,
+            s: 60,
+            l: 65
         }
     },
     {
@@ -2025,8 +2025,8 @@ const X11_CSS3: ColorResult[] = [
         },
         hsl: {
             h: 348,
-            s: 83.333,
-            l: 47.059
+            s: 83,
+            l: 47
         }
     },
     {
@@ -2038,9 +2038,9 @@ const X11_CSS3: ColorResult[] = [
             b: 203
         },
         hsl: {
-            h: 349.524,
+            h: 350,
             s: 100,
-            l: 87.647
+            l: 88
         }
     },
     {
@@ -2052,12 +2052,16 @@ const X11_CSS3: ColorResult[] = [
             b: 193
         },
         hsl: {
-            h: 350.959,
+            h: 351,
             s: 100,
-            l: 85.686
+            l: 86
         }
     }
 ];
+
+for (const color of X11_CSS3) {
+    Object.freeze(color);
+}
 
 const CACHE_COLORDATA: ObjectMap<ColorData> = {};
 
@@ -2070,7 +2074,7 @@ const parseOpacity = (value: string) => parseFloat(value.trim() || '1') * 255;
 export function findColorName(value: string) {
     for (const color of X11_CSS3) {
         if (color.name === value.toLowerCase()) {
-            return { ...color };
+            return color;
         }
     }
     return undefined;
@@ -2085,7 +2089,7 @@ export function findColorShade(value: string) {
         for (let i = 0; i < X11_CSS3.length; i++) {
             const color = X11_CSS3[i];
             if (color.value === value) {
-                return { ...color };
+                return color;
             }
             else if (baseline !== -1) {
                 if (baseline === color.hsl.h) {
@@ -2098,7 +2102,7 @@ export function findColorShade(value: string) {
             }
         }
         if (result.length === 1) {
-            return { ...result[0] };
+            return result[0];
         }
         else if (result.length > 1) {
             const total = hsl.l + hsl.s;
@@ -2114,10 +2118,10 @@ export function findColorShade(value: string) {
                     index = i;
                 }
             }
-            return { ...result[index] };
+            return result[index];
         }
         else {
-            return { ...X11_CSS3[X11_CSS3.length - 1] };
+            return X11_CSS3[X11_CSS3.length - 1];
         }
     }
     return undefined;
@@ -2281,9 +2285,9 @@ export function convertHSLA(value: RGBA) {
         h /= 6;
     }
     return <HSLA> {
-        h: h * 360,
-        s: s * 100,
-        l: l * 100,
+        h: Math.round(h * 360),
+        s: Math.round(s * 100),
+        l: Math.round(l * 100),
         a: value.a / 255
     };
 }
@@ -2297,5 +2301,5 @@ export function formatRGBA(value: RGBA) {
 }
 
 export function formatHSLA(value: HSLA) {
-    return `hsl${value.a < 255 ? 'a' : ''}(${Math.round(value.h)}, ${Math.round(value.s)}%, ${Math.round(value.l)}%${value.a < 255 ? `, ${(value.a / 255).toPrecision(2)}` : ''})`;
+    return `hsl${value.a < 255 ? 'a' : ''}(${value.h}, ${value.s}%, ${value.l}%${value.a < 255 ? `, ${(value.a / 255).toPrecision(2)}` : ''})`;
 }

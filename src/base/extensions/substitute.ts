@@ -5,7 +5,7 @@ import Node from '../node';
 
 import { EXT_NAME } from '../lib/constant';
 
-const $dom = squared.lib.dom;
+const $css = squared.lib.css;
 
 export default class Substitute<T extends Node> extends Extension<T> {
     constructor(
@@ -19,7 +19,7 @@ export default class Substitute<T extends Node> extends Extension<T> {
     }
 
     public processNode(node: T, parent: T): ExtensionResult<T> {
-        const data = $dom.getDataSet(node.element, this.name);
+        const data = $css.getDataSet(<HTMLElement> node.element, this.name);
         let output = '';
         if (data.tag) {
             node.setControlType(data.tag);

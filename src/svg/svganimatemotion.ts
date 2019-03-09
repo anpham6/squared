@@ -3,7 +3,7 @@ import SvgAnimate from './svganimate';
 import { INSTANCE_TYPE } from './lib/constant';
 import { SVG, getTargetElement } from './lib/util';
 
-const $dom = squared.lib.dom;
+const $css = squared.lib.css;
 const $util = squared.lib.util;
 
 export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.SvgAnimateMotion {
@@ -18,7 +18,7 @@ export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.
         super(element, animationElement);
         if (animationElement) {
             this.setAttribute('path');
-            const rotate = $dom.getNamedItem(animationElement, 'rotate');
+            const rotate = $css.getNamedItem(animationElement, 'rotate');
             switch (rotate) {
                 case 'auto':
                     this.rotateAuto = true;
@@ -31,7 +31,7 @@ export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.
                     break;
             }
             if (this.keyTimes.length) {
-                const keyPoints = $dom.getNamedItem(animationElement, 'keyPoints');
+                const keyPoints = $css.getNamedItem(animationElement, 'keyPoints');
                 if (keyPoints !== '') {
                     const points = SvgAnimate.toFractionList(keyPoints);
                     if (points.length === this.keyTimes.length) {

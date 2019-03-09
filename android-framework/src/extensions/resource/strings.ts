@@ -3,7 +3,7 @@ import { ResourceStringsOptions } from '../../@types/extension';
 import Resource from '../../resource';
 
 const $enum = squared.base.lib.enumeration;
-const $dom = squared.lib.dom;
+const $css = squared.lib.css;
 const $xml = squared.lib.xml;
 
 export default class ResourceStrings<T extends android.base.View> extends squared.base.Extension<T> {
@@ -54,7 +54,7 @@ export default class ResourceStrings<T extends android.base.View> extends square
                     if (stored) {
                         const renderParent = node.renderParent as T;
                         if (renderParent && renderParent.layoutRelative) {
-                            if (node.alignParent('left') && !$dom.cssParent(node.element, 'whiteSpace', 'pre', 'pre-wrap')) {
+                            if (node.alignParent('left') && !$css.isParentStyle(node.element, 'whiteSpace', 'pre', 'pre-wrap')) {
                                 const value = node.textContent;
                                 let leadingSpace = 0;
                                 for (let i = 0; i < value.length; i++) {

@@ -10,7 +10,9 @@ import Resource from './resource';
 
 import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } from './lib/enumeration';
 
+const $css = squared.lib.css;
 const $dom = squared.lib.dom;
+const $element = squared.lib.element;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
@@ -212,7 +214,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         }
         for (const value of elements) {
             const element = typeof value === 'string' ? document.getElementById(value) : value;
-            if ($dom.hasComputedStyle(element)) {
+            if ($css.hasComputedStyle(element)) {
                 this.parseElements.add(element);
             }
         }
@@ -1804,13 +1806,13 @@ export default class Application<T extends Node> implements squared.base.Applica
     protected insertNode(element: Element, parent?: T) {
         let node: T | undefined;
         if (element.nodeName.charAt(0) === '#' && element.nodeName === '#text') {
-            if ($dom.isPlainText(element, true) || $dom.cssParent(element, 'whiteSpace', 'pre', 'pre-wrap')) {
+            if ($element.isPlainText(element, true) || $css.isParentStyle(element, 'whiteSpace', 'pre', 'pre-wrap')) {
                 node = this.createNode(element);
                 if (parent) {
                     node.inherit(parent, 'textStyle');
                 }
                 else {
-                    node.css('whiteSpace', $dom.getStyle(element.parentElement).whiteSpace || 'normal');
+                    node.css('whiteSpace', $css.getStyle(element.parentElement).whiteSpace || 'normal');
                 }
                 node.cssApply({
                     position: 'static',
@@ -1840,7 +1842,7 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     protected conditionElement(element: Element) {
-        if ($dom.hasComputedStyle(element)) {
+        if ($css.hasComputedStyle(element)) {
             if ($dom.hasVisibleRect(element, true) || element.dataset.use) {
                 return true;
             }
@@ -1848,7 +1850,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 let current = element.parentElement;
                 let valid = true;
                 while (current) {
-                    if ($dom.getStyle(current).display === 'none') {
+                    if ($css.getStyle(current).display === 'none') {
                         valid = false;
                         break;
                     }
@@ -1865,7 +1867,7 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
         }
         else {
-            return $dom.isPlainText(element);
+            return $element.isPlainText(element);
         }
     }
 
@@ -1916,7 +1918,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                                 case 'height':
                                                 case 'min-height':
                                                 case 'max-height':
-                                                    valid = compareRange(operation, attr.indexOf('width') !== -1 ? window.innerWidth : window.innerHeight, $util.calculateUnit(value, $util.convertInt($dom.getStyle(document.body).fontSize as string)));
+                                                    valid = compareRange(operation, attr.indexOf('width') !== -1 ? window.innerWidth : window.innerHeight, $util.calculateUnit(value, $util.convertInt($css.getStyle(document.body).fontSize as string)));
                                                     break;
                                                 case 'orientation':
                                                     valid = value === 'portrait' && window.innerWidth <= window.innerHeight || value === 'landscape' && window.innerWidth > window.innerHeight;
@@ -1931,7 +1933,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                                     else if (value.endsWith('dppx') || value.endsWith('x')) {
                                                         resolution *= 96;
                                                     }
-                                                    valid = compareRange(operation, $dom.getDeviceDPI(), resolution);
+                                                    valid = compareRange(operation, $util.getDeviceDPI(), resolution);
                                                     break;
                                                 case 'grid':
                                                     valid = value === '0';
@@ -1990,24 +1992,24 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     private applyStyleRule(item: CSSStyleRule) {
-        const clientFirefox = $dom.isUserAgent($dom.USER_AGENT.FIREFOX);
+        const clientFirefox = $util.isUserAgent($util.USER_AGENT.FIREFOX);
         const fromRule: string[] = [];
         for (const attr of Array.from(item.style)) {
             fromRule.push($util.convertCamelCase(attr));
         }
         document.querySelectorAll(item.selectorText).forEach((element: HTMLElement) => {
-            const style = $dom.getStyle(element);
+            const style = $css.getStyle(element);
             const fontSize = $util.calculateUnit(style.fontSize as string);
             const styleMap: StringMap = {};
             for (const attr of fromRule) {
-                const value = $dom.checkStyleAttribute(element, attr, item.style[attr], style, fontSize);
+                const value = $css.checkStyleValue(element, attr, item.style[attr], style, fontSize);
                 if (value) {
                     styleMap[attr] = value;
                 }
             }
             if (this.userSettings.preloadImages && $util.hasValue(styleMap.backgroundImage) && styleMap.backgroundImage !== 'initial') {
                 for (const value of styleMap.backgroundImage.split($util.REGEXP_COMPILED.SEPARATOR)) {
-                    const uri = $dom.cssResolveURL(value.trim());
+                    const uri = $css.resolveURL(value.trim());
                     if (uri !== '' && !this.session.image.has(uri)) {
                         this.session.image.set(uri, { width: 0, height: 0, uri });
                     }

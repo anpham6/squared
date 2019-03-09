@@ -7,7 +7,7 @@ import { RESERVED_JAVA } from './lib/constant';
 
 const $Resource = squared.base.Resource;
 const $color = squared.lib.color;
-const $dom = squared.lib.dom;
+const $css = squared.lib.css;
 const $math = squared.lib.math;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
@@ -69,7 +69,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
         }
         switch (gradient.type) {
             case 'radial': {
-                const position = $dom.cssBackgroundPosition((<RadialGradient> gradient).position[0], dimension, gradient.fontSize, !hasStop);
+                const position = $css.getBackgroundPosition((<RadialGradient> gradient).position[0], dimension, gradient.fontSize, !hasStop);
                 if (hasStop) {
                     result.gradientRadius = dimension.width.toString();
                     result.centerX = position.left.toString();
@@ -146,7 +146,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
             }
             case 'conic': {
                 result.type = 'sweep';
-                const position = $dom.cssBackgroundPosition((<ConicGradient> gradient).position[0], <DOMRect> { width: dimension.width * 2, height: dimension.height * 2 }, gradient.fontSize, !hasStop);
+                const position = $css.getBackgroundPosition((<ConicGradient> gradient).position[0], <DOMRect> { width: dimension.width * 2, height: dimension.height * 2 }, gradient.fontSize, !hasStop);
                 if (hasStop) {
                     result.centerX = position.left.toString();
                     result.centerY = position.top.toString();
@@ -378,7 +378,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
     }
 
     public static addImageUrl(value: string, prefix = '') {
-        value = $dom.cssResolveURL(value) || $util.resolvePath(value);
+        value = $css.resolveURL(value) || $util.resolvePath(value);
         return value !== '' ? this.addImage({ mdpi: value }, prefix) : '';
     }
 
@@ -387,19 +387,14 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
             color = $color.parseColor(color, undefined, transparency);
         }
         if (color && (!color.transparent || transparency)) {
-            const keyName = color.opaque ? color.valueAsARGB : color.value;
+            const keyName = color.opaque || color.transparent ? color.valueAsARGB : color.value;
             let colorName = STORED.colors.get(keyName);
             if (colorName) {
                 return colorName;
             }
             const shade = $color.findColorShade(color.value);
             if (shade) {
-                if (color.value === shade.value && !color.opaque) {
-                    colorName = shade.name;
-                }
-                else {
-                    colorName = Resource.generateId('color', shade.name);
-                }
+                colorName = keyName === shade.value ? shade.name : Resource.generateId('color', shade.name);
                 STORED.colors.set(keyName, colorName);
                 return colorName;
             }

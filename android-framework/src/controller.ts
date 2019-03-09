@@ -17,7 +17,9 @@ import $NodeList = squared.base.NodeList;
 
 const $enum = squared.base.lib.enumeration;
 const $color = squared.lib.color;
+const $css = squared.lib.css;
 const $dom = squared.lib.dom;
+const $element = squared.lib.element;
 const $math = squared.lib.math;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
@@ -225,14 +227,16 @@ function parseAttributes<T extends View>(node: T) {
     if (node.dir === 'rtl') {
         node.android(node.length ? 'layoutDirection' : 'textDirection', 'rtl');
     }
-    const dataset = $dom.getDataSet(node.element, 'android');
-    for (const name in dataset) {
-        if (REGEXP_DATASETATTR.test(name)) {
-            const obj = $util.capitalize(name.substring(4), false);
-            for (const values of dataset[name].split(';')) {
-                const [key, value] = values.split('::');
-                if (key && value) {
-                    node.attr(obj, key, value);
+    if (node.styleElement) {
+        const dataset = $css.getDataSet(<HTMLElement> node.element, 'android');
+        for (const name in dataset) {
+            if (REGEXP_DATASETATTR.test(name)) {
+                const obj = $util.capitalize(name.substring(4), false);
+                for (const values of dataset[name].split(';')) {
+                    const [key, value] = values.split('::');
+                    if (key && value) {
+                        node.attr(obj, key, value);
+                    }
                 }
             }
         }
@@ -458,7 +462,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             }
             else {
                 layout.init();
-                if ($dom.hasLineBreak(node.element, true)) {
+                if (node.element && $element.hasLineBreak(node.element, true)) {
                     layout.setType(CONTAINER_NODE.LINEAR, $enum.NODE_ALIGNMENT.VERTICAL, $enum.NODE_ALIGNMENT.UNKNOWN);
                 }
                 else if (this.checkConstraintFloat(layout)) {
@@ -888,7 +892,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     if (!node.pageFlow && node.left < 0 || node.top < 0) {
                         const absoluteParent = node.absoluteParent;
                         if (absoluteParent && absoluteParent.css('overflow') === 'hidden') {
-                            const container = this.application.createNode($dom.createElement(node.actualParent ? node.actualParent.element : null));
+                            const container = this.application.createNode($element.createElement(node.actualParent ? node.actualParent.element : null));
                             container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                             container.inherit(node, 'base');
                             container.exclude({
@@ -1300,7 +1304,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     public createNodeWrapper(node: T, parent?: T, controlName?: string, containerType?: number) {
-        const container = this.application.createNode($dom.createElement(node.actualParent ? node.actualParent.element : null, node.block));
+        const container = this.application.createNode($element.createElement(node.actualParent ? node.actualParent.element : null, node.block));
         if (node.documentRoot) {
             container.documentRoot = true;
             node.documentRoot = false;
@@ -1358,7 +1362,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         })());
         const wrapWidth = boxWidth * this.localSettings.relative.boxWidthWordWrapPercent;
         const checkLineWrap = node.css('whiteSpace') !== 'nowrap';
-        const firefoxEdge = $dom.isUserAgent($dom.USER_AGENT.FIREFOX | $dom.USER_AGENT.EDGE);
+        const firefoxEdge = $util.isUserAgent($util.USER_AGENT.FIREFOX | $util.USER_AGENT.EDGE);
         const rows: T[][] = [];
         const rangeMultiLine = new Set<T>();
         let alignmentMultiLine = false;
@@ -1400,7 +1404,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         alignSibling = '';
                     }
                     const viewGroup = item.groupParent && !item.hasAlign($enum.NODE_ALIGNMENT.SEGMENTED);
-                    siblings = !viewGroup && item.element && item.inlineVertical && previous.inlineVertical ? $dom.getElementsBetween(previous.element, item.element, true) : [];
+                    siblings = !viewGroup && item.element && item.inlineVertical && previous.inlineVertical ? $dom.getElementsBetweenSiblings(previous.element, item.element, true) : [];
                     const startNewRow = (() => {
                         if (item.textElement) {
                             let connected = false;
@@ -1408,11 +1412,11 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                 if (i === 1 && item.plainText && !previous.rightAligned) {
                                     connected = siblings.length === 0 && !/\s+$/.test(previous.textContent) && !/^\s+/.test(item.textContent);
                                 }
-                                if (checkLineWrap && !connected && (rangeMultiLine.has(previous) || previous.multiline && $dom.hasLineBreak(previous.element, false, true))) {
+                                if (checkLineWrap && !connected && (rangeMultiLine.has(previous) || previous.multiline && $element.hasLineBreak(<Element> previous.element, false, true))) {
                                     return true;
                                 }
                             }
-                            if (checkLineWrap && !connected && (checkWidthWrap() || item.multiline && $dom.hasLineBreak(item.element) || item.preserveWhiteSpace && /^\s*\n+/.test(item.textContent))) {
+                            if (checkLineWrap && !connected && (checkWidthWrap() || item.multiline && $element.hasLineBreak(<Element> item.element) || item.preserveWhiteSpace && /^\s*\n+/.test(item.textContent))) {
                                 return true;
                             }
                         }
@@ -1430,7 +1434,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             !item.floating && (
                                 previous.blockStatic ||
                                 previousSiblings.some(sibling => sibling.lineBreak || sibling.excluded && sibling.blockStatic) ||
-                                siblings.some(element => $dom.isLineBreak(element))
+                                siblings.some(element => $element.isLineBreak(element))
                             ) ||
                             cleared.has(item)
                        ))
@@ -1469,7 +1473,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     rowPreviousLeft = item;
                 }
                 let previousOffset = 0;
-                if (siblings.length && !siblings.some(element => !!$dom.getElementAsNode(element) || $dom.isLineBreak(element))) {
+                if (siblings.length && !siblings.some(element => !!$dom.getElementAsNode(element) || $element.isLineBreak(element))) {
                     const betweenStart = $dom.getRangeClientRect(siblings[0]);
                     const betweenEnd = siblings.length > 1 ? $dom.getRangeClientRect(siblings[siblings.length - 1]) : null;
                     if (!betweenStart.multiline && (betweenEnd === null || !betweenEnd.multiline)) {
@@ -1796,7 +1800,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     if (aboveEnd) {
                         nodes.push(aboveEnd);
                         if (chain.element) {
-                            $util.concatArray(nodes, $util.flatMap($dom.getElementsBetween(aboveEnd.element, chain.element), element => $dom.getElementAsNode<T>(element) as T));
+                            $util.concatArray(nodes, $util.flatMap($dom.getElementsBetweenSiblings(aboveEnd.element, chain.element), element => $dom.getElementAsNode<T>(element) as T));
                         }
                     }
                     else {

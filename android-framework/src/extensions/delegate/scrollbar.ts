@@ -5,7 +5,7 @@ import View from '../../view';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 const $enum = squared.base.lib.enumeration;
-const $dom = squared.lib.dom;
+const $element = squared.lib.element;
 const $xml = squared.lib.xml;
 
 const SCROLL_HORIZONTAL = 'HorizontalScrollView';
@@ -47,7 +47,7 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
             node.overflow = overflowType;
         }
         for (let i = 0; i < overflow.length; i++) {
-            const container = this.application.createNode(i === 0 ? <Element> node.element : $dom.createElement(node.actualParent ? node.actualParent.element : null, node.block));
+            const container = this.application.createNode(i === 0 ? <Element> node.element : $element.createElement(node.actualParent ? node.actualParent.element : null, node.block));
             container.setControlType(overflow[i], CONTAINER_NODE.BLOCK);
             if (i === 0) {
                 container.inherit(node, 'initial', 'base', 'styleMap');

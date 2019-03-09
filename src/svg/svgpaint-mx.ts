@@ -7,7 +7,7 @@ type SvgUse = squared.svg.SvgUse;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
 
 const $color = squared.lib.color;
-const $dom = squared.lib.dom;
+const $css = squared.lib.css;
 const $util = squared.lib.util;
 
 const REGEXP_CLIPPATH: ObjectMap<RegExp> = {
@@ -65,7 +65,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                             return;
                         }
                         else if (d && d.length) {
-                            const fontSize = $dom.getFontSize(this.element);
+                            const fontSize = $css.getFontSize(this.element);
                             const boxRect = SvgBuild.parseBoxRect(d);
                             const width = boxRect.right - boxRect.left;
                             const height = boxRect.bottom - boxRect.top;
@@ -183,7 +183,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     this[attr] = '';
                                     break;
                                 case 'currentcolor':
-                                    color = $color.parseColor(this.color || $dom.cssAttribute(this.element, attr, true));
+                                    color = $color.parseColor(this.color || $css.getAttribute(this.element, attr, true));
                                     break;
                                 default:
                                     color = $color.parseColor(value);
@@ -200,7 +200,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
         }
 
         public getAttribute(attr: string, computed = false, inherited = true) {
-            let value = $dom.cssAttribute(this.element, attr, computed);
+            let value = $css.getAttribute(this.element, attr, computed);
             if (inherited && !$util.isString(value)) {
                 if (this.patternParent) {
                     switch (attr) {
@@ -213,7 +213,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                 }
                 let current = this.useParent || this.parent;
                 while (current) {
-                    value = $dom.cssAttribute(current.element, attr);
+                    value = $css.getAttribute(current.element, attr);
                     if ($util.isString(value)) {
                         break;
                     }
@@ -225,7 +225,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
 
         public convertUnit(value: string) {
             if ($util.isUnit(value)) {
-                return $util.convertUnit(value, 0, $dom.getFontSize(this.element)).toString();
+                return $util.convertUnit(value, 0, $css.getFontSize(this.element)).toString();
             }
             else if ($util.isPercent(value)) {
                 return $util.convertUnit(value, this.element.getBoundingClientRect().width).toString();

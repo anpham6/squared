@@ -7,13 +7,33 @@ import { APP_SECTION, BOX_STANDARD, CSS_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE
 
 type T = Node;
 
+const $css = squared.lib.css;
 const $dom = squared.lib.dom;
+const $element = squared.lib.element;
 const $util = squared.lib.util;
 
 const INHERIT_ALIGNMENT = ['position', 'top', 'right', 'bottom', 'left', 'display', 'verticalAlign', 'cssFloat', 'clear', 'zIndex'];
 const INHERIT_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
 const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
 const CSS_SPACING_VALUES = Array.from(CSS_SPACING.values());
+
+function hasFreeFormText(element: Element, whiteSpace = true) {
+    function findFreeForm(elements: NodeListOf<ChildNode> | Element[]): boolean {
+        for (let i = 0; i < elements.length; i++) {
+            const child = <Element> elements[i];
+            if (child.nodeName === '#text') {
+                if ($element.isPlainText(child, whiteSpace) || $css.isParentStyle(child, 'whiteSpace', 'pre', 'pre-wrap') && child.textContent && child.textContent !== '') {
+                    return true;
+                }
+            }
+            else if (findFreeForm(child.childNodes)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    return findFreeForm(element.nodeName === '#text' ? [element] : element.childNodes);
+}
 
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
     public alignmentType = 0;
@@ -96,14 +116,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         const element = <HTMLElement> this._element;
         if (element) {
             $dom.setElementCache(element, 'node', this);
-            this.style = $dom.getElementCache(element, 'style') || $dom.getStyle(element, false);
+            this.style = $dom.getElementCache(element, 'style') || $css.getStyle(element, false);
         }
         if (this.styleElement) {
             const styleMap = $dom.getElementCache(element, 'styleMap') || {};
             const fontSize = $util.convertInt(this.style.fontSize as string);
             for (let attr of Array.from(element.style)) {
                 attr = $util.convertCamelCase(attr);
-                const value = $dom.checkStyleAttribute(element, attr, element.style[attr], this.style, fontSize);
+                const value = $css.checkStyleValue(element, attr, element.style[attr], this.style, fontSize);
                 if (value !== '') {
                     styleMap[attr] = value;
                 }
@@ -976,7 +996,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get styleElement() {
-        return $dom.hasComputedStyle(this._element);
+        return $css.hasComputedStyle(this._element);
     }
 
     get naturalElement() {
@@ -1231,7 +1251,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     case 'relative':
                         return this.toInt('top') === 0 && this.toInt('right') === 0 && this.toInt('bottom') === 0 && this.toInt('left') === 0;
                     case 'inherit':
-                        const position = this._element ? $dom.cssInheritAttribute(this._element.parentElement, 'position') : '';
+                        const position = this._element ? $css.getParentAttribute(this._element.parentElement, 'position') : '';
                         return position !== '' && !(position === 'absolute' || position === 'fixed');
                     default:
                         return true;
@@ -1359,7 +1379,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get inline() {
         if (this._cached.inline === undefined) {
             const value = this.display;
-            this._cached.inline = value === 'inline' || (value === 'initial' || value === 'unset') && $dom.ELEMENT_INLINE.includes(this.tagName);
+            this._cached.inline = value === 'inline' || (value === 'initial' || value === 'unset') && $element.ELEMENT_INLINE.includes(this.tagName);
         }
         return this._cached.inline;
     }
@@ -1395,7 +1415,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     case 'TEXTAREA':
                         break;
                     default:
-                        if ($dom.hasFreeFormText(element)) {
+                        if (hasFreeFormText(element)) {
                             value = true;
                             for (let i = 0; i < element.children.length; i++) {
                                 const node = $dom.getElementAsNode<T>(element.children[i]);
@@ -1416,7 +1436,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get block() {
         if (this._cached.block === undefined) {
             const value = this.display;
-            this._cached.block = value === 'block' || value === 'list-item' || value === 'initial' && $dom.ELEMENT_BLOCK.includes(this.tagName);
+            this._cached.block = value === 'block' || value === 'list-item' || value === 'initial' && $element.ELEMENT_BLOCK.includes(this.tagName);
         }
         return this._cached.block;
     }

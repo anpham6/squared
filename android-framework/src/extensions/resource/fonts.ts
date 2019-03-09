@@ -12,7 +12,6 @@ type TagNameMap = ObjectMap<StyleAttribute[]>;
 type NodeStyleMap = ObjectMap<string[]>;
 
 const $enum = squared.base.lib.enumeration;
-const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 const FONT_ANDROID = {
@@ -78,7 +77,7 @@ const FONT_STYLE = {
     'backgroundColor': 'android:background="@color/{0}"'
 };
 
-if ($dom.isUserAgent($dom.USER_AGENT.EDGE)) {
+if ($util.isUserAgent($util.USER_AGENT.EDGE)) {
     FONTREPLACE_ANDROID['consolas'] = 'monospace';
 }
 

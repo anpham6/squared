@@ -9,7 +9,9 @@ import NodeList from './nodelist';
 import { NODE_RESOURCE } from './lib/enumeration';
 
 const $color = squared.lib.color;
+const $css = squared.lib.css;
 const $dom = squared.lib.dom;
+const $element = squared.lib.element;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
@@ -166,10 +168,10 @@ function replaceWhiteSpace<T extends Node>(node: T, element: Element, value: str
                 .replace(/\s+/g, ' ');
             break;
         default:
-            if ($dom.isLineBreak(<Element> element.previousSibling)) {
+            if (element.previousSibling && $element.isLineBreak(<Element> element.previousSibling)) {
                 value = value.replace(/^\s+/, '');
             }
-            if ($dom.isLineBreak(<Element> element.nextSibling)) {
+            if (element.nextSibling && $element.isLineBreak(<Element> element.nextSibling)) {
                 value = value.replace(/\s+$/, '');
             }
             return [value, false];
@@ -348,7 +350,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                     break;
                                 case 'inherit':
                                 case 'currentcolor':
-                                    borderColor = $dom.cssInheritStyle(node.element, `${attr}Color`);
+                                    borderColor = $css.getInheritedStyle(node.element, `${attr}Color`);
                                     break;
                             }
                             const style = node.css(`${attr}Style`) || 'none';
@@ -386,7 +388,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                             break;
                         }
                         case 'backgroundColor':
-                            if (!node.has('backgroundColor') && (value === node.cssAscend('backgroundColor', false, true) || node.documentParent.visible && $dom.cssFromParent(node.element, 'backgroundColor'))) {
+                            if (!node.has('backgroundColor') && (value === node.cssAscend('backgroundColor', false, true) || node.documentParent.visible && $css.isInheritedStyle(node.element, 'backgroundColor'))) {
                                 boxStyle.backgroundColor = '';
                             }
                             else {
@@ -533,7 +535,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                 let fontFamily = node.css('fontFamily');
                 let fontSize = node.css('fontSize');
                 let fontWeight = node.css('fontWeight');
-                if ($dom.isUserAgent($dom.USER_AGENT.EDGE) && !node.has('fontFamily')) {
+                if ($util.isUserAgent($util.USER_AGENT.EDGE) && !node.has('fontFamily')) {
                     switch (node.tagName) {
                         case 'TT':
                         case 'CODE':
@@ -640,7 +642,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                             if (element.tagName === 'CODE') {
                                 value = replaceExcluded(element, 'innerHTML');
                             }
-                            else if ($dom.hasLineBreak(element, true)) {
+                            else if ($element.hasLineBreak(element, true)) {
                                 value = replaceExcluded(element, 'innerHTML')
                                     .replace(/\s*<br[^>]*>\s*/g, '\\n')
                                     .replace(/(<([^>]+)>)/ig, '');
@@ -686,7 +688,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                     previousSibling.block ||
                                     previousSibling.lineBreak ||
                                     previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
-                                    node.multiline && $dom.hasLineBreak(element)) ? '' : '&#160;'
+                                    node.multiline && $element.hasLineBreak(element)) ? '' : '&#160;'
                                 );
                                 value = value.replace(/\s+$/, node.display === 'table-cell' || nextSibling && nextSibling.lineBreak || node.blockStatic ? '' : '&#160;');
                             }
