@@ -9,10 +9,10 @@ declare global {
             function findColorShade(value: string): ColorResult | undefined;
             function parseColor(value: string, opacity?: string, transparency?: boolean): ColorData | undefined;
             function reduceColor(value: string, percent: number): ColorData | undefined;
-            function convertHex(...values: string[] | number[]): string;
+            function getHexCode(...values: number[]): string;
+            function convertHex(value: RGBA): string;
             function convertRGBA(value: string): RGBA | undefined;
-            function convertHSLA(value: RGBA): HSL;
-            function formatHex(value: RGB): string;
+            function convertHSLA(value: RGBA): HSLA;
             function formatRGBA(value: RGBA): string;
             function formatHSLA(value: HSLA): string;
         }
@@ -31,6 +31,7 @@ declare global {
             function getAttribute(element: Element, attr: string, computed?: boolean): string;
             function getParentAttribute(element: Element | null, attr: string): string;
             function getNamedItem(element: Element | null, attr: string): string;
+            function calculateVar(element: Element, value: string, attr?: string, dimension?: number): number;
             function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number, percent?: boolean): RectPosition;
             function resolveURL(value: string): string;
         }

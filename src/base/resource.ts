@@ -15,9 +15,9 @@ const $element = squared.lib.element;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
-const REGEXP_COLORSTOP = `(?:\\s*(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[a-zA-Z\\d]{3,}|[a-z]+)\\s*(\\d+%|${$util.REGEXP_STRING.DEGREE}|${$util.REGEXP_STRING.UNIT})?,?\\s*)`;
+const REGEXP_COLORSTOP = `(?:\\s*(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[a-zA-Z\\d]{3,}|[a-z]+)\\s*(\\d+%|${$util.REGEXP_STRING.DEGREE}|${$util.REGEXP_STRING.UNIT}|(?:calc(\\(.+\\))(?=,)|${$util.REGEXP_STRING.CALC}))?,?\\s*)`;
 const REGEXP_POSITION = /(.+?)?\s*at (.+?)$/;
-const REGEXP_BACKGROUNDIMAGE = `(?:initial|url\\("?.+?"?\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|circle|ellipse|closest-side|closest-corner|farthest-side|farthest-corner)?(?:\\s*at [\\w %]+)?),?\\s*(${REGEXP_COLORSTOP}+)\\))`;
+const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\("?.+?"?\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|circle|ellipse|closest-side|closest-corner|farthest-side|farthest-corner)?(?:\\s*at [\\w %]+)?),?\\s*(${REGEXP_COLORSTOP}+)\\))`, 'g');
 
 function replaceExcluded<T extends Node>(element: HTMLElement, attr: string) {
     let value: string = element[attr];
@@ -59,8 +59,14 @@ function parseColorStops<T extends Node>(node: T, gradient: Gradient, value: str
                 if ($util.isPercent(match[2])) {
                     item.offset = parseFloat(match[2]) / 100;
                 }
-                else if (gradient.repeating && $util.isUnit(match[2])) {
-                    item.offset = node.calculateUnit(match[2], gradient.horizontal, false) / (gradient.horizontal ? width : height);
+                else if (gradient.repeating) {
+                    const dimension = gradient.horizontal ? width : height;
+                    if ($util.isUnit(match[2])) {
+                        item.offset = node.calculateUnit(match[2], gradient.horizontal, false) / dimension;
+                    }
+                    else if ($util.isCalc(match[2])) {
+                        item.offset = $util.calculate(match[7], dimension, node.fontSize) / dimension;
+                    }
                 }
             }
             if (result.length === 0) {
@@ -400,10 +406,9 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                             if (value !== 'none' && !node.hasBit('excludeResource', NODE_RESOURCE.IMAGE_SOURCE)) {
                                 const images: (string | Gradient)[] = [];
                                 const opacity = node.css('opacity');
-                                const pattern = new RegExp(REGEXP_BACKGROUNDIMAGE, 'g');
                                 let match: RegExpExecArray | null;
                                 let i = 0;
-                                while ((match = pattern.exec(value)) !== null) {
+                                while ((match = REGEXP_BACKGROUNDIMAGE.exec(value)) !== null) {
                                     const [complete, repeating, type, direction, colorStop] = match;
                                     if (complete === 'initial' || complete.startsWith('url')) {
                                         images.push(complete);

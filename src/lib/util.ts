@@ -6,12 +6,15 @@ interface UtilRegExpString {
     PERCENT: string;
     DEGREE: string;
     LENGTH: string;
+    CALC: string;
+    VAR: string;
 }
 
 interface UtilRegExpPattern {
     UNIT: RegExp;
     DECIMAL: RegExp;
     PERCENT: RegExp;
+    CALC: RegExp;
     URL: RegExp;
     URI: RegExp;
     SEPARATOR: RegExp;
@@ -29,7 +32,8 @@ const NUMERALS = [
 
 const REGEXP_UNDERSCORE = /([a-z][A-Z])/g;
 const REGEXP_WORD = /[^\w]+/g;
-const REGEXP_WORD_DASH = /[^a-zA-Z\d]+/g;
+const REGEXP_WORDDASH = /[^a-zA-Z\d]+/g;
+const REGEXP_CALCSIGN = /(\s+[+\-]\s+|\s*[*/]\s*)/;
 
 function compareObject(obj1: {}, obj2: {}, attr: string, numeric: boolean) {
     const namespaces = attr.split('.');
@@ -77,7 +81,9 @@ export const REGEXP_STRING: UtilRegExpString = <any> {
     URL: 'url\\("?(.+?)"?\\)',
     DECIMAL: '-?\\d+(?:.\\d+)?',
     ZERO_ONE: '0(?:\\.\\d+)?|1(?:\\.0+)?',
-    PERCENT: '\\d+(\\.\\d+)?%'
+    PERCENT: '\\d+(\\.\\d+)?%',
+    CALC: 'calc(\\(.+\\))',
+    VAR: 'var\\((--[A-Za-z0-9\\-]+)\\)'
 };
 
 REGEXP_STRING.UNIT = `(${REGEXP_STRING.DECIMAL})(px|em|ch|pc|pt|vw|vh|vmin|vmax|mm|cm|in)`;
@@ -88,6 +94,7 @@ export const REGEXP_COMPILED: UtilRegExpPattern = {
     UNIT: new RegExp(`^${REGEXP_STRING.UNIT}$`),
     DECIMAL: new RegExp(`^${REGEXP_STRING.DECIMAL}$`),
     PERCENT: new RegExp(`^${REGEXP_STRING.PERCENT}$`),
+    CALC: new RegExp(`^${REGEXP_STRING.CALC}$`),
     URL: new RegExp(REGEXP_STRING.URL),
     URI: /^[A-Za-z]+:\/\//,
     SEPARATOR: /\s*,\s*/,
@@ -168,7 +175,7 @@ export function convertCamelCase(value: string, char = '-') {
 }
 
 export function convertWord(value: string, dash = false) {
-    return dash ? value.trim().replace(REGEXP_WORD_DASH, '_') : value.replace(REGEXP_WORD, '_');
+    return dash ? value.trim().replace(REGEXP_WORDDASH, '_') : value.replace(REGEXP_WORD, '_');
 }
 
 export function convertInt(value: string) {
@@ -268,7 +275,6 @@ export function calculate(value: string, dimension = 0, fontSize?: number) {
         }
     }
     if (opened === closing.length) {
-        const symbol = /(\s+[+\-]\s+|\s*[*/]\s*)/;
         const equated: number[] = [];
         let index = 0;
         while (true) {
@@ -288,7 +294,7 @@ export function calculate(value: string, dimension = 0, fontSize?: number) {
                 if (valid) {
                     const seg: number[] = [];
                     const evaluate: string[] = [];
-                    for (let partial of value.substring(j + 1, closing[i]).split(symbol)) {
+                    for (let partial of value.substring(j + 1, closing[i]).split(REGEXP_CALCSIGN)) {
                         partial = partial.trim();
                         switch (partial) {
                             case '+':
@@ -376,6 +382,8 @@ export function calculateUnit(value: string, fontSize?: number) {
     if (match) {
         let result = parseFloat(match[1]);
         switch (match[2]) {
+            case 'px':
+                return result;
             case 'em':
             case 'ch':
                 result *= fontSize || 16;
@@ -384,6 +392,13 @@ export function calculateUnit(value: string, fontSize?: number) {
                 result *= 12;
             case 'pt':
                 result *= 4 / 3;
+                break;
+            case 'mm':
+                result /= 10;
+            case 'cm':
+                result /= 2.54;
+            case 'in':
+                result *= getDeviceDPI();
                 break;
             case 'vw':
                 result *= window.innerWidth / 100;
@@ -396,13 +411,6 @@ export function calculateUnit(value: string, fontSize?: number) {
                 break;
             case 'vmax':
                 result *= Math.max(window.innerWidth, window.innerHeight) / 100;
-                break;
-            case 'mm':
-                result /= 10;
-            case 'cm':
-                result /= 2.54;
-            case 'in':
-                result *= getDeviceDPI();
                 break;
         }
         return result;
@@ -459,6 +467,10 @@ export function isUnit(value: string) {
 
 export function isPercent(value: string) {
     return REGEXP_COMPILED.PERCENT.test(value);
+}
+
+export function isCalc(value: string) {
+    return REGEXP_COMPILED.CALC.test(value);
 }
 
 export function isEqual(source: any, values: any) {

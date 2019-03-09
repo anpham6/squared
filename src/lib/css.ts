@@ -1,9 +1,10 @@
 import { getElementAsNode, getElementCache, setElementCache } from './dom';
-import { REGEXP_COMPILED, calculateUnit, capitalize, convertCamelCase, convertPX, convertUnit, formatPercent, formatPX, isPercent, isUnit, resolvePath } from './util';
+import { REGEXP_COMPILED, REGEXP_STRING, calculate, calculateUnit, capitalize, convertCamelCase, convertPX, convertUnit, formatPercent, formatPX, isPercent, isUnit, resolvePath } from './util';
 
 type T = squared.base.Node;
 
 const REGEXP_KEYFRAMERULE = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
+const REGEXP_VAR = new RegExp(`${REGEXP_STRING.VAR}`, 'g');
 
 function convertPercent(value: string, dimension: number, fontSize?: number) {
     return isPercent(value) ? parseFloat(value) / 100 : calculateUnit(value, fontSize) / dimension;
@@ -232,6 +233,26 @@ export function getParentAttribute(element: Element | null, attr: string) {
         current = current.parentElement;
     }
     return value;
+}
+
+export function calculateVar(element: HTMLElement, value: string, attr?: string, dimension?: number) {
+    const style = getComputedStyle(element);
+    let result = value;
+    let match: RegExpMatchArray | null;
+    while ((match = REGEXP_VAR.exec(value)) !== null) {
+        const propertyValue = style.getPropertyValue(match[1]).trim();
+        if (propertyValue !== '') {
+            result = result.replace(match[0], propertyValue);
+        }
+        else {
+            return undefined;
+        }
+    }
+    if (attr && !dimension) {
+        const rect = (element.parentElement || element).getBoundingClientRect();
+        dimension = attr.toLowerCase().indexOf('height') !== -1 ? rect.height : rect.width;
+    }
+    return calculate(result, dimension, getFontSize(element));
 }
 
 export function getNamedItem(element: Element | null, attr: string) {

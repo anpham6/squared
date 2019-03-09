@@ -82,12 +82,12 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                         case 'stroke': {
                             const current = <ColorData> currentValue[0];
                             const next = <ColorData> nextValue[0];
-                            const rgb = $color.convertHex(
+                            const rgb = $color.getHexCode(
                                 SvgAnimate.getSplitValue(current.rgba.r, next.rgba.r, percent),
                                 SvgAnimate.getSplitValue(current.rgba.g, next.rgba.g, percent),
                                 SvgAnimate.getSplitValue(current.rgba.b, next.rgba.b, percent)
                             );
-                            const a = $color.convertHex(SvgAnimate.getSplitValue(current.rgba.a, next.rgba.a, percent));
+                            const a = $color.getHexCode(SvgAnimate.getSplitValue(current.rgba.a, next.rgba.a, percent));
                             value.push(`#${rgb + (a !== 'FF' ? a : '')}`);
                             break;
                         }
