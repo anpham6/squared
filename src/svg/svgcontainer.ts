@@ -69,6 +69,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         let precision: number | undefined;
         let initPath = true;
         if (options) {
+            options = { ...options };
             element = options.symbolElement || options.patternElement || options.element || this.element;
             precision = options.precision;
             if (options.initPath === false) {

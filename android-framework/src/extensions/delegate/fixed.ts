@@ -29,7 +29,7 @@ function reduceContainerWidth<T extends View>(node: T, value: string, offset: nu
             }
         }
     }
-    else if ($util.isUnit(value)) {
+    else if ($util.isLength(value)) {
         const width = parseInt(value) - offset;
         if (width > 0) {
             return $util.formatPX(width);

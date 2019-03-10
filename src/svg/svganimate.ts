@@ -45,14 +45,14 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 if ($util.isNumber(values[index])) {
                     currentValue = [parseFloat(values[index])];
                 }
-                else if ($util.isUnit(values[index])) {
-                    currentValue = [$util.calculateUnit(values[index], fontSize)];
+                else if ($util.isLength(values[index])) {
+                    currentValue = [$util.parseUnit(values[index], fontSize)];
                 }
                 if ($util.isNumber(values[index + 1])) {
                     nextValue = [parseFloat(values[index + 1])];
                 }
-                else if ($util.isUnit(values[index + 1])) {
-                    nextValue = [$util.calculateUnit(values[index + 1], fontSize)];
+                else if ($util.isLength(values[index + 1])) {
+                    nextValue = [$util.parseUnit(values[index + 1], fontSize)];
                 }
                 break;
         }
@@ -241,7 +241,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
 
     public convertToValues(keyTimes?: number[]) {
-        if (this.to !== '') {
+        if (this.to) {
             this.values = [this.from, this.to];
             this.keyTimes = keyTimes && keyTimes.length === 2 && this.keyTimes[0] === 0 && this.keyTimes[1] <= 1 ? keyTimes : [0, 1];
             if (this.from === '') {
@@ -295,7 +295,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     set delay(value) {
         super.delay = value;
         const end = $css.getNamedItem(this.animationElement, 'end');
-        if (end !== '') {
+        if (end) {
             const endTime = $util.sortNumber($util.replaceMap<string, number>(end.split(';'), time => SvgAnimation.convertClockTime(time)))[0];
             if (!isNaN(endTime) && (this.iterationCount === -1 || this.duration > 0 && endTime < this.duration * this.iterationCount)) {
                 if (this.delay > endTime) {

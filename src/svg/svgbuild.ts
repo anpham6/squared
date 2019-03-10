@@ -259,13 +259,14 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         if (commands.length) {
             let points = SvgBuild.extractPathPoints(commands);
             if (points.length) {
-                if (transforms && transforms.length) {
-                    points = SvgBuild.applyTransforms(transforms, points, companion && TRANSFORM.origin(companion.element));
+                const transformed = transforms && transforms.length > 0;
+                if (transformed) {
+                    points = SvgBuild.applyTransforms(<SvgTransform[]> transforms, points, companion && TRANSFORM.origin(companion.element));
                 }
                 if (companion && companion.parent && companion.parent.requireRefit()) {
                     companion.parent.refitPoints(points);
                 }
-                value = SvgBuild.drawPath(SvgBuild.rebindPathPoints(commands, points), precision);
+                value = SvgBuild.drawPath(SvgBuild.rebindPathPoints(commands, points, transformed), precision);
             }
         }
         return value;
@@ -450,29 +451,45 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
-    public static rebindPathPoints(values: SvgPathCommand[], points: SvgPoint[]) {
+    public static rebindPathPoints(values: SvgPathCommand[], points: SvgPoint[], transformed = false) {
         let location: Point | undefined;
         invalid: {
             for (const item of values) {
                 if (item.relative) {
                     if (location) {
-                        for (let i = 0, j = 0; i < item.coordinates.length; i += 2, j++) {
+                        if (transformed && (item.name === 'H' || item.name === 'V')) {
                             const pt = points.shift();
                             if (pt) {
-                                item.coordinates[i] = item.value[j].x - location.x;
-                                item.coordinates[i + 1] = item.value[j].y - location.y;
-                                if (item.name === 'a' && pt.rx !== undefined && pt.ry !== undefined) {
-                                    item.radiusX = pt.rx;
-                                    item.radiusY = pt.ry;
-                                }
-                                item.value[j] = pt;
+                                item.coordinates[0] = pt.x;
+                                item.coordinates[1] = pt.y;
+                                item.value[0] = pt;
+                                item.start = pt;
+                                item.end = pt;
+                                item.name = 'L';
+                                item.relative = false;
                             }
                             else {
-                                values = [];
                                 break invalid;
                             }
                         }
-                        item.name = item.name.toLowerCase();
+                        else {
+                            for (let i = 0, j = 0; i < item.coordinates.length; i += 2, j++) {
+                                const pt = points.shift();
+                                if (pt) {
+                                    item.coordinates[i] = pt.x - location.x;
+                                    item.coordinates[i + 1] = pt.y - location.y;
+                                    if (item.name === 'a' && pt.rx !== undefined && pt.ry !== undefined) {
+                                        item.radiusX = pt.rx;
+                                        item.radiusY = pt.ry;
+                                    }
+                                    item.value[j] = pt;
+                                }
+                                else {
+                                    break invalid;
+                                }
+                            }
+                            item.name = item.name.toLowerCase();
+                        }
                         location = item.end;
                     }
                     else {

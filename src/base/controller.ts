@@ -104,20 +104,18 @@ export default abstract class Controller<T extends Node> implements squared.base
 
     public replaceIndent(value: string, depth: number, cache: T[]) {
         value = $xml.replaceIndent(value, depth, REGEXP_INDENT);
-        if (cache) {
-            const pattern = /{@(\d+)}/g;
-            let match: RegExpExecArray | null;
-            let i = 0;
-            while ((match = pattern.exec(value)) !== null) {
-                const id = parseInt(match[1]);
-                const node = cache.find(item => item.id === id);
-                if (node) {
-                    if (i++ === 0) {
-                        node.renderDepth = depth;
-                    }
-                    else if (node.renderParent) {
-                        node.renderDepth = node.renderParent.renderDepth + 1;
-                    }
+        const pattern = /{@(\d+)}/g;
+        let match: RegExpExecArray | null;
+        let i = 0;
+        while ((match = pattern.exec(value)) !== null) {
+            const id = parseInt(match[1]);
+            const node = cache.find(item => item.id === id);
+            if (node) {
+                if (i++ === 0) {
+                    node.renderDepth = depth;
+                }
+                else if (node.renderParent) {
+                    node.renderDepth = node.renderParent.renderDepth + 1;
                 }
             }
         }

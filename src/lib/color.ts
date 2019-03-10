@@ -1,4 +1,9 @@
-const X11_CSS3: ColorResult[] = [
+const STRING_HEX = '0123456789ABCDEF';
+const REGEXP_HEX = /[A-Za-z\d]{3,}/;
+const REGEXP_RGBA = /rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/;
+
+const CACHE_COLORDATA: ObjectMap<ColorData> = {};
+const COLOR_CSS3: ColorResult[] = [
     {
         value: '#000000',
         name: 'black',
@@ -2059,20 +2064,14 @@ const X11_CSS3: ColorResult[] = [
     }
 ];
 
-for (const color of X11_CSS3) {
+for (const color of COLOR_CSS3) {
     Object.freeze(color);
 }
-
-const CACHE_COLORDATA: ObjectMap<ColorData> = {};
-
-const CHAR_HEX = '0123456789ABCDEF';
-const REGEXP_HEX = /[A-Za-z\d]{3,}/;
-const REGEXP_RGBA = /rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/;
 
 const parseOpacity = (value: string) => parseFloat(value.trim() || '1') * 255;
 
 export function findColorName(value: string) {
-    for (const color of X11_CSS3) {
+    for (const color of COLOR_CSS3) {
         if (color.name === value.toLowerCase()) {
             return color;
         }
@@ -2086,8 +2085,7 @@ export function findColorShade(value: string) {
         const hsl = convertHSLA(rgba);
         const result: ColorResult[] = [];
         let baseline = -1;
-        for (let i = 0; i < X11_CSS3.length; i++) {
-            const color = X11_CSS3[i];
+        for (const color of COLOR_CSS3) {
             if (color.value === value) {
                 return color;
             }
@@ -2121,7 +2119,7 @@ export function findColorShade(value: string) {
             return result[index];
         }
         else {
-            return X11_CSS3[X11_CSS3.length - 1];
+            return COLOR_CSS3[COLOR_CSS3.length - 1];
         }
     }
     return undefined;
@@ -2213,12 +2211,7 @@ export function getHexCode(...values: number[]) {
     let output = '';
     for (const value of values) {
         const rgb = Math.max(0, Math.min(value, 255));
-        if (isNaN(rgb)) {
-            output += '00';
-        }
-        else {
-            output += CHAR_HEX.charAt((rgb - (rgb % 16)) / 16) + CHAR_HEX.charAt(rgb % 16);
-        }
+        output += isNaN(rgb) ? '00' : STRING_HEX.charAt((rgb - (rgb % 16)) / 16) + STRING_HEX.charAt(rgb % 16);
     }
     return output;
 }

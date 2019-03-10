@@ -11,44 +11,53 @@ const $util = squared.lib.util;
 
 const STORED = <ResourceStoredMapAndroid> $Resource.STORED;
 
+function formatObject(obj: {}, numberAlias = false) {
+    if (obj) {
+        for (const attr in obj) {
+            if (typeof obj[attr] === 'object') {
+                formatObject(obj, numberAlias);
+            }
+            else {
+                let value = obj[attr].toString();
+                switch (attr) {
+                    case 'text':
+                        if (!value.startsWith('@string/')) {
+                            value = Resource.addString(value, '', numberAlias);
+                            if (value !== '') {
+                                obj[attr] = `@string/${value}`;
+                                continue;
+                            }
+                        }
+                        break;
+                    case 'src':
+                    case 'srcCompat':
+                        if ($util.REGEXP_COMPILED.PROTOCOL.test(value)) {
+                            value = Resource.addImage({ mdpi: value });
+                            if (value !== '') {
+                                obj[attr] = `@drawable/${value}`;
+                                continue;
+                            }
+                        }
+                        break;
+                }
+                const color = $color.parseColor(value);
+                if (color) {
+                    const colorName = Resource.addColor(color);
+                    if (colorName !== '') {
+                        obj[attr] = `@color/${colorName}`;
+                    }
+                }
+            }
+        }
+    }
+}
+
 export default class Resource<T extends View> extends squared.base.Resource<T> implements android.base.Resource<T> {
     public static formatOptions(options: ExternalData, numberAlias = false) {
         for (const namespace in options) {
-            if (options.hasOwnProperty(namespace)) {
-                const obj: ExternalData = options[namespace];
-                if (typeof obj === 'object') {
-                    for (const attr in obj) {
-                        let value = obj[attr].toString();
-                        switch (attr) {
-                            case 'text':
-                                if (!value.startsWith('@string/')) {
-                                    value = this.addString(value, '', numberAlias);
-                                    if (value !== '') {
-                                        obj[attr] = `@string/${value}`;
-                                        continue;
-                                    }
-                                }
-                                break;
-                            case 'src':
-                            case 'srcCompat':
-                                if ($util.REGEXP_COMPILED.URI.test(value)) {
-                                    value = this.addImage({ mdpi: value });
-                                    if (value !== '') {
-                                        obj[attr] = `@drawable/${value}`;
-                                        continue;
-                                    }
-                                }
-                                break;
-                        }
-                        const color = $color.parseColor(value);
-                        if (color) {
-                            const colorValue = this.addColor(color);
-                            if (colorValue !== '') {
-                                obj[attr] = `@color/${colorValue}`;
-                            }
-                        }
-                    }
-                }
+            const obj: ExternalData = options[namespace];
+            if (typeof obj === 'object') {
+                formatObject(obj, numberAlias);
             }
         }
         return options;

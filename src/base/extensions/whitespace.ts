@@ -7,7 +7,7 @@ const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 function setMinHeight<T extends Node>(node: T, offset: number) {
-    const minHeight = node.has('minHeight', CSS_STANDARD.UNIT) ? node.toInt('minHeight') : 0;
+    const minHeight = node.has('minHeight', CSS_STANDARD.LENGTH) ? node.toInt('minHeight') : 0;
     node.css('minHeight', $util.formatPX(Math.max(offset, minHeight)));
 }
 

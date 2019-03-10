@@ -1,3 +1,4 @@
+import * as $css from '../lib/css';
 import * as $dom from '../lib/dom';
 import * as $element from '../lib/element';
 import * as $util from '../lib/util';
@@ -18,6 +19,8 @@ declare global {
         }
 
         namespace css {
+            export import BOX_MARGIN = $css.BOX_MARGIN;
+            export import BOX_PADDING = $css.BOX_PADDING;
             function getKeyframeRules(): CSSRuleData;
             function checkStyleValue(element: Element, attr: string, value: string, style?: CSSStyleDeclaration, fontSize?: number): string;
             function hasComputedStyle(element: Element | null): element is HTMLElement;
@@ -45,7 +48,7 @@ declare global {
             function removeElementsByClassName(className: string): void;
             function getFirstChildElement(elements: Element | null, lineBreak?: boolean): Element | null;
             function getLastChildElement(elements: Element | null, lineBreak?: boolean): Element | null;
-            function getElementsBetweenSiblings(elementStart: Element | null, elementEnd: Element, whiteSpace?: boolean): Element[];
+            function getElementsBetweenSiblings(elementStart: Element | null, elementEnd: Element, whiteSpace?: boolean): Element[] | undefined;
             function getPreviousElementSibling(element: Element | null): Element | null;
             function getNextElementSibling(element: Element | null): Element | null;
             function isElementVisible(element: Element, viewport?: boolean): boolean;
@@ -85,7 +88,7 @@ declare global {
 
         namespace util {
             export import REGEXP_COMPILED = $util.REGEXP_COMPILED;
-            export import REGEXP_STRING = $util.REGEXP_STRING;
+            export import STRING_PATTERN = $util.STRING_PATTERN;
             export import USER_AGENT = $util.USER_AGENT;
             function isUserAgent(value: string | number): boolean;
             function getDeviceDPI(): number;
@@ -97,12 +100,13 @@ declare global {
             function convertFloat(value: string): number;
             function convertAngle(value: string, unit?: string): number;
             function convertPX(value: string, fontSize?: number): string;
-            function convertUnit(value: string, dimension: number, fontSize?: number): number;
+            function convertLength(value: string, dimension: number, fontSize?: number): number;
             function convertAlpha(value: number): string;
             function convertRoman(value: number): string;
             function convertEnum(value: number, base: {}, derived: {}): string;
             function calculate(value: string, dimension?: number, fontSize?: number): number;
-            function calculateUnit(value: string, fontSize?: number): number;
+            function parseUnit(value: string, fontSize?: number): number;
+            function parseAngle(value: string): number;
             function formatPX(value: string | number): string;
             function formatPercent(value: string | number, round?: boolean): string;
             function formatString(value: string, ...params: string[]): string;
@@ -110,9 +114,10 @@ declare global {
             function isNumber(value: string): boolean;
             function isString(value: any): value is string;
             function isArray<T>(value: any): value is Array<T>;
-            function isUnit(value: string): boolean;
+            function isLength(value: string): boolean;
             function isPercent(value: string): boolean;
             function isCalc(value: string): boolean;
+            function isAngle(value: string): boolean;
             function isEqual(source: any, values: any): boolean;
             function includes(source: string | undefined, value: string, delimiter?: string): boolean;
             function cloneInstance<T>(value: T): T;
@@ -137,7 +142,7 @@ declare global {
             function withinRange(a: number, b: number, offset?: number): boolean;
             function assignEmptyProperty(dest: {}, source: {}): {};
             function assignEmptyValue(dest: {}, ...attrs: string[]): void;
-            function sortNumber(values: number[], descending?: boolean): number[];
+            function sortNumber(values: number[], ascending?: boolean): number[];
             function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]): T[];
             function flatArray<T>(list: any[]): T[];
             function partitionArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): [T[], T[]];

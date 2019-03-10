@@ -20,7 +20,7 @@ export const enum NODE_ALIGNMENT {
 }
 
 export const enum CSS_STANDARD {
-    UNIT = 2,
+    LENGTH = 2,
     AUTO = 4,
     LEFT = 8,
     BASELINE = 16,

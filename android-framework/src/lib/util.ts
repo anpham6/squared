@@ -52,7 +52,7 @@ export function validateString(value: string) {
     return value ? value.trim().replace(REGEXP_VALIDSTRING, '_') : '';
 }
 
-export function convertUnit(value: string, dpi = 160, font = false) {
+export function convertLength(value: string, dpi = 160, font = false) {
     let result = parseFloat(value);
     if (!isNaN(result)) {
         result /= dpi / 160;
@@ -62,9 +62,9 @@ export function convertUnit(value: string, dpi = 160, font = false) {
     return '0dp';
 }
 
-export function replaceUnit(value: string, dpi = 160, format = 'dp', font = false) {
+export function replaceLength(value: string, dpi = 160, format = 'dp', font = false) {
     if (format === 'dp' || font) {
-        return value.replace(REGEXP_UNIT, (match, ...capture) => capture[0] + (capture[1] || '') + convertUnit(capture[2], dpi, font) + capture[3]);
+        return value.replace(REGEXP_UNIT, (match, ...capture) => capture[0] + (capture[1] || '') + convertLength(capture[2], dpi, font) + capture[3]);
     }
     return value;
 }

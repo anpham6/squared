@@ -128,7 +128,7 @@ export function isLineBreak(element: Element, excluded = true) {
     }
     else if (excluded) {
         const node = getElementAsNode<T>(element);
-        return node && node.excluded && node.blockStatic;
+        return !!node && node.excluded && node.blockStatic;
     }
     return false;
 }

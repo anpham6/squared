@@ -107,10 +107,7 @@ function convertToAnimateValue(value: AnimateValue, fromString = false) {
 }
 
 function convertToString(value: AnimateValue) {
-    if (Array.isArray(value)) {
-        return $util.objectMap<Point, string>(value, pt => `${pt.x},${pt.y}`).join(' ');
-    }
-    return value.toString();
+    return Array.isArray(value) ? $util.objectMap<Point, string>(value, pt => `${pt.x},${pt.y}`).join(' ') : value.toString();
 }
 
 function getForwardValue(items: ForwardValue[], time: number) {
@@ -287,8 +284,9 @@ function getItemValue(item: SvgAnimate, values: string[], iteration: number, ind
     switch (item.attributeName) {
         case 'transform':
             if (item.additiveSum && typeof baseValue === 'string') {
-                const baseArray = $util.replaceMap<string, number>(baseValue.split(/\s+/), value => parseFloat(value));
-                const valuesArray = $util.objectMap<string, number[]>(values, value => $util.replaceMap<string, number>(value.trim().split(/\s+/), pt => parseFloat(pt)));
+                const seperator = /\s+/;
+                const baseArray = $util.replaceMap<string, number>(baseValue.split(seperator), value => parseFloat(value));
+                const valuesArray = $util.objectMap<string, number[]>(values, value => $util.replaceMap<string, number>(value.trim().split(seperator), pt => parseFloat(pt)));
                 if (valuesArray.every(value => baseArray.length === value.length)) {
                     const result = valuesArray[index];
                     if (!item.accumulateSum) {
@@ -363,16 +361,11 @@ function getItemSplitValue(fraction: number, previousFraction: number, previousV
     return previousValue;
 }
 
-function insertSplitValue(item: SvgAnimate, baseValue: AnimateValue, keyTimes: number[], values: string[], keySplines: string[] | undefined, delay: number, iteration: number, time: number, keyTimeMode: number, timelineMap: TimelineIndex, interpolatorMap: InterpolatorMap, transformOriginMap?: TransformOriginMap): [number, AnimateValue] {
-    let actualTime: number;
+function insertSplitValue(item: SvgAnimate, actualTime: number, baseValue: AnimateValue, keyTimes: number[], values: string[], keySplines: string[] | undefined, delay: number, iteration: number, time: number, keyTimeMode: number, timelineMap: TimelineIndex, interpolatorMap: InterpolatorMap, transformOriginMap?: TransformOriginMap): [number, AnimateValue] {
     if (delay < 0) {
-        actualTime = time - delay;
+        actualTime -= delay;
         delay = 0;
     }
-    else {
-        actualTime = time;
-    }
-    actualTime = getActualTime(actualTime);
     const fraction = Math.max(0, Math.min((actualTime - (delay + item.duration * iteration)) / item.duration, 1));
     let previousIndex = -1;
     let nextIndex = -1;
@@ -582,16 +575,6 @@ function checkPartialKeyTimes(keyTimes: number[], values: string[], keySplines: 
             keySplines.push('');
         }
     }
-}
-
-function getActualTime(value: number) {
-    if ((value + 1) % 10 === 0) {
-        value++;
-    }
-    else if ((value - 1) % 10 === 0) {
-        value--;
-    }
-    return value;
 }
 
 function getStartIteration(time: number, delay: number, duration: number) {
@@ -1318,7 +1301,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                                         }
                                                         else {
                                                             function insertIntermediateValue(splitTime: number) {
-                                                                [maxTime, lastValue] = insertSplitValue(item, baseValue, keyTimes, values, keySplines, delay, k, splitTime, keyTimeMode, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
+                                                                [maxTime, lastValue] = insertSplitValue(item, actualMaxTime, baseValue, keyTimes, values, keySplines, delay, k, splitTime, keyTimeMode, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
                                                             }
                                                             if (delay < 0 && maxTime === -1) {
                                                                 if (time > 0) {
@@ -1494,7 +1477,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         let j = Math.floor(durationTotal / duration);
                                         let joined = false;
                                         function insertIntermediateValue(time: number) {
-                                            return insertSplitValue(item, baseValue, keyTimes, values, keySplines, delay, j, time, keyTimeMode, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
+                                            return insertSplitValue(item, actualMaxTime, baseValue, keyTimes, values, keySplines, delay, j, time, keyTimeMode, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
                                         }
                                         do {
                                             for (let k = 0; k < keyTimes.length; k++) {
@@ -1624,7 +1607,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                             for (let j = 0; j < item.keyTimes.length; j++) {
                                                 let time = getItemTime(delay, item.duration, item.keyTimes, i, j);
                                                 if (!joined && time >= maxTime) {
-                                                    [maxTime, baseValue] = insertSplitValue(item, baseValue, item.keyTimes, values, item.keySplines, delay, i, maxTime, keyTimeMode, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
+                                                    [maxTime, baseValue] = insertSplitValue(item, maxTime, baseValue, item.keyTimes, values, item.keySplines, delay, i, maxTime, keyTimeMode, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
                                                     keyTimesRepeating.add(maxTime);
                                                     joined = true;
                                                 }

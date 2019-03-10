@@ -167,13 +167,13 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                         }
                     }
                     else {
-                        const unit = $util.isUnit(mapWidth[m]);
+                        const unit = $util.isLength(mapWidth[m]);
                         const percent = $util.isPercent(columnWidth);
                         if (reevaluate || td.bounds.width < mapBounds[m] || (td.bounds.width === mapBounds[m] && (
                                 (unit || percent) ||
                                 unit && percent ||
                                 percent && $util.isPercent(mapWidth[m]) && $util.convertFloat(columnWidth) > $util.convertFloat(mapWidth[m]) ||
-                                unit && $util.isUnit(columnWidth) && $util.convertInt(columnWidth) > $util.convertInt(mapWidth[m])
+                                unit && $util.isLength(columnWidth) && $util.convertInt(columnWidth) > $util.convertInt(mapWidth[m])
                            )))
                         {
                             mapWidth[m] = columnWidth;
@@ -199,7 +199,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
             });
             columnCount = Math.max(columnCount, columnIndex[i]);
         }
-        if (node.has('width', CSS_STANDARD.UNIT) && mapWidth.some(value => $util.isPercent(value))) {
+        if (node.has('width', CSS_STANDARD.LENGTH) && mapWidth.some(value => $util.isPercent(value))) {
             $util.replaceMap<string, string>(mapWidth, (value, index) => {
                 if (value === 'auto' && mapBounds[index] > 0) {
                     value = $util.formatPX(mapBounds[index]);
@@ -221,7 +221,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                 return value;
             });
         }
-        else if (mapWidth.every(value => $util.isUnit(value))) {
+        else if (mapWidth.every(value => $util.isLength(value))) {
             const width = mapWidth.reduce((a, b) => a + parseInt(b), 0);
             if (width < node.width) {
                 $util.replaceMap<string, string>(mapWidth, value => value !== '0px' ? `${(parseInt(value) / width) * 100}%` : value);
@@ -237,7 +237,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
         }
         const mapPercent = mapWidth.reduce((a, b) => a + ($util.isPercent(b) ? parseFloat(b) : 0), 0);
         mainData.layoutType = (() => {
-            if (mapWidth.some(value => $util.isPercent(value)) || mapWidth.every(value => $util.isUnit(value) && value !== '0px')) {
+            if (mapWidth.some(value => $util.isPercent(value)) || mapWidth.every(value => $util.isLength(value) && value !== '0px')) {
                 return LAYOUT_TABLE.VARIABLE;
             }
             if (mapWidth.every(value => value === mapWidth[0])) {
@@ -251,7 +251,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                     return LAYOUT_TABLE.FIXED;
                 }
             }
-            if (mapWidth.every(value => value === 'auto' || ($util.isUnit(value) && value !== '0px'))) {
+            if (mapWidth.every(value => value === 'auto' || ($util.isLength(value) && value !== '0px'))) {
                 return LAYOUT_TABLE.STRETCH;
             }
             return LAYOUT_TABLE.NONE;
@@ -322,7 +322,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                                 td.data(EXT_NAME.TABLE, 'percent', columnWidth);
                                 td.data(EXT_NAME.TABLE, 'expand', true);
                             }
-                            else if ($util.isUnit(columnWidth) && parseInt(columnWidth) > 0) {
+                            else if ($util.isLength(columnWidth) && parseInt(columnWidth) > 0) {
                                 if (td.bounds.width >= parseInt(columnWidth)) {
                                     setBoundsWidth(td);
                                     td.data(EXT_NAME.TABLE, 'expand', false);

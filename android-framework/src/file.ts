@@ -4,7 +4,7 @@ import { ResourceStoredMapAndroid, UserSettingsAndroid } from './@types/applicat
 import View from './view';
 
 import { BUILD_ANDROID } from './lib/enumeration';
-import { getXmlNs, replaceTab, replaceUnit } from './lib/util';
+import { getXmlNs, replaceTab, replaceLength } from './lib/util';
 
 import COLOR_TMPL from './template/resource/color';
 import DIMEN_TMPL from './template/resource/dimen';
@@ -24,6 +24,9 @@ type StyleXML = {
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
+const REGEXP_IMAGE = /^<!-- image: (.+) -->\n<!-- filename: (.+)\/(.+?\.\w+) -->$/;
+const REGEXP_FILE = /^[\w\W]*?(<!-- filename: (.+)\/(.+?\.xml) -->)$/;
+
 const TEMPLATES = {
     color: $xml.parseTemplate(COLOR_TMPL),
     dimen: $xml.parseTemplate(DIMEN_TMPL),
@@ -33,9 +36,6 @@ const TEMPLATES = {
     string_array: $xml.parseTemplate(STRINGARRAY_TMPL),
     style: $xml.parseTemplate(STYLE_TMPL)
 };
-
-const REGEXP_IMAGE = /^<!-- image: (.+) -->\n<!-- filename: (.+)\/(.+?\.\w+) -->$/;
-const REGEXP_FILE = /^[\w\W]*?(<!-- filename: (.+)\/(.+?\.xml) -->)$/;
 
 function parseImageDetails(files: string[]) {
     const result: FileAsset[] = [];
@@ -299,7 +299,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         for (const style of files) {
             result.push(
                 replaceTab(
-                    replaceUnit(
+                    replaceLength(
                         $xml.createTemplate(TEMPLATES.style, style.data).replace('filename: {0}', `filename: ${style.filename}`),
                         settings.resolutionDPI,
                         settings.convertPixels,
@@ -326,7 +326,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             }
             result.push(
                 replaceTab(
-                    replaceUnit(
+                    replaceLength(
                         $xml.createTemplate(TEMPLATES.dimen, data),
                         settings.resolutionDPI,
                         settings.convertPixels
@@ -348,7 +348,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             for (const [name, value] of this.stored.drawables.entries()) {
                 result.push(
                     replaceTab(
-                        replaceUnit(
+                        replaceLength(
                             $xml.createTemplate(TEMPLATES.drawable, { name: `res/drawable/${name}.xml`, value }),
                             settings.resolutionDPI,
                             settings.convertPixels

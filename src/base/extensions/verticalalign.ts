@@ -36,7 +36,7 @@ export default class VerticalAlign<T extends Node> extends Extension<T> {
                     if (aboveBaseline.includes(item)) {
                         reset = true;
                     }
-                    else if (item.inlineVertical && !item.baseline && $util.isUnit(item.verticalAlign)) {
+                    else if (item.inlineVertical && !item.baseline && $util.isLength(item.verticalAlign)) {
                         item.modifyBox(BOX_STANDARD.MARGIN_TOP, item.linear.top - aboveBaseline[0].linear.top);
                         belowBaseline.push(item);
                         reset = true;
@@ -48,7 +48,7 @@ export default class VerticalAlign<T extends Node> extends Extension<T> {
             }
         }
         else {
-            $util.spliceArray(aboveBaseline, item => !($util.isUnit(item.verticalAlign) && $util.convertInt(item.verticalAlign) > 0));
+            $util.spliceArray(aboveBaseline, item => !($util.isLength(item.verticalAlign) && $util.convertInt(item.verticalAlign) > 0));
         }
         if (aboveBaseline.length) {
             node.data(EXT_NAME.VERTICAL_ALIGN, 'mainData', <VerticalAlignData<T>> {

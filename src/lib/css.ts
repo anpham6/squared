@@ -1,16 +1,17 @@
 import { getElementAsNode, getElementCache, setElementCache } from './dom';
-import { REGEXP_COMPILED, REGEXP_STRING, calculate, calculateUnit, capitalize, convertCamelCase, convertPX, convertUnit, formatPercent, formatPX, isPercent, isUnit, resolvePath } from './util';
+import { REGEXP_COMPILED, STRING_PATTERN, calculate, parseUnit, capitalize, convertCamelCase, convertPX, convertLength, formatPercent, formatPX, isLength, isPercent, resolvePath } from './util';
 
 type T = squared.base.Node;
 
-const REGEXP_KEYFRAMERULE = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
-const REGEXP_VAR = new RegExp(`${REGEXP_STRING.VAR}`, 'g');
-
 function convertPercent(value: string, dimension: number, fontSize?: number) {
-    return isPercent(value) ? parseFloat(value) / 100 : calculateUnit(value, fontSize) / dimension;
+    return isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize) / dimension;
 }
 
+export const BOX_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
+export const BOX_PADDING = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'];
+
 export function getKeyframeRules(): CSSRuleData {
+    const keyFrameRule = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
     const result = new Map<string, ObjectMap<StringMap>>();
     violation: {
         for (let i = 0; i < document.styleSheets.length; i++) {
@@ -22,7 +23,7 @@ export function getKeyframeRules(): CSSRuleData {
                         if (item.type === 7) {
                             const map: ObjectMap<StringMap> = {};
                             for (let k = 0; k < item.cssRules.length; k++) {
-                                const match = REGEXP_KEYFRAMERULE.exec(item.cssRules[k].cssText);
+                                const match = keyFrameRule.exec(item.cssRules[k].cssText);
                                 if (match) {
                                     for (let percent of (item.cssRules[k]['keyText'] || match[1].trim()).split(REGEXP_COMPILED.SEPARATOR)) {
                                         percent = percent.trim();
@@ -110,7 +111,7 @@ export function checkStyleValue(element: Element, attr: string, value: string, s
                 case 'paddingRight':
                 case 'paddingBottom':
                 case 'paddingLeft':
-                    return isUnit(value) ? convertPX(value, fontSize) : value;
+                    return isLength(value) ? convertPX(value, fontSize) : value;
             }
         }
         return value;
@@ -226,9 +227,10 @@ export function getParentAttribute(element: Element | null, attr: string) {
 
 export function calculateVar(element: HTMLElement | SVGElement, value: string, attr?: string, dimension?: number) {
     const style = getComputedStyle(element);
-    let result = value;
+    const pattern = new RegExp(`${STRING_PATTERN.VAR}`, 'g');
     let match: RegExpMatchArray | null;
-    while ((match = REGEXP_VAR.exec(value)) !== null) {
+    let result = value;
+    while ((match = pattern.exec(value)) !== null) {
         const propertyValue = style.getPropertyValue(match[1]).trim();
         if (propertyValue !== '') {
             result = result.replace(match[0], propertyValue);
@@ -238,13 +240,14 @@ export function calculateVar(element: HTMLElement | SVGElement, value: string, a
         }
     }
     if (attr && !dimension) {
+        const vertical = /(top|bottom|height)/.test(attr.toLowerCase());
         if (element instanceof SVGElement) {
             const rect = element.getBoundingClientRect();
-            dimension = attr === 'height' || (attr.length <= 2 && attr.indexOf('y') !== -1) ? rect.height : rect.width;
+            dimension = vertical || attr.length <= 2 && attr.indexOf('y') !== -1 ? rect.height : rect.width;
         }
         else {
             const rect = (element.parentElement || element).getBoundingClientRect();
-            dimension = attr.toLowerCase().indexOf('height') !== -1 ? rect.height : rect.width;
+            dimension = vertical ? rect.height : rect.width;
         }
     }
     return calculate(result, dimension, getFontSize(element));
@@ -280,7 +283,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                     result.horizontal = position;
                     break;
                 case 1: {
-                    const location = percent ? convertPercent(position, dimension.width, fontSize) : convertUnit(position, dimension.width, fontSize);
+                    const location = percent ? convertPercent(position, dimension.width, fontSize) : convertLength(position, dimension.width, fontSize);
                     switch (result.horizontal) {
                         case 'end:':
                             result.horizontal = 'right';
@@ -302,7 +305,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                     result.vertical = position;
                     break;
                 case 3: {
-                    const location = percent ? convertPercent(position, dimension.height, fontSize) : convertUnit(position, dimension.height, fontSize);
+                    const location = percent ? convertPercent(position, dimension.height, fontSize) : convertLength(position, dimension.height, fontSize);
                     if (result.vertical === 'bottom') {
                         result.bottom = location;
                         result.top = percent ? 1 - location : dimension.height - location;
@@ -357,7 +360,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                 }
             }
             else {
-                result[direction] = percent ? convertPercent(position, offsetParent, fontSize) : convertUnit(position, offsetParent, fontSize);
+                result[direction] = percent ? convertPercent(position, offsetParent, fontSize) : convertLength(position, offsetParent, fontSize);
                 result[original] = position;
             }
         }
@@ -367,8 +370,5 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
 
 export function resolveURL(value: string) {
     const match = value.match(REGEXP_COMPILED.URL);
-    if (match) {
-        return resolvePath(match[1]);
-    }
-    return '';
+    return match ? resolvePath(match[1]) : '';
 }

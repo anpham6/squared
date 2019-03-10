@@ -222,12 +222,12 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             residual = options.residual;
             precision = options.precision;
         }
-        this.transformed = undefined;
         const element = this.element;
         const parent = <SvgContainer> this.parent;
         const patternParent = <SvgShapePattern> this.patternParent;
         const requireRefit = !!parent && parent.requireRefit();
         const requirePatternRefit = !!patternParent && patternParent.patternContentUnits === REGION_UNIT.OBJECT_BOUNDING_BOX;
+        this.transformed = undefined;
         let d: string;
         if (SVG.path(element)) {
             d = this.getBaseValue('d');
@@ -251,7 +251,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                         if (requireRefit) {
                             parent.refitPoints(points);
                         }
-                        d = SvgBuild.drawPath(SvgBuild.rebindPathPoints(commands, points), precision);
+                        d = SvgBuild.drawPath(SvgBuild.rebindPathPoints(commands, points, this.transformed !== undefined), precision);
                     }
                 }
             }

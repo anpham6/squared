@@ -34,7 +34,7 @@ declare global {
 
         interface SvgBaseVal extends SvgElement {
             setBaseValue(attr: string, value?: any): boolean;
-            getBaseValue(attr: string, defaultValue?: any): any;
+            getBaseValue(attr: string, fallback?: any): any;
             refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
             verifyBaseValue(attr: string, value?: any): boolean | undefined;
         }
@@ -66,7 +66,7 @@ declare global {
             setAttribute(attr: string, computed?: boolean): void;
             getAttribute(attr: string, computed?: boolean, inherited?: boolean): string;
             resetPaint(): void;
-            convertUnit(value: string): string;
+            convertLength(value: string): string;
         }
 
         class SvgBuild {
@@ -101,7 +101,7 @@ declare global {
             public static applyTransforms(transforms: SvgTransform[], values: Point[], aspectRatio?: SvgAspectRatio, origin?: Point): SvgPoint[];
             public static convertTransforms(transforms: SVGTransformList): SvgTransform[];
             public static extractPathPoints(values: SvgPathCommand[], radius?: boolean): SvgPoint[];
-            public static rebindPathPoints(values: SvgPathCommand[], points: SvgPoint[]): SvgPathCommand[];
+            public static rebindPathPoints(values: SvgPathCommand[], points: SvgPoint[], transformed?: boolean): SvgPathCommand[];
             public static clonePoints(values: SvgPoint[] | SVGPointList): SvgPoint[];
             public static minMaxPoints(values: Point[]): number[];
             public static centerPoints(values: Point[]): Point[];

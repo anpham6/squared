@@ -15,9 +15,8 @@ const $element = squared.lib.element;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
-const REGEXP_COLORSTOP = `(?:\\s*(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[a-zA-Z\\d]{3,}|[a-z]+)\\s*(\\d+%|${$util.REGEXP_STRING.DEGREE}|${$util.REGEXP_STRING.UNIT}|(?:calc(\\(.+\\))(?=,)|${$util.REGEXP_STRING.CALC}))?,?\\s*)`;
-const REGEXP_POSITION = /(.+?)?\s*at (.+?)$/;
-const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\("?.+?"?\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|circle|ellipse|closest-side|closest-corner|farthest-side|farthest-corner)?(?:\\s*at [\\w %]+)?),?\\s*(${REGEXP_COLORSTOP}+)\\))`, 'g');
+const STRING_COLORSTOP = `(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[a-zA-Z\\d]{3,}|[a-z]+)\\s*(${$util.STRING_PATTERN.LENGTH_PERCENTAGE}|${$util.STRING_PATTERN.ANGLE}|(?:${$util.STRING_PATTERN.CALC}(?=,)|${$util.STRING_PATTERN.CALC}))?,?\\s*`;
+const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\("?.+?"?\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|circle|ellipse|closest-side|closest-corner|farthest-side|farthest-corner)?(?:\\s*at [\\w %]+)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
 
 function replaceExcluded<T extends Node>(element: HTMLElement, attr: string) {
     let value: string = element[attr];
@@ -32,8 +31,7 @@ function replaceExcluded<T extends Node>(element: HTMLElement, attr: string) {
 
 function parseColorStops<T extends Node>(node: T, gradient: Gradient, value: string, opacity: string, index: number, backgroundSize?: string) {
     const result: ColorStop[] = [];
-    const pattern = new RegExp(REGEXP_COLORSTOP, 'g');
-    const conic = gradient.type === 'conic';
+    const pattern = new RegExp(STRING_COLORSTOP, 'g');
     let match: RegExpExecArray | null;
     let width = node.bounds.width;
     let height = node.bounds.height;
@@ -50,7 +48,7 @@ function parseColorStops<T extends Node>(node: T, gradient: Gradient, value: str
         const color = $color.parseColor(match[1], opacity, true);
         if (color) {
             const item: ColorStop = { color, offset: -1 };
-            if (conic) {
+            if (gradient.type === 'conic') {
                 if (match[3] && match[4]) {
                     item.offset = $util.convertAngle(match[3], match[4]) / 360;
                 }
@@ -61,11 +59,11 @@ function parseColorStops<T extends Node>(node: T, gradient: Gradient, value: str
                 }
                 else if (gradient.repeating) {
                     const dimension = gradient.horizontal ? width : height;
-                    if ($util.isUnit(match[2])) {
-                        item.offset = node.calculateUnit(match[2], gradient.horizontal, false) / dimension;
+                    if ($util.isLength(match[2])) {
+                        item.offset = node.parseUnit(match[2], gradient.horizontal, false) / dimension;
                     }
                     else if ($util.isCalc(match[2])) {
-                        item.offset = $util.calculate(match[7], dimension, node.fontSize) / dimension;
+                        item.offset = $util.calculate(match[6], dimension, node.fontSize) / dimension;
                     }
                 }
             }
@@ -136,18 +134,19 @@ function parseColorStops<T extends Node>(node: T, gradient: Gradient, value: str
     return result;
 }
 
-function parseAngle(value: string | undefined) {
+function parseAngle(value: string) {
     if (value) {
-        const match = new RegExp($util.REGEXP_STRING.DEGREE).exec(value.trim());
-        if (match) {
-            let angle = $util.convertAngle(match[1], match[2]) % 360;
-            if (angle < 0) {
-                angle += 360;
-            }
-            return angle;
+        let degree = $util.parseAngle(value.trim());
+        if (degree < 0) {
+            degree += 360;
         }
+        return degree;
     }
     return 0;
+}
+
+function getGradientPosition(value: string) {
+    return /(.+?)?\s*at (.+?)$/.exec(value);
 }
 
 function replaceWhiteSpace<T extends Node>(node: T, element: Element, value: string): [string, boolean] {
@@ -175,10 +174,10 @@ function replaceWhiteSpace<T extends Node>(node: T, element: Element, value: str
             break;
         default:
             if (element.previousSibling && $element.isLineBreak(<Element> element.previousSibling)) {
-                value = value.replace(/^\s+/, '');
+                value = value.replace($util.REGEXP_COMPILED.LEADINGSPACE, '');
             }
             if (element.nextSibling && $element.isLineBreak(<Element> element.nextSibling)) {
-                value = value.replace(/\s+$/, '');
+                value = value.replace($util.REGEXP_COMPILED.TRAILINGSPACE, '');
             }
             return [value, false];
     }
@@ -238,7 +237,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
         if (stored) {
             let result = this.getStoredName(asset, value);
             if (result === '') {
-                if ($util.isNumber(name) || /^\d/.test(name)) {
+                if ($util.isNumber(name)) {
                     name = `__${name}`;
                 }
                 if ($util.hasValue(value)) {
@@ -291,10 +290,10 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         dimensions[i] = '100%';
                     }
                     if (i === 0) {
-                        width = node.calculateUnit(dimensions[i], true, false);
+                        width = node.parseUnit(dimensions[i], true, false);
                     }
                     else {
-                        height = node.calculateUnit(dimensions[i], false, false);
+                        height = node.parseUnit(dimensions[i], false, false);
                     }
                 }
                 break;
@@ -463,7 +462,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                                 (<RadialGradient> gradient).position = (() => {
                                                     const result = ['center', 'ellipse'];
                                                     if (direction) {
-                                                        const position = REGEXP_POSITION.exec(direction);
+                                                        const position = getGradientPosition(direction);
                                                         if (position) {
                                                             switch (position[1]) {
                                                                 case 'ellipse':
@@ -489,7 +488,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                                 (<ConicGradient> gradient).angle = parseAngle(direction);
                                                 (<ConicGradient> gradient).position = (() => {
                                                     if (direction) {
-                                                        const position = REGEXP_POSITION.exec(direction);
+                                                        const position = getGradientPosition(direction);
                                                         if (position) {
                                                             return [position[2]];
                                                         }
@@ -671,35 +670,33 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         const previousSibling = node.previousSiblings().pop();
                         const nextSibling = node.nextSiblings().shift();
                         let previousSpaceEnd = false;
-                        if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && /\s+$/.test(previousSibling.textContent)) {
-                            value = value.replace(/^\s+/, '');
+                        if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && $util.REGEXP_COMPILED.TRAILINGSPACE.test(previousSibling.textContent)) {
+                            value = value.replace($util.REGEXP_COMPILED.LEADINGSPACE, '');
                         }
                         else if (previousSibling.element) {
-                            previousSpaceEnd = /\s+$/.test((<HTMLElement> previousSibling.element).innerText || previousSibling.textContent);
+                            previousSpaceEnd = $util.REGEXP_COMPILED.TRAILINGSPACE.test((<HTMLElement> previousSibling.element).innerText || previousSibling.textContent);
                         }
                         if (inlineTrim) {
                             const original = value;
                             value = value.trim();
-                            if (previousSibling && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd && /^\s+/.test(original)) {
+                            if (previousSibling && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd && $util.REGEXP_COMPILED.LEADINGSPACE.test(original)) {
                                 value = '&#160;' + value;
                             }
-                            if (nextSibling && !nextSibling.lineBreak && /\s+$/.test(original)) {
+                            if (nextSibling && !nextSibling.lineBreak && $util.REGEXP_COMPILED.TRAILINGSPACE.test(original)) {
                                 value += '&#160;';
                             }
                         }
-                        else {
-                            if (!/^\s+$/.test(value)) {
-                                value = value.replace(/^\s+/, previousSibling && (
-                                    previousSibling.block ||
-                                    previousSibling.lineBreak ||
-                                    previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
-                                    node.multiline && $element.hasLineBreak(element)) ? '' : '&#160;'
-                                );
-                                value = value.replace(/\s+$/, node.display === 'table-cell' || nextSibling && nextSibling.lineBreak || node.blockStatic ? '' : '&#160;');
-                            }
-                            else if (value.length) {
-                                value = '&#160;' + value.substring(1);
-                            }
+                        else if (value.trim() !== '') {
+                            value = value.replace($util.REGEXP_COMPILED.LEADINGSPACE, previousSibling && (
+                                previousSibling.block ||
+                                previousSibling.lineBreak ||
+                                previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
+                                node.multiline && $element.hasLineBreak(element)) ? '' : '&#160;'
+                            );
+                            value = value.replace($util.REGEXP_COMPILED.TRAILINGSPACE, node.display === 'table-cell' || nextSibling && nextSibling.lineBreak || node.blockStatic ? '' : '&#160;');
+                        }
+                        else if (value.length) {
+                            value = '&#160;' + value.substring(1);
                         }
                     }
                     if (value !== '') {

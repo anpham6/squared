@@ -13,11 +13,9 @@ const $util = squared.lib.util;
 
 export default class <T extends android.base.View> extends squared.base.extensions.Sprite<T> {
     public processNode(node: T, parent: T): ExtensionResult<T> {
-        const mainData = <ImageAsset> node.data($const.EXT_NAME.SPRITE, 'mainData');
-        let container: T | undefined;
-        let output = '';
-        if (mainData && mainData.uri && mainData.position) {
-            container = this.application.createNode(<HTMLElement> node.element);
+        const mainData = <Required<ImageAsset>> node.data($const.EXT_NAME.SPRITE, 'mainData');
+        if (mainData) {
+            const container = this.application.createNode(<HTMLElement> node.element);
             container.inherit(node, 'initial', 'base', 'styleMap');
             container.setControlType(CONTAINER_ANDROID.FRAME);
             container.exclude({
@@ -68,12 +66,12 @@ export default class <T extends android.base.View> extends squared.base.extensio
                 1,
                 container.children as T[]
             );
-            output = this.application.renderLayout(layout);
+            return {
+                output: this.application.renderLayout(layout),
+                parent: container,
+                complete: true
+            };
         }
-        return {
-            output,
-            parent: container,
-            complete: true
-        };
+        return { output: '' };
     }
 }

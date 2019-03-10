@@ -125,6 +125,7 @@ squared.settings = {
     floatOverlapDisabled: false,
     collapseUnattributedElements: true,
     customizationsOverwritePrivilege: true,
+    replaceCharacterEntities: false,
     showAttributes: true,
     insertSpaces: 4, // tabs: 0
     convertPixels: 'dp',

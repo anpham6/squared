@@ -14,12 +14,6 @@ const $constA = android.lib.constant;
 const $enumA = android.lib.enumeration;
 const $utilA = android.lib.util;
 
-const VIEW_NAVIGATION = {
-    MENU: 'menu',
-    ITEM: 'item',
-    GROUP: 'group'
-};
-
 const REGEXP_ITEM = {
     id: /^@\+id\/\w+$/,
     title: /^.+$/,
@@ -50,6 +44,11 @@ const REGEXP_GROUP = {
 };
 
 const NAMESPACE_APP = ['showAsAction', 'actionViewClass', 'actionProviderClass'];
+const NAVIGATION = {
+    MENU: 'menu',
+    ITEM: 'item',
+    GROUP: 'group'
+};
 
 function hasInputType(node: View, value: string) {
     return node.some(item => (<HTMLInputElement> item.element).type === value);
@@ -136,12 +135,12 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
     public processNode(node: T): ExtensionResult<T> {
         node.documentRoot = true;
         node.alignmentType |= $enum.NODE_ALIGNMENT.AUTO_LAYOUT;
-        node.setControlType(VIEW_NAVIGATION.MENU, $enumA.CONTAINER_NODE.INLINE);
+        node.setControlType(NAVIGATION.MENU, $enumA.CONTAINER_NODE.INLINE);
         node.exclude({
             procedure: $enum.NODE_PROCEDURE.ALL,
             resource: $enum.NODE_RESOURCE.ALL
         });
-        const output = this.application.controllerHandler.renderNodeStatic(VIEW_NAVIGATION.MENU, 0, {}, '', '', node, true);
+        const output = this.application.controllerHandler.renderNodeStatic(NAVIGATION.MENU, 0, {}, '', '', node, true);
         for (const item of node.cascade()) {
             this.subscribersChild.add(item as T);
         }
@@ -159,17 +158,17 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
         let title = '';
         let layout = false;
         if (node.tagName === 'NAV') {
-            controlName = VIEW_NAVIGATION.MENU;
+            controlName = NAVIGATION.MENU;
             title = getTitle(element);
             layout = true;
         }
         else if (node.some(item => item.length > 0)) {
             if (node.some(item => item.tagName === 'NAV')) {
-                controlName = VIEW_NAVIGATION.ITEM;
+                controlName = NAVIGATION.ITEM;
                 node.each(item => item.tagName !== 'NAV' && item.hide());
             }
             else {
-                controlName = VIEW_NAVIGATION.GROUP;
+                controlName = NAVIGATION.GROUP;
                 if (node.every((item: T) => hasInputType(item, 'radio'))) {
                     options.android.checkableBehavior = 'single';
                 }
@@ -181,21 +180,21 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
             layout = true;
         }
         else {
-            controlName = VIEW_NAVIGATION.ITEM;
+            controlName = NAVIGATION.ITEM;
             title = (element.title || element.innerText).trim();
             if (hasInputType(node, 'checkbox') && !parent.android('checkableBehavior')) {
                 options.android.checkable = 'true';
             }
         }
         switch (controlName) {
-            case VIEW_NAVIGATION.MENU:
+            case NAVIGATION.MENU:
                 node.alignmentType |= $enum.NODE_ALIGNMENT.AUTO_LAYOUT;
                 break;
-            case VIEW_NAVIGATION.GROUP:
+            case NAVIGATION.GROUP:
                 node.alignmentType |= $enum.NODE_ALIGNMENT.AUTO_LAYOUT;
                 parseDataSet(REGEXP_GROUP, element, options);
                 break;
-            case VIEW_NAVIGATION.ITEM:
+            case NAVIGATION.ITEM:
                 parseDataSet(REGEXP_ITEM, element, options);
                 if (!$util.hasValue(options.android.icon)) {
                     const style = $css.getStyle(element);
@@ -225,8 +224,11 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
             resource: $enum.NODE_RESOURCE.ALL
         });
         node.render(parent);
-        const output = this.application.controllerHandler.renderNodeStatic(controlName, node.renderDepth, options, '', '', node, layout);
-        return { output, complete: true, next: controlName === VIEW_NAVIGATION.MENU };
+        return {
+            output: this.application.controllerHandler.renderNodeStatic(controlName, node.renderDepth, options, '', '', node, layout),
+            complete: true,
+            next: controlName === NAVIGATION.MENU
+        };
     }
 
     public postBaseLayout(node: T) {

@@ -21,14 +21,14 @@ type RepeatItem = {
 
 const $util = squared.lib.util;
 
-const REGEXP_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
-const REGEXP_MINMAX = 'minmax\\(([^,]+), ([^)]+)\\)';
-const REGEXP_FIT_CONTENT = 'fit-content\\(([\\d.]+[a-z%]+)\\)';
-const REGEXP_NAMED = '\\[([\\w\\-\\s]+)\\]';
+const STRING_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
+const STRING_MINMAX = 'minmax\\(([^,]+), ([^)]+)\\)';
+const STRING_FIT_CONTENT = 'fit-content\\(([\\d.]+[a-z%]+)\\)';
+const STRING_NAMED = '\\[([\\w\\-\\s]+)\\]';
 const REGEXP_GRID = {
-    UNIT: new RegExp(`^(${REGEXP_UNIT})$`),
-    NAMED: `\\s*(repeat\\((auto-fit|auto-fill|[0-9]+), (.+)\\)|${REGEXP_NAMED}|${REGEXP_MINMAX}|${REGEXP_FIT_CONTENT}|${REGEXP_UNIT})\\s*`,
-    REPEAT: `\\s*(${REGEXP_NAMED}|${REGEXP_MINMAX}|${REGEXP_FIT_CONTENT}|${REGEXP_UNIT})\\s*`
+    UNIT: new RegExp(`^(${STRING_UNIT})$`),
+    NAMED: `\\s*(repeat\\((auto-fit|auto-fill|[0-9]+), (.+)\\)|${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT})\\s*`,
+    REPEAT: `\\s*(${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT})\\s*`
 };
 
 function repeatUnit(data: CssGridDirectionData, dimension: string[]) {
@@ -61,8 +61,8 @@ function repeatUnit(data: CssGridDirectionData, dimension: string[]) {
     return result;
 }
 
-function convertUnit<T extends Node>(node: T, value: string) {
-    return $util.isUnit(value) ? node.convertPX(value) : value;
+function convertLength<T extends Node>(node: T, value: string) {
+    return $util.isLength(value) ? node.convertPX(value) : value;
 }
 
 function getColumnTotal<T extends Node>(rows: (T[] | undefined)[]) {
@@ -124,8 +124,8 @@ export default class CssGrid<T extends Node> extends Extension<T> {
         const cellsPerRow: number[] = [];
         const gridPosition: GridPosition[] = [];
         let rowInvalid: ObjectIndex<boolean> = {};
-        mainData.row.gap = node.calculateUnit(node.css('rowGap'), false, false);
-        mainData.column.gap = node.calculateUnit(node.css('columnGap'), true, false);
+        mainData.row.gap = node.parseUnit(node.css('rowGap'), false, false);
+        mainData.column.gap = node.parseUnit(node.css('columnGap'), true, false);
         function setDataRows(item: T, placement: number[]) {
             if (placement.every(value => value > 0)) {
                 for (let i = placement[horizontal ? 0 : 1] - 1; i < placement[horizontal ? 2 : 3] - 1; i++) {
@@ -174,20 +174,20 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                                 let matchB: RegExpMatchArray | null;
                                 while ((matchB = patternB.exec(matchA[3])) !== null) {
                                     let matchC: RegExpMatchArray | null;
-                                    if ((matchC = new RegExp(REGEXP_NAMED).exec(matchB[1])) !== null) {
+                                    if ((matchC = new RegExp(STRING_NAMED).exec(matchB[1])) !== null) {
                                         if (data.name[matchC[1]] === undefined) {
                                             data.name[matchC[1]] = [];
                                         }
                                         repeating.push({ name: matchC[1] });
                                     }
-                                    else if ((matchC = new RegExp(REGEXP_MINMAX).exec(matchB[1])) !== null) {
-                                        repeating.push({ unit: convertUnit(node, matchC[2]), unitMin: convertUnit(node, matchC[1]) });
+                                    else if ((matchC = new RegExp(STRING_MINMAX).exec(matchB[1])) !== null) {
+                                        repeating.push({ unit: convertLength(node, matchC[2]), unitMin: convertLength(node, matchC[1]) });
                                     }
-                                    else if ((matchC = new RegExp(REGEXP_FIT_CONTENT).exec(matchB[1])) !== null) {
-                                        repeating.push({ unit: convertUnit(node, matchC[1]), unitMin: '0px' });
+                                    else if ((matchC = new RegExp(STRING_FIT_CONTENT).exec(matchB[1])) !== null) {
+                                        repeating.push({ unit: convertLength(node, matchC[1]), unitMin: '0px' });
                                     }
-                                    else if ((matchC = new RegExp(REGEXP_UNIT).exec(matchB[1])) !== null) {
-                                        repeating.push({ unit: convertUnit(node, matchC[0]) });
+                                    else if ((matchC = new RegExp(STRING_UNIT).exec(matchB[1])) !== null) {
+                                        repeating.push({ unit: convertLength(node, matchC[0]) });
                                     }
                                 }
                                 if (repeating.length) {
@@ -214,19 +214,19 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                             data.name[matchA[4]].push(i);
                         }
                         else if (matchA[1].startsWith('minmax')) {
-                            data.unit.push(convertUnit(node, matchA[6]));
-                            data.unitMin.push(convertUnit(node, matchA[5]));
+                            data.unit.push(convertLength(node, matchA[6]));
+                            data.unitMin.push(convertLength(node, matchA[5]));
                             data.repeat.push(false);
                             i++;
                         }
                         else if (matchA[1].startsWith('fit-content')) {
-                            data.unit.push(convertUnit(node, matchA[7]));
+                            data.unit.push(convertLength(node, matchA[7]));
                             data.unitMin.push('0px');
                             data.repeat.push(false);
                             i++;
                         }
                         else if (REGEXP_GRID.UNIT.test(matchA[1])) {
-                            data.unit.push(convertUnit(node, matchA[1]));
+                            data.unit.push(convertLength(node, matchA[1]));
                             data.unitMin.push('');
                             data.repeat.push(false);
                             i++;

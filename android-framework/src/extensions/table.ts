@@ -15,7 +15,6 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
     public processNode(node: T, parent: T): ExtensionResult<T> {
         super.processNode(node, parent);
         const mainData: TableData = node.data($const.EXT_NAME.TABLE, 'mainData');
-        let output = '';
         if (mainData) {
             if (mainData.columnCount > 1) {
                 let requireWidth = !!node.data($const.EXT_NAME.TABLE, 'expand');
@@ -50,7 +49,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                                 if (item.textElement && !/[\s\n\-]/.test(item.textContent.trim())) {
                                     item.android('maxLines', '1');
                                 }
-                                if (item.has('width') && item.toInt('width') < item.bounds.width) {
+                                if (item.has('width') && item.toFloat('width') < item.bounds.width) {
                                     item.android('layout_width', $util.formatPX(item.bounds.width));
                                 }
                             }
@@ -84,9 +83,12 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
             );
             layout.rowCount = mainData.rowCount;
             layout.columnCount = mainData.columnCount;
-            output = this.application.renderNode(layout);
+            return {
+                output: this.application.renderNode(layout),
+                complete: true
+            };
         }
-        return { output, complete: output !== '' };
+        return { output: '' };
     }
 
     public processChild(node: T, parent: T): ExtensionResult<T> {

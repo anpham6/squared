@@ -144,8 +144,8 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
             const baseElement = this.animationElement && this.animationElement.parentElement || this.element;
             if (baseElement) {
                 this.baseValue = $util.optionalAsString(baseElement, `${value}.baseVal.valueAsString`) || $css.getParentAttribute(baseElement, value);
-                if ($util.isUnit(this.baseValue)) {
-                    this.baseValue = $util.calculateUnit(this.baseValue, $css.getFontSize(baseElement)).toString();
+                if ($util.isLength(this.baseValue)) {
+                    this.baseValue = $util.parseUnit(this.baseValue, $css.getFontSize(baseElement)).toString();
                 }
             }
         }

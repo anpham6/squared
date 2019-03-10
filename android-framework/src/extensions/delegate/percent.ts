@@ -16,7 +16,7 @@ export default class Percent<T extends android.base.View> extends squared.base.E
         const container = (<android.base.Controller<T>> this.application.controllerHandler).createNodeWrapper(node, parent);
         container.android('layout_width', 'match_parent');
         container.android('layout_height', 'wrap_content');
-        if (!node.has('height', $enum.CSS_STANDARD.UNIT)) {
+        if (!node.has('height', $enum.CSS_STANDARD.LENGTH)) {
             node.css('height', $util.formatPX(node.bounds.height), true);
         }
         const layout = new $Layout(

@@ -37,8 +37,8 @@ declare global {
             function createViewAttribute(options?: ExternalData): ViewAttribute;
             function createStyleAttribute(options?: ExternalData): Required<StyleAttribute>;
             function validateString(value: string): string;
-            function convertUnit(value: string, dpi?: number, font?: boolean): string;
-            function replaceUnit(value: string, dpi?: number, format?: string, font?: boolean): string;
+            function convertLength(value: string, dpi?: number, font?: boolean): string;
+            function replaceLength(value: string, dpi?: number, format?: string, font?: boolean): string;
             function replaceTab(value: string, spaces?: number, preserve?: boolean): string;
             function calculateBias(start: number, end: number, accuracy: number): number;
             function replaceRTL(value: string, rtl?: boolean, api?: number): string;

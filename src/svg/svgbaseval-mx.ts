@@ -50,8 +50,8 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             return false;
         }
 
-        public getBaseValue(attr: string, defaultValue?: any): any {
-            return this._baseVal[attr] === undefined && !this.setBaseValue(attr) ? defaultValue : this._baseVal[attr];
+        public getBaseValue(attr: string, fallback?: any): any {
+            return this._baseVal[attr] === undefined && !this.setBaseValue(attr) ? fallback : this._baseVal[attr];
         }
 
         public refitBaseValue(x: number, y: number, precision?: number, scaleX = 1, scaleY = 1) {

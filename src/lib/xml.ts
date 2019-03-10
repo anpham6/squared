@@ -7,8 +7,7 @@ type XMLTagData = {
     closing: boolean;
 };
 
-const TEMPLATE_ROOT = '__ROOT__';
-
+const STRING_ROOT = '__ROOT__';
 const REGEXP_CREATE = {
     ATTRIBUTE: /\s*((\w+:)?\w+="[^"]*)?{~\w+}"?/g,
     COLLECTION: /\n*\t*{%\w+}\n+/g,
@@ -125,13 +124,13 @@ export function parseTemplate(value: string) {
         Object.assign(result, data);
         return data;
     }
-    result[TEMPLATE_ROOT] = replaceSectionTag(parseSection(value), value);
+    result[STRING_ROOT] = replaceSectionTag(parseSection(value), value);
     return result;
 }
 
 export function createTemplate(templates: StringMap, data: ExternalData, format = false, index?: string) {
     if (index === undefined) {
-        index = TEMPLATE_ROOT;
+        index = STRING_ROOT;
     }
     let output: string = templates[index] || '';
     for (const attr in data) {
@@ -194,10 +193,11 @@ export function createTemplate(templates: StringMap, data: ExternalData, format 
             }
         }
     }
-    if (index === TEMPLATE_ROOT) {
+    if (index === STRING_ROOT) {
         output = output
             .replace(REGEXP_CREATE.COLLECTION, '\n')
-            .replace(REGEXP_CREATE.LINEBREAK, '\n').trim();
+            .replace(REGEXP_CREATE.LINEBREAK, '\n')
+            .trim();
         if (format) {
             output = formatTemplate(output);
         }

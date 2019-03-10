@@ -47,8 +47,7 @@ function getGridSize<T extends View>(mainData: CssGridData<T>, direction: string
         }
     }
     value += (mainData[direction].count - 1) * mainData[direction].gap;
-    value = node[dimension] - value;
-    return value;
+    return node[dimension] - value;
 }
 
 function setContentSpacing<T extends View>(mainData: CssGridData<T>, node: T, alignment: string, direction: string) {
@@ -146,7 +145,6 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
     public processNode(node: T, parent: T): ExtensionResult<T> {
         super.processNode(node, parent);
         const mainData: CssGridData<T> = node.data($const.EXT_NAME.CSS_GRID, 'mainData');
-        let output = '';
         if (mainData) {
             const layout = new $Layout(
                 parent,
@@ -158,9 +156,12 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             );
             layout.rowCount = mainData.row.count;
             layout.columnCount = mainData.column.count;
-            output = this.application.renderNode(layout);
+            return {
+                output: this.application.renderNode(layout),
+                complete: true
+            };
         }
-        return { output, complete: output !== '' };
+        return { output: '' };
     }
 
     public processChild(node: T, parent: T): ExtensionResult<T> {
@@ -190,7 +191,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 }
                 for (let i = 0, j = 0; i < cellData[cellSpan]; i++) {
                     const unitMin = data.unitMin[cellData[cellStart] + i];
-                    minUnitSize += parent.calculateUnit(unitMin);
+                    minUnitSize += parent.parseUnit(unitMin);
                     let unit = data.unit[cellData[cellStart] + i];
                     if (!$util.hasValue(unit)) {
                         if (data.auto[j]) {
@@ -205,7 +206,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     }
                     if ($util.hasValue(unit)) {
                         if (unit === 'auto' || unit === 'min-content' || unit === 'max-content') {
-                            if (cellTotal < data.unit.length && (!parent.has(dimension) || data.unit.some(value => $util.isUnit(value)) || unit === 'min-content')) {
+                            if (cellTotal < data.unit.length && (!parent.has(dimension) || data.unit.some(value => $util.isLength(value)) || unit === 'min-content')) {
                                 size = node.bounds[dimension];
                                 minSize = 0;
                                 sizeWeight = 0;

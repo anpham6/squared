@@ -13,7 +13,11 @@ export default class Substitute<T extends android.base.View> extends squared.bas
     }
 
     public postProcedure(node: T) {
-        const options = createViewAttribute(this.options[node.elementId]);
-        node.apply(Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')));
+        node.apply(
+            Resource.formatOptions(
+                createViewAttribute(this.options[node.elementId]),
+                this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')
+            )
+        );
     }
 }

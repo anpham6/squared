@@ -153,11 +153,11 @@ export function getElementsBetweenSiblings(elementStart: Element | null, element
                 else {
                     spliceArray(result, element => element.nodeName.charAt(0) === '#' && (element.nodeName !== 'text' || !!element.textContent && element.textContent.trim() === ''));
                 }
-                return result;
+                return result.length ? result : undefined;
             }
         }
     }
-    return [];
+    return undefined;
 }
 
 export function getPreviousElementSibling(element: Element | null) {

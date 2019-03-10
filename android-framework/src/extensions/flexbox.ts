@@ -43,12 +43,13 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
         else {
             layout.setType(CONTAINER_NODE.LINEAR, mainData.columnDirection ? $enum.NODE_ALIGNMENT.HORIZONTAL : $enum.NODE_ALIGNMENT.VERTICAL);
         }
-        const output = this.application.renderNode(layout);
-        return { output, complete: true };
+        return {
+            output: this.application.renderNode(layout),
+            complete: true
+        };
     }
 
     public processChild(node: T, parent: T): ExtensionResult<T> {
-        let output = '';
         if (node.hasAlign($enum.NODE_ALIGNMENT.SEGMENTED)) {
             const layout = new $Layout(
                 parent,
@@ -58,9 +59,12 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 node.length,
                 node.children as T[]
             );
-            output = this.application.renderNode(layout);
+            return {
+                output: this.application.renderNode(layout),
+                complete: true
+            };
         }
-        return { output, complete: output !== '' };
+        return { output: '' };
     }
 
     public postBaseLayout(node: T) {

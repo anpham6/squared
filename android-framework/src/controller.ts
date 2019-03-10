@@ -8,7 +8,7 @@ import ViewGroup from './viewgroup';
 
 import { AXIS_ANDROID, BOX_ANDROID, CONTAINER_ANDROID, XMLNS_ANDROID } from './lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
-import { createViewAttribute, getXmlNs, replaceTab, replaceUnit } from './lib/util';
+import { createViewAttribute, getXmlNs, replaceTab, replaceLength } from './lib/util';
 
 import BASE_TMPL from './template/base';
 
@@ -24,8 +24,9 @@ const $math = squared.lib.math;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
-const GUIDELINE_AXIS = [AXIS_ANDROID.HORIZONTAL, AXIS_ANDROID.VERTICAL];
 const REGEXP_DATASETATTR = /^attr[A-Z]/;
+
+const GUIDELINE_AXIS = [AXIS_ANDROID.HORIZONTAL, AXIS_ANDROID.VERTICAL];
 
 function createColumnLayout<T extends View>(partition: T[][], horizontal: boolean) {
     for (const seg of partition) {
@@ -40,10 +41,8 @@ function createColumnLayout<T extends View>(partition: T[][], horizontal: boolea
             if (horizontal) {
                 chain.app('layout_constraintVertical_bias', '0');
             }
-            else {
-                if (i > 0) {
-                    chain.anchor('left', rowStart.documentId);
-                }
+            else if (i > 0) {
+                chain.anchor('left', rowStart.documentId);
             }
             if (next) {
                 chain.anchor(horizontal ? 'rightLeft' : 'bottomTop', next.documentId);
@@ -170,11 +169,11 @@ function adjustFloatingNegativeMargin<T extends View>(node: T, previous: T) {
 function constraintMinMax<T extends View>(node: T, dimension: string) {
     const minWH = node.cssInitial(`min${dimension}`);
     const maxWH = node.cssInitial(`max${dimension}`);
-    if ($util.isUnit(minWH)) {
+    if ($util.isLength(minWH)) {
         node.app(`layout_constraint${dimension}_min`, minWH);
         node.constraint.minWidth = true;
     }
-    if ($util.isUnit(maxWH)) {
+    if ($util.isLength(maxWH)) {
         node.app(`layout_constraint${dimension}_max`, maxWH);
         node.constraint.minHeight = true;
     }
@@ -311,7 +310,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     basis = '';
                 }
             }
-            else if ($util.isUnit(basis)) {
+            else if ($util.isLength(basis)) {
                 node.android(`layout_${dimensionA}`, node.convertPX(basis));
                 basis = '';
             }
@@ -322,7 +321,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 node.android(`layout_${dimensionA}`, '0px');
                 node.app(`layout_constraint${horizontal ? 'Horizontal' : 'Vertical'}_weight`, node.flexbox.grow.toString());
             }
-            else if ($util.isUnit(size)) {
+            else if ($util.isLength(size)) {
                 node.android(`layout_${dimensionA}`, size);
             }
             else if (node.flexbox.shrink > 1) {
@@ -341,7 +340,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             }
         }
         const sizeB = node.has(dimensionB) ? node.css(dimensionB) : '';
-        if ($util.isUnit(sizeB)) {
+        if ($util.isLength(sizeB)) {
             node.android(`layout_${dimensionB}`, sizeB);
         }
         else {
@@ -400,7 +399,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         for (const view of templates) {
             view.content = this.removePlaceholders(
                 replaceTab(
-                    replaceUnit(
+                    replaceLength(
                         view.content.replace(/{#0}/, getRootNamespace(view.content)),
                         this.userSettings.resolutionDPI,
                         this.userSettings.convertPixels
@@ -639,10 +638,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     public checkConstraintFloat(layout: $Layout<T>) {
-        return (
-            layout.floated.size === 1 &&
-            layout.every(node => node.floating && node.marginLeft >= 0 && node.marginRight >= 0 && (!node.positionRelative || node.left >= 0 && node.top >= 0))
-        );
+        return layout.floated.size === 1 && layout.every(node => node.floating && node.marginLeft >= 0 && node.marginRight >= 0 && (!node.positionRelative || node.left >= 0 && node.top >= 0));
     }
 
     public checkConstraintHorizontal(layout: $Layout<T>) {
@@ -833,179 +829,181 @@ export default class Controller<T extends View> extends squared.base.Controller<
         const controlName = View.getControlName(containerType);
         node.setControlType(controlName, containerType);
         const target = !node.dataset.use ? node.dataset.target : undefined;
-        switch (node.element && node.element.tagName) {
-            case 'IMG': {
-                if (!node.hasBit('excludeResource', $enum.NODE_RESOURCE.IMAGE_SOURCE)) {
-                    const element = <HTMLImageElement> node.element;
-                    const widthPercent = node.has('width', $enum.CSS_STANDARD.PERCENT);
-                    const heightPercent = node.has('height', $enum.CSS_STANDARD.PERCENT);
-                    let width = node.toInt('width');
-                    let height = node.toInt('height');
-                    let scaleType = '';
-                    if (widthPercent || heightPercent) {
-                        scaleType = widthPercent && heightPercent ? 'fitXY' : 'fitCenter';
+        if (node.element) {
+            switch (node.element.tagName) {
+                case 'IMG': {
+                    if (!node.hasBit('excludeResource', $enum.NODE_RESOURCE.IMAGE_SOURCE)) {
+                        const element = <HTMLImageElement> node.element;
+                        const widthPercent = node.has('width', $enum.CSS_STANDARD.PERCENT);
+                        const heightPercent = node.has('height', $enum.CSS_STANDARD.PERCENT);
+                        let width = node.toInt('width');
+                        let height = node.toInt('height');
+                        let scaleType = '';
+                        if (widthPercent || heightPercent) {
+                            scaleType = widthPercent && heightPercent ? 'fitXY' : 'fitCenter';
+                        }
+                        else {
+                            if (width === 0) {
+                                const match = /width="(\d+)"/.exec(element.outerHTML);
+                                if (match) {
+                                    width = parseInt(match[1]);
+                                    node.css('width', $util.formatPX(match[1]), true);
+                                }
+                            }
+                            if (height === 0) {
+                                const match = /height="(\d+)"/.exec(element.outerHTML);
+                                if (match) {
+                                    height = parseInt(match[1]);
+                                    node.css('height', $util.formatPX(match[1]), true);
+                                }
+                            }
+                            switch (node.css('objectFit')) {
+                                case 'contain':
+                                    scaleType = 'centerInside';
+                                    break;
+                                case 'cover':
+                                    scaleType = 'centerCrop';
+                                    break;
+                                case 'scale-down':
+                                    scaleType = 'fitCenter';
+                                    break;
+                                case 'none':
+                                    scaleType = 'matrix';
+                                    break;
+                                default:
+                                    scaleType = 'fitXY';
+                                    break;
+                            }
+                        }
+                        node.android('scaleType', scaleType);
+                        if (width > 0 && height === 0 || width === 0 && height > 0) {
+                            node.android('adjustViewBounds', 'true');
+                        }
+                        if (node.baseline) {
+                            node.android('baselineAlignBottom', 'true');
+                        }
+                        const src = Resource.addImageSrcSet(element);
+                        if (src !== '') {
+                            node.android('src', `@drawable/${src}`);
+                        }
+                        if (!node.pageFlow && node.left < 0 || node.top < 0) {
+                            const absoluteParent = node.absoluteParent;
+                            if (absoluteParent && absoluteParent.css('overflow') === 'hidden') {
+                                const container = this.application.createNode($element.createElement(node.actualParent ? node.actualParent.element : null));
+                                container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
+                                container.inherit(node, 'base');
+                                container.exclude({
+                                    procedure: $enum.NODE_PROCEDURE.ALL,
+                                    resource: $enum.NODE_RESOURCE.ALL
+                                });
+                                container.cssApply({
+                                    position: node.position,
+                                    zIndex: node.zIndex.toString()
+                                });
+                                parent.appendTry(node, container);
+                                this.cache.append(container);
+                                if (width > 0) {
+                                    container.android('layout_width', width < parent.box.width ? $util.formatPX(width) : 'match_parent');
+                                }
+                                else {
+                                    container.android('layout_width', 'wrap_content');
+                                }
+                                if (height > 0) {
+                                    container.android('layout_height', height < parent.box.height ? $util.formatPX(height) : 'match_parent');
+                                }
+                                else {
+                                    container.android('layout_height', 'wrap_content');
+                                }
+                                container.render(target ? this.application.resolveTarget(target, container) : parent);
+                                container.companion = node;
+                                container.saveAsInitial();
+                                node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, node.top);
+                                node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, node.left);
+                                node.render(container);
+                                return this.getEnclosingTag(
+                                    CONTAINER_ANDROID.FRAME,
+                                    container.id,
+                                    target ? -1 : container.renderDepth,
+                                    this.getEnclosingTag(controlName, node.id, target ? 0 : node.renderDepth)
+                                );
+                            }
+                        }
                     }
-                    else {
-                        if (width === 0) {
-                            const match = /width="(\d+)"/.exec(element.outerHTML);
-                            if (match) {
-                                width = parseInt(match[1]);
-                                node.css('width', $util.formatPX(match[1]), true);
-                            }
-                        }
-                        if (height === 0) {
-                            const match = /height="(\d+)"/.exec(element.outerHTML);
-                            if (match) {
-                                height = parseInt(match[1]);
-                                node.css('height', $util.formatPX(match[1]), true);
-                            }
-                        }
-                        switch (node.css('objectFit')) {
-                            case 'contain':
-                                scaleType = 'centerInside';
-                                break;
-                            case 'cover':
-                                scaleType = 'centerCrop';
-                                break;
-                            case 'scale-down':
-                                scaleType = 'fitCenter';
-                                break;
-                            case 'none':
-                                scaleType = 'matrix';
-                                break;
-                            default:
-                                scaleType = 'fitXY';
-                                break;
-                        }
+                    break;
+                }
+                case 'TEXTAREA': {
+                    const element = <HTMLTextAreaElement> node.element;
+                    node.android('minLines', '2');
+                    if (element.rows > 2) {
+                        node.android('lines', element.rows.toString());
                     }
-                    node.android('scaleType', scaleType);
-                    if (width > 0 && height === 0 || width === 0 && height > 0) {
-                        node.android('adjustViewBounds', 'true');
+                    if (element.maxLength > 0) {
+                        node.android('maxLength', element.maxLength.toString());
                     }
-                    if (node.baseline) {
-                        node.android('baselineAlignBottom', 'true');
+                    if (!node.hasWidth && element.cols > 0) {
+                        node.css('width', $util.formatPX(element.cols * 8), true);
                     }
-                    const src = Resource.addImageSrcSet(element);
-                    if (src !== '') {
-                        node.android('src', `@drawable/${src}`);
+                    node.android('hint', element.placeholder);
+                    node.android('scrollbars', AXIS_ANDROID.VERTICAL);
+                    node.android('inputType', 'textMultiLine');
+                    if (node.overflowX) {
+                        node.android('scrollHorizontally', 'true');
                     }
-                    if (!node.pageFlow && node.left < 0 || node.top < 0) {
-                        const absoluteParent = node.absoluteParent;
-                        if (absoluteParent && absoluteParent.css('overflow') === 'hidden') {
-                            const container = this.application.createNode($element.createElement(node.actualParent ? node.actualParent.element : null));
-                            container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
-                            container.inherit(node, 'base');
-                            container.exclude({
-                                procedure: $enum.NODE_PROCEDURE.ALL,
-                                resource: $enum.NODE_RESOURCE.ALL
-                            });
-                            container.cssApply({
-                                position: node.position,
-                                zIndex: node.zIndex.toString()
-                            });
-                            parent.appendTry(node, container);
-                            this.cache.append(container);
-                            if (width > 0) {
-                                container.android('layout_width', width < parent.box.width ? $util.formatPX(width) : 'match_parent');
-                            }
-                            else {
-                                container.android('layout_width', 'wrap_content');
-                            }
-                            if (height > 0) {
-                                container.android('layout_height', height < parent.box.height ? $util.formatPX(height) : 'match_parent');
-                            }
-                            else {
-                                container.android('layout_height', 'wrap_content');
-                            }
-                            container.render(target ? this.application.resolveTarget(target, container) : parent);
-                            container.companion = node;
-                            container.saveAsInitial();
-                            node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, node.top);
-                            node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, node.left);
-                            node.render(container);
-                            return this.getEnclosingTag(
-                                CONTAINER_ANDROID.FRAME,
-                                container.id,
-                                target ? -1 : container.renderDepth,
-                                this.getEnclosingTag(controlName, node.id, target ? 0 : node.renderDepth)
-                            );
-                        }
+                    if (!node.cssInitial('verticalAlign')) {
+                        node.css('verticalAlign', 'text-bottom', true);
                     }
+                    break;
                 }
-                break;
-            }
-            case 'TEXTAREA': {
-                const element = <HTMLTextAreaElement> node.element;
-                node.android('minLines', '2');
-                if (element.rows > 2) {
-                    node.android('lines', element.rows.toString());
+                case 'SELECT': {
+                    const element = <HTMLSelectElement> node.element;
+                    if (element.size > 1 && !node.cssInitial('verticalAlign')) {
+                        node.css('verticalAlign', 'text-bottom', true);
+                    }
+                    break;
                 }
-                if (element.maxLength > 0) {
-                    node.android('maxLength', element.maxLength.toString());
-                }
-                if (!node.hasWidth && element.cols > 0) {
-                    node.css('width', $util.formatPX(element.cols * 8), true);
-                }
-                node.android('hint', element.placeholder);
-                node.android('scrollbars', AXIS_ANDROID.VERTICAL);
-                node.android('inputType', 'textMultiLine');
-                if (node.overflowX) {
-                    node.android('scrollHorizontally', 'true');
-                }
-                if (!node.cssInitial('verticalAlign')) {
-                    node.css('verticalAlign', 'text-bottom', true);
-                }
-                break;
-            }
-            case 'SELECT': {
-                const element = <HTMLSelectElement> node.element;
-                if (element.size > 1 && !node.cssInitial('verticalAlign')) {
-                    node.css('verticalAlign', 'text-bottom', true);
-                }
-                break;
-            }
-            case 'INPUT': {
-                const element = <HTMLInputElement> node.element;
-                switch (element.type) {
-                    case 'password':
-                        node.android('inputType', 'textPassword');
-                        break;
-                    case 'text':
-                        node.android('inputType', 'text');
-                        break;
-                    case 'range':
-                        if ($util.hasValue(element.min)) {
-                            node.android('min', element.min);
-                        }
-                        if ($util.hasValue(element.max)) {
-                            node.android('max', element.max);
-                        }
-                        if ($util.hasValue(element.value)) {
-                            node.android('progress', element.value);
-                        }
-                        break;
-                    case 'image':
-                        if (!node.hasBit('excludeResource', $enum.NODE_RESOURCE.IMAGE_SOURCE)) {
-                            const result = Resource.addImage({ mdpi: element.src });
-                            if (result !== '') {
-                                node.android('src', `@drawable/${result}`, false);
+                case 'INPUT': {
+                    const element = <HTMLInputElement> node.element;
+                    switch (element.type) {
+                        case 'password':
+                            node.android('inputType', 'textPassword');
+                            break;
+                        case 'text':
+                            node.android('inputType', 'text');
+                            break;
+                        case 'range':
+                            if ($util.hasValue(element.min)) {
+                                node.android('min', element.min);
                             }
-                        }
-                        break;
+                            if ($util.hasValue(element.max)) {
+                                node.android('max', element.max);
+                            }
+                            if ($util.hasValue(element.value)) {
+                                node.android('progress', element.value);
+                            }
+                            break;
+                        case 'image':
+                            if (!node.hasBit('excludeResource', $enum.NODE_RESOURCE.IMAGE_SOURCE)) {
+                                const result = Resource.addImage({ mdpi: element.src });
+                                if (result !== '') {
+                                    node.android('src', `@drawable/${result}`, false);
+                                }
+                            }
+                            break;
+                    }
+                    switch (element.type) {
+                        case 'text':
+                        case 'search':
+                        case 'tel':
+                        case 'url':
+                        case 'email':
+                        case 'password':
+                            if (!node.hasWidth && element.size > 0) {
+                                node.css('width', $util.formatPX(element.size * 8), true);
+                            }
+                            break;
+                    }
+                    break;
                 }
-                switch (element.type) {
-                    case 'text':
-                    case 'search':
-                    case 'tel':
-                    case 'url':
-                    case 'email':
-                    case 'password':
-                        if (!node.hasWidth && element.size > 0) {
-                            node.css('width', $util.formatPX(element.size * 8), true);
-                        }
-                        break;
-                }
-                break;
             }
         }
         if (node.inlineVertical) {
@@ -1020,15 +1018,15 @@ export default class Controller<T extends View> extends squared.base.Controller<
         }
         switch (node.controlName) {
             case CONTAINER_ANDROID.TEXT:
-                const overflow: string[] = [];
+                let overflow = '';
                 if (node.overflowX) {
-                    overflow.push(AXIS_ANDROID.HORIZONTAL);
+                    overflow += AXIS_ANDROID.HORIZONTAL;
                 }
                 if (node.overflowY) {
-                    overflow.push(AXIS_ANDROID.VERTICAL);
+                    overflow += (overflow !== '' ? '|' : '') + AXIS_ANDROID.VERTICAL;
                 }
-                if (overflow.length) {
-                    node.android('scrollbars', overflow.join('|'));
+                if (overflow !== '') {
+                    node.android('scrollbars', overflow);
                 }
                 if (node.has('letterSpacing')) {
                     node.android('letterSpacing', node.css('letterSpacing'));
@@ -1037,9 +1035,8 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     node.android('justificationMode', 'inter_word');
                 }
                 if (node.has('textShadow')) {
-                    const value = node.css('textShadow');
                     [/^(rgba?\(\d+, \d+, \d+(?:, [\d.]+)?\)) ([\d.]+[a-z]+) ([\d.]+[a-z]+) ([\d.]+[a-z]+)$/, /^([\d.]+[a-z]+) ([\d.]+[a-z]+) ([\d.]+[a-z]+) (.+)$/].some((pattern, index) => {
-                        const match = value.match(pattern);
+                        const match = node.css('textShadow').match(pattern);
                         if (match) {
                             const color = $color.parseColor(match[index === 0 ? 1 : 4]);
                             if (color) {
@@ -1093,12 +1090,12 @@ export default class Controller<T extends View> extends squared.base.Controller<
 
     public renderNodeStatic(controlName: string, depth: number, options: ExternalData = {}, width = '', height = '', node?: T, children?: boolean) {
         const renderDepth = Math.max(0, depth);
-        if (node === undefined) {
-            node = new View(0, undefined, this.afterInsertNode) as T;
-        }
-        else {
+        if (node) {
             node.renderDepth = renderDepth;
             node.rendered = true;
+        }
+        else {
+            node = new View(0, undefined, this.afterInsertNode) as T;
         }
         node.apply(options);
         node.android('layout_width', width, false);
@@ -1229,12 +1226,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 const guideline = parent.constraint.guideline || {};
                 if (!node.pageFlow) {
                     if (node.absoluteParent === node.documentParent) {
-                        if (horizontal) {
-                            location = adjustDocumentRootOffset(location, documentParent, 'Left');
-                        }
-                        else {
-                            location = adjustDocumentRootOffset(location, documentParent, 'Top', documentParent.valueBox($enum.BOX_STANDARD.PADDING_TOP)[0] === 1);
-                        }
+                        location = horizontal ? adjustDocumentRootOffset(location, documentParent, 'Left') : adjustDocumentRootOffset(location, documentParent, 'Top', documentParent.valueBox($enum.BOX_STANDARD.PADDING_TOP)[0] === 1);
                     }
                 }
                 else {
@@ -1340,11 +1332,11 @@ export default class Controller<T extends View> extends squared.base.Controller<
             const renderParent = node.renderParent;
             if (renderParent) {
                 if (renderParent.overflowX) {
-                    if (node.has('width', $enum.CSS_STANDARD.UNIT)) {
-                        return node.toInt('width', true);
+                    if (node.has('width', $enum.CSS_STANDARD.LENGTH)) {
+                        return node.toFloat('width', true);
                     }
-                    else if (renderParent.has('width', $enum.CSS_STANDARD.UNIT)) {
-                        return renderParent.toInt('width', true);
+                    else if (renderParent.has('width', $enum.CSS_STANDARD.LENGTH)) {
+                        return renderParent.toFloat('width', true);
                     }
                     else if (renderParent.has('width', $enum.CSS_STANDARD.PERCENT)) {
                         return renderParent.bounds.width - renderParent.contentBoxWidth;
@@ -1363,13 +1355,13 @@ export default class Controller<T extends View> extends squared.base.Controller<
         const wrapWidth = boxWidth * this.localSettings.relative.boxWidthWordWrapPercent;
         const checkLineWrap = node.css('whiteSpace') !== 'nowrap';
         const firefoxEdge = $util.isUserAgent($util.USER_AGENT.FIREFOX | $util.USER_AGENT.EDGE);
+        const [right, left] = $util.partitionArray(children, item => item.float === 'right');
         const rows: T[][] = [];
         const rangeMultiLine = new Set<T>();
         let alignmentMultiLine = false;
         let rowWidth = 0;
         let rowPreviousLeft: T | undefined;
         let rowPreviousBottom: T | undefined;
-        const [right, left] = $util.partitionArray(children, item => item.float === 'right');
         sortHorizontalFloat(left);
         for (const seg of [left, right]) {
             const alignParent = seg === left ? 'left' : 'right';
@@ -1384,13 +1376,13 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         if (item.multiline === 0) {
                             item.multiline = bounds.multiline;
                         }
-                        if (firefoxEdge && bounds.multiline && !/^\s*\n+/.test(item.textContent)) {
+                        if (firefoxEdge && bounds.multiline && !$util.REGEXP_COMPILED.LEADINGNEWLINE.test(item.textContent)) {
                             rangeMultiLine.add(item);
                         }
                     }
                 }
                 let alignSibling = seg === left ? 'leftRight' : 'rightLeft';
-                let siblings: Element[] = [];
+                let siblings: Element[] | undefined;
                 if (i === 0) {
                     item.anchor(alignParent, 'true');
                     rows.push([item]);
@@ -1404,19 +1396,18 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         alignSibling = '';
                     }
                     const viewGroup = item.groupParent && !item.hasAlign($enum.NODE_ALIGNMENT.SEGMENTED);
-                    siblings = !viewGroup && item.element && item.inlineVertical && previous.inlineVertical ? $dom.getElementsBetweenSiblings(previous.element, item.element, true) : [];
+                    siblings = !viewGroup && item.element && item.inlineVertical && previous.inlineVertical ? $dom.getElementsBetweenSiblings(previous.element, item.element, true) : undefined;
                     const startNewRow = (() => {
                         if (item.textElement) {
-                            let connected = false;
                             if (previous.textElement) {
-                                if (i === 1 && item.plainText && !previous.rightAligned) {
-                                    connected = siblings.length === 0 && !/\s+$/.test(previous.textContent) && !/^\s+/.test(item.textContent);
+                                if (i === 1 && siblings === undefined && !previous.rightAligned && item.plainText && !$util.REGEXP_COMPILED.TRAILINGSPACE.test(previous.textContent) && !$util.REGEXP_COMPILED.LEADINGSPACE.test(item.textContent)) {
+                                    return false;
                                 }
-                                if (checkLineWrap && !connected && (rangeMultiLine.has(previous) || previous.multiline && $element.hasLineBreak(<Element> previous.element, false, true))) {
+                                else if (checkLineWrap && (rangeMultiLine.has(previous) || previous.multiline && $element.hasLineBreak(<Element> previous.element, false, true))) {
                                     return true;
                                 }
                             }
-                            if (checkLineWrap && !connected && (checkWidthWrap() || item.multiline && $element.hasLineBreak(<Element> item.element) || item.preserveWhiteSpace && /^\s*\n+/.test(item.textContent))) {
+                            if (checkLineWrap && (checkWidthWrap() || item.multiline && $element.hasLineBreak(<Element> item.element) || item.preserveWhiteSpace && $util.REGEXP_COMPILED.LEADINGNEWLINE.test(item.textContent))) {
                                 return true;
                             }
                         }
@@ -1434,7 +1425,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             !item.floating && (
                                 previous.blockStatic ||
                                 previousSiblings.some(sibling => sibling.lineBreak || sibling.excluded && sibling.blockStatic) ||
-                                siblings.some(element => $element.isLineBreak(element))
+                                siblings !== undefined && siblings.some(element => $element.isLineBreak(element))
                             ) ||
                             cleared.has(item)
                        ))
@@ -1473,7 +1464,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     rowPreviousLeft = item;
                 }
                 let previousOffset = 0;
-                if (siblings.length && !siblings.some(element => !!$dom.getElementAsNode(element) || $element.isLineBreak(element))) {
+                if (siblings && !siblings.some(element => !!$dom.getElementAsNode(element) || $element.isLineBreak(element))) {
                     const betweenStart = $dom.getRangeClientRect(siblings[0]);
                     const betweenEnd = siblings.length > 1 ? $dom.getRangeClientRect(siblings[siblings.length - 1]) : null;
                     if (!betweenStart.multiline && (betweenEnd === null || !betweenEnd.multiline)) {
@@ -1494,15 +1485,18 @@ export default class Controller<T extends View> extends squared.base.Controller<
             let baseline: T | undefined;
             if (rows[i].length > 1) {
                 const baselineItems = $NodeList.baseline(rows[i]);
+                let textBottom: T | undefined;
                 baseline = baselineItems[0];
+                if (baseline) {
+                    textBottom = getTextBottom(rows[i]);
+                    if (textBottom && textBottom.bounds.height > baseline.bounds.height) {
+                        baseline.anchor('bottom', textBottom.documentId);
+                    }
+                    else {
+                        textBottom = undefined;
+                    }
+                }
                 const textBaseline = $NodeList.baseline(rows[i], true)[0] as T | undefined;
-                let textBottom = getTextBottom(rows[i]);
-                if (baseline && textBottom && textBottom.bounds.height > baseline.bounds.height) {
-                    baseline.anchor('bottom', textBottom.documentId);
-                }
-                else {
-                    textBottom = undefined;
-                }
                 const baselineAlign: T[] = [];
                 const tryHeight = (child: T) => {
                     if (!alignmentMultiLine) {
@@ -1697,9 +1691,9 @@ export default class Controller<T extends View> extends squared.base.Controller<
 
     protected processConstraintChain(node: T, children: T[], bottomParent: number) {
         const chainHorizontal = $NodeList.partitionRows(children);
-        const boxParent = $NodeList.actualParent(children) || node;
+        const parent = $NodeList.actualParent(children) || node;
         const floating = node.hasAlign($enum.NODE_ALIGNMENT.FLOAT);
-        const cleared = chainHorizontal.length > 1 && node.hasAlign($enum.NODE_ALIGNMENT.NOWRAP) ? $NodeList.clearedAll(boxParent) : new Map<T, string>();
+        const cleared = chainHorizontal.length > 1 && node.hasAlign($enum.NODE_ALIGNMENT.NOWRAP) ? $NodeList.clearedAll(parent) : new Map<T, string>();
         let reverse = false;
         if (chainHorizontal.length > 1) {
             node.alignmentType |= $enum.NODE_ALIGNMENT.MULTILINE;
@@ -1713,18 +1707,18 @@ export default class Controller<T extends View> extends squared.base.Controller<
         for (const item of children) {
             if (!floating) {
                 if (item.rightAligned) {
-                    if ($util.withinRange(item.linear.right, boxParent.box.right) || item.linear.right > boxParent.box.right) {
+                    if ($util.withinRange(item.linear.right, parent.box.right) || item.linear.right > parent.box.right) {
                         item.anchor('right', 'parent');
                     }
                 }
-                else if ($util.withinRange(item.linear.left, boxParent.box.left) || item.linear.left < boxParent.box.left) {
+                else if ($util.withinRange(item.linear.left, parent.box.left) || item.linear.left < parent.box.left) {
                     item.anchor('left', 'parent');
                 }
             }
             if ($util.withinRange(item.linear.top, node.box.top) || item.linear.top < node.box.top || item.floating && chainHorizontal.length === 1) {
                 item.anchor('top', 'parent');
             }
-            if (this.withinParentBottom(item.linear.bottom, bottomParent) && !boxParent.documentBody && (boxParent.hasHeight || !item.alignParent('top'))) {
+            if (this.withinParentBottom(item.linear.bottom, bottomParent) && !parent.documentBody && (parent.hasHeight || !item.alignParent('top'))) {
                 item.anchor('bottom', 'parent');
             }
         }
@@ -1750,7 +1744,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             const rowStart = seg[0];
             const rowEnd = seg[seg.length - 1];
             rowStart.anchor(anchorStart, 'parent');
-            if (boxParent.css('textAlign') === 'center') {
+            if (parent.css('textAlign') === 'center') {
                 rowStart.app('layout_constraintHorizontal_chainStyle', 'spread');
             }
             else if (seg.length > 1) {
@@ -1800,7 +1794,10 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     if (aboveEnd) {
                         nodes.push(aboveEnd);
                         if (chain.element) {
-                            $util.concatArray(nodes, $util.flatMap($dom.getElementsBetweenSiblings(aboveEnd.element, chain.element), element => $dom.getElementAsNode<T>(element) as T));
+                            const elements = $dom.getElementsBetweenSiblings(aboveEnd.element, chain.element);
+                            if (elements) {
+                                $util.concatArray(nodes, $util.flatMap(elements, element => $dom.getElementAsNode<T>(element) as T));
+                            }
                         }
                     }
                     else {
@@ -1815,7 +1812,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             for (let k = previousSiblings.length - 2; k >= 0; k--) {
                                 const aboveBefore = previousSiblings[k];
                                 if (aboveBefore.linear.bottom > aboveEnd.linear.bottom) {
-                                    const offset = reverse ? Math.ceil(aboveBefore.linear[anchorEnd]) - Math.floor(boxParent.box[anchorEnd]) : Math.ceil(boxParent.box[anchorEnd]) - Math.floor(aboveBefore.linear[anchorEnd]);
+                                    const offset = reverse ? Math.ceil(aboveBefore.linear[anchorEnd]) - Math.floor(parent.box[anchorEnd]) : Math.ceil(parent.box[anchorEnd]) - Math.floor(aboveBefore.linear[anchorEnd]);
                                     if (offset >= chain.linear.width) {
                                         chain.anchor(chainStart, aboveBefore.documentId);
                                         chain.anchorDelete(chainEnd);

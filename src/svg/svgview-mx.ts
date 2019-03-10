@@ -18,6 +18,9 @@ type AttributeMap = ObjectMap<AttributeData[]>;
 const $css = squared.lib.css;
 const $util = squared.lib.util;
 
+const STRING_CUBICBEZIER = `cubic-bezier\\((${$util.STRING_PATTERN.ZERO_ONE}), (${$util.STRING_PATTERN.DECIMAL}), (${$util.STRING_PATTERN.ZERO_ONE}), (${$util.STRING_PATTERN.DECIMAL})\\)`;
+const REGEXP_TIMINGFUNCTION = new RegExp(`(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+, (?:start|end)\\)|${STRING_CUBICBEZIER}),?\\s*`, 'g');
+
 const KEYFRAME_NAME = $css.getKeyframeRules();
 const ANIMATION_DEFAULT: StringMap = {
     'animation-delay': '0s',
@@ -29,9 +32,6 @@ const ANIMATION_DEFAULT: StringMap = {
     'animation-timing-function': 'ease'
 };
 
-const REGEXP_CUBICBEZIER = `cubic-bezier\\((${$util.REGEXP_STRING.ZERO_ONE}), (${$util.REGEXP_STRING.DECIMAL}), (${$util.REGEXP_STRING.ZERO_ONE}), (${$util.REGEXP_STRING.DECIMAL})\\)`;
-const REGEXP_TIMINGFUNCTION = `(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+, (?:start|end)\\)|${REGEXP_CUBICBEZIER}),?\\s*`;
-
 function setAttribute(element: SVGElement, attr: string, value: string) {
     element.style[attr] = value;
     element.setAttribute(attr, value);
@@ -40,10 +40,9 @@ function setAttribute(element: SVGElement, attr: string, value: string) {
 function parseAttribute(element: SVGElement, attr: string) {
     const value = $css.getAttribute(element, attr);
     if (attr === 'animation-timing-function') {
-        const pattern = new RegExp(REGEXP_TIMINGFUNCTION, 'g');
-        let match: RegExpMatchArray | null;
         const result: string[] = [];
-        while ((match = pattern.exec(value)) !== null) {
+        let match: RegExpMatchArray | null;
+        while ((match = REGEXP_TIMINGFUNCTION.exec(value)) !== null) {
             result.push(match[1]);
         }
         return result;
@@ -110,11 +109,11 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             for (let i = 0; i < element.children.length; i++) {
                 const item = element.children[i];
                 if (item instanceof SVGAnimationElement) {
-                    const begin = item.attributes.getNamedItem('begin');
-                    if (begin && /^[a-zA-Z]+$/.test(begin.value.trim())) {
+                    const begin = $css.getNamedItem(item, 'begin');
+                    if (begin !== '' && /^[a-zA-Z]+$/.test(begin)) {
                         continue;
                     }
-                    const times = begin ? $util.sortNumber($util.replaceMap<string, number>(begin.value.split(';'), value => SvgAnimation.convertClockTime(value))) : [0];
+                    const times = begin ? $util.sortNumber($util.replaceMap<string, number>(begin.split(';'), value => SvgAnimation.convertClockTime(value))) : [0];
                     if (times.length) {
                         switch (item.tagName) {
                             case 'set':
@@ -361,7 +360,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                             keySplines[j] = KEYSPLINE_NAME.linear;
                                         }
                                         else {
-                                            const match = new RegExp(REGEXP_CUBICBEZIER).exec(keySplines[j]);
+                                            const match = new RegExp(STRING_CUBICBEZIER).exec(keySplines[j]);
                                             keySplines[j] = match ? `${match[1]} ${match[2]} ${match[3]} ${match[4]}` : KEYSPLINE_NAME.ease;
                                         }
                                         keySplinesData.push(keySplines[j]);

@@ -210,12 +210,7 @@ function insertDoubleBorder(layerList: LayerListTemplate, border: BorderAttribut
 function checkBackgroundPosition(value: string, adjacent: string, defaultPosition: string) {
     const initial = value === 'initial' || value === 'unset';
     if (value.indexOf(' ') === -1 && adjacent.indexOf(' ') !== -1) {
-        if (/^[a-z]+$/.test(value)) {
-            return `${initial ? defaultPosition : value} 0px`;
-        }
-        else {
-            return `${defaultPosition} ${value}`;
-        }
+        return /^[a-z]+$/.test(value) ? `${initial ? defaultPosition : value} 0px` : `${defaultPosition} ${value}`;
     }
     else if (initial) {
         return '0px';
@@ -346,7 +341,7 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIP
     }
     const colorStops = gradient.colorStops;
     if (hasStop) {
-        result.colorStops = ResourceBackground.convertColorStops(colorStops);
+        result.colorStops = convertColorStops(colorStops);
     }
     else {
         result.startColor = Resource.addColor(colorStops[0].color, true);
@@ -358,19 +353,19 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIP
     return result;
 }
 
-export default class ResourceBackground<T extends View> extends squared.base.Extension<T> {
-    public static convertColorStops(list: ColorStop[], precision?: number) {
-        const result: GradientColorStop[] = [];
-        for (const stop of list) {
-            const color = `@color/${Resource.addColor(stop.color, true)}`;
-            result.push({
-                color,
-                offset: $math.truncate(stop.offset, precision)
-            });
-        }
-        return result;
+export function convertColorStops(list: ColorStop[], precision?: number) {
+    const result: GradientColorStop[] = [];
+    for (const stop of list) {
+        const color = `@color/${Resource.addColor(stop.color, true)}`;
+        result.push({
+            color,
+            offset: $math.truncate(stop.offset, precision)
+        });
     }
+    return result;
+}
 
+export default class ResourceBackground<T extends View> extends squared.base.Extension<T> {
     public readonly options: ResourceBackgroundOptions = {
         autoSizeBackgroundImage: true
     };
@@ -488,82 +483,82 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 position.bottom = 0;
                             }
                         }
-                        let gravity = '';
-                        if ((position.horizontal === 'center' || position.horizontal === '50%') && (position.vertical === 'center' || position.vertical === '50%')) {
-                            resetHorizontal();
-                            resetVertical();
-                            gravity = 'center';
-                        }
-                        else {
-                            switch (position.horizontal) {
-                                case '0%':
-                                case 'left':
-                                    resetHorizontal();
-                                    gravity = node.localizeString('left');
-                                    break;
-                                case '50%':
-                                case 'center':
-                                    resetHorizontal();
-                                    gravity = 'center_horizontal';
-                                    break;
-                                case '100%':
-                                case 'right':
-                                    resetHorizontal();
-                                    gravity = node.localizeString('right');
-                                    break;
-                            }
-                            const separator = gravity !== '' ? '|' : '';
-                            switch (position.vertical) {
-                                case '0%':
-                                case 'top':
-                                    resetVertical();
-                                    gravity += separator + 'top';
-                                    break;
-                                case '50%':
-                                case 'center':
-                                    resetVertical();
-                                    gravity += separator + 'center_vertical';
-                                    break;
-                                case '100%':
-                                case 'bottom':
-                                    resetVertical();
-                                    gravity += separator + 'bottom';
-                                    break;
-                            }
-                        }
                         let dimension: ImageAsset | Dimension | undefined;
                         if (typeof value === 'string') {
                             dimension = imageDimensions[i];
                             let width = '';
                             let height = '';
+                            let gravity = '';
                             let tileMode = '';
                             let tileModeX = '';
                             let tileModeY = '';
-                            if (backgroundRepeat[i] === 'no-repeat') {
-                                tileMode = 'disabled';
+                            if ((position.horizontal === 'center' || position.horizontal === '50%') && (position.vertical === 'center' || position.vertical === '50%')) {
+                                resetHorizontal();
+                                resetVertical();
+                                gravity = 'center';
                             }
-                            else if (!dimension || dimension.width < node.bounds.width || dimension.height < node.bounds.height) {
-                                switch (backgroundRepeat[i]) {
-                                    case 'repeat':
-                                        tileMode = 'repeat';
+                            else {
+                                switch (position.horizontal) {
+                                    case '0%':
+                                    case 'left':
+                                        resetHorizontal();
+                                        gravity = node.localizeString('left');
                                         break;
-                                    case 'repeat-x':
-                                        tileModeX = 'repeat';
+                                    case '50%':
+                                    case 'center':
+                                        resetHorizontal();
+                                        gravity = 'center_horizontal';
                                         break;
-                                    case 'repeat-y':
-                                        tileModeY = 'repeat';
+                                    case '100%':
+                                    case 'right':
+                                        resetHorizontal();
+                                        gravity = node.localizeString('right');
+                                        break;
+                                }
+                                const separator = gravity !== '' ? '|' : '';
+                                switch (position.vertical) {
+                                    case '0%':
+                                    case 'top':
+                                        resetVertical();
+                                        gravity += separator + 'top';
+                                        break;
+                                    case '50%':
+                                    case 'center':
+                                        resetVertical();
+                                        gravity += separator + 'center_vertical';
+                                        break;
+                                    case '100%':
+                                    case 'bottom':
+                                        resetVertical();
+                                        gravity += separator + 'bottom';
                                         break;
                                 }
                             }
-                            if (gravity !== '' && dimension && dimension.width > 0 && dimension.height > 0 && node.renderChildren.length === 0) {
+                            if (backgroundRepeat[i] === 'no-repeat') {
+                                tileMode = 'disabled';
+                            }
+                            else {
+                                switch (backgroundRepeat[i]) {
+                                    case 'repeat':
+                                        if (!dimension || dimension.width < node.bounds.width || dimension.height < node.bounds.height) {
+                                            tileMode = 'repeat';
+                                        }
+                                        break;
+                                    case 'repeat-x':
+                                        if (!dimension || dimension.width < node.bounds.width) {
+                                            tileModeX = 'repeat';
+                                        }
+                                        break;
+                                    case 'repeat-y':
+                                        if (!dimension || dimension.height < node.bounds.height) {
+                                            tileModeY = 'repeat';
+                                        }
+                                        break;
+                                }
+                            }
+                            if (gravity !== '' && node.renderChildren.length === 0 && dimension && dimension.width > 0 && dimension.height > 0) {
                                 if (tileModeY === 'repeat') {
-                                    let tileWidth = 0;
-                                    if (node.hasWidth) {
-                                        tileWidth = node.width + node.paddingLeft + node.paddingRight;
-                                    }
-                                    else {
-                                        tileWidth = node.bounds.width - (node.borderLeftWidth + node.borderRightWidth);
-                                    }
+                                    const tileWidth = node.hasWidth ? node.width + node.paddingLeft + node.paddingRight : node.bounds.width - (node.borderLeftWidth + node.borderRightWidth);
                                     if (dimension.width < tileWidth) {
                                         const layoutWidth = $util.convertInt(node.android('layout_width'));
                                         if (gravity.indexOf('left') !== -1 || gravity.indexOf('start') !== -1) {
@@ -588,13 +583,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     }
                                 }
                                 if (tileModeX === 'repeat') {
-                                    let tileHeight = 0;
-                                    if (node.hasHeight) {
-                                        tileHeight = node.height + node.paddingTop + node.paddingBottom;
-                                    }
-                                    else {
-                                        tileHeight = node.bounds.height - (node.borderTopWidth + node.borderBottomWidth);
-                                    }
+                                    const tileHeight = node.hasHeight ? node.height + node.paddingTop + node.paddingBottom : node.bounds.height - (node.borderTopWidth + node.borderBottomWidth);
                                     if (dimension.height < tileHeight) {
                                         const layoutHeight = $util.convertInt(node.android('layout_height'));
                                         if (gravity.indexOf('top') !== -1) {
@@ -620,7 +609,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 }
                             }
                             if (imageSingle) {
-                                let scaleType = '';
+                                let scaleType: string | undefined;
                                 if (/^(left|start)/.test(gravity)) {
                                     scaleType = 'fitStart';
                                 }
@@ -630,19 +619,33 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 else if (gravity === 'center' || gravity.startsWith('center_horizontal')) {
                                     scaleType = 'center';
                                 }
+                                if (scaleType) {
+                                    node.android('scaleType', scaleType);
+                                }
                                 if (position.left > 0) {
                                     node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, position.left);
                                 }
                                 if (position.top > 0) {
                                     node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, position.top);
                                 }
-                                node.android('scaleType', scaleType);
                                 node.android('src', `@drawable/${value}`);
                                 if (!hasBorder) {
                                     return;
                                 }
                             }
                             else {
+                                if (position.top !== 0) {
+                                    imageData.top = $util.formatPX(position.top);
+                                }
+                                if (position.right !== 0) {
+                                    imageData.right = $util.formatPX(position.right);
+                                }
+                                if (position.bottom !== 0) {
+                                    imageData.bottom = $util.formatPX(position.bottom);
+                                }
+                                if (position.left !== 0) {
+                                    imageData.left = $util.formatPX(position.left);
+                                }
                                 if (!(backgroundSize[i] === 'auto' || backgroundSize[i] === 'auto auto' || backgroundSize[i] === 'initial')) {
                                     switch (backgroundSize[i]) {
                                         case 'cover':
@@ -742,20 +745,20 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             else {
                                 imageData.gradient = [value];
                             }
-                        }
-                        if (imageData.src || imageData.bitmap || imageData.gradient) {
                             if (position.top !== 0) {
-                                imageData.top = $util.formatPX(imageData.gradient ? getPercentOffset(position, 'top', node.bounds, dimension) : position.top);
+                                imageData.top = $util.formatPX(getPercentOffset(position, 'top', node.bounds, dimension));
                             }
                             if (position.right !== 0) {
-                                imageData.right = $util.formatPX(position.right);
+                                imageData.right = $util.formatPX(getPercentOffset(position, 'right', node.bounds, dimension));
                             }
                             if (position.bottom !== 0) {
-                                imageData.bottom = $util.formatPX(position.bottom);
+                                imageData.bottom = $util.formatPX(getPercentOffset(position, 'bottom', node.bounds, dimension));
                             }
                             if (position.left !== 0) {
-                                imageData.left = $util.formatPX(imageData.gradient ? getPercentOffset(position, 'left', node.bounds, dimension) : position.left);
+                                imageData.left = $util.formatPX(getPercentOffset(position, 'left', node.bounds, dimension));
                             }
+                        }
+                        if (imageData.src || imageData.bitmap || imageData.gradient) {
                             layerList.B.push(imageData);
                         }
                     }
@@ -909,13 +912,13 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     current = current.documentParent as T;
                                 }
                             }
-                            if (!node.has('width', $enum.CSS_STANDARD.UNIT)) {
+                            if (!node.has('width', $enum.CSS_STANDARD.LENGTH)) {
                                 const width = node.bounds.width + (node.is(CONTAINER_NODE.LINE) ? 0 : node.borderLeftWidth + node.borderRightWidth);
                                 if (sizeParent.width === 0 || (width > 0 && width < sizeParent.width)) {
                                     node.css('width', $util.formatPX(width), true);
                                 }
                             }
-                            if (!node.has('height', $enum.CSS_STANDARD.UNIT)) {
+                            if (!node.has('height', $enum.CSS_STANDARD.LENGTH)) {
                                 const height = node.bounds.height + (node.is(CONTAINER_NODE.LINE) ? 0 : node.borderTopWidth + node.borderBottomWidth);
                                 if (sizeParent.height === 0 || (height > 0 && height < sizeParent.height)) {
                                     node.css('height', $util.formatPX(height), true);

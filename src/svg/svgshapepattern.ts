@@ -41,6 +41,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
         const path = new SvgPath(element);
         path.build(options);
         if (path.value) {
+            options = { ...options };
             const precision = options && options.precision;
             this.clipRegion = path.value;
             if (path.clipPath) {
@@ -69,7 +70,6 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                 offsetY = tileHeight - offsetY;
                 remainingHeight += tileHeight;
             }
-            options = { ...options };
             while (remainingHeight > 0) {
                 const y = boundingY + j * tileHeight - offsetY;
                 let remainingWidth = width;

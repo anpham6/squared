@@ -14,17 +14,11 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
     }
 
     public static baseline<T extends Node>(list: T[], text = false) {
-        let baseline = $util.filterArray(list, item => {
-            if (item.baseline || $util.isUnit(item.verticalAlign) && item.verticalAlign !== '0px') {
-                const position = item.cssInitial('position');
-                return position !== 'absolute' && position !== 'fixed';
-            }
-            return false;
-        });
+        let baseline = $util.filterArray(list, item => item.baseline || $util.isLength(item.verticalAlign) && item.verticalAlign !== '0px');
         if (baseline.length) {
             list = baseline;
         }
-        baseline = $util.filterArray(list, item => item.textElement || item.verticalAlign !== 'text-top' && item.verticalAlign !== 'text-bottom');
+        baseline = $util.filterArray(list, item => item.textElement || !item.verticalAlign.startsWith('text-'));
         if (baseline.length) {
             list = baseline;
         }
@@ -45,7 +39,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
             else if (b.groupParent || b.length || (a.baseline && !b.baseline)) {
                 return -1;
             }
-            if (!a.imageElement || !b.imageElement) {
+            else if (!a.imageElement || !b.imageElement) {
                 if (a.multiline || b.multiline) {
                     if (a.lineHeight > 0 && b.lineHeight > 0) {
                         return a.lineHeight <= b.lineHeight ? 1 : -1;
@@ -54,22 +48,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                         return a.htmlElement || !b.htmlElement ? -1 : 1;
                     }
                 }
-                if (a.containerType !== b.containerType) {
-                    if (a.textElement || a.imageElement) {
-                        return -1;
-                    }
-                    else if (b.textElement || b.imageElement) {
-                        return 1;
-                    }
-                    return a.containerType < b.containerType ? -1 : 1;
-                }
-                else if (b.imageElement) {
-                    return -1;
-                }
-                else if (a.imageElement) {
-                    return 1;
-                }
-                else {
+                else if (a.textElement && b.textElement) {
                     if (a.fontSize === b.fontSize) {
                         if (a.htmlElement && !b.htmlElement) {
                             return -1;
@@ -77,16 +56,27 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                         else if (!a.htmlElement && b.htmlElement) {
                             return 1;
                         }
-                        else {
-                            return a.siblingIndex >= b.siblingIndex ? 1 : -1;
-                        }
+                        return a.siblingIndex >= b.siblingIndex ? 1 : -1;
                     }
-                    else if (a.fontSize !== b.fontSize && a.fontSize > 0 && b.fontSize > 0) {
-                        return a.fontSize > b.fontSize ? -1 : 1;
+                    return a.fontSize > b.fontSize ? -1 : 1;
+                }
+                else if (a.containerType !== b.containerType) {
+                    if (a.textElement) {
+                        return -1;
                     }
+                    else if (b.textElement) {
+                        return 1;
+                    }
+                    else if (a.imageElement) {
+                        return -1;
+                    }
+                    else if (b.imageElement) {
+                        return 1;
+                    }
+                    return a.containerType < b.containerType ? -1 : 1;
                 }
             }
-            return 0;
+            return a.bounds.height <= b.bounds.height ? 1 : -1;
         });
     }
 
@@ -104,12 +94,13 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
         if (parent && list.length > 1) {
             list.slice(0).sort(this.siblingIndex);
             const actualParent = this.actualParent(list);
-            if (actualParent && actualParent.element) {
+            const element = actualParent && actualParent.element;
+            if (element) {
                 const nodes: T[] = [];
                 const listEnd = list[list.length - 1];
                 let valid = false;
-                for (let i = 0; i < actualParent.element.childNodes.length; i++) {
-                    const node = $dom.getElementAsNode<T>(<Element> actualParent.element.childNodes[i]);
+                for (let i = 0; i < element.childNodes.length; i++) {
+                    const node = $dom.getElementAsNode<T>(<Element> element.childNodes[i]);
                     if (node) {
                         if (node === list[0]) {
                             valid = true;
@@ -147,7 +138,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                             break;
                     }
                     for (const item of previousFloat) {
-                        if (item && !node.floating && node.linear.top > item.linear.bottom && floated.has(item.float)) {
+                        if (item && floated.has(item.float) && !node.floating && node.linear.top > item.linear.bottom) {
                             floated.delete(item.float);
                             previous[item.float] = undefined;
                         }
@@ -174,11 +165,11 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
     }
 
     public static floatedAll<T extends Node>(parent: T) {
-        return this.floated($util.filterArray(parent.actualChildren, item => item.pageFlow) as T[]);
+        return this.floated($util.filterArray(parent.actualChildren as T[], item => item.pageFlow));
     }
 
     public static clearedAll<T extends Node>(parent: T) {
-        return this.cleared($util.filterArray(parent.actualChildren, item => item.pageFlow) as T[], false);
+        return this.cleared($util.filterArray(parent.actualChildren as T[], item => item.pageFlow), false);
     }
 
     public static linearX<T extends Node>(list: T[]) {
@@ -271,12 +262,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
     public static partitionRows<T extends Node>(list: T[]) {
         const [children, cleared] = ((): [T[], Map<T, string>] => {
             const parent = this.actualParent(list);
-            if (parent) {
-                return [parent.actualChildren as T[], this.clearedAll(parent)];
-            }
-            else {
-                return [list, this.cleared(list)];
-            }
+            return parent ? [parent.actualChildren as T[], this.clearedAll(parent)] : [list, this.cleared(list)];
         })();
         const result: T[][] = [];
         let row: T[] = [];

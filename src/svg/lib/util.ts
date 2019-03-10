@@ -4,6 +4,15 @@ const $css = squared.lib.css;
 const $math = squared.lib.math;
 const $util = squared.lib.util;
 
+const STRING_DECIMAL = `(${$util.STRING_PATTERN.DECIMAL})`;
+const REGEXP_TRANSFORM = {
+    MATRIX: new RegExp(`(matrix(?:3d)?)\\(${STRING_DECIMAL}, ${STRING_DECIMAL}, ${STRING_DECIMAL}, ${STRING_DECIMAL}, ${STRING_DECIMAL}, ${STRING_DECIMAL}(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?\\)`, 'g'),
+    ROTATE: new RegExp(`(rotate[XY]?)\\(${$util.STRING_PATTERN.ANGLE}\\)`, 'g'),
+    SKEW: new RegExp(`(skew[XY]?)\\(${$util.STRING_PATTERN.ANGLE}(?:, ${$util.STRING_PATTERN.ANGLE})?\\)`, 'g'),
+    SCALE: new RegExp(`(scale[XY]?)\\(${STRING_DECIMAL}(?:, ${STRING_DECIMAL})?\\)`, 'g'),
+    TRANSLATE: new RegExp(`(translate[XY]?)\\(${$util.STRING_PATTERN.LENGTH_PERCENTAGE}(?:, ${$util.STRING_PATTERN.LENGTH_PERCENTAGE})?\\)`, 'g')
+};
+
 const SHAPES = {
     path: 1,
     line: 2,
@@ -12,15 +21,6 @@ const SHAPES = {
     circle: 5,
     polyline: 6,
     polygon: 7
-};
-
-const REGEXP_DECIMAL = `(${$util.REGEXP_STRING.DECIMAL})`;
-const REGEXP_TRANSFORM = {
-    MATRIX: `(matrix(?:3d)?)\\(${REGEXP_DECIMAL}, ${REGEXP_DECIMAL}, ${REGEXP_DECIMAL}, ${REGEXP_DECIMAL}, ${REGEXP_DECIMAL}, ${REGEXP_DECIMAL}(?:, ${REGEXP_DECIMAL})?(?:, ${REGEXP_DECIMAL})?(?:, ${REGEXP_DECIMAL})?(?:, ${REGEXP_DECIMAL})?(?:, ${REGEXP_DECIMAL})?(?:, ${REGEXP_DECIMAL})?(?:, ${REGEXP_DECIMAL})?(?:, ${REGEXP_DECIMAL})?(?:, ${REGEXP_DECIMAL})?(?:, ${REGEXP_DECIMAL})?\\)`,
-    ROTATE: `(rotate[XY]?)\\(${$util.REGEXP_STRING.DEGREE}\\)`,
-    SKEW: `(skew[XY]?)\\(${$util.REGEXP_STRING.DEGREE}(?:, ${$util.REGEXP_STRING.DEGREE})?\\)`,
-    SCALE: `(scale[XY]?)\\(${REGEXP_DECIMAL}(?:, ${REGEXP_DECIMAL})?\\)`,
-    TRANSLATE: `(translate[XY]?)\\(${$util.REGEXP_STRING.LENGTH}(?:, ${$util.REGEXP_STRING.LENGTH})?\\)`
 };
 
 export const MATRIX = {
@@ -95,13 +95,12 @@ export const TRANSFORM = {
         };
     },
     parse(element: SVGElement, value?: string): SvgTransform[] | undefined {
-        const transform = value === undefined ? $css.getInlineStyle(element, 'transform') : value;
+        const transform = value || $css.getInlineStyle(element, 'transform');
         if (transform !== '') {
             const ordered: SvgTransform[] = [];
             for (const name in REGEXP_TRANSFORM) {
-                const pattern = new RegExp(REGEXP_TRANSFORM[name], 'g');
-                let match: RegExpExecArray | null = null;
-                while ((match = pattern.exec(transform)) !== null) {
+                let match: RegExpExecArray | null;
+                while ((match = REGEXP_TRANSFORM[name].exec(transform)) !== null) {
                     const isX = match[1].endsWith('X');
                     const isY = match[1].endsWith('Y');
                     if (match[1].startsWith('rotate')) {
@@ -144,8 +143,8 @@ export const TRANSFORM = {
                     }
                     else if (match[1].startsWith('translate')) {
                         const fontSize = $css.getFontSize(element);
-                        const arg1 = $util.calculateUnit(match[2], fontSize);
-                        const arg2 = (!isX && match[3] ? $util.calculateUnit(match[3], fontSize) : 0);
+                        const arg1 = $util.parseUnit(match[2], fontSize);
+                        const arg2 = (!isX && match[3] ? $util.parseUnit(match[3], fontSize) : 0);
                         const x = isY ? 0 : arg1;
                         const y = isY ? arg1 : arg2;
                         const matrix = MATRIX.translate(x, y);
@@ -202,8 +201,8 @@ export const TRANSFORM = {
         if (value !== '') {
             const viewBox = getNearestViewBox(element);
             function setPosition(attr: string, position: string, dimension: number) {
-                if ($util.isUnit(position)) {
-                    result[attr] = $util.calculateUnit(position, $css.getFontSize(element));
+                if ($util.isLength(position)) {
+                    result[attr] = $util.parseUnit(position, $css.getFontSize(element));
                 }
                 else if ($util.isPercent(position)) {
                     result[attr] = (parseFloat(position) / 100) * dimension;

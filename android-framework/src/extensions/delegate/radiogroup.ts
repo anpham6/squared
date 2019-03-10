@@ -9,8 +9,6 @@ const $enum = squared.base.lib.enumeration;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
-const RADIO_GROUP = 'RadioGroup';
-
 export default class ScrollView<T extends android.base.View> extends squared.base.Extension<T> {
     public condition(node: T) {
         const element = <HTMLInputElement> node.element;
@@ -42,7 +40,7 @@ export default class ScrollView<T extends android.base.View> extends squared.bas
             if (parent.layoutConstraint) {
                 container.companion = replacement || node;
             }
-            container.setControlType(RADIO_GROUP, CONTAINER_NODE.INLINE);
+            container.setControlType('RadioGroup', CONTAINER_NODE.INLINE);
             container.inherit(node, 'alignment');
             container.css('verticalAlign', 'text-bottom');
             container.each((item: T, index) => {
@@ -60,7 +58,7 @@ export default class ScrollView<T extends android.base.View> extends squared.bas
             container.render(target ? this.application.resolveTarget(target, container) : parent);
             this.subscribers.add(container);
             const outputAs = controller.getEnclosingTag(
-                RADIO_GROUP,
+                'RadioGroup',
                 container.id,
                 target ? -1 : container.renderDepth, $xml.formatPlaceholder(container.id)
             );

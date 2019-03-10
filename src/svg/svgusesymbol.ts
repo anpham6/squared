@@ -19,9 +19,9 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewR
     }
 
     public build(options?: SvgBuildOptions) {
-        this.setRect();
         options = { ...options };
         options.symbolElement = this.symbolElement;
+        this.setRect();
         super.build(options);
         const x = this.getBaseValue('x', 0);
         const y = this.getBaseValue('y', 0);

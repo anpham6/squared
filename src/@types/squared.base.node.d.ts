@@ -26,6 +26,7 @@ declare global {
             renderDepth: number;
             renderPositionId: string;
             inlineText: boolean;
+            baseline: boolean;
             multiline: number;
             overflow: number;
             documentParent: Node;
@@ -105,7 +106,6 @@ declare global {
             readonly fontSize: number;
             readonly overflowX: boolean;
             readonly overflowY: boolean;
-            readonly baseline: boolean;
             readonly verticalAlign: string;
             readonly preserveWhiteSpace: boolean;
             readonly layoutHorizontal: boolean;
@@ -161,13 +161,14 @@ declare global {
             cssApply(values: StringMap, cache?: boolean): this;
             cssInitial(attr: string, modified?: boolean, computed?: boolean): string;
             cssAscend(attr: string, startChild?: boolean, visible?: boolean): string;
-            cssSort(attr: string, duplicate?: boolean): Node[];
+            cssSort(attr: string, ascending?: boolean, duplicate?: boolean): Node[];
             cssPX(attr: string, value: number, negative?: boolean, cache?: boolean): string;
             cssTry(attr: string, value: string): boolean;
             cssFinally(attr: string): boolean;
             appendTry(node: Node, withNode: Node, append?: boolean): void;
-            toInt(attr: string, initial?: boolean, defaultValue?: number): number;
-            calculateUnit(value: string, horizontal?: boolean, parent?: boolean): number;
+            toInt(attr: string, initial?: boolean, fallback?: number): number;
+            toFloat(attr: string, initial?: boolean, fallback?: number): number;
+            parseUnit(value: string, horizontal?: boolean, parent?: boolean): number;
             convertPX(value: string, horizontal?: boolean, parent?: boolean): string;
             has(attr: string, checkType?: number, options?: {}): boolean;
             hasBit(attr: string, value: number): boolean;

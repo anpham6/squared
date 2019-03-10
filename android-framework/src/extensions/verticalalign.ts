@@ -12,7 +12,6 @@ export default class <T extends android.base.View> extends squared.base.extensio
     public processNode(node: T, parent: T): ExtensionResult<T> {
         super.processNode(node, parent);
         const mainData: VerticalAlignData<T> = node.data($const.EXT_NAME.VERTICAL_ALIGN, 'mainData');
-        let output = '';
         if (mainData) {
             const layout = new $Layout(
                 parent,
@@ -23,8 +22,8 @@ export default class <T extends android.base.View> extends squared.base.extensio
                 node.children as T[]
             );
             layout.floated = layout.getFloated(true);
-            output = this.application.renderNode(layout);
+            return { output: this.application.renderNode(layout) };
         }
-        return { output };
+        return { output: '' };
     }
 }

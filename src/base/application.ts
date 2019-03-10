@@ -21,15 +21,19 @@ const PREALIGN_DIRECTION = ['top', 'right', 'bottom', 'left'];
 function prioritizeExtensions<T extends Node>(documentRoot: HTMLElement, element: HTMLElement, extensions: Extension<T>[]) {
     const tagged: string[] = [];
     let current: HTMLElement | null = element;
-    do {
+    while (current) {
         if (current.dataset.use) {
             for (const value of current.dataset.use.split($util.REGEXP_COMPILED.SEPARATOR)) {
                 tagged.push(value.trim());
             }
         }
-        current = current !== documentRoot ? current.parentElement : null;
+        if (current !== documentRoot) {
+            current = current.parentElement;
+        }
+        else {
+            break;
+        }
     }
-    while (current);
     if (tagged.length) {
         const result: Extension<T>[] = [];
         const untagged: Extension<T>[] = [];
@@ -219,6 +223,7 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
         }
         const documentRoot = this.parseElements.values().next().value;
+        const fileExtension = new RegExp(`\.${this.controllerHandler.localSettings.layout.fileExtension}$`);
         const preloadImages: HTMLImageElement[] = [];
         const parseResume = () => {
             this.initialized = false;
@@ -237,7 +242,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 if (this.appName === '') {
                     this.appName = element.id || 'untitled';
                 }
-                const filename = element.dataset.filename && element.dataset.filename.replace(new RegExp(`\.${this.controllerHandler.localSettings.layout.fileExtension}$`), '') || element.id || `document_${this.size}`;
+                const filename = element.dataset.filename && element.dataset.filename.replace(fileExtension, '') || element.id || `document_${this.size}`;
                 const iteration = parseInt(element.dataset.iteration || '0') + 1;
                 element.dataset.iteration = iteration.toString();
                 element.dataset.layoutName = $util.convertWord(iteration > 1 ? `${filename}_${iteration}` : filename, true);
@@ -1683,8 +1688,8 @@ export default class Application<T extends Node> implements squared.base.Applica
                     if (!node.floating) {
                         node.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
                         staticRows.push(current.slice(0));
-                        current.length = 0;
                         floatedRows.push(floated.slice(0));
+                        current.length = 0;
                         floated.length = 0;
                     }
                     else {
@@ -1924,7 +1929,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                                 case 'height':
                                                 case 'min-height':
                                                 case 'max-height':
-                                                    valid = compareRange(operation, attr.indexOf('width') !== -1 ? window.innerWidth : window.innerHeight, $util.calculateUnit(value, $util.convertInt($css.getStyle(document.body).fontSize as string)));
+                                                    valid = compareRange(operation, attr.indexOf('width') !== -1 ? window.innerWidth : window.innerHeight, $util.parseUnit(value, $util.convertInt($css.getStyle(document.body).fontSize as string)));
                                                     break;
                                                 case 'orientation':
                                                     valid = value === 'portrait' && window.innerWidth <= window.innerHeight || value === 'landscape' && window.innerWidth > window.innerHeight;
@@ -2005,7 +2010,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         }
         document.querySelectorAll(item.selectorText).forEach((element: HTMLElement) => {
             const style = $css.getStyle(element);
-            const fontSize = $util.calculateUnit(style.fontSize as string);
+            const fontSize = $util.parseUnit(style.fontSize as string);
             const styleMap: StringMap = {};
             for (const attr of fromRule) {
                 const value = $css.checkStyleValue(element, attr, item.style[attr], style, fontSize);

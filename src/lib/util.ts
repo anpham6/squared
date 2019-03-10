@@ -1,27 +1,34 @@
 interface UtilRegExpString {
-    URL: string;
     DECIMAL: string;
-    ZERO_ONE: string;
-    UNIT: string;
-    PERCENT: string;
-    DEGREE: string;
     LENGTH: string;
+    PERCENT: string;
+    LENGTH_PERCENTAGE: string;
+    ANGLE: string;
     CALC: string;
     VAR: string;
+    ZERO_ONE: string;
+    URL: string;
 }
 
 interface UtilRegExpPattern {
-    UNIT: RegExp;
     DECIMAL: RegExp;
+    LENGTH: RegExp;
     PERCENT: RegExp;
+    ANGLE: RegExp;
     CALC: RegExp;
     URL: RegExp;
-    URI: RegExp;
+    PROTOCOL: RegExp;
     SEPARATOR: RegExp;
     ATTRIBUTE: RegExp;
     CUSTOMPROPERTY: RegExp;
-    PLACEHOLDER: RegExp;
+    LEADINGSPACE: RegExp;
+    TRAILINGSPACE: RegExp;
+    LEADINGNEWLINE: RegExp;
 }
+
+const REGEXP_UNDERSCORE = /([a-z][A-Z])/g;
+const REGEXP_WORD = /[^\w]+/g;
+const REGEXP_WORDDASH = /[^a-zA-Z\d]+/g;
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const NUMERALS = [
@@ -30,46 +37,6 @@ const NUMERALS = [
     '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'
 ];
 
-const REGEXP_UNDERSCORE = /([a-z][A-Z])/g;
-const REGEXP_WORD = /[^\w]+/g;
-const REGEXP_WORDDASH = /[^a-zA-Z\d]+/g;
-const REGEXP_CALCSIGN = /(\s+[+\-]\s+|\s*[*/]\s*)/;
-
-function compareObject(obj1: {}, obj2: {}, attr: string, numeric: boolean) {
-    const namespaces = attr.split('.');
-    let current1: any = obj1;
-    let current2: any = obj2;
-    for (const name of namespaces) {
-        if (current1[name] !== undefined && current2[name] !== undefined) {
-            current1 = current1[name];
-            current2 = current2[name];
-        }
-        else if (current1[name] === undefined && current2[name] === undefined) {
-            return false;
-        }
-        else if (current1[name] !== undefined) {
-            return [1, 0];
-        }
-        else {
-            return [0, 1];
-        }
-    }
-    if (numeric) {
-        const value1 = parseFloat(current1);
-        const value2 = parseFloat(current2);
-        if (!isNaN(value1) && !isNaN(value2)) {
-            return [value1, value2];
-        }
-        else if (!isNaN(value1)) {
-            return [1, 0];
-        }
-        else if (!isNaN(value2)) {
-            return [0, 1];
-        }
-    }
-    return [current1, current2];
-}
-
 export const enum USER_AGENT {
     CHROME = 2,
     SAFARI = 4,
@@ -77,7 +44,7 @@ export const enum USER_AGENT {
     EDGE = 16
 }
 
-export const REGEXP_STRING: UtilRegExpString = <any> {
+export const STRING_PATTERN: UtilRegExpString = <any> {
     URL: 'url\\("?(.+?)"?\\)',
     DECIMAL: '-?\\d+(?:\\.\\d+)?',
     ZERO_ONE: '0(?:\\.\\d+)?|1(?:\\.0+)?',
@@ -86,21 +53,26 @@ export const REGEXP_STRING: UtilRegExpString = <any> {
     VAR: 'var\\((--[A-Za-z0-9\\-]+)\\)'
 };
 
-REGEXP_STRING.UNIT = `(${REGEXP_STRING.DECIMAL})(px|em|ch|pc|pt|vw|vh|vmin|vmax|mm|cm|in)`;
-REGEXP_STRING.DEGREE = `(${REGEXP_STRING.DECIMAL})(deg|rad|turn|grad)`;
-REGEXP_STRING.LENGTH = `(${REGEXP_STRING.DECIMAL}(?:[a-z]{2,}|%)?)`;
+const UNIT_TYPE = 'px|em|ch|pc|pt|vw|vh|vmin|vmax|mm|cm|in';
+
+STRING_PATTERN.LENGTH = `(${STRING_PATTERN.DECIMAL})(${UNIT_TYPE})?`;
+STRING_PATTERN.LENGTH_PERCENTAGE = `(${STRING_PATTERN.DECIMAL}(?:${UNIT_TYPE}|%)?)`;
+STRING_PATTERN.ANGLE = `(${STRING_PATTERN.DECIMAL})(deg|rad|turn|grad)`;
 
 export const REGEXP_COMPILED: UtilRegExpPattern = {
-    UNIT: new RegExp(`^${REGEXP_STRING.UNIT}$`),
-    DECIMAL: new RegExp(`^${REGEXP_STRING.DECIMAL}$`),
-    PERCENT: new RegExp(`^${REGEXP_STRING.PERCENT}$`),
-    CALC: new RegExp(`^${REGEXP_STRING.CALC}$`),
-    URL: new RegExp(REGEXP_STRING.URL),
-    URI: /^[A-Za-z]+:\/\//,
+    DECIMAL: new RegExp(`^${STRING_PATTERN.DECIMAL}$`),
+    LENGTH: new RegExp(`^${STRING_PATTERN.LENGTH}$`),
+    PERCENT: new RegExp(`^${STRING_PATTERN.PERCENT}$`),
+    ANGLE: new RegExp(`^${STRING_PATTERN.ANGLE}$`),
+    CALC: new RegExp(`^${STRING_PATTERN.CALC}$`),
+    URL: new RegExp(STRING_PATTERN.URL),
+    PROTOCOL: /^[A-Za-z]+:\/\//,
     SEPARATOR: /\s*,\s*/,
     ATTRIBUTE: /([^\s]+)="([^"]+)"/,
     CUSTOMPROPERTY: /^(?:var|calc)\(.+\)$/,
-    PLACEHOLDER: /{(\d+)}/
+    LEADINGSPACE: /^\s+/,
+    TRAILINGSPACE: /\s+$/,
+    LEADINGNEWLINE: /^\s*\n+/
 };
 
 export function isUserAgent(value: string | number) {
@@ -120,8 +92,8 @@ export function isUserAgent(value: string | number) {
             value |= USER_AGENT.EDGE;
         }
     }
-    let client: number;
     const userAgent = navigator.userAgent;
+    let client: number;
     if (userAgent.indexOf('Safari') !== -1 && userAgent.indexOf('Chrome') === -1) {
         client = USER_AGENT.SAFARI;
     }
@@ -142,7 +114,7 @@ export function getDeviceDPI() {
 }
 
 export function capitalize(value: string, upper = true) {
-    if (value !== '') {
+    if (value) {
         if (upper) {
             return value.charAt(0).toUpperCase() + value.substring(1).toLowerCase();
         }
@@ -188,17 +160,20 @@ export function convertFloat(value: string) {
 
 export function convertAngle(value: string, unit = 'deg') {
     let angle = parseFloat(value);
-    switch (unit) {
-        case 'rad':
-            angle *= 180 / Math.PI;
-            break;
-        case 'grad':
-            angle /= 400;
-        case 'turn':
-            angle *= 360;
-            break;
+    if (!isNaN(angle)) {
+        switch (unit) {
+            case 'rad':
+                angle *= 180 / Math.PI;
+                break;
+            case 'grad':
+                angle /= 400;
+            case 'turn':
+                angle *= 360;
+                break;
+        }
+        return angle;
     }
-    return angle;
+    return 0;
 }
 
 export function convertPX(value: string, fontSize?: number) {
@@ -207,13 +182,13 @@ export function convertPX(value: string, fontSize?: number) {
         if (value.endsWith('%') || value === 'auto') {
             return value;
         }
-        return `${calculateUnit(value, fontSize)}px`;
+        return `${parseUnit(value, fontSize)}px`;
     }
     return '0px';
 }
 
-export function convertUnit(value: string, dimension: number, fontSize?: number) {
-    return isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : calculateUnit(value, fontSize);
+export function convertLength(value: string, dimension: number, fontSize?: number) {
+    return isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseUnit(value, fontSize);
 }
 
 export function convertAlpha(value: number) {
@@ -232,8 +207,7 @@ export function convertAlpha(value: number) {
         result += ALPHABET.charAt(index);
         value -= index + ALPHABET.length;
     }
-    result = ALPHABET.charAt(value) + result;
-    return result;
+    return ALPHABET.charAt(value) + result;
 }
 
 export function convertRoman(value: number) {
@@ -275,6 +249,8 @@ export function calculate(value: string, dimension = 0, fontSize?: number) {
         }
     }
     if (opened === closing.length) {
+        const symbol = /(\s+[+\-]\s+|\s*[*/]\s*)/;
+        const placeholder = /{(\d+)}/;
         const equated: number[] = [];
         let index = 0;
         while (true) {
@@ -294,7 +270,7 @@ export function calculate(value: string, dimension = 0, fontSize?: number) {
                 if (valid) {
                     const seg: number[] = [];
                     const evaluate: string[] = [];
-                    for (let partial of value.substring(j + 1, closing[i]).split(REGEXP_CALCSIGN)) {
+                    for (let partial of value.substring(j + 1, closing[i]).split(symbol)) {
                         partial = partial.trim();
                         switch (partial) {
                             case '+':
@@ -304,18 +280,18 @@ export function calculate(value: string, dimension = 0, fontSize?: number) {
                                 evaluate.push(partial);
                                 break;
                             default:
-                                const match = REGEXP_COMPILED.PLACEHOLDER.exec(partial);
+                                const match = placeholder.exec(partial);
                                 if (match) {
                                     seg.push(equated[parseInt(match[1])]);
                                 }
-                                else if (isUnit(partial)) {
-                                    seg.push(calculateUnit(partial, fontSize));
+                                else if (isLength(partial)) {
+                                    seg.push(parseUnit(partial, fontSize));
                                 }
                                 else if (isPercent(partial)) {
                                     seg.push(parseFloat(partial) / 100 * dimension);
                                 }
-                                else if (isNumber(partial)) {
-                                    seg.push(parseFloat(partial));
+                                else if (isAngle(partial)) {
+                                    seg.push(parseAngle(partial));
                                 }
                                 else {
                                     return undefined;
@@ -353,9 +329,9 @@ export function calculate(value: string, dimension = 0, fontSize?: number) {
                         }
                         else {
                             equated[index] = seg[0];
-                            const placeholder = `{${index++}}`;
+                            const hash = `{${index++}}`;
                             const remaining = closing[i] + 1;
-                            value = value.substring(0, j) + `${placeholder + ' '.repeat(remaining - (j + placeholder.length))}` + value.substring(remaining);
+                            value = value.substring(0, j) + `${hash + ' '.repeat(remaining - (j + hash.length))}` + value.substring(remaining);
                             closing.splice(i--, 1);
                         }
                     }
@@ -369,9 +345,9 @@ export function calculate(value: string, dimension = 0, fontSize?: number) {
     return undefined;
 }
 
-export function calculateUnit(value: string, fontSize?: number) {
+export function parseUnit(value: string, fontSize?: number) {
     if (value) {
-        const match = value.match(REGEXP_COMPILED.UNIT);
+        const match = value.match(REGEXP_COMPILED.LENGTH);
         if (match) {
             let result = parseFloat(match[1]);
             switch (match[2]) {
@@ -408,8 +384,15 @@ export function calculateUnit(value: string, fontSize?: number) {
             }
             return result;
         }
-        else if (isNumber(value)) {
-            return parseFloat(value);
+    }
+    return 0;
+}
+
+export function parseAngle(value: string) {
+    if (value) {
+        const match = REGEXP_COMPILED.ANGLE.exec(value);
+        if (match) {
+            return convertAngle(match[1], match[2]);
         }
     }
     return 0;
@@ -444,7 +427,7 @@ export function hasBit(value: number, offset: number) {
 }
 
 export function isNumber(value: string): boolean {
-    return value !== '' && REGEXP_COMPILED.DECIMAL.test(value.trim());
+    return typeof value === 'string' && REGEXP_COMPILED.DECIMAL.test(value.trim());
 }
 
 export function isString(value: any): value is string {
@@ -455,8 +438,8 @@ export function isArray<T>(value: any): value is Array<T> {
     return Array.isArray(value) && value.length > 0;
 }
 
-export function isUnit(value: string) {
-    return REGEXP_COMPILED.UNIT.test(value);
+export function isLength(value: string) {
+    return REGEXP_COMPILED.LENGTH.test(value);
 }
 
 export function isPercent(value: string) {
@@ -465,6 +448,10 @@ export function isPercent(value: string) {
 
 export function isCalc(value: string) {
     return REGEXP_COMPILED.CALC.test(value);
+}
+
+export function isAngle(value: string) {
+    return REGEXP_COMPILED.ANGLE.test(value);
 }
 
 export function isEqual(source: any, values: any) {
@@ -528,7 +515,7 @@ export function cloneObject(data: {}, result = {}, array = false) {
         if (Array.isArray(item)) {
             result[attr] = array ? cloneArray(item, [], true) : item;
         }
-        else if (item && typeof item === 'object') {
+        else if (typeof item === 'object' && item !== null) {
             result[attr] = cloneObject(item, {}, array);
         }
         else {
@@ -586,7 +573,7 @@ export function optionalAsBoolean(obj: UndefNull<object>, value: string): boolea
 }
 
 export function resolvePath(value: string) {
-    if (!REGEXP_COMPILED.URI.test(value)) {
+    if (!REGEXP_COMPILED.PROTOCOL.test(value)) {
         let pathname = location.pathname.split('/');
         pathname.pop();
         if (value.charAt(0) === '/') {
@@ -735,21 +722,36 @@ export function assignEmptyValue(dest: {}, ...attrs: string[]) {
     }
 }
 
-export function sortNumber(values: number[], descending = false) {
-    return descending ? values.sort((a, b) => a > b ? -1 : 1) : values.sort((a, b) => a < b ? -1 : 1);
+export function sortNumber(values: number[], ascending = true) {
+    return ascending ? values.sort((a, b) => a < b ? -1 : 1) : values.sort((a, b) => a > b ? -1 : 1);
 }
 
 export function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]) {
     return list.sort((a, b) => {
         for (const attr of attrs) {
-            const result = compareObject(a, b, attr, true);
-            if (result && result[0] !== result[1]) {
-                if (ascending) {
-                    return result[0] > result[1] ? 1 : -1;
+            const namespaces = attr.split('.');
+            let valueA: any = a;
+            let valueB: any = b;
+            for (const name of namespaces) {
+                if (valueA[name] !== undefined && valueB[name] !== undefined) {
+                    valueA = valueA[name];
+                    valueB = valueB[name];
+                }
+                else if (valueA[name] === undefined && valueB[name] === undefined) {
+                    return 0;
+                }
+                else if (valueA[name] !== undefined) {
+                    return -1;
                 }
                 else {
-                    return result[0] < result[1] ? 1 : -1;
+                    return 1;
                 }
+            }
+            if (ascending) {
+                return valueA >= valueB ? 1 : -1;
+            }
+            else {
+                return valueA <= valueB ? -1 : 1;
             }
         }
         return 0;
@@ -759,7 +761,8 @@ export function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]) 
 export function flatArray<T>(list: any[]): T[] {
     let current = list;
     while (current.some(item => Array.isArray(item))) {
-        current = [].concat.apply([], filterArray(current, item => item !== undefined && item !== null));
+        const flatten: any[] = [];
+        current = flatten.concat.apply(flatten, filterArray(current, item => item !== undefined && item !== null));
     }
     return current;
 }
@@ -792,12 +795,14 @@ export function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolea
 }
 
 export function filterArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>) {
-    const result: T[] = [];
+    const result: T[] = new Array(list.length);
+    let j = 0;
     for (let i = 0; i < list.length; i++) {
         if (predicate(list[i], i, list)) {
-            result.push(list[i]);
+            result[j++] = list[i];
         }
     }
+    result.length = j;
     return result;
 }
 
@@ -818,23 +823,27 @@ export function concatMultiArray<T>(dest: T[], ...source: T[][]) {
 }
 
 export function flatMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[] {
-    const result: U[] = [];
+    const result: U[] = new Array(list.length);
+    let j = 0;
     for (let i = 0; i < list.length; i++) {
         const item = predicate(list[i], i, list);
-        if (hasValue(item)) {
-            result.push(item);
+        if (item !== undefined && item !== null) {
+            result[j++] = item;
         }
     }
+    result.length = j;
     return result;
 }
 
 export function filterMap<T, U>(list: T[], predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, U>): U[] {
-    const result: U[] = [];
+    const result: U[] = new Array(list.length);
+    let j = 0;
     for (let i = 0; i < list.length; i++) {
         if (predicate(list[i], i, list)) {
-            result.push(callback(list[i], i, list));
+            result[j++] = callback(list[i], i, list);
         }
     }
+    result.length = j;
     return result;
 }
 
@@ -846,7 +855,7 @@ export function replaceMap<T, U>(list: any[], predicate: IteratorPredicate<T, U>
 }
 
 export function objectMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[] {
-    const result: U[] = [];
+    const result: U[] = new Array(list.length);
     for (let i = 0; i < list.length; i++) {
         result[i] = predicate(list[i], i, list);
     }

@@ -28,7 +28,7 @@ const settings: UserSettingsAndroid = {
         'android.resource.dimens',
         'android.resource.styles'
     ],
-    targetAPI: 26,
+    targetAPI: 28,
     resolutionDPI: 160,
     supportRTL: true,
     preloadImages: true,

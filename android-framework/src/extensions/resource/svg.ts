@@ -6,7 +6,8 @@ import { GradientTemplate } from '../../@types/resource';
 
 import Resource from '../../resource';
 import View from '../../view';
-import ResourceBackground from '../../extensions/resource/background';
+
+import { convertColorStops } from '../../extensions/resource/background';
 
 import { BUILD_ANDROID } from '../../lib/enumeration';
 import { getXmlNs } from '../../lib/util';
@@ -516,87 +517,87 @@ function getTileMode(value: number) {
     return '';
 }
 
+function createFillGradient(gradient: Gradient, path: $SvgPath, precision?: number) {
+    const result: GradientTemplate = {
+        type: gradient.type,
+        colorStops: convertColorStops(gradient.colorStops, precision)
+    };
+    switch (gradient.type) {
+        case 'radial': {
+            const radial = <SvgRadialGradient> gradient;
+            const points: Point[] = [];
+            let cx!: number;
+            let cy!: number;
+            let cxDiameter!: number;
+            let cyDiameter!: number;
+            switch (path.element.tagName) {
+                case 'path':
+                    for (const command of $SvgBuild.getPathCommands(path.value)) {
+                        $util.concatArray(points, command.value);
+                    }
+                case 'polygon':
+                    if ($utilS.SVG.polygon(path.element)) {
+                        $util.concatArray(points, $SvgBuild.clonePoints(path.element.points));
+                    }
+                    if (!points.length) {
+                        return undefined;
+                    }
+                    [cx, cy, cxDiameter, cyDiameter] = $SvgBuild.minMaxPoints(points);
+                    cxDiameter -= cx;
+                    cyDiameter -= cy;
+                    break;
+                default:
+                    if ($utilS.SVG.rect(path.element)) {
+                        const rect = path.element;
+                        cx = rect.x.baseVal.value;
+                        cy = rect.y.baseVal.value;
+                        cxDiameter = rect.width.baseVal.value;
+                        cyDiameter = rect.height.baseVal.value;
+                    }
+                    else if ($utilS.SVG.circle(path.element)) {
+                        const circle = path.element;
+                        cx = circle.cx.baseVal.value - circle.r.baseVal.value;
+                        cy = circle.cy.baseVal.value - circle.r.baseVal.value;
+                        cxDiameter = circle.r.baseVal.value * 2;
+                        cyDiameter = cxDiameter;
+                    }
+                    else if ($utilS.SVG.ellipse(path.element)) {
+                        const ellipse = path.element;
+                        cx = ellipse.cx.baseVal.value - ellipse.rx.baseVal.value;
+                        cy = ellipse.cy.baseVal.value - ellipse.ry.baseVal.value;
+                        cxDiameter = ellipse.rx.baseVal.value * 2;
+                        cyDiameter = ellipse.ry.baseVal.value * 2;
+                    }
+                    else {
+                        return undefined;
+                    }
+                    break;
+            }
+            result.centerX = (cx + cxDiameter * getRadiusPercent(radial.cxAsString)).toString();
+            result.centerY = (cy + cyDiameter * getRadiusPercent(radial.cyAsString)).toString();
+            result.gradientRadius = (((cxDiameter + cyDiameter) / 2) * ($util.isPercent(radial.rAsString) ? (parseFloat(radial.rAsString) / 100) : 1)).toString();
+            if (radial.spreadMethod) {
+                result.tileMode = getTileMode(radial.spreadMethod);
+            }
+            break;
+        }
+        case 'linear': {
+            const linear = <SvgLinearGradient> gradient;
+            result.startX = linear.x1.toString();
+            result.startY = linear.y1.toString();
+            result.endX = linear.x2.toString();
+            result.endY = linear.y2.toString();
+            if (linear.spreadMethod) {
+                result.tileMode = getTileMode(linear.spreadMethod);
+            }
+        }
+    }
+    return result;
+}
+
 const getRadiusPercent = (value: string) => $util.isPercent(value) ? parseInt(value) / 100 : 0.5;
 
 export default class ResourceSvg<T extends View> extends squared.base.Extension<T> {
-    public static createFillGradient(gradient: Gradient, path: $SvgPath, precision?: number) {
-        const result: GradientTemplate = {
-            type: gradient.type,
-            colorStops: ResourceBackground.convertColorStops(gradient.colorStops, precision)
-        };
-        switch (gradient.type) {
-            case 'radial': {
-                const radial = <SvgRadialGradient> gradient;
-                const points: Point[] = [];
-                let cx!: number;
-                let cy!: number;
-                let cxDiameter!: number;
-                let cyDiameter!: number;
-                switch (path.element.tagName) {
-                    case 'path':
-                        for (const command of $SvgBuild.getPathCommands(path.value)) {
-                            $util.concatArray(points, command.value);
-                        }
-                    case 'polygon':
-                        if ($utilS.SVG.polygon(path.element)) {
-                            $util.concatArray(points, $SvgBuild.clonePoints(path.element.points));
-                        }
-                        if (!points.length) {
-                            return undefined;
-                        }
-                        [cx, cy, cxDiameter, cyDiameter] = $SvgBuild.minMaxPoints(points);
-                        cxDiameter -= cx;
-                        cyDiameter -= cy;
-                        break;
-                    default:
-                        if ($utilS.SVG.rect(path.element)) {
-                            const rect = path.element;
-                            cx = rect.x.baseVal.value;
-                            cy = rect.y.baseVal.value;
-                            cxDiameter = rect.width.baseVal.value;
-                            cyDiameter = rect.height.baseVal.value;
-                        }
-                        else if ($utilS.SVG.circle(path.element)) {
-                            const circle = path.element;
-                            cx = circle.cx.baseVal.value - circle.r.baseVal.value;
-                            cy = circle.cy.baseVal.value - circle.r.baseVal.value;
-                            cxDiameter = circle.r.baseVal.value * 2;
-                            cyDiameter = cxDiameter;
-                        }
-                        else if ($utilS.SVG.ellipse(path.element)) {
-                            const ellipse = path.element;
-                            cx = ellipse.cx.baseVal.value - ellipse.rx.baseVal.value;
-                            cy = ellipse.cy.baseVal.value - ellipse.ry.baseVal.value;
-                            cxDiameter = ellipse.rx.baseVal.value * 2;
-                            cyDiameter = ellipse.ry.baseVal.value * 2;
-                        }
-                        else {
-                            return undefined;
-                        }
-                        break;
-                }
-                result.centerX = (cx + cxDiameter * getRadiusPercent(radial.cxAsString)).toString();
-                result.centerY = (cy + cyDiameter * getRadiusPercent(radial.cyAsString)).toString();
-                result.gradientRadius = (((cxDiameter + cyDiameter) / 2) * ($util.isPercent(radial.rAsString) ? (parseFloat(radial.rAsString) / 100) : 1)).toString();
-                if (radial.spreadMethod) {
-                    result.tileMode = getTileMode(radial.spreadMethod);
-                }
-                break;
-            }
-            case 'linear': {
-                const linear = <SvgLinearGradient> gradient;
-                result.startX = linear.x1.toString();
-                result.startY = linear.y1.toString();
-                result.endX = linear.x2.toString();
-                result.endY = linear.y2.toString();
-                if (linear.spreadMethod) {
-                    result.tileMode = getTileMode(linear.spreadMethod);
-                }
-            }
-        }
-        return result;
-    }
-
     public readonly options: ResourceSvgOptions = {
         transformExclude: {
             path: [],
@@ -1484,7 +1485,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                             case 'polyline':
                             case 'circle':
                             case 'ellipse': {
-                                const backgroundGradient = ResourceSvg.createFillGradient(gradient, path, this.options.floatPrecisionValue);
+                                const backgroundGradient = createFillGradient(gradient, path, this.options.floatPrecisionValue);
                                 if (backgroundGradient) {
                                     result[attr] = '';
                                     result[pattern] = [{ gradients: [backgroundGradient] }];

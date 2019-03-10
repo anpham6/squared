@@ -28,7 +28,6 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             node.length,
             node.children as T[]
         );
-        let output = '';
         if ($NodeList.linearY(layout.children)) {
             layout.rowCount = node.length;
             layout.columnCount = node.some(item => item.css('listStylePosition') === 'inside') ? 3 : 2;
@@ -40,14 +39,16 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             layout.setType(CONTAINER_NODE.RELATIVE, $enum.NODE_ALIGNMENT.HORIZONTAL);
         }
         if (layout.containerType !== 0) {
-            output = this.application.renderNode(layout);
+            return {
+                output: this.application.renderNode(layout),
+                complete: true
+            };
         }
-        return { output, complete: output !== '' };
+        return { output: '' };
     }
 
     public processChild(node: T, parent: T): ExtensionResult<T> {
         const mainData: ListData = node.data($const.EXT_NAME.LIST, 'mainData');
-        let output = '';
         if (mainData) {
             const controller = <android.base.Controller<T>> this.application.controllerHandler;
             const parentLeft = $util.convertInt(parent.css('paddingLeft')) + $util.convertInt(parent.css('marginLeft'));
@@ -164,7 +165,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     if (image !== '') {
                         Object.assign(options.android, {
                             src: `@drawable/${image}`,
-                            [BOX_ANDROID.MARGIN_TOP]: top > 0 ? $util.formatPX(top) : '',
+                            [BOX_ANDROID.MARGIN_TOP]: top !== 0 ? $util.formatPX(top) : '',
                             scaleType: !positionInside && gravity === 'right' ? 'fitEnd' : 'fitStart'
                         });
                     }
@@ -203,10 +204,13 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     node.length,
                     node.children as T[]
                 );
-                output = this.application.renderNode(layout);
+                return {
+                    output: this.application.renderNode(layout),
+                    next: true
+                };
             }
         }
-        return { output, next: output !== '' };
+        return { output: '' };
     }
 
     public postBaseLayout(node: T) {
@@ -218,14 +222,14 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             let spaceHeight = 0;
             if (previous) {
                 const marginBottom = $util.convertInt(previous.android(BOX_ANDROID.MARGIN_BOTTOM));
-                if (marginBottom > 0) {
+                if (marginBottom !== 0) {
                     spaceHeight += marginBottom;
                     previous.delete('android', BOX_ANDROID.MARGIN_BOTTOM);
                     previous.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, null);
                 }
             }
             const marginTop = $util.convertInt(item.android(BOX_ANDROID.MARGIN_TOP));
-            if (marginTop > 0) {
+            if (marginTop !== 0) {
                 spaceHeight += marginTop;
                 item.delete('android', BOX_ANDROID.MARGIN_TOP);
                 item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, null);
@@ -237,8 +241,11 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         layout_columnSpan: columnCount.toString()
                     }
                 });
-                const output = controller.renderNodeStatic(CONTAINER_ANDROID.SPACE, item.renderDepth, options, 'match_parent', $util.formatPX(spaceHeight));
-                controller.prependBefore(item.id, output, 0);
+                controller.prependBefore(
+                    item.id,
+                    controller.renderNodeStatic(CONTAINER_ANDROID.SPACE, item.renderDepth, options, 'match_parent', $util.formatPX(spaceHeight)),
+                    0
+                );
             }
         }
     }

@@ -5,11 +5,12 @@ import Resource from '../../resource';
 const $util = squared.lib.util;
 
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
-const NAMESPACE_ATTR = ['android', 'app'];
 
 const REGEXP_WIDGETNAME = /[\s\n]+<[^<]*?(\w+):(\w+)="(-?[\d.]+(?:px|dp|sp))"/;
 const REGEXP_CONTROLNAME = /^[\s\n]+<([\w\-.]+)[\s\n]/;
 const REGEXP_DEVICEUNIT = /^-?[\d.]+(px|dp|sp)$/;
+
+const NAMESPACE_ATTR = ['android', 'app'];
 
 function getResourceName(map: Map<string, string>, name: string, value: string) {
     for (const [storedName, storedValue] of map.entries()) {
