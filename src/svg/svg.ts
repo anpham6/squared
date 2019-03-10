@@ -7,11 +7,10 @@ import SvgViewRect$MX from './svgviewrect-mx';
 import SvgContainer from './svgcontainer';
 
 import { INSTANCE_TYPE } from './lib/constant';
-import { SVG, getTargetElement } from './lib/util';
+import { SVG, getDOMRect, getTargetElement } from './lib/util';
 
 const $color = squared.lib.color;
 const $css = squared.lib.css;
-const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 function getColorStop(element: SVGGradientElement) {
@@ -119,7 +118,7 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
     }
 
     get viewBox() {
-        return this.element.viewBox.baseVal || $dom.getDOMRect(this.element);
+        return this.element.viewBox.baseVal || getDOMRect(this.element);
     }
 
     get instanceType() {

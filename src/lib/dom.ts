@@ -2,6 +2,10 @@ import { isString, spliceArray, withinRange } from './util';
 
 type T = squared.base.Node;
 
+function withinViewport(rect: DOMRect | ClientRect) {
+    return !(rect.left < 0 && rect.top < 0 && Math.abs(rect.left) >= rect.width && Math.abs(rect.top) >= rect.height);
+}
+
 export function newBoxRect(): BoxRect {
     return {
         top: 0,
@@ -35,13 +39,6 @@ export function newBoxModel(): BoxModel {
     };
 }
 
-export function getDOMRect(element: Element) {
-    const result: Partial<DOMRect> = element.getBoundingClientRect();
-    result.x = result.left;
-    result.y = result.top;
-    return <DOMRect> result;
-}
-
 export function getRangeClientRect(element: Element) {
     const range = document.createRange();
     range.selectNodeContents(element);
@@ -56,7 +53,7 @@ export function getRangeClientRect(element: Element) {
     let bounds: RectDimension = newRectDimension();
     let multiline = 0;
     if (domRect.length) {
-        bounds = assignBounds(domRect[0]);
+        bounds = assignRect(domRect[0]);
         const top = new Set([bounds.top]);
         const bottom = new Set([bounds.bottom]);
         let minTop = bounds.top;
@@ -83,7 +80,7 @@ export function getRangeClientRect(element: Element) {
     return <TextDimension> bounds;
 }
 
-export function assignBounds(rect: RectDimension | DOMRect): RectDimension {
+export function assignRect(rect: DOMRect | RectDimension): RectDimension {
     return {
         top: rect.top,
         right: rect.right,
@@ -104,13 +101,9 @@ export function removeElementsByClassName(className: string) {
     }
 }
 
-export function hasVisibleRect(element: Element, viewport = false) {
+export function isElementVisible(element: Element, viewport = false) {
     const rect = element.getBoundingClientRect();
     return rect.width !== 0 && rect.height !== 0 && (!viewport || withinViewport(rect));
-}
-
-export function withinViewport(rect: ClientRect | DOMRect) {
-    return !(rect.left < 0 && rect.top < 0 && Math.abs(rect.left) >= rect.width && Math.abs(rect.top) >= rect.height);
 }
 
 export function getFirstChildElement(element: Element | null, lineBreak = false) {

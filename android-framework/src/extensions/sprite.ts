@@ -70,6 +70,10 @@ export default class <T extends android.base.View> extends squared.base.extensio
             );
             output = this.application.renderLayout(layout);
         }
-        return { output, parent: container, complete: true };
+        return {
+            output,
+            parent: container,
+            complete: true
+        };
     }
 }

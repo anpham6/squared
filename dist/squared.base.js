@@ -1,4 +1,4 @@
-/* squared.base 0.7.2
+/* squared.base 0.8.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -46,7 +46,7 @@
                 lineHeight = Math.max(lineHeight, item.lineHeight);
                 boundsHeight = Math.max(boundsHeight, item.bounds.height);
             }
-            $util.spliceArray(list, item => lineHeight > boundsHeight ? item.lineHeight !== lineHeight : !$util.withinFraction(item.bounds.height, boundsHeight));
+            $util.spliceArray(list, item => lineHeight > boundsHeight ? item.lineHeight !== lineHeight : !$util.withinRange(item.bounds.height, boundsHeight));
             return list.sort((a, b) => {
                 if (a.groupParent || a.length || (!a.baseline && b.baseline)) {
                     return 1;
@@ -136,30 +136,39 @@
             }
             const result = new Map();
             const floated = new Set();
-            const previous = { left: null, right: null };
+            const previous = {};
             for (const node of list) {
                 if (node.pageFlow) {
                     const clear = node.css('clear');
                     if (floated.size) {
-                        const previousFloat = clear === 'both' ? [previous.left, previous.right]
-                            : clear === 'left' ? [previous.left, null]
-                                : clear === 'right' ? [null, previous.right] : [];
+                        const previousFloat = [];
+                        switch (clear) {
+                            case 'left':
+                                previousFloat.push(previous.left);
+                                break;
+                            case 'right':
+                                previousFloat.push(previous.right);
+                                break;
+                            case 'both':
+                                previousFloat.push(previous.left, previous.right);
+                                break;
+                        }
                         for (const item of previousFloat) {
                             if (item && !node.floating && node.linear.top > item.linear.bottom && floated.has(item.float)) {
                                 floated.delete(item.float);
-                                previous[item.float] = null;
+                                previous[item.float] = undefined;
                             }
                         }
                         if (clear === 'both') {
                             result.set(node, floated.size === 2 ? 'both' : floated.values().next().value);
                             floated.clear();
-                            previous.left = null;
-                            previous.right = null;
+                            previous.left = undefined;
+                            previous.right = undefined;
                         }
                         else if (floated.has(clear)) {
                             result.set(node, clear);
                             floated.delete(clear);
-                            previous[clear] = null;
+                            previous[clear] = undefined;
                         }
                     }
                     if (node.floating) {
@@ -231,7 +240,7 @@
                                 return false;
                             }
                             const previous = nodes[i - 1];
-                            if (previous.floating && item.linear.top >= previous.linear.bottom || $util.withinFraction(item.linear.left, previous.linear.left)) {
+                            if (previous.floating && item.linear.top >= previous.linear.bottom || $util.withinRange(item.linear.left, previous.linear.left)) {
                                 return false;
                             }
                         }
@@ -457,78 +466,126 @@
     });
 
     const $color = squared.lib.color;
+    const $css = squared.lib.css;
     const $dom$1 = squared.lib.dom;
+    const $element = squared.lib.element;
     const $util$2 = squared.lib.util;
     const $xml = squared.lib.xml;
-    const REGEXP_COLORSTOP = `(?:\\s*(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[a-zA-Z\\d]{3,}|[a-z]+)\\s*(\\d+%|${$util$2.REGEXP_STRING.DEGREE}|${$util$2.REGEXP_STRING.UNIT})?,?\\s*)`;
+    const REGEXP_COLORSTOP = `(?:\\s*(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[a-zA-Z\\d]{3,}|[a-z]+)\\s*(\\d+%|${$util$2.REGEXP_STRING.DEGREE}|${$util$2.REGEXP_STRING.UNIT}|(?:calc(\\(.+\\))(?=,)|${$util$2.REGEXP_STRING.CALC}))?,?\\s*)`;
     const REGEXP_POSITION = /(.+?)?\s*at (.+?)$/;
+    const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\("?.+?"?\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|circle|ellipse|closest-side|closest-corner|farthest-side|farthest-corner)?(?:\\s*at [\\w %]+)?),?\\s*(${REGEXP_COLORSTOP}+)\\))`, 'g');
     function replaceExcluded(element, attr) {
         let value = element[attr];
         for (let i = 0; i < element.children.length; i++) {
             const item = $dom$1.getElementAsNode(element.children[i]);
-            if (item && (item.excluded || $util$2.hasValue(item.dataset.target) && $util$2.isString(item[attr]))) {
+            if (item && (item.excluded || item.dataset.target && $util$2.isString(item[attr]))) {
                 value = value.replace(item[attr], '');
             }
         }
         return value;
     }
-    function getColorStops(value, opacity, conic = false) {
+    function parseColorStops(node, gradient, value, opacity, index, backgroundSize) {
         const result = [];
         const pattern = new RegExp(REGEXP_COLORSTOP, 'g');
+        const conic = gradient.type === 'conic';
         let match;
+        let width = node.bounds.width;
+        let height = node.bounds.height;
+        if (backgroundSize) {
+            const sizes = backgroundSize.split($util$2.REGEXP_COMPILED.SEPARATOR);
+            const dimension = Resource.getBackgroundSize(node, sizes[index % sizes.length]);
+            if (dimension) {
+                width = dimension.width;
+                height = dimension.height;
+                gradient.dimension = dimension;
+            }
+        }
         while ((match = pattern.exec(value)) !== null) {
-            const color = $color.parseRGBA(match[1], opacity, true);
+            const color = $color.parseColor(match[1], opacity, true);
             if (color) {
-                const item = {
-                    color: color.valueRGBA,
-                    opacity: color.alpha,
-                    offset: ''
-                };
+                const item = { color, offset: -1 };
                 if (conic) {
                     if (match[3] && match[4]) {
-                        item.offset = $util$2.convertAngle(match[3], match[4]).toString();
+                        item.offset = $util$2.convertAngle(match[3], match[4]) / 360;
                     }
                 }
-                else {
-                    if (match[2] && $util$2.isPercent(match[2])) {
-                        item.offset = match[2];
+                else if (match[2]) {
+                    if ($util$2.isPercent(match[2])) {
+                        item.offset = parseFloat(match[2]) / 100;
+                    }
+                    else if (gradient.repeating) {
+                        const dimension = gradient.horizontal ? width : height;
+                        if ($util$2.isUnit(match[2])) {
+                            item.offset = node.calculateUnit(match[2], gradient.horizontal, false) / dimension;
+                        }
+                        else if ($util$2.isCalc(match[2])) {
+                            item.offset = $util$2.calculate(match[7], dimension, node.fontSize) / dimension;
+                        }
+                    }
+                }
+                if (result.length === 0) {
+                    if (item.offset === -1) {
+                        item.offset = 0;
+                    }
+                    else if (item.offset > 0) {
+                        result.push({
+                            color,
+                            offset: 0
+                        });
                     }
                 }
                 result.push(item);
             }
         }
         const lastStop = result[result.length - 1];
-        if (lastStop.offset === '') {
-            lastStop.offset = conic ? '360' : '100%';
+        if (lastStop.offset === -1) {
+            lastStop.offset = 1;
         }
-        let previousIncrement = 0;
+        let percent = 0;
         for (let i = 0; i < result.length; i++) {
             const item = result[i];
-            if (item.offset === '') {
+            if (item.offset === -1) {
                 if (i === 0) {
-                    item.offset = '0';
+                    item.offset = 0;
                 }
                 else {
                     for (let j = i + 1, k = 2; j < result.length - 1; j++, k++) {
-                        if (result[j].offset !== '') {
-                            item.offset = ((previousIncrement + parseInt(result[j].offset)) / k).toString();
+                        if (result[j].offset !== -1) {
+                            item.offset = (percent + result[j].offset) / k;
                             break;
                         }
                     }
-                    if (item.offset === '') {
-                        item.offset = (previousIncrement + parseInt(lastStop.offset) / (result.length - 1)).toString();
+                    if (item.offset === -1) {
+                        item.offset = percent + lastStop.offset / (result.length - 1);
                     }
                 }
-                if (!conic) {
-                    item.offset += '%';
+            }
+            percent = item.offset;
+        }
+        if (gradient.repeating) {
+            if (percent < 100) {
+                const original = result.slice(0);
+                complete: {
+                    let basePercent = percent;
+                    while (percent < 100) {
+                        for (let i = 0; i < original.length; i++) {
+                            percent = Math.min(basePercent + original[i].offset, 1);
+                            result.push(Object.assign({}, original[i], { offset: percent }));
+                            if (percent === 1) {
+                                break complete;
+                            }
+                        }
+                        basePercent = percent;
+                    }
                 }
             }
-            previousIncrement = parseInt(item.offset);
         }
-        if (conic && previousIncrement < 360 || !conic && previousIncrement < 100) {
-            const colorFill = Object.assign({}, result[result.length - 1]);
-            colorFill.offset = conic ? '360' : '100%';
-            result.push(colorFill);
+        else {
+            if (percent < 1) {
+                const color = Object.assign({}, result[result.length - 1]);
+                color.offset = 1;
+                result.push(color);
+            }
         }
         return result;
     }
@@ -536,12 +593,16 @@
         if (value) {
             const match = new RegExp($util$2.REGEXP_STRING.DEGREE).exec(value.trim());
             if (match) {
-                return $util$2.convertAngle(match[1], match[2]);
+                let angle = $util$2.convertAngle(match[1], match[2]) % 360;
+                if (angle < 0) {
+                    angle += 360;
+                }
+                return angle;
             }
         }
         return 0;
     }
-    function replaceWhiteSpace(node, value) {
+    function replaceWhiteSpace(node, element, value) {
         const renderParent = node.renderParent;
         if (node.multiline && renderParent && !renderParent.layoutVertical) {
             value = value.replace(/^\s*\n/, '');
@@ -555,20 +616,21 @@
                 if (renderParent && !renderParent.layoutVertical) {
                     value = value.replace(/^\n/, '');
                 }
-                value = value.replace(/\n/g, '\\n').replace(/\s/g, '&#160;');
+                value = value
+                    .replace(/\n/g, '\\n')
+                    .replace(/\s/g, '&#160;');
                 break;
             case 'pre-line':
-                value = value.replace(/\n/g, '\\n').replace(/\s+/g, ' ');
+                value = value
+                    .replace(/\n/g, '\\n')
+                    .replace(/\s+/g, ' ');
                 break;
             default:
-                const element = node.element;
-                if (element) {
-                    if ($dom$1.isLineBreak(element.previousSibling)) {
-                        value = value.replace(/^\s+/, '');
-                    }
-                    if ($dom$1.isLineBreak(element.nextSibling)) {
-                        value = value.replace(/\s+$/, '');
-                    }
+                if (element.previousSibling && $element.isLineBreak(element.previousSibling)) {
+                    value = value.replace(/^\s+/, '');
+                }
+                if (element.nextSibling && $element.isLineBreak(element.nextSibling)) {
+                    value = value.replace(/\s+$/, '');
                 }
                 return [value, false];
         }
@@ -635,19 +697,42 @@
             return '';
         }
         static isBorderVisible(border) {
-            return !!border && !(border.style === 'none' ||
-                border.width === '0px' ||
-                border.color === '' ||
-                border.color.length === 9 && border.color.endsWith('00'));
+            return !!border && !(border.style === 'none' || border.width === '0px' || border.color === '' || border.color.length === 9 && border.color.endsWith('00'));
         }
         static hasDrawableBackground(object) {
-            return !!object && (this.isBorderVisible(object.borderTop) ||
-                this.isBorderVisible(object.borderRight) ||
-                this.isBorderVisible(object.borderBottom) ||
-                this.isBorderVisible(object.borderLeft) ||
-                !!object.backgroundImage ||
-                !!object.borderRadius ||
-                !!object.backgroundGradient);
+            return !!object && (!!object.backgroundImage || this.isBorderVisible(object.borderTop) || this.isBorderVisible(object.borderRight) || this.isBorderVisible(object.borderBottom) || this.isBorderVisible(object.borderLeft) || !!object.borderRadius);
+        }
+        static getBackgroundSize(node, value) {
+            let width = 0;
+            let height = 0;
+            switch (value) {
+                case '':
+                case 'cover':
+                case 'contain':
+                case '100% 100%':
+                case 'auto':
+                case 'auto auto':
+                case 'initial':
+                    return undefined;
+                default:
+                    const dimensions = value.split(' ');
+                    if (dimensions.length === 1) {
+                        dimensions[1] = dimensions[0];
+                    }
+                    for (let i = 0; i < dimensions.length; i++) {
+                        if (dimensions[i] === 'auto') {
+                            dimensions[i] = '100%';
+                        }
+                        if (i === 0) {
+                            width = node.calculateUnit(dimensions[i], true, false);
+                        }
+                        else {
+                            height = node.calculateUnit(dimensions[i], false, false);
+                        }
+                    }
+                    break;
+            }
+            return width > 0 && height > 0 ? { width: Math.round(width), height: Math.round(height) } : undefined;
         }
         finalize(data) { }
         reset() {
@@ -665,18 +750,17 @@
             for (const node of this.cache) {
                 if (node.visible && node.styleElement) {
                     const boxStyle = {
-                        background: null,
-                        borderTop: null,
-                        borderRight: null,
-                        borderBottom: null,
-                        borderLeft: null,
-                        borderRadius: null,
-                        backgroundColor: null,
-                        backgroundSize: null,
-                        backgroundImage: null,
-                        backgroundRepeat: null,
-                        backgroundPositionX: null,
-                        backgroundPositionY: null
+                        borderTop: undefined,
+                        borderRight: undefined,
+                        borderBottom: undefined,
+                        borderLeft: undefined,
+                        borderRadius: undefined,
+                        backgroundColor: undefined,
+                        backgroundSize: undefined,
+                        backgroundRepeat: undefined,
+                        backgroundPositionX: undefined,
+                        backgroundPositionY: undefined,
+                        backgroundImage: undefined
                     };
                     for (const attr in boxStyle) {
                         const value = node.css(attr);
@@ -692,7 +776,7 @@
                                         break;
                                     case 'inherit':
                                     case 'currentcolor':
-                                        borderColor = $dom$1.cssInheritStyle(node.element, `${attr}Color`);
+                                        borderColor = $css.getInheritedStyle(node.element, `${attr}Color`);
                                         break;
                                 }
                                 const style = node.css(`${attr}Style`) || 'none';
@@ -706,13 +790,13 @@
                                             width = '1px';
                                         }
                                     default:
-                                        color = $color.parseRGBA(borderColor, node.css('opacity'));
+                                        color = $color.parseColor(borderColor, node.css('opacity'));
                                         break;
                                 }
                                 boxStyle[attr] = {
                                     width,
                                     style,
-                                    color: color ? color.valueRGBA : ''
+                                    color: color ? color.valueAsRGBA : ''
                                 };
                                 break;
                             }
@@ -730,84 +814,86 @@
                                 break;
                             }
                             case 'backgroundColor':
-                                if (!node.has('backgroundColor') && (value === node.cssAscend('backgroundColor', false, true) || node.documentParent.visible && $dom$1.cssFromParent(node.element, 'backgroundColor'))) {
+                                if (!node.has('backgroundColor') && (value === node.cssAscend('backgroundColor', false, true) || node.documentParent.visible && $css.isInheritedStyle(node.element, 'backgroundColor'))) {
                                     boxStyle.backgroundColor = '';
                                 }
                                 else {
-                                    const color = $color.parseRGBA(value, node.css('opacity'));
-                                    boxStyle.backgroundColor = color ? color.valueRGBA : '';
+                                    const color = $color.parseColor(value, node.css('opacity'));
+                                    boxStyle.backgroundColor = color ? color.valueAsRGBA : '';
                                 }
                                 break;
-                            case 'background':
                             case 'backgroundImage':
                                 if (value !== 'none' && !node.hasBit('excludeResource', NODE_RESOURCE.IMAGE_SOURCE)) {
-                                    const gradients = [];
+                                    const images = [];
                                     const opacity = node.css('opacity');
-                                    let pattern = new RegExp(`(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|circle|ellipse|closest-side|closest-corner|farthest-side|farthest-corner)?(?:\\s*at [\\w %]+)?),?\\s*(${REGEXP_COLORSTOP}+)\\)`, 'g');
                                     let match;
-                                    while ((match = pattern.exec(value)) !== null) {
-                                        let gradient;
-                                        switch (match[1]) {
-                                            case 'linear': {
-                                                if (match[2] === undefined) {
-                                                    match[2] = 'to bottom';
+                                    let i = 0;
+                                    while ((match = REGEXP_BACKGROUNDIMAGE.exec(value)) !== null) {
+                                        const [complete, repeating, type, direction, colorStop] = match;
+                                        if (complete === 'initial' || complete.startsWith('url')) {
+                                            images.push(complete);
+                                        }
+                                        else {
+                                            const gradient = {
+                                                type,
+                                                repeating: repeating === 'repeating',
+                                                fontSize: node.fontSize
+                                            };
+                                            switch (type) {
+                                                case 'linear': {
+                                                    let angle = 180;
+                                                    switch (direction) {
+                                                        case 'to top':
+                                                            angle = 0;
+                                                            break;
+                                                        case 'to right top':
+                                                            angle = 45;
+                                                            break;
+                                                        case 'to right':
+                                                            angle = 90;
+                                                            break;
+                                                        case 'to right bottom':
+                                                            angle = 135;
+                                                            break;
+                                                        case 'to bottom':
+                                                            break;
+                                                        case 'to left bottom':
+                                                            angle = 225;
+                                                            break;
+                                                        case 'to left':
+                                                            angle = 270;
+                                                            break;
+                                                        case 'to left top':
+                                                            angle = 315;
+                                                            break;
+                                                        default:
+                                                            if (direction) {
+                                                                angle = parseAngle(direction);
+                                                            }
+                                                            break;
+                                                    }
+                                                    gradient.horizontal = angle >= 45 && angle <= 135 || angle >= 225 && angle <= 315;
+                                                    gradient.colorStops = parseColorStops(node, gradient, colorStop, opacity, i, boxStyle.backgroundSize);
+                                                    gradient.angle = angle;
+                                                    break;
                                                 }
-                                                let angle;
-                                                switch (match[2]) {
-                                                    case 'to top':
-                                                        angle = 0;
-                                                        break;
-                                                    case 'to right top':
-                                                        angle = 45;
-                                                        break;
-                                                    case 'to right':
-                                                        angle = 90;
-                                                        break;
-                                                    case 'to right bottom':
-                                                        angle = 135;
-                                                        break;
-                                                    case 'to bottom':
-                                                        angle = 180;
-                                                        break;
-                                                    case 'to left bottom':
-                                                        angle = 225;
-                                                        break;
-                                                    case 'to left':
-                                                        angle = 270;
-                                                        break;
-                                                    case 'to left top':
-                                                        angle = 315;
-                                                        break;
-                                                    default:
-                                                        angle = parseAngle(match[2]);
-                                                        break;
-                                                }
-                                                gradient = {
-                                                    type: match[1],
-                                                    angle,
-                                                    colorStops: getColorStops(match[3], opacity)
-                                                };
-                                                break;
-                                            }
-                                            case 'radial': {
-                                                gradient = {
-                                                    type: match[1],
-                                                    position: (() => {
+                                                case 'radial': {
+                                                    gradient.horizontal = node.bounds.width <= node.bounds.height;
+                                                    gradient.colorStops = parseColorStops(node, gradient, colorStop, opacity, i, boxStyle.backgroundSize);
+                                                    gradient.position = (() => {
                                                         const result = ['center', 'ellipse'];
-                                                        if (match[2]) {
-                                                            const position = REGEXP_POSITION.exec(match[2]);
+                                                        if (direction) {
+                                                            const position = REGEXP_POSITION.exec(direction);
                                                             if (position) {
-                                                                if (position[1]) {
-                                                                    switch (position[1]) {
-                                                                        case 'ellipse':
-                                                                        case 'circle':
-                                                                        case 'closest-side':
-                                                                        case 'closest-corner':
-                                                                        case 'farthest-side':
-                                                                        case 'farthest-corner':
-                                                                            result[1] = position[1];
-                                                                            break;
-                                                                    }
+                                                                switch (position[1]) {
+                                                                    case 'ellipse':
+                                                                    case 'circle':
+                                                                    case 'closest-side':
+                                                                    case 'closest-corner':
+                                                                    case 'farthest-side':
+                                                                    case 'farthest-corner':
+                                                                        result[1] = position[1];
+                                                                        break;
                                                                 }
                                                                 if (position[2]) {
                                                                     result[0] = position[2];
@@ -815,45 +901,30 @@
                                                             }
                                                         }
                                                         return result;
-                                                    })(),
-                                                    colorStops: getColorStops(match[3], opacity)
-                                                };
-                                                break;
-                                            }
-                                            case 'conic': {
-                                                gradient = {
-                                                    type: match[1],
-                                                    angle: parseAngle(match[2]),
-                                                    position: (() => {
-                                                        if (match[2]) {
-                                                            const position = REGEXP_POSITION.exec(match[2]);
+                                                    })();
+                                                    break;
+                                                }
+                                                case 'conic': {
+                                                    gradient.colorStops = parseColorStops(node, gradient, colorStop, opacity, i, boxStyle.backgroundSize);
+                                                    gradient.angle = parseAngle(direction);
+                                                    gradient.position = (() => {
+                                                        if (direction) {
+                                                            const position = REGEXP_POSITION.exec(direction);
                                                             if (position) {
                                                                 return [position[2]];
                                                             }
                                                         }
                                                         return ['center'];
-                                                    })(),
-                                                    colorStops: getColorStops(match[3], opacity, true)
-                                                };
-                                                break;
+                                                    })();
+                                                    break;
+                                                }
                                             }
+                                            images.push(gradient);
                                         }
-                                        if (gradient.colorStops.length > 1) {
-                                            gradients.push(gradient);
-                                        }
+                                        i++;
                                     }
-                                    if (gradients.length) {
-                                        boxStyle.backgroundGradient = gradients;
-                                    }
-                                    else {
-                                        const images = [];
-                                        pattern = new RegExp($util$2.REGEXP_PATTERN.URL, 'g');
-                                        while ((match = pattern.exec(value)) !== null) {
-                                            images.push(match[0]);
-                                        }
-                                        if (images.length) {
-                                            boxStyle.backgroundImage = images;
-                                        }
+                                    if (images.length) {
+                                        boxStyle.backgroundImage = images;
                                     }
                                 }
                                 break;
@@ -883,17 +954,11 @@
                     node.tagName === 'HR' ||
                     node.inlineText && !backgroundImage && !node.preserveWhiteSpace && node.element.innerHTML.trim() === '')) {
                     const opacity = node.css('opacity');
-                    const color = $color.parseRGBA(node.css('color'), opacity);
-                    let backgroundColor;
-                    if (!(backgroundImage ||
-                        node.css('backgroundColor') === node.cssAscend('backgroundColor', false, true) && (node.plainText || node.style.backgroundColor !== node.cssInitial('backgroundColor')) ||
-                        node.documentParent.visible && !node.has('backgroundColor') && $dom$1.cssFromParent(node.element, 'backgroundColor'))) {
-                        backgroundColor = $color.parseRGBA(node.css('backgroundColor'), opacity);
-                    }
+                    const color = $color.parseColor(node.css('color'), opacity);
                     let fontFamily = node.css('fontFamily');
                     let fontSize = node.css('fontSize');
                     let fontWeight = node.css('fontWeight');
-                    if ($dom$1.isUserAgent(8 /* EDGE */) && !node.has('fontFamily')) {
+                    if ($util$2.isUserAgent(16 /* EDGE */) && !node.has('fontFamily')) {
                         switch (node.tagName) {
                             case 'TT':
                             case 'CODE':
@@ -949,8 +1014,7 @@
                         fontStyle: node.css('fontStyle'),
                         fontSize,
                         fontWeight,
-                        color: color ? color.valueRGBA : '',
-                        backgroundColor: backgroundColor ? backgroundColor.valueRGBA : ''
+                        color: color ? color.valueAsRGBA : ''
                     };
                     node.data(Resource.KEY_NAME, 'fontStyle', result);
                 }
@@ -964,56 +1028,60 @@
                     let value = '';
                     let inlineTrim = false;
                     let performTrim = true;
-                    if (element.tagName === 'INPUT') {
-                        switch (element.type) {
-                            case 'text':
-                            case 'number':
-                            case 'email':
-                            case 'search':
-                            case 'submit':
-                            case 'reset':
-                            case 'button':
-                                value = element.value.trim();
-                                break;
-                            default:
-                                if (node.companion && !node.companion.visible) {
-                                    value = node.companion.textContent.trim();
-                                }
-                                break;
-                        }
-                    }
-                    else if (element.tagName === 'TEXTAREA') {
-                        value = element.value.trim();
-                    }
-                    else if (node.htmlElement) {
-                        if (element.tagName === 'BUTTON') {
+                    switch (element.tagName) {
+                        case 'INPUT':
+                            switch (element.type) {
+                                case 'text':
+                                case 'number':
+                                case 'email':
+                                case 'search':
+                                case 'submit':
+                                case 'reset':
+                                case 'button':
+                                    value = element.value.trim();
+                                    break;
+                                default:
+                                    if (node.companion && !node.companion.visible) {
+                                        value = node.companion.textContent.trim();
+                                    }
+                                    break;
+                            }
+                            break;
+                        case 'BUTTON':
                             value = element.innerText;
-                        }
-                        else if (node.inlineText) {
-                            name = node.textContent.trim();
-                            if (element.tagName === 'CODE') {
-                                value = $xml.replaceEntity(replaceExcluded(element, 'innerHTML'));
+                            break;
+                        case 'TEXTAREA':
+                            value = element.value.trim();
+                            break;
+                        default:
+                            if (node.plainText) {
+                                name = node.textContent.trim();
+                                value = node.textContent.replace(/&[A-Za-z]+;/g, match => match.replace('&', '&amp;'));
+                                [value, inlineTrim] = replaceWhiteSpace(node, element, value);
                             }
-                            else if ($dom$1.hasLineBreak(element, true)) {
-                                value = $xml.replaceEntity(replaceExcluded(element, 'innerHTML'))
-                                    .replace(/\s*<br[^>]*>\s*/g, '\\n')
-                                    .replace(/(<([^>]+)>)/ig, '');
+                            else if (node.inlineText) {
+                                name = node.textContent.trim();
+                                if (element.tagName === 'CODE') {
+                                    value = replaceExcluded(element, 'innerHTML');
+                                }
+                                else if ($element.hasLineBreak(element, true)) {
+                                    value = replaceExcluded(element, 'innerHTML')
+                                        .replace(/\s*<br[^>]*>\s*/g, '\\n')
+                                        .replace(/(<([^>]+)>)/ig, '');
+                                }
+                                else {
+                                    value = replaceExcluded(element, 'textContent');
+                                }
+                                [value, inlineTrim] = replaceWhiteSpace(node, element, value);
                             }
-                            else {
-                                value = $xml.replaceEntity(replaceExcluded(element, 'textContent'));
+                            else if (node.htmlElement && element.innerText.trim() === '' && Resource.hasDrawableBackground(node.data(Resource.KEY_NAME, 'boxStyle'))) {
+                                value = element.innerText;
+                                performTrim = false;
                             }
-                            [value, inlineTrim] = replaceWhiteSpace(node, value);
-                        }
-                        else if (element.innerText.trim() === '' && Resource.hasDrawableBackground(node.data(Resource.KEY_NAME, 'boxStyle'))) {
-                            value = $xml.replaceEntity(element.innerText);
-                            performTrim = false;
-                        }
+                            break;
                     }
-                    else if (node.plainText) {
-                        name = node.textContent.trim();
-                        value = $xml.replaceEntity(node.textContent);
-                        value = value.replace(/&[A-Za-z]+;/g, match => match.replace('&', '&amp;'));
-                        [value, inlineTrim] = replaceWhiteSpace(node, value);
+                    if (this.application.userSettings.replaceCharacterEntities) {
+                        value = $xml.replaceEntity(value);
                     }
                     if (value !== '') {
                         if (performTrim) {
@@ -1041,7 +1109,7 @@
                                     value = value.replace(/^\s+/, previousSibling && (previousSibling.block ||
                                         previousSibling.lineBreak ||
                                         previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
-                                        node.multiline && $dom$1.hasLineBreak(element)) ? '' : '&#160;');
+                                        node.multiline && $element.hasLineBreak(element)) ? '' : '&#160;');
                                     value = value.replace(/\s+$/, node.display === 'table-cell' || nextSibling && nextSibling.lineBreak || node.blockStatic ? '' : '&#160;');
                                 }
                                 else if (value.length) {
@@ -1073,7 +1141,9 @@
         images: new Map()
     };
 
+    const $css$1 = squared.lib.css;
     const $dom$2 = squared.lib.dom;
+    const $element$1 = squared.lib.element;
     const $util$3 = squared.lib.util;
     const $xml$1 = squared.lib.xml;
     const PREALIGN_DIRECTION = ['top', 'right', 'bottom', 'left'];
@@ -1082,7 +1152,7 @@
         let current = element;
         do {
             if (current.dataset.use) {
-                for (const value of current.dataset.use.split(',')) {
+                for (const value of current.dataset.use.split($util$3.REGEXP_COMPILED.SEPARATOR)) {
                     tagged.push(value.trim());
                 }
             }
@@ -1100,9 +1170,7 @@
                     untagged.push(ext);
                 }
             }
-            $util$3.spliceArray(result, item => item === undefined);
-            result.push(...untagged);
-            return result;
+            return $util$3.concatArray($util$3.spliceArray(result, item => item === undefined), untagged);
         }
         else {
             return extensions;
@@ -1149,12 +1217,13 @@
                 image: new Map(),
                 renderQueue: new Map(),
                 excluded: new NodeList(),
+                targeted: new Map()
             };
             this.processing = {
                 cache: new NodeList(),
                 depthMap: new Map(),
-                node: null,
-                layout: null,
+                node: undefined,
+                layout: undefined,
                 excluded: new NodeList()
             };
             this._renderPosition = new Map();
@@ -1206,8 +1275,9 @@
                 ext.afterProcedure();
             }
             this.processRenderQueue();
-            this.resourceHandler.finalize(this.sessionData);
-            this.controllerHandler.finalize(this.sessionData);
+            const sessionData = this.sessionData;
+            this.resourceHandler.finalize(sessionData);
+            this.controllerHandler.finalize(sessionData);
             for (const ext of this.extensions) {
                 ext.afterFinalize();
             }
@@ -1222,14 +1292,15 @@
         reset() {
             this.session.cache.each(node => node.element && $dom$2.deleteElementCache(node.element, 'node', 'style', 'styleMap'));
             for (const element of this.parseElements) {
-                delete element.dataset.iteration;
-                delete element.dataset.layoutName;
+                element.dataset.iteration = '';
+                element.dataset.layoutName = '';
             }
             this.appName = '';
             this.session.renderQueue.clear();
             this.session.image.clear();
             this.session.cache.reset();
             this.session.excluded.reset();
+            this.session.targeted.clear();
             this.processing.cache.reset();
             this.controllerHandler.reset();
             this.resourceHandler.reset();
@@ -1252,15 +1323,18 @@
             }
             for (const value of elements) {
                 const element = typeof value === 'string' ? document.getElementById(value) : value;
-                if ($dom$2.hasComputedStyle(element)) {
+                if ($css$1.hasComputedStyle(element)) {
                     this.parseElements.add(element);
                 }
             }
             const documentRoot = this.parseElements.values().next().value;
+            const preloadImages = [];
             const parseResume = () => {
                 this.initialized = false;
-                if (this.userSettings.preloadImages) {
-                    $dom$2.removeElementsByClassName('__css.preload');
+                if (preloadImages.length) {
+                    for (const image of preloadImages) {
+                        documentRoot.removeChild(image);
+                    }
                 }
                 for (const [uri, image] of this.session.image.entries()) {
                     Resource.ASSETS.images.set(uri, image);
@@ -1272,10 +1346,7 @@
                     if (this.appName === '') {
                         this.appName = element.id || 'untitled';
                     }
-                    let filename = $util$3.trimNull(element.dataset.filename).replace(new RegExp(`\.${this.controllerHandler.localSettings.layout.fileExtension}$`), '');
-                    if (filename === '') {
-                        filename = element.id || `document_${this.size}`;
-                    }
+                    const filename = element.dataset.filename && element.dataset.filename.replace(new RegExp(`\.${this.controllerHandler.localSettings.layout.fileExtension}$`), '') || element.id || `document_${this.size}`;
                     const iteration = parseInt(element.dataset.iteration || '0') + 1;
                     element.dataset.iteration = iteration.toString();
                     element.dataset.layoutName = $util$3.convertWord(iteration > 1 ? `${filename}_${iteration}` : filename, true);
@@ -1301,11 +1372,13 @@
                 for (const element of this.parseElements) {
                     element.querySelectorAll('svg image').forEach((image) => {
                         const uri = $util$3.resolvePath(image.href.baseVal);
-                        this.session.image.set(uri, {
-                            width: image.width.baseVal.value,
-                            height: image.height.baseVal.value,
-                            uri
-                        });
+                        if (uri !== '') {
+                            this.session.image.set(uri, {
+                                width: image.width.baseVal.value,
+                                height: image.height.baseVal.value,
+                                uri
+                            });
+                        }
                     });
                 }
                 for (const image of this.session.image.values()) {
@@ -1317,8 +1390,8 @@
                             image.height = element.naturalHeight;
                         }
                         else {
-                            element.className = '__css.preload';
                             documentRoot.appendChild(element);
+                            preloadImages.push(element);
                         }
                     }
                 }
@@ -1341,15 +1414,19 @@
             }
             else {
                 this.initialized = true;
-                Promise.all($util$3.objectMap(images, image => new Promise((resolve, reject) => {
-                    image.onload = resolve;
-                    image.onerror = reject;
-                })))
+                Promise.all($util$3.objectMap(images, image => {
+                    return new Promise((resolve, reject) => {
+                        image.onload = () => {
+                            resolve(image);
+                        };
+                        image.onerror = () => {
+                            reject(image);
+                        };
+                    });
+                }))
                     .then((result) => {
-                    if (Array.isArray(result)) {
-                        for (const item of result) {
-                            this.addImagePreload(item.target);
-                        }
+                    for (const item of result) {
+                        this.addImagePreload(item);
                     }
                     parseResume();
                 })
@@ -1446,8 +1523,9 @@
                     else if (parent.dataset.target) {
                         const target = document.getElementById(parent.dataset.target);
                         if (target) {
-                            this.addRenderQueue(parent.controlId, output);
-                            node.dataset.target = parent.controlId;
+                            const id = parent.elementId || parent.controlId;
+                            this.addRenderQueue(id, output);
+                            node.dataset.target = id;
                             return;
                         }
                     }
@@ -1513,8 +1591,7 @@
             if (required) {
                 const renderMap = this._renderPosition.get(parent.id);
                 if (renderMap) {
-                    children = $util$3.filterArray(renderMap.children, item => !parent.contains(item));
-                    children.push(...parent.children);
+                    children = $util$3.concatArray($util$3.filterArray(renderMap.children, item => !parent.contains(item)), parent.children);
                 }
                 else {
                     children = parent.duplicate();
@@ -1524,6 +1601,22 @@
         }
         createNode(element) {
             return new this.nodeConstructor(this.nextId, element, this.controllerHandler.afterInsertNode);
+        }
+        resolveTarget(target, node) {
+            for (const parent of this.processing.cache) {
+                if (parent.elementId === target || parent.controlId === target) {
+                    return parent;
+                }
+            }
+            for (const parent of this.session.cache) {
+                if (parent.elementId === target || parent.controlId === target) {
+                    return parent;
+                }
+            }
+            const nodes = this.session.targeted.get(target) || [];
+            nodes.push(node);
+            this.session.targeted.set(target, nodes);
+            return undefined;
         }
         toString() {
             return this._views.length ? this._views[0].content : '';
@@ -1545,7 +1638,7 @@
             this.processing.cache.afterAppend = undefined;
             this.processing.cache.clear();
             this.processing.excluded.clear();
-            this.processing.node = null;
+            this.processing.node = undefined;
             const extensions = Array.from(this.extensions);
             for (const ext of extensions) {
                 ext.beforeInit(documentRoot);
@@ -1726,6 +1819,7 @@
                         }
                     }
                 }
+                const checkTargeted = this.session.targeted.size > 0;
                 for (const node of this.processing.cache) {
                     if (node.htmlElement && node.length) {
                         let i = 0;
@@ -1778,6 +1872,15 @@
                         node.sort(NodeList.siblingIndex);
                     }
                     node.saveAsInitial();
+                    if (checkTargeted && node.elementId) {
+                        const children = this.session.targeted.get(node.elementId);
+                        if (children) {
+                            for (const target of children) {
+                                target.render(node);
+                            }
+                            this.session.targeted.delete(node.elementId);
+                        }
+                    }
                 }
                 $util$3.sortArray(this.processing.cache.children, true, 'depth', 'id');
                 for (const ext of extensions) {
@@ -1932,7 +2035,15 @@
                                         }
                                         else if (previous) {
                                             if (hasFloat) {
-                                                const startNewRow = item.alignedVertically(previousSiblings, [...horizontal, ...vertical, item], cleared, false);
+                                                const siblings = [];
+                                                if (horizontal.length) {
+                                                    $util$3.concatArray(siblings, horizontal);
+                                                }
+                                                else if (vertical.length) {
+                                                    $util$3.concatArray(siblings, vertical);
+                                                }
+                                                siblings.push(item);
+                                                const startNewRow = item.alignedVertically(previousSiblings, siblings, cleared, false);
                                                 if (startNewRow || settings.floatOverlapDisabled && previous.floating && item.blockStatic && floatSegment.size === 2) {
                                                     if (horizontal.length) {
                                                         if (!settings.floatOverlapDisabled && floatSegment.size && !previous.autoMargin.horizontal && !previousSiblings.some(node => node.lineBreak && !cleared.has(node)) && cleared.get(item) !== 'both') {
@@ -2035,7 +2146,7 @@
                             if (extensionsParent.length || extensionsChild.length) {
                                 const combined = extensionsParent.slice(0);
                                 if (extensionsChild.length) {
-                                    combined.push(...$util$3.filterArray(extensionsChild, item => item.subscribersChild.has(nodeY)));
+                                    $util$3.concatArray(combined, $util$3.filterArray(extensionsChild, item => item.subscribersChild.has(nodeY)));
                                 }
                                 for (const ext of combined) {
                                     const result = ext.processChild(nodeY, parentY);
@@ -2157,7 +2268,7 @@
                     }
                 }
             }
-            if (documentRoot.dataset.layoutName && (!$util$3.hasValue(documentRoot.dataset.target) || documentRoot.renderExtension.size === 0)) {
+            if (documentRoot.dataset.layoutName && (!documentRoot.dataset.target || documentRoot.renderExtension.size === 0)) {
                 this.addLayoutFile(documentRoot.dataset.layoutName, !empty ? baseTemplate : '', $util$3.trimString($util$3.trimNull(documentRoot.dataset.pathname), '/'), documentRoot.renderExtension.size > 0 && $util$3.hasInSet(documentRoot.renderExtension, item => item.documentRoot));
             }
             if (empty && documentRoot.renderExtension.size === 0) {
@@ -2177,8 +2288,8 @@
                     return a.siblingIndex < b.siblingIndex ? -1 : 1;
                 }
             });
-            this.session.cache.children.push(...this.processing.cache);
-            this.session.excluded.children.push(...this.processing.excluded);
+            this.session.cache.concat(this.processing.cache.children);
+            this.session.excluded.concat(this.processing.excluded.children);
             for (const ext of this.extensions) {
                 for (const node of ext.subscribers) {
                     ext.postBaseLayout(node);
@@ -2265,13 +2376,13 @@
                 else if ((left.length === 0 || right.length === 0) && (this.userSettings.floatOverlapDisabled || !inline.some(item => item.blockStatic))) {
                     const subgroup = [];
                     if (right.length === 0) {
-                        subgroup.push(...left, ...inline);
+                        $util$3.concatMultiArray(subgroup, left, inline);
                         const horizontal = this.controllerHandler.containerTypeHorizontal;
                         layout.setType(horizontal.containerType, horizontal.alignmentType);
                         layerIndex = [left, inline];
                     }
                     else {
-                        subgroup.push(...inline, ...right);
+                        $util$3.concatMultiArray(subgroup, inline, right);
                         const vertical = this.controllerHandler.containerTypeVerticalMargin;
                         layout.setType(vertical.containerType, vertical.alignmentType);
                         layerIndex = [inline, right];
@@ -2510,7 +2621,7 @@
                         segments = item;
                         const grouping = [];
                         for (const seg of segments) {
-                            grouping.push(...seg);
+                            $util$3.concatArray(grouping, seg);
                         }
                         grouping.sort(NodeList.siblingIndex);
                         floatgroup = this.controllerHandler.createNodeGroup(grouping[0], grouping, data.node);
@@ -2728,13 +2839,13 @@
         insertNode(element, parent) {
             let node;
             if (element.nodeName.charAt(0) === '#' && element.nodeName === '#text') {
-                if ($dom$2.isPlainText(element, true) || $dom$2.cssParent(element, 'whiteSpace', 'pre', 'pre-wrap')) {
+                if ($element$1.isPlainText(element, true) || $css$1.isParentStyle(element, 'whiteSpace', 'pre', 'pre-wrap')) {
                     node = this.createNode(element);
                     if (parent) {
                         node.inherit(parent, 'textStyle');
                     }
                     else {
-                        node.css('whiteSpace', $dom$2.getStyle(element.parentElement).whiteSpace || 'normal');
+                        node.css('whiteSpace', $css$1.getStyle(element.parentElement).whiteSpace || 'normal');
                     }
                     node.cssApply({
                         position: 'static',
@@ -2763,15 +2874,15 @@
             return node;
         }
         conditionElement(element) {
-            if ($dom$2.hasComputedStyle(element)) {
-                if ($dom$2.hasVisibleRect(element, true) || $util$3.hasValue(element.dataset.use)) {
+            if ($css$1.hasComputedStyle(element)) {
+                if ($dom$2.isElementVisible(element, true) || element.dataset.use) {
                     return true;
                 }
                 else {
                     let current = element.parentElement;
                     let valid = true;
                     while (current) {
-                        if ($dom$2.getStyle(current).display === 'none') {
+                        if ($css$1.getStyle(current).display === 'none') {
                             valid = false;
                             break;
                         }
@@ -2779,7 +2890,7 @@
                     }
                     if (valid) {
                         for (let i = 0; i < element.children.length; i++) {
-                            if ($dom$2.hasVisibleRect(element.children[i], true)) {
+                            if ($dom$2.isElementVisible(element.children[i], true)) {
                                 return true;
                             }
                         }
@@ -2788,7 +2899,7 @@
                 }
             }
             else {
-                return $dom$2.isPlainText(element);
+                return $element$1.isPlainText(element);
             }
         }
         setStyleMap() {
@@ -2838,7 +2949,7 @@
                                                     case 'height':
                                                     case 'min-height':
                                                     case 'max-height':
-                                                        valid = compareRange(operation, attr.indexOf('width') !== -1 ? window.innerWidth : window.innerHeight, parseFloat($util$3.convertPX(value, $util$3.convertInt($dom$2.getStyle(document.body).fontSize))));
+                                                        valid = compareRange(operation, attr.indexOf('width') !== -1 ? window.innerWidth : window.innerHeight, $util$3.calculateUnit(value, $util$3.convertInt($css$1.getStyle(document.body).fontSize)));
                                                         break;
                                                     case 'orientation':
                                                         valid = value === 'portrait' && window.innerWidth <= window.innerHeight || value === 'landscape' && window.innerWidth > window.innerHeight;
@@ -2853,7 +2964,7 @@
                                                         else if (value.endsWith('dppx') || value.endsWith('x')) {
                                                             resolution *= 96;
                                                         }
-                                                        valid = compareRange(operation, $dom$2.getDeviceDPI(), resolution);
+                                                        valid = compareRange(operation, $util$3.getDeviceDPI(), resolution);
                                                         break;
                                                     case 'grid':
                                                         valid = value === '0';
@@ -2911,24 +3022,24 @@
             }
         }
         applyStyleRule(item) {
-            const clientFirefox = $dom$2.isUserAgent(16 /* FIREFOX */);
+            const clientFirefox = $util$3.isUserAgent(8 /* FIREFOX */);
             const fromRule = [];
             for (const attr of Array.from(item.style)) {
                 fromRule.push($util$3.convertCamelCase(attr));
             }
             document.querySelectorAll(item.selectorText).forEach((element) => {
-                const style = $dom$2.getStyle(element);
-                const fontSize = parseInt($util$3.convertPX(style.fontSize, 0));
+                const style = $css$1.getStyle(element);
+                const fontSize = $util$3.calculateUnit(style.fontSize);
                 const styleMap = {};
                 for (const attr of fromRule) {
-                    const value = $dom$2.checkStyleAttribute(element, attr, item.style[attr], style, fontSize);
-                    if (value !== '') {
+                    const value = $css$1.checkStyleValue(element, attr, item.style[attr], style, fontSize);
+                    if (value) {
                         styleMap[attr] = value;
                     }
                 }
                 if (this.userSettings.preloadImages && $util$3.hasValue(styleMap.backgroundImage) && styleMap.backgroundImage !== 'initial') {
-                    for (const value of styleMap.backgroundImage.split(',')) {
-                        const uri = $dom$2.cssResolveUrl(value.trim());
+                    for (const value of styleMap.backgroundImage.split($util$3.REGEXP_COMPILED.SEPARATOR)) {
+                        const uri = $css$1.resolveURL(value.trim());
                         if (uri !== '' && !this.session.image.has(uri)) {
                             this.session.image.set(uri, { width: 0, height: 0, uri });
                         }
@@ -2969,13 +3080,12 @@
             return this._userSettings || {};
         }
         get viewData() {
-            return [...this._views, ...this._includes];
+            return [].concat(this._views, this._includes);
         }
         get sessionData() {
             return {
                 cache: this.session.cache,
-                views: this._views,
-                includes: this._includes
+                templates: this.viewData
             };
         }
         get rendered() {
@@ -2990,6 +3100,8 @@
     }
 
     const $xml$2 = squared.lib.xml;
+    const REGEXP_INDENT = /^({[^}]+})(\t*)(<.*)/;
+    const REGEXP_PLACEHOLDER = /{[<:@#>]\d+(\^\d+)?}\n?/g;
     class Controller {
         constructor(application, cache) {
             this.application = application;
@@ -3050,10 +3162,10 @@
             return output;
         }
         removePlaceholders(value) {
-            return value.replace(/{[<:@#>]\d+(\^\d+)?}\n?/g, '').trim();
+            return value.replace(REGEXP_PLACEHOLDER, '').trim();
         }
         replaceIndent(value, depth, cache) {
-            value = $xml$2.replaceIndent(value, depth, /^({[^}]+})(\t*)(<.*)/);
+            value = $xml$2.replaceIndent(value, depth, REGEXP_INDENT);
             if (cache) {
                 const pattern = /{@(\d+)}/g;
                 let match;
@@ -3075,7 +3187,7 @@
         }
     }
 
-    const $dom$3 = squared.lib.dom;
+    const $css$2 = squared.lib.css;
     const $util$4 = squared.lib.util;
     class Extension {
         constructor(name, framework, tagNames, options) {
@@ -3097,7 +3209,7 @@
             }
         }
         static findNestedByName(element, name) {
-            if ($dom$3.hasComputedStyle(element)) {
+            if ($css$2.hasComputedStyle(element)) {
                 for (let i = 0; i < element.children.length; i++) {
                     const item = element.children[i];
                     if ($util$4.includes(item.dataset.use, name)) {
@@ -3146,14 +3258,8 @@
             }
         }
         condition(node, parent) {
-            if ($dom$3.hasComputedStyle(node.element)) {
-                const ext = node.dataset.use;
-                if (!ext) {
-                    return this.tagNames.length > 0;
-                }
-                else {
-                    return this.included(node.element);
-                }
+            if ($css$2.hasComputedStyle(node.element)) {
+                return node.dataset.use ? this.included(node.element) : this.tagNames.length > 0;
             }
             return false;
         }
@@ -3298,7 +3404,7 @@
             }
             if (files.length) {
                 const settings = this.userSettings;
-                files.push(...this.assets);
+                $util$6.concatArray(files, this.assets);
                 fetch(`/api/savetodisk` +
                     `?directory=${encodeURIComponent($util$6.trimString(settings.outputDirectory, '/'))}` +
                     `&appname=${encodeURIComponent(this.appName.trim())}` +
@@ -3317,7 +3423,7 @@
                         if (result.zipname) {
                             fetch(`/api/downloadtobrowser?filename=${encodeURIComponent(result.zipname)}`)
                                 .then((responseBlob) => responseBlob.blob())
-                                .then((blob) => File.downloadToDisk(blob, $util$6.lastIndexOf(result.zipname)));
+                                .then((blob) => File.downloadToDisk(blob, $util$6.fromLastIndexOf(result.zipname)));
                         }
                         else if (result.system) {
                             alert(`${result.application}\n\n${result.system}`);
@@ -3362,7 +3468,9 @@
         EXT_NAME: EXT_NAME
     });
 
-    const $dom$4 = squared.lib.dom;
+    const $css$3 = squared.lib.css;
+    const $dom$3 = squared.lib.dom;
+    const $element$2 = squared.lib.element;
     const $util$7 = squared.lib.util;
     const INHERIT_ALIGNMENT = ['position', 'top', 'right', 'bottom', 'left', 'display', 'verticalAlign', 'cssFloat', 'clear', 'zIndex'];
     const INHERIT_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
@@ -3408,20 +3516,20 @@
         init() {
             const element = this._element;
             if (element) {
-                $dom$4.setElementCache(element, 'node', this);
-                this.style = $dom$4.getElementCache(element, 'style') || $dom$4.getStyle(element, false);
+                $dom$3.setElementCache(element, 'node', this);
+                this.style = $dom$3.getElementCache(element, 'style') || $css$3.getStyle(element, false);
             }
             if (this.styleElement) {
-                const styleMap = $dom$4.getElementCache(element, 'styleMap') || {};
-                const fontSize = $util$7.convertInt(this.style.fontSize);
+                const styleMap = $dom$3.getElementCache(element, 'styleMap') || {};
+                const fontSize = parseInt(this.style.fontSize) || undefined;
                 for (let attr of Array.from(element.style)) {
                     attr = $util$7.convertCamelCase(attr);
-                    const value = $dom$4.checkStyleAttribute(element, attr, element.style[attr], this.style, fontSize);
-                    if (value !== '') {
+                    const value = $css$3.checkStyleValue(element, attr, element.style[attr], this.style, fontSize);
+                    if (value) {
                         styleMap[attr] = value;
                     }
                 }
-                this._styleMap = styleMap;
+                this._styleMap = Object.assign({}, styleMap);
             }
         }
         saveAsInitial() {
@@ -3431,9 +3539,9 @@
                 this._initial.documentParent = this._documentParent;
             }
             if (this._bounds) {
-                this._initial.bounds = $dom$4.assignBounds(this._bounds);
-                this._initial.linear = $dom$4.assignBounds(this.linear);
-                this._initial.box = $dom$4.assignBounds(this.box);
+                this._initial.bounds = $dom$3.assignRect(this._bounds);
+                this._initial.linear = $dom$3.assignRect(this.linear);
+                this._initial.box = $dom$3.assignRect(this.box);
             }
             this._initial.iteration++;
         }
@@ -3493,7 +3601,7 @@
         }
         render(parent) {
             this.renderParent = parent;
-            this.renderDepth = this.documentRoot || this === parent || $util$7.hasValue(parent.dataset.target) ? 0 : parent.renderDepth + 1;
+            this.renderDepth = this.documentRoot || parent === undefined || parent.dataset.target ? 0 : parent.renderDepth + 1;
             this.rendered = true;
         }
         renderEach(predicate) {
@@ -3597,18 +3705,18 @@
             }
             return result;
         }
-        inherit(node, ...props) {
+        inherit(node, ...modules) {
             const initial = node.unsafe('initial');
-            for (const type of props) {
-                switch (type) {
+            for (const name of modules) {
+                switch (name) {
                     case 'initial':
                         Object.assign(this._initial, initial);
                         break;
                     case 'base':
                         this._documentParent = node.documentParent;
-                        this._bounds = $dom$4.assignBounds(node.bounds);
-                        this._linear = $dom$4.assignBounds(node.linear);
-                        this._box = $dom$4.assignBounds(node.box);
+                        this._bounds = $dom$3.assignRect(node.bounds);
+                        this._linear = $dom$3.assignRect(node.linear);
+                        this._box = $dom$3.assignRect(node.box);
                         const actualParent = node.actualParent;
                         if (actualParent) {
                             this.css('direction', actualParent.dir);
@@ -3629,7 +3737,7 @@
                         }
                         break;
                     case 'styleMap':
-                        $util$7.assignWhenNull(this._styleMap, node.unsafe('styleMap'));
+                        $util$7.assignEmptyProperty(this._styleMap, node.unsafe('styleMap'));
                         break;
                     case 'textStyle':
                         const style = { whiteSpace: node.css('whiteSpace') };
@@ -3655,7 +3763,7 @@
                     }
                     if (checkFloat) {
                         const previous = siblings[siblings.length - 1];
-                        if (this.floating && (this.linear.top >= previous.linear.bottom || this.float === 'left' && siblings.find(node => node.siblingIndex < this.siblingIndex && $util$7.withinFraction(this.linear.left, node.linear.left)) !== undefined || this.float === 'right' && siblings.find(node => node.siblingIndex < this.siblingIndex && $util$7.withinFraction(this.linear.right, node.linear.right)) !== undefined)) {
+                        if (this.floating && (this.linear.top >= previous.linear.bottom || this.float === 'left' && siblings.find(node => node.siblingIndex < this.siblingIndex && $util$7.withinRange(this.linear.left, node.linear.left)) !== undefined || this.float === 'right' && siblings.find(node => node.siblingIndex < this.siblingIndex && $util$7.withinRange(this.linear.right, node.linear.right)) !== undefined)) {
                             return true;
                         }
                     }
@@ -3779,7 +3887,7 @@
         cssPX(attr, value, negative = false, cache = false) {
             const current = this._styleMap[attr];
             if (current && $util$7.isUnit(current)) {
-                value += parseFloat($util$7.convertPX(current, this.fontSize));
+                value += $util$7.calculateUnit(current, this.fontSize);
                 if (!negative) {
                     value = Math.max(0, value);
                 }
@@ -3798,7 +3906,7 @@
                 const current = this.css(attr);
                 element.style[attr] = value;
                 if (element.style[attr] === value) {
-                    $dom$4.setElementCache(element, attr, current);
+                    $dom$3.setElementCache(element, attr, current);
                     return true;
                 }
             }
@@ -3807,10 +3915,10 @@
         cssFinally(attr) {
             if (this.styleElement) {
                 const element = this._element;
-                const value = $dom$4.getElementCache(element, attr);
+                const value = $dom$3.getElementCache(element, attr);
                 if (value) {
                     element.style[attr] = value;
-                    $dom$4.deleteElementCache(element, attr);
+                    $dom$3.deleteElementCache(element, attr);
                     return true;
                 }
             }
@@ -3820,10 +3928,7 @@
             const value = (initial ? this._initial.styleMap : this._styleMap)[attr];
             return parseInt(value) || defaultValue;
         }
-        convertPX(value, horizontal = true, parent = true) {
-            return this.convertPercent(value, horizontal, parent) || $util$7.convertPX(value, this.fontSize);
-        }
-        convertPercent(value, horizontal, parent = true) {
+        calculateUnit(value, horizontal = true, parent = true) {
             if ($util$7.isPercent(value)) {
                 const node = parent && this.absoluteParent || this;
                 const attr = horizontal ? 'width' : 'height';
@@ -3835,9 +3940,14 @@
                     dimension = node[parent ? 'box' : 'bounds'][attr];
                 }
                 const percent = parseFloat(value) >= 1 ? parseInt(value) / 100 : parseFloat(value);
-                return `${Math.round(percent * dimension)}px`;
+                return percent * dimension;
             }
-            return '';
+            else {
+                return $util$7.calculateUnit(value, this.fontSize);
+            }
+        }
+        convertPX(value, horizontal = true, parent = true) {
+            return `${Math.round(this.calculateUnit(value, horizontal, parent))}px`;
         }
         has(attr, checkType = 0, options) {
             const value = (options && options.map === 'initial' ? this._initial.styleMap : this._styleMap)[attr];
@@ -3951,7 +4061,7 @@
             const element = this._element;
             if (element && !calibrate) {
                 if (this.styleElement) {
-                    this._bounds = $dom$4.assignBounds(element.getBoundingClientRect());
+                    this._bounds = $dom$3.assignRect(element.getBoundingClientRect());
                     if (this.documentBody) {
                         if (this.marginTop > 0) {
                             const firstChild = this.firstChild;
@@ -3963,8 +4073,8 @@
                     }
                 }
                 else if (this.plainText) {
-                    const bounds = $dom$4.getRangeClientRect(element);
-                    this._bounds = $dom$4.assignBounds(bounds);
+                    const bounds = $dom$3.getRangeClientRect(element);
+                    this._bounds = $dom$3.assignRect(bounds);
                 }
             }
         }
@@ -4064,7 +4174,7 @@
                 element = children.length && children[0].element ? children[0].element.previousSibling : null;
             }
             while (element) {
-                const node = $dom$4.getElementAsNode(element);
+                const node = $dom$3.getElementAsNode(element);
                 if (node) {
                     if (lineBreak && node.lineBreak || excluded && node.excluded) {
                         result.push(node);
@@ -4094,7 +4204,7 @@
                 }
             }
             while (element) {
-                const node = $dom$4.getElementAsNode(element);
+                const node = $dom$3.getElementAsNode(element);
                 if (node) {
                     if (node.naturalElement) {
                         if (lineBreak && node.lineBreak || excluded && node.excluded) {
@@ -4135,7 +4245,7 @@
                     }
                 }
                 if (this._initial[dimension] === undefined) {
-                    this._initial[dimension] = $dom$4.assignBounds(bounds);
+                    this._initial[dimension] = $dom$3.assignRect(bounds);
                 }
             }
         }
@@ -4144,18 +4254,18 @@
             if (!this.positionStatic) {
                 const unit = this.cssInitial(attr);
                 if ($util$7.isUnit(unit) || $util$7.isPercent(unit)) {
-                    value = $util$7.convertInt(this.percentValue(attr, unit, attr === 'left' || attr === 'right'));
+                    value = $util$7.convertInt(this.convertUnit(attr, unit, attr === 'left' || attr === 'right'));
                 }
             }
             return value;
         }
         convertBox(region, direction) {
             const attr = region + direction;
-            return $util$7.convertInt(this.percentValue(attr, this.css(attr), direction === 'Left' || direction === 'Right'));
+            return $util$7.convertInt(this.convertUnit(attr, this.css(attr), direction === 'Left' || direction === 'Right'));
         }
-        percentValue(attr, value, horizontal, parent = true) {
+        convertUnit(attr, value, horizontal, parent = true) {
             if ($util$7.isPercent(value)) {
-                return $util$7.isUnit(this.style[attr]) ? this.style[attr] : this.convertPercent(value, horizontal, parent);
+                return $util$7.isUnit(this.style[attr]) ? this.style[attr] : this.convertPX(value, horizontal, parent);
             }
             return value;
         }
@@ -4202,6 +4312,9 @@
         get element() {
             return this._element;
         }
+        get elementId() {
+            return this._element && this._element.id || '';
+        }
         get htmlElement() {
             if (this._cached.htmlElement === undefined) {
                 this._cached.htmlElement = this._element instanceof HTMLElement;
@@ -4212,7 +4325,7 @@
             return this._element !== null && this._element.tagName === 'svg';
         }
         get styleElement() {
-            return $dom$4.hasComputedStyle(this._element);
+            return $css$3.hasComputedStyle(this._element);
         }
         get naturalElement() {
             if (this._cached.naturalElement === undefined) {
@@ -4248,7 +4361,7 @@
             return this._element === document.body;
         }
         get bounds() {
-            return this._bounds || $dom$4.newRectDimension();
+            return this._bounds || $dom$3.newRectDimension();
         }
         get linear() {
             if (this._linear === undefined && this._bounds) {
@@ -4264,11 +4377,11 @@
                     };
                 }
                 else {
-                    this._linear = $dom$4.assignBounds(this._bounds);
+                    this._linear = $dom$3.assignRect(this._bounds);
                 }
                 this.setDimensions('linear');
             }
-            return this._linear || $dom$4.newRectDimension();
+            return this._linear || $dom$3.newRectDimension();
         }
         get box() {
             if (this._box === undefined && this._bounds) {
@@ -4284,11 +4397,11 @@
                     };
                 }
                 else {
-                    this._box = $dom$4.assignBounds(this._bounds);
+                    this._box = $dom$3.assignRect(this._bounds);
                 }
                 this.setDimensions('box');
             }
-            return this._box || $dom$4.newRectDimension();
+            return this._box || $dom$3.newRectDimension();
         }
         set renderAs(value) {
             if (!this.rendered && value && !value.rendered) {
@@ -4343,7 +4456,7 @@
                 let width = 0;
                 for (const value of [this._styleMap.width, this._styleMap.minWidth]) {
                     if ($util$7.isUnit(value) || $util$7.isPercent(value)) {
-                        width = $util$7.convertInt(this.convertPX(value));
+                        width = this.calculateUnit(value);
                         if (width > 0) {
                             break;
                         }
@@ -4358,7 +4471,7 @@
                 let height = 0;
                 for (const value of [this._styleMap.height, this._styleMap.minHeight]) {
                     if ($util$7.isUnit(value) || this.hasHeight && $util$7.isPercent(value)) {
-                        height = $util$7.convertInt(this.convertPX(value, true));
+                        height = this.calculateUnit(value, false);
                         if (height > 0) {
                             break;
                         }
@@ -4440,7 +4553,7 @@
                         case 'relative':
                             return this.toInt('top') === 0 && this.toInt('right') === 0 && this.toInt('bottom') === 0 && this.toInt('left') === 0;
                         case 'inherit':
-                            const position = this._element ? $dom$4.cssInheritAttribute(this._element.parentElement, 'position') : '';
+                            const position = this._element ? $css$3.getParentAttribute(this._element.parentElement, 'position') : '';
                             return position !== '' && !(position === 'absolute' || position === 'fixed');
                         default:
                             return true;
@@ -4557,7 +4670,7 @@
         get inline() {
             if (this._cached.inline === undefined) {
                 const value = this.display;
-                this._cached.inline = value === 'inline' || (value === 'initial' || value === 'unset') && $dom$4.ELEMENT_INLINE.includes(this.tagName);
+                this._cached.inline = value === 'inline' || (value === 'initial' || value === 'unset') && $element$2.ELEMENT_INLINE.includes(this.tagName);
             }
             return this._cached.inline;
         }
@@ -4590,11 +4703,11 @@
                         case 'TEXTAREA':
                             break;
                         default:
-                            if ($dom$4.hasFreeFormText(element)) {
+                            if ($element$2.hasFreeFormText(element)) {
                                 value = true;
                                 for (let i = 0; i < element.children.length; i++) {
-                                    const node = $dom$4.getElementAsNode(element.children[i]);
-                                    if (!(node === undefined || node.excluded || $util$7.hasValue(node.dataset.target))) {
+                                    const node = $dom$3.getElementAsNode(element.children[i]);
+                                    if (!(node === undefined || node.excluded || node.dataset.target)) {
                                         value = false;
                                         break;
                                     }
@@ -4610,7 +4723,7 @@
         get block() {
             if (this._cached.block === undefined) {
                 const value = this.display;
-                this._cached.block = value === 'block' || value === 'list-item' || value === 'initial' && $dom$4.ELEMENT_BLOCK.includes(this.tagName);
+                this._cached.block = value === 'block' || value === 'list-item' || value === 'initial' && $element$2.ELEMENT_BLOCK.includes(this.tagName);
             }
             return this._cached.block;
         }
@@ -4770,14 +4883,14 @@
         }
         get multiline() {
             if (this._cached.multiline === undefined) {
-                this._cached.multiline = this.plainText || this.inlineText && (this.inlineFlow || this.length === 0) ? $dom$4.getRangeClientRect(this._element).multiline : 0;
+                this._cached.multiline = this.plainText || this.inlineText && (this.inlineFlow || this.length === 0) ? $dom$3.getRangeClientRect(this._element).multiline : 0;
             }
             return this._cached.multiline;
         }
         get visibleStyle() {
             if (this._cached.visibleStyle === undefined) {
                 const borderWidth = this.borderTopWidth > 0 || this.borderRightWidth > 0 || this.borderBottomWidth > 0 || this.borderLeftWidth > 0;
-                const backgroundImage = $util$7.REGEXP_PATTERN.URL.test(this.css('backgroundImage')) || $util$7.REGEXP_PATTERN.URL.test(this.css('background'));
+                const backgroundImage = $util$7.REGEXP_COMPILED.URL.test(this.css('backgroundImage')) || $util$7.REGEXP_COMPILED.URL.test(this.css('background'));
                 const backgroundColor = this.has('backgroundColor');
                 const backgroundRepeat = this.css('backgroundRepeat');
                 const paddingHorizontal = this.paddingLeft + this.paddingRight > 0;
@@ -4855,14 +4968,14 @@
             return this._renderPositionId || this.id + (this.renderPosition !== -1 ? `^${this.renderPosition}` : '');
         }
         get actualParent() {
-            return this._element && this._element.parentElement ? $dom$4.getElementAsNode(this._element.parentElement) : undefined;
+            return this._element && this._element.parentElement ? $dom$3.getElementAsNode(this._element.parentElement) : undefined;
         }
         get actualChildren() {
             if (this._cached.actualChildren === undefined) {
                 if (this.htmlElement) {
                     const actualChildren = [];
                     this._element.childNodes.forEach((element) => {
-                        const node = $dom$4.getElementAsNode(element);
+                        const node = $dom$3.getElementAsNode(element);
                         if (node) {
                             actualChildren.push(node);
                         }
@@ -4885,7 +4998,7 @@
             if (this.htmlElement) {
                 const element = this._element;
                 for (let i = 0; i < element.childNodes.length; i++) {
-                    const node = $dom$4.getElementAsNode(element.childNodes[i]);
+                    const node = $dom$3.getElementAsNode(element.childNodes[i]);
                     if (node) {
                         return node;
                     }
@@ -4897,7 +5010,7 @@
             if (this.htmlElement) {
                 const element = this._element;
                 for (let i = element.childNodes.length - 1; i >= 0; i--) {
-                    const node = $dom$4.getElementAsNode(element.childNodes[i]);
+                    const node = $dom$3.getElementAsNode(element.childNodes[i]);
                     if (node && node.naturalElement) {
                         return node;
                     }
@@ -4937,7 +5050,7 @@
         }
     }
 
-    const $dom$5 = squared.lib.dom;
+    const $dom$4 = squared.lib.dom;
     class NodeGroup extends Node {
         init() {
             if (this.length) {
@@ -4964,7 +5077,7 @@
             if (!calibrate) {
                 if (this.length) {
                     const bounds = this.outerRegion;
-                    this._bounds = Object.assign({ width: bounds.right - bounds.left, height: bounds.bottom - bounds.top }, bounds);
+                    this._bounds = Object.assign({}, bounds, { width: bounds.right - bounds.left, height: bounds.bottom - bounds.top });
                 }
             }
         }
@@ -4985,7 +5098,7 @@
                 const element = actualParent.element;
                 if (element) {
                     for (let i = 0; i < element.childNodes.length; i++) {
-                        const node = $dom$5.getElementAsNode(element.childNodes[i]);
+                        const node = $dom$4.getElementAsNode(element.childNodes[i]);
                         if (node && this.nodes.includes(node)) {
                             return node;
                         }
@@ -5003,7 +5116,7 @@
                 const element = actualParent.element;
                 if (element) {
                     for (let i = element.childNodes.length - 1; i >= 0; i--) {
-                        const node = $dom$5.getElementAsNode(element.childNodes[i]);
+                        const node = $dom$4.getElementAsNode(element.childNodes[i]);
                         if (node && this.nodes.includes(node)) {
                             return node;
                         }
@@ -5093,7 +5206,7 @@
         }
     }
 
-    const $dom$6 = squared.lib.dom;
+    const $dom$5 = squared.lib.dom;
     const $util$8 = squared.lib.util;
     class Accessibility extends Extension {
         afterInit() {
@@ -5103,10 +5216,10 @@
                     switch (element.type) {
                         case 'radio':
                         case 'checkbox':
-                            [$dom$6.getPreviousElementSibling(element), $dom$6.getNextElementSibling(element)].some((sibling) => {
+                            [$dom$5.getPreviousElementSibling(element), $dom$5.getNextElementSibling(element)].some((sibling) => {
                                 if (sibling) {
-                                    const label = $dom$6.getElementAsNode(sibling);
-                                    const labelParent = sibling.parentElement && sibling.parentElement.tagName === 'LABEL' ? $dom$6.getElementAsNode(sibling.parentElement) : undefined;
+                                    const label = $dom$5.getElementAsNode(sibling);
+                                    const labelParent = sibling.parentElement && sibling.parentElement.tagName === 'LABEL' ? $dom$5.getElementAsNode(sibling.parentElement) : undefined;
                                     if (label && label.visible && label.pageFlow) {
                                         if ($util$8.hasValue(sibling.htmlFor) && sibling.htmlFor === element.id) {
                                             node.companion = label;
@@ -5116,7 +5229,7 @@
                                             labelParent.renderAs = node;
                                         }
                                         if (node.companion) {
-                                            if (this.options && !this.options.showLabel) {
+                                            if (!this.options.showLabel) {
                                                 label.hide();
                                             }
                                             return true;
@@ -5133,16 +5246,14 @@
     }
 
     const $util$9 = squared.lib.util;
-    const REGEXP_PARTIAL = {
-        UNIT: '[\\d.]+[a-z%]+|auto|max-content|min-content',
-        MINMAX: 'minmax\\(([^,]+), ([^)]+)\\)',
-        FIT_CONTENT: 'fit-content\\(([\\d.]+[a-z%]+)\\)',
-        NAMED: '\\[([\\w\\-\\s]+)\\]'
-    };
-    const PATTERN_GRID = {
-        UNIT: new RegExp(`^(${REGEXP_PARTIAL.UNIT})$`),
-        NAMED: new RegExp(`\\s*(repeat\\((auto-fit|auto-fill|[0-9]+), (.+)\\)|${REGEXP_PARTIAL.NAMED}|${REGEXP_PARTIAL.MINMAX}|${REGEXP_PARTIAL.FIT_CONTENT}|${REGEXP_PARTIAL.UNIT})\\s*`, 'g'),
-        REPEAT: new RegExp(`\\s*(${REGEXP_PARTIAL.NAMED}|${REGEXP_PARTIAL.MINMAX}|${REGEXP_PARTIAL.FIT_CONTENT}|${REGEXP_PARTIAL.UNIT})\\s*`, 'g'),
+    const REGEXP_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
+    const REGEXP_MINMAX = 'minmax\\(([^,]+), ([^)]+)\\)';
+    const REGEXP_FIT_CONTENT = 'fit-content\\(([\\d.]+[a-z%]+)\\)';
+    const REGEXP_NAMED = '\\[([\\w\\-\\s]+)\\]';
+    const REGEXP_GRID = {
+        UNIT: new RegExp(`^(${REGEXP_UNIT})$`),
+        NAMED: `\\s*(repeat\\((auto-fit|auto-fill|[0-9]+), (.+)\\)|${REGEXP_NAMED}|${REGEXP_MINMAX}|${REGEXP_FIT_CONTENT}|${REGEXP_UNIT})\\s*`,
+        REPEAT: `\\s*(${REGEXP_NAMED}|${REGEXP_MINMAX}|${REGEXP_FIT_CONTENT}|${REGEXP_UNIT})\\s*`
     };
     function repeatUnit(data, dimension) {
         const unitPX = [];
@@ -5226,8 +5337,8 @@
             const cellsPerRow = [];
             const gridPosition = [];
             let rowInvalid = {};
-            mainData.row.gap = parseInt(node.convertPX(node.css('rowGap'), false, false));
-            mainData.column.gap = parseInt(node.convertPX(node.css('columnGap'), true, false));
+            mainData.row.gap = node.calculateUnit(node.css('rowGap'), false, false);
+            mainData.column.gap = node.calculateUnit(node.css('columnGap'), true, false);
             function setDataRows(item, placement) {
                 if (placement.every(value => value > 0)) {
                     for (let i = placement[horizontal ? 0 : 1] - 1; i < placement[horizontal ? 2 : 3] - 1; i++) {
@@ -5251,9 +5362,10 @@
             }
             [node.cssInitial('gridTemplateRows', true), node.cssInitial('gridTemplateColumns', true), node.css('gridAutoRows'), node.css('gridAutoColumns')].forEach((value, index) => {
                 if (value && value !== 'none' && value !== 'auto') {
-                    let i = 1;
+                    const patternA = new RegExp(REGEXP_GRID.NAMED, 'g');
                     let matchA;
-                    while ((matchA = PATTERN_GRID.NAMED.exec(value)) !== null) {
+                    let i = 1;
+                    while ((matchA = patternA.exec(value)) !== null) {
                         if (index < 2) {
                             const data = mainData[index === 0 ? 'row' : 'column'];
                             if (matchA[1].startsWith('repeat')) {
@@ -5271,22 +5383,23 @@
                                 }
                                 if (iterations > 0) {
                                     const repeating = [];
+                                    const patternB = new RegExp(REGEXP_GRID.REPEAT, 'g');
                                     let matchB;
-                                    while ((matchB = PATTERN_GRID.REPEAT.exec(matchA[3])) !== null) {
+                                    while ((matchB = patternB.exec(matchA[3])) !== null) {
                                         let matchC;
-                                        if ((matchC = new RegExp(REGEXP_PARTIAL.NAMED).exec(matchB[1])) !== null) {
+                                        if ((matchC = new RegExp(REGEXP_NAMED).exec(matchB[1])) !== null) {
                                             if (data.name[matchC[1]] === undefined) {
                                                 data.name[matchC[1]] = [];
                                             }
                                             repeating.push({ name: matchC[1] });
                                         }
-                                        else if ((matchC = new RegExp(REGEXP_PARTIAL.MINMAX).exec(matchB[1])) !== null) {
+                                        else if ((matchC = new RegExp(REGEXP_MINMAX).exec(matchB[1])) !== null) {
                                             repeating.push({ unit: convertUnit(node, matchC[2]), unitMin: convertUnit(node, matchC[1]) });
                                         }
-                                        else if ((matchC = new RegExp(REGEXP_PARTIAL.FIT_CONTENT).exec(matchB[1])) !== null) {
+                                        else if ((matchC = new RegExp(REGEXP_FIT_CONTENT).exec(matchB[1])) !== null) {
                                             repeating.push({ unit: convertUnit(node, matchC[1]), unitMin: '0px' });
                                         }
-                                        else if ((matchC = new RegExp(REGEXP_PARTIAL.UNIT).exec(matchB[1])) !== null) {
+                                        else if ((matchC = new RegExp(REGEXP_UNIT).exec(matchB[1])) !== null) {
                                             repeating.push({ unit: convertUnit(node, matchC[0]) });
                                         }
                                     }
@@ -5325,7 +5438,7 @@
                                 data.repeat.push(false);
                                 i++;
                             }
-                            else if (PATTERN_GRID.UNIT.test(matchA[1])) {
+                            else if (REGEXP_GRID.UNIT.test(matchA[1])) {
                                 data.unit.push(convertUnit(node, matchA[1]));
                                 data.unitMin.push('');
                                 data.repeat.push(false);
@@ -5786,7 +5899,7 @@
                 function setDirection(align, sort, size) {
                     const map = new Map();
                     pageFlow.sort((a, b) => {
-                        if (!$util$a.withinFraction(a.linear[align], b.linear[align])) {
+                        if (!$util$a.withinRange(a.linear[align], b.linear[align])) {
                             return a.linear[align] < b.linear[align] ? -1 : 1;
                         }
                         return a.linear[sort] >= b.linear[sort] ? 1 : -1;
@@ -5849,19 +5962,20 @@
         }
     }
 
-    const $dom$7 = squared.lib.dom;
+    const $css$4 = squared.lib.css;
+    const $dom$6 = squared.lib.dom;
     class External extends Extension {
         beforeInit(element, internal = false) {
             if (internal || this.included(element)) {
-                if (!$dom$7.getElementCache(element, 'squaredExternalDisplay')) {
+                if (!$dom$6.getElementCache(element, 'squaredExternalDisplay')) {
                     const display = [];
                     let current = element;
                     while (current) {
-                        display.push($dom$7.getStyle(current).display);
+                        display.push($css$4.getStyle(current).display);
                         current.style.display = 'block';
                         current = current.parentElement;
                     }
-                    $dom$7.setElementCache(element, 'squaredExternalDisplay', display);
+                    $dom$6.setElementCache(element, 'squaredExternalDisplay', display);
                 }
             }
         }
@@ -5873,7 +5987,7 @@
         }
         afterInit(element, internal = false) {
             if (internal || this.included(element)) {
-                const data = $dom$7.getElementCache(element, 'squaredExternalDisplay');
+                const data = $dom$6.getElementCache(element, 'squaredExternalDisplay');
                 if (data) {
                     const display = data;
                     let current = element;
@@ -5883,17 +5997,17 @@
                         current = current.parentElement;
                         i++;
                     }
-                    $dom$7.deleteElementCache(element, 'squaredExternalDisplay');
+                    $dom$6.deleteElementCache(element, 'squaredExternalDisplay');
                 }
             }
         }
     }
 
-    const $dom$8 = squared.lib.dom;
+    const $dom$7 = squared.lib.dom;
     const $util$b = squared.lib.util;
     function getRowIndex(columns, target) {
         for (const column of columns) {
-            const index = column.findIndex(item => $util$b.withinFraction(target.linear.top, item.linear.top) || target.linear.top > item.linear.top && target.linear.top < item.linear.bottom);
+            const index = column.findIndex(item => $util$b.withinRange(target.linear.top, item.linear.top) || target.linear.top > item.linear.top && target.linear.top < item.linear.bottom);
             if (index !== -1) {
                 return index;
             }
@@ -5984,8 +6098,8 @@
                         else {
                             for (let m = 0; m < columns.length; m++) {
                                 if (columns[m].length > base.length) {
-                                    const removed = columns[m].splice(assigned[m] + (every ? 2 : 1), columns[m].length - base.length);
-                                    columns[m][assigned[m] + (every ? 1 : 0)].data(EXT_NAME.GRID, 'cellData', { siblings: [...removed] });
+                                    const siblings = columns[m].splice(assigned[m] + (every ? 2 : 1), columns[m].length - base.length);
+                                    columns[m][assigned[m] + (every ? 1 : 0)].data(EXT_NAME.GRID, 'cellData', { siblings });
                                 }
                             }
                         }
@@ -5995,8 +6109,8 @@
                             if (maxIndex > minIndex) {
                                 for (let m = 0; m < columns.length; m++) {
                                     if (found[m] > minIndex) {
-                                        const removed = columns[m].splice(minIndex, found[m] - minIndex);
-                                        columns[m][assigned[m] + (every ? 1 : 0)].data(EXT_NAME.GRID, 'cellData', { siblings: [...removed] });
+                                        const siblings = columns[m].splice(minIndex, found[m] - minIndex);
+                                        columns[m][assigned[m] + (every ? 1 : 0)].data(EXT_NAME.GRID, 'cellData', { siblings });
                                     }
                                 }
                             }
@@ -6159,7 +6273,7 @@
                                 const documentParent = item.documentParent.element;
                                 if (documentParent) {
                                     for (let i = 0; i < documentParent.children.length; i++) {
-                                        const sibling = $dom$8.getElementAsNode(documentParent.children[i]);
+                                        const sibling = $dom$7.getElementAsNode(documentParent.children[i]);
                                         if (sibling && sibling.visible && !sibling.rendered && sibling.linear.left >= item.linear.right && sibling.linear.right <= columnEnd[index]) {
                                             data.siblings.push(sibling);
                                         }
@@ -6336,48 +6450,51 @@
         }
     }
 
-    const $dom$9 = squared.lib.dom;
+    const $css$5 = squared.lib.css;
     const $util$e = squared.lib.util;
     class Sprite extends Extension {
         condition(node) {
             let valid = false;
-            if (node.hasWidth && node.hasHeight && node.length === 0 && !node.inlineText) {
+            if (node.hasWidth && node.hasHeight && node.length === 0) {
                 let url = node.css('backgroundImage');
                 if (!$util$e.hasValue(url) || url === 'none') {
                     url = '';
-                    const match = $util$e.REGEXP_PATTERN.URL.exec(node.css('background'));
+                    const match = $util$e.REGEXP_COMPILED.URL.exec(node.css('background'));
                     if (match) {
                         url = match[0];
                     }
                 }
                 if (url !== '') {
-                    url = $dom$9.cssResolveUrl(url);
+                    url = $css$5.resolveURL(url);
                     const image = this.application.session.image.get(url);
                     if (image) {
                         const fontSize = node.fontSize;
-                        const width = $util$e.convertPercentPX(node.has('width') ? node.css('width') : node.css('minWidth'), node.bounds.width, fontSize);
-                        const height = $util$e.convertPercentPX(node.has('height') ? node.css('width') : node.css('minHeight'), node.bounds.height, fontSize);
-                        const position = $dom$9.getBackgroundPosition(`${node.css('backgroundPositionX')} ${node.css('backgroundPositionY')}`, node.bounds, fontSize);
+                        const width = $util$e.convertUnit(node.has('width') ? node.css('width') : node.css('minWidth'), node.bounds.width, fontSize);
+                        const height = $util$e.convertUnit(node.has('height') ? node.css('width') : node.css('minHeight'), node.bounds.height, fontSize);
+                        const position = $css$5.getBackgroundPosition(`${node.css('backgroundPositionX')} ${node.css('backgroundPositionY')}`, node.bounds, fontSize);
                         if (position.left <= 0 && position.top <= 0 && image.width > width && image.height > height) {
-                            image.position = { x: position.left, y: position.top };
+                            image.position = {
+                                x: position.left,
+                                y: position.top
+                            };
                             node.data(EXT_NAME.SPRITE, 'mainData', image);
                             valid = true;
                         }
                     }
                 }
             }
-            return valid && (!$util$e.hasValue(node.dataset.use) || this.included(node.element));
+            return valid && (!node.dataset.use || this.included(node.element));
         }
     }
 
-    const $dom$a = squared.lib.dom;
+    const $css$6 = squared.lib.css;
     class Substitute extends Extension {
         constructor(name, framework, tagNames, options) {
             super(name, framework, tagNames, options);
             this.require(EXT_NAME.EXTERNAL, true);
         }
         processNode(node, parent) {
-            const data = $dom$a.getDataSet(node.element, this.name);
+            const data = $css$6.getDataSet(node.element, this.name);
             let output = '';
             if (data.tag) {
                 node.setControlType(data.tag);
@@ -6396,7 +6513,7 @@
         }
     }
 
-    const $dom$b = squared.lib.dom;
+    const $css$7 = squared.lib.css;
     const $math = squared.lib.math;
     const $util$f = squared.lib.util;
     class Table extends Extension {
@@ -6423,9 +6540,10 @@
                     for (const item of section[0].cascade()) {
                         if (item.tagName === 'TH' || item.tagName === 'TD') {
                             item.inherit(section[0], 'styleMap');
+                            item.unsetCache('visibleStyle');
                         }
                     }
-                    table.push(...section[0].children);
+                    $util$f.concatArray(table, section[0].children);
                     for (const item of section) {
                         item.hide();
                     }
@@ -6449,7 +6567,7 @@
             });
             inheritStyles(thead);
             for (const section of tbody) {
-                table.push(...section.children);
+                $util$f.concatArray(table, section.children);
                 section.hide();
             }
             inheritStyles(tfoot);
@@ -6497,7 +6615,7 @@
                     }
                     if (!td.visibleStyle.backgroundImage && !td.visibleStyle.backgroundColor) {
                         if (colgroup) {
-                            const style = $dom$b.getStyle(colgroup.children[columnIndex[i]]);
+                            const style = $css$7.getStyle(colgroup.children[columnIndex[i]]);
                             if (style.background) {
                                 element.style.background = style.background;
                             }
@@ -6506,12 +6624,13 @@
                             }
                         }
                         else {
-                            let value = $dom$b.cssInheritStyle(element, 'background', ['rgba(0, 0, 0, 0)', 'transparent'], ['TABLE']);
+                            const exclude = /rgba\(0, 0, 0, 0\)|transparent/;
+                            let value = $css$7.getInheritedStyle(element, 'background', exclude, 'TABLE');
                             if (value !== '') {
                                 element.style.background = value;
                             }
                             else {
-                                value = $dom$b.cssInheritStyle(element, 'backgroundColor', ['rgba(0, 0, 0, 0)', 'transparent'], ['TABLE']);
+                                value = $css$7.getInheritedStyle(element, 'backgroundColor', exclude, 'TABLE');
                                 if (value !== '') {
                                     element.style.backgroundColor = value;
                                 }
@@ -6637,7 +6756,7 @@
             const caption = node.find(item => item.tagName === 'CAPTION');
             node.clear();
             if (caption) {
-                if (!caption.hasWidth && !$dom$b.isUserAgent(8 /* EDGE */)) {
+                if (!caption.hasWidth && !$util$f.isUserAgent(16 /* EDGE */)) {
                     if (caption.textElement) {
                         if (!caption.has('maxWidth')) {
                             caption.css('maxWidth', $util$f.formatPX(caption.bounds.width));
@@ -6902,7 +7021,7 @@
                     baseline.modifyBox(2 /* MARGIN_TOP */, baseline.linear.top - mainData.aboveBaseline[0].linear.top);
                 }
                 else {
-                    [...mainData.belowBaseline, ...mainData.aboveBaseline].some(item => {
+                    [].concat(mainData.belowBaseline, mainData.aboveBaseline).some(item => {
                         const verticalAlign = $util$g.convertInt(item.cssInitial('verticalAlign'));
                         if (verticalAlign > 0) {
                             item.modifyBox(8 /* MARGIN_BOTTOM */, verticalAlign);
@@ -6915,7 +7034,7 @@
         }
     }
 
-    const $dom$c = squared.lib.dom;
+    const $dom$8 = squared.lib.dom;
     const $util$h = squared.lib.util;
     function setMinHeight(node, offset) {
         const minHeight = node.has('minHeight', 2 /* UNIT */) ? node.toInt('minHeight') : 0;
@@ -6935,12 +7054,12 @@
         afterBaseLayout() {
             const processed = new Set();
             for (const node of this.application.processing.cache) {
-                if (node.element && node.htmlElement && node.blockStatic) {
+                if (node.htmlElement && node.blockStatic) {
+                    const element = node.element;
                     let firstChild;
                     let lastChild;
-                    for (let i = 0; i < node.element.children.length; i++) {
-                        const element = node.element.children[i];
-                        let current = $dom$c.getElementAsNode(element);
+                    for (let i = 0; i < element.children.length; i++) {
+                        let current = $dom$8.getElementAsNode(element.children[i]);
                         if (current && current.pageFlow) {
                             if (firstChild === undefined) {
                                 firstChild = current;
@@ -6950,7 +7069,8 @@
                                 const previousSiblings = current.previousSiblings();
                                 if (previousSiblings.length) {
                                     let previous = previousSiblings[0];
-                                    if (previous.blockStatic && !previous.lineBreak) {
+                                    const floating = previous.block && previous.floating;
+                                    if (!previous.lineBreak && (previous.blockStatic || floating)) {
                                         current = (current.renderAs || current);
                                         previous = (previous.renderAs || previous);
                                         let marginTop = $util$h.convertInt(current.cssInitial('marginTop', false, true));
@@ -6960,28 +7080,25 @@
                                         if (previous.excluded && !current.excluded) {
                                             const offset = Math.min(previousMarginTop, previousMarginBottom);
                                             if (offset < 0) {
-                                                if (Math.abs(offset) >= marginTop) {
-                                                    current.modifyBox(2 /* MARGIN_TOP */, null);
-                                                }
-                                                else {
-                                                    current.modifyBox(2 /* MARGIN_TOP */, offset);
-                                                }
+                                                current.modifyBox(2 /* MARGIN_TOP */, Math.abs(offset) >= marginTop ? null : offset);
                                                 processed.add(previous);
                                             }
                                         }
                                         else if (!previous.excluded && current.excluded) {
                                             const offset = Math.min(marginTop, marginBottom);
                                             if (offset < 0) {
-                                                if (Math.abs(offset) >= previousMarginBottom) {
-                                                    previous.modifyBox(8 /* MARGIN_BOTTOM */, null);
-                                                }
-                                                else {
-                                                    previous.modifyBox(8 /* MARGIN_BOTTOM */, offset);
-                                                }
+                                                previous.modifyBox(8 /* MARGIN_BOTTOM */, Math.abs(offset) >= previousMarginBottom ? null : offset);
                                                 processed.add(current);
                                             }
                                         }
                                         else {
+                                            if (previousMarginBottom === 0 && previous.length && !floating) {
+                                                const bottomChild = previous.lastChild;
+                                                if (bottomChild && bottomChild.blockStatic) {
+                                                    previousMarginBottom = $util$h.convertInt(bottomChild.cssInitial('marginBottom', false, true));
+                                                    previous = bottomChild;
+                                                }
+                                            }
                                             if (marginTop === 0 && current.length) {
                                                 const topChild = current.firstChild;
                                                 if (topChild && topChild.blockStatic) {
@@ -6989,15 +7106,8 @@
                                                     current = topChild;
                                                 }
                                             }
-                                            if (previousMarginBottom === 0 && previous.length) {
-                                                const bottomChild = previous.lastChild;
-                                                if (bottomChild && bottomChild.blockStatic) {
-                                                    previousMarginBottom = $util$h.convertInt(bottomChild.cssInitial('marginBottom', false, true));
-                                                    previous = bottomChild;
-                                                }
-                                            }
-                                            if (previousMarginBottom > 0 && marginTop > 0) {
-                                                if (marginTop <= previousMarginBottom) {
+                                            if ((previousMarginBottom > 0 || floating) && marginTop > 0) {
+                                                if (marginTop <= previousMarginBottom || floating && previousMarginBottom === 0) {
                                                     current.modifyBox(2 /* MARGIN_TOP */, null);
                                                 }
                                                 else {
@@ -7021,7 +7131,7 @@
             if (this.application.processing.node && this.application.processing.node.htmlElement) {
                 const elements = this.application.processing.node.element.getElementsByTagName('BR');
                 for (let i = 0; i < elements.length; i++) {
-                    const node = $dom$c.getElementAsNode(elements[i]);
+                    const node = $dom$8.getElementAsNode(elements[i]);
                     if (node && !processed.has(node)) {
                         const actualParent = node.actualParent;
                         const previousSiblings = node.previousSiblings(true, true, true);
@@ -7065,27 +7175,25 @@
                                     else if (aboveParent && aboveParent.groupParent && aboveParent.lastChild === above) {
                                         aboveParent.modifyBox(8 /* MARGIN_BOTTOM */, offset);
                                     }
-                                    else {
-                                        if (belowParent && belowParent.layoutVertical && (below.visible || below.renderAs)) {
-                                            (below.renderAs || below).modifyBox(2 /* MARGIN_TOP */, offset);
+                                    else if (belowParent && belowParent.layoutVertical && (below.visible || below.renderAs)) {
+                                        (below.renderAs || below).modifyBox(2 /* MARGIN_TOP */, offset);
+                                    }
+                                    else if (aboveParent && aboveParent.layoutVertical && (above.visible || above.renderAs)) {
+                                        (above.renderAs || above).modifyBox(8 /* MARGIN_BOTTOM */, offset);
+                                    }
+                                    else if (!belowParent && !aboveParent && actualParent && actualParent.visible) {
+                                        if (below.lineBreak || below.excluded) {
+                                            actualParent.modifyBox(128 /* PADDING_BOTTOM */, offset);
                                         }
-                                        else if (aboveParent && aboveParent.layoutVertical && (above.visible || above.renderAs)) {
-                                            (above.renderAs || above).modifyBox(8 /* MARGIN_BOTTOM */, offset);
-                                        }
-                                        else if (!belowParent && !aboveParent && actualParent && actualParent.visible) {
-                                            if (below.lineBreak || below.excluded) {
-                                                actualParent.modifyBox(128 /* PADDING_BOTTOM */, offset);
-                                            }
-                                            else if (above.lineBreak || above.excluded) {
-                                                actualParent.modifyBox(32 /* PADDING_TOP */, offset);
-                                            }
-                                            else {
-                                                valid = false;
-                                            }
+                                        else if (above.lineBreak || above.excluded) {
+                                            actualParent.modifyBox(32 /* PADDING_TOP */, offset);
                                         }
                                         else {
                                             valid = false;
                                         }
+                                    }
+                                    else {
+                                        valid = false;
                                     }
                                 }
                             }
@@ -7153,7 +7261,7 @@
                         const previous = [];
                         let current = node;
                         while (true) {
-                            previous.push(...current.previousSiblings());
+                            $util$h.concatArray(previous, current.previousSiblings());
                             if (previous.length && !previous.some(item => item.lineBreak || item.excluded && item.blockStatic)) {
                                 const previousSibling = previous[previous.length - 1];
                                 if (previousSibling.inlineVertical) {

@@ -11,7 +11,7 @@ const $util = squared.lib.util;
 export default abstract class Sprite<T extends Node> extends Extension<T> {
     public condition(node: T) {
         let valid = false;
-        if (node.hasWidth && node.hasHeight && node.length === 0 && !node.inlineText) {
+        if (node.hasWidth && node.hasHeight && node.length === 0) {
             let url = node.css('backgroundImage');
             if (!$util.hasValue(url) || url === 'none') {
                 url = '';
@@ -29,13 +29,16 @@ export default abstract class Sprite<T extends Node> extends Extension<T> {
                     const height = $util.convertUnit(node.has('height') ? node.css('width') : node.css('minHeight'), node.bounds.height, fontSize);
                     const position = $css.getBackgroundPosition(`${node.css('backgroundPositionX')} ${node.css('backgroundPositionY')}`, node.bounds, fontSize);
                     if (position.left <= 0 && position.top <= 0 && image.width > width && image.height > height) {
-                        image.position = { x: position.left, y: position.top };
+                        image.position = {
+                            x: position.left,
+                            y: position.top
+                        };
                         node.data(EXT_NAME.SPRITE, 'mainData', image);
                         valid = true;
                     }
                 }
             }
         }
-        return valid && (!!node.dataset.use || this.included(<HTMLElement> node.element));
+        return valid && (!node.dataset.use || this.included(<HTMLElement> node.element));
     }
 }

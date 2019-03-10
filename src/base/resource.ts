@@ -486,7 +486,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                             }
                                             case 'conic': {
                                                 gradient.colorStops = parseColorStops(node, gradient, colorStop, opacity, i, boxStyle.backgroundSize);
-                                                (<ConicGradient> gradient).angle = parseAngle(direction),
+                                                (<ConicGradient> gradient).angle = parseAngle(direction);
                                                 (<ConicGradient> gradient).position = (() => {
                                                     if (direction) {
                                                         const position = REGEXP_POSITION.exec(direction);

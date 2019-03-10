@@ -89,6 +89,7 @@ const appBase: AppFramework<T> = {
         List,
         Relative,
         Sprite,
+        Substitute,
         Table,
         VerticalAlign,
         WhiteSpace,

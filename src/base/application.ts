@@ -219,10 +219,13 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
         }
         const documentRoot = this.parseElements.values().next().value;
+        const preloadImages: HTMLImageElement[] = [];
         const parseResume = () => {
             this.initialized = false;
-            if (this.userSettings.preloadImages) {
-                $dom.removeElementsByClassName('__css.preload');
+            if (preloadImages.length) {
+                for (const image of preloadImages) {
+                    documentRoot.removeChild(image);
+                }
             }
             for (const [uri, image] of this.session.image.entries()) {
                 Resource.ASSETS.images.set(uri, image);
@@ -278,8 +281,8 @@ export default class Application<T extends Node> implements squared.base.Applica
                         image.height = element.naturalHeight;
                     }
                     else {
-                        element.className = '__css.preload';
                         documentRoot.appendChild(element);
+                        preloadImages.push(element);
                     }
                 }
             }
@@ -302,16 +305,19 @@ export default class Application<T extends Node> implements squared.base.Applica
         }
         else {
             this.initialized = true;
-            Promise.all($util.objectMap<HTMLImageElement, {}>(images, image => new Promise((resolve, reject) => {
-                    image.onload = resolve;
-                    image.onerror = reject;
-                })
-            ))
-            .then((result: Event[]) => {
-                if (Array.isArray(result)) {
-                    for (const item of result) {
-                        this.addImagePreload(<HTMLImageElement> item.target);
-                    }
+            Promise.all($util.objectMap<HTMLImageElement, {}>(images, image => {
+                return new Promise((resolve, reject) => {
+                    image.onload = () => {
+                        resolve(image);
+                    };
+                    image.onerror = () => {
+                        reject(image);
+                    };
+                });
+            }))
+            .then((result: HTMLImageElement[]) => {
+                for (const item of result) {
+                    this.addImagePreload(item);
                 }
                 parseResume();
             })
@@ -436,7 +442,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         this.session.renderQueue.set(id, items);
      }
 
-    public addImagePreload(element: HTMLImageElement | null) {
+    public addImagePreload(element: HTMLImageElement | undefined) {
         if (element && element.complete && $util.hasValue(element.src)) {
             this.session.image.set(element.src, {
                 width: element.naturalWidth,
@@ -1843,7 +1849,7 @@ export default class Application<T extends Node> implements squared.base.Applica
 
     protected conditionElement(element: Element) {
         if ($css.hasComputedStyle(element)) {
-            if ($dom.hasVisibleRect(element, true) || element.dataset.use) {
+            if ($dom.isElementVisible(element, true) || element.dataset.use) {
                 return true;
             }
             else {
@@ -1858,7 +1864,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 }
                 if (valid) {
                     for (let i = 0; i < element.children.length; i++) {
-                        if ($dom.hasVisibleRect(<Element> element.children[i], true)) {
+                        if ($dom.isElementVisible(<Element> element.children[i], true)) {
                             return true;
                         }
                     }

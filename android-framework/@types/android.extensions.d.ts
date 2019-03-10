@@ -10,6 +10,7 @@ declare global {
         class List<T extends View> extends squared.base.extensions.List<T> {}
         class Relative<T extends View> extends squared.base.extensions.Relative<T> {}
         class Sprite<T extends View> extends squared.base.extensions.Sprite<T> {}
+        class Substitute<T extends View> extends squared.base.extensions.Substitute<T> {}
         class Table<T extends View> extends squared.base.extensions.Table<T> {}
         class VerticalAlign<T extends View> extends squared.base.extensions.VerticalAlign<T> {}
         class WhiteSpace<T extends View> extends squared.base.extensions.WhiteSpace<T> {}
@@ -19,7 +20,6 @@ declare global {
         }
 
         namespace delegate {
-            class Element<T extends View> extends squared.base.Extension<T> {}
             class Fixed<T extends View> extends squared.base.Extension<T> {}
             class MaxWidthHeight<T extends View> extends squared.base.Extension<T> {}
             class Percent<T extends View> extends squared.base.Extension<T> {}

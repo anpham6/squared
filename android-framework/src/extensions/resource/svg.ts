@@ -2,10 +2,11 @@ import { TemplateData, TemplateDataA, TemplateDataAA, TemplateDataAAA } from '..
 import { SvgLinearGradient, SvgMatrix, SvgPoint, SvgRadialGradient, SvgTransform } from '../../../../src/svg/@types/object';
 import { ResourceStoredMapAndroid } from '../../@types/application';
 import { ResourceSvgOptions } from '../../@types/extension';
-import { GradientTemplate } from '../../resource';
+import { GradientTemplate } from '../../@types/resource';
 
 import Resource from '../../resource';
 import View from '../../view';
+import ResourceBackground from '../../extensions/resource/background';
 
 import { BUILD_ANDROID } from '../../lib/enumeration';
 import { getXmlNs } from '../../lib/util';
@@ -521,7 +522,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
     public static createFillGradient(gradient: Gradient, path: $SvgPath, precision?: number) {
         const result: GradientTemplate = {
             type: gradient.type,
-            colorStops: Resource.convertColorStops(gradient.colorStops, precision)
+            colorStops: ResourceBackground.convertColorStops(gradient.colorStops, precision)
         };
         switch (gradient.type) {
             case 'radial': {

@@ -40,17 +40,15 @@ declare global {
             function newBoxRect(): BoxRect;
             function newRectDimension(): RectDimension;
             function newBoxModel(): BoxModel;
-            function getDOMRect(element: Element): DOMRect;
             function getRangeClientRect(element: Element): TextDimension;
-            function assignBounds(rect: RectDimension | DOMRect): RectDimension;
+            function assignRect(rect: DOMRect | RectDimension): RectDimension;
             function removeElementsByClassName(className: string): void;
             function getFirstChildElement(elements: Element | null, lineBreak?: boolean): Element | null;
             function getLastChildElement(elements: Element | null, lineBreak?: boolean): Element | null;
             function getElementsBetweenSiblings(elementStart: Element | null, elementEnd: Element, whiteSpace?: boolean): Element[];
             function getPreviousElementSibling(element: Element | null): Element | null;
             function getNextElementSibling(element: Element | null): Element | null;
-            function hasVisibleRect(element: Element, viewport?: boolean): boolean;
-            function withinViewport(rect: ClientRect | DOMRect): boolean;
+            function isElementVisible(element: Element, viewport?: boolean): boolean;
             function setElementCache(element: Element, attr: string, data: any): void;
             function getElementCache(element: Element, attr: string): any;
             function deleteElementCache(element: Element, ...attrs: string[]): void;
@@ -64,6 +62,7 @@ declare global {
             function isPlainText(element: Element, whiteSpace?: boolean): boolean;
             function isLineBreak(element: Element, excluded?: boolean): boolean;
             function hasLineBreak(element: Element, lineBreak?: boolean, trim?: boolean): boolean;
+            function hasFreeFormText(element: Element, whiteSpace?: boolean): boolean;
         }
 
         namespace math {

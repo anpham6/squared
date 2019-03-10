@@ -1,4 +1,4 @@
-/* android.widget 0.7.2
+/* android.widget 0.8.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -18,8 +18,8 @@ this.android.widget.bottomnavigation = (function () {
             this.require("android.widget.menu" /* MENU */);
         }
         processNode(node, parent) {
-            const options = $utilA.createViewAttribute(node.element ? this.options[node.element.id] : undefined);
-            $util.defaultWhenNull(options, 'android', 'background', `?android:attr/windowBackground`);
+            const options = $utilA.createViewAttribute(this.options[node.elementId]);
+            $util.assignEmptyValue(options, 'android', 'background', `?android:attr/windowBackground`);
             for (let i = 5; i < node.length; i++) {
                 const item = node.item(i);
                 item.hide();
@@ -49,14 +49,14 @@ this.android.widget.bottomnavigation = (function () {
             }
             const menu = $util.optionalAsString(BottomNavigation.findNestedByName(node.element, "android.widget.menu" /* MENU */), 'dataset.layoutName');
             if (menu !== '') {
-                const options = $utilA.createViewAttribute(node.element ? this.options[node.element.id] : undefined);
-                $util.defaultWhenNull(options, 'app', 'menu', `@menu/${menu}`);
+                const options = $utilA.createViewAttribute(this.options[node.elementId]);
+                $util.assignEmptyValue(options, 'app', 'menu', `@menu/${menu}`);
                 node.app('menu', options.app.menu);
             }
         }
         setStyleTheme() {
-            const options = $utilA.createStyleAttribute(Object.assign({}, this.options.resource));
-            $util.defaultWhenNull(options, 'parent', 'Theme.AppCompat.Light.DarkActionBar');
+            const options = $utilA.createStyleAttribute(this.options.resource);
+            $util.assignEmptyValue(options, 'parent', 'Theme.AppCompat.Light.DarkActionBar');
             $Resource.addTheme(options);
         }
     }

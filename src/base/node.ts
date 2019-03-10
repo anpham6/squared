@@ -17,24 +17,6 @@ const INHERIT_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'
 const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
 const CSS_SPACING_VALUES = Array.from(CSS_SPACING.values());
 
-function hasFreeFormText(element: Element, whiteSpace = true) {
-    function findFreeForm(elements: NodeListOf<ChildNode> | Element[]): boolean {
-        for (let i = 0; i < elements.length; i++) {
-            const child = <Element> elements[i];
-            if (child.nodeName === '#text') {
-                if ($element.isPlainText(child, whiteSpace) || $css.isParentStyle(child, 'whiteSpace', 'pre', 'pre-wrap') && child.textContent && child.textContent !== '') {
-                    return true;
-                }
-            }
-            else if (findFreeForm(child.childNodes)) {
-                return true;
-            }
-        }
-        return false;
-    }
-    return findFreeForm(element.nodeName === '#text' ? [element] : element.childNodes);
-}
-
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
     public alignmentType = 0;
     public depth = -1;
@@ -124,11 +106,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             for (let attr of Array.from(element.style)) {
                 attr = $util.convertCamelCase(attr);
                 const value = $css.checkStyleValue(element, attr, element.style[attr], this.style, fontSize);
-                if (value !== '') {
+                if (value) {
                     styleMap[attr] = value;
                 }
             }
-            this._styleMap = styleMap;
+            this._styleMap = { ...styleMap };
         }
     }
 
@@ -139,9 +121,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             this._initial.documentParent = this._documentParent;
         }
         if (this._bounds) {
-             this._initial.bounds = $dom.assignBounds(this._bounds);
-             this._initial.linear = $dom.assignBounds(this.linear);
-             this._initial.box = $dom.assignBounds(this.box);
+             this._initial.bounds = $dom.assignRect(this._bounds);
+             this._initial.linear = $dom.assignRect(this.linear);
+             this._initial.box = $dom.assignRect(this.box);
         }
         this._initial.iteration++;
     }
@@ -321,18 +303,18 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return result;
     }
 
-    public inherit(node: T, ...props: string[]) {
+    public inherit(node: T, ...modules: string[]) {
         const initial = <InitialData<T>> node.unsafe('initial');
-        for (const type of props) {
-            switch (type) {
+        for (const name of modules) {
+            switch (name) {
                 case 'initial':
                     Object.assign(this._initial, initial);
                     break;
                 case 'base':
                     this._documentParent = node.documentParent;
-                    this._bounds = $dom.assignBounds(node.bounds);
-                    this._linear = $dom.assignBounds(node.linear);
-                    this._box = $dom.assignBounds(node.box);
+                    this._bounds = $dom.assignRect(node.bounds);
+                    this._linear = $dom.assignRect(node.linear);
+                    this._box = $dom.assignRect(node.box);
                     const actualParent = node.actualParent;
                     if (actualParent) {
                         this.css('direction', actualParent.dir);
@@ -713,7 +695,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         const element = this._element;
         if (element && !calibrate) {
             if (this.styleElement) {
-                this._bounds = $dom.assignBounds(element.getBoundingClientRect());
+                this._bounds = $dom.assignRect(element.getBoundingClientRect());
                 if (this.documentBody) {
                     if (this.marginTop > 0) {
                         const firstChild = this.firstChild;
@@ -726,7 +708,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             }
             else if (this.plainText) {
                 const bounds = $dom.getRangeClientRect(element);
-                this._bounds = $dom.assignBounds(bounds);
+                this._bounds = $dom.assignRect(bounds);
             }
         }
     }
@@ -906,7 +888,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 }
             }
             if (this._initial[dimension] === undefined) {
-                this._initial[dimension] = $dom.assignBounds(bounds);
+                this._initial[dimension] = $dom.assignRect(bounds);
             }
         }
     }
@@ -1060,7 +1042,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 };
             }
             else {
-                this._linear = $dom.assignBounds(this._bounds);
+                this._linear = $dom.assignRect(this._bounds);
             }
             this.setDimensions('linear');
         }
@@ -1081,7 +1063,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 };
             }
             else {
-                this._box = $dom.assignBounds(this._bounds);
+                this._box = $dom.assignRect(this._bounds);
             }
             this.setDimensions('box');
         }
@@ -1415,7 +1397,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     case 'TEXTAREA':
                         break;
                     default:
-                        if (hasFreeFormText(element)) {
+                        if ($element.hasFreeFormText(element)) {
                             value = true;
                             for (let i = 0; i < element.children.length; i++) {
                                 const node = $dom.getElementAsNode<T>(element.children[i]);

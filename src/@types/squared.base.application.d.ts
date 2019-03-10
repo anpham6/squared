@@ -33,7 +33,7 @@ declare global {
             addIncludeFile(filename: string, content: string): void;
             addRenderTemplate(node: T, parent: T, output: string, group: boolean): void;
             addRenderQueue(id: string, template: string): void;
-            addImagePreload(element: HTMLImageElement): void;
+            addImagePreload(element: HTMLImageElement | undefined): void;
             saveRenderPosition(parent: T, required: boolean): void;
             createNode(element: Element): T;
             resolveTarget(target: string, node: T): T | undefined;

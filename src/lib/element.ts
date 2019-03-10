@@ -154,3 +154,21 @@ export function hasLineBreak(element: Element, lineBreak = false, trim = false) 
     }
     return false;
 }
+
+export function hasFreeFormText(element: Element, whiteSpace = true) {
+    function findFreeForm(elements: NodeListOf<ChildNode> | Element[]): boolean {
+        for (let i = 0; i < elements.length; i++) {
+            const child = <Element> elements[i];
+            if (child.nodeName === '#text') {
+                if (isPlainText(child, whiteSpace) || isParentStyle(child, 'whiteSpace', 'pre', 'pre-wrap') && child.textContent && child.textContent !== '') {
+                    return true;
+                }
+            }
+            else if (findFreeForm(child.childNodes)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    return findFreeForm(element.nodeName === '#text' ? [element] : element.childNodes);
+}

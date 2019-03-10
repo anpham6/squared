@@ -43,6 +43,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                 for (const item of section[0].cascade()) {
                     if (item.tagName === 'TH' || item.tagName === 'TD') {
                         item.inherit(section[0], 'styleMap');
+                        item.unsetCache('visibleStyle');
                     }
                 }
                 $util.concatArray(table, section[0].children as T[]);

@@ -149,7 +149,7 @@ declare global {
             unsetCache(...attrs: string[]): void;
             ascend(generated?: boolean, levels?: number): Node[];
             cascade(element?: boolean): Node[];
-            inherit(node: Node, ...props: string[]): void;
+            inherit(node: Node, ...modules: string[]): void;
             alignedVertically(previousSiblings: Node[], siblings?: Node[], cleared?: Map<Node, string>, checkFloat?: boolean): boolean;
             intersectX(rect: RectDimension, dimension?: string): boolean;
             intersectY(rect: RectDimension, dimension?: string): boolean;

@@ -1,4 +1,5 @@
 import { ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from '../src/@types/application';
+import { GradientColorStop } from '../src/@types/resource';
 
 type SvgPath = squared.svg.SvgPath;
 
@@ -11,7 +12,6 @@ declare global {
         class Resource<T extends View> implements Resource<T> {
             public static STORED: ResourceStoredMapAndroid;
             public static formatOptions(options: ExternalData, numberAlias?: boolean): ExternalData;
-            public static getOptionArray(element: HTMLSelectElement, replaceEntities?: boolean): (string[] | null)[];
             public static addTheme(...options: Required<StyleAttribute>[]): void;
             public static addString(value: string, name?: string, numberAlias?: boolean): string;
             public static addImageSrcSet(element: HTMLImageElement, prefix?: string): string;

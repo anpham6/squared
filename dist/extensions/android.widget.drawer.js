@@ -1,4 +1,4 @@
-/* android.widget 0.7.2
+/* android.widget 0.8.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -27,7 +27,7 @@ this.android.widget.drawer = (function () {
                 for (let i = 0; i < element.children.length; i++) {
                     const item = element.children[i];
                     if (item.tagName === 'NAV' && !$util.includes(item.dataset.use, $const.EXT_NAME.EXTERNAL)) {
-                        item.dataset.use = ($util.hasValue(item.dataset.use) ? `${item.dataset.use}, ` : '') + $const.EXT_NAME.EXTERNAL;
+                        item.dataset.use = (item.dataset.use ? `${item.dataset.use}, ` : '') + $const.EXT_NAME.EXTERNAL;
                     }
                 }
                 this.application.parseElements.add(element);
@@ -38,12 +38,12 @@ this.android.widget.drawer = (function () {
         processNode(node) {
             const options = $utilA.createViewAttribute(this.options.self);
             if (Drawer.findNestedByName(node.element, "android.widget.menu" /* MENU */)) {
-                $util.defaultWhenNull(options, 'android', 'fitsSystemWindows', 'true');
+                $util.assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');
                 this.setStyleTheme(node.localSettings.targetAPI);
             }
             else {
                 const navigationViewOptions = $utilA.createViewAttribute(this.options.navigationView);
-                $util.defaultWhenNull(navigationViewOptions, 'android', 'layout_gravity', node.localizeString('left'));
+                $util.assignEmptyValue(navigationViewOptions, 'android', 'layout_gravity', node.localizeString('left'));
                 const navView = node.item();
                 navView.android('layout_gravity', navigationViewOptions.android.layout_gravity);
                 navView.android('layout_height', 'match_parent');
@@ -57,19 +57,19 @@ this.android.widget.drawer = (function () {
         }
         postParseDocument(node) {
             const application = this.application;
-            const options = $utilA.createViewAttribute(this.options.navigation);
+            const options = $utilA.createViewAttribute(this.options.navigationView);
             const menu = $util.optionalAsString(Drawer.findNestedByName(node.element, "android.widget.menu" /* MENU */), 'dataset.layoutName');
             const headerLayout = $util.optionalAsString(Drawer.findNestedByName(node.element, $const.EXT_NAME.EXTERNAL), 'dataset.layoutName');
             if (menu !== '') {
-                $util.defaultWhenNull(options, 'app', 'menu', `@menu/${menu}`);
+                $util.assignEmptyValue(options, 'app', 'menu', `@menu/${menu}`);
             }
             if (headerLayout !== '') {
-                $util.defaultWhenNull(options, 'app', 'headerLayout', `@layout/${headerLayout}`);
+                $util.assignEmptyValue(options, 'app', 'headerLayout', `@layout/${headerLayout}`);
             }
             if (menu !== '' || headerLayout !== '') {
-                $util.defaultWhenNull(options, 'android', 'id', `${node.documentId}_navigation`);
-                $util.defaultWhenNull(options, 'android', 'fitsSystemWindows', 'true');
-                $util.defaultWhenNull(options, 'android', 'layout_gravity', node.localizeString('left'));
+                $util.assignEmptyValue(options, 'android', 'id', `${node.documentId}_navigation`);
+                $util.assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');
+                $util.assignEmptyValue(options, 'android', 'layout_gravity', node.localizeString('left'));
                 const output = application.controllerHandler.renderNodeStatic($constA.SUPPORT_ANDROID.NAVIGATION_VIEW, 1, $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')), 'wrap_content', 'match_parent');
                 application.addRenderQueue(node.id.toString(), output);
             }
@@ -84,16 +84,16 @@ this.android.widget.drawer = (function () {
             }
         }
         setStyleTheme(api) {
-            const options = $utilA.createStyleAttribute(Object.assign({}, this.options.resource));
-            $util.defaultWhenNull(options, 'parent', 'Theme.AppCompat.Light.NoActionBar');
-            $util.defaultWhenNull(options.items, 'android:windowTranslucentStatus', 'true');
+            const options = $utilA.createStyleAttribute(this.options.resource);
+            $util.assignEmptyValue(options, 'parent', 'Theme.AppCompat.Light.NoActionBar');
+            $util.assignEmptyValue(options.items, 'android:windowTranslucentStatus', 'true');
             $Resource.addTheme(options);
             if (api >= 21) {
                 const lollipop = $utilA.createStyleAttribute($util.cloneObject(options));
                 lollipop.items = {};
-                $util.defaultWhenNull(lollipop.output, 'path', 'res/values-v21');
-                $util.defaultWhenNull(lollipop.items, 'android:windowDrawsSystemBarBackgrounds', 'true');
-                $util.defaultWhenNull(lollipop.items, 'android:statusBarColor', '@android:color/transparent');
+                $util.assignEmptyValue(lollipop.output, 'path', 'res/values-v21');
+                $util.assignEmptyValue(lollipop.items, 'android:windowDrawsSystemBarBackgrounds', 'true');
+                $util.assignEmptyValue(lollipop.items, 'android:statusBarColor', '@android:color/transparent');
                 $Resource.addTheme(lollipop);
             }
         }

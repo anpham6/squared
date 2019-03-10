@@ -1,4 +1,4 @@
-/* squared 0.7.2
+/* squared 0.8.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -13,6 +13,10 @@
         '', 'X', 'XX', 'XXX', 'XL', 'L', 'LX', 'LXX', 'LXXX', 'XC',
         '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'
     ];
+    const REGEXP_UNDERSCORE = /([a-z][A-Z])/g;
+    const REGEXP_WORD = /[^\w]+/g;
+    const REGEXP_WORDDASH = /[^a-zA-Z\d]+/g;
+    const REGEXP_CALCSIGN = /(\s+[+\-]\s+|\s*[*/]\s*)/;
     function compareObject(obj1, obj2, attr, numeric) {
         const namespaces = attr.split('.');
         let current1 = obj1;
@@ -33,8 +37,8 @@
             }
         }
         if (numeric) {
-            const value1 = parseInt(current1);
-            const value2 = parseInt(current2);
+            const value1 = parseFloat(current1);
+            const value2 = parseFloat(current2);
             if (!isNaN(value1) && !isNaN(value2)) {
                 return [value1, value2];
             }
@@ -48,18 +52,64 @@
         return [current1, current2];
     }
     const REGEXP_STRING = {
-        DECIMAL: '-?\\d+(?:.\\d+)?',
-        ZERO_ONE: '0(?:\\.\\d+)?|1(?:\\.0+)?'
+        URL: 'url\\("?(.+?)"?\\)',
+        DECIMAL: '-?\\d+(?:\\.\\d+)?',
+        ZERO_ONE: '0(?:\\.\\d+)?|1(?:\\.0+)?',
+        PERCENT: '\\d+(\\.\\d+)?%',
+        CALC: 'calc(\\(.+\\))',
+        VAR: 'var\\((--[A-Za-z0-9\\-]+)\\)'
     };
     REGEXP_STRING.UNIT = `(${REGEXP_STRING.DECIMAL})(px|em|ch|pc|pt|vw|vh|vmin|vmax|mm|cm|in)`;
     REGEXP_STRING.DEGREE = `(${REGEXP_STRING.DECIMAL})(deg|rad|turn|grad)`;
     REGEXP_STRING.LENGTH = `(${REGEXP_STRING.DECIMAL}(?:[a-z]{2,}|%)?)`;
-    const REGEXP_PATTERN = {
-        URL: /url\("?(.+?)"?\)/,
-        URI: /^[A-Za-z]+:\/\//,
+    const REGEXP_COMPILED = {
         UNIT: new RegExp(`^${REGEXP_STRING.UNIT}$`),
-        ATTRIBUTE: /([^\s]+)="([^"]+)"/
+        DECIMAL: new RegExp(`^${REGEXP_STRING.DECIMAL}$`),
+        PERCENT: new RegExp(`^${REGEXP_STRING.PERCENT}$`),
+        CALC: new RegExp(`^${REGEXP_STRING.CALC}$`),
+        URL: new RegExp(REGEXP_STRING.URL),
+        URI: /^[A-Za-z]+:\/\//,
+        SEPARATOR: /\s*,\s*/,
+        ATTRIBUTE: /([^\s]+)="([^"]+)"/,
+        CUSTOMPROPERTY: /^(?:var|calc)\(.+\)$/,
+        PLACEHOLDER: /{(\d+)}/
     };
+    function isUserAgent(value) {
+        if (typeof value === 'string') {
+            const name = value.toUpperCase();
+            value = 0;
+            if (name.indexOf('CHROME') !== -1) {
+                value |= 2 /* CHROME */;
+            }
+            if (name.indexOf('SAFARI') !== -1) {
+                value |= 4 /* SAFARI */;
+            }
+            if (name.indexOf('FIREFOX') !== -1) {
+                value |= 8 /* FIREFOX */;
+            }
+            if (name.indexOf('EDGE') !== -1) {
+                value |= 16 /* EDGE */;
+            }
+        }
+        let client;
+        const userAgent = navigator.userAgent;
+        if (userAgent.indexOf('Safari') !== -1 && userAgent.indexOf('Chrome') === -1) {
+            client = 4 /* SAFARI */;
+        }
+        else if (userAgent.indexOf('Firefox') !== -1) {
+            client = 8 /* FIREFOX */;
+        }
+        else if (userAgent.indexOf('Edge') !== -1) {
+            client = 16 /* EDGE */;
+        }
+        else {
+            client = 2 /* CHROME */;
+        }
+        return hasBit(value, client);
+    }
+    function getDeviceDPI() {
+        return window.devicePixelRatio * 96;
+    }
     function capitalize(value, upper = true) {
         if (value !== '') {
             if (upper) {
@@ -73,7 +123,7 @@
     }
     function convertUnderscore(value) {
         value = value.charAt(0).toLowerCase() + value.substring(1);
-        const match = value.match(/([a-z][A-Z])/g);
+        const match = value.match(REGEXP_UNDERSCORE);
         if (match) {
             for (const capture of match) {
                 value = value.replace(capture, `${capture[0]}_${capture[1].toLowerCase()}`);
@@ -91,7 +141,7 @@
         return value;
     }
     function convertWord(value, dash = false) {
-        return value ? (dash ? value.replace(/[^a-zA-Z\d]+/g, '_') : value.replace(/[^\w]+/g, '_')).trim() : '';
+        return dash ? value.trim().replace(REGEXP_WORDDASH, '_') : value.replace(REGEXP_WORD, '_');
     }
     function convertInt(value) {
         return value && parseInt(value) || 0;
@@ -113,65 +163,18 @@
         }
         return angle;
     }
-    function convertPercent(value, precision = 0) {
-        return value < 1 ? `${precision === 0 ? Math.round(value * 100) : parseFloat((value * 100).toPrecision(precision))}%` : `100%`;
-    }
     function convertPX(value, fontSize) {
         if (value) {
-            if (isNumber(value)) {
-                return `${value}px`;
+            value = value.trim();
+            if (value.endsWith('%') || value === 'auto') {
+                return value;
             }
-            else {
-                value = value.trim();
-                if (value.endsWith('px') || value.endsWith('%') || value === 'auto') {
-                    return value;
-                }
-            }
-            const match = value.match(REGEXP_PATTERN.UNIT);
-            if (match) {
-                let result = parseFloat(match[1]);
-                switch (match[2]) {
-                    case 'em':
-                    case 'ch':
-                        result *= fontSize || 16;
-                        break;
-                    case 'pc':
-                        result *= 12;
-                    case 'pt':
-                        result *= 4 / 3;
-                        break;
-                    case 'vw':
-                        result *= window.innerWidth / 100;
-                        break;
-                    case 'vh':
-                        result *= window.innerHeight / 100;
-                        break;
-                    case 'vmin':
-                        result *= Math.min(window.innerWidth, window.innerHeight) / 100;
-                        break;
-                    case 'vmax':
-                        result *= Math.max(window.innerWidth, window.innerHeight) / 100;
-                        break;
-                    case 'mm':
-                        result /= 10;
-                    case 'cm':
-                        result /= 2.54;
-                    case 'in':
-                        result *= window.devicePixelRatio * 96;
-                        break;
-                }
-                return `${result}px`;
-            }
+            return `${calculateUnit(value, fontSize)}px`;
         }
         return '0px';
     }
-    function convertPercentPX(value, dimension, fontSize, percent = false) {
-        if (percent) {
-            return isPercent(value) ? convertFloat(value) / 100 : parseFloat(convertPX(value, fontSize)) / dimension;
-        }
-        else {
-            return isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseFloat(convertPX(value, fontSize));
-        }
+    function convertUnit(value, dimension, fontSize) {
+        return isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : calculateUnit(value, fontSize);
     }
     function convertAlpha(value) {
         let result = '';
@@ -203,12 +206,169 @@
     }
     function convertEnum(value, base, derived) {
         for (const key of Object.keys(base)) {
-            const index = base[key];
-            if (value === index) {
+            if (value === base[key]) {
                 return derived[key];
             }
         }
         return '';
+    }
+    function calculate(value, dimension = 0, fontSize) {
+        value = value.trim();
+        if (value.charAt(0) !== '(' || value.charAt(value.length - 1) !== ')') {
+            value = `(${value})`;
+        }
+        const opening = [];
+        const closing = [];
+        let opened = 0;
+        for (let i = 0; i < value.length; i++) {
+            switch (value.charAt(i)) {
+                case '(':
+                    opened++;
+                    opening[i] = true;
+                    break;
+                case ')':
+                    closing.push(i);
+                    break;
+            }
+        }
+        if (opened === closing.length) {
+            const equated = [];
+            let index = 0;
+            while (true) {
+                for (let i = 0; i < closing.length; i++) {
+                    let j = closing[i] - 1;
+                    let valid = false;
+                    for (; j >= 0; j--) {
+                        if (opening[j]) {
+                            valid = true;
+                            opening[j] = false;
+                            break;
+                        }
+                        else if (closing.includes(j)) {
+                            break;
+                        }
+                    }
+                    if (valid) {
+                        const seg = [];
+                        const evaluate = [];
+                        for (let partial of value.substring(j + 1, closing[i]).split(REGEXP_CALCSIGN)) {
+                            partial = partial.trim();
+                            switch (partial) {
+                                case '+':
+                                case '-':
+                                case '*':
+                                case '/':
+                                    evaluate.push(partial);
+                                    break;
+                                default:
+                                    const match = REGEXP_COMPILED.PLACEHOLDER.exec(partial);
+                                    if (match) {
+                                        seg.push(equated[parseInt(match[1])]);
+                                    }
+                                    else if (isUnit(partial)) {
+                                        seg.push(calculateUnit(partial, fontSize));
+                                    }
+                                    else if (isPercent(partial)) {
+                                        seg.push(parseFloat(partial) / 100 * dimension);
+                                    }
+                                    else if (isNumber(partial)) {
+                                        seg.push(parseFloat(partial));
+                                    }
+                                    else {
+                                        return undefined;
+                                    }
+                                    break;
+                            }
+                        }
+                        if (seg.length !== evaluate.length + 1) {
+                            return undefined;
+                        }
+                        for (let k = 0; k < evaluate.length; k++) {
+                            if (evaluate[k] === '/') {
+                                if (Math.abs(seg[k + 1]) !== 0) {
+                                    seg.splice(k, 2, seg[k] / seg[k + 1]);
+                                    evaluate.splice(k--, 1);
+                                }
+                                else {
+                                    return undefined;
+                                }
+                            }
+                        }
+                        for (let k = 0; k < evaluate.length; k++) {
+                            if (evaluate[k] === '*') {
+                                seg.splice(k, 2, seg[k] * seg[k + 1]);
+                                evaluate.splice(k--, 1);
+                            }
+                        }
+                        for (let k = 0; k < evaluate.length; k++) {
+                            seg.splice(k, 2, seg[k] + (evaluate[k] === '-' ? -seg[k + 1] : seg[k + 1]));
+                            evaluate.splice(k--, 1);
+                        }
+                        if (seg.length === 1) {
+                            if (closing.length === 1) {
+                                return seg[0];
+                            }
+                            else {
+                                equated[index] = seg[0];
+                                const placeholder = `{${index++}}`;
+                                const remaining = closing[i] + 1;
+                                value = value.substring(0, j) + `${placeholder + ' '.repeat(remaining - (j + placeholder.length))}` + value.substring(remaining);
+                                closing.splice(i--, 1);
+                            }
+                        }
+                        else {
+                            return undefined;
+                        }
+                    }
+                }
+            }
+        }
+        return undefined;
+    }
+    function calculateUnit(value, fontSize) {
+        if (value) {
+            const match = value.match(REGEXP_COMPILED.UNIT);
+            if (match) {
+                let result = parseFloat(match[1]);
+                switch (match[2]) {
+                    case 'px':
+                        return result;
+                    case 'em':
+                    case 'ch':
+                        result *= fontSize || 16;
+                        break;
+                    case 'pc':
+                        result *= 12;
+                    case 'pt':
+                        result *= 4 / 3;
+                        break;
+                    case 'mm':
+                        result /= 10;
+                    case 'cm':
+                        result /= 2.54;
+                    case 'in':
+                        result *= getDeviceDPI();
+                        break;
+                    case 'vw':
+                        result *= window.innerWidth / 100;
+                        break;
+                    case 'vh':
+                        result *= window.innerHeight / 100;
+                        break;
+                    case 'vmin':
+                        result *= Math.min(window.innerWidth, window.innerHeight) / 100;
+                        break;
+                    case 'vmax':
+                        result *= Math.max(window.innerWidth, window.innerHeight) / 100;
+                        break;
+                }
+                return result;
+            }
+            else if (isNumber(value)) {
+                return parseFloat(value);
+            }
+        }
+        return 0;
     }
     function formatPX(value) {
         if (typeof value === 'string') {
@@ -216,14 +376,14 @@
         }
         return isNaN(value) ? '0px' : `${Math.round(value)}px`;
     }
-    function formatPercent(value) {
+    function formatPercent(value, round = true) {
         if (typeof value === 'string') {
             value = parseFloat(value);
         }
         if (isNaN(value)) {
             return '0%';
         }
-        return value < 1 ? convertPercent(value) : `${Math.round(value)}%`;
+        return `${round ? Math.round(value) : value}%`;
     }
     function formatString(value, ...params) {
         for (let i = 0; i < params.length; i++) {
@@ -231,11 +391,11 @@
         }
         return value;
     }
-    function hasBit(value, type) {
-        return (value & type) === type;
+    function hasBit(value, offset) {
+        return (value & offset) === offset;
     }
     function isNumber(value) {
-        return value !== '' && /^-?\d+(\.\d+)?$/.test(value.trim());
+        return value !== '' && REGEXP_COMPILED.DECIMAL.test(value.trim());
     }
     function isString(value) {
         return typeof value === 'string' && value.trim() !== '';
@@ -244,10 +404,13 @@
         return Array.isArray(value) && value.length > 0;
     }
     function isUnit(value) {
-        return REGEXP_PATTERN.UNIT.test(value);
+        return REGEXP_COMPILED.UNIT.test(value);
     }
     function isPercent(value) {
-        return /^\d+(\.\d+)?%$/.test(value);
+        return REGEXP_COMPILED.PERCENT.test(value);
+    }
+    function isCalc(value) {
+        return REGEXP_COMPILED.CALC.test(value);
     }
     function isEqual(source, values) {
         if (source === values) {
@@ -302,14 +465,15 @@
     }
     function cloneObject(data, result = {}, array = false) {
         for (const attr in data) {
-            if (Array.isArray(data[attr])) {
-                result[attr] = array ? cloneArray(data[attr], [], true) : data[attr];
+            const item = data[attr];
+            if (Array.isArray(item)) {
+                result[attr] = array ? cloneArray(item, [], true) : item;
             }
-            else if (typeof data[attr] === 'object') {
-                result[attr] = cloneObject(data[attr], {}, array);
+            else if (item && typeof item === 'object') {
+                result[attr] = cloneObject(item, {}, array);
             }
             else {
-                result[attr] = data[attr];
+                result[attr] = item;
             }
         }
         return result;
@@ -326,16 +490,15 @@
             } while (result !== null &&
                 result !== undefined &&
                 ++i < attrs.length &&
-                typeof result !== 'string' &&
-                typeof result !== 'number' &&
-                typeof result !== 'boolean');
-            valid = result !== undefined && result !== null && i === attrs.length;
+                typeof result === 'object');
+            valid = i === attrs.length && result !== undefined && result !== null;
         }
         switch (type) {
             case 'object':
                 return valid ? result : null;
             case 'number':
-                return valid && !isNaN(parseInt(result)) ? parseInt(result) : 0;
+                result = parseFloat(result);
+                return valid && !isNaN(result) ? result : 0;
             case 'boolean':
                 return valid && result === true;
             default:
@@ -355,7 +518,7 @@
         return optional(obj, value, 'boolean');
     }
     function resolvePath(value) {
-        if (!REGEXP_PATTERN.URI.test(value)) {
+        if (!REGEXP_COMPILED.URI.test(value)) {
             let pathname = location.pathname.split('/');
             pathname.pop();
             if (value.charAt(0) === '/') {
@@ -373,30 +536,30 @@
                             segments.push(dir);
                         }
                     }
-                    pathname = pathname.slice(0, Math.max(pathname.length - levels, 0));
-                    pathname.push(...segments);
+                    pathname = concatArray(pathname.slice(0, Math.max(pathname.length - levels, 0)), segments);
                     value = location.origin + pathname.join('/');
                 }
                 else {
                     value = `${location.origin + pathname.join('/')}/${value}`;
                 }
             }
+            return value;
         }
-        return value;
+        return '';
     }
     function trimNull(value) {
         return value ? value.trim() : '';
     }
     function trimString(value, char) {
-        return value ? trimStart(trimEnd(value, char), char) : '';
+        return trimStart(trimEnd(value, char), char);
     }
     function trimStart(value, char) {
-        return value ? value.replace(new RegExp(`^${char}+`), '') : '';
+        return value.replace(new RegExp(`^${char}+`), '');
     }
     function trimEnd(value, char) {
-        return value ? value.replace(new RegExp(`${char}+$`), '') : '';
+        return value.replace(new RegExp(`${char}+$`), '');
     }
-    function indexOf(value, ...terms) {
+    function firstIndexOf(value, ...terms) {
         for (const term of terms) {
             const index = value.indexOf(term);
             if (index !== -1) {
@@ -405,7 +568,7 @@
         }
         return -1;
     }
-    function lastIndexOf(value, char = '/') {
+    function fromLastIndexOf(value, char = '/') {
         return value.substring(value.lastIndexOf(char) + 1);
     }
     function searchObject(obj, value) {
@@ -441,7 +604,7 @@
         return result;
     }
     function hasValue(value) {
-        return typeof value !== 'undefined' && value !== null && value.toString().trim() !== '';
+        return value !== undefined && value !== null && value.toString().trim() !== '';
     }
     function hasInSet(list, condition) {
         for (const item of list) {
@@ -451,46 +614,43 @@
         }
         return false;
     }
-    function withinRange(a, b, offset = 0) {
+    function withinRange(a, b, offset = 0.5) {
         return b >= (a - offset) && b <= (a + offset);
     }
-    function withinFraction(lower, upper) {
-        return (lower === upper ||
-            Math.floor(lower) === Math.floor(upper) ||
-            Math.ceil(lower) === Math.ceil(upper) ||
-            Math.ceil(lower) === Math.floor(upper) ||
-            Math.floor(lower) === Math.ceil(upper));
-    }
-    function assignWhenNull(destination, source) {
+    function assignEmptyProperty(dest, source) {
         for (const attr in source) {
-            if (!hasValue(destination[attr])) {
-                destination[attr] = source[attr];
+            if (!dest.hasOwnProperty(attr)) {
+                dest[attr] = source[attr];
             }
         }
+        return dest;
     }
-    function defaultWhenNull(options, ...attrs) {
-        let current = options;
-        for (let i = 0; i < attrs.length - 1; i++) {
-            const name = attrs[i];
-            if (i === attrs.length - 2) {
-                if (!hasValue(current[name])) {
-                    current[name] = attrs[i + 1];
+    function assignEmptyValue(dest, ...attrs) {
+        if (attrs.length > 1) {
+            let current = dest;
+            for (let i = 0;; i++) {
+                const name = attrs[i];
+                if (i === attrs.length - 2) {
+                    if (!hasValue(current[name])) {
+                        current[name] = attrs[i + 1];
+                    }
+                    break;
                 }
-            }
-            else if (isString(name)) {
-                if (typeof current[name] === 'object') {
-                    current = current[name];
-                }
-                else if (current[name] === undefined) {
-                    current[name] = {};
-                    current = current[name];
+                else if (isString(name)) {
+                    if (current[name] && typeof current[name] === 'object') {
+                        current = current[name];
+                    }
+                    else if (current[name] === undefined || current[name] === null) {
+                        current[name] = {};
+                        current = current[name];
+                    }
+                    else {
+                        break;
+                    }
                 }
                 else {
                     break;
                 }
-            }
-            else {
-                break;
             }
         }
     }
@@ -554,6 +714,20 @@
         }
         return result;
     }
+    function concatArray(dest, source) {
+        for (const item of source) {
+            dest.push(item);
+        }
+        return dest;
+    }
+    function concatMultiArray(dest, ...source) {
+        for (const list of source) {
+            for (const item of list) {
+                dest.push(item);
+            }
+        }
+        return dest;
+    }
     function flatMap(list, predicate) {
         const result = [];
         for (let i = 0; i < list.length; i++) {
@@ -609,7 +783,9 @@
 
     var util = /*#__PURE__*/Object.freeze({
         REGEXP_STRING: REGEXP_STRING,
-        REGEXP_PATTERN: REGEXP_PATTERN,
+        REGEXP_COMPILED: REGEXP_COMPILED,
+        isUserAgent: isUserAgent,
+        getDeviceDPI: getDeviceDPI,
         capitalize: capitalize,
         convertUnderscore: convertUnderscore,
         convertCamelCase: convertCamelCase,
@@ -617,12 +793,13 @@
         convertInt: convertInt,
         convertFloat: convertFloat,
         convertAngle: convertAngle,
-        convertPercent: convertPercent,
         convertPX: convertPX,
-        convertPercentPX: convertPercentPX,
+        convertUnit: convertUnit,
         convertAlpha: convertAlpha,
         convertRoman: convertRoman,
         convertEnum: convertEnum,
+        calculate: calculate,
+        calculateUnit: calculateUnit,
         formatPX: formatPX,
         formatPercent: formatPercent,
         formatString: formatString,
@@ -632,6 +809,7 @@
         isArray: isArray,
         isUnit: isUnit,
         isPercent: isPercent,
+        isCalc: isCalc,
         isEqual: isEqual,
         includes: includes,
         cloneInstance: cloneInstance,
@@ -647,21 +825,22 @@
         trimString: trimString,
         trimStart: trimStart,
         trimEnd: trimEnd,
-        indexOf: indexOf,
-        lastIndexOf: lastIndexOf,
+        firstIndexOf: firstIndexOf,
+        fromLastIndexOf: fromLastIndexOf,
         searchObject: searchObject,
         hasValue: hasValue,
         hasInSet: hasInSet,
         withinRange: withinRange,
-        withinFraction: withinFraction,
-        assignWhenNull: assignWhenNull,
-        defaultWhenNull: defaultWhenNull,
+        assignEmptyProperty: assignEmptyProperty,
+        assignEmptyValue: assignEmptyValue,
         sortNumber: sortNumber,
         sortArray: sortArray,
         flatArray: flatArray,
         partitionArray: partitionArray,
         spliceArray: spliceArray,
         filterArray: filterArray,
+        concatArray: concatArray,
+        concatMultiArray: concatMultiArray,
         flatMap: flatMap,
         filterMap: filterMap,
         replaceMap: replaceMap,
@@ -756,6 +935,10 @@
             this._children.sort(predicate);
             return this;
         }
+        concat(list) {
+            concatArray(this._children, list);
+            return this;
+        }
         every(predicate) {
             if (this.length > 0) {
                 for (let i = 0; i < this._children.length; i++) {
@@ -796,7 +979,7 @@
                 for (const item of container.children) {
                     result.push(item);
                     if (item instanceof Container && item.length) {
-                        result.push(...cascade(item));
+                        concatArray(result, cascade(item));
                     }
                 }
                 return result;
@@ -811,274 +994,2220 @@
         }
     }
 
-    const HEX_CHAR = '0123456789ABCDEF';
-    const X11_CSS3 = {
-        'Pink': { value: '#FFC0CB' },
-        'LightPink': { value: '#FFB6C1' },
-        'HotPink': { value: '#FF69B4' },
-        'DeepPink': { value: '#FF1493' },
-        'PaleVioletRed': { value: '#DB7093' },
-        'MediumVioletRed': { value: '#C71585' },
-        'LightSalmon': { value: '#FFA07A' },
-        'Salmon': { value: '#FA8072' },
-        'DarkSalmon': { value: '#E9967A' },
-        'LightCoral': { value: '#F08080' },
-        'IndianRed': { value: '#CD5C5C' },
-        'Crimson': { value: '#DC143C' },
-        'Firebrick': { value: '#B22222' },
-        'DarkRed': { value: '#8B0000' },
-        'Red': { value: '#FF0000' },
-        'OrangeRed': { value: '#FF4500' },
-        'Tomato': { value: '#FF6347' },
-        'Coral': { value: '#FF7F50' },
-        'Orange': { value: '#FFA500' },
-        'DarkOrange': { value: '#FF8C00' },
-        'Yellow': { value: '#FFFF00' },
-        'LightYellow': { value: '#FFFFE0' },
-        'LemonChiffon': { value: '#FFFACD' },
-        'LightGoldenrodYellow': { value: '#FAFAD2' },
-        'PapayaWhip': { value: '#FFEFD5' },
-        'Moccasin': { value: '#FFE4B5' },
-        'PeachPuff': { value: '#FFDAB9' },
-        'PaleGoldenrod': { value: '#EEE8AA' },
-        'Khaki': { value: '#F0E68C' },
-        'DarkKhaki': { value: '#BDB76B' },
-        'Gold': { value: '#FFD700' },
-        'Cornsilk': { value: '#FFF8DC' },
-        'BlanchedAlmond': { value: '#FFEBCD' },
-        'Bisque': { value: '#FFE4C4' },
-        'NavajoWhite': { value: '#FFDEAD' },
-        'Wheat': { value: '#F5DEB3' },
-        'Burlywood': { value: '#DEB887' },
-        'Tan': { value: '#D2B48C' },
-        'RosyBrown': { value: '#BC8F8F' },
-        'SandyBrown': { value: '#F4A460' },
-        'Goldenrod': { value: '#DAA520' },
-        'DarkGoldenrod': { value: '#B8860B' },
-        'Peru': { value: '#CD853F' },
-        'Chocolate': { value: '#D2691E' },
-        'SaddleBrown': { value: '#8B4513' },
-        'Sienna': { value: '#A0522D' },
-        'Brown': { value: '#A52A2A' },
-        'Maroon': { value: '#800000' },
-        'DarkOliveGreen': { value: '#556B2F' },
-        'Olive': { value: '#808000' },
-        'OliveDrab': { value: '#6B8E23' },
-        'YellowGreen': { value: '#9ACD32' },
-        'LimeGreen': { value: '#32CD32' },
-        'Lime': { value: '#00FF00' },
-        'LawnGreen': { value: '#7CFC00' },
-        'Chartreuse': { value: '#7FFF00' },
-        'GreenYellow': { value: '#ADFF2F' },
-        'SpringGreen': { value: '#00FF7F' },
-        'MediumSpringGreen': { value: '#00FA9A' },
-        'LightGreen': { value: '#90EE90' },
-        'PaleGreen': { value: '#98FB98' },
-        'DarkSeaGreen': { value: '#8FBC8F' },
-        'MediumAquamarine': { value: '#66CDAA' },
-        'MediumSeaGreen': { value: '#3CB371' },
-        'SeaGreen': { value: '#2E8B57' },
-        'ForestGreen': { value: '#228B22' },
-        'Green': { value: '#008000' },
-        'DarkGreen': { value: '#006400' },
-        'Aqua': { value: '#00FFFF' },
-        'Cyan': { value: '#00FFFF' },
-        'LightCyan': { value: '#E0FFFF' },
-        'PaleTurquoise': { value: '#AFEEEE' },
-        'Aquamarine': { value: '#7FFFD4' },
-        'Turquoise': { value: '#40E0D0' },
-        'DarkTurquoise': { value: '#00CED1' },
-        'MediumTurquoise': { value: '#48D1CC' },
-        'LightSeaGreen': { value: '#20B2AA' },
-        'CadetBlue': { value: '#5F9EA0' },
-        'DarkCyan': { value: '#008B8B' },
-        'Teal': { value: '#008080' },
-        'LightSteelBlue': { value: '#B0C4DE' },
-        'PowderBlue': { value: '#B0E0E6' },
-        'LightBlue': { value: '#ADD8E6' },
-        'SkyBlue': { value: '#87CEEB' },
-        'LightSkyBlue': { value: '#87CEFA' },
-        'DeepSkyBlue': { value: '#00BFFF' },
-        'DodgerBlue': { value: '#1E90FF' },
-        'Cornflower': { value: '#6495ED' },
-        'SteelBlue': { value: '#4682B4' },
-        'RoyalBlue': { value: '#4169E1' },
-        'Blue': { value: '#0000FF' },
-        'MediumBlue': { value: '#0000CD' },
-        'DarkBlue': { value: '#00008B' },
-        'Navy': { value: '#000080' },
-        'MidnightBlue': { value: '#191970' },
-        'Lavender': { value: '#E6E6FA' },
-        'Thistle': { value: '#D8BFD8' },
-        'Plum': { value: '#DDA0DD' },
-        'Violet': { value: '#EE82EE' },
-        'Orchid': { value: '#DA70D6' },
-        'Fuchsia': { value: '#FF00FF' },
-        'Magenta': { value: '#FF00FF' },
-        'MediumOrchid': { value: '#BA55D3' },
-        'MediumPurple': { value: '#9370DB' },
-        'BlueViolet': { value: '#8A2BE2' },
-        'DarkViolet': { value: '#9400D3' },
-        'DarkOrchid': { value: '#9932CC' },
-        'DarkMagenta': { value: '#8B008B' },
-        'Purple': { value: '#800080' },
-        'RebeccaPurple': { value: '#663399' },
-        'Indigo': { value: '#4B0082' },
-        'DarkSlateBlue': { value: '#483D8B' },
-        'SlateBlue': { value: '#6A5ACD' },
-        'MediumSlateBlue': { value: '#7B68EE' },
-        'White': { value: '#FFFFFF' },
-        'Snow': { value: '#FFFAFA' },
-        'Honeydew': { value: '#F0FFF0' },
-        'MintCream': { value: '#F5FFFA' },
-        'Azure': { value: '#F0FFFF' },
-        'AliceBlue': { value: '#F0F8FF' },
-        'GhostWhite': { value: '#F8F8FF' },
-        'WhiteSmoke': { value: '#F5F5F5' },
-        'Seashell': { value: '#FFF5EE' },
-        'Beige': { value: '#F5F5DC' },
-        'OldLace': { value: '#FDF5E6' },
-        'FloralWhite': { value: '#FFFAF0' },
-        'Ivory': { value: '#FFFFF0' },
-        'AntiqueWhite': { value: '#FAEBD7' },
-        'Linen': { value: '#FAF0E6' },
-        'LavenderBlush': { value: '#FFF0F5' },
-        'MistyRose': { value: '#FFE4E1' },
-        'Gainsboro': { value: '#DCDCDC' },
-        'LightGray': { value: '#D3D3D3' },
-        'Silver': { value: '#C0C0C0' },
-        'DarkGray': { value: '#A9A9A9' },
-        'Gray': { value: '#808080' },
-        'DimGray': { value: '#696969' },
-        'LightSlateGray': { value: '#778899' },
-        'SlateGray': { value: '#708090' },
-        'DarkSlateGray': { value: '#2F4F4F' },
-        'LightGrey': { value: '#D3D3D3' },
-        'DarkGrey': { value: '#A9A9A9' },
-        'Grey': { value: '#808080' },
-        'DimGrey': { value: '#696969' },
-        'LightSlateGrey': { value: '#778899' },
-        'SlateGrey': { value: '#708090' },
-        'DarkSlateGrey': { value: '#2F4F4F' },
-        'Black': { value: '#000000' }
-    };
+    const X11_CSS3 = [
+        {
+            value: '#000000',
+            name: 'black',
+            rgb: {
+                r: 0,
+                g: 0,
+                b: 0
+            },
+            hsl: {
+                h: 0,
+                s: 0,
+                l: 0
+            }
+        },
+        {
+            value: '#696969',
+            name: 'dimgray',
+            rgb: {
+                r: 105,
+                g: 105,
+                b: 105
+            },
+            hsl: {
+                h: 0,
+                s: 0,
+                l: 41
+            }
+        },
+        {
+            value: '#696969',
+            name: 'dimgrey',
+            rgb: {
+                r: 105,
+                g: 105,
+                b: 105
+            },
+            hsl: {
+                h: 0,
+                s: 0,
+                l: 41
+            }
+        },
+        {
+            value: '#808080',
+            name: 'gray',
+            rgb: {
+                r: 128,
+                g: 128,
+                b: 128
+            },
+            hsl: {
+                h: 0,
+                s: 0,
+                l: 50
+            }
+        },
+        {
+            value: '#808080',
+            name: 'grey',
+            rgb: {
+                r: 128,
+                g: 128,
+                b: 128
+            },
+            hsl: {
+                h: 0,
+                s: 0,
+                l: 50
+            }
+        },
+        {
+            value: '#A9A9A9',
+            name: 'darkgray',
+            rgb: {
+                r: 169,
+                g: 169,
+                b: 169
+            },
+            hsl: {
+                h: 0,
+                s: 0,
+                l: 66
+            }
+        },
+        {
+            value: '#A9A9A9',
+            name: 'darkgrey',
+            rgb: {
+                r: 169,
+                g: 169,
+                b: 169
+            },
+            hsl: {
+                h: 0,
+                s: 0,
+                l: 66
+            }
+        },
+        {
+            value: '#C0C0C0',
+            name: 'silver',
+            rgb: {
+                r: 192,
+                g: 192,
+                b: 192
+            },
+            hsl: {
+                h: 0,
+                s: 0,
+                l: 75
+            }
+        },
+        {
+            value: '#D3D3D3',
+            name: 'lightgray',
+            rgb: {
+                r: 211,
+                g: 211,
+                b: 211
+            },
+            hsl: {
+                h: 0,
+                s: 0,
+                l: 83
+            }
+        },
+        {
+            value: '#D3D3D3',
+            name: 'lightgrey',
+            rgb: {
+                r: 211,
+                g: 211,
+                b: 211
+            },
+            hsl: {
+                h: 0,
+                s: 0,
+                l: 83
+            }
+        },
+        {
+            value: '#DCDCDC',
+            name: 'gainsboro',
+            rgb: {
+                r: 220,
+                g: 220,
+                b: 220
+            },
+            hsl: {
+                h: 0,
+                s: 0,
+                l: 86
+            }
+        },
+        {
+            value: '#F5F5F5',
+            name: 'whitesmoke',
+            rgb: {
+                r: 245,
+                g: 245,
+                b: 245
+            },
+            hsl: {
+                h: 0,
+                s: 0,
+                l: 96
+            }
+        },
+        {
+            value: '#FFFFFF',
+            name: 'white',
+            rgb: {
+                r: 255,
+                g: 255,
+                b: 255
+            },
+            hsl: {
+                h: 0,
+                s: 0,
+                l: 100
+            }
+        },
+        {
+            value: '#BC8F8F',
+            name: 'rosybrown',
+            rgb: {
+                r: 188,
+                g: 143,
+                b: 143
+            },
+            hsl: {
+                h: 0,
+                s: 25,
+                l: 65
+            }
+        },
+        {
+            value: '#CD5C5C',
+            name: 'indianred',
+            rgb: {
+                r: 205,
+                g: 92,
+                b: 92
+            },
+            hsl: {
+                h: 0,
+                s: 53,
+                l: 58
+            }
+        },
+        {
+            value: '#A52A2A',
+            name: 'brown',
+            rgb: {
+                r: 165,
+                g: 42,
+                b: 42
+            },
+            hsl: {
+                h: 0,
+                s: 59,
+                l: 41
+            }
+        },
+        {
+            value: '#B22222',
+            name: 'firebrick',
+            rgb: {
+                r: 178,
+                g: 34,
+                b: 34
+            },
+            hsl: {
+                h: 0,
+                s: 68,
+                l: 42
+            }
+        },
+        {
+            value: '#F08080',
+            name: 'lightcoral',
+            rgb: {
+                r: 240,
+                g: 128,
+                b: 128
+            },
+            hsl: {
+                h: 0,
+                s: 79,
+                l: 72
+            }
+        },
+        {
+            value: '#800000',
+            name: 'maroon',
+            rgb: {
+                r: 128,
+                g: 0,
+                b: 0
+            },
+            hsl: {
+                h: 0,
+                s: 100,
+                l: 25
+            }
+        },
+        {
+            value: '#8B0000',
+            name: 'darkred',
+            rgb: {
+                r: 139,
+                g: 0,
+                b: 0
+            },
+            hsl: {
+                h: 0,
+                s: 100,
+                l: 27
+            }
+        },
+        {
+            value: '#FF0000',
+            name: 'red',
+            rgb: {
+                r: 255,
+                g: 0,
+                b: 0
+            },
+            hsl: {
+                h: 0,
+                s: 100,
+                l: 50
+            }
+        },
+        {
+            value: '#FFFAFA',
+            name: 'snow',
+            rgb: {
+                r: 255,
+                g: 250,
+                b: 250
+            },
+            hsl: {
+                h: 0,
+                s: 100,
+                l: 99
+            }
+        },
+        {
+            value: '#FFE4E1',
+            name: 'mistyrose',
+            rgb: {
+                r: 255,
+                g: 228,
+                b: 225
+            },
+            hsl: {
+                h: 6,
+                s: 100,
+                l: 94
+            }
+        },
+        {
+            value: '#FA8072',
+            name: 'salmon',
+            rgb: {
+                r: 250,
+                g: 128,
+                b: 114
+            },
+            hsl: {
+                h: 6,
+                s: 93,
+                l: 71
+            }
+        },
+        {
+            value: '#FF6347',
+            name: 'tomato',
+            rgb: {
+                r: 255,
+                g: 99,
+                b: 71
+            },
+            hsl: {
+                h: 9,
+                s: 100,
+                l: 64
+            }
+        },
+        {
+            value: '#E9967A',
+            name: 'darksalmon',
+            rgb: {
+                r: 233,
+                g: 150,
+                b: 122
+            },
+            hsl: {
+                h: 15,
+                s: 72,
+                l: 70
+            }
+        },
+        {
+            value: '#FF7F50',
+            name: 'coral',
+            rgb: {
+                r: 255,
+                g: 127,
+                b: 80
+            },
+            hsl: {
+                h: 16,
+                s: 100,
+                l: 66
+            }
+        },
+        {
+            value: '#FF4500',
+            name: 'orangered',
+            rgb: {
+                r: 255,
+                g: 69,
+                b: 0
+            },
+            hsl: {
+                h: 16,
+                s: 100,
+                l: 50
+            }
+        },
+        {
+            value: '#FFA07A',
+            name: 'lightsalmon',
+            rgb: {
+                r: 255,
+                g: 160,
+                b: 122
+            },
+            hsl: {
+                h: 17,
+                s: 100,
+                l: 74
+            }
+        },
+        {
+            value: '#A0522D',
+            name: 'sienna',
+            rgb: {
+                r: 160,
+                g: 82,
+                b: 45
+            },
+            hsl: {
+                h: 19,
+                s: 56,
+                l: 40
+            }
+        },
+        {
+            value: '#FFF5EE',
+            name: 'seashell',
+            rgb: {
+                r: 255,
+                g: 245,
+                b: 238
+            },
+            hsl: {
+                h: 25,
+                s: 100,
+                l: 97
+            }
+        },
+        {
+            value: '#D2691E',
+            name: 'chocolate',
+            rgb: {
+                r: 210,
+                g: 105,
+                b: 30
+            },
+            hsl: {
+                h: 25,
+                s: 75,
+                l: 47
+            }
+        },
+        {
+            value: '#8B4513',
+            name: 'saddlebrown',
+            rgb: {
+                r: 139,
+                g: 69,
+                b: 19
+            },
+            hsl: {
+                h: 25,
+                s: 76,
+                l: 31
+            }
+        },
+        {
+            value: '#F4A460',
+            name: 'sandybrown',
+            rgb: {
+                r: 244,
+                g: 164,
+                b: 96
+            },
+            hsl: {
+                h: 28,
+                s: 87,
+                l: 67
+            }
+        },
+        {
+            value: '#FFDAB9',
+            name: 'peachpuff',
+            rgb: {
+                r: 255,
+                g: 218,
+                b: 185
+            },
+            hsl: {
+                h: 28,
+                s: 100,
+                l: 86
+            }
+        },
+        {
+            value: '#CD853F',
+            name: 'peru',
+            rgb: {
+                r: 205,
+                g: 133,
+                b: 63
+            },
+            hsl: {
+                h: 30,
+                s: 59,
+                l: 53
+            }
+        },
+        {
+            value: '#FAF0E6',
+            name: 'linen',
+            rgb: {
+                r: 250,
+                g: 240,
+                b: 230
+            },
+            hsl: {
+                h: 30,
+                s: 67,
+                l: 94
+            }
+        },
+        {
+            value: '#FFE4C4',
+            name: 'bisque',
+            rgb: {
+                r: 255,
+                g: 228,
+                b: 196
+            },
+            hsl: {
+                h: 33,
+                s: 100,
+                l: 88
+            }
+        },
+        {
+            value: '#FF8C00',
+            name: 'darkorange',
+            rgb: {
+                r: 255,
+                g: 140,
+                b: 0
+            },
+            hsl: {
+                h: 33,
+                s: 100,
+                l: 50
+            }
+        },
+        {
+            value: '#DEB887',
+            name: 'burlywood',
+            rgb: {
+                r: 222,
+                g: 184,
+                b: 135
+            },
+            hsl: {
+                h: 34,
+                s: 57,
+                l: 70
+            }
+        },
+        {
+            value: '#FAEBD7',
+            name: 'antiquewhite',
+            rgb: {
+                r: 250,
+                g: 235,
+                b: 215
+            },
+            hsl: {
+                h: 34,
+                s: 78,
+                l: 91
+            }
+        },
+        {
+            value: '#D2B48C',
+            name: 'tan',
+            rgb: {
+                r: 210,
+                g: 180,
+                b: 140
+            },
+            hsl: {
+                h: 34,
+                s: 44,
+                l: 69
+            }
+        },
+        {
+            value: '#FFDEAD',
+            name: 'navajowhite',
+            rgb: {
+                r: 255,
+                g: 222,
+                b: 173
+            },
+            hsl: {
+                h: 36,
+                s: 100,
+                l: 84
+            }
+        },
+        {
+            value: '#FFEBCD',
+            name: 'blanchedalmond',
+            rgb: {
+                r: 255,
+                g: 235,
+                b: 205
+            },
+            hsl: {
+                h: 36,
+                s: 100,
+                l: 90
+            }
+        },
+        {
+            value: '#FFEFD5',
+            name: 'papayawhip',
+            rgb: {
+                r: 255,
+                g: 239,
+                b: 213
+            },
+            hsl: {
+                h: 37,
+                s: 100,
+                l: 92
+            }
+        },
+        {
+            value: '#FFE4B5',
+            name: 'moccasin',
+            rgb: {
+                r: 255,
+                g: 228,
+                b: 181
+            },
+            hsl: {
+                h: 38,
+                s: 100,
+                l: 85
+            }
+        },
+        {
+            value: '#FFA500',
+            name: 'orange',
+            rgb: {
+                r: 255,
+                g: 165,
+                b: 0
+            },
+            hsl: {
+                h: 39,
+                s: 100,
+                l: 50
+            }
+        },
+        {
+            value: '#F5DEB3',
+            name: 'wheat',
+            rgb: {
+                r: 245,
+                g: 222,
+                b: 179
+            },
+            hsl: {
+                h: 39,
+                s: 77,
+                l: 83
+            }
+        },
+        {
+            value: '#FDF5E6',
+            name: 'oldlace',
+            rgb: {
+                r: 253,
+                g: 245,
+                b: 230
+            },
+            hsl: {
+                h: 39,
+                s: 85,
+                l: 95
+            }
+        },
+        {
+            value: '#FFFAF0',
+            name: 'floralwhite',
+            rgb: {
+                r: 255,
+                g: 250,
+                b: 240
+            },
+            hsl: {
+                h: 40,
+                s: 100,
+                l: 97
+            }
+        },
+        {
+            value: '#B8860B',
+            name: 'darkgoldenrod',
+            rgb: {
+                r: 184,
+                g: 134,
+                b: 11
+            },
+            hsl: {
+                h: 43,
+                s: 89,
+                l: 38
+            }
+        },
+        {
+            value: '#DAA520',
+            name: 'goldenrod',
+            rgb: {
+                r: 218,
+                g: 165,
+                b: 32
+            },
+            hsl: {
+                h: 43,
+                s: 74,
+                l: 49
+            }
+        },
+        {
+            value: '#FFF8DC',
+            name: 'cornsilk',
+            rgb: {
+                r: 255,
+                g: 248,
+                b: 220
+            },
+            hsl: {
+                h: 48,
+                s: 100,
+                l: 93
+            }
+        },
+        {
+            value: '#FFD700',
+            name: 'gold',
+            rgb: {
+                r: 255,
+                g: 215,
+                b: 0
+            },
+            hsl: {
+                h: 51,
+                s: 100,
+                l: 50
+            }
+        },
+        {
+            value: '#FFFACD',
+            name: 'lemonchiffon',
+            rgb: {
+                r: 255,
+                g: 250,
+                b: 205
+            },
+            hsl: {
+                h: 54,
+                s: 100,
+                l: 90
+            }
+        },
+        {
+            value: '#F0E68C',
+            name: 'khaki',
+            rgb: {
+                r: 240,
+                g: 230,
+                b: 140
+            },
+            hsl: {
+                h: 54,
+                s: 77,
+                l: 75
+            }
+        },
+        {
+            value: '#EEE8AA',
+            name: 'palegoldenrod',
+            rgb: {
+                r: 238,
+                g: 232,
+                b: 170
+            },
+            hsl: {
+                h: 55,
+                s: 67,
+                l: 80
+            }
+        },
+        {
+            value: '#BDB76B',
+            name: 'darkkhaki',
+            rgb: {
+                r: 189,
+                g: 183,
+                b: 107
+            },
+            hsl: {
+                h: 56,
+                s: 38,
+                l: 58
+            }
+        },
+        {
+            value: '#F5F5DC',
+            name: 'beige',
+            rgb: {
+                r: 245,
+                g: 245,
+                b: 220
+            },
+            hsl: {
+                h: 60,
+                s: 56,
+                l: 91
+            }
+        },
+        {
+            value: '#FAFAD2',
+            name: 'lightgoldenrodyellow',
+            rgb: {
+                r: 250,
+                g: 250,
+                b: 210
+            },
+            hsl: {
+                h: 60,
+                s: 80,
+                l: 90
+            }
+        },
+        {
+            value: '#808000',
+            name: 'olive',
+            rgb: {
+                r: 128,
+                g: 128,
+                b: 0
+            },
+            hsl: {
+                h: 60,
+                s: 100,
+                l: 25
+            }
+        },
+        {
+            value: '#FFFF00',
+            name: 'yellow',
+            rgb: {
+                r: 255,
+                g: 255,
+                b: 0
+            },
+            hsl: {
+                h: 60,
+                s: 100,
+                l: 50
+            }
+        },
+        {
+            value: '#FFFFE0',
+            name: 'lightyellow',
+            rgb: {
+                r: 255,
+                g: 255,
+                b: 224
+            },
+            hsl: {
+                h: 60,
+                s: 100,
+                l: 94
+            }
+        },
+        {
+            value: '#FFFFF0',
+            name: 'ivory',
+            rgb: {
+                r: 255,
+                g: 255,
+                b: 240
+            },
+            hsl: {
+                h: 60,
+                s: 100,
+                l: 97
+            }
+        },
+        {
+            value: '#6B8E23',
+            name: 'olivedrab',
+            rgb: {
+                r: 107,
+                g: 142,
+                b: 35
+            },
+            hsl: {
+                h: 80,
+                s: 60,
+                l: 35
+            }
+        },
+        {
+            value: '#9ACD32',
+            name: 'yellowgreen',
+            rgb: {
+                r: 154,
+                g: 205,
+                b: 50
+            },
+            hsl: {
+                h: 80,
+                s: 61,
+                l: 50
+            }
+        },
+        {
+            value: '#556B2F',
+            name: 'darkolivegreen',
+            rgb: {
+                r: 85,
+                g: 107,
+                b: 47
+            },
+            hsl: {
+                h: 82,
+                s: 39,
+                l: 30
+            }
+        },
+        {
+            value: '#ADFF2F',
+            name: 'greenyellow',
+            rgb: {
+                r: 173,
+                g: 255,
+                b: 47
+            },
+            hsl: {
+                h: 84,
+                s: 100,
+                l: 59
+            }
+        },
+        {
+            value: '#7FFF00',
+            name: 'chartreuse',
+            rgb: {
+                r: 127,
+                g: 255,
+                b: 0
+            },
+            hsl: {
+                h: 90,
+                s: 100,
+                l: 50
+            }
+        },
+        {
+            value: '#7CFC00',
+            name: 'lawngreen',
+            rgb: {
+                r: 124,
+                g: 252,
+                b: 0
+            },
+            hsl: {
+                h: 90,
+                s: 100,
+                l: 49
+            }
+        },
+        {
+            value: '#8FBC8F',
+            name: 'darkseagreen',
+            rgb: {
+                r: 143,
+                g: 188,
+                b: 143
+            },
+            hsl: {
+                h: 120,
+                s: 25,
+                l: 65
+            }
+        },
+        {
+            value: '#228B22',
+            name: 'forestgreen',
+            rgb: {
+                r: 34,
+                g: 139,
+                b: 34
+            },
+            hsl: {
+                h: 120,
+                s: 61,
+                l: 34
+            }
+        },
+        {
+            value: '#32CD32',
+            name: 'limegreen',
+            rgb: {
+                r: 50,
+                g: 205,
+                b: 50
+            },
+            hsl: {
+                h: 120,
+                s: 61,
+                l: 50
+            }
+        },
+        {
+            value: '#90EE90',
+            name: 'lightgreen',
+            rgb: {
+                r: 144,
+                g: 238,
+                b: 144
+            },
+            hsl: {
+                h: 120,
+                s: 73,
+                l: 75
+            }
+        },
+        {
+            value: '#98FB98',
+            name: 'palegreen',
+            rgb: {
+                r: 152,
+                g: 251,
+                b: 152
+            },
+            hsl: {
+                h: 120,
+                s: 93,
+                l: 79
+            }
+        },
+        {
+            value: '#006400',
+            name: 'darkgreen',
+            rgb: {
+                r: 0,
+                g: 100,
+                b: 0
+            },
+            hsl: {
+                h: 120,
+                s: 100,
+                l: 20
+            }
+        },
+        {
+            value: '#008000',
+            name: 'green',
+            rgb: {
+                r: 0,
+                g: 128,
+                b: 0
+            },
+            hsl: {
+                h: 120,
+                s: 100,
+                l: 25
+            }
+        },
+        {
+            value: '#00FF00',
+            name: 'lime',
+            rgb: {
+                r: 0,
+                g: 255,
+                b: 0
+            },
+            hsl: {
+                h: 120,
+                s: 100,
+                l: 50
+            }
+        },
+        {
+            value: '#F0FFF0',
+            name: 'honeydew',
+            rgb: {
+                r: 240,
+                g: 255,
+                b: 240
+            },
+            hsl: {
+                h: 120,
+                s: 100,
+                l: 97
+            }
+        },
+        {
+            value: '#2E8B57',
+            name: 'seagreen',
+            rgb: {
+                r: 46,
+                g: 139,
+                b: 87
+            },
+            hsl: {
+                h: 146,
+                s: 50,
+                l: 36
+            }
+        },
+        {
+            value: '#3CB371',
+            name: 'mediumseagreen',
+            rgb: {
+                r: 60,
+                g: 179,
+                b: 113
+            },
+            hsl: {
+                h: 147,
+                s: 50,
+                l: 47
+            }
+        },
+        {
+            value: '#00FF7F',
+            name: 'springgreen',
+            rgb: {
+                r: 0,
+                g: 255,
+                b: 127
+            },
+            hsl: {
+                h: 150,
+                s: 100,
+                l: 50
+            }
+        },
+        {
+            value: '#F5FFFA',
+            name: 'mintcream',
+            rgb: {
+                r: 245,
+                g: 255,
+                b: 250
+            },
+            hsl: {
+                h: 150,
+                s: 100,
+                l: 98
+            }
+        },
+        {
+            value: '#00FA9A',
+            name: 'mediumspringgreen',
+            rgb: {
+                r: 0,
+                g: 250,
+                b: 154
+            },
+            hsl: {
+                h: 157,
+                s: 100,
+                l: 49
+            }
+        },
+        {
+            value: '#66CDAA',
+            name: 'mediumaquamarine',
+            rgb: {
+                r: 102,
+                g: 205,
+                b: 170
+            },
+            hsl: {
+                h: 160,
+                s: 51,
+                l: 60
+            }
+        },
+        {
+            value: '#7FFFD4',
+            name: 'aquamarine',
+            rgb: {
+                r: 127,
+                g: 255,
+                b: 212
+            },
+            hsl: {
+                h: 160,
+                s: 100,
+                l: 75
+            }
+        },
+        {
+            value: '#40E0D0',
+            name: 'turquoise',
+            rgb: {
+                r: 64,
+                g: 224,
+                b: 208
+            },
+            hsl: {
+                h: 174,
+                s: 72,
+                l: 56
+            }
+        },
+        {
+            value: '#20B2AA',
+            name: 'lightseagreen',
+            rgb: {
+                r: 32,
+                g: 178,
+                b: 170
+            },
+            hsl: {
+                h: 177,
+                s: 70,
+                l: 41
+            }
+        },
+        {
+            value: '#48D1CC',
+            name: 'mediumturquoise',
+            rgb: {
+                r: 72,
+                g: 209,
+                b: 204
+            },
+            hsl: {
+                h: 178,
+                s: 60,
+                l: 55
+            }
+        },
+        {
+            value: '#2F4F4F',
+            name: 'darkslategray',
+            rgb: {
+                r: 47,
+                g: 79,
+                b: 79
+            },
+            hsl: {
+                h: 180,
+                s: 25,
+                l: 25
+            }
+        },
+        {
+            value: '#2F4F4F',
+            name: 'darkslategrey',
+            rgb: {
+                r: 47,
+                g: 79,
+                b: 79
+            },
+            hsl: {
+                h: 180,
+                s: 25,
+                l: 25
+            }
+        },
+        {
+            value: '#AFEEEE',
+            name: 'paleturquoise',
+            rgb: {
+                r: 175,
+                g: 238,
+                b: 238
+            },
+            hsl: {
+                h: 180,
+                s: 65,
+                l: 81
+            }
+        },
+        {
+            value: '#008080',
+            name: 'teal',
+            rgb: {
+                r: 0,
+                g: 128,
+                b: 128
+            },
+            hsl: {
+                h: 180,
+                s: 100,
+                l: 25
+            }
+        },
+        {
+            value: '#008B8B',
+            name: 'darkcyan',
+            rgb: {
+                r: 0,
+                g: 139,
+                b: 139
+            },
+            hsl: {
+                h: 180,
+                s: 100,
+                l: 27
+            }
+        },
+        {
+            value: '#00FFFF',
+            name: 'aqua',
+            rgb: {
+                r: 0,
+                g: 255,
+                b: 255
+            },
+            hsl: {
+                h: 180,
+                s: 100,
+                l: 50
+            }
+        },
+        {
+            value: '#00FFFF',
+            name: 'cyan',
+            rgb: {
+                r: 0,
+                g: 255,
+                b: 255
+            },
+            hsl: {
+                h: 180,
+                s: 100,
+                l: 50
+            }
+        },
+        {
+            value: '#E0FFFF',
+            name: 'lightcyan',
+            rgb: {
+                r: 224,
+                g: 255,
+                b: 255
+            },
+            hsl: {
+                h: 180,
+                s: 100,
+                l: 94
+            }
+        },
+        {
+            value: '#F0FFFF',
+            name: 'azure',
+            rgb: {
+                r: 240,
+                g: 255,
+                b: 255
+            },
+            hsl: {
+                h: 180,
+                s: 100,
+                l: 97
+            }
+        },
+        {
+            value: '#00CED1',
+            name: 'darkturquoise',
+            rgb: {
+                r: 0,
+                g: 206,
+                b: 209
+            },
+            hsl: {
+                h: 181,
+                s: 100,
+                l: 41
+            }
+        },
+        {
+            value: '#5F9EA0',
+            name: 'cadetblue',
+            rgb: {
+                r: 95,
+                g: 158,
+                b: 160
+            },
+            hsl: {
+                h: 182,
+                s: 25,
+                l: 50
+            }
+        },
+        {
+            value: '#B0E0E6',
+            name: 'powderblue',
+            rgb: {
+                r: 176,
+                g: 224,
+                b: 230
+            },
+            hsl: {
+                h: 187,
+                s: 52,
+                l: 80
+            }
+        },
+        {
+            value: '#ADD8E6',
+            name: 'lightblue',
+            rgb: {
+                r: 173,
+                g: 216,
+                b: 230
+            },
+            hsl: {
+                h: 195,
+                s: 53,
+                l: 79
+            }
+        },
+        {
+            value: '#00BFFF',
+            name: 'deepskyblue',
+            rgb: {
+                r: 0,
+                g: 191,
+                b: 255
+            },
+            hsl: {
+                h: 195,
+                s: 100,
+                l: 50
+            }
+        },
+        {
+            value: '#87CEEB',
+            name: 'skyblue',
+            rgb: {
+                r: 135,
+                g: 206,
+                b: 235
+            },
+            hsl: {
+                h: 197,
+                s: 71,
+                l: 73
+            }
+        },
+        {
+            value: '#87CEFA',
+            name: 'lightskyblue',
+            rgb: {
+                r: 135,
+                g: 206,
+                b: 250
+            },
+            hsl: {
+                h: 203,
+                s: 92,
+                l: 75
+            }
+        },
+        {
+            value: '#4682B4',
+            name: 'steelblue',
+            rgb: {
+                r: 70,
+                g: 130,
+                b: 180
+            },
+            hsl: {
+                h: 207,
+                s: 44,
+                l: 49
+            }
+        },
+        {
+            value: '#F0F8FF',
+            name: 'aliceblue',
+            rgb: {
+                r: 240,
+                g: 248,
+                b: 255
+            },
+            hsl: {
+                h: 208,
+                s: 100,
+                l: 97
+            }
+        },
+        {
+            value: '#1E90FF',
+            name: 'dodgerblue',
+            rgb: {
+                r: 30,
+                g: 144,
+                b: 255
+            },
+            hsl: {
+                h: 210,
+                s: 100,
+                l: 56
+            }
+        },
+        {
+            value: '#708090',
+            name: 'slategray',
+            rgb: {
+                r: 112,
+                g: 128,
+                b: 144
+            },
+            hsl: {
+                h: 210,
+                s: 13,
+                l: 50
+            }
+        },
+        {
+            value: '#708090',
+            name: 'slategrey',
+            rgb: {
+                r: 112,
+                g: 128,
+                b: 144
+            },
+            hsl: {
+                h: 210,
+                s: 13,
+                l: 50
+            }
+        },
+        {
+            value: '#778899',
+            name: 'lightslategray',
+            rgb: {
+                r: 119,
+                g: 136,
+                b: 153
+            },
+            hsl: {
+                h: 210,
+                s: 14,
+                l: 53
+            }
+        },
+        {
+            value: '#778899',
+            name: 'lightslategrey',
+            rgb: {
+                r: 119,
+                g: 136,
+                b: 153
+            },
+            hsl: {
+                h: 210,
+                s: 14,
+                l: 53
+            }
+        },
+        {
+            value: '#B0C4DE',
+            name: 'lightsteelblue',
+            rgb: {
+                r: 176,
+                g: 196,
+                b: 222
+            },
+            hsl: {
+                h: 214,
+                s: 41,
+                l: 78
+            }
+        },
+        {
+            value: '#6495ED',
+            name: 'cornflower',
+            rgb: {
+                r: 100,
+                g: 149,
+                b: 237
+            },
+            hsl: {
+                h: 219,
+                s: 79,
+                l: 66
+            }
+        },
+        {
+            value: '#4169E1',
+            name: 'royalblue',
+            rgb: {
+                r: 65,
+                g: 105,
+                b: 225
+            },
+            hsl: {
+                h: 225,
+                s: 73,
+                l: 57
+            }
+        },
+        {
+            value: '#191970',
+            name: 'midnightblue',
+            rgb: {
+                r: 25,
+                g: 25,
+                b: 112
+            },
+            hsl: {
+                h: 240,
+                s: 64,
+                l: 27
+            }
+        },
+        {
+            value: '#E6E6FA',
+            name: 'lavender',
+            rgb: {
+                r: 230,
+                g: 230,
+                b: 250
+            },
+            hsl: {
+                h: 240,
+                s: 67,
+                l: 94
+            }
+        },
+        {
+            value: '#000080',
+            name: 'navy',
+            rgb: {
+                r: 0,
+                g: 0,
+                b: 128
+            },
+            hsl: {
+                h: 240,
+                s: 100,
+                l: 25
+            }
+        },
+        {
+            value: '#00008B',
+            name: 'darkblue',
+            rgb: {
+                r: 0,
+                g: 0,
+                b: 139
+            },
+            hsl: {
+                h: 240,
+                s: 100,
+                l: 27
+            }
+        },
+        {
+            value: '#0000CD',
+            name: 'mediumblue',
+            rgb: {
+                r: 0,
+                g: 0,
+                b: 205
+            },
+            hsl: {
+                h: 240,
+                s: 100,
+                l: 40
+            }
+        },
+        {
+            value: '#0000FF',
+            name: 'blue',
+            rgb: {
+                r: 0,
+                g: 0,
+                b: 255
+            },
+            hsl: {
+                h: 240,
+                s: 100,
+                l: 50
+            }
+        },
+        {
+            value: '#F8F8FF',
+            name: 'ghostwhite',
+            rgb: {
+                r: 248,
+                g: 248,
+                b: 255
+            },
+            hsl: {
+                h: 240,
+                s: 100,
+                l: 99
+            }
+        },
+        {
+            value: '#6A5ACD',
+            name: 'slateblue',
+            rgb: {
+                r: 106,
+                g: 90,
+                b: 205
+            },
+            hsl: {
+                h: 248,
+                s: 53,
+                l: 58
+            }
+        },
+        {
+            value: '#483D8B',
+            name: 'darkslateblue',
+            rgb: {
+                r: 72,
+                g: 61,
+                b: 139
+            },
+            hsl: {
+                h: 248,
+                s: 39,
+                l: 39
+            }
+        },
+        {
+            value: '#7B68EE',
+            name: 'mediumslateblue',
+            rgb: {
+                r: 123,
+                g: 104,
+                b: 238
+            },
+            hsl: {
+                h: 249,
+                s: 80,
+                l: 67
+            }
+        },
+        {
+            value: '#9370DB',
+            name: 'mediumpurple',
+            rgb: {
+                r: 147,
+                g: 112,
+                b: 219
+            },
+            hsl: {
+                h: 260,
+                s: 60,
+                l: 65
+            }
+        },
+        {
+            value: '#8A2BE2',
+            name: 'blueviolet',
+            rgb: {
+                r: 138,
+                g: 43,
+                b: 226
+            },
+            hsl: {
+                h: 271,
+                s: 76,
+                l: 53
+            }
+        },
+        {
+            value: '#4B0082',
+            name: 'indigo',
+            rgb: {
+                r: 75,
+                g: 0,
+                b: 130
+            },
+            hsl: {
+                h: 275,
+                s: 100,
+                l: 25
+            }
+        },
+        {
+            value: '#9932CC',
+            name: 'darkorchid',
+            rgb: {
+                r: 153,
+                g: 50,
+                b: 204
+            },
+            hsl: {
+                h: 280,
+                s: 61,
+                l: 50
+            }
+        },
+        {
+            value: '#9400D3',
+            name: 'darkviolet',
+            rgb: {
+                r: 148,
+                g: 0,
+                b: 211
+            },
+            hsl: {
+                h: 282,
+                s: 100,
+                l: 41
+            }
+        },
+        {
+            value: '#BA55D3',
+            name: 'mediumorchid',
+            rgb: {
+                r: 186,
+                g: 85,
+                b: 211
+            },
+            hsl: {
+                h: 288,
+                s: 59,
+                l: 58
+            }
+        },
+        {
+            value: '#D8BFD8',
+            name: 'thistle',
+            rgb: {
+                r: 216,
+                g: 191,
+                b: 216
+            },
+            hsl: {
+                h: 300,
+                s: 24,
+                l: 80
+            }
+        },
+        {
+            value: '#DDA0DD',
+            name: 'plum',
+            rgb: {
+                r: 221,
+                g: 160,
+                b: 221
+            },
+            hsl: {
+                h: 300,
+                s: 47,
+                l: 75
+            }
+        },
+        {
+            value: '#EE82EE',
+            name: 'violet',
+            rgb: {
+                r: 238,
+                g: 130,
+                b: 238
+            },
+            hsl: {
+                h: 300,
+                s: 76,
+                l: 72
+            }
+        },
+        {
+            value: '#800080',
+            name: 'purple',
+            rgb: {
+                r: 128,
+                g: 0,
+                b: 128
+            },
+            hsl: {
+                h: 300,
+                s: 100,
+                l: 25
+            }
+        },
+        {
+            value: '#8B008B',
+            name: 'darkmagenta',
+            rgb: {
+                r: 139,
+                g: 0,
+                b: 139
+            },
+            hsl: {
+                h: 300,
+                s: 100,
+                l: 27
+            }
+        },
+        {
+            value: '#FF00FF',
+            name: 'fuchsia',
+            rgb: {
+                r: 255,
+                g: 0,
+                b: 255
+            },
+            hsl: {
+                h: 300,
+                s: 100,
+                l: 50
+            }
+        },
+        {
+            value: '#FF00FF',
+            name: 'magenta',
+            rgb: {
+                r: 255,
+                g: 0,
+                b: 255
+            },
+            hsl: {
+                h: 300,
+                s: 100,
+                l: 50
+            }
+        },
+        {
+            value: '#DA70D6',
+            name: 'orchid',
+            rgb: {
+                r: 218,
+                g: 112,
+                b: 214
+            },
+            hsl: {
+                h: 302,
+                s: 59,
+                l: 65
+            }
+        },
+        {
+            value: '#C71585',
+            name: 'mediumvioletred',
+            rgb: {
+                r: 199,
+                g: 21,
+                b: 133
+            },
+            hsl: {
+                h: 322,
+                s: 81,
+                l: 43
+            }
+        },
+        {
+            value: '#FF1493',
+            name: 'deeppink',
+            rgb: {
+                r: 255,
+                g: 20,
+                b: 147
+            },
+            hsl: {
+                h: 328,
+                s: 100,
+                l: 54
+            }
+        },
+        {
+            value: '#FF69B4',
+            name: 'hotpink',
+            rgb: {
+                r: 255,
+                g: 105,
+                b: 180
+            },
+            hsl: {
+                h: 330,
+                s: 100,
+                l: 71
+            }
+        },
+        {
+            value: '#FFF0F5',
+            name: 'lavenderblush',
+            rgb: {
+                r: 255,
+                g: 240,
+                b: 245
+            },
+            hsl: {
+                h: 340,
+                s: 100,
+                l: 97
+            }
+        },
+        {
+            value: '#DB7093',
+            name: 'palevioletred',
+            rgb: {
+                r: 219,
+                g: 112,
+                b: 147
+            },
+            hsl: {
+                h: 340,
+                s: 60,
+                l: 65
+            }
+        },
+        {
+            value: '#DC143C',
+            name: 'crimson',
+            rgb: {
+                r: 220,
+                g: 20,
+                b: 60
+            },
+            hsl: {
+                h: 348,
+                s: 83,
+                l: 47
+            }
+        },
+        {
+            value: '#FFC0CB',
+            name: 'pink',
+            rgb: {
+                r: 255,
+                g: 192,
+                b: 203
+            },
+            hsl: {
+                h: 350,
+                s: 100,
+                l: 88
+            }
+        },
+        {
+            value: '#FFB6C1',
+            name: 'lightpink',
+            rgb: {
+                r: 255,
+                g: 182,
+                b: 193
+            },
+            hsl: {
+                h: 351,
+                s: 100,
+                l: 86
+            }
+        }
+    ];
+    for (const color of X11_CSS3) {
+        Object.freeze(color);
+    }
+    const CACHE_COLORDATA = {};
+    const CHAR_HEX = '0123456789ABCDEF';
     const REGEXP_HEX = /[A-Za-z\d]{3,}/;
     const REGEXP_RGBA = /rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/;
-    const HSL_SORTED = [];
-    for (const name in X11_CSS3) {
-        const x11 = X11_CSS3[name];
-        x11.name = name;
-        const rgba = convertRGBA(x11.value);
-        if (rgba) {
-            x11.rgba = rgba;
-            x11.hsl = convertHSL(x11.rgba);
-            HSL_SORTED.push(x11);
-        }
-    }
-    HSL_SORTED.sort(sortHSL);
-    function convertHSL({ r = 0, g = 0, b = 0 }) {
-        r /= 255;
-        g /= 255;
-        b /= 255;
-        const min = Math.min(r, g, b);
-        const max = Math.max(r, g, b);
-        let h = (max + min) / 2;
-        let s = h;
-        const l = h;
-        if (max === min) {
-            h = 0;
-            s = 0;
-        }
-        else {
-            const d = max - min;
-            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-            switch (max) {
-                case r:
-                    h = (g - b) / d + (g < b ? 6 : 0);
-                    break;
-                case g:
-                    h = (b - r) / d + 2;
-                    break;
-                case b:
-                    h = (r - g) / d + 4;
-                    break;
-            }
-            h /= 6;
-        }
-        return {
-            h: h * 360,
-            s: s * 100,
-            l: l * 100
-        };
-    }
-    function sortHSL(a, b) {
-        if (a.hsl && b.hsl) {
-            let c = a.hsl.h;
-            let d = b.hsl.h;
-            if (c === d) {
-                c = a.hsl.s;
-                d = b.hsl.s;
-                if (c === d) {
-                    c = a.hsl.l;
-                    d = b.hsl.l;
-                }
-            }
-            return c >= d ? 1 : -1;
-        }
-        return 0;
-    }
-    function formatRGBA(rgba) {
-        return `rgb${rgba.a < 255 ? 'a' : ''}(${rgba.r}, ${rgba.g}, ${rgba.b}${rgba.a < 255 ? `, ${(rgba.a / 255).toPrecision(2)}` : ''})`;
-    }
-    function convertAlpha$1(value) {
-        return parseFloat(value) < 1 ? convertHex(255 * parseFloat(value)) : 'FF';
-    }
-    function getColorByName(value) {
-        for (const color in X11_CSS3) {
-            if (color.toLowerCase() === value.trim().toLowerCase()) {
-                return X11_CSS3[color];
+    const parseOpacity = (value) => parseFloat(value.trim() || '1') * 255;
+    function findColorName(value) {
+        for (const color of X11_CSS3) {
+            if (color.name === value.toLowerCase()) {
+                return color;
             }
         }
         return undefined;
     }
-    function getColorByShade(value) {
-        const sorted = HSL_SORTED.slice(0);
-        let index = sorted.findIndex(item => item.value === value);
-        if (index !== -1) {
-            return sorted[index];
-        }
-        else {
-            const rgb = convertRGBA(value);
-            if (rgb) {
-                const hsl = convertHSL(rgb);
-                if (hsl) {
-                    sorted.push({
-                        name: '',
-                        value: '',
-                        hsl,
-                        rgba: { r: -1, g: -1, b: -1, a: 1 },
-                    });
-                    sorted.sort(sortHSL);
-                    index = sorted.findIndex(item => item.name === '');
-                    return sorted[Math.min(index + 1, sorted.length - 1)];
+    function findColorShade(value) {
+        const rgba = parseRGBA(value);
+        if (rgba) {
+            const hsl = convertHSLA(rgba);
+            const result = [];
+            let baseline = -1;
+            for (let i = 0; i < X11_CSS3.length; i++) {
+                const color = X11_CSS3[i];
+                if (color.value === value) {
+                    return color;
+                }
+                else if (baseline !== -1) {
+                    if (baseline === color.hsl.h) {
+                        result.push(color);
+                    }
+                }
+                else if (hsl.h >= color.hsl.h) {
+                    result.push(color);
+                    baseline = color.hsl.h;
                 }
             }
-            return undefined;
+            if (result.length === 1) {
+                return result[0];
+            }
+            else if (result.length > 1) {
+                const total = hsl.l + hsl.s;
+                const combined = [];
+                for (const color of result) {
+                    combined.push(Math.abs(total - (color.hsl.l + color.hsl.s)));
+                }
+                let nearest = Number.POSITIVE_INFINITY;
+                let index = -1;
+                for (let i = 0; i < combined.length; i++) {
+                    if (combined[i] < nearest) {
+                        nearest = combined[i];
+                        index = i;
+                    }
+                }
+                return result[index];
+            }
+            else {
+                return X11_CSS3[X11_CSS3.length - 1];
+            }
         }
+        return undefined;
     }
-    function convertHex(...values) {
+    function parseColor(value, opacity = '1', transparency = false) {
+        if (value && (value !== 'transparent' || transparency)) {
+            if (CACHE_COLORDATA[value]) {
+                return CACHE_COLORDATA[value];
+            }
+            let name = '';
+            let rgba;
+            if (value.charAt(0) === '#') {
+                rgba = parseRGBA(value);
+            }
+            else if (value.startsWith('rgb')) {
+                const match = value.match(REGEXP_RGBA);
+                if (match) {
+                    rgba = {
+                        r: parseInt(match[1]),
+                        g: parseInt(match[2]),
+                        b: parseInt(match[3]),
+                        a: match[4] ? parseFloat(match[4]) * 255 : parseOpacity(opacity)
+                    };
+                }
+            }
+            else {
+                switch (value) {
+                    case 'transparent':
+                        rgba = { r: 0, g: 0, b: 0, a: 0 };
+                        name = 'transparent';
+                        break;
+                    case 'initial':
+                        rgba = { r: 0, g: 0, b: 0, a: 255 };
+                        name = 'black';
+                        break;
+                    default:
+                        const color = findColorName(value);
+                        if (color) {
+                            rgba = Object.assign({}, color.rgb, { a: parseOpacity(opacity) });
+                            name = value;
+                        }
+                        break;
+                }
+            }
+            if (rgba && (rgba.a > 0 || transparency)) {
+                const hexAsString = getHexCode(rgba.r, rgba.g, rgba.b);
+                const alphaAsString = getHexCode(rgba.a);
+                const alpha = rgba.a / 255;
+                CACHE_COLORDATA[value] = {
+                    name,
+                    value: `#${hexAsString}`,
+                    valueAsRGBA: `#${hexAsString + alphaAsString}`,
+                    valueAsARGB: `#${alphaAsString + hexAsString}`,
+                    rgba,
+                    hsl: convertHSLA(rgba),
+                    opacity: alpha,
+                    semiopaque: alpha > 0 && alpha < 1,
+                    transparent: alpha === 0
+                };
+                Object.freeze(CACHE_COLORDATA[value]);
+                return CACHE_COLORDATA[value];
+            }
+        }
+        return undefined;
+    }
+    function reduceColor(value, percent) {
+        const rgba = parseRGBA(value);
+        if (rgba) {
+            const base = percent < 0 ? 0 : 255;
+            percent = Math.abs(percent);
+            return parseColor(formatRGBA({
+                r: (rgba.r + Math.round((base - rgba.r) * percent)) % 255,
+                g: (rgba.g + Math.round((base - rgba.g) * percent)) % 255,
+                b: (rgba.b + Math.round((base - rgba.b) * percent)) % 255,
+                a: rgba.a
+            }));
+        }
+        return undefined;
+    }
+    function getHexCode(...values) {
         let output = '';
         for (const value of values) {
-            let rgb = typeof value === 'string' ? parseInt(value) : value;
+            const rgb = Math.max(0, Math.min(value, 255));
             if (isNaN(rgb)) {
-                return '00';
+                output += '00';
             }
-            rgb = Math.max(0, Math.min(rgb, 255));
-            output += HEX_CHAR.charAt((rgb - (rgb % 16)) / 16) + HEX_CHAR.charAt(rgb % 16);
+            else {
+                output += CHAR_HEX.charAt((rgb - (rgb % 16)) / 16) + CHAR_HEX.charAt(rgb % 16);
+            }
         }
         return output;
     }
-    function convertRGBA(value) {
+    function convertHex(value) {
+        return `#${getHexCode(value.r, value.g, value.b) + (value.a < 255 ? getHexCode(value.a) : '')}`;
+    }
+    function parseRGBA(value) {
         value = value.replace(/#/g, '').trim();
         if (REGEXP_HEX.test(value)) {
             let a = 255;
@@ -1109,75 +3238,641 @@
         }
         return undefined;
     }
-    function parseRGBA(value, opacity = '1', transparency = false) {
-        if (value && (value !== 'transparent' || transparency)) {
-            if (opacity.trim() === '') {
-                opacity = '1';
-            }
-            if (value.charAt(0) === '#') {
-                const rgba = convertRGBA(value);
-                if (rgba) {
-                    value = formatRGBA(rgba);
-                }
-            }
-            else if (value === 'initial') {
-                value = formatRGBA({ r: 0, g: 0, b: 0, a: 1 });
-            }
-            else if (value === 'transparent') {
-                value = formatRGBA({ r: 0, g: 0, b: 0, a: 0 });
-            }
-            else if (!value.startsWith('rgb')) {
-                const color = getColorByName(value);
-                if (color && color.rgba) {
-                    color.rgba.a = parseFloat(convertAlpha$1(opacity));
-                    value = formatRGBA(color.rgba);
-                }
-            }
-            const match = value.match(REGEXP_RGBA);
-            if (match && match.length >= 4 && (match[4] === undefined || parseFloat(match[4]) > 0 || transparency)) {
-                if (match[4] === undefined) {
-                    match[4] = parseFloat(opacity).toPrecision(2);
-                }
-                const valueHEX = convertHex(match[1]) + convertHex(match[2]) + convertHex(match[3]);
-                const valueAlpha = convertAlpha$1(match[4]);
-                const valueRGBA = `#${valueHEX + valueAlpha}`;
-                const alpha = parseFloat(match[4]);
-                return {
-                    valueRGB: `#${valueHEX}`,
-                    valueRGBA,
-                    valueARGB: `#${valueAlpha + valueHEX}`,
-                    alpha,
-                    rgba: convertRGBA(valueRGBA),
-                    opaque: alpha < 1,
-                    visible: alpha > 0
-                };
-            }
+    function convertHSLA(value) {
+        const r = value.r / 255;
+        const g = value.g / 255;
+        const b = value.b / 255;
+        const min = Math.min(r, g, b);
+        const max = Math.max(r, g, b);
+        let h = (max + min) / 2;
+        let s = h;
+        const l = h;
+        if (max === min) {
+            h = 0;
+            s = 0;
         }
-        return undefined;
+        else {
+            const d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            switch (max) {
+                case r:
+                    h = (g - b) / d + (g < b ? 6 : 0);
+                    break;
+                case g:
+                    h = (b - r) / d + 2;
+                    break;
+                case b:
+                    h = (r - g) / d + 4;
+                    break;
+            }
+            h /= 6;
+        }
+        return {
+            h: Math.round(h * 360),
+            s: Math.round(s * 100),
+            l: Math.round(l * 100),
+            a: value.a / 255
+        };
     }
-    function reduceRGBA(value, percent) {
-        const rgba = convertRGBA(value);
-        if (rgba) {
-            const base = percent < 0 ? 0 : 255;
-            percent = Math.abs(percent);
-            rgba.r = Math.round((base - rgba.r) * percent) + rgba.r;
-            rgba.g = Math.round((base - rgba.g) * percent) + rgba.g;
-            rgba.b = Math.round((base - rgba.b) * percent) + rgba.b;
-            return parseRGBA(formatRGBA(rgba));
-        }
-        return undefined;
+    function formatRGBA(value) {
+        return `rgb${value.a < 255 ? 'a' : ''}(${value.r}, ${value.g}, ${value.b}${value.a < 255 ? `, ${(value.a / 255).toPrecision(2)}` : ''})`;
+    }
+    function formatHSLA(value) {
+        return `hsl${value.a < 255 ? 'a' : ''}(${value.h}, ${value.s}%, ${value.l}%${value.a < 255 ? `, ${(value.a / 255).toPrecision(2)}` : ''})`;
     }
 
     var color = /*#__PURE__*/Object.freeze({
-        getColorByName: getColorByName,
-        getColorByShade: getColorByShade,
+        findColorName: findColorName,
+        findColorShade: findColorShade,
+        parseColor: parseColor,
+        reduceColor: reduceColor,
+        getHexCode: getHexCode,
         convertHex: convertHex,
-        convertRGBA: convertRGBA,
         parseRGBA: parseRGBA,
-        reduceRGBA: reduceRGBA
+        convertHSLA: convertHSLA,
+        formatRGBA: formatRGBA,
+        formatHSLA: formatHSLA
+    });
+
+    function withinViewport(rect) {
+        return !(rect.left < 0 && rect.top < 0 && Math.abs(rect.left) >= rect.width && Math.abs(rect.top) >= rect.height);
+    }
+    function newBoxRect() {
+        return {
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0
+        };
+    }
+    function newRectDimension() {
+        return {
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: 0,
+            height: 0
+        };
+    }
+    function newBoxModel() {
+        return {
+            marginTop: 0,
+            marginRight: 0,
+            marginBottom: 0,
+            marginLeft: 0,
+            paddingTop: 0,
+            paddingRight: 0,
+            paddingBottom: 0,
+            paddingLeft: 0
+        };
+    }
+    function getRangeClientRect(element) {
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        const clientRects = range.getClientRects();
+        const domRect = [];
+        for (let i = 0; i < clientRects.length; i++) {
+            const item = clientRects.item(i);
+            if (!(Math.round(item.width) === 0 && withinRange(item.left, item.right))) {
+                domRect.push(item);
+            }
+        }
+        let bounds = newRectDimension();
+        let multiline = 0;
+        if (domRect.length) {
+            bounds = assignRect(domRect[0]);
+            const top = new Set([bounds.top]);
+            const bottom = new Set([bounds.bottom]);
+            let minTop = bounds.top;
+            let maxBottom = bounds.bottom;
+            for (let i = 1; i < domRect.length; i++) {
+                const rect = domRect[i];
+                top.add(Math.round(rect.top));
+                bottom.add(Math.round(rect.bottom));
+                minTop = Math.min(minTop, rect.top);
+                maxBottom = Math.min(maxBottom, rect.bottom);
+                bounds.width += rect.width;
+                bounds.right = Math.max(rect.right, bounds.right);
+                bounds.height = Math.max(rect.height, bounds.height);
+            }
+            if (top.size > 1 && bottom.size > 1) {
+                bounds.top = minTop;
+                bounds.bottom = maxBottom;
+                if (domRect[domRect.length - 1].top >= domRect[0].bottom && element.textContent && (element.textContent.trim() !== '' || /^\s*\n/.test(element.textContent))) {
+                    multiline = domRect.length - 1;
+                }
+            }
+        }
+        bounds.multiline = multiline;
+        return bounds;
+    }
+    function assignRect(rect) {
+        return {
+            top: rect.top,
+            right: rect.right,
+            bottom: rect.bottom,
+            left: rect.left,
+            width: rect.width,
+            height: rect.height
+        };
+    }
+    function removeElementsByClassName(className) {
+        const elements = document.getElementsByClassName(className);
+        for (let i = 0; i < elements.length; i++) {
+            const element = elements[i];
+            if (element.parentElement) {
+                element.parentElement.removeChild(element);
+            }
+        }
+    }
+    function isElementVisible(element, viewport = false) {
+        const rect = element.getBoundingClientRect();
+        return rect.width !== 0 && rect.height !== 0 && (!viewport || withinViewport(rect));
+    }
+    function getFirstChildElement(element, lineBreak = false) {
+        if (element) {
+            for (let i = 0; i < element.childNodes.length; i++) {
+                const node = getElementAsNode(element.childNodes[i]);
+                if (node && (!node.excluded || (lineBreak && node.lineBreak))) {
+                    return node.element;
+                }
+            }
+        }
+        return null;
+    }
+    function getLastChildElement(element, lineBreak = false) {
+        if (element) {
+            for (let i = element.childNodes.length - 1; i >= 0; i--) {
+                const node = getElementAsNode(element.childNodes[i]);
+                if (node && node.naturalElement && (!node.excluded || (lineBreak && node.lineBreak))) {
+                    return node.element;
+                }
+            }
+        }
+        return null;
+    }
+    function getElementsBetweenSiblings(elementStart, elementEnd, whiteSpace = false) {
+        if (!elementStart || elementStart.parentElement === elementEnd.parentElement) {
+            const parent = elementEnd.parentElement;
+            if (parent) {
+                let startIndex = elementStart ? -1 : 0;
+                let endIndex = -1;
+                const elements = Array.from(parent.childNodes);
+                for (let i = 0; i < elements.length; i++) {
+                    if (elements[i] === elementStart) {
+                        startIndex = i;
+                    }
+                    if (elements[i] === elementEnd) {
+                        endIndex = i;
+                    }
+                }
+                if (startIndex !== -1 && endIndex !== -1 && startIndex !== endIndex) {
+                    const result = elements.slice(Math.min(startIndex, endIndex) + 1, Math.max(startIndex, endIndex));
+                    if (whiteSpace) {
+                        spliceArray(result, element => element.nodeName === '#comment');
+                    }
+                    else {
+                        spliceArray(result, element => element.nodeName.charAt(0) === '#' && (element.nodeName !== 'text' || !!element.textContent && element.textContent.trim() === ''));
+                    }
+                    return result;
+                }
+            }
+        }
+        return [];
+    }
+    function getPreviousElementSibling(element) {
+        if (element) {
+            element = element.previousSibling;
+            while (element) {
+                const node = getElementAsNode(element);
+                if (node && (!node.excluded || node.lineBreak)) {
+                    return node.element;
+                }
+                element = element.previousSibling;
+            }
+        }
+        return null;
+    }
+    function getNextElementSibling(element) {
+        if (element) {
+            element = element.nextSibling;
+            while (element) {
+                const node = getElementAsNode(element);
+                if (node && (!node.excluded || node.lineBreak)) {
+                    return node.element;
+                }
+                element = element.nextSibling;
+            }
+        }
+        return null;
+    }
+    function setElementCache(element, attr, data) {
+        element[`__${attr}`] = data;
+    }
+    function getElementCache(element, attr) {
+        return element[`__${attr}`] || undefined;
+    }
+    function deleteElementCache(element, ...attrs) {
+        for (const attr of attrs) {
+            element[`__${attr}`] = undefined;
+        }
+    }
+    function getElementAsNode(element) {
+        return isString(element.className) && element.className.startsWith('squared') ? undefined : getElementCache(element, 'node');
+    }
+
+    var dom = /*#__PURE__*/Object.freeze({
+        newBoxRect: newBoxRect,
+        newRectDimension: newRectDimension,
+        newBoxModel: newBoxModel,
+        getRangeClientRect: getRangeClientRect,
+        assignRect: assignRect,
+        removeElementsByClassName: removeElementsByClassName,
+        isElementVisible: isElementVisible,
+        getFirstChildElement: getFirstChildElement,
+        getLastChildElement: getLastChildElement,
+        getElementsBetweenSiblings: getElementsBetweenSiblings,
+        getPreviousElementSibling: getPreviousElementSibling,
+        getNextElementSibling: getNextElementSibling,
+        setElementCache: setElementCache,
+        getElementCache: getElementCache,
+        deleteElementCache: deleteElementCache,
+        getElementAsNode: getElementAsNode
     });
 
     const REGEXP_KEYFRAMERULE = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
+    const REGEXP_VAR = new RegExp(`${REGEXP_STRING.VAR}`, 'g');
+    function convertPercent(value, dimension, fontSize) {
+        return isPercent(value) ? parseFloat(value) / 100 : calculateUnit(value, fontSize) / dimension;
+    }
+    function getKeyframeRules() {
+        const result = new Map();
+        violation: {
+            for (let i = 0; i < document.styleSheets.length; i++) {
+                const styleSheet = document.styleSheets[i];
+                if (styleSheet.cssRules) {
+                    for (let j = 0; j < styleSheet.cssRules.length; j++) {
+                        try {
+                            const item = styleSheet.cssRules[j];
+                            if (item.type === 7) {
+                                const map = {};
+                                for (let k = 0; k < item.cssRules.length; k++) {
+                                    const match = REGEXP_KEYFRAMERULE.exec(item.cssRules[k].cssText);
+                                    if (match) {
+                                        for (let percent of (item.cssRules[k]['keyText'] || match[1].trim()).split(REGEXP_COMPILED.SEPARATOR)) {
+                                            percent = percent.trim();
+                                            switch (percent) {
+                                                case 'from':
+                                                    percent = '0%';
+                                                    break;
+                                                case 'to':
+                                                    percent = '100%';
+                                                    break;
+                                            }
+                                            map[percent] = {};
+                                            for (const property of match[2].split(';')) {
+                                                const [name, value] = property.split(':');
+                                                if (value) {
+                                                    map[percent][name.trim()] = value.trim();
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                result.set(item.name, map);
+                            }
+                        }
+                        catch (_a) {
+                            break violation;
+                        }
+                    }
+                }
+            }
+        }
+        return result;
+    }
+    function hasComputedStyle(element) {
+        if (element) {
+            return typeof element['style'] === 'object' && element['style'] !== null;
+        }
+        return false;
+    }
+    function checkStyleValue(element, attr, value, style, fontSize) {
+        if (style === undefined) {
+            style = getStyle(element);
+        }
+        if (value === 'inherit') {
+            value = getInheritedStyle(element.parentElement, attr);
+        }
+        if (value && value !== 'initial') {
+            if (value !== style[attr]) {
+                switch (attr) {
+                    case 'backgroundColor':
+                    case 'borderTopColor':
+                    case 'borderRightColor':
+                    case 'borderBottomColor':
+                    case 'borderLeftColor':
+                    case 'color':
+                    case 'fontSize':
+                    case 'fontWeight':
+                        return style[attr];
+                }
+                if (REGEXP_COMPILED.CUSTOMPROPERTY.test(value)) {
+                    return style[attr];
+                }
+                switch (attr) {
+                    case 'width':
+                    case 'height':
+                    case 'minWidth':
+                    case 'maxWidth':
+                    case 'minHeight':
+                    case 'maxHeight':
+                    case 'lineHeight':
+                    case 'verticalAlign':
+                    case 'textIndent':
+                    case 'columnGap':
+                    case 'top':
+                    case 'right':
+                    case 'bottom':
+                    case 'left':
+                    case 'marginTop':
+                    case 'marginRight':
+                    case 'marginBottom':
+                    case 'marginLeft':
+                    case 'paddingTop':
+                    case 'paddingRight':
+                    case 'paddingBottom':
+                    case 'paddingLeft':
+                        return isUnit(value) ? convertPX(value, fontSize) : value;
+                }
+            }
+            return value;
+        }
+        return '';
+    }
+    function getDataSet(element, prefix) {
+        const result = {};
+        if (element) {
+            prefix = convertCamelCase(prefix, '\\.');
+            for (const attr in element.dataset) {
+                if (attr.length > prefix.length && attr.startsWith(prefix)) {
+                    result[capitalize(attr.substring(prefix.length), false)] = element.dataset[attr];
+                }
+            }
+        }
+        return result;
+    }
+    function getStyle(element, cache = true) {
+        if (element) {
+            if (cache) {
+                const style = getElementCache(element, 'style');
+                if (style) {
+                    return style;
+                }
+                else {
+                    const node = getElementAsNode(element);
+                    if (node && node.plainText) {
+                        return node.unsafe('styleMap');
+                    }
+                }
+            }
+            if (hasComputedStyle(element)) {
+                const style = getComputedStyle(element);
+                setElementCache(element, 'style', style);
+                return style;
+            }
+            return {};
+        }
+        return { display: 'none' };
+    }
+    function getFontSize(element) {
+        return parseInt(getStyle(element).fontSize || '16px');
+    }
+    function isParentStyle(element, attr, ...styles) {
+        if (element) {
+            return element.nodeName.charAt(0) !== '#' && styles.includes(getStyle(element)[attr]) || element.parentElement && styles.includes(getStyle(element.parentElement)[attr]);
+        }
+        return false;
+    }
+    function getInheritedStyle(element, attr, exclude, ...tagNames) {
+        let value = '';
+        if (element) {
+            let current = element.parentElement;
+            while (current && !tagNames.includes(current.tagName)) {
+                value = getStyle(current)[attr] || '';
+                if (value === 'inherit' || exclude && exclude.test(value)) {
+                    value = '';
+                }
+                if (value !== '' || current === document.body) {
+                    break;
+                }
+                current = current.parentElement;
+            }
+        }
+        return value;
+    }
+    function isInheritedStyle(element, attr) {
+        if (hasComputedStyle(element) && element.parentElement) {
+            const node = getElementAsNode(element);
+            if (node && !node.cssInitial(attr)) {
+                return getStyle(element)[attr] === getStyle(element.parentElement)[attr];
+            }
+        }
+        return false;
+    }
+    function getInlineStyle(element, attr) {
+        let value = hasComputedStyle(element) ? element['style'][attr] : '';
+        if (!value) {
+            const styleMap = getElementCache(element, 'styleMap');
+            if (styleMap) {
+                value = styleMap[attr];
+            }
+        }
+        return value || '';
+    }
+    function getAttribute(element, attr, computed = false) {
+        const node = getElementAsNode(element);
+        const name = convertCamelCase(attr);
+        return node && node.cssInitial(name) || getInlineStyle(element, name) || getNamedItem(element, attr) || computed && getStyle(element)[name] || '';
+    }
+    function getParentAttribute(element, attr) {
+        let current = element;
+        let value = '';
+        while (current) {
+            value = getAttribute(current, attr);
+            if (value !== '' && value !== 'inherit') {
+                break;
+            }
+            current = current.parentElement;
+        }
+        return value;
+    }
+    function calculateVar(element, value, attr, dimension) {
+        const style = getComputedStyle(element);
+        let result = value;
+        let match;
+        while ((match = REGEXP_VAR.exec(value)) !== null) {
+            const propertyValue = style.getPropertyValue(match[1]).trim();
+            if (propertyValue !== '') {
+                result = result.replace(match[0], propertyValue);
+            }
+            else {
+                return undefined;
+            }
+        }
+        if (attr && !dimension) {
+            if (element instanceof SVGElement) {
+                const rect = element.getBoundingClientRect();
+                dimension = attr === 'height' || (attr.length <= 2 && attr.indexOf('y') !== -1) ? rect.height : rect.width;
+            }
+            else {
+                const rect = (element.parentElement || element).getBoundingClientRect();
+                dimension = attr.toLowerCase().indexOf('height') !== -1 ? rect.height : rect.width;
+            }
+        }
+        return calculate(result, dimension, getFontSize(element));
+    }
+    function getNamedItem(element, attr) {
+        if (element) {
+            const item = element.attributes.getNamedItem(attr);
+            if (item) {
+                return item.value.trim();
+            }
+        }
+        return '';
+    }
+    function getBackgroundPosition(value, dimension, fontSize, percent = false) {
+        const result = {
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            horizontal: 'left',
+            vertical: 'top',
+            originalX: '',
+            originalY: ''
+        };
+        const orientation = value === 'center' ? ['center', 'center'] : value.split(' ');
+        if (orientation.length === 4) {
+            for (let i = 0; i < orientation.length; i++) {
+                const position = orientation[i];
+                switch (i) {
+                    case 0:
+                        result.horizontal = position;
+                        break;
+                    case 1: {
+                        const location = percent ? convertPercent(position, dimension.width, fontSize) : convertUnit(position, dimension.width, fontSize);
+                        switch (result.horizontal) {
+                            case 'end:':
+                                result.horizontal = 'right';
+                            case 'right':
+                                result.right = location;
+                                result.left = percent ? 1 - location : dimension.width - location;
+                                result.originalX = isPercent(position) ? formatPercent(100 - parseInt(position)) : formatPX(dimension.width - parseInt(convertPX(position, fontSize)));
+                                break;
+                            case 'start':
+                                result.horizontal = 'left';
+                            default:
+                                result.left = location;
+                                result.originalX = position;
+                                break;
+                        }
+                        break;
+                    }
+                    case 2:
+                        result.vertical = position;
+                        break;
+                    case 3: {
+                        const location = percent ? convertPercent(position, dimension.height, fontSize) : convertUnit(position, dimension.height, fontSize);
+                        if (result.vertical === 'bottom') {
+                            result.bottom = location;
+                            result.top = percent ? 1 - location : dimension.height - location;
+                            result.originalY = isPercent(position) ? formatPercent(100 - parseInt(position)) : formatPX(dimension.height - parseInt(convertPX(position, fontSize)));
+                        }
+                        else {
+                            result.top = location;
+                            result.originalY = position;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        else if (orientation.length === 2) {
+            for (let i = 0; i < orientation.length; i++) {
+                const position = orientation[i];
+                let offsetParent;
+                let direction;
+                let original;
+                if (i === 0) {
+                    offsetParent = dimension.width;
+                    direction = 'left';
+                    original = 'originalX';
+                    result.horizontal = position;
+                }
+                else {
+                    offsetParent = dimension.height;
+                    direction = 'top';
+                    original = 'originalY';
+                    result.vertical = position;
+                }
+                if (/^[a-z]+$/.test(position)) {
+                    switch (position) {
+                        case 'start':
+                            result.horizontal = 'left';
+                        case 'left':
+                        case 'top':
+                            result[original] = '0%';
+                            break;
+                        case 'end':
+                            result.horizontal = 'right';
+                        case 'right':
+                        case 'bottom':
+                            result[direction] = percent ? 1 : offsetParent;
+                            result[original] = '100%';
+                            break;
+                        case 'center':
+                            result[direction] = percent ? 0.5 : Math.round(offsetParent / 2);
+                            result[original] = '50%';
+                            break;
+                    }
+                }
+                else {
+                    result[direction] = percent ? convertPercent(position, offsetParent, fontSize) : convertUnit(position, offsetParent, fontSize);
+                    result[original] = position;
+                }
+            }
+        }
+        return result;
+    }
+    function resolveURL(value) {
+        const match = value.match(REGEXP_COMPILED.URL);
+        if (match) {
+            return resolvePath(match[1]);
+        }
+        return '';
+    }
+
+    var css = /*#__PURE__*/Object.freeze({
+        getKeyframeRules: getKeyframeRules,
+        hasComputedStyle: hasComputedStyle,
+        checkStyleValue: checkStyleValue,
+        getDataSet: getDataSet,
+        getStyle: getStyle,
+        getFontSize: getFontSize,
+        isParentStyle: isParentStyle,
+        getInheritedStyle: getInheritedStyle,
+        isInheritedStyle: isInheritedStyle,
+        getInlineStyle: getInlineStyle,
+        getAttribute: getAttribute,
+        getParentAttribute: getParentAttribute,
+        calculateVar: calculateVar,
+        getNamedItem: getNamedItem,
+        getBackgroundPosition: getBackgroundPosition,
+        resolveURL: resolveURL
+    });
+
     const ELEMENT_BLOCK = [
         'ADDRESS',
         'ARTICLE',
@@ -1254,177 +3949,6 @@
         'VAR',
         'PLAINTEXT'
     ];
-    function isUserAgent(value) {
-        if (typeof value === 'string') {
-            const name = value.toUpperCase();
-            value = 0;
-            if (name.indexOf('CHROME') !== -1) {
-                value |= 2 /* CHROME */;
-            }
-            if (name.indexOf('SAFARI') !== -1) {
-                value |= 4 /* SAFARI */;
-            }
-            if (name.indexOf('FIREFOX') !== -1) {
-                value |= 16 /* FIREFOX */;
-            }
-            if (name.indexOf('EDGE') !== -1) {
-                value |= 8 /* EDGE */;
-            }
-        }
-        let client;
-        const userAgent = navigator.userAgent;
-        if (userAgent.indexOf('Safari') !== -1 && userAgent.indexOf('Chrome') === -1) {
-            client = 4 /* SAFARI */;
-        }
-        else if (userAgent.indexOf('Firefox') !== -1) {
-            client = 16 /* FIREFOX */;
-        }
-        else if (userAgent.indexOf('Edge') !== -1) {
-            client = 8 /* EDGE */;
-        }
-        else {
-            client = 2 /* CHROME */;
-        }
-        return hasBit(value, client);
-    }
-    function getDeviceDPI() {
-        return window.devicePixelRatio * 96;
-    }
-    function getKeyframeRules() {
-        const result = new Map();
-        violation: {
-            for (let i = 0; i < document.styleSheets.length; i++) {
-                const styleSheet = document.styleSheets[i];
-                if (styleSheet.cssRules) {
-                    for (let j = 0; j < styleSheet.cssRules.length; j++) {
-                        try {
-                            const item = styleSheet.cssRules[j];
-                            if (item.type === 7) {
-                                const map = {};
-                                for (let k = 0; k < item.cssRules.length; k++) {
-                                    const match = REGEXP_KEYFRAMERULE.exec(item.cssRules[k].cssText);
-                                    if (match) {
-                                        for (let percent of (item.cssRules[k]['keyText'] || match[1].trim()).split(',')) {
-                                            percent = percent.trim();
-                                            switch (percent) {
-                                                case 'from':
-                                                    percent = '0%';
-                                                    break;
-                                                case 'to':
-                                                    percent = '100%';
-                                                    break;
-                                            }
-                                            map[percent] = {};
-                                            for (const property of match[2].split(';')) {
-                                                const [name, value] = property.split(':');
-                                                if (value) {
-                                                    map[percent][name.trim()] = value.trim();
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                result.set(item.name, map);
-                            }
-                        }
-                        catch (_a) {
-                            break violation;
-                        }
-                    }
-                }
-            }
-        }
-        return result;
-    }
-    function checkStyleAttribute(element, attr, value, style, fontSize) {
-        if (style === undefined) {
-            style = getStyle(element);
-        }
-        if (value === 'inherit') {
-            value = cssInheritStyle(element.parentElement, attr);
-        }
-        if (value !== 'initial') {
-            if (value !== style[attr]) {
-                switch (attr) {
-                    case 'backgroundColor':
-                    case 'borderTopColor':
-                    case 'borderRightColor':
-                    case 'borderBottomColor':
-                    case 'borderLeftColor':
-                    case 'color':
-                    case 'fontSize':
-                    case 'fontWeight':
-                        return style[attr] || value;
-                    case 'width':
-                    case 'height':
-                    case 'minWidth':
-                    case 'maxWidth':
-                    case 'minHeight':
-                    case 'maxHeight':
-                    case 'lineHeight':
-                    case 'verticalAlign':
-                    case 'textIndent':
-                    case 'columnGap':
-                    case 'top':
-                    case 'right':
-                    case 'bottom':
-                    case 'left':
-                    case 'marginTop':
-                    case 'marginRight':
-                    case 'marginBottom':
-                    case 'marginLeft':
-                    case 'paddingTop':
-                    case 'paddingRight':
-                    case 'paddingBottom':
-                    case 'paddingLeft':
-                        return /^[A-Za-z\-]+$/.test(value) || isPercent(value) ? value : convertPX(value, fontSize);
-                }
-            }
-            return value;
-        }
-        return '';
-    }
-    function getDataSet(element, prefix) {
-        const result = {};
-        if (hasComputedStyle(element)) {
-            prefix = convertCamelCase(prefix, '\\.');
-            for (const attr in element.dataset) {
-                if (attr.length > prefix.length && attr.startsWith(prefix)) {
-                    result[capitalize(attr.substring(prefix.length), false)] = element.dataset[attr];
-                }
-            }
-        }
-        return result;
-    }
-    function newBoxRect() {
-        return {
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0
-        };
-    }
-    function newRectDimension() {
-        return Object.assign({ width: 0, height: 0 }, newBoxRect());
-    }
-    function newBoxModel() {
-        return {
-            marginTop: 0,
-            marginRight: 0,
-            marginBottom: 0,
-            marginLeft: 0,
-            paddingTop: 0,
-            paddingRight: 0,
-            paddingBottom: 0,
-            paddingLeft: 0
-        };
-    }
-    function getDOMRect(element) {
-        const result = element.getBoundingClientRect();
-        result.x = result.left;
-        result.y = result.top;
-        return result;
-    }
     function createElement(parent, block = false) {
         const element = document.createElement(block ? 'div' : 'span');
         const style = element.style;
@@ -1441,343 +3965,8 @@
         }
         return element;
     }
-    function removeElementsByClassName(className) {
-        const elements = document.getElementsByClassName(className);
-        for (let i = 0; i < elements.length; i++) {
-            const element = elements[i];
-            if (element.parentElement) {
-                element.parentElement.removeChild(element);
-            }
-        }
-    }
-    function getRangeClientRect(element) {
-        const range = document.createRange();
-        range.selectNodeContents(element);
-        const clientRects = range.getClientRects();
-        const domRect = [];
-        for (let i = 0; i < clientRects.length; i++) {
-            const item = clientRects.item(i);
-            if (!(Math.round(item.width) === 0 && withinFraction(item.left, item.right))) {
-                domRect.push(item);
-            }
-        }
-        let bounds = newRectDimension();
-        let multiline = 0;
-        if (domRect.length) {
-            bounds = assignBounds(domRect[0]);
-            const top = new Set([bounds.top]);
-            const bottom = new Set([bounds.bottom]);
-            let minTop = bounds.top;
-            let maxBottom = bounds.bottom;
-            for (let i = 1; i < domRect.length; i++) {
-                const rect = domRect[i];
-                top.add(Math.round(rect.top));
-                bottom.add(Math.round(rect.bottom));
-                minTop = Math.min(minTop, rect.top);
-                maxBottom = Math.min(maxBottom, rect.bottom);
-                bounds.width += rect.width;
-                bounds.right = Math.max(rect.right, bounds.right);
-                bounds.height = Math.max(rect.height, bounds.height);
-            }
-            if (top.size > 1 && bottom.size > 1) {
-                bounds.top = minTop;
-                bounds.bottom = maxBottom;
-                if (domRect[domRect.length - 1].top >= domRect[0].bottom && element.textContent && (element.textContent.trim() !== '' || /^\s*\n/.test(element.textContent))) {
-                    multiline = domRect.length - 1;
-                }
-            }
-        }
-        return Object.assign({}, bounds, { multiline });
-    }
-    function assignBounds(bounds) {
-        return {
-            top: bounds.top,
-            right: bounds.right,
-            bottom: bounds.bottom,
-            left: bounds.left,
-            width: bounds.width,
-            height: bounds.height
-        };
-    }
-    function getStyle(element, cache = true) {
-        if (element) {
-            if (cache) {
-                const style = getElementCache(element, 'style');
-                if (style) {
-                    return style;
-                }
-                else {
-                    const node = getElementAsNode(element);
-                    if (node && node.plainText) {
-                        return node.unsafe('styleMap');
-                    }
-                }
-            }
-            if (hasComputedStyle(element)) {
-                const style = getComputedStyle(element);
-                setElementCache(element, 'style', style);
-                return style;
-            }
-            return {};
-        }
-        return { display: 'none' };
-    }
-    function getFontSize(element) {
-        return parseInt(getStyle(element).fontSize || '16px');
-    }
-    function cssResolveUrl(value) {
-        const match = value.match(REGEXP_PATTERN.URL);
-        if (match) {
-            return resolvePath(match[1]);
-        }
-        return '';
-    }
-    function cssInheritStyle(element, attr, exclude, tagNames) {
-        let value = '';
-        if (element) {
-            let current = element.parentElement;
-            while (current && (tagNames === undefined || !tagNames.includes(current.tagName))) {
-                value = getStyle(current)[attr] || '';
-                if (value === 'inherit' || exclude && exclude.some(style => value.indexOf(style) !== -1)) {
-                    value = '';
-                }
-                if (value !== '' || current === document.body) {
-                    break;
-                }
-                current = current.parentElement;
-            }
-        }
-        return value;
-    }
-    function cssParent(element, attr, ...styles) {
-        if (element) {
-            if (element.nodeName.charAt(0) !== '#') {
-                if (styles.includes(getStyle(element)[attr])) {
-                    return true;
-                }
-            }
-            if (element.parentElement) {
-                return styles.includes(getStyle(element.parentElement)[attr]);
-            }
-        }
-        return false;
-    }
-    function cssFromParent(element, attr) {
-        if (hasComputedStyle(element) && element.parentElement) {
-            const node = getElementAsNode(element);
-            const style = getStyle(element);
-            if (node && style) {
-                return style[attr] === getStyle(element.parentElement)[attr] && !node.cssInitial(attr);
-            }
-        }
-        return false;
-    }
-    function cssInline(element, attr) {
-        let value = '';
-        if (typeof element['style'] === 'object') {
-            value = element['style'][attr];
-        }
-        if (!value) {
-            const styleMap = getElementCache(element, 'styleMap');
-            if (styleMap) {
-                value = styleMap[attr];
-            }
-        }
-        return value || '';
-    }
-    function cssAttribute(element, attr, computed = false) {
-        const node = getElementAsNode(element);
-        const name = convertCamelCase(attr);
-        return node && node.cssInitial(name) || cssInline(element, name) || getNamedItem(element, attr) || computed && getStyle(element)[name] || '';
-    }
-    function cssInheritAttribute(element, attr) {
-        let current = element;
-        let value = '';
-        while (current) {
-            value = cssAttribute(current, attr);
-            if (value !== '' && value !== 'inherit') {
-                break;
-            }
-            current = current.parentElement;
-        }
-        return value;
-    }
-    function getNamedItem(element, attr) {
-        if (element) {
-            const item = element.attributes.getNamedItem(attr);
-            if (item) {
-                return item.value.trim();
-            }
-        }
-        return '';
-    }
-    function getBackgroundPosition(value, dimension, fontSize, leftPerspective = false, percent = false) {
-        const result = {
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            horizontal: 'left',
-            vertical: 'top',
-            originalX: '',
-            originalY: ''
-        };
-        const orientation = value === 'center' ? ['center', 'center'] : value.split(' ');
-        if (orientation.length === 4) {
-            for (let i = 0; i < orientation.length; i++) {
-                const position = orientation[i];
-                switch (i) {
-                    case 0:
-                        result.horizontal = position;
-                        break;
-                    case 2:
-                        result.vertical = position;
-                        break;
-                    case 1:
-                    case 3:
-                        const clientXY = convertPercentPX(position, i === 1 ? dimension.width : dimension.height, fontSize, percent);
-                        if (i === 1) {
-                            if (leftPerspective) {
-                                if (result.horizontal === 'right') {
-                                    if (isPercent(position)) {
-                                        result.originalX = formatPercent(100 - parseInt(position));
-                                    }
-                                    else {
-                                        result.originalX = formatPX(dimension.width - parseInt(convertPX(position, fontSize)));
-                                    }
-                                    result.right = clientXY;
-                                    result.left = percent ? 1 - clientXY : dimension.width - clientXY;
-                                }
-                                else {
-                                    result.left = clientXY;
-                                    result.originalX = position;
-                                }
-                            }
-                            else {
-                                if (result.horizontal !== 'center') {
-                                    result[result.horizontal] = clientXY;
-                                }
-                            }
-                        }
-                        else {
-                            if (leftPerspective) {
-                                if (result.vertical === 'bottom') {
-                                    if (isPercent(position)) {
-                                        result.originalY = formatPercent(100 - parseInt(position));
-                                    }
-                                    else {
-                                        result.originalY = formatPX(dimension.height - parseInt(convertPX(position, fontSize)));
-                                    }
-                                    result.bottom = clientXY;
-                                    result.top = percent ? 1 - clientXY : dimension.height - clientXY;
-                                }
-                                else {
-                                    result.top = clientXY;
-                                    result.originalY = position;
-                                }
-                            }
-                            else {
-                                if (result.vertical !== 'center') {
-                                    result[result.vertical] = clientXY;
-                                }
-                            }
-                        }
-                        break;
-                }
-            }
-        }
-        else if (orientation.length === 2) {
-            for (let i = 0; i < orientation.length; i++) {
-                const position = orientation[i];
-                let offsetParent;
-                let direction;
-                let original;
-                if (i === 0) {
-                    offsetParent = dimension.width;
-                    direction = 'left';
-                    original = 'originalX';
-                }
-                else {
-                    offsetParent = dimension.height;
-                    direction = 'top';
-                    original = 'originalY';
-                }
-                const clientXY = convertPercentPX(position, offsetParent, fontSize, percent);
-                if (isPercent(position)) {
-                    result[direction] = clientXY;
-                    result[original] = position;
-                }
-                else {
-                    if (/^[a-z]+$/.test(position)) {
-                        result[i === 0 ? 'horizontal' : 'vertical'] = position;
-                        if (leftPerspective) {
-                            switch (position) {
-                                case 'left':
-                                case 'top':
-                                    result[original] = '0%';
-                                    break;
-                                case 'right':
-                                case 'bottom':
-                                    result[direction] = percent ? 1 : offsetParent;
-                                    result[original] = '100%';
-                                    break;
-                                case 'center':
-                                    result[direction] = percent ? 0.5 : Math.round(offsetParent / 2);
-                                    result[original] = '50%';
-                                    break;
-                            }
-                        }
-                    }
-                    else {
-                        result[direction] = clientXY;
-                        result[original] = position;
-                    }
-                }
-            }
-        }
-        return result;
-    }
-    function getFirstChildElement(element, lineBreak = false) {
-        if (element) {
-            for (let i = 0; i < element.childNodes.length; i++) {
-                const node = getElementAsNode(element.childNodes[i]);
-                if (node && (!node.excluded || (lineBreak && node.lineBreak))) {
-                    return node.element;
-                }
-            }
-        }
-        return null;
-    }
-    function getLastChildElement(element, lineBreak = false) {
-        if (element) {
-            for (let i = element.childNodes.length - 1; i >= 0; i--) {
-                const node = getElementAsNode(element.childNodes[i]);
-                if (node && node.naturalElement && (!node.excluded || (lineBreak && node.lineBreak))) {
-                    return node.element;
-                }
-            }
-        }
-        return null;
-    }
-    function hasFreeFormText(element, whiteSpace = true) {
-        function findFreeForm(elements) {
-            for (let i = 0; i < elements.length; i++) {
-                const child = elements[i];
-                if (child.nodeName === '#text') {
-                    if (isPlainText(child, whiteSpace) || cssParent(child, 'whiteSpace', 'pre', 'pre-wrap') && child.textContent && child.textContent !== '') {
-                        return true;
-                    }
-                }
-                else if (findFreeForm(child.childNodes)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-        return findFreeForm(element.nodeName === '#text' ? [element] : element.childNodes);
-    }
     function isPlainText(element, whiteSpace = false) {
-        if (element && element.nodeName === '#text' && element.textContent) {
+        if (element.nodeName === '#text' && element.textContent) {
             if (whiteSpace) {
                 const value = element.textContent;
                 for (let i = 0; i < value.length; i++) {
@@ -1799,159 +3988,63 @@
         }
         return false;
     }
-    function hasLineBreak(element, lineBreak = false, trimString = false) {
-        if (element) {
+    function isLineBreak(element, excluded = true) {
+        if (element.tagName === 'BR') {
+            return true;
+        }
+        else if (excluded) {
+            const node = getElementAsNode(element);
+            return node && node.excluded && node.blockStatic;
+        }
+        return false;
+    }
+    function hasLineBreak(element, lineBreak = false, trim = false) {
+        if (element.children) {
+            for (let i = 0; i < element.children.length; i++) {
+                if (element.children[i].tagName === 'BR') {
+                    return true;
+                }
+            }
+        }
+        else if (!lineBreak) {
             let value = element.textContent || '';
-            if (trimString) {
+            if (trim) {
                 value = value.trim();
             }
-            if (element.children) {
-                for (let i = 0; i < element.children.length; i++) {
-                    if (element.children[i].tagName === 'BR') {
+            if (/\n/.test(value)) {
+                const node = getElementAsNode(element);
+                const whiteSpace = node ? node.css('whiteSpace') : (getStyle(element).whiteSpace || '');
+                return ['pre', 'pre-wrap'].includes(whiteSpace) || element.nodeName === '#text' && isParentStyle(element, 'whiteSpace', 'pre', 'pre-wrap');
+            }
+        }
+        return false;
+    }
+    function hasFreeFormText(element, whiteSpace = true) {
+        function findFreeForm(elements) {
+            for (let i = 0; i < elements.length; i++) {
+                const child = elements[i];
+                if (child.nodeName === '#text') {
+                    if (isPlainText(child, whiteSpace) || isParentStyle(child, 'whiteSpace', 'pre', 'pre-wrap') && child.textContent && child.textContent !== '') {
                         return true;
                     }
                 }
-            }
-            else if (!lineBreak && /\n/.test(value)) {
-                const node = getElementAsNode(element);
-                const whiteSpace = node ? node.css('whiteSpace') : (getStyle(element).whiteSpace || '');
-                return ['pre', 'pre-wrap'].includes(whiteSpace) || element.nodeName === '#text' && cssParent(element, 'whiteSpace', 'pre', 'pre-wrap');
-            }
-        }
-        return false;
-    }
-    function isLineBreak(element, excluded = true) {
-        if (element) {
-            const node = getElementAsNode(element);
-            if (node) {
-                return node.tagName === 'BR' || excluded && node.excluded && node.blockStatic;
-            }
-        }
-        return false;
-    }
-    function getElementsBetween(elementStart, elementEnd, whiteSpace = false) {
-        if (!elementStart || elementStart.parentElement === elementEnd.parentElement) {
-            const parent = elementEnd.parentElement;
-            if (parent) {
-                let startIndex = elementStart ? -1 : 0;
-                let endIndex = -1;
-                const elements = Array.from(parent.childNodes);
-                for (let i = 0; i < elements.length; i++) {
-                    if (elements[i] === elementStart) {
-                        startIndex = i;
-                    }
-                    if (elements[i] === elementEnd) {
-                        endIndex = i;
-                    }
-                }
-                if (startIndex !== -1 && endIndex !== -1 && startIndex !== endIndex) {
-                    const result = elements.slice(Math.min(startIndex, endIndex) + 1, Math.max(startIndex, endIndex));
-                    if (whiteSpace) {
-                        spliceArray(result, element => element.nodeName === '#comment');
-                    }
-                    else {
-                        spliceArray(result, element => element.nodeName.charAt(0) === '#' && !isPlainText(element));
-                    }
-                    return result;
+                else if (findFreeForm(child.childNodes)) {
+                    return true;
                 }
             }
+            return false;
         }
-        return [];
-    }
-    function getPreviousElementSibling(element) {
-        if (element) {
-            element = element.previousSibling;
-            while (element) {
-                const node = getElementAsNode(element);
-                if (node && (!node.excluded || node.lineBreak)) {
-                    return node.element;
-                }
-                element = element.previousSibling;
-            }
-        }
-        return null;
-    }
-    function getNextElementSibling(element) {
-        if (element) {
-            element = element.nextSibling;
-            while (element) {
-                const node = getElementAsNode(element);
-                if (node && (!node.excluded || node.lineBreak)) {
-                    return node.element;
-                }
-                element = element.nextSibling;
-            }
-        }
-        return null;
-    }
-    function hasComputedStyle(element) {
-        return !!element && typeof element['style'] === 'object';
-    }
-    function hasVisibleRect(element, checkViewport = false) {
-        const bounds = element.getBoundingClientRect();
-        return bounds.width !== 0 && bounds.height !== 0 && (!checkViewport || withinViewport(bounds));
-    }
-    function withinViewport(bounds) {
-        return !(bounds.left < 0 && bounds.top < 0 && Math.abs(bounds.left) >= bounds.width && Math.abs(bounds.top) >= bounds.height);
-    }
-    function setElementCache(element, attr, data) {
-        element[`__${attr}`] = data;
-    }
-    function getElementCache(element, attr) {
-        return element[`__${attr}`] || undefined;
-    }
-    function deleteElementCache(element, ...attrs) {
-        for (const attr of attrs) {
-            delete element[`__${attr}`];
-        }
-    }
-    function getElementAsNode(element) {
-        return isString(element.className) && element.className.startsWith('squared') ? undefined : getElementCache(element, 'node');
+        return findFreeForm(element.nodeName === '#text' ? [element] : element.childNodes);
     }
 
-    var dom = /*#__PURE__*/Object.freeze({
+    var element = /*#__PURE__*/Object.freeze({
         ELEMENT_BLOCK: ELEMENT_BLOCK,
         ELEMENT_INLINE: ELEMENT_INLINE,
-        isUserAgent: isUserAgent,
-        getDeviceDPI: getDeviceDPI,
-        getKeyframeRules: getKeyframeRules,
-        checkStyleAttribute: checkStyleAttribute,
-        getDataSet: getDataSet,
-        newBoxRect: newBoxRect,
-        newRectDimension: newRectDimension,
-        newBoxModel: newBoxModel,
-        getDOMRect: getDOMRect,
         createElement: createElement,
-        removeElementsByClassName: removeElementsByClassName,
-        getRangeClientRect: getRangeClientRect,
-        assignBounds: assignBounds,
-        getStyle: getStyle,
-        getFontSize: getFontSize,
-        cssResolveUrl: cssResolveUrl,
-        cssInheritStyle: cssInheritStyle,
-        cssParent: cssParent,
-        cssFromParent: cssFromParent,
-        cssInline: cssInline,
-        cssAttribute: cssAttribute,
-        cssInheritAttribute: cssInheritAttribute,
-        getNamedItem: getNamedItem,
-        getBackgroundPosition: getBackgroundPosition,
-        getFirstChildElement: getFirstChildElement,
-        getLastChildElement: getLastChildElement,
-        hasFreeFormText: hasFreeFormText,
         isPlainText: isPlainText,
-        hasLineBreak: hasLineBreak,
         isLineBreak: isLineBreak,
-        getElementsBetween: getElementsBetween,
-        getPreviousElementSibling: getPreviousElementSibling,
-        getNextElementSibling: getNextElementSibling,
-        hasComputedStyle: hasComputedStyle,
-        hasVisibleRect: hasVisibleRect,
-        withinViewport: withinViewport,
-        setElementCache: setElementCache,
-        getElementCache: getElementCache,
-        deleteElementCache: deleteElementCache,
-        getElementAsNode: getElementAsNode
+        hasLineBreak: hasLineBreak,
+        hasFreeFormText: hasFreeFormText
     });
 
     function minArray(list) {
@@ -1966,12 +4059,6 @@
         }
         return Number.NEGATIVE_INFINITY;
     }
-    function distanceFromX(value, angle) {
-        return value * Math.sin(convertRadian(angle));
-    }
-    function distanceFromY(value, angle) {
-        return value * Math.cos(convertRadian(angle)) * -1;
-    }
     function isEqual$1(valueA, valueB, precision = 8) {
         return valueA.toPrecision(precision) === valueB.toPrecision(precision);
     }
@@ -1982,7 +4069,19 @@
         return valueA < valueB || isEqual$1(valueA, valueB, precision);
     }
     function truncate(value, precision = 3) {
-        return value === Math.floor(value) ? value.toString() : value.toPrecision(precision).replace(/\.?0+$/, '');
+        if (value === Math.floor(value)) {
+            return value.toString();
+        }
+        else {
+            if (value > 1) {
+                precision += 1;
+                let i = 1;
+                while (value / Math.pow(10, i++) >= 1) {
+                    precision += 1;
+                }
+            }
+            return value.toPrecision(precision).replace(/\.?0+$/, '');
+        }
     }
     function truncateFraction(value) {
         if (value !== Math.floor(value)) {
@@ -2008,15 +4107,27 @@
     function convertRadian(value) {
         return value * Math.PI / 180;
     }
+    function trianguleASA(a, b, clen) {
+        const c = 180 - a - b;
+        return [
+            (clen / Math.sin(convertRadian(c))) * Math.sin(convertRadian(a)),
+            (clen / Math.sin(convertRadian(c))) * Math.sin(convertRadian(b))
+        ];
+    }
     function offsetAngle(start, end) {
+        const x = end.x - start.x;
         const y = end.y - start.y;
-        const value = Math.atan2(y, end.x - start.x) * 180 / Math.PI;
+        let value = (Math.atan2(y, x) * 180 / Math.PI) + 90;
         if (value < 0) {
-            return 270 + (y < 0 ? value : Math.abs(value)) % 360;
+            value += 360;
         }
-        else {
-            return (value + 90) % 360;
-        }
+        return value;
+    }
+    function offsetAngleX(angle, value) {
+        return value * Math.sin(convertRadian(angle));
+    }
+    function offsetAngleY(angle, value) {
+        return value * Math.cos(convertRadian(angle)) * -1;
     }
     function clampRange(value, min = 0, max = 1) {
         if (value < min) {
@@ -2027,7 +4138,7 @@
         }
         return value;
     }
-    function nextMultiple(values, offset, minimum = 0) {
+    function nextMultiple(values, minimum = 0, offset) {
         if (values.length > 1) {
             const increment = minArray(values);
             if (offset && offset.length === values.length) {
@@ -2067,8 +4178,6 @@
     var math = /*#__PURE__*/Object.freeze({
         minArray: minArray,
         maxArray: maxArray,
-        distanceFromX: distanceFromX,
-        distanceFromY: distanceFromY,
         isEqual: isEqual$1,
         moreEqual: moreEqual,
         lessEqual: lessEqual,
@@ -2076,18 +4185,35 @@
         truncateFraction: truncateFraction,
         truncateString: truncateString,
         convertRadian: convertRadian,
+        trianguleASA: trianguleASA,
         offsetAngle: offsetAngle,
+        offsetAngleX: offsetAngleX,
+        offsetAngleY: offsetAngleY,
         clampRange: clampRange,
         nextMultiple: nextMultiple
     });
 
-    function replaceTemplateSection(data, value) {
+    const TEMPLATE_ROOT = '__ROOT__';
+    const REGEXP_CREATE = {
+        ATTRIBUTE: /\s*((\w+:)?\w+="[^"]*)?{~\w+}"?/g,
+        COLLECTION: /\n*\t*{%\w+}\n+/g,
+        LINEBREAK: /\n\n/g
+    };
+    const REGEXP_FORAMT = {
+        ITEM: /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g,
+        OPENTAG: /\s*>$/,
+        CLOSETAG: /\/>\n*$/
+    };
+    const REGEXP_INDENT = /^(\t+)(.*)$/;
+    function replaceSectionTag(data, value) {
         for (const index in data) {
             value = value.replace(new RegExp(`\\t*<<${index}>>[\\w\\W]*<<${index}>>`), `{%${index}}`);
         }
         return value;
     }
-    const TEMPLATE_ROOT = '__ROOT__';
+    function getSectionTag(attr, value) {
+        return `((\\t*##${attr}-${value}##\\s*\\n)([\\w\\W]*?\\s*\\n)(\\t*##${attr}-${value}##\\s*\\n))`;
+    }
     function formatPlaceholder(id, symbol = ':') {
         return `{${symbol + id.toString()}}`;
     }
@@ -2096,17 +4222,14 @@
         return value.replace(hash, (before ? hash : '') + content + '\n' + (before ? '' : hash));
     }
     function pushIndent(value, depth, char = '\t') {
-        if (value !== '') {
-            const pattern = new RegExp(`^${char.replace('\\', '\\\\')}+`);
-            return joinMap(value.split('\n'), line => {
-                const match = pattern.exec(line);
-                if (match) {
-                    return line.replace(match[0], char.repeat(depth + match[0].length));
-                }
-                return line;
-            });
-        }
-        return value;
+        const pattern = new RegExp(`^${char.replace('\\', '\\\\')}+`);
+        return joinMap(value.split('\n'), line => {
+            const match = pattern.exec(line);
+            if (match) {
+                return line.replace(match[0], char.repeat(depth + match[0].length));
+            }
+            return line;
+        });
     }
     function replaceIndent(value, depth, pattern) {
         if (depth >= 0) {
@@ -2128,7 +4251,7 @@
         if (spaces > 0) {
             if (preserve) {
                 return joinMap(value.split('\n'), line => {
-                    const match = line.match(/^(\t+)(.*)$/);
+                    const match = line.match(REGEXP_INDENT);
                     if (match) {
                         return ' '.repeat(spaces * match[1].length) + match[2];
                     }
@@ -2142,7 +4265,9 @@
         return value;
     }
     function replaceEntity(value) {
-        return value.replace(/&#(\d+);/g, (match, capture) => String.fromCharCode(parseInt(capture)))
+        return value
+            .replace(/&#(\d+);/g, (match, capture) => String.fromCharCode(parseInt(capture)))
+            .replace(/&(?!#?[A-Za-z0-9]{2,};)/g, '&amp;')
             .replace(/\u00A0/g, '&#160;')
             .replace(/\u2002/g, '&#8194;')
             .replace(/\u2003/g, '&#8195;')
@@ -2153,8 +4278,8 @@
             .replace(/\u200F/g, '&#8207;');
     }
     function replaceCharacter(value) {
-        return value.replace(/&nbsp;/g, '&#160;')
-            .replace(/&(?!#?[A-Za-z0-9]{2,};)/g, '&amp;')
+        return value
+            .replace(/&nbsp;/g, '&#160;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
             .replace(/'/g, '&apos;')
@@ -2167,20 +4292,22 @@
             const pattern = /(\t*<<(\w+)>>)\n*[\w\W]*\n*\1/g;
             let match;
             while ((match = pattern.exec(section)) !== null) {
-                const seg = match[0].replace(new RegExp(`^${match[1]}\\n`), '').replace(new RegExp(`${match[1]}$`), '');
-                data[match[2]] = replaceTemplateSection(parseSection(seg), seg);
+                match[0] = match[0]
+                    .replace(new RegExp(`^${match[1]}\\n`), '')
+                    .replace(new RegExp(`${match[1]}$`), '');
+                data[match[2]] = replaceSectionTag(parseSection(match[0]), match[0]);
             }
             Object.assign(result, data);
             return data;
         }
-        result[TEMPLATE_ROOT] = replaceTemplateSection(parseSection(value), value);
+        result[TEMPLATE_ROOT] = replaceSectionTag(parseSection(value), value);
         return result;
     }
-    function createTemplate(value, data, format = false, index) {
+    function createTemplate(templates, data, format = false, index) {
         if (index === undefined) {
             index = TEMPLATE_ROOT;
         }
-        let output = value[index] || '';
+        let output = templates[index] || '';
         for (const attr in data) {
             if (data[attr] !== undefined && data[attr] !== null) {
                 const unknown = data[attr];
@@ -2189,13 +4316,10 @@
                 if (Array.isArray(unknown)) {
                     hash = '%';
                     if (Array.isArray(unknown[0])) {
-                        function partial(section) {
-                            return `((\\t*##${attr}-${section}##\\s*\\n)([\\w\\W]*?\\s*\\n)(\\t*##${attr}-${section}##\\s*\\n))`;
-                        }
-                        const match = new RegExp(partial('start') + `([\\w\\W]*?)` + partial('end')).exec(output);
+                        const match = new RegExp(getSectionTag(attr, 'start') + `([\\w\\W]*?)` + getSectionTag(attr, 'end')).exec(output);
                         if (match) {
                             const depth = unknown[0].length;
-                            const guard = Object.assign({}, value);
+                            const guard = Object.assign({}, templates);
                             let tagStart = '';
                             let tagEnd = '';
                             for (let i = 0; i < depth; i++) {
@@ -2204,7 +4328,9 @@
                                 tagStart += createTemplate(guard, unknown[0][i], format, key);
                                 tagEnd = match[8] + tagEnd;
                             }
-                            output = output.replace(match[1], tagStart).replace(match[6], tagEnd);
+                            output = output
+                                .replace(match[1], tagStart)
+                                .replace(match[6], tagEnd);
                         }
                         else {
                             result = false;
@@ -2215,7 +4341,7 @@
                     }
                     else {
                         for (let i = 0; i < unknown.length; i++) {
-                            result += createTemplate(value, unknown[i], format, attr.toString());
+                            result += createTemplate(templates, unknown[i], format, attr.toString());
                         }
                         if (result !== '') {
                             result = trimEnd(result, '\n');
@@ -2243,18 +4369,19 @@
             }
         }
         if (index === TEMPLATE_ROOT) {
-            output = output.replace(/\n*\t*{%\w+}\n+/g, '\n').replace(/\n\n/g, '\n').trim();
+            output = output
+                .replace(REGEXP_CREATE.COLLECTION, '\n')
+                .replace(REGEXP_CREATE.LINEBREAK, '\n').trim();
             if (format) {
                 output = formatTemplate(output);
             }
         }
-        return output.replace(/\s*((\w+:)?\w+="[^"]*)?{~\w+}"?/g, '');
+        return output.replace(REGEXP_CREATE.ATTRIBUTE, '');
     }
     function formatTemplate(value, closeEmpty = true, char = '\t') {
         const lines = [];
-        const pattern = /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g;
         let match;
-        while ((match = pattern.exec(value)) !== null) {
+        while ((match = REGEXP_FORAMT.ITEM.exec(value)) !== null) {
             lines.push({
                 tag: match[1],
                 closing: !!match[2],
@@ -2262,7 +4389,6 @@
                 value: match[4].trim() === '' ? '' : match[4]
             });
         }
-        const closed = /\/>\n*$/;
         let output = '';
         let indent = -1;
         for (let i = 0; i < lines.length; i++) {
@@ -2274,11 +4400,11 @@
                 }
                 else {
                     previous++;
-                    if (!closed.exec(line.tag)) {
+                    if (!REGEXP_FORAMT.CLOSETAG.exec(line.tag)) {
                         if (closeEmpty && line.value.trim() === '') {
                             const next = lines[i + 1];
                             if (next && next.closing && next.tagName === line.tagName) {
-                                line.tag = line.tag.replace(/\s*>$/, ' />');
+                                line.tag = line.tag.replace(REGEXP_FORAMT.OPENTAG, ' />');
                                 i++;
                             }
                             else {
@@ -2333,24 +4459,21 @@
             exports.settings = appBase.userSettings;
             main = appBase.application;
             main.userSettings = exports.settings;
-            if (Array.isArray(exports.settings.builtInExtensions)) {
-                const register = new Set();
-                for (let namespace of exports.settings.builtInExtensions) {
-                    namespace = namespace.trim();
-                    if (main.builtInExtensions[namespace]) {
-                        register.add(main.builtInExtensions[namespace]);
-                    }
-                    else {
-                        for (const extension in main.builtInExtensions) {
-                            if (extension.startsWith(`${namespace}.`)) {
-                                register.add(main.builtInExtensions[extension]);
-                            }
+            const register = new Set();
+            for (const namespace of exports.settings.builtInExtensions) {
+                if (main.builtInExtensions[namespace]) {
+                    register.add(main.builtInExtensions[namespace]);
+                }
+                else {
+                    for (const extension in main.builtInExtensions) {
+                        if (extension.startsWith(`${namespace}.`)) {
+                            register.add(main.builtInExtensions[extension]);
                         }
                     }
                 }
-                for (const extension of register) {
-                    main.extensionManager.include(extension);
-                }
+            }
+            for (const extension of register) {
+                main.extensionManager.include(extension);
             }
             framework = value;
             exports.system = value.system;
@@ -2506,7 +4629,9 @@
             Container
         },
         color,
+        css,
         dom,
+        element,
         math,
         util,
         xml

@@ -310,9 +310,8 @@ export default (Base: Constructor<squared.base.Node>) => {
                         return value !== '' && value !== 'parent' && value !== renderParent.documentId ? value : '';
                     }
                     else if (renderParent.layoutRelative) {
-                        const attr: string = LAYOUT_ANDROID.relative[position];
-                        const value = this.android(this.localizeString(attr)) || this.android(attr);
-                        return value;
+                        const attr: string | undefined = LAYOUT_ANDROID.relative[position];
+                        return attr ? this.android(this.localizeString(attr)) || this.android(attr) : '';
                     }
                 }
             }
@@ -576,7 +575,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                         return;
                     }
                     else if (
-                        this.flexElement && !renderParent.inlineWidth ||
+                        this.flexElement && renderParent.hasWidth ||
                         this.groupParent && renderChildren.some(node => !(node.plainText && node.multiline) && node.linear.width >= this.documentParent.box.width) ||
                         blockStatic && (this.documentBody || (
                             parent.documentBody ||
@@ -801,17 +800,12 @@ export default (Base: Constructor<squared.base.Node>) => {
                 paddingBottom: 0,
                 paddingLeft: 0
             };
+            const combined = this.supported('android', 'layout_marginHorizontal');
             for (let i = 0; i < BOXSPACING_REGION.length; i++) {
                 const region = BOXSPACING_REGION[i];
                 for (const direction of BOXSPACING_DIRECTION) {
                     const attr = region + direction;
-                    let value: number;
-                    if (this._boxReset[attr] === 1 || attr === 'marginRight' && this.bounds.right >= this.documentParent.box.right && this.inline) {
-                        value = 0;
-                    }
-                    else {
-                        value = this[attr];
-                    }
+                    let value = this._boxReset[attr] === 0 && !(attr === 'marginRight' && this.inline && this.bounds.right >= this.documentParent.box.right) ? this[attr] : 0;
                     value += this._boxAdjustment[attr];
                     boxModel[attr] = value;
                 }
@@ -826,7 +820,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                 let mergeAll = 0;
                 let mergeHorizontal = 0;
                 let mergeVertical = 0;
-                if (this.supported('android', 'layout_marginHorizontal') && !(i === 0 && renderParent && renderParent.is(CONTAINER_NODE.GRID))) {
+                if (combined && !(i === 0 && renderParent && renderParent.is(CONTAINER_NODE.GRID))) {
                     if (boxModel[top] === boxModel[right] && boxModel[right] === boxModel[bottom] && boxModel[bottom] === boxModel[left]) {
                         mergeAll = boxModel[top];
                     }
@@ -839,29 +833,29 @@ export default (Base: Constructor<squared.base.Node>) => {
                         }
                     }
                 }
-                if (mergeAll > 0) {
+                if (mergeAll !== 0) {
                     this.android(prefix, $util.formatPX(mergeAll));
                 }
                 else {
-                    if (mergeHorizontal > 0) {
+                    if (mergeHorizontal !== 0) {
                         this.android(`${prefix}Horizontal`, $util.formatPX(mergeHorizontal));
                     }
                     else {
-                        if (boxModel[left] > 0) {
+                        if (boxModel[left] !== 0) {
                             this.android(prefix + localizeLeft, $util.formatPX(boxModel[left]));
                         }
-                        if (boxModel[right] > 0) {
+                        if (boxModel[right] !== 0) {
                             this.android(prefix + localizeRight, $util.formatPX(boxModel[right]));
                         }
                     }
-                    if (mergeVertical > 0) {
+                    if (mergeVertical !== 0) {
                         this.android(`${prefix}Vertical`, $util.formatPX(mergeVertical));
                     }
                     else {
-                        if (boxModel[top] > 0) {
+                        if (boxModel[top] !== 0) {
                             this.android(`${prefix}Top`, $util.formatPX(boxModel[top]));
                         }
-                        if (boxModel[bottom] > 0) {
+                        if (boxModel[bottom] !== 0) {
                             this.android(`${prefix}Bottom`, $util.formatPX(boxModel[bottom]));
                         }
                     }

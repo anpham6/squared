@@ -373,12 +373,19 @@ export const SVG = {
     }
 };
 
+export function getDOMRect(element: SVGElement) {
+    const result: Partial<DOMRect> = element.getBoundingClientRect();
+    result.x = result.left;
+    result.y = result.top;
+    return <DOMRect> result;
+}
+
 export function getAttributeUrl(value: string) {
     const match = /url\("?(#.+?)"?\)/.exec(value);
     return match ? match[1] : '';
 }
 
-export function getTargetElement(element: Element, rootElement?: SVGElement) {
+export function getTargetElement(element: SVGElement, rootElement?: SVGElement) {
     const value = $css.getNamedItem(element, 'href');
     if (value.charAt(0) === '#') {
         const id = value.substring(1);

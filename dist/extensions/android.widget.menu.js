@@ -1,4 +1,4 @@
-/* android.widget 0.7.2
+/* android.widget 0.8.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -9,6 +9,7 @@ this.android.widget.menu = (function () {
     var $Resource = android.base.Resource;
     const $const = squared.base.lib.constant;
     const $enum = squared.base.lib.enumeration;
+    const $css = squared.lib.css;
     const $dom = squared.lib.dom;
     const $util = squared.lib.util;
     const $constA = android.lib.constant;
@@ -19,7 +20,7 @@ this.android.widget.menu = (function () {
         ITEM: 'item',
         GROUP: 'group'
     };
-    const VALIDATE_ITEM = {
+    const REGEXP_ITEM = {
         id: /^@\+id\/\w+$/,
         title: /^.+$/,
         titleCondensed: /^.+$/,
@@ -39,7 +40,7 @@ this.android.widget.menu = (function () {
         menuCategory: /^(container|system|secondary|alternative)$/,
         orderInCategory: /^[0-9]+$/
     };
-    const VALIDATE_GROUP = {
+    const REGEXP_GROUP = {
         id: /^@\+id\/\w+$/,
         checkableBehavior: /^(none|all|single)$/,
         visible: /^(true|false)$/,
@@ -57,7 +58,7 @@ this.android.widget.menu = (function () {
             if (value && validator[attr]) {
                 const match = value.match(validator[attr]);
                 if (match) {
-                    options[NAMESPACE_APP.includes(attr) ? 'app' : 'android'][attr] = match.join('|');
+                    options[NAMESPACE_APP.includes(attr) ? 'app' : 'android'][attr] = Array.from(new Set(match)).join('|');
                 }
             }
         }
@@ -106,7 +107,7 @@ this.android.widget.menu = (function () {
                 }
                 if (valid) {
                     element.querySelectorAll('NAV').forEach((item) => {
-                        if ($dom.getStyle(element).display === 'none') {
+                        if ($css.getStyle(element).display === 'none') {
                             $dom.setElementCache(item, 'squaredExternalDisplay', 'none');
                             item.style.display = 'block';
                         }
@@ -178,12 +179,12 @@ this.android.widget.menu = (function () {
                     break;
                 case VIEW_NAVIGATION.GROUP:
                     node.alignmentType |= 4 /* AUTO_LAYOUT */;
-                    parseDataSet(VALIDATE_GROUP, element, options);
+                    parseDataSet(REGEXP_GROUP, element, options);
                     break;
                 case VIEW_NAVIGATION.ITEM:
-                    parseDataSet(VALIDATE_ITEM, element, options);
+                    parseDataSet(REGEXP_ITEM, element, options);
                     if (!$util.hasValue(options.android.icon)) {
-                        const style = $dom.getStyle(element);
+                        const style = $css.getStyle(element);
                         let src = $Resource.addImageUrl((style.backgroundImage !== 'none' ? style.backgroundImage : style.background), $constA.PREFIX_ANDROID.MENU);
                         if (src !== '') {
                             options.android.icon = `@drawable/${src}`;

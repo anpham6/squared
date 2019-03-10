@@ -1,4 +1,3 @@
-import { ConicGradient, LinearGradient, RadialGradient } from '../../src/base/@types/node';
 import { ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from './@types/application';
 
 import View from './view';
@@ -8,162 +7,11 @@ import { RESERVED_JAVA } from './lib/constant';
 const $Resource = squared.base.Resource;
 const $color = squared.lib.color;
 const $css = squared.lib.css;
-const $math = squared.lib.math;
 const $util = squared.lib.util;
-const $xml = squared.lib.xml;
 
 const STORED = <ResourceStoredMapAndroid> $Resource.STORED;
 
-type GradientColorStop = {
-    color: string;
-    offset: string;
-};
-
-export interface GradientTemplate {
-    type: string;
-    colorStops: GradientColorStop[] | false;
-    startColor?: string;
-    endColor?: string;
-    centerColor?: string;
-    angle?: string;
-    startX?: string;
-    startY?: string;
-    endX?: string;
-    endY?: string;
-    centerX?: string;
-    centerY?: string;
-    gradientRadius?: string;
-    tileMode?: string;
-}
-
 export default class Resource<T extends View> extends squared.base.Resource<T> implements android.base.Resource<T> {
-    public static convertColorStops(list: ColorStop[], precision?: number) {
-        const result: GradientColorStop[] = [];
-        for (const stop of list) {
-            const color = `@color/${Resource.addColor(stop.color, true)}`;
-            result.push({
-                color,
-                offset: $math.truncate(stop.offset, precision)
-            });
-        }
-        return result;
-    }
-
-    public static createBackgroundGradient(gradient: Gradient, precision?: number) {
-        if (gradient.dimension === undefined) {
-            return undefined;
-        }
-        const dimension = gradient.dimension;
-        const result: GradientTemplate = {
-            type: gradient.type,
-            colorStops: false
-        };
-        let hasStop = true;
-        if (gradient.type !== 'linear' && (gradient.colorStops.length === 2 || gradient.colorStops.length === 3 && gradient.colorStops[1].offset === 0.5) && gradient.colorStops[0].offset <= 0 && gradient.colorStops[gradient.colorStops.length - 1].offset === 1) {
-            result.startColor = Resource.addColor(gradient.colorStops[0].color, true);
-            result.endColor = Resource.addColor(gradient.colorStops[gradient.colorStops.length - 1].color, true);
-            if (gradient.colorStops.length === 3) {
-                result.centerColor = Resource.addColor(gradient.colorStops[1].color, true);
-            }
-            hasStop = false;
-        }
-        switch (gradient.type) {
-            case 'radial': {
-                const position = $css.getBackgroundPosition((<RadialGradient> gradient).position[0], dimension, gradient.fontSize, !hasStop);
-                if (hasStop) {
-                    result.gradientRadius = dimension.width.toString();
-                    result.centerX = position.left.toString();
-                    result.centerY = position.top.toString();
-                }
-                else {
-                    result.gradientRadius = $util.formatPX(dimension.width);
-                    result.centerX = $util.formatPercent(position.left * 100);
-                    result.centerY = $util.formatPercent(position.top * 100);
-                }
-                break;
-            }
-            case 'linear': {
-                const linear = <LinearGradient> gradient;
-                const angle = linear.angle;
-                let width: number;
-                let height: number;
-                if (linear.dimension) {
-                    width = linear.dimension.width;
-                    height = linear.dimension.height;
-                }
-                else {
-                    width = Math.round(dimension.width);
-                    height = Math.round(dimension.height);
-                }
-                let positionX = $math.offsetAngleX(angle, width);
-                let positionY = $math.offsetAngleY(angle, height);
-                if (!$math.isEqual(Math.abs(positionX), Math.abs(positionY))) {
-                    let oppositeAngle: number;
-                    if (angle <= 90) {
-                        oppositeAngle = $math.offsetAngle({ x: 0, y: height }, { x: width, y: 0 });
-                    }
-                    else if (angle <= 180) {
-                        oppositeAngle = $math.offsetAngle({ x: 0, y: 0 }, { x: width, y: height });
-                    }
-                    else if (angle <= 270) {
-                        oppositeAngle = $math.offsetAngle({ x: 0, y: 0 }, { x: -width, y: height });
-                    }
-                    else {
-                        oppositeAngle = $math.offsetAngle({ x: 0, y: height }, { x: -width, y: 0 });
-                    }
-                    let a = Math.abs(oppositeAngle - angle);
-                    let b = 90 - a;
-                    const lenX = $math.trianguleASA(a, b, Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2)));
-                    positionX = $math.truncateFraction($math.offsetAngleX(angle, lenX[1]));
-                    a = 90;
-                    b = 90 - angle;
-                    const lenY = $math.trianguleASA(a, b, positionX);
-                    positionY = $math.truncateFraction($math.offsetAngleY(angle, lenY[0]));
-                }
-                if (angle <= 90) {
-                    positionY += height;
-                    result.startX = '0';
-                    result.startY = height.toString();
-                }
-                else if (angle <= 180) {
-                    result.startX = '0';
-                    result.startY = '0';
-                }
-                else if (angle <= 270) {
-                    positionX += width;
-                    result.startX = width.toString();
-                    result.startY = '0';
-                }
-                else {
-                    positionX += width;
-                    positionY += height;
-                    result.startX = width.toString();
-                    result.startY = height.toString();
-                }
-                result.endX = $math.truncate(positionX, precision);
-                result.endY = $math.truncate(positionY, precision);
-                break;
-            }
-            case 'conic': {
-                result.type = 'sweep';
-                const position = $css.getBackgroundPosition((<ConicGradient> gradient).position[0], <DOMRect> { width: dimension.width * 2, height: dimension.height * 2 }, gradient.fontSize, !hasStop);
-                if (hasStop) {
-                    result.centerX = position.left.toString();
-                    result.centerY = position.top.toString();
-                }
-                else {
-                    result.centerX = $util.formatPercent(position.left * 100);
-                    result.centerY = $util.formatPercent(position.top * 100);
-                }
-                break;
-            }
-        }
-        if (hasStop) {
-            result.colorStops = Resource.convertColorStops(gradient.colorStops);
-        }
-        return result;
-    }
-
     public static formatOptions(options: ExternalData, numberAlias = false) {
         for (const namespace in options) {
             if (options.hasOwnProperty(namespace)) {
@@ -204,32 +52,6 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
             }
         }
         return options;
-    }
-
-    public static getOptionArray(element: HTMLSelectElement, replaceEntities = false) {
-        const stringArray: string[] = [];
-        let numberArray: string[] | undefined = [];
-        let i = -1;
-        while (++i < element.children.length) {
-            const item = <HTMLOptionElement> element.children[i];
-            const value = item.text.trim();
-            if (value !== '') {
-                if (numberArray && stringArray.length === 0 && $util.isNumber(value)) {
-                    numberArray.push(value);
-                }
-                else {
-                    if (numberArray && numberArray.length) {
-                        i = -1;
-                        numberArray = undefined;
-                        continue;
-                    }
-                    if (value !== '') {
-                        stringArray.push(replaceEntities ? $xml.replaceEntity(value) : value);
-                    }
-                }
-            }
-        }
-        return [stringArray.length ? stringArray : undefined, numberArray && numberArray.length ? numberArray : undefined];
     }
 
     public static addTheme(...values: Required<StyleAttribute>[]) {
@@ -284,11 +106,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                         return resourceName;
                     }
                 }
-                const partial = name
-                    .replace(/[^\w]/g, '_')
-                    .replace(/^_+/, '')
-                    .replace(/_+$/, '')
-                    .split(/_+/);
+                const partial = $util.trimString(name.replace(/[^A-Za-z\d]+/g, '_'), '_').split(/_+/);
                 if (partial.length > 1) {
                     if (partial.length > 4) {
                         partial.length = 4;
@@ -387,7 +205,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
             color = $color.parseColor(color, undefined, transparency);
         }
         if (color && (!color.transparent || transparency)) {
-            const keyName = color.opaque || color.transparent ? color.valueAsARGB : color.value;
+            const keyName = color.semiopaque || color.transparent ? color.valueAsARGB : color.value;
             let colorName = STORED.colors.get(keyName);
             if (colorName) {
                 return colorName;

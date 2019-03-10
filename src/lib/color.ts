@@ -2144,7 +2144,7 @@ export function parseColor(value: string, opacity = '1', transparency = false) {
                     r: parseInt(match[1]),
                     g: parseInt(match[2]),
                     b: parseInt(match[3]),
-                    a: match[4] ? parseFloat(match[4]) : parseOpacity(opacity)
+                    a: match[4] ? parseFloat(match[4]) * 255 : parseOpacity(opacity)
                 };
             }
         }
@@ -2181,8 +2181,8 @@ export function parseColor(value: string, opacity = '1', transparency = false) {
                 valueAsARGB: `#${alphaAsString + hexAsString}`,
                 rgba,
                 hsl: convertHSLA(rgba),
-                alpha,
-                opaque: alpha > 0 && alpha < 1,
+                opacity: alpha,
+                semiopaque: alpha > 0 && alpha < 1,
                 transparent: alpha === 0
             };
             Object.freeze(CACHE_COLORDATA[value]);

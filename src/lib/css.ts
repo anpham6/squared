@@ -279,45 +279,41 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                 case 0:
                     result.horizontal = position;
                     break;
+                case 1: {
+                    const location = percent ? convertPercent(position, dimension.width, fontSize) : convertUnit(position, dimension.width, fontSize);
+                    switch (result.horizontal) {
+                        case 'end:':
+                            result.horizontal = 'right';
+                        case 'right':
+                            result.right = location;
+                            result.left = percent ? 1 - location : dimension.width - location;
+                            result.originalX = isPercent(position) ? formatPercent(100 - parseInt(position)) : formatPX(dimension.width - parseInt(convertPX(position, fontSize)));
+                            break;
+                        case 'start':
+                            result.horizontal = 'left';
+                        default:
+                            result.left = location;
+                            result.originalX = position;
+                            break;
+                    }
+                    break;
+                }
                 case 2:
                     result.vertical = position;
                     break;
-                case 1:
-                case 3:
-                    const location = percent ? convertPercent(position, i === 1 ? dimension.width : dimension.height, fontSize) : convertUnit(position, i === 1 ? dimension.width : dimension.height, fontSize);
-                    if (i === 1) {
-                        if (result.horizontal === 'right') {
-                            if (isPercent(position)) {
-                                result.originalX = formatPercent(100 - parseInt(position));
-                            }
-                            else {
-                                result.originalX = formatPX(dimension.width - parseInt(convertPX(position, fontSize)));
-                            }
-                            result.right = location;
-                            result.left = percent ? 1 - location : dimension.width - location;
-                        }
-                        else {
-                            result.left = location;
-                            result.originalX = position;
-                        }
+                case 3: {
+                    const location = percent ? convertPercent(position, dimension.height, fontSize) : convertUnit(position, dimension.height, fontSize);
+                    if (result.vertical === 'bottom') {
+                        result.bottom = location;
+                        result.top = percent ? 1 - location : dimension.height - location;
+                        result.originalY = isPercent(position) ? formatPercent(100 - parseInt(position)) : formatPX(dimension.height - parseInt(convertPX(position, fontSize)));
                     }
                     else {
-                        if (result.vertical === 'bottom') {
-                            if (isPercent(position)) {
-                                result.originalY = formatPercent(100 - parseInt(position));
-                            }
-                            else {
-                                result.originalY = formatPX(dimension.height - parseInt(convertPX(position, fontSize)));
-                            }
-                            result.bottom = location;
-                            result.top = percent ? 1 - location : dimension.height - location;
-                        }
-                        else {
-                            result.top = location;
-                            result.originalY = position;
-                        }
+                        result.top = location;
+                        result.originalY = position;
                     }
                     break;
+                }
             }
         }
     }
@@ -341,10 +337,14 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
             }
             if (/^[a-z]+$/.test(position)) {
                 switch (position) {
+                    case 'start':
+                        result.horizontal = 'left';
                     case 'left':
                     case 'top':
                         result[original] = '0%';
                         break;
+                    case 'end':
+                        result.horizontal = 'right';
                     case 'right':
                     case 'bottom':
                         result[direction] = percent ? 1 : offsetParent;
@@ -357,8 +357,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                 }
             }
             else {
-                const location = percent ? convertPercent(position, offsetParent, fontSize) : convertUnit(position, offsetParent, fontSize);
-                result[direction] = location;
+                result[direction] = percent ? convertPercent(position, offsetParent, fontSize) : convertUnit(position, offsetParent, fontSize);
                 result[original] = position;
             }
         }

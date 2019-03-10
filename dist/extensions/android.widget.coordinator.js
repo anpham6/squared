@@ -1,4 +1,4 @@
-/* android.widget 0.7.2
+/* android.widget 0.8.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -14,7 +14,7 @@ this.android.widget.coordinator = (function () {
     const $utilA = android.lib.util;
     class Coordinator extends squared.base.Extension {
         processNode(node, parent) {
-            const options = $utilA.createViewAttribute(node.element ? this.options[node.element.id] : undefined);
+            const options = $utilA.createViewAttribute(this.options[node.elementId]);
             node.setControlType($constA.SUPPORT_ANDROID.COORDINATOR, $enumA.CONTAINER_NODE.BLOCK);
             node.exclude({ resource: $enum.NODE_RESOURCE.ASSET });
             node.render(parent);
@@ -25,7 +25,7 @@ this.android.widget.coordinator = (function () {
                 if (toolbar && toolbar.element) {
                     const extension = this.application.extensionManager.retrieve("android.widget.toolbar" /* TOOLBAR */);
                     if (extension) {
-                        const toolbarOptions = $utilA.createViewAttribute(extension.options[toolbar.element.id]);
+                        const toolbarOptions = $utilA.createViewAttribute(extension.options[toolbar.elementId]);
                         if ('collapsingToolbar' in toolbarOptions) {
                             node.android('fitsSystemWindows', 'true');
                         }

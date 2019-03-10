@@ -1,4 +1,4 @@
-/* android.widget 0.7.2
+/* android.widget 0.8.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -23,16 +23,16 @@ this.android.widget.floatingactionbutton = (function () {
         }
         processNode(node, parent) {
             const element = node.element;
-            const target = $util.hasValue(node.dataset.target);
+            const target = node.dataset.target;
             const options = $utilA.createViewAttribute(this.options[element.id]);
-            const backgroundColor = $color.parseRGBA(node.css('backgroundColor'), node.css('opacity'));
+            const backgroundColor = $color.parseColor(node.css('backgroundColor'), node.css('opacity'));
             let colorValue = '';
             if (backgroundColor) {
                 colorValue = $Resource.addColor(backgroundColor);
             }
-            $util.defaultWhenNull(options, 'android', 'backgroundTint', colorValue !== '' ? `@color/${colorValue}` : '?attr/colorAccent');
+            $util.assignEmptyValue(options, 'android', 'backgroundTint', colorValue !== '' ? `@color/${colorValue}` : '?attr/colorAccent');
             if (node.hasBit('excludeProcedure', $enum.NODE_PROCEDURE.ACCESSIBILITY)) {
-                $util.defaultWhenNull(options, 'android', 'focusable', 'false');
+                $util.assignEmptyValue(options, 'android', 'focusable', 'false');
             }
             let src = '';
             switch (element.tagName) {
@@ -52,7 +52,7 @@ this.android.widget.floatingactionbutton = (function () {
                     break;
             }
             if (src !== '') {
-                $util.defaultWhenNull(options, 'app', 'srcCompat', `@drawable/${src}`);
+                $util.assignEmptyValue(options, 'app', 'srcCompat', `@drawable/${src}`);
             }
             node.setControlType($constA.SUPPORT_ANDROID.FLOATING_ACTION_BUTTON, $enumA.CONTAINER_NODE.BUTTON);
             node.exclude({ resource: $enum.NODE_RESOURCE.BOX_STYLE | $enum.NODE_RESOURCE.ASSET });
@@ -111,7 +111,7 @@ this.android.widget.floatingactionbutton = (function () {
                         node.delete('android', 'layout_gravity');
                     }
                     node.exclude({ procedure: $enum.NODE_PROCEDURE.ALIGNMENT });
-                    node.render(node);
+                    node.render(this.application.resolveTarget(target, node));
                 }
                 else {
                     node.render(parent);

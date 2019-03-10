@@ -35,8 +35,8 @@ interface ColorData extends NameValue {
     valueAsARGB: string;
     rgba: RGBA;
     hsl: HSL;
-    alpha: number;
-    opaque: boolean;
+    opacity: number;
+    semiopaque: boolean;
     transparent: boolean;
 }
 

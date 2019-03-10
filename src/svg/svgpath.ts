@@ -410,21 +410,17 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                 }
                                 if (afterStartPoint) {
                                     if (afterStartPoint.x === pathStartPoint.x) {
-                                        const y = pathStart.coordinates[1] + (pathStartPoint.y > afterStartPoint.y ? leading : -leading);
-                                        pathStart.coordinates[1] = y;
+                                        pathStart.coordinates[1] = pathStart.coordinates[1] + (pathStartPoint.y > afterStartPoint.y ? leading : -leading);
                                         modified = true;
                                     }
                                     else if (afterStartPoint.y === pathStartPoint.y) {
-                                        const x = pathStart.coordinates[0] + (pathStartPoint.x > afterStartPoint.x ? leading : -leading);
-                                        pathStart.coordinates[0] = x;
+                                        pathStart.coordinates[0] = pathStart.coordinates[0] + (pathStartPoint.x > afterStartPoint.x ? leading : -leading);
                                         modified = true;
                                     }
                                     else {
                                         const angle = $math.offsetAngle(afterStartPoint, pathStartPoint);
-                                        const x = pathStart.coordinates[0] - $math.offsetAngleX(angle, leading);
-                                        const y = pathStart.coordinates[1] - $math.offsetAngleY(angle, leading);
-                                        pathStart.coordinates[0] = x;
-                                        pathStart.coordinates[1] = y;
+                                        pathStart.coordinates[0] = pathStart.coordinates[0] - $math.offsetAngleX(angle, leading);
+                                        pathStart.coordinates[1] = pathStart.coordinates[1] - $math.offsetAngleY(angle, leading);
                                         modified = true;
                                     }
                                 }
@@ -447,13 +443,11 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         }
                                         if (beforeEndPoint) {
                                             if (beforeEndPoint.x === pathEndPoint.x) {
-                                                const y = pathEnd.coordinates[1] + (pathEndPoint.y > beforeEndPoint.y ? trailing : -trailing);
-                                                pathEnd.coordinates[1] = y;
+                                                pathEnd.coordinates[1] = pathEnd.coordinates[1] + (pathEndPoint.y > beforeEndPoint.y ? trailing : -trailing);
                                                 modified = true;
                                             }
                                             else if (beforeEndPoint.y === pathEndPoint.y) {
-                                                const x = pathEnd.coordinates[0] + (pathEndPoint.x > beforeEndPoint.x ? trailing : -trailing);
-                                                pathEnd.coordinates[0] = x;
+                                                pathEnd.coordinates[0] = pathEnd.coordinates[0] + (pathEndPoint.x > beforeEndPoint.x ? trailing : -trailing);
                                                 modified = true;
                                             }
                                             else {
@@ -471,8 +465,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                 case 'H':
                                 case 'V': {
                                     const index = name === 'H' ? 0 : 1;
-                                    const pt = pathEnd.coordinates[index] + (leading + trailing) * (pathEnd.coordinates[index] >= 0 ? 1 : -1);
-                                    pathEnd.coordinates[index] = pt;
+                                    pathEnd.coordinates[index] = pathEnd.coordinates[index] + (leading + trailing) * (pathEnd.coordinates[index] >= 0 ? 1 : -1);
                                     modified = true;
                                     break;
                                 }

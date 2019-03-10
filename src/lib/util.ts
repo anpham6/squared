@@ -79,7 +79,7 @@ export const enum USER_AGENT {
 
 export const REGEXP_STRING: UtilRegExpString = <any> {
     URL: 'url\\("?(.+?)"?\\)',
-    DECIMAL: '-?\\d+(?:.\\d+)?',
+    DECIMAL: '-?\\d+(?:\\.\\d+)?',
     ZERO_ONE: '0(?:\\.\\d+)?|1(?:\\.0+)?',
     PERCENT: '\\d+(\\.\\d+)?%',
     CALC: 'calc(\\(.+\\))',
@@ -282,7 +282,7 @@ export function calculate(value: string, dimension = 0, fontSize?: number) {
                 let j = closing[i] - 1;
                 let valid = false;
                 for ( ; j >= 0; j--) {
-                    if (opening[j] === true) {
+                    if (opening[j]) {
                         valid = true;
                         opening[j] = false;
                         break;
@@ -370,45 +370,47 @@ export function calculate(value: string, dimension = 0, fontSize?: number) {
 }
 
 export function calculateUnit(value: string, fontSize?: number) {
-    const match = value.match(REGEXP_COMPILED.UNIT);
-    if (match) {
-        let result = parseFloat(match[1]);
-        switch (match[2]) {
-            case 'px':
-                return result;
-            case 'em':
-            case 'ch':
-                result *= fontSize || 16;
-                break;
-            case 'pc':
-                result *= 12;
-            case 'pt':
-                result *= 4 / 3;
-                break;
-            case 'mm':
-                result /= 10;
-            case 'cm':
-                result /= 2.54;
-            case 'in':
-                result *= getDeviceDPI();
-                break;
-            case 'vw':
-                result *= window.innerWidth / 100;
-                break;
-            case 'vh':
-                result *= window.innerHeight / 100;
-                break;
-            case 'vmin':
-                result *= Math.min(window.innerWidth, window.innerHeight) / 100;
-                break;
-            case 'vmax':
-                result *= Math.max(window.innerWidth, window.innerHeight) / 100;
-                break;
+    if (value) {
+        const match = value.match(REGEXP_COMPILED.UNIT);
+        if (match) {
+            let result = parseFloat(match[1]);
+            switch (match[2]) {
+                case 'px':
+                    return result;
+                case 'em':
+                case 'ch':
+                    result *= fontSize || 16;
+                    break;
+                case 'pc':
+                    result *= 12;
+                case 'pt':
+                    result *= 4 / 3;
+                    break;
+                case 'mm':
+                    result /= 10;
+                case 'cm':
+                    result /= 2.54;
+                case 'in':
+                    result *= getDeviceDPI();
+                    break;
+                case 'vw':
+                    result *= window.innerWidth / 100;
+                    break;
+                case 'vh':
+                    result *= window.innerHeight / 100;
+                    break;
+                case 'vmin':
+                    result *= Math.min(window.innerWidth, window.innerHeight) / 100;
+                    break;
+                case 'vmax':
+                    result *= Math.max(window.innerWidth, window.innerHeight) / 100;
+                    break;
+            }
+            return result;
         }
-        return result;
-    }
-    else if (isNumber(value)) {
-        return parseFloat(value);
+        else if (isNumber(value)) {
+            return parseFloat(value);
+        }
     }
     return 0;
 }
@@ -696,7 +698,7 @@ export function withinRange(a: number, b: number, offset = 0.5) {
 
 export function assignEmptyProperty(dest: {}, source: {}) {
     for (const attr in source) {
-        if (!dest.hasOwnProperty(dest[attr])) {
+        if (!dest.hasOwnProperty(attr)) {
             dest[attr] = source[attr];
         }
     }

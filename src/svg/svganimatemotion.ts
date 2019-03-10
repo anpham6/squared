@@ -42,7 +42,7 @@ export default class SvgAnimateMotion extends SvgAnimate implements squared.svg.
             for (let i = 0; i < animationElement.children.length; i++) {
                 const item = animationElement.children[i];
                 if (item.tagName === 'mpath') {
-                    const target = getTargetElement(item);
+                    const target = getTargetElement(<SVGElement> item);
                     if (target && (SVG.shape(target) || SVG.use(target))) {
                         this.motionPathElement = target;
                         break;
