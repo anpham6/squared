@@ -16,8 +16,6 @@ const $element = squared.lib.element;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
-const PREALIGN_DIRECTION = ['top', 'right', 'bottom', 'left'];
-
 function prioritizeExtensions<T extends Node>(documentRoot: HTMLElement, element: HTMLElement, extensions: Extension<T>[]) {
     const tagged: string[] = [];
     let current: HTMLElement | null = element;
@@ -622,7 +620,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         if (preAlignment[node.id] === undefined) {
                             preAlignment[node.id] = {};
                         }
-                        for (const attr of PREALIGN_DIRECTION) {
+                        for (const attr of $css.BOX_POSITION) {
                             if (node.has(attr)) {
                                 preAlignment[node.id][attr] = node.css(attr);
                                 element.style[attr] = 'auto';
@@ -1830,7 +1828,9 @@ export default class Application<T extends Node> implements squared.base.Applica
         else if (element.parentElement instanceof HTMLElement) {
             node = this.createNode(element);
             if (!this.controllerHandler.localSettings.unsupported.excluded.has(element.tagName) && this.conditionElement(element)) {
-                node.setExclusions();
+                if (!this.userSettings.exclusionsDisabled) {
+                    node.setExclusions();
+                }
             }
             else {
                 node.visible = false;

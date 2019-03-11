@@ -106,7 +106,8 @@ export default (Base: Constructor<squared.base.Node>) => {
         private _containerType = 0;
         private _localSettings: LocalSettings = {
             targetAPI: BUILD_ANDROID.LATEST,
-            supportRTL: false
+            supportRTL: false,
+            constraintPercentPrecision: 4
         };
         private __android: StringMap = {};
         private __app: StringMap = {};

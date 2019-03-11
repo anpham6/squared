@@ -12,7 +12,7 @@ const $dom = squared.lib.dom;
 const $element = squared.lib.element;
 const $util = squared.lib.util;
 
-const INHERIT_ALIGNMENT = ['position', 'top', 'right', 'bottom', 'left', 'display', 'verticalAlign', 'cssFloat', 'clear', 'zIndex'];
+const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'cssFloat', 'clear', 'zIndex'];
 const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
 
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
@@ -323,12 +323,20 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         this._styleMap[attr] = node.css(attr);
                         this._initial.styleMap[attr] = initial.styleMap[attr];
                     }
-                    for (const attr of $css.BOX_MARGIN) {
-                        if (node.cssInitial(attr) === 'auto') {
-                            this._initial.styleMap[attr] = 'auto';
+                    if (!this.positionStatic) {
+                        for (const attr of $css.BOX_POSITION) {
+                            this._styleMap[attr] = node.css(attr);
+                            this._initial.styleMap[attr] = initial.styleMap[attr];
                         }
-                        if (node.cssInitial(attr, true) === 'auto') {
-                            this._styleMap[attr] = 'auto';
+                    }
+                    if (node.autoMargin.horizontal || node.autoMargin.vertical) {
+                        for (const attr of $css.BOX_MARGIN) {
+                            if (node.cssInitial(attr, true) === 'auto') {
+                                this._styleMap[attr] = 'auto';
+                            }
+                            if (node.cssInitial(attr) === 'auto') {
+                                this._initial.styleMap[attr] = 'auto';
+                            }
                         }
                     }
                     break;
@@ -353,7 +361,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (this.lineBreak) {
             return true;
         }
-        if (this.pageFlow && previousSiblings.length) {
+        else if (this.pageFlow && previousSiblings.length) {
             if ($util.isArray(siblings) && this !== siblings[0]) {
                 if (cleared && cleared.has(this)) {
                     return true;
@@ -562,8 +570,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if ($util.isPercent(value)) {
             const node = parent && this.absoluteParent || this;
             const attr = horizontal ? 'width' : 'height';
-            const percent = parseFloat(value) >= 1 ? parseFloat(value) / 100 : parseFloat(value);
-            return percent * (node.has(attr, CSS_STANDARD.LENGTH) ? node.toFloat(attr) : node[parent ? 'box' : 'bounds'][attr]);
+            return parseFloat(value) / 100 * (node.has(attr, CSS_STANDARD.LENGTH) ? node.toFloat(attr) : node[parent ? 'box' : 'bounds'][attr]);
         }
         return $util.parseUnit(value, this.fontSize);
     }
@@ -752,10 +759,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public valueBox(region: number): [number, number] {
         const attr = CSS_SPACING.get(region);
-        if (attr) {
-            return [this._boxReset[attr], this._boxAdjustment[attr]];
-        }
-        return [0, 0];
+        return attr ? [this._boxReset[attr], this._boxAdjustment[attr]] : [0, 0];
     }
 
     public resetBox(region: number, node?: T, fromParent = false) {
@@ -888,7 +892,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (!this.positionStatic) {
             const unit = this.cssInitial(attr);
             if ($util.isLength(unit) || $util.isPercent(unit)) {
-                value = $util.convertInt(this.convertLength(attr, unit, attr === 'left' || attr === 'right'));
+                value = $util.convertFloat(this.convertLength(attr, unit, attr === 'left' || attr === 'right'));
             }
         }
         return value;
@@ -896,7 +900,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     private convertBox(region: string, direction: string) {
         const attr = region + direction;
-        return $util.convertInt(this.convertLength(attr, this.css(attr), direction === 'Left' || direction === 'Right'));
+        return $util.convertFloat(this.convertLength(attr, this.css(attr), direction === 'Left' || direction === 'Right'));
     }
 
     private convertLength(attr: string, value: string, horizontal: boolean, parent = true): string {
@@ -1150,18 +1154,18 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get hasWidth() {
         if (this._cached.hasWidth === undefined) {
             const value = this.cssInitial('width', true);
-            this._cached.hasWidth = (() => {
-                if (this.inlineStatic) {
-                    return false;
-                }
-                else if ($util.isPercent(value)) {
-                    return value !== '0%';
-                }
-                else if ($util.isLength(value) && value !== '0px' || this.toInt('minWidth') > 0) {
-                    return true;
-                }
-                return false;
-            })();
+            if (this.inlineStatic) {
+                this._cached.hasWidth = false;
+            }
+            else if ($util.isPercent(value)) {
+                this._cached.hasWidth = parseFloat(value) > 0;
+            }
+            else if ($util.isLength(value) && value !== '0px' || this.toInt('minWidth') > 0) {
+                this._cached.hasWidth = true;
+            }
+            else {
+                this._cached.hasWidth = false;
+            }
         }
         return this._cached.hasWidth;
     }
@@ -1175,7 +1179,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 else if ($util.isPercent(value)) {
                     const actualParent = this.actualParent;
                     if (actualParent && actualParent.hasHeight) {
-                        return value !== '0%';
+                        return parseFloat(value) > 0;
                     }
                 }
                 else if ($util.isLength(value) && value !== '0px' || this.toInt('minHeight') > 0) {

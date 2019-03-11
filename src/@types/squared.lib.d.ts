@@ -19,6 +19,7 @@ declare global {
         }
 
         namespace css {
+            export import BOX_POSITION = $css.BOX_POSITION;
             export import BOX_MARGIN = $css.BOX_MARGIN;
             export import BOX_PADDING = $css.BOX_PADDING;
             function getKeyframeRules(): CSSRuleData;

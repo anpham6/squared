@@ -7,6 +7,7 @@ function convertPercent(value: string, dimension: number, fontSize?: number) {
     return isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize) / dimension;
 }
 
+export const BOX_POSITION = ['top', 'right', 'bottom', 'left'];
 export const BOX_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
 export const BOX_PADDING = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'];
 
@@ -290,7 +291,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                         case 'right':
                             result.right = location;
                             result.left = percent ? 1 - location : dimension.width - location;
-                            result.originalX = isPercent(position) ? formatPercent(100 - parseInt(position)) : formatPX(dimension.width - parseInt(convertPX(position, fontSize)));
+                            result.originalX = isPercent(position) ? formatPercent(100 - parseFloat(position)) : formatPX(dimension.width -  parseUnit(position, fontSize));
                             break;
                         case 'start':
                             result.horizontal = 'left';
@@ -309,7 +310,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                     if (result.vertical === 'bottom') {
                         result.bottom = location;
                         result.top = percent ? 1 - location : dimension.height - location;
-                        result.originalY = isPercent(position) ? formatPercent(100 - parseInt(position)) : formatPX(dimension.height - parseInt(convertPX(position, fontSize)));
+                        result.originalY = isPercent(position) ? formatPercent(100 - parseFloat(position)) : formatPX(dimension.height -  parseUnit(position, fontSize));
                     }
                     else {
                         result.top = location;

@@ -36,6 +36,7 @@ const NUMERALS = [
     '', 'X', 'XX', 'XXX', 'XL', 'L', 'LX', 'LXX', 'LXXX', 'XC',
     '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'
 ];
+const UNIT_TYPE = 'px|em|ch|pc|pt|vw|vh|vmin|vmax|mm|cm|in';
 
 export const enum USER_AGENT {
     CHROME = 2,
@@ -47,13 +48,11 @@ export const enum USER_AGENT {
 export const STRING_PATTERN: UtilRegExpString = <any> {
     URL: 'url\\("?(.+?)"?\\)',
     DECIMAL: '-?\\d+(?:\\.\\d+)?',
-    ZERO_ONE: '0(?:\\.\\d+)?|1(?:\\.0+)?',
-    PERCENT: '\\d+(\\.\\d+)?%',
+    PERCENT: '\\d+(?:\\.\\d+)?%',
     CALC: 'calc(\\(.+\\))',
-    VAR: 'var\\((--[A-Za-z0-9\\-]+)\\)'
+    VAR: 'var\\((--[A-Za-z0-9\\-]+)\\)',
+    ZERO_ONE: '0(?:\\.\\d+)?|1(?:\\.0+)?'
 };
-
-const UNIT_TYPE = 'px|em|ch|pc|pt|vw|vh|vmin|vmax|mm|cm|in';
 
 STRING_PATTERN.LENGTH = `(${STRING_PATTERN.DECIMAL})(${UNIT_TYPE})?`;
 STRING_PATTERN.LENGTH_PERCENTAGE = `(${STRING_PATTERN.DECIMAL}(?:${UNIT_TYPE}|%)?)`;

@@ -202,7 +202,7 @@ function constraintPercentValue<T extends View>(node: T, dimension: string, valu
         }
         else if (value !== '100%') {
             const percent = parseInt(value) / 100 + (node.actualParent ? node.contentBoxWidth / node.actualParent.box.width : 0);
-            node.app(`layout_constraint${dimension}_percent`, percent.toPrecision(node.localSettings.constraintPercentPrecision || 4));
+            node.app(`layout_constraint${dimension}_percent`, percent.toPrecision(node.localSettings.constraintPercentPrecision));
             node.android(`layout_${dimension.toLowerCase()}`, '0px');
         }
     }
@@ -330,7 +330,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         if (basis !== 'auto') {
             if ($util.isPercent(basis)) {
                 if (basis !== '0%') {
-                    node.app(`layout_constraint${horizontal ? 'Width' : 'Height'}_percent`, (parseInt(basis) / 100).toPrecision(2));
+                    node.app(`layout_constraint${horizontal ? 'Width' : 'Height'}_percent`, (parseFloat(basis) / 100).toPrecision(node.localSettings.constraintPercentPrecision));
                     basis = '';
                 }
             }
@@ -381,6 +381,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
 
     public readonly localSettings: ControllerSettings = {
         baseTemplate: BASE_TMPL,
+        floatPrecision: 3,
         layout: {
             pathName: 'res/layout',
             fileExtension: 'xml'
@@ -1136,11 +1137,11 @@ export default class Controller<T extends View> extends squared.base.Controller<
     public renderSpace(depth: number, width: string, height = '', columnSpan = 0, rowSpan = 0, options?: ViewAttribute) {
         options = createViewAttribute(options);
         if ($util.isPercent(width)) {
-            options.android.layout_columnWeight = (parseInt(width) / 100).toPrecision(2);
+            options.android.layout_columnWeight = (parseFloat(width) / 100).toPrecision(this.localSettings.floatPrecision);
             width = '0px';
         }
         if ($util.isPercent(height)) {
-            options.android.layout_rowWeight = (parseInt(height) / 100).toPrecision(2);
+            options.android.layout_rowWeight = (parseFloat(height) / 100).toPrecision(this.localSettings.floatPrecision);
             height = '0px';
         }
         if (columnSpan > 0) {
@@ -1182,7 +1183,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 let usePercent = false;
                 let location: number;
                 if (!node.pageFlow && $util.isPercent(node.css(LT))) {
-                    location = parseInt(node.css(LT)) / 100;
+                    location = parseFloat(node.css(LT)) / 100;
                     usePercent = true;
                     beginPercent += 'percent';
                 }
@@ -1236,7 +1237,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     }
                     if (percent) {
                         const position = Math.abs(node[dimension][LT] - documentParent.box[LT]) / documentParent.box[horizontal ? 'width' : 'height'];
-                        location = parseFloat(Math.abs(position - (!opposite ? 0 : 1)).toPrecision(this.localSettings.constraint.percentPrecision));
+                        location = parseFloat((opposite ? 1 - position : position).toPrecision(this.localSettings.constraint.percentPrecision));
                         usePercent = true;
                         beginPercent += 'percent';
                     }
@@ -1701,7 +1702,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 }
                 if (percent > 0) {
                     item.android('layout_width', '0px');
-                    item.app('layout_constraintWidth_percent', percent.toPrecision(2));
+                    item.app('layout_constraintWidth_percent', percent.toPrecision(this.localSettings.constraint.percentPrecision));
                 }
             }
             chainVertical.push(column);

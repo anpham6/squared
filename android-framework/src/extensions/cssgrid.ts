@@ -219,17 +219,17 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                             break;
                         }
                         else if ($util.isPercent(unit)) {
-                            sizeWeight += parseInt(unit) / 100;
+                            sizeWeight += parseFloat(unit) / 100;
                             minSize = size;
                             size = 0;
                         }
                         else if (unit.endsWith('fr')) {
-                            sizeWeight += parseInt(unit);
+                            sizeWeight += parseFloat(unit);
                             minSize = size;
                             size = 0;
                         }
                         else if (unit.endsWith('px')) {
-                            const gap = parseInt(unit);
+                            const gap = parseFloat(unit);
                             if (minSize === 0) {
                                 size += gap;
                             }
@@ -390,7 +390,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             const controller = <android.base.Controller<T>> this.application.controllerHandler;
             const lastChild = Array.from(mainData.children)[mainData.children.size - 1];
             if (mainData.column.unit.every(value => $util.isPercent(value))) {
-                const percentTotal = mainData.column.unit.reduce((a, b) => a + parseInt(b), 0);
+                const percentTotal = mainData.column.unit.reduce((a, b) => a + parseFloat(b), 0);
                 if (percentTotal < 100) {
                     node.android('columnCount', (mainData.column.count + 1).toString());
                     for (let i = 0; i < mainData.row.count; i++) {

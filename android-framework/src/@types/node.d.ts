@@ -1,7 +1,7 @@
 export interface LocalSettings {
     targetAPI: number;
     supportRTL: boolean;
-    constraintPercentPrecision?: number;
+    constraintPercentPrecision: number;
 }
 
 export interface Constraint {

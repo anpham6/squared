@@ -3,6 +3,7 @@ export interface UserSettings {
     preloadImages: boolean;
     supportNegativeLeftTop: boolean;
     floatOverlapDisabled: boolean;
+    exclusionsDisabled: boolean;
     customizationsDisabled: boolean;
     customizationsOverwritePrivilege: boolean;
     replaceCharacterEntities: boolean;
@@ -17,6 +18,7 @@ export interface UserSettings {
 
 export interface ControllerSettings {
     baseTemplate: string;
+    floatPrecision: number;
     layout: {
         pathName: string;
         fileExtension: string;

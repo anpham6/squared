@@ -63,6 +63,7 @@
             System.import('/build/android-framework/src/main.js').then(result => {
                 android = result.default;
                 squared.setFramework(android);
+                squared.settings.exclusionsDisabled = false;
                 Promise.all([
                     System.import('/build/android-widget/coordinator/main.js'),
                     System.import('/build/android-widget/floatingactionbutton/main.js'),
