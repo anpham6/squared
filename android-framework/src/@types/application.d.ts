@@ -6,7 +6,6 @@ export interface UserSettingsAndroid extends UserSettings {
     supportRTL: boolean;
     ellipsisOnTextOverflow: boolean;
     collapseUnattributedElements: boolean;
-    customizationsOverwritePrivilege: boolean;
     convertPixels: string;
     showAttributes: boolean;
 }

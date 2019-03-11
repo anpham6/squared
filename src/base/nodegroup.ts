@@ -28,16 +28,14 @@ export default abstract class NodeGroup extends Node {
         }
     }
 
-    public setBounds(calibrate = false) {
-        if (!calibrate) {
-            if (this.length) {
-                const bounds = this.outerRegion;
-                this._bounds = {
-                    ...bounds,
-                    width: bounds.right - bounds.left,
-                    height: bounds.bottom - bounds.top
-                };
-            }
+    public setBounds() {
+        if (this.length) {
+            const bounds = this.outerRegion;
+            this._bounds = {
+                ...bounds,
+                width: bounds.right - bounds.left,
+                height: bounds.bottom - bounds.top
+            };
         }
     }
 
@@ -142,7 +140,7 @@ export default abstract class NodeGroup extends Node {
     }
 
     get multiline() {
-        return this.children.reduce((a, b) => a + b.multiline, 0);
+        return this.some(node => node.multiline);
     }
 
     get display() {

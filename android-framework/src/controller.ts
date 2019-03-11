@@ -29,11 +29,27 @@ const REGEXP_DATASETATTR = /^attr[A-Z]/;
 const GUIDELINE_AXIS = [AXIS_ANDROID.HORIZONTAL, AXIS_ANDROID.VERTICAL];
 
 function createColumnLayout<T extends View>(partition: T[][], horizontal: boolean) {
+    let LT: string;
+    let RB: string;
+    let LRTB: string;
+    let RLBT: string;
+    if (horizontal) {
+        LT = 'left';
+        RB = 'right';
+        LRTB = 'leftRight';
+        RLBT = 'rightLeft';
+    }
+    else {
+        LT = 'top';
+        RB = 'bottom';
+        LRTB = 'topBottom';
+        RLBT = 'bottomTop';
+    }
     for (const seg of partition) {
         const rowStart = seg[0];
         const rowEnd = seg[seg.length - 1];
-        rowStart.anchor(horizontal ? 'left' : 'top', 'parent');
-        rowEnd.anchor(horizontal ? 'right' : 'bottom', 'parent');
+        rowStart.anchor(LT, 'parent');
+        rowEnd.anchor(RB, 'parent');
         for (let i = 0; i < seg.length; i++) {
             const chain = seg[i];
             const previous = seg[i - 1] as T | undefined;
@@ -44,11 +60,11 @@ function createColumnLayout<T extends View>(partition: T[][], horizontal: boolea
             else if (i > 0) {
                 chain.anchor('left', rowStart.documentId);
             }
-            if (next) {
-                chain.anchor(horizontal ? 'rightLeft' : 'bottomTop', next.documentId);
-            }
             if (previous) {
-                chain.anchor(horizontal ? 'leftRight' : 'topBottom', previous.documentId);
+                chain.anchor(LRTB, previous.documentId);
+            }
+            if (next) {
+                chain.anchor(RLBT, next.documentId);
             }
             Controller.setConstraintDimension(chain);
             chain.anchored = true;
@@ -186,7 +202,7 @@ function constraintPercentValue<T extends View>(node: T, dimension: string, valu
         }
         else if (value !== '100%') {
             const percent = parseInt(value) / 100 + (node.actualParent ? node.contentBoxWidth / node.actualParent.box.width : 0);
-            node.app(`layout_constraint${dimension}_percent`, percent.toPrecision(node.localSettings.constraintPercentAccuracy || 4));
+            node.app(`layout_constraint${dimension}_percent`, percent.toPrecision(node.localSettings.constraintPercentPrecision || 4));
             node.android(`layout_${dimension.toLowerCase()}`, '0px');
         }
     }
@@ -300,8 +316,16 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     public static setFlexDimension<T extends View>(node: T, horizontal: boolean) {
-        const dimensionA = horizontal ? 'width' : 'height';
-        const dimensionB = horizontal ? 'height' : 'width';
+        let dimensionA: string;
+        let dimensionB: string;
+        if (horizontal) {
+            dimensionA = 'width';
+            dimensionB = 'height';
+        }
+        else {
+            dimensionA = 'height';
+            dimensionB = 'width';
+        }
         let basis = node.flexbox.basis;
         if (basis !== 'auto') {
             if ($util.isPercent(basis)) {
@@ -372,7 +396,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         },
         constraint: {
             withinParentBottomOffset: 3.5,
-            percentAccuracy: 4
+            percentPrecision: 4
         }
     };
 
@@ -599,13 +623,11 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 if (item.pageFlow || item.actualParent !== parent) {
                     middle.push(item);
                 }
+                else if (item.zIndex >= 0) {
+                    above.push(item);
+                }
                 else {
-                    if (item.zIndex >= 0) {
-                        above.push(item);
-                    }
-                    else {
-                        below.push(item);
-                    }
+                    below.push(item);
                 }
             }
             return $util.concatMultiArray(
@@ -971,13 +993,13 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             node.android('inputType', 'text');
                             break;
                         case 'range':
-                            if ($util.hasValue(element.min)) {
+                            if (element.min) {
                                 node.android('min', element.min);
                             }
-                            if ($util.hasValue(element.max)) {
+                            if (element.max) {
                                 node.android('max', element.max);
                             }
-                            if ($util.hasValue(element.value)) {
+                            if (element.value) {
                                 node.android('progress', element.value);
                             }
                             break;
@@ -1066,7 +1088,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 }
                 break;
             case CONTAINER_ANDROID.BUTTON:
-                if (!node.cssInitial('verticalAlign')) {
+                if (node.cssInitial('verticalAlign') === '') {
                     node.css('verticalAlign', 'text-bottom', true);
                 }
                 break;
@@ -1214,7 +1236,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     }
                     if (percent) {
                         const position = Math.abs(node[dimension][LT] - documentParent.box[LT]) / documentParent.box[horizontal ? 'width' : 'height'];
-                        location = parseFloat(Math.abs(position - (!opposite ? 0 : 1)).toPrecision(this.localSettings.constraint.percentAccuracy));
+                        location = parseFloat(Math.abs(position - (!opposite ? 0 : 1)).toPrecision(this.localSettings.constraint.percentPrecision));
                         usePercent = true;
                         beginPercent += 'percent';
                     }
@@ -1371,10 +1393,10 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 let dimension = item.bounds;
                 if (item.element && !item.hasWidth && item.inlineText) {
                     const bounds = $dom.getRangeClientRect(item.element);
-                    if (bounds.multiline || bounds.width < item.box.width) {
+                    if (bounds.multiline > 0 || bounds.width < item.box.width) {
                         dimension = bounds;
-                        if (item.multiline === 0) {
-                            item.multiline = bounds.multiline;
+                        if (!item.multiline) {
+                            item.multiline = bounds.multiline > 0;
                         }
                         if (firefoxEdge && bounds.multiline && !$util.REGEXP_COMPILED.LEADINGNEWLINE.test(item.textContent)) {
                             rangeMultiLine.add(item);
@@ -1884,8 +1906,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             target.localSettings = {
                 targetAPI: settings.targetAPI !== undefined ? settings.targetAPI : BUILD_ANDROID.LATEST,
                 supportRTL: settings.supportRTL !== undefined ? settings.supportRTL : true,
-                constraintPercentAccuracy: this.localSettings.constraint.percentAccuracy,
-                customizationsOverwritePrivilege: settings.customizationsOverwritePrivilege !== undefined ? settings.customizationsOverwritePrivilege : true
+                constraintPercentPrecision: this.localSettings.constraint.percentPrecision
             };
         };
     }

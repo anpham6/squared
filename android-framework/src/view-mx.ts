@@ -329,7 +329,7 @@ export default (Base: Constructor<squared.base.Node>) => {
             if (parent !== this) {
                 const left = Math.max(0, this.linear.left - parent.box.left);
                 const right = Math.max(0, parent.box.right - this.linear.right);
-                return calculateBias(left, right, this.localSettings.constraintPercentAccuracy);
+                return calculateBias(left, right, this.localSettings.constraintPercentPrecision);
             }
             return 0.5;
         }
@@ -339,7 +339,7 @@ export default (Base: Constructor<squared.base.Node>) => {
             if (parent !== this) {
                 const top = Math.max(0, this.linear.top - parent.box.top);
                 const bottom = Math.max(0, parent.box.bottom - this.linear.bottom);
-                return calculateBias(top, bottom, this.localSettings.constraintPercentAccuracy);
+                return calculateBias(top, bottom, this.localSettings.constraintPercentPrecision);
             }
             return 0.5;
         }
@@ -764,11 +764,11 @@ export default (Base: Constructor<squared.base.Node>) => {
                 this.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.floor(offset / 2) - (this.inlineVertical ? $util.convertInt(this.verticalAlign) : 0));
                 this.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, Math.ceil(offset / 2));
             }
-            else if (!this.hasHeight && this.multiline === 0) {
+            else if (!this.hasHeight && !this.multiline) {
                 this.android('minHeight', $util.formatPX(value));
                 this.mergeGravity('gravity', 'center_vertical');
             }
-         }
+        }
 
         public applyOptimizations() {
             if (this.renderParent) {
@@ -784,20 +784,23 @@ export default (Base: Constructor<squared.base.Node>) => {
             }
         }
 
-        public applyCustomizations() {
-            for (const build of [API_ANDROID[0], API_ANDROID[this.localSettings.targetAPI]]) {
-                if (build && build.assign) {
-                    for (const tagName of [this.tagName, this.controlName]) {
-                        const assign = build.assign[tagName];
-                        if (assign) {
-                            for (const obj in assign) {
-                                for (const attr in assign[obj]) {
-                                    this.attr(obj, attr, assign[obj][attr], this.localSettings.customizationsOverwritePrivilege);
-                                }
-                            }
+        public applyCustomizations(overwrite = true) {
+            const setCustomization = (build: ExternalData, tagName: string) => {
+                const assign = build.assign[tagName];
+                if (assign) {
+                    for (const obj in assign) {
+                        for (const attr in assign[obj]) {
+                            this.attr(obj, attr, assign[obj][attr], overwrite);
                         }
                     }
                 }
+            };
+            setCustomization(API_ANDROID[0], this.tagName);
+            setCustomization(API_ANDROID[0], this.controlName);
+            const targetBuild = API_ANDROID[this.localSettings.targetAPI];
+            if (targetBuild) {
+                setCustomization(targetBuild, this.tagName);
+                setCustomization(targetBuild, this.controlName);
             }
         }
 
@@ -806,11 +809,8 @@ export default (Base: Constructor<squared.base.Node>) => {
             if (renderParent) {
                 const supported = this.supported('android', 'layout_marginHorizontal');
                 const setBoxModel = (attrs: string[], prefix: string, mergeable = true) => {
+                    const [top, right, bottom, left] = attrs;
                     const boxModel: ObjectMap<number> = {};
-                    const top = attrs[0];
-                    const right = attrs[1];
-                    const bottom = attrs[2];
-                    const left = attrs[3];
                     let mergeAll = 0;
                     let mergeHorizontal = 0;
                     let mergeVertical = 0;
@@ -958,8 +958,8 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         private alignVerticalLayout() {
-            const renderParent = this.renderParent;
-            if (renderParent && !renderParent.layoutHorizontal) {
+            const renderParent = this.renderParent as T;
+            if (!renderParent.layoutHorizontal) {
                 const lineHeight = this.lineHeight;
                 if (lineHeight > 0) {
                     const setMinHeight = () => {

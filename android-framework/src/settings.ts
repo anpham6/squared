@@ -36,6 +36,7 @@ const settings: UserSettingsAndroid = {
     supportNegativeLeftTop: true,
     floatOverlapDisabled: false,
     collapseUnattributedElements: true,
+    customizationsDisabled: true,
     customizationsOverwritePrivilege: true,
     replaceCharacterEntities: false,
     showAttributes: true,

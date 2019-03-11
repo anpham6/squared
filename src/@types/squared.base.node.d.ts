@@ -27,7 +27,7 @@ declare global {
             renderPositionId: string;
             inlineText: boolean;
             baseline: boolean;
-            multiline: number;
+            multiline: boolean;
             overflow: number;
             documentParent: Node;
             parent?: Node;
@@ -125,7 +125,7 @@ declare global {
             setLayout(): void;
             setAlignment(): void;
             applyOptimizations(): void;
-            applyCustomizations(): void;
+            applyCustomizations(overwrite?: boolean): void;
             modifyBox(region: number, offset: number | null, negative?: boolean): void;
             valueBox(region: number): [number, number];
             alignParent(position: string): boolean;
@@ -175,7 +175,7 @@ declare global {
             hasAlign(value: number): boolean;
             exclude(options: { section?: number, procedure?: number, resource?: number }): void;
             setExclusions(): void;
-            setBounds(calibrate?: boolean): void;
+            setBounds(): void;
             setBoxSpacing(): void;
             resetBox(region: number, node?: Node, fromParent?: boolean): void;
             inheritBox(region: number, node: Node): void;

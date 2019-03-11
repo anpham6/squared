@@ -14,6 +14,7 @@ export interface CachedValue<T> {
     pageFlow?: boolean;
     inlineFlow?: boolean;
     positionStatic?: boolean;
+    positionRelative?: boolean;
     positionAuto?: boolean;
     top?: number;
     right?: number;
@@ -36,7 +37,7 @@ export interface CachedValue<T> {
     blockDimension?: boolean;
     floating?: boolean;
     baseline?: boolean;
-    multiline?: number;
+    multiline?: boolean;
     hasWidth?: boolean;
     hasHeight?: boolean;
     rightAligned?: boolean;

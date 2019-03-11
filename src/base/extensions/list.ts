@@ -46,7 +46,7 @@ export default abstract class List<T extends Node> extends Extension<T> {
             const mainData = List.createDataAttribute();
             if (item.display === 'list-item' || item.has('listStyleType') || hasSingleImage(item)) {
                 let src = item.css('listStyleImage');
-                if (src && src !== 'none') {
+                if (src !== '' && src !== 'none') {
                     mainData.imageSrc = src;
                 }
                 else {
@@ -84,7 +84,7 @@ export default abstract class List<T extends Node> extends Extension<T> {
                                 src = item.css('backgroundImage');
                                 position = item.css('backgroundPosition');
                             }
-                            if (src && src !== 'none') {
+                            if (src !== '' && src !== 'none') {
                                 mainData.imageSrc = src;
                                 mainData.imagePosition = position;
                                 item.exclude({ resource: NODE_RESOURCE.IMAGE_SOURCE });

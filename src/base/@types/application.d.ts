@@ -3,6 +3,8 @@ export interface UserSettings {
     preloadImages: boolean;
     supportNegativeLeftTop: boolean;
     floatOverlapDisabled: boolean;
+    customizationsDisabled: boolean;
+    customizationsOverwritePrivilege: boolean;
     replaceCharacterEntities: boolean;
     insertSpaces: number;
     handleExtensionsAsync: boolean;
@@ -30,7 +32,7 @@ export interface ControllerSettings {
     };
     constraint: {
         withinParentBottomOffset: number;
-        percentAccuracy: number;
+        percentPrecision: number;
     };
 }
 

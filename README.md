@@ -116,7 +116,7 @@ squared.settings = {
         'android.resource.dimens',
         'android.resource.styles'
     ],
-    targetAPI: 26,
+    targetAPI: 28,
     resolutionDPI: 160,
     supportRTL: true,
     preloadImages: true,
@@ -124,6 +124,7 @@ squared.settings = {
     supportNegativeLeftTop: true,
     floatOverlapDisabled: false,
     collapseUnattributedElements: true,
+    customizationsDisabled: true,
     customizationsOverwritePrivilege: true,
     replaceCharacterEntities: false,
     showAttributes: true,

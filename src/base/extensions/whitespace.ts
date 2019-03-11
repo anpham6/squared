@@ -138,10 +138,10 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                             else {
                                 top = below.linear.top;
                             }
-                            const aboveParent = above.visible ? above.renderParent : undefined;
-                            const belowParent = below.visible ? below.renderParent : undefined;
+                            const aboveParent = above.visible && above.renderParent;
+                            const belowParent = below.visible && below.renderParent;
                             const offset = top - bottom;
-                            if (offset > 0) {
+                            if (offset !== 0) {
                                 if (belowParent && belowParent.groupParent && belowParent.firstChild === below) {
                                     belowParent.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
                                 }
@@ -175,7 +175,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                         if (!actualParent.documentRoot && previousSiblings.length) {
                             const previousStart = previousSiblings[previousSiblings.length - 1];
                             const offset = actualParent.box.bottom - previousStart.linear[previousStart.lineBreak || previousStart.excluded ? 'top' : 'bottom'];
-                            if (offset > 0) {
+                            if (offset !== 0) {
                                 if (previousStart.visible) {
                                     actualParent.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);
                                 }
@@ -187,7 +187,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                         else if (nextSiblings.length) {
                             const nextStart = nextSiblings[nextSiblings.length - 1];
                             const offset = nextStart.linear[nextStart.lineBreak || nextStart.excluded ? 'bottom' : 'top'] - actualParent.box.top;
-                            if (offset > 0) {
+                            if (offset !== 0) {
                                 if (nextStart.visible) {
                                     actualParent.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
                                 }
@@ -230,28 +230,26 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
     public afterConstraints() {
         for (const node of this.application.processing.cache) {
             const renderParent = node.renderAs ? node.renderAs.renderParent : node.renderParent;
-            if (renderParent && node.pageFlow) {
-                if (!renderParent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && !node.alignParent('left') && node.styleElement && node.inlineVertical) {
-                    const previous: T[] = [];
-                    let current = node;
-                    while (true) {
-                        $util.concatArray(previous, current.previousSiblings());
-                        if (previous.length && !previous.some(item => item.lineBreak || item.excluded && item.blockStatic)) {
-                            const previousSibling = previous[previous.length - 1];
-                            if (previousSibling.inlineVertical) {
-                                const offset = node.linear.left - previous[previous.length - 1].actualRight();
-                                if (offset > 0) {
-                                    (node.renderAs || node).modifyBox(BOX_STANDARD.MARGIN_LEFT, offset);
-                                }
-                            }
-                            else if (previousSibling.floating) {
-                                previous.length = 0;
-                                current = previousSibling;
-                                continue;
+            if (renderParent && !renderParent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && node.pageFlow && node.styleElement && node.inlineVertical && !node.alignParent('left')) {
+                const previous: T[] = [];
+                let current = node;
+                while (true) {
+                    $util.concatArray(previous, current.previousSiblings());
+                    if (previous.length && !previous.some(item => item.lineBreak || item.excluded && item.blockStatic)) {
+                        const previousSibling = previous[previous.length - 1];
+                        if (previousSibling.inlineVertical) {
+                            const offset = node.linear.left - previous[previous.length - 1].actualRight();
+                            if (offset !== 0) {
+                                (node.renderAs || node).modifyBox(BOX_STANDARD.MARGIN_LEFT, offset);
                             }
                         }
-                        break;
+                        else if (previousSibling.floating) {
+                            previous.length = 0;
+                            current = previousSibling;
+                            continue;
+                        }
                     }
+                    break;
                 }
             }
         }

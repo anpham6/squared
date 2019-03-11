@@ -103,7 +103,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
         let rowCount = table.length;
         let columnIndex: number[] = new Array(rowCount).fill(0);
         let columnCount = 0;
-        let multiline = 0;
+        let multiline = false;
         for (let i = 0; i < rowCount; i++) {
             const tr = table[i];
             rowWidth[i] = horizontal;
@@ -167,14 +167,13 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                         }
                     }
                     else {
-                        const unit = $util.isLength(mapWidth[m]);
+                        const length = $util.isLength(mapWidth[m]);
                         const percent = $util.isPercent(columnWidth);
-                        if (reevaluate || td.bounds.width < mapBounds[m] || (td.bounds.width === mapBounds[m] && (
-                                (unit || percent) ||
-                                unit && percent ||
+                        if (reevaluate || td.bounds.width < mapBounds[m] || td.bounds.width === mapBounds[m] && (
+                                length && percent ||
                                 percent && $util.isPercent(mapWidth[m]) && $util.convertFloat(columnWidth) > $util.convertFloat(mapWidth[m]) ||
-                                unit && $util.isLength(columnWidth) && $util.convertInt(columnWidth) > $util.convertInt(mapWidth[m])
-                           )))
+                                length && $util.isLength(columnWidth) && $util.convertFloat(columnWidth) > $util.convertFloat(mapWidth[m])
+                           ))
                         {
                             mapWidth[m] = columnWidth;
                         }
@@ -183,7 +182,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                         }
                     }
                 }
-                if (multiline === 0) {
+                if (!multiline) {
                     multiline = td.multiline;
                 }
                 if (td.length || td.inlineText) {
@@ -202,7 +201,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
         if (node.has('width', CSS_STANDARD.LENGTH) && mapWidth.some(value => $util.isPercent(value))) {
             $util.replaceMap<string, string>(mapWidth, (value, index) => {
                 if (value === 'auto' && mapBounds[index] > 0) {
-                    value = $util.formatPX(mapBounds[index]);
+                    return $util.formatPX(mapBounds[index]);
                 }
                 return value;
             });
@@ -256,7 +255,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
             }
             return LAYOUT_TABLE.NONE;
         })();
-        if (multiline || (mainData.layoutType === LAYOUT_TABLE.STRETCH && !node.hasWidth)) {
+        if (multiline || mainData.layoutType === LAYOUT_TABLE.STRETCH && !node.hasWidth) {
             mainData.expand = true;
         }
         const caption = node.find(item => item.tagName === 'CAPTION') as T | undefined;

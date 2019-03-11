@@ -495,15 +495,15 @@ export function cloneInstance<T>(value: T): T {
 }
 
 export function cloneArray(data: any[], result: any[] = [], object = false) {
-    for (const item of data) {
-        if (Array.isArray(item)) {
-            result.push(cloneArray(item, [], object));
+    for (const value of data) {
+        if (Array.isArray(value)) {
+            result.push(cloneArray(value, [], object));
         }
-        else if (object && typeof item === 'object') {
-            result.push(cloneObject(item, {}, true));
+        else if (object && typeof value === 'object' && value !== null) {
+            result.push(cloneObject(value, {}, true));
         }
         else {
-            result.push(item);
+            result.push(value);
         }
     }
     return result;
@@ -511,15 +511,15 @@ export function cloneArray(data: any[], result: any[] = [], object = false) {
 
 export function cloneObject(data: {}, result = {}, array = false) {
     for (const attr in data) {
-        const item = data[attr];
-        if (Array.isArray(item)) {
-            result[attr] = array ? cloneArray(item, [], true) : item;
+        const value = data[attr];
+        if (Array.isArray(value)) {
+            result[attr] = array ? cloneArray(value, [], true) : value;
         }
-        else if (typeof item === 'object' && item !== null) {
-            result[attr] = cloneObject(item, {}, array);
+        else if (typeof value === 'object' && value !== null) {
+            result[attr] = cloneObject(value, {}, array);
         }
         else {
-            result[attr] = item;
+            result[attr] = value;
         }
     }
     return result;

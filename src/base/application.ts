@@ -48,15 +48,13 @@ function prioritizeExtensions<T extends Node>(documentRoot: HTMLElement, element
         }
         return $util.concatArray($util.spliceArray(result, item => item === undefined), untagged);
     }
-    else {
-        return extensions;
-    }
+    return extensions;
 }
 
 function checkPositionStatic<T extends Node>(node: T, parent?: T) {
     const previousSiblings = node.previousSiblings();
     const nextSiblings = node.nextSiblings();
-    if ((previousSiblings.length === 0 || !previousSiblings.some(item => item.multiline > 0 || item.excluded && !item.blockStatic)) && (nextSiblings.length === 0 || nextSiblings.every(item => item.blockStatic || item.lineBreak || item.excluded) || parent && node.element === $dom.getLastChildElement(parent.element))) {
+    if (!previousSiblings.some(item => item.multiline || item.excluded && !item.blockStatic) && (nextSiblings.every(item => item.blockStatic || item.lineBreak || item.excluded) || parent && node.element === $dom.getLastChildElement(parent.element))) {
         node.cssApply({
             display: 'inline-block',
             verticalAlign: 'top'
@@ -149,8 +147,8 @@ export default class Application<T extends Node> implements squared.base.Applica
             if (!node.hasBit('excludeProcedure', NODE_PROCEDURE.OPTIMIZATION)) {
                 node.applyOptimizations();
             }
-            if (!node.hasBit('excludeProcedure', NODE_PROCEDURE.CUSTOMIZATION)) {
-                node.applyCustomizations();
+            if (!this.userSettings.customizationsDisabled && !node.hasBit('excludeProcedure', NODE_PROCEDURE.CUSTOMIZATION)) {
+                node.applyCustomizations(this.userSettings.customizationsOverwritePrivilege);
             }
         }
         for (const ext of this.extensions) {
@@ -356,8 +354,8 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     public renderLayout(layout: Layout<T>) {
-        let output = '';
         const floating = $util.hasBit(layout.renderType, NODE_ALIGNMENT.FLOAT);
+        let output = '';
         if (floating && $util.hasBit(layout.renderType, NODE_ALIGNMENT.HORIZONTAL)) {
             output = this.processFloatHorizontal(layout);
         }
@@ -609,22 +607,24 @@ export default class Application<T extends Node> implements squared.base.Applica
             for (const node of this.processing.cache) {
                 if (node.styleElement) {
                     const element = <HTMLElement> node.element;
-                    const reset: StringMap = {};
                     if (element.tagName !== 'BUTTON' && (<HTMLInputElement> element).type !== 'button') {
-                        const value = node.css('textAlign');
-                        switch (value) {
+                        const textAlign = node.css('textAlign');
+                        switch (textAlign) {
                             case 'center':
                             case 'right':
                             case 'end':
-                                reset.textAlign = value;
+                                preAlignment[node.id] = { textAlign };
                                 element.style.textAlign = 'left';
                                 break;
                         }
                     }
                     if (node.positionRelative && !node.positionStatic) {
+                        if (preAlignment[node.id] === undefined) {
+                            preAlignment[node.id] = {};
+                        }
                         for (const attr of PREALIGN_DIRECTION) {
                             if (node.has(attr)) {
-                                reset[attr] = node.css(attr);
+                                preAlignment[node.id][attr] = node.css(attr);
                                 element.style[attr] = 'auto';
                             }
                         }
@@ -633,7 +633,6 @@ export default class Application<T extends Node> implements squared.base.Applica
                         element.dir = 'ltr';
                         direction.add(element);
                     }
-                    preAlignment[node.id] = reset;
                 }
             }
             rootNode.parent.setBounds();
@@ -647,15 +646,15 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
             for (const node of this.processing.cache) {
                 if (node.styleElement) {
+                    const element = <HTMLElement> node.element;
                     const reset = preAlignment[node.id];
                     if (reset) {
-                        const element = <HTMLElement> node.element;
                         for (const attr in reset) {
                             element.style[attr] = reset[attr];
                         }
-                        if (direction.has(element)) {
-                            element.dir = 'rtl';
-                        }
+                    }
+                    if (direction.has(element)) {
+                        element.dir = 'rtl';
                     }
                 }
             }
@@ -1114,16 +1113,12 @@ export default class Application<T extends Node> implements squared.base.Applica
                             parentY,
                             nodeY,
                             nodeY.containerType,
-                            nodeY.alignmentType, nodeY.length, nodeY.children as T[]
+                            nodeY.alignmentType,
+                            nodeY.length,
+                            nodeY.children as T[]
                         );
                         if (layout.containerType === 0) {
-                            let result: LayoutResult<T>;
-                            if (nodeY.length) {
-                                result = this.controllerHandler.processUnknownParent(layout);
-                            }
-                            else {
-                                result = this.controllerHandler.processUnknownChild(layout);
-                            }
+                            const result = nodeY.length ? this.controllerHandler.processUnknownParent(layout) : this.controllerHandler.processUnknownChild(layout);
                             if (result.next === true) {
                                 continue;
                             }
@@ -1158,10 +1153,10 @@ export default class Application<T extends Node> implements squared.base.Applica
                 if (children && children.length) {
                     const sorted = new Map<string, string>();
                     for (const node of children) {
-                        const key = node.renderPositionId;
-                        const result = templates.get(key) || (node.companion ? templates.get(node.companion.renderPositionId) : null);
-                        if (result) {
-                            sorted.set(key, result);
+                        const positionId = node.renderPositionId;
+                        const template = templates.get(positionId) || node.companion && templates.get(node.companion.renderPositionId);
+                        if (template) {
+                            sorted.set(positionId, template);
                         }
                     }
                     if (sorted.size === templates.size) {
@@ -1188,7 +1183,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         if (documentRoot.dataset.layoutName && (!documentRoot.dataset.target || documentRoot.renderExtension.size === 0)) {
             this.addLayoutFile(
                 documentRoot.dataset.layoutName,
-                !empty ? baseTemplate : '',
+                empty ? '' : baseTemplate,
                 $util.trimString($util.trimNull(documentRoot.dataset.pathname), '/'),
                 documentRoot.renderExtension.size > 0 && $util.hasInSet(documentRoot.renderExtension, item => item.documentRoot)
             );
@@ -1206,9 +1201,7 @@ export default class Application<T extends Node> implements squared.base.Applica
             else if (a.renderParent !== b.renderParent) {
                 return a.documentParent.id < b.documentParent.id ? -1 : 1;
             }
-            else {
-                return a.siblingIndex < b.siblingIndex ? -1 : 1;
-            }
+            return a.siblingIndex < b.siblingIndex ? -1 : 1;
         });
         this.session.cache.concat(this.processing.cache.children);
         this.session.excluded.concat(this.processing.excluded.children);

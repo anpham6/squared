@@ -32,7 +32,7 @@ export default class VerticalAlign<T extends Node> extends Extension<T> {
         if (node.every(item => item.positionStatic || item.positionRelative && item.length > 0)) {
             if (aboveBaseline.length !== node.length) {
                 node.each((item: T) => {
-                    let reset = false;
+                    let reset: boolean;
                     if (aboveBaseline.includes(item)) {
                         reset = true;
                     }
@@ -40,6 +40,9 @@ export default class VerticalAlign<T extends Node> extends Extension<T> {
                         item.modifyBox(BOX_STANDARD.MARGIN_TOP, item.linear.top - aboveBaseline[0].linear.top);
                         belowBaseline.push(item);
                         reset = true;
+                    }
+                    else {
+                        reset = false;
                     }
                     if (reset) {
                         item.css('verticalAlign', '0px', true);

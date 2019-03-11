@@ -81,7 +81,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public abstract setAlignment(): void;
     public abstract setBoxSpacing(): void;
     public abstract applyOptimizations(): void;
-    public abstract applyCustomizations(): void;
+    public abstract applyCustomizations(overwrite?: boolean): void;
     public abstract alignParent(position: string): boolean;
     public abstract alignSibling(position: string, documentId?: string): string;
     public abstract localizeString(value: string): string;
@@ -663,44 +663,50 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public setExclusions() {
         if (this.styleElement) {
-            const applyExclusions = (attr: string, enumeration: {}) => {
-                const actualParent = this.actualParent;
-                const exclude = $util.spliceArray([$util.trimNull(this.dataset[`exclude${attr}`]), actualParent ? $util.trimNull(actualParent.dataset[`exclude${attr}Child`]) : ''], value => value.trim() === '').join('|');
-                let result = 0;
-                for (let value of exclude.split('|')) {
-                    value = value.trim().toUpperCase();
-                    if (enumeration[value] !== undefined) {
-                        result |= enumeration[value];
+            const actualParent = this.actualParent;
+            if (actualParent) {
+                const applyExclusions = (attr: string, enumeration: {}) => {
+                    let exclude = this.dataset[`exclude${attr}`] || '';
+                    if (actualParent.dataset[`exclude${attr}Child`]) {
+                        exclude += (exclude !== '' ? '|' : '') + actualParent.dataset[`exclude${attr}Child`];
                     }
-                }
-                if (result > 0) {
-                    this.exclude({ [attr.toLowerCase()]: result });
-                }
-            };
-            applyExclusions('Section', APP_SECTION);
-            applyExclusions('Procedure', NODE_PROCEDURE);
-            applyExclusions('Resource', NODE_RESOURCE);
+                    if (exclude !== '') {
+                        let offset = 0;
+                        for (let name of exclude.split('|')) {
+                            name = name.trim().toUpperCase();
+                            if (enumeration[name] && !$util.hasBit(offset, enumeration[name])) {
+                                offset |= enumeration[name];
+                            }
+                        }
+                        if (offset > 0) {
+                            this.exclude({ [attr.toLowerCase()]: offset });
+                        }
+                    }
+                };
+                applyExclusions('Section', APP_SECTION);
+                applyExclusions('Procedure', NODE_PROCEDURE);
+                applyExclusions('Resource', NODE_RESOURCE);
+            }
         }
     }
 
-    public setBounds(calibrate = false) {
-        const element = this._element;
-        if (element && !calibrate) {
-            if (this.styleElement) {
-                this._bounds = $dom.assignRect(element.getBoundingClientRect());
-                if (this.documentBody) {
-                    if (this.marginTop > 0) {
-                        const firstChild = this.firstChild;
-                        if (firstChild && firstChild.blockStatic && firstChild.marginTop >= this.marginTop && !firstChild.lineBreak) {
-                            this.css('marginTop', '0px', true);
-                        }
+    public setBounds() {
+        if (this.styleElement) {
+            this._bounds = $dom.assignRect((<HTMLElement> this._element).getBoundingClientRect());
+            if (this.documentBody) {
+                if (this.marginTop > 0) {
+                    const firstChild = this.firstChild;
+                    if (firstChild && firstChild.blockStatic && firstChild.marginTop >= this.marginTop && !firstChild.lineBreak) {
+                        this.css('marginTop', '0px', true);
                     }
-                    this._bounds.top = this.marginTop;
                 }
+                this._bounds.top = this.marginTop;
             }
-            else if (this.plainText) {
-                this._bounds = $dom.assignRect($dom.getRangeClientRect(element));
-            }
+        }
+        else if (this.plainText) {
+            const rangeRect = $dom.getRangeClientRect(<Element> this._element);
+            this._bounds = $dom.assignRect(rangeRect);
+            this._cached.multiline = rangeRect.multiline > 0;
         }
     }
 
@@ -1208,28 +1214,33 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
     get positionStatic() {
         if (this._cached.positionStatic === undefined) {
-            this._cached.positionStatic = (() => {
-                switch (this.position) {
-                    case 'fixed':
-                    case 'absolute':
-                        return false;
-                    case 'sticky':
-                    case 'relative':
-                        return this.toInt('top') === 0 && this.toInt('right') === 0 && this.toInt('bottom') === 0 && this.toInt('left') === 0;
-                    case 'inherit':
-                        const position = this._element ? $css.getParentAttribute(this._element.parentElement, 'position') : '';
-                        return position !== '' && !(position === 'absolute' || position === 'fixed');
-                    default:
-                        return true;
-                }
-            })();
+            switch (this.position) {
+                case 'fixed':
+                case 'absolute':
+                    this._cached.positionStatic = false;
+                    break;
+                case 'sticky':
+                case 'relative':
+                    this._cached.positionStatic = this.toInt('top') === 0 && this.toInt('right') === 0 && this.toInt('bottom') === 0 && this.toInt('left') === 0;
+                    break;
+                case 'inherit':
+                    const position = this._element ? $css.getParentAttribute(this._element.parentElement, 'position') : '';
+                    this._cached.positionStatic = position !== '' && !(position === 'absolute' || position === 'fixed');
+                    break;
+                default:
+                    this._cached.positionStatic = true;
+                    break;
+            }
         }
         return this._cached.positionStatic;
     }
 
     get positionRelative() {
-        const value = this.position;
-        return value === 'relative' || value === 'sticky';
+        if (this._cached.positionRelative === undefined) {
+            const value = this.position;
+            this._cached.positionRelative = value === 'relative' || value === 'sticky';
+        }
+        return this._cached.positionRelative;
     }
 
     get positionAuto() {
@@ -1578,7 +1589,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
     get multiline() {
         if (this._cached.multiline === undefined) {
-            this._cached.multiline = this.plainText || this.inlineText && (this.inlineFlow || this.length === 0) ? $dom.getRangeClientRect(<Element> this._element).multiline : 0;
+            this._cached.multiline = this.plainText || this.inlineText && (this.inlineFlow || this.length === 0) ? $dom.getRangeClientRect(<Element> this._element).multiline > 0 : false;
         }
         return this._cached.multiline;
     }
