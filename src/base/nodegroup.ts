@@ -146,7 +146,7 @@ export default abstract class NodeGroup extends Node {
     get display() {
         return (
             this.css('display') ||
-            this.some(node => node.block) ? 'block' : (this.some(node => node.blockDimension) ? 'inline-block' : 'inline')
+            this.some(node => node.block) ? 'block' : (this.some(node => node.blockDimension || node.inlineVertical) ? 'inline-block' : 'inline')
         );
     }
 

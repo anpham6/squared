@@ -256,7 +256,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 }
                 if (minUnitSize > 0) {
                     if (data.autoFill && size === 0 && mainData[direction === 'column' ? 'row' : 'column'].count === 1) {
-                        size = Math.max(node.bounds.width, minUnitSize);
+                        size = Math.max(node.actualWidth, minUnitSize);
                         sizeWeight = 0;
                     }
                     else {
@@ -357,7 +357,11 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 target.mergeGravity('layout_gravity', 'fill_horizontal');
             }
         }
-        return { output, parent: container, complete: output !== '' };
+        return {
+            output,
+            parent: container,
+            complete: output !== ''
+        };
     }
 
     public postBaseLayout(node: T) {
@@ -377,7 +381,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         node.cssPX('width', columnGap, false, true);
                     }
                     if (!node.has('width') && node.has('maxWidth')) {
-                        node.css('width', $util.formatPX(node.bounds.width + columnGap), true);
+                        node.css('width', $util.formatPX(node.actualWidth + columnGap), true);
                     }
                 }
             }

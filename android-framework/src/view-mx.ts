@@ -503,7 +503,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                     this.android('layout_height', 'match_parent', false);
                 }
             }
-            if (!this.android('layout_height')) {
+            if (this.android('layout_height') === '') {
                 if (!this.inlineStatic && this.has('height') || this.toInt('height') > 0 && !this.cssInitial('height')) {
                     const height = this.css('height');
                     if ($util.isLength(height)) {
@@ -533,7 +533,7 @@ export default (Base: Constructor<squared.base.Node>) => {
             else if (!hasHeight) {
                 this.android('layout_height', 'wrap_content', false);
             }
-            if (!this.android('layout_width')) {
+            if (this.android('layout_width') === '') {
                 if (!this.inlineStatic && this.has('width') || this.toInt('width') > 0 && !this.cssInitial('width')) {
                     const width = this.css('width');
                     if ($util.isLength(width)) {
@@ -574,10 +574,10 @@ export default (Base: Constructor<squared.base.Node>) => {
                 if (parent && renderParent) {
                     const blockStatic = this.blockStatic && !this.has('maxWidth') && (this.htmlElement || this.svgElement);
                     if (this.plainText) {
-                        this.android('layout_width', this.bounds.width > renderParent.box.width && this.multiline && this.alignParent('left') ? 'match_parent' : 'wrap_content', false);
+                        this.android('layout_width', this.actualWidth > renderParent.box.width && this.multiline && this.alignParent('left') ? 'match_parent' : 'wrap_content', false);
                         return;
                     }
-                    else if (renderChildren.some(node => Math.ceil(node.bounds.width) >= this.box.width && !node.autoMargin.horizontal && (renderParent.inlineWidth || node.inlineStatic && !node.plainText || $util.isLength(node.cssInitial('width'))))) {
+                    else if (renderChildren.some(node => Math.ceil(node.actualWidth) >= this.box.width && !node.autoMargin.horizontal && (renderParent.inlineWidth || node.inlineStatic && !node.plainText || $util.isLength(node.cssInitial('width'))))) {
                         this.android('layout_width', 'wrap_content', false);
                         return;
                     }
@@ -601,6 +601,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                             !this.pageFlow ||
                             this.tableElement ||
                             this.flexElement ||
+                            this.groupParent && this.renderChildren.every(node => node.inlineVertical) ||
                             renderParent.is(CONTAINER_NODE.GRID) ||
                             parent.flexElement ||
                             parent.gridElement

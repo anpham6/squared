@@ -50,6 +50,35 @@
             background: repeating-linear-gradient(60deg, transparent 0, transparent 5px, tan 0, tan 35px),
                         repeating-linear-gradient(-60deg, transparent 0, transparent 5px, tan 0, tan 35px);
         }
+        #gradient7 {
+            width: 120px;
+            height: 120px;
+            background: repeating-radial-gradient(black, black 5px, white 5px, white 10px);
+        }
+        #gradient8 {
+            width: 240px;
+            height: 240px;
+            background: repeating-radial-gradient(closest-side at 20% 20%, red 0 5%, green 5% 10%);
+            display: inline-block;
+        }
+        #gradient9 {
+            width: 240px;
+            height: 240px;
+            background: repeating-radial-gradient(closest-corner at 20% 20%, red 0 5%, green 5% 10%);
+            display: inline-block;
+        }
+        #gradient10 {
+            width: 240px;
+            height: 240px;
+            background: repeating-radial-gradient(farthest-side at 20% 20%, red 0 5%, green 5% 10%);
+            display: inline-block;
+        }
+        #gradient11 {
+            width: 240px;
+            height: 240px;
+            background: repeating-radial-gradient(farthest-corner at 20% 20%, red 0 5%, green 5% 10%);
+            display: inline-block;
+        }
     </style>
     <script src="/node_modules/systemjs/dist/system.js"></script>
     <script src="common/dev.js"></script>
@@ -92,6 +121,14 @@
         <div id="gradient5"></div>
         <br /><br />
         <div id="gradient6"></div>
+        <br /><br />
+        <div id="gradient7"></div>
+        <br /><br />
+        <span id="gradient8"></span>
+        <span id="gradient9"></span>
+        <br /><br />
+        <span id="gradient10"></span>
+        <span id="gradient11"></span>
     </div>
     <!-- END: DEMO -->
 

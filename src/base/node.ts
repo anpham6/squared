@@ -358,7 +358,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public alignedVertically(previousSiblings: T[], siblings?: T[], cleared?: Map<T, string>, checkFloat = true) {
-        if (this.lineBreak) {
+        const actualParent = this.actualParent;
+        if (this.lineBreak || actualParent === undefined) {
             return true;
         }
         else if (this.pageFlow && previousSiblings.length) {
@@ -366,36 +367,21 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 if (cleared && cleared.has(this)) {
                     return true;
                 }
-                if (checkFloat) {
-                    const previous = siblings[siblings.length - 1];
-                    if (this.floating && (this.linear.top >= previous.linear.bottom || this.float === 'left' && siblings.find(node => node.siblingIndex < this.siblingIndex && $util.withinRange(this.linear.left, node.linear.left)) !== undefined || this.float === 'right' && siblings.find(node => node.siblingIndex < this.siblingIndex && $util.withinRange(this.linear.right, node.linear.right)) !== undefined)) {
-                        return true;
-                    }
+                else if (checkFloat && this.floating && (this.linear.top >= siblings[siblings.length - 1].linear.bottom || this.float === 'left' && siblings.find(node => node.siblingIndex < this.siblingIndex && $util.withinRange(this.linear.left, node.linear.left)) !== undefined || this.float === 'right' && siblings.find(node => node.siblingIndex < this.siblingIndex && $util.withinRange(this.linear.right, node.linear.right)) !== undefined)) {
+                    return true;
                 }
             }
-            const actualParent = this.actualParent;
             for (const previous of previousSiblings) {
-                const vertical = (
-                    previous.blockStatic ||
-                    this.blockStatic && (
-                        !previous.inlineFlow ||
-                        !!cleared && cleared.has(previous)
-                    ) ||
-                    !!cleared && cleared.get(previous) === 'both' && (!$util.isArray(siblings) || siblings[0] !== previous) ||
-                    !previous.floating && (
-                        this.blockStatic ||
-                        !this.floating && !this.inlineFlow
-                    ) ||
-                    actualParent && previous.bounds.width > (actualParent.has('width', CSS_STANDARD.LENGTH) ? actualParent.width : actualParent.box.width) && (
-                        !previous.textElement ||
-                        previous.textElement && previous.css('whiteSpace') === 'nowrap'
-                    ) ||
+                if (previous.blockStatic ||
+                    this.blockStatic && (!previous.inlineFlow || !!cleared && cleared.has(previous)) ||
+                    cleared && cleared.get(previous) === 'both' && (!$util.isArray(siblings) || siblings[0] !== previous) ||
+                    !previous.floating && (this.blockStatic || !this.floating && !this.inlineFlow) ||
+                    previous.bounds.width > (actualParent.has('width', CSS_STANDARD.LENGTH) ? actualParent.width : actualParent.box.width) && (!previous.textElement || previous.textElement && previous.css('whiteSpace') === 'nowrap') ||
                     previous.lineBreak ||
                     previous.autoMargin.leftRight ||
                     previous.float === 'left' && this.autoMargin.right ||
-                    previous.float === 'right' && this.autoMargin.left
-                );
-                if (vertical) {
+                    previous.float === 'right' && this.autoMargin.left)
+                {
                     return true;
                 }
             }
@@ -568,9 +554,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public parseUnit(value: string, horizontal = true, parent = true) {
         if ($util.isPercent(value)) {
-            const node = parent && this.absoluteParent || this;
+            const container = parent && this.absoluteParent || this;
             const attr = horizontal ? 'width' : 'height';
-            return parseFloat(value) / 100 * (node.has(attr, CSS_STANDARD.LENGTH) ? node.toFloat(attr) : node[parent ? 'box' : 'bounds'][attr]);
+            return parseFloat(value) / 100 * (container.has(attr, CSS_STANDARD.LENGTH) ? container.toFloat(attr) : container[parent ? 'box' : 'bounds'][attr]);
         }
         return $util.parseUnit(value, this.fontSize);
     }
@@ -1198,7 +1184,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             }
             else {
                 const lineHeight = $util.convertInt(this.cssAscend('lineHeight', true));
-                this._cached.lineHeight = lineHeight > this.bounds.height || this.some(node => node.plainText) ? lineHeight : 0;
+                this._cached.lineHeight = lineHeight > this.actualHeight || this.some(node => node.plainText) ? lineHeight : 0;
             }
         }
         return this._cached.lineHeight;
@@ -1702,18 +1688,26 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 });
                 this._cached.actualChildren = actualChildren;
             }
-            else if (this.groupParent) {
-                this._cached.actualChildren = this._initial.children.slice(0);
-            }
             else {
-                this._cached.actualChildren = [];
+                this._cached.actualChildren = this.groupParent ? this._initial.children : this.children;
             }
         }
         return this._cached.actualChildren;
     }
 
+    get actualWidth() {
+        return this.has('width', CSS_STANDARD.LENGTH) && this.display !== 'table-cell' ? this.toFloat('width') : this.bounds.width;
+    }
+
     get actualHeight() {
+        if (this.has('height', CSS_STANDARD.LENGTH) && this.display !== 'table-cell') {
+            return this.toFloat('height');
+        }
         return this.plainText ? this.bounds.bottom - this.bounds.top : this.bounds.height;
+    }
+
+    get actualDimension(): Dimension {
+        return { width: this.actualWidth, height: this.actualHeight };
     }
 
     get firstChild() {

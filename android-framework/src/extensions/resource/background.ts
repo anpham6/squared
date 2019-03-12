@@ -1,5 +1,4 @@
 import { ImageAsset, TemplateDataA } from '../../../../src/base/@types/application';
-import { ConicGradient, LinearGradient, RadialGradient } from '../../../../src/base/@types/node';
 import { ResourceStoredMapAndroid } from '../../@types/application';
 import { ResourceBackgroundOptions } from '../../@types/extension';
 import { GradientColorStop, GradientTemplate } from '../../@types/resource';
@@ -85,9 +84,9 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
         if (color) {
             const reduced = $color.reduceColor(color.valueAsRGBA, groove || color.value === '#000000' ? 0.5 : -0.5);
             if (reduced) {
-                const colorValue = Resource.addColor(reduced);
-                if (colorValue !== '') {
-                    const colorName = `android:color="@color/${colorValue}"`;
+                const colorName = Resource.addColor(reduced);
+                if (colorName !== '') {
+                    const attribute = `android:color="@color/${colorName}"`;
                     if (direction === 0 || direction === 2) {
                         halfSize = !halfSize;
                     }
@@ -97,32 +96,24 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
                     if (halfSize) {
                         switch (direction) {
                             case 0:
-                                result[style] = colorName;
+                            case 3:
+                                result[style] = attribute;
                                 break;
                             case 1:
-                                result[style] = result.solid;
-                                break;
                             case 2:
                                 result[style] = result.solid;
-                                break;
-                            case 3:
-                                result[style] = colorName;
                                 break;
                         }
                     }
                     else {
                         switch (direction) {
                             case 0:
+                            case 3:
                                 result[style] = result.solid;
                                 break;
                             case 1:
-                                result[style] = colorName;
-                                break;
                             case 2:
-                                result[style] = colorName;
-                                break;
-                            case 3:
-                                result[style] = result.solid;
+                                result[style] = attribute;
                                 break;
                         }
                     }
@@ -135,6 +126,11 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
 
 function getShapeAttribute(boxStyle: BoxStyle, attr: string, direction = -1, hasInset = false, isInset = false): StringMap[] | false {
     switch (attr) {
+        case 'backgroundColor':
+            if ($util.hasValue(boxStyle.backgroundColor)) {
+                return [{ color: boxStyle.backgroundColor }];
+            }
+            break;
         case 'stroke':
             if (boxStyle.border && Resource.isBorderVisible(boxStyle.border)) {
                 if (!hasInset || isInset) {
@@ -150,25 +146,28 @@ function getShapeAttribute(boxStyle: BoxStyle, attr: string, direction = -1, has
                     }];
                 }
             }
-            return false;
-        case 'backgroundColor':
-            return $util.hasValue(boxStyle.backgroundColor) ? [{ color: boxStyle.backgroundColor }] : false;
+            break;
         case 'radius':
             if (boxStyle.borderRadius) {
-                if (boxStyle.borderRadius.length === 1) {
-                    if (boxStyle.borderRadius[0] !== '0px') {
-                        return [{ radius: boxStyle.borderRadius[0] }];
+                if (boxStyle.borderRadius.length > 1) {
+                    const boxModel = ['topLeft', 'topRight', 'bottomRight', 'bottomLeft'];
+                    const result = {};
+                    let valid = false;
+                    for (let i = 0; i < boxStyle.borderRadius.length; i++) {
+                        if (boxStyle.borderRadius[i] !== '0px') {
+                            result[`${boxModel[i]}Radius`] = boxStyle.borderRadius[i];
+                            valid = true;
+                        }
+                    }
+                    if (valid) {
+                        return [result];
                     }
                 }
-                else if (boxStyle.borderRadius.length > 1) {
-                    const result = {};
-                    for (let i = 0; i < boxStyle.borderRadius.length; i++) {
-                        result[`${['topLeft', 'topRight', 'bottomRight', 'bottomLeft'][i]}Radius`] = boxStyle.borderRadius[i];
-                    }
-                    return [result];
+                else if (boxStyle.borderRadius.length === 1) {
+                    return [{ radius: boxStyle.borderRadius[0] }];
                 }
             }
-            return false;
+            break;
 
     }
     return false;
@@ -189,7 +188,10 @@ function insertDoubleBorder(layerList: LayerListTemplate, border: BorderAttribut
             right: right ? '' : hideWidth,
             bottom: bottom ? '' : hideWidth,
             left: left ? '' :  hideWidth,
-            stroke: [{ width: $util.formatPX(leftWidth), borderStyle: getBorderStyle(border) }],
+            stroke: [{
+                width: $util.formatPX(leftWidth),
+                borderStyle: getBorderStyle(border)
+            }],
             corners: borderRadius
         });
         if (width === 3) {
@@ -201,16 +203,19 @@ function insertDoubleBorder(layerList: LayerListTemplate, border: BorderAttribut
             right: right ? indentWidth : hideWidth,
             bottom: bottom ? indentWidth : hideWidth,
             left: left ? indentWidth : hideWidth,
-            stroke: [{ width: $util.formatPX(rightWidth), borderStyle: getBorderStyle(border) }],
+            stroke: [{
+                width: $util.formatPX(rightWidth),
+                borderStyle: getBorderStyle(border)
+            }],
             corners: borderRadius
         });
     }
 }
 
-function checkBackgroundPosition(value: string, adjacent: string, defaultPosition: string) {
+function checkBackgroundPosition(value: string, adjacent: string, fallback: string) {
     const initial = value === 'initial' || value === 'unset';
     if (value.indexOf(' ') === -1 && adjacent.indexOf(' ') !== -1) {
-        return /^[a-z]+$/.test(value) ? `${initial ? defaultPosition : value} 0px` : `${defaultPosition} ${value}`;
+        return /^[a-z]+$/.test(value) ? `${initial ? fallback : value} 0px` : `${fallback} ${value}`;
     }
     else if (initial) {
         return '0px';
@@ -218,89 +223,51 @@ function checkBackgroundPosition(value: string, adjacent: string, defaultPositio
     return value;
 }
 
-function getPercentOffset(position: RectPosition, direction: string, bounds: RectDimension, dimension?: Dimension) {
-    if (dimension) {
-        switch (direction) {
-            case 'left':
-            case 'right':
-                if ($util.isPercent(position.originalX)) {
-                    return parseInt(position.originalX) / 100 * (bounds.width - dimension.width);
-                }
-                break;
-            case 'top':
-            case 'bottom':
-                if ($util.isPercent(position.originalY)) {
-                    return parseInt(position.originalY) / 100 * (bounds.height - dimension.height);
-                }
-                break;
-        }
-    }
-    return position[direction];
-}
-
 function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIPOP, precision?: number) {
-    if (gradient.dimension === undefined) {
-        return undefined;
-    }
-    const dimension = gradient.dimension;
     const result: GradientTemplate = {
         type: gradient.type,
         colorStops: false
     };
     const hasStop = api >= BUILD_ANDROID.LOLLIPOP;
     switch (gradient.type) {
-        case 'radial': {
-            const position = $css.getBackgroundPosition((<RadialGradient> gradient).position[0], dimension, gradient.fontSize, !hasStop);
+        case 'conic': {
+            const conic = <ConicGradient> gradient;
+            const center = conic.center;
+            result.type = 'sweep';
             if (hasStop) {
-                result.gradientRadius = dimension.width.toString();
-                result.centerX = position.left.toString();
-                result.centerY = position.top.toString();
+                result.centerX = (center.left * 2).toString();
+                result.centerY = (center.top * 2).toString();
             }
             else {
-                result.gradientRadius = $util.formatPX(dimension.width);
-                result.centerX = $util.formatPercent(position.left * 100);
-                result.centerY = $util.formatPercent(position.top * 100);
+                result.centerX = $util.formatPercent(center.leftAsPercent * 100);
+                result.centerY = $util.formatPercent(center.topAsPercent * 100);
+            }
+            break;
+        }
+        case 'radial': {
+            const radial = <RadialGradient> gradient;
+            const center = radial.center;
+            const radius = radial.radius;
+            if (hasStop) {
+                result.gradientRadius = radius.toString();
+                result.centerX = center.left.toString();
+                result.centerY = center.top.toString();
+            }
+            else {
+                result.gradientRadius = $util.formatPX(radius);
+                result.centerX = $util.formatPercent(center.leftAsPercent * 100);
+                result.centerY = $util.formatPercent(center.topAsPercent * 100);
             }
             break;
         }
         case 'linear': {
             const linear = <LinearGradient> gradient;
+            const dimension = <Dimension> linear.dimension;
+            const width = dimension.width;
+            const height = dimension.height;
             const angle = linear.angle;
-            let width: number;
-            let height: number;
-            if (linear.dimension) {
-                width = linear.dimension.width;
-                height = linear.dimension.height;
-            }
-            else {
-                width = Math.round(dimension.width);
-                height = Math.round(dimension.height);
-            }
-            let positionX = $math.offsetAngleX(angle, width);
-            let positionY = $math.offsetAngleY(angle, height);
-            if (!$math.isEqual(Math.abs(positionX), Math.abs(positionY))) {
-                let oppositeAngle: number;
-                if (angle <= 90) {
-                    oppositeAngle = $math.offsetAngle({ x: 0, y: height }, { x: width, y: 0 });
-                }
-                else if (angle <= 180) {
-                    oppositeAngle = $math.offsetAngle({ x: 0, y: 0 }, { x: width, y: height });
-                }
-                else if (angle <= 270) {
-                    oppositeAngle = $math.offsetAngle({ x: 0, y: 0 }, { x: -width, y: height });
-                }
-                else {
-                    oppositeAngle = $math.offsetAngle({ x: 0, y: height }, { x: -width, y: 0 });
-                }
-                let a = Math.abs(oppositeAngle - angle);
-                let b = 90 - a;
-                const lenX = $math.trianguleASA(a, b, Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2)));
-                positionX = $math.truncateFraction($math.offsetAngleX(angle, lenX[1]));
-                a = 90;
-                b = 90 - angle;
-                const lenY = $math.trianguleASA(a, b, positionX);
-                positionY = $math.truncateFraction($math.offsetAngleY(angle, lenY[0]));
-            }
+            let positionX = linear.angleExtent.x;
+            let positionY = linear.angleExtent.y;
             if (angle <= 90) {
                 positionY += height;
                 result.startX = '0';
@@ -323,19 +290,6 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIP
             }
             result.endX = $math.truncate(positionX, precision);
             result.endY = $math.truncate(positionY, precision);
-            break;
-        }
-        case 'conic': {
-            result.type = 'sweep';
-            const position = $css.getBackgroundPosition((<ConicGradient> gradient).position[0], <DOMRect> { width: dimension.width * 2, height: dimension.height * 2 }, gradient.fontSize, !hasStop);
-            if (hasStop) {
-                result.centerX = position.left.toString();
-                result.centerY = position.top.toString();
-            }
-            else {
-                result.centerX = $util.formatPercent(position.left * 100);
-                result.centerY = $util.formatPercent(position.top * 100);
-            }
             break;
         }
     }
@@ -381,8 +335,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 const backgroundPositionX = stored.backgroundPositionX.split($util.REGEXP_COMPILED.SEPARATOR);
                 const backgroundPositionY = stored.backgroundPositionY.split($util.REGEXP_COMPILED.SEPARATOR);
                 const backgroundImage: (string | GradientTemplate)[] = [];
-                const backgroundPosition: string[] = [];
-                const imageDimensions: Undefined<ImageAsset>[] = [];
+                const backgroundPosition: RectPosition[] = [];
+                const imageDimensions: Undefined<Dimension>[] = [];
                 let imageLength = 0;
                 if (stored.backgroundImage && !node.hasBit('excludeResource', $enum.NODE_RESOURCE.IMAGE_SOURCE)) {
                     imageLength = stored.backgroundImage.length;
@@ -403,9 +357,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             }
                         }
                         else if (value.colorStops.length > 1) {
-                            if (value.dimension === undefined) {
-                                value.dimension = node.bounds;
-                            }
                             const gradient = createBackgroundGradient(value, node.localSettings.targetAPI);
                             if (gradient) {
                                 backgroundImage[j] = gradient;
@@ -421,7 +372,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         else {
                             const x = backgroundPositionX[i] || backgroundPositionX[i - 1];
                             const y = backgroundPositionY[i] || backgroundPositionY[i - 1];
-                            backgroundPosition[j] = `${checkBackgroundPosition(x, y, 'left')} ${checkBackgroundPosition(y, x, 'top')}`;
+                            backgroundPosition[j] = $css.getBackgroundPosition(`${checkBackgroundPosition(x, y, 'left')} ${checkBackgroundPosition(y, x, 'top')}`, node.actualDimension, node.fontSize);
                             j++;
                         }
                     }
@@ -470,22 +421,21 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             gradient: false
                         };
                         const imageSingle = node.of(CONTAINER_NODE.IMAGE, $enum.NODE_ALIGNMENT.SINGLE) && imageLength === 1;
-                        const position = $css.getBackgroundPosition(backgroundPosition[i], node.bounds, node.fontSize);
-                        function resetHorizontal() {
-                            if (!imageSingle) {
-                                position.left = 0;
-                                position.right = 0;
-                            }
-                        }
-                        function resetVertical() {
-                            if (!imageSingle) {
-                                position.top = 0;
-                                position.bottom = 0;
-                            }
-                        }
-                        let dimension: ImageAsset | Dimension | undefined;
+                        const position = backgroundPosition[i];
                         if (typeof value === 'string') {
-                            dimension = imageDimensions[i];
+                            const dimension = <Undefined<ImageAsset>> imageDimensions[i];
+                            function resetHorizontal() {
+                                if (!imageSingle) {
+                                    position.left = 0;
+                                    position.right = 0;
+                                }
+                            }
+                            function resetVertical() {
+                                if (!imageSingle) {
+                                    position.top = 0;
+                                    position.bottom = 0;
+                                }
+                            }
                             let width = '';
                             let height = '';
                             let gravity = '';
@@ -540,17 +490,17 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             else {
                                 switch (backgroundRepeat[i]) {
                                     case 'repeat':
-                                        if (!dimension || dimension.width < node.bounds.width || dimension.height < node.bounds.height) {
+                                        if (!dimension || dimension.width < node.actualWidth || dimension.height < node.actualHeight) {
                                             tileMode = 'repeat';
                                         }
                                         break;
                                     case 'repeat-x':
-                                        if (!dimension || dimension.width < node.bounds.width) {
+                                        if (!dimension || dimension.width < node.actualWidth) {
                                             tileModeX = 'repeat';
                                         }
                                         break;
                                     case 'repeat-y':
-                                        if (!dimension || dimension.height < node.bounds.height) {
+                                        if (!dimension || dimension.height < node.actualHeight) {
                                             tileModeY = 'repeat';
                                         }
                                         break;
@@ -563,21 +513,21 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         const layoutWidth = $util.convertInt(node.android('layout_width'));
                                         if (gravity.indexOf('left') !== -1 || gravity.indexOf('start') !== -1) {
                                             position.right = tileWidth - dimension.width;
-                                            if (node.hasWidth && tileWidth > layoutWidth) {
-                                                node.android('layout_width', $util.formatPX(node.bounds.width));
+                                            if (!node.hasWidth && tileWidth > layoutWidth) {
+                                                node.android('layout_width', $util.formatPX(node.actualWidth));
                                             }
                                         }
                                         else if (gravity.indexOf('right') !== -1 || gravity.indexOf('end') !== -1) {
                                             position.left = tileWidth - dimension.width;
-                                            if (node.hasWidth && tileWidth > layoutWidth) {
-                                                node.android('layout_width', $util.formatPX(node.bounds.width));
+                                            if (!node.hasWidth && tileWidth > layoutWidth) {
+                                                node.android('layout_width', $util.formatPX(node.actualWidth));
                                             }
                                         }
                                         else if (gravity === 'center' || gravity.indexOf('center_horizontal') !== -1) {
                                             position.left = Math.floor((tileWidth - dimension.width) / 2);
                                             width = $util.formatPX(dimension.width);
-                                            if (node.hasWidth && tileWidth > layoutWidth) {
-                                                node.android('layout_width', $util.formatPX(node.bounds.width));
+                                            if (!node.hasWidth && tileWidth > layoutWidth) {
+                                                node.android('layout_width', $util.formatPX(node.actualWidth));
                                             }
                                         }
                                     }
@@ -589,20 +539,20 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         if (gravity.indexOf('top') !== -1) {
                                             position.bottom = tileHeight - dimension.height;
                                             if (!node.hasHeight && tileHeight > layoutHeight) {
-                                                node.android('layout_height', $util.formatPX(node.bounds.height));
+                                                node.android('layout_height', $util.formatPX(node.actualHeight));
                                             }
                                         }
                                         else if (gravity.indexOf('bottom') !== -1) {
                                             position.top = tileHeight - dimension.height;
                                             if (!node.hasHeight && tileHeight > layoutHeight) {
-                                                node.android('layout_height', $util.formatPX(node.bounds.height));
+                                                node.android('layout_height', $util.formatPX(node.actualHeight));
                                             }
                                         }
                                         else if (gravity === 'center' || gravity.indexOf('center_vertical') !== -1) {
                                             position.top = Math.floor((tileHeight - dimension.height) / 2);
                                             height = $util.formatPX(dimension.height);
                                             if (!node.hasHeight && tileHeight > layoutHeight) {
-                                                node.android('layout_height', $util.formatPX(node.bounds.height));
+                                                node.android('layout_height', $util.formatPX(node.actualHeight));
                                             }
                                         }
                                     }
@@ -634,18 +584,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 }
                             }
                             else {
-                                if (position.top !== 0) {
-                                    imageData.top = $util.formatPX(position.top);
-                                }
-                                if (position.right !== 0) {
-                                    imageData.right = $util.formatPX(position.right);
-                                }
-                                if (position.bottom !== 0) {
-                                    imageData.bottom = $util.formatPX(position.bottom);
-                                }
-                                if (position.left !== 0) {
-                                    imageData.left = $util.formatPX(position.left);
-                                }
                                 if (!(backgroundSize[i] === 'auto' || backgroundSize[i] === 'auto auto' || backgroundSize[i] === 'initial')) {
                                     switch (backgroundSize[i]) {
                                         case 'cover':
@@ -697,19 +635,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                         else {
                             if (value.colorStops) {
-                                dimension = imageDimensions[i] || Resource.getBackgroundSize(node, backgroundSize[i]);
-                                let width: number;
-                                let height: number;
-                                if (dimension) {
-                                    width = Math.round(dimension.width);
-                                    height = Math.round(dimension.height);
-                                    imageData.width = $util.formatPX(width);
-                                    imageData.height = $util.formatPX(height);
-                                }
-                                else {
-                                    width = Math.round(node.bounds.width);
-                                    height = Math.round(node.bounds.height);
-                                }
+                                const dimension = <Dimension> imageDimensions[i];
+                                const width = Math.round(dimension.width);
+                                const height = Math.round(dimension.height);
+                                imageData.width = $util.formatPX(width);
+                                imageData.height = $util.formatPX(height);
                                 const vectorData: TemplateDataA = {
                                     namespace: getXmlNs('aapt'),
                                     width: imageData.width || $util.formatPX(width),
@@ -745,20 +675,20 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             else {
                                 imageData.gradient = [value];
                             }
-                            if (position.top !== 0) {
-                                imageData.top = $util.formatPX(getPercentOffset(position, 'top', node.bounds, dimension));
-                            }
-                            if (position.right !== 0) {
-                                imageData.right = $util.formatPX(getPercentOffset(position, 'right', node.bounds, dimension));
-                            }
-                            if (position.bottom !== 0) {
-                                imageData.bottom = $util.formatPX(getPercentOffset(position, 'bottom', node.bounds, dimension));
-                            }
-                            if (position.left !== 0) {
-                                imageData.left = $util.formatPX(getPercentOffset(position, 'left', node.bounds, dimension));
-                            }
                         }
                         if (imageData.src || imageData.bitmap || imageData.gradient) {
+                            if (position.top !== 0) {
+                                imageData.top = $util.formatPX(position.top);
+                            }
+                            if (position.right !== 0) {
+                                imageData.right = $util.formatPX(position.right);
+                            }
+                            if (position.bottom !== 0) {
+                                imageData.bottom = $util.formatPX(position.bottom);
+                            }
+                            if (position.left !== 0) {
+                                imageData.left = $util.formatPX(position.left);
+                            }
                             layerList.B.push(imageData);
                         }
                     }
@@ -901,10 +831,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 let current = node;
                                 while (current && !current.documentBody) {
                                     if (current.hasWidth) {
-                                        sizeParent.width = current.bounds.width;
+                                        sizeParent.width = current.actualWidth;
                                     }
                                     if (current.hasHeight) {
-                                        sizeParent.height = current.bounds.height;
+                                        sizeParent.height = current.actualHeight;
                                     }
                                     if (!current.pageFlow || (sizeParent.width > 0 && sizeParent.height > 0)) {
                                         break;

@@ -21,10 +21,11 @@ export default abstract class Sprite<T extends Node> extends Extension<T> {
                 url = $css.resolveURL(url);
                 const image = <ImageAsset> this.application.session.image.get(url);
                 if (image) {
+                    const dimension = node.actualDimension;
                     const fontSize = node.fontSize;
-                    const width = $util.convertLength(node.has('width') ? node.css('width') : node.css('minWidth'), node.bounds.width, fontSize);
-                    const height = $util.convertLength(node.has('height') ? node.css('width') : node.css('minHeight'), node.bounds.height, fontSize);
-                    const position = $css.getBackgroundPosition(`${node.css('backgroundPositionX')} ${node.css('backgroundPositionY')}`, node.bounds, fontSize);
+                    const position = $css.getBackgroundPosition(`${node.css('backgroundPositionX')} ${node.css('backgroundPositionY')}`, dimension, fontSize);
+                    const width = $util.convertLength(node.has('width') ? node.css('width') : node.css('minWidth'), dimension.width, fontSize);
+                    const height = $util.convertLength(node.has('height') ? node.css('width') : node.css('minHeight'), dimension.height, fontSize);
                     if (position.left <= 0 && position.top <= 0 && image.width > width && image.height > height) {
                         image.position = {
                             x: position.left,

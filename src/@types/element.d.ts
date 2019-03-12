@@ -6,10 +6,12 @@ interface BoxRect {
 }
 
 interface RectPosition extends BoxRect {
+    topAsPercent: number;
+    rightAsPercent: number;
+    bottomAsPercent: number;
+    leftAsPercent: number;
     horizontal: string;
     vertical: string;
-    originalX: string;
-    originalY: string;
 }
 
 interface RectDimension extends BoxRect, Dimension {
@@ -88,9 +90,32 @@ interface Gradient {
     type: string;
     colorStops: ColorStop[];
     dimension?: Dimension;
-    fontSize?: number;
-    repeating?: boolean;
-    horizontal?: boolean;
+}
+
+interface RepeatingGradient extends Gradient {
+    repeating: boolean;
+    horizontal: boolean;
+}
+
+interface LinearGradient extends RepeatingGradient {
+    angle: number;
+    angleExtent: Point;
+}
+
+interface RadialGradient extends RepeatingGradient {
+    shape: string;
+    center: RectPosition;
+    radius: number;
+    radiusExtent: number;
+    closestSide: number;
+    farthestSide: number;
+    closestCorner: number;
+    farthestCorner: number;
+}
+
+interface ConicGradient extends Gradient {
+    angle: number;
+    center: RectPosition;
 }
 
 interface ColorStop {

@@ -114,7 +114,9 @@ declare global {
             readonly absoluteParent: Node | undefined;
             readonly actualParent: Node | undefined;
             readonly actualChildren: Node[];
+            readonly actualWidth: number;
             readonly actualHeight: number;
+            readonly actualDimension: Dimension;
             readonly firstChild: Node | undefined;
             readonly lastChild: Node | undefined;
             readonly documentId: string;

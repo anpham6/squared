@@ -190,6 +190,10 @@ export function convertLength(value: string, dimension: number, fontSize?: numbe
     return isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseUnit(value, fontSize);
 }
 
+export function convertPercent(value: string, dimension: number, fontSize?: number) {
+    return isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize) / dimension;
+}
+
 export function convertAlpha(value: number) {
     let result = '';
     while (value >= ALPHABET.length) {
@@ -407,9 +411,9 @@ export function formatPX(value: string | number) {
 export function formatPercent(value: string | number, round = true) {
     if (typeof value === 'string') {
         value = parseFloat(value);
-    }
-    if (isNaN(value)) {
-        return '0%';
+        if (isNaN(value)) {
+            return '0%';
+        }
     }
     return `${round ? Math.round(value) : value}%`;
 }

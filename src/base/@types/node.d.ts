@@ -89,14 +89,3 @@ export type AutoMargin = {
     bottom: boolean;
     topBottom: boolean;
 };
-
-interface LinearGradient extends Gradient {
-    angle: number;
-}
-
-interface RadialGradient extends Gradient {
-    position: string[];
-}
-
-interface ConicGradient extends LinearGradient, RadialGradient {
-}

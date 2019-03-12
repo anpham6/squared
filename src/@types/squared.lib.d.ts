@@ -36,7 +36,7 @@ declare global {
             function getParentAttribute(element: Element | null, attr: string): string;
             function getNamedItem(element: Element | null, attr: string): string;
             function calculateVar(element: HTMLElement | SVGElement, value: string, attr?: string, dimension?: number): number;
-            function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number, percent?: boolean): RectPosition;
+            function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number): RectPosition;
             function resolveURL(value: string): string;
         }
 
@@ -102,6 +102,7 @@ declare global {
             function convertAngle(value: string, unit?: string): number;
             function convertPX(value: string, fontSize?: number): string;
             function convertLength(value: string, dimension: number, fontSize?: number): number;
+            function convertPercent(value: string, dimension: number, fontSize?: number): number;
             function convertAlpha(value: number): string;
             function convertRoman(value: number): string;
             function convertEnum(value: number, base: {}, derived: {}): string;

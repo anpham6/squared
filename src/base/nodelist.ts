@@ -29,9 +29,9 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
         let boundsHeight = 0;
         for (const item of list) {
             lineHeight = Math.max(lineHeight, item.lineHeight);
-            boundsHeight = Math.max(boundsHeight, item.bounds.height);
+            boundsHeight = Math.max(boundsHeight, item.actualHeight);
         }
-        $util.spliceArray(list, item => lineHeight > boundsHeight ? item.lineHeight !== lineHeight : !$util.withinRange(item.bounds.height, boundsHeight));
+        $util.spliceArray(list, item => lineHeight > boundsHeight ? item.lineHeight !== lineHeight : !$util.withinRange(item.actualHeight, boundsHeight));
         return list.sort((a, b) => {
             if (a.groupParent || a.length || (!a.baseline && b.baseline)) {
                 return 1;
@@ -76,7 +76,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                     return a.containerType < b.containerType ? -1 : 1;
                 }
             }
-            return a.bounds.height <= b.bounds.height ? 1 : -1;
+            return a.actualHeight <= b.actualHeight ? 1 : -1;
         });
     }
 

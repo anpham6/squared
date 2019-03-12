@@ -162,7 +162,7 @@ function adjustFloatingNegativeMargin<T extends View>(node: T, previous: T) {
     if (previous.float === 'left') {
         if (previous.marginRight < 0) {
             const right = Math.abs(previous.marginRight);
-            node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, (previous.bounds.width + (previous.hasWidth ? previous.paddingLeft + previous.borderLeftWidth : 0)) - right);
+            node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, (previous.actualWidth + (previous.hasWidth ? previous.paddingLeft + previous.borderLeftWidth : 0)) - right);
             node.anchor('left', previous.documentId);
             previous.modifyBox($enum.BOX_STANDARD.MARGIN_RIGHT, null);
             return true;
@@ -171,8 +171,9 @@ function adjustFloatingNegativeMargin<T extends View>(node: T, previous: T) {
     else if (node.float === 'right' && previous.float === 'right') {
         if (previous.marginLeft < 0) {
             const left = Math.abs(previous.marginLeft);
-            if (left < previous.bounds.width) {
-                node.modifyBox($enum.BOX_STANDARD.MARGIN_RIGHT, previous.bounds.width - left);
+            const width = previous.actualWidth;
+            if (left < width) {
+                node.modifyBox($enum.BOX_STANDARD.MARGIN_RIGHT, width - left);
             }
             node.anchor('right', previous.documentId);
             previous.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, null);
@@ -539,7 +540,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         if (node.inlineText || visible.borderWidth && node.textContent.length) {
             layout.setType(CONTAINER_NODE.TEXT);
         }
-        else if (visible.backgroundImage && !visible.backgroundRepeat && (!node.inlineText || node.toInt('textIndent') + node.bounds.width < 0)) {
+        else if (visible.backgroundImage && !visible.backgroundRepeat && (!node.inlineText || node.toInt('textIndent') + node.actualWidth < 0)) {
             layout.setType(CONTAINER_NODE.IMAGE, $enum.NODE_ALIGNMENT.SINGLE);
             node.exclude({ resource: $enum.NODE_RESOURCE.FONT_STYLE | $enum.NODE_RESOURCE.VALUE_STRING });
         }
@@ -666,11 +667,14 @@ export default class Controller<T extends View> extends squared.base.Controller<
 
     public checkConstraintHorizontal(layout: $Layout<T>) {
         let sameHeight = true;
+        let previousHeight = layout.children[0].actualHeight;
         for (let i = 1; i < layout.length; i++) {
-            if (layout.children[i - 1].bounds.height !== layout.children[i].bounds.height) {
+            const height = layout.children[i].actualHeight;
+            if (previousHeight !== height) {
                 sameHeight = false;
                 break;
             }
+            previousHeight = height;
         }
         return (
             !sameHeight &&
@@ -1362,7 +1366,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         return renderParent.toFloat('width', true);
                     }
                     else if (renderParent.has('width', $enum.CSS_STANDARD.PERCENT)) {
-                        return renderParent.bounds.width - renderParent.contentBoxWidth;
+                        return renderParent.actualWidth - renderParent.contentBoxWidth;
                     }
                 }
                 else {
@@ -1556,8 +1560,8 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                         item.anchor('centerVertical', 'true');
                                     }
                                     else if (baseline) {
-                                        const height = Math.max(item.bounds.height, item.lineHeight);
-                                        const heightParent = Math.max(baseline.bounds.height, baseline.lineHeight);
+                                        const height = Math.max(item.actualHeight, item.lineHeight);
+                                        const heightParent = Math.max(baseline.actualHeight, baseline.lineHeight);
                                         if (height < heightParent) {
                                             item.anchor('top', baseline.documentId);
                                             item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.round((heightParent - height) / 2));

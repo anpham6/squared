@@ -1,5 +1,4 @@
 import { ResourceAssetMap, ResourceStoredMap, SessionData, UserSettings } from './@types/application';
-import { ConicGradient, LinearGradient, RadialGradient } from './@types/node';
 
 import Application from './application';
 import File from './file';
@@ -12,6 +11,7 @@ const $color = squared.lib.color;
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 const $element = squared.lib.element;
+const $math = squared.lib.math;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
@@ -29,21 +29,12 @@ function replaceExcluded<T extends Node>(element: HTMLElement, attr: string) {
     return value;
 }
 
-function parseColorStops<T extends Node>(node: T, gradient: Gradient, value: string, opacity: string, index: number, backgroundSize?: string) {
+function parseColorStops<T extends Node>(node: T, gradient: Gradient, value: string, opacity: string) {
+    const repeating = !!(<RepeatingGradient> gradient).repeating;
+    const extent = repeating && gradient.type === 'radial' ? (<RadialGradient> gradient).radiusExtent / (<RadialGradient> gradient).radius : 1;
     const result: ColorStop[] = [];
     const pattern = new RegExp(STRING_COLORSTOP, 'g');
     let match: RegExpExecArray | null;
-    let width = node.bounds.width;
-    let height = node.bounds.height;
-    if (backgroundSize) {
-        const sizes = backgroundSize.split($util.REGEXP_COMPILED.SEPARATOR);
-        const dimension = Resource.getBackgroundSize(node, sizes[index % sizes.length]);
-        if (dimension) {
-            width = dimension.width;
-            height = dimension.height;
-            gradient.dimension = dimension;
-        }
-    }
     while ((match = pattern.exec(value)) !== null) {
         const color = $color.parseColor(match[1], opacity, true);
         if (color) {
@@ -57,14 +48,18 @@ function parseColorStops<T extends Node>(node: T, gradient: Gradient, value: str
                 if ($util.isPercent(match[2])) {
                     item.offset = parseFloat(match[2]) / 100;
                 }
-                else if (gradient.repeating) {
-                    const dimension = gradient.horizontal ? width : height;
+                else if (repeating) {
+                    const horizontal = (<RadialGradient> gradient).horizontal;
+                    const dimension = (<Dimension> gradient.dimension)[horizontal ? 'width' : 'height'];
                     if ($util.isLength(match[2])) {
-                        item.offset = node.parseUnit(match[2], gradient.horizontal, false) / dimension;
+                        item.offset = node.parseUnit(match[2], horizontal, false) / dimension;
                     }
                     else if ($util.isCalc(match[2])) {
                         item.offset = $util.calculate(match[6], dimension, node.fontSize) / dimension;
                     }
+                }
+                if (repeating && item.offset !== -1) {
+                    item.offset *= extent;
                 }
             }
             if (result.length === 0) {
@@ -72,10 +67,7 @@ function parseColorStops<T extends Node>(node: T, gradient: Gradient, value: str
                     item.offset = 0;
                 }
                 else if (item.offset > 0) {
-                    result.push({
-                        color,
-                        offset: 0
-                    });
+                    result.push({ color, offset: 0 });
                 }
             }
             result.push(item);
@@ -106,7 +98,7 @@ function parseColorStops<T extends Node>(node: T, gradient: Gradient, value: str
         }
         percent = item.offset;
     }
-    if (gradient.repeating) {
+    if (repeating) {
         if (percent < 100) {
             const original = result.slice(0);
             complete: {
@@ -146,7 +138,7 @@ function parseAngle(value: string) {
 }
 
 function getGradientPosition(value: string) {
-    return /(.+?)?\s*at (.+?)$/.exec(value);
+    return value ? /(.+?)?\s*at (.+?)$/.exec(value) : null;
 }
 
 function replaceWhiteSpace<T extends Node>(node: T, element: Element, value: string): [string, boolean] {
@@ -182,6 +174,14 @@ function replaceWhiteSpace<T extends Node>(node: T, element: Element, value: str
             return [value, false];
     }
     return [value, true];
+}
+
+function getBackgroundSize<T extends Node>(node: T, index: number, value?: string) {
+    if (value) {
+        const sizes = value.split($util.REGEXP_COMPILED.SEPARATOR);
+        return Resource.getBackgroundSize(node, sizes[index % sizes.length]);
+    }
+    return undefined;
 }
 
 export default abstract class Resource<T extends Node> implements squared.base.Resource<T> {
@@ -261,11 +261,11 @@ export default abstract class Resource<T extends Node> implements squared.base.R
     }
 
     public static isBorderVisible(border: BorderAttribute | undefined) {
-        return !!border && !(border.style === 'none' || border.width === '0px' || border.color === '' || border.color.length === 9 && border.color.endsWith('00'));
+        return border !== undefined && !(border.style === 'none' || border.width === '0px' || border.color === '' || border.color.length === 9 && border.color.endsWith('00'));
     }
 
-    public static hasDrawableBackground(object: BoxStyle | undefined) {
-        return !!object && (!!object.backgroundImage || this.isBorderVisible(object.borderTop) || this.isBorderVisible(object.borderRight) || this.isBorderVisible(object.borderBottom) || this.isBorderVisible(object.borderLeft) || !!object.borderRadius);
+    public static isBackgroundVisible(object: BoxStyle | undefined) {
+        return object !== undefined && (object.backgroundImage !== undefined || object.borderRadius !== undefined || this.isBorderVisible(object.borderTop) || this.isBorderVisible(object.borderRight) || this.isBorderVisible(object.borderBottom) || this.isBorderVisible(object.borderLeft));
     }
 
     public static getBackgroundSize<T extends Node>(node: T, value: string): Dimension | undefined {
@@ -380,12 +380,13 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                             break;
                         }
                         case 'borderRadius': {
-                            const top = node.css('borderTopLeftRadius');
-                            const right = node.css('borderTopRightRadius');
-                            const bottom = node.css('borderBottomLeftRadius');
-                            const left = node.css('borderBottomRightRadius');
+                            const horizontal = node.actualWidth >= node.actualHeight;
+                            const top = node.convertPX(node.css('borderTopLeftRadius'), horizontal, false);
+                            const right = node.convertPX(node.css('borderTopRightRadius'), horizontal, false);
+                            const bottom = node.convertPX(node.css('borderBottomLeftRadius'), horizontal, false);
+                            const left = node.convertPX(node.css('borderBottomRightRadius'), horizontal, false);
                             if (top === right && right === bottom && bottom === left) {
-                                boxStyle.borderRadius = $util.convertInt(top) > 0 ? [top] : undefined;
+                                boxStyle.borderRadius = top !== '0px' ? [top] : undefined;
                             }
                             else {
                                 boxStyle.borderRadius = [top, right, bottom, left];
@@ -413,13 +414,75 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                         images.push(complete);
                                     }
                                     else {
-                                        const gradient: Gradient = {
-                                            type,
-                                            repeating: repeating === 'repeating',
-                                            fontSize: node.fontSize
-                                        } as any;
+                                        const dimension = getBackgroundSize(node, i, boxStyle.backgroundSize) || node.actualDimension;
+                                        let gradient: Gradient | undefined;
                                         switch (type) {
-                                            case 'linear': {
+                                            case 'conic': {
+                                                const position = getGradientPosition(direction);
+                                                const conic = <ConicGradient> {
+                                                    type,
+                                                    dimension,
+                                                    angle: parseAngle(direction)
+                                                };
+                                                conic.center = $css.getBackgroundPosition(position && position[2] || 'center', dimension, node.fontSize);
+                                                conic.colorStops = parseColorStops(node, conic, colorStop, opacity);
+                                                gradient = conic;
+                                                break;
+                                            }
+                                            case 'radial': {
+                                                const position = getGradientPosition(direction);
+                                                const radial = <RadialGradient> {
+                                                    type,
+                                                    repeating: repeating === 'repeating',
+                                                    horizontal: node.actualWidth <= node.actualHeight,
+                                                    dimension,
+                                                    shape: position && position[1] === 'circle' ? 'circle' : 'ellipse'
+                                                };
+                                                radial.center = $css.getBackgroundPosition(position && position[2] || 'center', dimension, node.fontSize);
+                                                radial.closestCorner = Number.POSITIVE_INFINITY;
+                                                radial.farthestCorner = Number.NEGATIVE_INFINITY;
+                                                for (const corner of [[0, 0], [dimension.width, 0], [dimension.width, dimension.height], [0, dimension.height]]) {
+                                                    const length = Math.round(Math.sqrt(Math.pow(Math.abs(corner[0] - radial.center.left), 2) + Math.pow(Math.abs(corner[1] - radial.center.top), 2)));
+                                                    if (length < radial.closestCorner) {
+                                                        radial.closestCorner = length;
+                                                    }
+                                                    if (length > radial.farthestCorner) {
+                                                        radial.farthestCorner = length;
+                                                    }
+                                                }
+                                                radial.closestSide = radial.center.top;
+                                                radial.farthestSide = radial.center.top;
+                                                for (const side of [dimension.width - radial.center.left, dimension.height - radial.center.top, radial.center.left]) {
+                                                    if (side < radial.closestSide) {
+                                                        radial.closestSide = side;
+                                                    }
+                                                    if (side > radial.farthestSide) {
+                                                        radial.farthestSide = side;
+                                                    }
+                                                }
+                                                radial.radius = radial.farthestCorner;
+                                                const extent = position && position[1];
+                                                switch (extent) {
+                                                    case 'closest-corner':
+                                                    case 'closest-side':
+                                                    case 'farthest-side':
+                                                        const length = radial[$util.convertCamelCase(extent)];
+                                                        if (repeating) {
+                                                            radial.radiusExtent = length;
+                                                        }
+                                                        else {
+                                                            radial.radius = length;
+                                                        }
+                                                        break;
+                                                    default:
+                                                        radial.radiusExtent = radial.farthestCorner;
+                                                        break;
+                                                }
+                                                radial.colorStops = parseColorStops(node, radial, colorStop, opacity);
+                                                gradient = radial;
+                                                break;
+                                            }
+                                            default: {
                                                 let angle = 180;
                                                 switch (direction) {
                                                     case 'to top':
@@ -451,50 +514,43 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                                         }
                                                         break;
                                                 }
-                                                gradient.horizontal = angle >= 45 && angle <= 135 || angle >= 225 && angle <= 315;
-                                                gradient.colorStops = parseColorStops(node, gradient, colorStop, opacity, i, boxStyle.backgroundSize);
-                                                (<LinearGradient> gradient).angle = angle;
-                                                break;
-                                            }
-                                            case 'radial': {
-                                                gradient.horizontal = node.bounds.width <= node.bounds.height;
-                                                gradient.colorStops = parseColorStops(node, gradient, colorStop, opacity, i, boxStyle.backgroundSize);
-                                                (<RadialGradient> gradient).position = (() => {
-                                                    const result = ['center', 'ellipse'];
-                                                    if (direction) {
-                                                        const position = getGradientPosition(direction);
-                                                        if (position) {
-                                                            switch (position[1]) {
-                                                                case 'ellipse':
-                                                                case 'circle':
-                                                                case 'closest-side':
-                                                                case 'closest-corner':
-                                                                case 'farthest-side':
-                                                                case 'farthest-corner':
-                                                                    result[1] = position[1];
-                                                                    break;
-                                                            }
-                                                            if (position[2]) {
-                                                                result[0] = position[2];
-                                                            }
-                                                        }
+                                                const linear = <LinearGradient> {
+                                                    type,
+                                                    repeating: repeating === 'repeating',
+                                                    horizontal: angle >= 45 && angle <= 135 || angle >= 225 && angle <= 315,
+                                                    dimension,
+                                                    angle
+                                                };
+                                                linear.colorStops = parseColorStops(node, linear, colorStop, opacity);
+                                                const width = dimension.width;
+                                                const height = dimension.height;
+                                                let x = $math.offsetAngleX(angle, width);
+                                                let y = $math.offsetAngleY(angle, height);
+                                                if (!$math.isEqual(Math.abs(x), Math.abs(y))) {
+                                                    let oppositeAngle: number;
+                                                    if (angle <= 90) {
+                                                        oppositeAngle = $math.offsetAngle({ x: 0, y: height }, { x: width, y: 0 });
                                                     }
-                                                    return result;
-                                                })();
-                                                break;
-                                            }
-                                            case 'conic': {
-                                                gradient.colorStops = parseColorStops(node, gradient, colorStop, opacity, i, boxStyle.backgroundSize);
-                                                (<ConicGradient> gradient).angle = parseAngle(direction);
-                                                (<ConicGradient> gradient).position = (() => {
-                                                    if (direction) {
-                                                        const position = getGradientPosition(direction);
-                                                        if (position) {
-                                                            return [position[2]];
-                                                        }
+                                                    else if (angle <= 180) {
+                                                        oppositeAngle = $math.offsetAngle({ x: 0, y: 0 }, { x: width, y: height });
                                                     }
-                                                    return ['center'];
-                                                })();
+                                                    else if (angle <= 270) {
+                                                        oppositeAngle = $math.offsetAngle({ x: 0, y: 0 }, { x: -width, y: height });
+                                                    }
+                                                    else {
+                                                        oppositeAngle = $math.offsetAngle({ x: 0, y: height }, { x: -width, y: 0 });
+                                                    }
+                                                    let a = Math.abs(oppositeAngle - angle);
+                                                    let b = 90 - a;
+                                                    const lenX = $math.trianguleASA(a, b, Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2)));
+                                                    x = $math.truncateFraction($math.offsetAngleX(angle, lenX[1]));
+                                                    a = 90;
+                                                    b = 90 - angle;
+                                                    const lenY = $math.trianguleASA(a, b, x);
+                                                    y = $math.truncateFraction($math.offsetAngleY(angle, lenY[0]));
+                                                }
+                                                linear.angleExtent = { x, y };
+                                                gradient = linear;
                                                 break;
                                             }
                                         }
@@ -502,7 +558,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                     }
                                     i++;
                                 }
-                                if (images.length) {
+                                if (i > 0) {
                                     boxStyle.backgroundImage = images;
                                 }
                             }
@@ -526,7 +582,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
 
     public setFontStyle() {
         for (const node of this.cache) {
-            const backgroundImage = Resource.hasDrawableBackground(node.data(Resource.KEY_NAME, 'boxStyle'));
+            const backgroundImage = Resource.isBackgroundVisible(node.data(Resource.KEY_NAME, 'boxStyle'));
             if (!(node.element === null ||
                 node.renderChildren.length ||
                 node.imageElement ||
@@ -656,7 +712,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                             }
                             [value, inlineTrim] = replaceWhiteSpace(node, element, value);
                         }
-                        else if (node.htmlElement && element.innerText.trim() === '' && Resource.hasDrawableBackground(node.data(Resource.KEY_NAME, 'boxStyle'))) {
+                        else if (node.htmlElement && element.innerText.trim() === '' && Resource.isBackgroundVisible(node.data(Resource.KEY_NAME, 'boxStyle'))) {
                             value = element.innerText;
                             performTrim = false;
                         }

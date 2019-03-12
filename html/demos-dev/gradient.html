@@ -35,9 +35,6 @@
             font-size: 13px;
             text-align: right;
         }
-        tr:first-child td:nth-child(1) {
-            background: radial-gradient(at bottom left, red, yellow, green);
-        }
         tr:last-child td {
             font-size: 11px;
             padding-left: 10px;
@@ -79,7 +76,7 @@
     <div id="squared_ui">
         <table data-android-include="gradient_content" data-android-include-merge="true">
             <tr>
-                <td>Chrome</td>
+                <td style="background: radial-gradient(red, yellow, green);">Chrome</td>
                 <td><img src="../demos/images/icons8-chrome.png" /></td>
             </tr>
             <tr>
@@ -89,7 +86,7 @@
         <br />
         <table>
             <tr>
-                <td>Docs</td>
+                <td style="background: radial-gradient(closest-side at 30% 30%, red, yellow, green);">Docs</td>
                 <td><img src="../demos/images/icons8-google-docs.png" /></td>
             </tr>
             <tr>
@@ -99,7 +96,7 @@
         <br />
         <table data-android-include="gradient_nested" data-android-include-merge="true" data-android-include-end="true">
             <tr>
-                <td>News</td>
+                <td style="background: radial-gradient(closest-corner at 30% 30%, red, yellow, green);">News</td>
                 <td><img src="../demos/images/icons8-google-news.png" /></td>
             </tr>
             <tr>
@@ -109,7 +106,7 @@
         <br />
         <table data-android-include-end="true">
             <tr>
-                <td>Play</td>
+                <td style="background: radial-gradient(farthest-side at bottom left, red, yellow, green);">Play</td>
                 <td><img src="../demos/images/icons8-google-play.png" /></td>
             </tr>
             <tr>
@@ -119,7 +116,7 @@
         <br />
         <table data-android-include="gradient_single" data-android-include-end="true">
             <tr>
-                <td>Plus</td>
+                <td style="background: radial-gradient(farthest-corner at bottom left, red, yellow, green);">Plus</td>
                 <td><img src="../demos/images/icons8-google-plus.png" /></td>
             </tr>
             <tr>

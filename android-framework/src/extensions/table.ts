@@ -57,19 +57,20 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                     }
                 });
                 if (requireWidth && !node.hasWidth) {
-                    let widthParent = 0;
+                    const actualWidth = node.actualWidth;
+                    let parentWidth = 0;
                     node.ascend().some(item => {
                         if (item.hasWidth) {
-                            widthParent = item.bounds.width;
+                            parentWidth = item.bounds.width;
                             return true;
                         }
                         return false;
                     });
-                    if (node.bounds.width >= widthParent) {
+                    if (actualWidth >= parentWidth) {
                         node.android('layout_width', 'match_parent');
                     }
                     else {
-                        node.css('width', $util.formatPX(node.bounds.width), true);
+                        node.css('width', $util.formatPX(actualWidth), true);
                     }
                 }
             }
@@ -112,8 +113,9 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
     public postProcedure(node: T) {
         const layoutWidth = $util.convertInt(node.android('layout_width'));
         if (layoutWidth > 0) {
-            if (node.bounds.width > layoutWidth) {
-                node.android('layout_width', $util.formatPX(node.bounds.width));
+            const actualWidth = node.bounds.width;
+            if (actualWidth > layoutWidth) {
+                node.android('layout_width', $util.formatPX(actualWidth));
             }
             if (layoutWidth > 0 && node.cssInitial('width') === 'auto' && node.renderChildren.every(item => item.inlineWidth)) {
                 node.renderEach((item: T) => {

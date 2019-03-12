@@ -1,11 +1,7 @@
 import { getElementAsNode, getElementCache, setElementCache } from './dom';
-import { REGEXP_COMPILED, STRING_PATTERN, calculate, parseUnit, capitalize, convertCamelCase, convertPX, convertLength, formatPercent, formatPX, isLength, isPercent, resolvePath } from './util';
+import { REGEXP_COMPILED, STRING_PATTERN, calculate, capitalize, convertCamelCase, convertPX, convertLength, convertPercent, isLength, resolvePath } from './util';
 
 type T = squared.base.Node;
-
-function convertPercent(value: string, dimension: number, fontSize?: number) {
-    return isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize) / dimension;
-}
 
 export const BOX_POSITION = ['top', 'right', 'bottom', 'left'];
 export const BOX_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
@@ -264,19 +260,59 @@ export function getNamedItem(element: Element | null, attr: string) {
     return '';
 }
 
-export function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number, percent = false) {
+export function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number) {
     const result: RectPosition = {
         top: 0,
         left: 0,
         right: 0,
         bottom: 0,
+        topAsPercent: 0,
+        leftAsPercent: 0,
+        rightAsPercent: 0,
+        bottomAsPercent: 0,
         horizontal: 'left',
-        vertical: 'top',
-        originalX: '',
-        originalY: ''
+        vertical: 'top'
     };
     const orientation = value === 'center' ? ['center', 'center'] : value.split(' ');
-    if (orientation.length === 4) {
+    if (orientation.length === 2) {
+        for (let i = 0; i < orientation.length; i++) {
+            const position = orientation[i];
+            let direction: string;
+            let offsetParent: number;
+            if (i === 0) {
+                direction = 'left';
+                offsetParent = dimension.width;
+                result.horizontal = position;
+            }
+            else {
+                direction = 'top';
+                offsetParent = dimension.height;
+                result.vertical = position;
+            }
+            const directionAsPercent = `${direction}AsPercent`;
+            switch (position) {
+                case 'start':
+                    result.horizontal = 'left';
+                    break;
+                case 'end':
+                    result.horizontal = 'right';
+                case 'right':
+                case 'bottom':
+                    result[direction] = offsetParent;
+                    result[directionAsPercent] = 1;
+                    break;
+                case 'center':
+                    result[direction] = offsetParent / 2;
+                    result[directionAsPercent] = 0.5;
+                    break;
+                default:
+                    result[direction] = convertLength(position, offsetParent, fontSize);
+                    result[directionAsPercent] = convertPercent(position, offsetParent, fontSize);
+                    break;
+            }
+        }
+    }
+    else if (orientation.length === 4) {
         for (let i = 0; i < orientation.length; i++) {
             const position = orientation[i];
             switch (i) {
@@ -284,20 +320,22 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                     result.horizontal = position;
                     break;
                 case 1: {
-                    const location = percent ? convertPercent(position, dimension.width, fontSize) : convertLength(position, dimension.width, fontSize);
+                    const location = convertLength(position, dimension.width, fontSize);
+                    const locationAsPercent = convertPercent(position, dimension.width, fontSize);
                     switch (result.horizontal) {
                         case 'end:':
                             result.horizontal = 'right';
                         case 'right':
                             result.right = location;
-                            result.left = percent ? 1 - location : dimension.width - location;
-                            result.originalX = isPercent(position) ? formatPercent(100 - parseFloat(position)) : formatPX(dimension.width -  parseUnit(position, fontSize));
+                            result.left = dimension.width - location;
+                            result.rightAsPercent = locationAsPercent;
+                            result.leftAsPercent = 1 - locationAsPercent;
                             break;
                         case 'start':
                             result.horizontal = 'left';
                         default:
                             result.left = location;
-                            result.originalX = position;
+                            result.leftAsPercent = locationAsPercent;
                             break;
                     }
                     break;
@@ -306,63 +344,20 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
                     result.vertical = position;
                     break;
                 case 3: {
-                    const location = percent ? convertPercent(position, dimension.height, fontSize) : convertLength(position, dimension.height, fontSize);
+                    const location = convertLength(position, dimension.height, fontSize);
+                    const locationAsPercent = convertPercent(position, dimension.height, fontSize);
                     if (result.vertical === 'bottom') {
                         result.bottom = location;
-                        result.top = percent ? 1 - location : dimension.height - location;
-                        result.originalY = isPercent(position) ? formatPercent(100 - parseFloat(position)) : formatPX(dimension.height -  parseUnit(position, fontSize));
+                        result.top = dimension.height - location;
+                        result.bottomAsPercent = locationAsPercent;
+                        result.topAsPercent = 1 - locationAsPercent;
                     }
                     else {
                         result.top = location;
-                        result.originalY = position;
+                        result.topAsPercent = locationAsPercent;
                     }
                     break;
                 }
-            }
-        }
-    }
-    else if (orientation.length === 2) {
-        for (let i = 0; i < orientation.length; i++) {
-            const position = orientation[i];
-            let offsetParent: number;
-            let direction: string;
-            let original: string;
-            if (i === 0) {
-                offsetParent = dimension.width;
-                direction = 'left';
-                original = 'originalX';
-                result.horizontal = position;
-            }
-            else {
-                offsetParent = dimension.height;
-                direction = 'top';
-                original = 'originalY';
-                result.vertical = position;
-            }
-            if (/^[a-z]+$/.test(position)) {
-                switch (position) {
-                    case 'start':
-                        result.horizontal = 'left';
-                    case 'left':
-                    case 'top':
-                        result[original] = '0%';
-                        break;
-                    case 'end':
-                        result.horizontal = 'right';
-                    case 'right':
-                    case 'bottom':
-                        result[direction] = percent ? 1 : offsetParent;
-                        result[original] = '100%';
-                        break;
-                    case 'center':
-                        result[direction] = percent ? 0.5 : Math.round(offsetParent / 2);
-                        result[original] = '50%';
-                        break;
-                }
-            }
-            else {
-                result[direction] = percent ? convertPercent(position, offsetParent, fontSize) : convertLength(position, offsetParent, fontSize);
-                result[original] = position;
             }
         }
     }

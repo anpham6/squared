@@ -95,7 +95,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 let top = 0;
                 let image = '';
                 if (mainData.imageSrc !== '') {
-                    const position = $css.getBackgroundPosition(mainData.imagePosition, node.bounds, node.fontSize);
+                    const position = $css.getBackgroundPosition(mainData.imagePosition, node.actualDimension, node.fontSize);
                     left = position.left;
                     top = position.top;
                     image = Resource.addImageUrl(mainData.imageSrc);

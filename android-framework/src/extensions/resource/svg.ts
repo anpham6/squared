@@ -595,7 +595,7 @@ function createFillGradient(gradient: Gradient, path: $SvgPath, precision?: numb
     return result;
 }
 
-const getRadiusPercent = (value: string) => $util.isPercent(value) ? parseInt(value) / 100 : 0.5;
+const getRadiusPercent = (value: string) => $util.isPercent(value) ? parseFloat(value) / 100 : 0.5;
 
 export default class ResourceSvg<T extends View> extends squared.base.Extension<T> {
     public readonly options: ResourceSvgOptions = {
@@ -1511,7 +1511,8 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
             const shape = new $SvgShape(path.element);
             shape.build({
                 exclude: this.options.transformExclude,
-                residual: partitionTransforms
+                residual: partitionTransforms,
+                precision: this.options.floatPrecisionValue
             });
             shape.synchronize({
                 keyTimeMode: this.SYNCHRONIZE_MODE,
@@ -1702,7 +1703,8 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                     const g = new $SvgG(element);
                     g.build({
                         exclude: this.options.transformExclude,
-                        residual: partitionTransforms
+                        residual: partitionTransforms,
+                        precision: this.options.floatPrecisionValue
                     });
                     g.synchronize({
                         keyTimeMode: this.SYNCHRONIZE_MODE,

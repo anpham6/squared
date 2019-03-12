@@ -67,7 +67,7 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
             const dimensions: number[][] = [];
             node.each((item, index) => {
                 dimensions[index] = [];
-                item.each(child => dimensions[index].push(child.bounds.width));
+                item.each(child => dimensions[index].push(child.actualWidth));
                 columns.push(item.duplicate() as T[]);
             });
             const base = columns[
