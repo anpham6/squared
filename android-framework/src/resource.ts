@@ -8,6 +8,7 @@ const $Resource = squared.base.Resource;
 const $color = squared.lib.color;
 const $css = squared.lib.css;
 const $util = squared.lib.util;
+const $xml = squared.lib.xml;
 
 const STORED = <ResourceStoredMapAndroid> $Resource.STORED;
 
@@ -135,43 +136,45 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                 if (STORED.strings.has(name)) {
                     name = Resource.generateId('string', name);
                 }
-                STORED.strings.set(name, value);
+                STORED.strings.set(name, $xml.escapeNonEntity(value));
             }
             return name;
         }
         return '';
     }
 
-    public static addImageSrcSet(element: HTMLImageElement, prefix = '') {
+    public static addImageSrc(element: HTMLImageElement, prefix = '') {
         const images: StringMap = {};
-        const srcset = element.srcset.trim();
-        if (srcset !== '') {
-            const filepath = element.src.substring(0, element.src.lastIndexOf('/') + 1);
-            for (const value of srcset.split($util.REGEXP_COMPILED.SEPARATOR)) {
-                const match = /^(.+?)\s*(?:(\d*\.?\d*)x)?$/.exec(value.trim());
-                if (match) {
-                    if (!$util.hasValue(match[2])) {
-                        match[2] = '1';
-                    }
-                    const src = filepath + $util.fromLastIndexOf(match[1]);
-                    const size = parseFloat(match[2]);
-                    if (size <= 0.75) {
-                        images.ldpi = src;
-                    }
-                    else if (size <= 1) {
-                        images.mdpi = src;
-                    }
-                    else if (size <= 1.5) {
-                        images.hdpi = src;
-                    }
-                    else if (size <= 2) {
-                        images.xhdpi = src;
-                    }
-                    else if (size <= 3) {
-                        images.xxhdpi = src;
-                    }
-                    else {
-                        images.xxxhdpi = src;
+        if (element.srcset) {
+            const srcset = element.srcset.trim();
+            if (srcset !== '') {
+                const filepath = element.src.substring(0, element.src.lastIndexOf('/') + 1);
+                for (const value of srcset.split($util.REGEXP_COMPILED.SEPARATOR)) {
+                    const match = /^(.+?)\s*(?:(\d*\.?\d*)x)?$/.exec(value.trim());
+                    if (match) {
+                        if (!$util.hasValue(match[2])) {
+                            match[2] = '1';
+                        }
+                        const src = filepath + $util.fromLastIndexOf(match[1]);
+                        const size = parseFloat(match[2]);
+                        if (size <= 0.75) {
+                            images.ldpi = src;
+                        }
+                        else if (size <= 1) {
+                            images.mdpi = src;
+                        }
+                        else if (size <= 1.5) {
+                            images.hdpi = src;
+                        }
+                        else if (size <= 2) {
+                            images.xhdpi = src;
+                        }
+                        else if (size <= 3) {
+                            images.xxhdpi = src;
+                        }
+                        else {
+                            images.xxxhdpi = src;
+                        }
                     }
                 }
             }

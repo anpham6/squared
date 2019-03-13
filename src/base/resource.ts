@@ -18,7 +18,7 @@ const $xml = squared.lib.xml;
 const STRING_COLORSTOP = `(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[a-zA-Z\\d]{3,}|[a-z]+)\\s*(${$util.STRING_PATTERN.LENGTH_PERCENTAGE}|${$util.STRING_PATTERN.ANGLE}|(?:${$util.STRING_PATTERN.CALC}(?=,)|${$util.STRING_PATTERN.CALC}))?,?\\s*`;
 const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\("?.+?"?\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|circle|ellipse|closest-side|closest-corner|farthest-side|farthest-corner)?(?:\\s*at [\\w %]+)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
 
-function replaceExcluded<T extends Node>(element: HTMLElement, attr: string) {
+function removeExcluded<T extends Node>(element: HTMLElement, attr: string) {
     let value: string = element[attr];
     for (let i = 0; i < element.children.length; i++) {
         const item = $dom.getElementAsNode<T>(element.children[i]);
@@ -116,12 +116,8 @@ function parseColorStops<T extends Node>(node: T, gradient: Gradient, value: str
             }
         }
     }
-    else {
-        if (percent < 1) {
-            const color = { ...result[result.length - 1] };
-            color.offset = 1;
-            result.push(color);
-        }
+    else if (percent < 1) {
+        result.push({ ...result[result.length - 1], offset: 1 });
     }
     return result;
 }
@@ -668,28 +664,68 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                 let performTrim = true;
                 switch (element.tagName) {
                     case 'INPUT':
+                        value = element.value.trim();
                         switch (element.type) {
-                            case 'text':
-                            case 'number':
-                            case 'email':
-                            case 'search':
-                            case 'submit':
-                            case 'reset':
-                            case 'button':
-                                value = element.value.trim();
-                                break;
-                            default:
+                            case 'radio':
+                            case 'checkbox':
                                 if (node.companion && !node.companion.visible) {
                                     value = node.companion.textContent.trim();
                                 }
                                 break;
+                            case 'time':
+                                if (value === '') {
+                                    value = '--:-- --';
+                                }
+                                break;
+                            case 'date':
+                            case 'datetime-local':
+                                if (value === '') {
+                                    switch ((new Intl.DateTimeFormat()).resolvedOptions().locale) {
+                                        case 'en-US':
+                                            value = 'mm/dd/yyyy';
+                                            break;
+                                        default:
+                                            value = 'dd/mm/yyyy';
+                                            break;
+                                    }
+                                    if (element.type === 'datetime-local') {
+                                        value += ' --:-- --';
+                                    }
+                                }
+                                break;
+                            case 'week':
+                                if (value === '') {
+                                    value = 'Week: --, ----';
+                                }
+                                break;
+                            case 'month':
+                                if (value === '') {
+                                    value = '--------- ----';
+                                }
+                                break;
+                            case 'url':
+                            case 'email':
+                            case 'search':
+                            case 'number':
+                            case 'tel':
+                                if (value === '') {
+                                    value = element.placeholder;
+                                }
+                                break;
+                            case 'file':
+                                value = 'Choose File';
+                                break;
                         }
+                        break;
+                    case 'TEXTAREA':
+                        value = element.value.trim();
                         break;
                     case 'BUTTON':
                         value = element.innerText;
                         break;
-                    case 'TEXTAREA':
-                        value = element.value.trim();
+                    case 'IFRAME':
+                        value = element.src;
+                        performTrim = false;
                         break;
                     default:
                         if (node.plainText) {
@@ -700,15 +736,15 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         else if (node.inlineText) {
                             name = node.textContent.trim();
                             if (element.tagName === 'CODE') {
-                                value = replaceExcluded(element, 'innerHTML');
+                                value = removeExcluded(element, 'innerHTML');
                             }
                             else if ($element.hasLineBreak(element, true)) {
-                                value = replaceExcluded(element, 'innerHTML')
+                                value = removeExcluded(element, 'innerHTML')
                                     .replace(/\s*<br[^>]*>\s*/g, '\\n')
                                     .replace(/(<([^>]+)>)/ig, '');
                             }
                             else {
-                                value = replaceExcluded(element, 'textContent');
+                                value = removeExcluded(element, 'textContent');
                             }
                             [value, inlineTrim] = replaceWhiteSpace(node, element, value);
                         }

@@ -1,4 +1,4 @@
-import { isString, spliceArray, withinRange } from './util';
+import { spliceArray, withinRange } from './util';
 
 type T = squared.base.Node;
 
@@ -203,5 +203,6 @@ export function deleteElementCache(element: Element, ...attrs: string[]) {
 }
 
 export function getElementAsNode<T>(element: Element): T | undefined {
-    return isString(element.className) && element.className.startsWith('squared') ? undefined : getElementCache(element, 'node');
+    const node = getElementCache(element, 'node');
+    return node && node.naturalElement ? node : undefined;
 }

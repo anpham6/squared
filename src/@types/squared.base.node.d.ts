@@ -30,10 +30,11 @@ declare global {
             multiline: boolean;
             overflow: number;
             documentParent: Node;
+            renderAs?: Node;
             parent?: Node;
             renderParent?: Node;
             companion?: Node;
-            renderAs?: Node;
+            extracted?: Node[];
             readonly localSettings: {};
             readonly excludeSection: number;
             readonly excludeProcedure: number;

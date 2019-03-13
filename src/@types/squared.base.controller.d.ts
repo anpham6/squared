@@ -13,6 +13,7 @@ declare global {
             readonly afterInsertNode: BindGeneric<T, void>;
             finalize(data: SessionData<NodeList<T>>): void;
             reset(): void;
+            applyDefaultStyles(element: Element): void;
             processUnknownParent(layout: Layout<T>): LayoutResult<T>;
             processUnknownChild(layout: Layout<T>): LayoutResult<T>;
             processTraverseHorizontal(layout: Layout<T>, siblings?: T[]): LayoutResult<T>;

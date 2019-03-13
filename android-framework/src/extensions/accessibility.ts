@@ -9,7 +9,7 @@ export default class <T extends android.base.View> extends squared.base.extensio
 
     public afterBaseLayout() {
         for (const node of this.application.processing.cache) {
-            const element = <HTMLElement> node.element;
+            const element = <HTMLInputElement> node.element;
             if (element && node.visible && !node.hasBit('excludeProcedure', $enum.NODE_PROCEDURE.ACCESSIBILITY)) {
                 switch (node.controlName) {
                     case CONTAINER_ANDROID.EDIT:
@@ -36,8 +36,11 @@ export default class <T extends android.base.View> extends squared.base.extensio
                     case CONTAINER_ANDROID.CHECKBOX:
                     case CONTAINER_ANDROID.RADIO:
                     case CONTAINER_ANDROID.BUTTON:
-                        if ((<HTMLInputElement> element).disabled) {
+                        if (element.readOnly) {
                             node.android('focusable', 'false');
+                        }
+                        if (element.disabled) {
+                            node.android('enabled', 'false');
                         }
                         break;
                 }

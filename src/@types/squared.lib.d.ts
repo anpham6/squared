@@ -168,6 +168,7 @@ declare global {
             function replaceTab(value: string, spaces?: number, preserve?: boolean): string;
             function replaceEntity(value: string): string;
             function replaceCharacter(value: string): string;
+            function escapeNonEntity(value: string): string;
             function parseTemplate(value: string): StringMap;
             function createTemplate(templates: StringMap, data: ExternalData, format?: boolean): string;
             function formatTemplate(value: string, closeEmpty?: boolean, char?: string): string;

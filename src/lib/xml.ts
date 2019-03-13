@@ -89,7 +89,6 @@ export function replaceTab(value: string, spaces = 4, preserve = false) {
 export function replaceEntity(value: string) {
     return value
         .replace(/&#(\d+);/g, (match, capture) => String.fromCharCode(parseInt(capture)))
-        .replace(/&(?!#?[A-Za-z0-9]{2,};)/g, '&amp;')
         .replace(/\u00A0/g, '&#160;')
         .replace(/\u2002/g, '&#8194;')
         .replace(/\u2003/g, '&#8195;')
@@ -107,6 +106,10 @@ export function replaceCharacter(value: string) {
         .replace(/>/g, '&gt;')
         .replace(/'/g, '&apos;')
         .replace(/"/g, '&quot;');
+}
+
+export function escapeNonEntity(value: string) {
+    return value.replace(/&(?!#?[A-Za-z0-9]{2,};)/g, '&amp;');
 }
 
 export function parseTemplate(value: string) {

@@ -37,7 +37,7 @@ export default class FloatingActionButton<T extends android.base.View> extends s
         let src = '';
         switch (element.tagName) {
             case 'IMG':
-                src = $Resource.addImageSrcSet(<HTMLImageElement> element, $constA.PREFIX_ANDROID.DIALOG);
+                src = $Resource.addImageSrc(<HTMLImageElement> element, $constA.PREFIX_ANDROID.DIALOG);
                 break;
             case 'INPUT':
                 if ((<HTMLInputElement> element).type === 'image') {

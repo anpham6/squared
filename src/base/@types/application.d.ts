@@ -1,6 +1,7 @@
 export interface UserSettings {
     builtInExtensions: string[];
     preloadImages: boolean;
+    maxWordWrapWidth: number;
     supportNegativeLeftTop: boolean;
     floatOverlapDisabled: boolean;
     exclusionsDisabled: boolean;
@@ -28,7 +29,6 @@ export interface ControllerSettings {
         tagName: Set<string>
     };
     relative: {
-        boxWidthWordWrapPercent: number;
         superscriptFontScale: number;
         subscriptFontScale: number;
     };

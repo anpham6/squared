@@ -205,7 +205,7 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
                     else {
                         const image = node.find(item => item.imageElement);
                         if (image) {
-                            src = $Resource.addImageSrcSet(<HTMLImageElement> image.element, $constA.PREFIX_ANDROID.MENU);
+                            src = $Resource.addImageSrc(<HTMLImageElement> image.element, $constA.PREFIX_ANDROID.MENU);
                             if (src !== '') {
                                 options.android.icon = `@drawable/${src}`;
                             }

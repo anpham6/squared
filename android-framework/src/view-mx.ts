@@ -17,6 +17,8 @@ const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
+const REGEXP_FORMATTED = /^(?:([a-z]+):)?(\w+)="((?:@+?[a-z]+\/)?.+)"$/;
+
 function checkTextAlign(value: string) {
     switch (value) {
         case 'justify':
@@ -164,7 +166,7 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         public formatted(value: string, overwrite = true) {
-            const match = value.match(/^(?:([a-z]+):)?(\w+)="((?:@+?[a-z]+\/)?.+)"$/);
+            const match = value.match(REGEXP_FORMATTED);
             if (match) {
                 this.attr(match[1] || '_', match[2], match[3], overwrite);
             }
@@ -479,7 +481,8 @@ export default (Base: Constructor<squared.base.Node>) => {
                 const element = this.element;
                 let name: string | undefined;
                 if (element) {
-                    name = validateString(element.id || (<HTMLInputElement> element).name);
+                    const inputName = (<HTMLInputElement> element).name;
+                    name = validateString(element.id || (typeof inputName === 'string' ? inputName : ''));
                     if (name === 'parent' || RESERVED_JAVA.includes(name)) {
                         name = `_${name}`;
                     }
@@ -539,23 +542,15 @@ export default (Base: Constructor<squared.base.Node>) => {
                     if ($util.isLength(width)) {
                         const widthParent = renderParent ? $util.convertInt((renderParent as T).android('layout_width')) : 0;
                         const value = this.parseUnit(width);
-                        if (parent === renderParent && widthParent > 0 && value >= widthParent) {
-                            this.android('layout_width', 'match_parent');
-                        }
-                        else {
-                            this.android('layout_width', $util.formatPX(value));
-                        }
+                        this.android('layout_width', parent === renderParent && widthParent > 0 && value >= widthParent ? 'match_parent' : $util.formatPX(value));
                     }
                     else if ($util.isPercent(width)) {
                         if (renderParent && renderParent.is(CONTAINER_NODE.GRID)) {
                             this.android('layout_width', '0px', false);
                             this.android('layout_columnWeight', (parseInt(width) / 100).toPrecision(2), false);
                         }
-                        else if (width === '100%') {
-                            this.android('layout_width', 'match_parent');
-                        }
                         else {
-                            this.android('layout_width', this.convertPX(width));
+                            this.android('layout_width', width === '100%' ? 'match_parent' : this.convertPX(width));
                         }
                     }
                     else {
@@ -574,6 +569,17 @@ export default (Base: Constructor<squared.base.Node>) => {
                 if (parent && renderParent) {
                     const blockStatic = this.blockStatic && !this.has('maxWidth') && (this.htmlElement || this.svgElement);
                     if (this.plainText) {
+                        if (this.multiline && renderParent.layoutFrame && renderParent.renderChildren.length > 1 && renderParent.ascend(true).some(node => !node.inlineStatic && node.has('width'))) {
+                            let width = renderParent.actualWidth;
+                            renderParent.renderEach(node => {
+                                if (node !== this) {
+                                    width -= node.actualWidth;
+                                }
+                            });
+                            if (width > 0) {
+                                this.android('maxWidth', $util.formatPX(width));
+                            }
+                        }
                         this.android('layout_width', this.actualWidth > renderParent.box.width && this.multiline && this.alignParent('left') ? 'match_parent' : 'wrap_content', false);
                         return;
                     }
@@ -809,7 +815,7 @@ export default (Base: Constructor<squared.base.Node>) => {
         public setBoxSpacing() {
             const renderParent = this.renderParent;
             if (renderParent) {
-                const supported = this.supported('android', 'layout_marginHorizontal');
+                const supported = this.localSettings.targetAPI >= BUILD_ANDROID.OREO;
                 const setBoxModel = (attrs: string[], prefix: string, mergeable = true) => {
                     const [top, right, bottom, left] = attrs;
                     const boxModel: ObjectMap<number> = {};

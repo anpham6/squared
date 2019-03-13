@@ -45,5 +45,6 @@ export enum CONTAINER_NODE {
     LINEAR,
     GRID,
     RELATIVE,
-    CONSTRAINT
+    CONSTRAINT,
+    WEBVIEW
 }

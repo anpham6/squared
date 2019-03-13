@@ -30,6 +30,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public controlId = '';
     public style!: CSSStyleDeclaration;
     public companion?: T;
+    public extracted?: T[];
 
     public abstract readonly localSettings: {};
     public abstract readonly renderChildren: T[];
@@ -689,7 +690,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             if (this.documentBody) {
                 if (this.marginTop > 0) {
                     const firstChild = this.firstChild;
-                    if (firstChild && firstChild.blockStatic && firstChild.marginTop >= this.marginTop && !firstChild.lineBreak) {
+                    if (firstChild && firstChild.blockStatic && firstChild.has('marginTop') && firstChild.marginTop >= this.marginTop && !firstChild.lineBreak) {
                         this.css('marginTop', '0px', true);
                     }
                 }
@@ -734,6 +735,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     this._boxReset[attr] = 1;
                 }
                 else {
+
                     this._boxAdjustment[attr] += offset;
                     if (!negative && this._boxAdjustment[attr] < 0) {
                         this._boxAdjustment[attr] = 0;
@@ -801,7 +803,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 }
                 else if (!node.excluded && node.pageFlow) {
                     result.push(node);
-                    if (!height || node.visible && !node.floating) {
+                    if (!height || (node.visible || node.rendered) && !node.floating) {
                         break;
                     }
                 }
@@ -833,7 +835,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     }
                     else if (!node.excluded && node.pageFlow) {
                         result.push(node);
-                        if (!visible || node.visible && !node.floating) {
+                        if (!visible || (node.visible || node.rendered) && !node.floating) {
                             break;
                         }
                     }

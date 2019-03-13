@@ -5,6 +5,10 @@ import Layout from './layout';
 import Node from './node';
 import NodeList from './nodelist';
 
+const $color = squared.lib.color;
+const $css = squared.lib.css;
+const $dom = squared.lib.dom;
+const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
 const REGEXP_INDENT = /^({[^}]+})(\t*)(<.*)/;
@@ -43,6 +47,58 @@ export default abstract class Controller<T extends Node> implements squared.base
     public reset() {
         this._before = {};
         this._after = {};
+    }
+
+    public applyDefaultStyles(element: Element) {
+        const styleMap: StringMap = $dom.getElementCache(element, 'styleMap') || {};
+        if ($util.isUserAgent($util.USER_AGENT.FIREFOX)) {
+            if (styleMap.display === undefined) {
+                switch (element.tagName) {
+                    case 'INPUT':
+                    case 'TEXTAREA':
+                    case 'SELECT':
+                    case 'BUTTON':
+                        styleMap.display = 'inline-block';
+                        break;
+                }
+            }
+        }
+        switch (element.tagName) {
+            case 'INPUT':
+                switch ((<HTMLInputElement> element).type) {
+                    case 'file': {
+                        const style = $css.getStyle(element);
+                        const color = $color.parseColor(style.backgroundColor || '');
+                        if (color === undefined) {
+                            styleMap.backgroundColor = '#DDDDDD';
+                            if (style.borderStyle === 'none') {
+                                for (const border of ['borderTop', 'borderRight', 'borderBottom', 'borderLeft']) {
+                                    styleMap[`${border}Style`] = 'solid';
+                                    styleMap[`${border}Color`] = '#DDDDDD';
+                                    styleMap[`${border}Width`] = '2px';
+                                }
+                            }
+                        }
+                        break;
+                    }
+                }
+                break;
+            case 'IFRAME':
+                if (styleMap.display === undefined) {
+                    styleMap.display = 'block';
+                }
+            case 'IMG':
+                if (styleMap.width === undefined) {
+                    const match = /width="(\d+)"/.exec(element.outerHTML);
+                    styleMap.width = match ? $util.formatPX($util.isPercent(match[1]) ? parseFloat(match[1]) / 100 * (element.parentElement || element).getBoundingClientRect().width : match[1]) : '300px';
+                }
+                if (styleMap.height === undefined) {
+                    const match = /height="(\d+)"/.exec(element.outerHTML);
+                    styleMap.height = match ? $util.formatPX($util.isPercent(match[1]) ? parseFloat(match[1]) / 100 * (element.parentElement || element).getBoundingClientRect().height : match[1]) : '150px';
+                }
+                break;
+        }
+        $dom.setElementCache(element, 'styleMap', styleMap);
     }
 
     public replaceRenderQueue(output: string) {

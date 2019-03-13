@@ -389,10 +389,9 @@ export default class Controller<T extends View> extends squared.base.Controller<
         },
         unsupported: {
             excluded: new Set(['BR']),
-            tagName: new Set(['OPTION', 'INPUT:hidden', 'MAP', 'AREA', 'IFRAME', 'svg'])
+            tagName: new Set(['OPTION', 'INPUT:hidden', 'MAP', 'AREA', 'svg'])
         },
         relative: {
-            boxWidthWordWrapPercent: 0.9,
             superscriptFontScale: -4,
             subscriptFontScale: -4
         },
@@ -863,27 +862,13 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         const element = <HTMLImageElement> node.element;
                         const widthPercent = node.has('width', $enum.CSS_STANDARD.PERCENT);
                         const heightPercent = node.has('height', $enum.CSS_STANDARD.PERCENT);
-                        let width = node.toInt('width');
-                        let height = node.toInt('height');
-                        let scaleType = '';
+                        const width = node.toFloat('width');
+                        const height = node.toFloat('height');
+                        let scaleType: string;
                         if (widthPercent || heightPercent) {
                             scaleType = widthPercent && heightPercent ? 'fitXY' : 'fitCenter';
                         }
                         else {
-                            if (width === 0) {
-                                const match = /width="(\d+)"/.exec(element.outerHTML);
-                                if (match) {
-                                    width = parseInt(match[1]);
-                                    node.css('width', $util.formatPX(match[1]), true);
-                                }
-                            }
-                            if (height === 0) {
-                                const match = /height="(\d+)"/.exec(element.outerHTML);
-                                if (match) {
-                                    height = parseInt(match[1]);
-                                    node.css('height', $util.formatPX(match[1]), true);
-                                }
-                            }
                             switch (node.css('objectFit')) {
                                 case 'contain':
                                     scaleType = 'centerInside';
@@ -909,7 +894,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         if (node.baseline) {
                             node.android('baselineAlignBottom', 'true');
                         }
-                        const src = Resource.addImageSrcSet(element);
+                        const src = Resource.addImageSrc(element);
                         if (src !== '') {
                             node.android('src', `@drawable/${src}`);
                         }
@@ -958,6 +943,65 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     }
                     break;
                 }
+                case 'INPUT': {
+                    const element = <HTMLInputElement> node.element;
+                    switch (element.type) {
+                        case 'checkbox':
+                            if (element.checked) {
+                                node.android('checked', 'true');
+                            }
+                            break;
+                        case 'text':
+                            node.android('inputType', 'text');
+                            break;
+                        case 'password':
+                            node.android('inputType', 'textPassword');
+                            break;
+                        case 'range':
+                            if (element.value) {
+                                node.android('progress', element.value);
+                            }
+                        case 'time':
+                        case 'week':
+                        case 'month':
+                        case 'number':
+                        case 'datetime-local':
+                            if (element.min) {
+                                node.android('min', element.min);
+                            }
+                            if (element.max) {
+                                node.android('max', element.max);
+                            }
+                            break;
+                        case 'url':
+                        case 'email':
+                        case 'search':
+                        case 'tel':
+                            if (element.minLength !== -1) {
+                                node.android('minLength', element.minLength.toString());
+                            }
+                            if (element.maxLength > 0) {
+                                node.android('maxLength', element.maxLength.toString());
+                            }
+                            break;
+                    }
+                    switch (controlName) {
+                        case CONTAINER_ANDROID.EDIT:
+                        case CONTAINER_ANDROID.RANGE:
+                            if (!node.hasWidth && element.size > 0) {
+                                node.css('width', $util.formatPX(element.size * 7), true);
+                            }
+                            break;
+                    }
+                    break;
+                }
+                case 'SELECT': {
+                    const element = <HTMLSelectElement> node.element;
+                    if (element.size > 1 && !node.cssInitial('verticalAlign')) {
+                        node.css('verticalAlign', 'text-bottom', true);
+                    }
+                    break;
+                }
                 case 'TEXTAREA': {
                     const element = <HTMLTextAreaElement> node.element;
                     node.android('minLines', '2');
@@ -981,56 +1025,6 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     }
                     break;
                 }
-                case 'SELECT': {
-                    const element = <HTMLSelectElement> node.element;
-                    if (element.size > 1 && !node.cssInitial('verticalAlign')) {
-                        node.css('verticalAlign', 'text-bottom', true);
-                    }
-                    break;
-                }
-                case 'INPUT': {
-                    const element = <HTMLInputElement> node.element;
-                    switch (element.type) {
-                        case 'password':
-                            node.android('inputType', 'textPassword');
-                            break;
-                        case 'text':
-                            node.android('inputType', 'text');
-                            break;
-                        case 'range':
-                            if (element.min) {
-                                node.android('min', element.min);
-                            }
-                            if (element.max) {
-                                node.android('max', element.max);
-                            }
-                            if (element.value) {
-                                node.android('progress', element.value);
-                            }
-                            break;
-                        case 'image':
-                            if (!node.hasBit('excludeResource', $enum.NODE_RESOURCE.IMAGE_SOURCE)) {
-                                const result = Resource.addImage({ mdpi: element.src });
-                                if (result !== '') {
-                                    node.android('src', `@drawable/${result}`, false);
-                                }
-                            }
-                            break;
-                    }
-                    switch (element.type) {
-                        case 'text':
-                        case 'search':
-                        case 'tel':
-                        case 'url':
-                        case 'email':
-                        case 'password':
-                            if (!node.hasWidth && element.size > 0) {
-                                node.css('width', $util.formatPX(element.size * 8), true);
-                            }
-                            break;
-                    }
-                    break;
-                }
             }
         }
         if (node.inlineVertical) {
@@ -1043,7 +1037,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     break;
             }
         }
-        switch (node.controlName) {
+        switch (controlName) {
             case CONTAINER_ANDROID.TEXT:
                 let overflow = '';
                 if (node.overflowX) {
@@ -1355,31 +1349,33 @@ export default class Controller<T extends View> extends squared.base.Controller<
 
     protected processRelativeHorizontal(node: T, children: T[]) {
         const cleared = $NodeList.cleared(children);
-        const boxWidth = Math.ceil((() => {
-            const renderParent = node.renderParent;
-            if (renderParent) {
-                if (renderParent.overflowX) {
-                    if (node.has('width', $enum.CSS_STANDARD.LENGTH)) {
-                        return node.toFloat('width', true);
+        const boxWidth = Math.min(
+            Math.ceil((() => {
+                const renderParent = node.renderParent;
+                if (renderParent) {
+                    if (renderParent.overflowX) {
+                        if (node.has('width', $enum.CSS_STANDARD.LENGTH)) {
+                            return node.toFloat('width', true);
+                        }
+                        else if (renderParent.has('width', $enum.CSS_STANDARD.LENGTH)) {
+                            return renderParent.toFloat('width', true);
+                        }
+                        else if (renderParent.has('width', $enum.CSS_STANDARD.PERCENT)) {
+                            return renderParent.actualWidth - renderParent.contentBoxWidth;
+                        }
                     }
-                    else if (renderParent.has('width', $enum.CSS_STANDARD.LENGTH)) {
-                        return renderParent.toFloat('width', true);
-                    }
-                    else if (renderParent.has('width', $enum.CSS_STANDARD.PERCENT)) {
-                        return renderParent.actualWidth - renderParent.contentBoxWidth;
+                    else {
+                        let floatStart = Number.NEGATIVE_INFINITY;
+                        $util.captureMap(renderParent.children, item => item.float === 'left' && item.siblingIndex < node.siblingIndex, item => floatStart = Math.max(floatStart, item.linear.right));
+                        if (floatStart !== Number.NEGATIVE_INFINITY && children.some(item => item.linear.left === floatStart)) {
+                            return node.box.right - floatStart;
+                        }
                     }
                 }
-                else {
-                    let floatStart = Number.NEGATIVE_INFINITY;
-                    $util.captureMap(renderParent.children, item => item.float === 'left' && item.siblingIndex < node.siblingIndex, item => floatStart = Math.max(floatStart, item.linear.right));
-                    if (floatStart !== Number.NEGATIVE_INFINITY && children.some(item => item.linear.left === floatStart)) {
-                        return node.box.right - floatStart;
-                    }
-                }
-            }
-            return node.box.width;
-        })());
-        const wrapWidth = boxWidth * this.localSettings.relative.boxWidthWordWrapPercent;
+                return node.box.width;
+            })()),
+            this.userSettings.maxWordWrapWidth
+        );
         const checkLineWrap = node.css('whiteSpace') !== 'nowrap';
         const firefoxEdge = $util.isUserAgent($util.USER_AGENT.FIREFOX | $util.USER_AGENT.EDGE);
         const [right, left] = $util.partitionArray(children, item => item.float === 'right');
@@ -1416,8 +1412,11 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 }
                 else {
                     function checkWidthWrap() {
-                        const baseWidth = (rowPreviousLeft && rows.length > 1 ? rowPreviousLeft.linear.width : 0) + rowWidth + item.marginLeft + (previous.float === 'left' && !cleared.has(item) ? 0 : dimension.width) - (firefoxEdge ? item.borderRightWidth : 0);
-                        return !item.rightAligned && (Math.floor(baseWidth) - (item.styleElement && item.inlineStatic ? item.paddingLeft + item.paddingRight : 0) > boxWidth);
+                        if (!item.rightAligned) {
+                            const baseWidth = (rowPreviousLeft && rows.length > 1 ? rowPreviousLeft.linear.width : 0) + rowWidth + item.marginLeft + (previous.float === 'left' && !cleared.has(item) ? 0 : dimension.width) - (firefoxEdge ? item.borderRightWidth : 0);
+                            return Math.floor(baseWidth) - (item.styleElement && item.inlineStatic ? item.paddingLeft + item.paddingRight : 0) > boxWidth;
+                        }
+                        return false;
                     }
                     if (adjustFloatingNegativeMargin(item, previous)) {
                         alignSibling = '';
@@ -1499,7 +1498,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     }
                 }
                 rowWidth += previousOffset + item.marginLeft + dimension.width + item.marginRight;
-                if (Math.ceil(rowWidth) >= wrapWidth && !item.alignParent(alignParent)) {
+                if (i < seg.length - 1 && Math.ceil(rowWidth) >= this.userSettings.maxWordWrapWidth && !item.alignParent(alignParent)) {
                     checkSingleLine(item, checkLineWrap);
                 }
             }

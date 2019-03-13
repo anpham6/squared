@@ -338,44 +338,73 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 const backgroundPosition: RectPosition[] = [];
                 const imageDimensions: Undefined<Dimension>[] = [];
                 let imageLength = 0;
-                if (stored.backgroundImage && !node.hasBit('excludeResource', $enum.NODE_RESOURCE.IMAGE_SOURCE)) {
-                    imageLength = stored.backgroundImage.length;
-                    while (backgroundSize.length < imageLength) {
-                        $util.concatArray(backgroundSize, backgroundSize.slice(0));
-                    }
-                    backgroundSize.length = imageLength;
-                    for (let i = 0, j = 0; i < imageLength; i++) {
-                        const value = stored.backgroundImage[i];
-                        let remove = true;
-                        if (typeof value === 'string') {
-                            if (value !== 'initial') {
-                                backgroundImage[j] = Resource.addImageUrl(value);
-                                if (backgroundImage[j] !== '') {
-                                    imageDimensions[j] = Resource.ASSETS.images.get($css.resolveURL(value));
+                if (!node.hasBit('excludeResource', $enum.NODE_RESOURCE.IMAGE_SOURCE)) {
+                    if (stored.backgroundImage)  {
+                        imageLength = stored.backgroundImage.length;
+                        while (backgroundSize.length < imageLength) {
+                            $util.concatArray(backgroundSize, backgroundSize.slice(0));
+                        }
+                        backgroundSize.length = imageLength;
+                        for (let i = 0, j = 0; i < imageLength; i++) {
+                            const value = stored.backgroundImage[i];
+                            let remove = true;
+                            if (typeof value === 'string') {
+                                if (value !== 'initial') {
+                                    backgroundImage[j] = Resource.addImageUrl(value);
+                                    if (backgroundImage[j] !== '') {
+                                        imageDimensions[j] = Resource.ASSETS.images.get($css.resolveURL(value));
+                                        remove = false;
+                                    }
+                                }
+                            }
+                            else if (value.colorStops.length > 1) {
+                                const gradient = createBackgroundGradient(value, node.localSettings.targetAPI);
+                                if (gradient) {
+                                    backgroundImage[j] = gradient;
+                                    imageDimensions[j] = value.dimension;
                                     remove = false;
                                 }
                             }
-                        }
-                        else if (value.colorStops.length > 1) {
-                            const gradient = createBackgroundGradient(value, node.localSettings.targetAPI);
-                            if (gradient) {
-                                backgroundImage[j] = gradient;
-                                imageDimensions[j] = value.dimension;
-                                remove = false;
+                            if (remove) {
+                                backgroundRepeat.splice(i, 1);
+                                backgroundSize.splice(i, 1);
+                            }
+                            else {
+                                const x = backgroundPositionX[i] || backgroundPositionX[i - 1];
+                                const y = backgroundPositionY[i] || backgroundPositionY[i - 1];
+                                backgroundPosition[j] = $css.getBackgroundPosition(`${checkBackgroundPosition(x, y, 'left')} ${checkBackgroundPosition(y, x, 'top')}`, node.actualDimension, node.fontSize);
+                                j++;
                             }
                         }
-                        if (remove) {
-                            backgroundRepeat.splice(i, 1);
-                            backgroundSize.splice(i, 1);
-                            imageLength--;
+                    }
+                    if (node.extracted) {
+                        if (imageLength === 0) {
+                            backgroundRepeat.length = 0;
+                            backgroundSize.length = 0;
                         }
-                        else {
-                            const x = backgroundPositionX[i] || backgroundPositionX[i - 1];
-                            const y = backgroundPositionY[i] || backgroundPositionY[i - 1];
-                            backgroundPosition[j] = $css.getBackgroundPosition(`${checkBackgroundPosition(x, y, 'left')} ${checkBackgroundPosition(y, x, 'top')}`, node.actualDimension, node.fontSize);
-                            j++;
+                        const images = node.extracted.filter(item => item.visible && (item.imageElement || item.tagName === 'IMAGE'));
+                        for (let i = 0, j = imageLength; i < images.length; i++) {
+                            const image = images[i];
+                            const element = <HTMLImageElement> image.element;
+                            const src = Resource.addImageSrc(element);
+                            if (src !== '') {
+                                backgroundImage[j] = src;
+                                imageDimensions[j] = Resource.ASSETS.images.get(element.src);
+                                backgroundRepeat[j] = 'no-repeat';
+                                backgroundSize[j] = `${image.actualWidth}px ${image.actualHeight}px`;
+                                let position: string;
+                                if (image.tagName === 'IMAGE') {
+                                    position = '0px 0px';
+                                }
+                                else {
+                                    position = `${image.bounds.left - node.bounds.left}px ${image.bounds.top - node.bounds.top}px`;
+                                }
+                                backgroundPosition[j] = $css.getBackgroundPosition(position, node.actualDimension, node.fontSize);
+                                j++;
+                            }
                         }
                     }
+                    imageLength = backgroundImage.length;
                 }
                 const companion = node.companion;
                 if (companion && !companion.visible && companion.htmlElement && !$css.isInheritedStyle(companion.element, 'backgroundColor')) {
@@ -605,12 +634,13 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                                 tileModeY = '';
                                             }
                                             for (let j = 0; j < dimensions.length; j++) {
-                                                if (dimensions[j] !== 'auto' && dimensions[j] !== '100%') {
+                                                const size = dimensions[j];
+                                                if (size !== 'auto' && size !== '100%') {
                                                     if (j === 0) {
-                                                        width = node.convertPX(backgroundSize[i], true, false);
+                                                        width = node.convertPX(size, true, false);
                                                     }
                                                     else {
-                                                        height = node.convertPX(backgroundSize[i], false, false);
+                                                        height = node.convertPX(size, false, false);
                                                     }
                                                 }
                                             }
@@ -820,37 +850,40 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             node.renderParent && !node.renderParent.tableElement &&
                             !node.hasBit('excludeProcedure', $enum.NODE_PROCEDURE.AUTOFIT))
                         {
-                            const sizeParent: ImageAsset = { width: 0, height: 0 };
-                            for (const image of imageDimensions) {
-                                if (image) {
-                                    sizeParent.width = Math.max(sizeParent.width, image.width);
-                                    sizeParent.height = Math.max(sizeParent.height, image.height);
+                            let parentWidth = 0;
+                            let parentHeight = 0;
+                            if (node.tagName !== 'IMAGE') {
+                                for (const image of imageDimensions) {
+                                    if (image) {
+                                        parentWidth = Math.max(parentWidth, image.width);
+                                        parentHeight = Math.max(parentHeight, image.height);
+                                    }
                                 }
-                            }
-                            if (sizeParent.width === 0) {
-                                let current = node;
-                                while (current && !current.documentBody) {
-                                    if (current.hasWidth) {
-                                        sizeParent.width = current.actualWidth;
+                                if (parentWidth === 0) {
+                                    let current = node;
+                                    while (current && !current.documentBody) {
+                                        if (current.hasWidth) {
+                                            parentWidth = current.actualWidth;
+                                        }
+                                        if (current.hasHeight) {
+                                            parentHeight = current.actualHeight;
+                                        }
+                                        if (!current.pageFlow || (parentWidth > 0 && parentHeight > 0)) {
+                                            break;
+                                        }
+                                        current = current.documentParent as T;
                                     }
-                                    if (current.hasHeight) {
-                                        sizeParent.height = current.actualHeight;
-                                    }
-                                    if (!current.pageFlow || (sizeParent.width > 0 && sizeParent.height > 0)) {
-                                        break;
-                                    }
-                                    current = current.documentParent as T;
                                 }
                             }
                             if (!node.has('width', $enum.CSS_STANDARD.LENGTH)) {
                                 const width = node.bounds.width + (node.is(CONTAINER_NODE.LINE) ? 0 : node.borderLeftWidth + node.borderRightWidth);
-                                if (sizeParent.width === 0 || (width > 0 && width < sizeParent.width)) {
+                                if (parentWidth === 0 || (width > 0 && width < parentWidth)) {
                                     node.css('width', $util.formatPX(width), true);
                                 }
                             }
                             if (!node.has('height', $enum.CSS_STANDARD.LENGTH)) {
                                 const height = node.bounds.height + (node.is(CONTAINER_NODE.LINE) ? 0 : node.borderTopWidth + node.borderBottomWidth);
-                                if (sizeParent.height === 0 || (height > 0 && height < sizeParent.height)) {
+                                if (parentHeight === 0 || (height > 0 && height < parentHeight)) {
                                     node.css('height', $util.formatPX(height), true);
                                     if (node.marginTop < 0) {
                                         node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, null);
@@ -870,9 +903,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         fontStyle.backgroundColor = stored.backgroundColor;
                     }
                     else {
-                        stored.backgroundColor = Resource.addColor(stored.backgroundColor);
-                        if (stored.backgroundColor !== '') {
-                            node.android('background', `@color/${stored.backgroundColor}`, false);
+                        const background = Resource.addColor(stored.backgroundColor);
+                        if (background !== '') {
+                            node.android('background', `@color/${background}`, false);
                         }
                     }
                 }

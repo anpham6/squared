@@ -116,6 +116,18 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                         columnIndex[col] += element.colSpan;
                     }
                 }
+                if (!td.hasWidth) {
+                    const width = $util.convertInt($css.getNamedItem(element, 'width'));
+                    if (width > 0) {
+                        td.css('width', $util.formatPX(width));
+                    }
+                }
+                if (!td.hasHeight) {
+                    const height = $util.convertInt($css.getNamedItem(element, 'height'));
+                    if (height > 0) {
+                        td.css('height', $util.formatPX(height));
+                    }
+                }
                 if (!td.visibleStyle.backgroundImage && !td.visibleStyle.backgroundColor) {
                     if (colgroup) {
                         const style = $css.getStyle(colgroup.children[columnIndex[i]]);

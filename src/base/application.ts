@@ -262,6 +262,16 @@ export default class Application<T extends Node> implements squared.base.Applica
         };
         if (this.userSettings.preloadImages) {
             for (const element of this.parseElements) {
+                element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => {
+                    const uri = image.src;
+                    if (uri !== '') {
+                        this.session.image.set(uri, {
+                            width: image.width,
+                            height: image.height,
+                            uri
+                        });
+                    }
+                });
                 element.querySelectorAll('svg image').forEach((image: SVGImageElement) => {
                     const uri = $util.resolvePath(image.href.baseVal);
                     if (uri !== '') {
@@ -660,13 +670,12 @@ export default class Application<T extends Node> implements squared.base.Applica
                 if (!node.documentRoot) {
                     let parent = node.actualParent;
                     switch (node.position) {
-                        case 'fixed': {
+                        case 'fixed':
                             if (!node.positionAuto) {
                                 parent = rootNode;
                                 break;
                             }
-                        }
-                        case 'absolute': {
+                        case 'absolute':
                             if (node.positionAuto && checkPositionStatic(node, parent)) {
                                 break;
                             }
@@ -708,12 +717,11 @@ export default class Application<T extends Node> implements squared.base.Applica
                                 if (documentParent) {
                                     parent = documentParent;
                                 }
-                                break;
                             }
                             else {
                                 parent = node.absoluteParent;
                             }
-                        }
+                            break;
                     }
                     if (!node.pageFlow && (parent === undefined || parent.id === 0)) {
                         parent = rootNode;
@@ -741,14 +749,13 @@ export default class Application<T extends Node> implements squared.base.Applica
                     node.each((item: T) => {
                         if (item.siblingIndex === Number.POSITIVE_INFINITY) {
                             for (const adjacent of node.children) {
-                                if (adjacent.actualChildren.includes(item) || item.ascend().some(child => adjacent.cascade().includes(child))) {
-                                    let index = -1;
-                                    if (item.zIndex >= 0 || adjacent !== item.actualParent) {
-                                        index = adjacent.siblingIndex + 1;
-                                    }
-                                    else {
-                                        index = adjacent.siblingIndex - 1;
-                                    }
+                                let valid = adjacent.actualChildren.includes(item);
+                                if (!valid) {
+                                    const nested = adjacent.cascade();
+                                    valid = item.ascend().some(child => nested.includes(child));
+                                }
+                                if (valid) {
+                                    const index = adjacent.siblingIndex + (item.zIndex >= 0 || adjacent !== item.actualParent ? 1 : -1);
                                     if (layers[index] === undefined) {
                                         layers[index] = [];
                                     }
@@ -1069,7 +1076,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                     parentY = result.parent as T;
                                 }
                                 next = result.next === true;
-                                if (result.complete || result.next) {
+                                if (result.complete || next) {
                                     break;
                                 }
                             }
@@ -1079,7 +1086,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         }
                         if (nodeY.styleElement) {
                             prioritizeExtensions(<HTMLElement> documentRoot.element, <HTMLElement> nodeY.element, extensions).some(item => {
-                                if (item.is(nodeY) && item.condition(nodeY, parentY)) {
+                                if (!extensionsParent.includes(item) && !extensionsChild.includes(item) && item.is(nodeY) && item.condition(nodeY, parentY)) {
                                     const result = item.processNode(nodeY, parentY);
                                     if (result.output) {
                                         this.addRenderTemplate(parentY, nodeY, result.output);
@@ -1095,7 +1102,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                         nodeY.renderExtension.add(item);
                                     }
                                     next = result.next === true;
-                                    if (result.complete || result.next) {
+                                    if (result.complete || next) {
                                         return true;
                                     }
                                 }
@@ -1807,6 +1814,7 @@ export default class Application<T extends Node> implements squared.base.Applica
 
     protected insertNode(element: Element, parent?: T) {
         let node: T | undefined;
+        this.controllerHandler.applyDefaultStyles(element);
         if (element.nodeName.charAt(0) === '#' && element.nodeName === '#text') {
             if ($element.isPlainText(element, true) || $css.isParentStyle(element, 'whiteSpace', 'pre', 'pre-wrap')) {
                 node = this.createNode(element);
@@ -1996,7 +2004,6 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     private applyStyleRule(item: CSSStyleRule) {
-        const clientFirefox = $util.isUserAgent($util.USER_AGENT.FIREFOX);
         const fromRule: string[] = [];
         for (const attr of Array.from(item.style)) {
             fromRule.push($util.convertCamelCase(attr));
@@ -2017,16 +2024,6 @@ export default class Application<T extends Node> implements squared.base.Applica
                     if (uri !== '' && !this.session.image.has(uri)) {
                         this.session.image.set(uri, { width: 0, height: 0, uri });
                     }
-                }
-            }
-            if (clientFirefox && styleMap.display === undefined) {
-                switch (element.tagName) {
-                    case 'INPUT':
-                    case 'TEXTAREA':
-                    case 'SELECT':
-                    case 'BUTTON':
-                        styleMap.display = 'inline-block';
-                        break;
                 }
             }
             const data = $dom.getElementCache(element, 'styleMap');
@@ -2061,10 +2058,7 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     get sessionData(): SessionData<NodeList<T>> {
-        return {
-            cache: this.session.cache,
-            templates: this.viewData
-        };
+        return { cache: this.session.cache, templates: this.viewData };
     }
 
     get rendered() {

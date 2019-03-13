@@ -69,7 +69,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             const item = <HTMLElement> element.children[i];
             if (item.tagName === 'IMG') {
                 if ($util.hasValue(item.dataset.navigationIcon)) {
-                    const result = $Resource.addImageSrcSet(<HTMLImageElement> item, $constA.PREFIX_ANDROID.MENU);
+                    const result = $Resource.addImageSrc(<HTMLImageElement> item, $constA.PREFIX_ANDROID.MENU);
                     if (result !== '') {
                         $util.assignEmptyValue(toolbarOptions, 'app', 'navigationIcon', `@drawable/${result}`);
                         if ($css.getStyle(item).display !== 'none') {
@@ -78,7 +78,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                     }
                 }
                 if ($util.hasValue(item.dataset.collapseIcon)) {
-                    const result = $Resource.addImageSrcSet(<HTMLImageElement> item, $constA.PREFIX_ANDROID.MENU);
+                    const result = $Resource.addImageSrc(<HTMLImageElement> item, $constA.PREFIX_ANDROID.MENU);
                     if (result !== '') {
                         $util.assignEmptyValue(toolbarOptions, 'app', 'collapseIcon', `@drawable/${result}`);
                         if ($css.getStyle(item).display !== 'none') {

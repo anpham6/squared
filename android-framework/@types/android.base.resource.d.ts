@@ -14,7 +14,7 @@ declare global {
             public static formatOptions(options: ExternalData, numberAlias?: boolean): ExternalData;
             public static addTheme(...options: Required<StyleAttribute>[]): void;
             public static addString(value: string, name?: string, numberAlias?: boolean): string;
-            public static addImageSrcSet(element: HTMLImageElement, prefix?: string): string;
+            public static addImageSrc(element: HTMLImageElement, prefix?: string): string;
             public static addImage(images: StringMap, prefix?: string): string;
             public static addImageUrl(value: string, prefix?: string): string;
             public static addColor(value: ColorData | string | undefined, transparency?: boolean): string;

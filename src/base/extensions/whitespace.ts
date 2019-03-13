@@ -12,12 +12,10 @@ function setMinHeight<T extends Node>(node: T, offset: number) {
 }
 
 function applyMarginCollapse<T extends Node>(parent: T, node: T, direction: boolean) {
-    if (!node.lineBreak &&
-        !node.plainText &&
-        node === parent[direction ? 'firstChild' : 'lastChild'] &&
-        parent[direction ? 'marginTop' : 'marginBottom'] > 0 &&
-        parent[direction ? 'borderTopWidth' : 'borderBottomWidth'] === 0 &&
-        parent[direction ? 'paddingTop' : 'paddingBottom'] === 0)
+    if (!node.lineBreak && !node.plainText && node === parent[direction ? 'firstChild' : 'lastChild'] && (
+            parent.tagName === 'FORM' ||
+            parent[direction ? 'marginTop' : 'marginBottom'] > 0 && parent[direction ? 'borderTopWidth' : 'borderBottomWidth'] === 0 && parent[direction ? 'paddingTop' : 'paddingBottom'] === 0
+       ))
     {
         node.modifyBox(direction ? BOX_STANDARD.MARGIN_TOP : BOX_STANDARD.MARGIN_BOTTOM, null);
     }
@@ -212,15 +210,23 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
         }
         for (const node of this.application.processing.excluded) {
             if (!processed.has(node) && !node.lineBreak) {
-                const offset = node.marginTop + node.marginBottom;
-                if (offset !== 0) {
-                    const nextSiblings = node.nextSiblings(true, true, true);
-                    if (nextSiblings.length) {
-                        const below = nextSiblings.pop() as T;
-                        if (below.visible) {
-                            below.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
-                            processed.add(node);
+                const nextSiblings = node.nextSiblings(true, true, true);
+                if (nextSiblings.length) {
+                    const below = nextSiblings.pop() as T;
+                    if (below.visible) {
+                        const previousSiblings = node.previousSiblings(false, false) as T[];
+                        let offset = 0;
+                        if (previousSiblings.length) {
+                            const previous = previousSiblings.pop() as T;
+                            offset = below.linear.top - previous.linear.bottom;
                         }
+                        else {
+                            offset = below.linear.top - node.linear.top;
+                        }
+                        if (offset > 0) {
+                            below.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
+                        }
+                        processed.add(node);
                     }
                 }
             }
