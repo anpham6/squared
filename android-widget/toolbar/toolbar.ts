@@ -1,4 +1,5 @@
 import { ExtensionResult } from '../../src/base/@types/application';
+import { UserSettingsAndroid } from '../../android-framework/src/@types/application';
 
 import { WIDGET_NAME } from '../lib/constant';
 
@@ -53,6 +54,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
     public processNode(node: T, parent: T): ExtensionResult<T> {
         const application = this.application;
         const controller = application.controllerHandler;
+        const settings = <UserSettingsAndroid> application.userSettings;
         const element = <HTMLElement> node.element;
         const target = node.dataset.target;
         const options: ExternalData = { ...this.options[element.id] };
@@ -137,7 +139,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             if (toolbarOptions.app.popupTheme) {
                 popupOverlay = toolbarOptions.app.popupTheme.replace('@style/', '');
             }
-            toolbarOptions.app.popupTheme = '@style/AppTheme.PopupOverlay';
+            toolbarOptions.app.popupTheme = `@style/${settings.manifestThemeName}.PopupOverlay`;
         }
         const innerDepth = depth + (hasAppBar ? 1 : 0) + (hasCollapsingToolbar ? 1 : 0);
         const numberResourceValue = application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue');
@@ -195,7 +197,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                 if (appBarOptions.android.theme) {
                     appBarOverlay = appBarOptions.android.theme;
                 }
-                appBarOptions.android.theme = '@style/AppTheme.AppBarOverlay';
+                appBarOptions.android.theme = `@style/${settings.manifestThemeName}.AppBarOverlay`;
                 node.data(WIDGET_NAME.TOOLBAR, 'themeData', <ToolbarThemeData> { appBarOverlay, popupOverlay });
             }
             else {
@@ -293,12 +295,11 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             const optionsActionBar = $utilA.createStyleAttribute({ name: '.NoActionBar', output: options.output });
             const optionsAppBar = $utilA.createStyleAttribute({ name: '.AppBarOverlay', output: options.output });
             const optionsPopup = $utilA.createStyleAttribute({ name: '.PopupOverlay', output: options.output });
-            $util.assignEmptyValue(options, 'parent', 'Theme.AppCompat.Light.DarkActionBar');
             $util.assignEmptyValue(optionsActionBar.items, 'windowActionBar', 'false');
             $util.assignEmptyValue(optionsActionBar.items, 'windowNoTitle', 'true');
             $util.assignEmptyValue(optionsAppBar, 'parent', themeData.appBarOverlay || 'ThemeOverlay.AppCompat.Dark.ActionBar');
             $util.assignEmptyValue(optionsPopup, 'parent', themeData.popupOverlay || 'ThemeOverlay.AppCompat.Light');
-            $Resource.addTheme(options, optionsActionBar, optionsAppBar, optionsPopup);
+            $Resource.addTheme(optionsActionBar, optionsAppBar, optionsPopup);
         }
     }
 

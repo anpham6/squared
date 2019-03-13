@@ -132,6 +132,7 @@ squared.settings = {
     convertPixels: 'dp',
     handleExtensionsAsync: true,
     autoCloseOnWrite: true,
+    manifestThemeName: 'AppTheme',
     outputDirectory: 'app/src/main',
     outputMainFileName: 'activity_main.xml',
     outputArchiveFileType: 'zip', // zip | tar

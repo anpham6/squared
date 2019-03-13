@@ -1,5 +1,5 @@
 import { ImageAsset, TemplateDataA } from '../../../../src/base/@types/application';
-import { ResourceStoredMapAndroid } from '../../@types/application';
+import { ResourceStoredMapAndroid, UserSettingsAndroid } from '../../@types/application';
 import { ResourceBackgroundOptions } from '../../@types/extension';
 import { GradientColorStop, GradientTemplate } from '../../@types/resource';
 
@@ -126,11 +126,6 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
 
 function getShapeAttribute(boxStyle: BoxStyle, attr: string, direction = -1, hasInset = false, isInset = false): StringMap[] | false {
     switch (attr) {
-        case 'backgroundColor':
-            if ($util.hasValue(boxStyle.backgroundColor)) {
-                return [{ color: boxStyle.backgroundColor }];
-            }
-            break;
         case 'stroke':
             if (boxStyle.border && Resource.isBorderVisible(boxStyle.border)) {
                 if (!hasInset || isInset) {
@@ -221,6 +216,14 @@ function checkBackgroundPosition(value: string, adjacent: string, fallback: stri
         return '0px';
     }
     return value;
+}
+
+function setBodyBackgroundColor(name: string, parent: string, value: string) {
+    Resource.addTheme({
+        name,
+        parent,
+        items: { 'android:windowBackground': value }
+    });
 }
 
 function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIPOP, precision?: number) {
@@ -327,6 +330,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
     public readonly eventOnly = true;
 
     public afterResources() {
+        const settings = <UserSettingsAndroid> this.application.userSettings;
         for (const node of this.application.processing.cache.duplicate().sort(a => !a.visible ? -1 : 0)) {
             const stored: BoxStyle = node.data(Resource.KEY_NAME, 'boxStyle');
             if (stored && !node.hasBit('excludeResource', $enum.NODE_RESOURCE.BOX_STYLE)) {
@@ -368,6 +372,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             if (remove) {
                                 backgroundRepeat.splice(i, 1);
                                 backgroundSize.splice(i, 1);
+                                imageLength--;
                             }
                             else {
                                 const x = backgroundPositionX[i] || backgroundPositionX[i - 1];
@@ -722,8 +727,19 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             layerList.B.push(imageData);
                         }
                     }
-                    stored.backgroundColor = Resource.addColor(stored.backgroundColor);
-                    const backgroundColor = getShapeAttribute(stored, 'backgroundColor');
+                    let backgroundColor: boolean | {}[] = false;
+                    if (stored.backgroundColor) {
+                        const colorName = Resource.addColor(stored.backgroundColor);
+                        if (colorName !== '') {
+                            const color = `@color/${colorName}`;
+                            if (node.documentBody) {
+                                setBodyBackgroundColor(settings.manifestThemeName, settings.manifestParentThemeName, color);
+                            }
+                            else {
+                                backgroundColor = [{ color }];
+                            }
+                        }
+                    }
                     const borderRadius = getShapeAttribute(stored, 'radius');
                     let template: StringMap;
                     let shape: TemplateDataA | undefined;
@@ -898,14 +914,20 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     node.android('background', `@drawable/${resourceName}`, false);
                 }
                 else if (stored.backgroundColor) {
-                    const fontStyle: FontAttribute = node.data(Resource.KEY_NAME, 'fontStyle');
-                    if (fontStyle) {
-                        fontStyle.backgroundColor = stored.backgroundColor;
-                    }
-                    else {
-                        const background = Resource.addColor(stored.backgroundColor);
-                        if (background !== '') {
-                            node.android('background', `@color/${background}`, false);
+                    let colorName = Resource.addColor(stored.backgroundColor);
+                    if (colorName !== '') {
+                        colorName = `@color/${colorName}`;
+                        if (node.documentBody) {
+                            setBodyBackgroundColor(settings.manifestThemeName, settings.manifestParentThemeName, colorName);
+                        }
+                        else {
+                            const fontStyle: FontAttribute = node.data(Resource.KEY_NAME, 'fontStyle');
+                            if (fontStyle) {
+                                fontStyle.backgroundColor = stored.backgroundColor;
+                            }
+                            else {
+                                node.android('background', colorName, false);
+                            }
                         }
                     }
                 }

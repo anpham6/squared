@@ -67,7 +67,7 @@ export function checkStyleValue(element: Element, attr: string, value: string, s
         style = getStyle(element);
     }
     if (value === 'inherit') {
-        value = getInheritedStyle(element.parentElement, attr);
+        value = getInheritedStyle(element, attr);
     }
     if (value && value !== 'initial') {
         if (value !== style[attr]) {
@@ -169,7 +169,7 @@ export function getInheritedStyle(element: Element | null, attr: string, exclude
     if (element) {
         let current = element.parentElement;
         while (current && !tagNames.includes(current.tagName)) {
-            value = getStyle(current)[attr] || '';
+            value = getStyle(current, false)[attr] || '';
             if (value === 'inherit' || exclude && exclude.test(value)) {
                 value = '';
             }

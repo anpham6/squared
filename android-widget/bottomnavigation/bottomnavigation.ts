@@ -1,4 +1,5 @@
 import { ExtensionResult } from '../../src/base/@types/application';
+import { UserSettingsAndroid } from '../../android-framework/src/@types/application';
 
 import { WIDGET_NAME } from '../lib/constant';
 
@@ -69,6 +70,7 @@ export default class BottomNavigation<T extends android.base.View> extends squar
 
     private setStyleTheme() {
         const options = $utilA.createStyleAttribute(this.options.resource);
+        $util.assignEmptyValue(options, 'name', (<UserSettingsAndroid> this.application.userSettings).manifestThemeName);
         $util.assignEmptyValue(options, 'parent', 'Theme.AppCompat.Light.DarkActionBar');
         $Resource.addTheme(options);
     }

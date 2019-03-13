@@ -64,12 +64,20 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
         return options;
     }
 
-    public static addTheme(...values: Required<StyleAttribute>[]) {
+    public static addTheme(...values: StyleAttribute[]) {
         for (const theme of values) {
-            const path = $util.isString(theme.output.path) ? theme.output.path : '';
-            const file = $util.isString(theme.output.file) ? theme.output.file : 'themes.xml';
+            let path = 'res/values';
+            let file = 'themes.xml';
+            if (theme.output) {
+                if ($util.isString(theme.output.path)) {
+                    path = theme.output.path.trim();
+                }
+                if ($util.isString(theme.output.file)) {
+                    file = theme.output.file.trim();
+                }
+            }
             const filename = `${$util.trimString(path.trim(), '/')}/${$util.trimString(file.trim(), '/')}`;
-            const stored = STORED.themes.get(filename) || new Map<string, StyleAttribute>();
+            const storedFile = STORED.themes.get(filename) || new Map<string, StyleAttribute>();
             let appTheme = '';
             if (theme.name === '' || theme.name.charAt(0) === '.') {
                 found: {
@@ -83,7 +91,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                     }
                 }
                 if (appTheme === '') {
-                    appTheme = 'AppTheme';
+                    continue;
                 }
             }
             else {
@@ -91,16 +99,16 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
             }
             theme.name = appTheme + (theme.name.charAt(0) === '.' ? theme.name : '');
             Resource.formatOptions(theme.items);
-            const storedTheme = <StyleAttribute> stored.get(theme.name);
+            const storedTheme = <StyleAttribute> storedFile.get(theme.name);
             if (storedTheme) {
                 for (const attr in theme.items) {
                     storedTheme.items[attr] = theme.items[attr];
                 }
             }
             else {
-                stored.set(theme.name, theme);
+                storedFile.set(theme.name, theme);
             }
-            STORED.themes.set(filename, stored);
+            STORED.themes.set(filename, storedFile);
         }
     }
 

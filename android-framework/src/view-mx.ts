@@ -499,10 +499,10 @@ export default (Base: Constructor<squared.base.Node>) => {
             let hasWidth = true;
             let hasHeight = true;
             if (this.documentBody) {
-                if (!this.hasWidth && renderChildren.some(node => node.alignParent('right'))) {
+                if (!this.hasWidth && renderChildren.some(node => node.alignParent('right')) || this.visibleStyle.backgroundColor || this.borderRightWidth > 0) {
                     this.android('layout_width', 'match_parent', false);
                 }
-                if (!this.hasHeight && renderChildren.some(node => node.alignParent('bottom'))) {
+                if (!this.hasHeight && renderChildren.some(node => node.alignParent('bottom')) || this.visibleStyle.backgroundColor || this.borderBottomWidth > 0) {
                     this.android('layout_height', 'match_parent', false);
                 }
             }
@@ -754,8 +754,10 @@ export default (Base: Constructor<squared.base.Node>) => {
                                 break;
                         }
                     }
-                    const gravity = x !== '' && y !== '' ? `${x}|${y}` : x || y;
-                    result = gravity + (z !== '' ? (gravity !== '' ? '|' : '') + z : '');
+                    result = x !== '' && y !== '' ? `${x}|${y}` : x || y;
+                    if (z !== '') {
+                        result += (result !== '' ? '|' : '') + z;
+                    }
             }
             if (result !== '') {
                 return this.android(attr, result);

@@ -282,14 +282,14 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     for (const name in themeData.items) {
                         items.push({ name, value: themeData.items[name] });
                     }
-                    if (!appTheme[filename] || themeName !== 'AppTheme' || items.length) {
+                    if (!appTheme[filename] || themeName !== settings.manifestThemeName || items.length) {
                         data.A.push({
                             name: themeName,
                             parent: themeData.parent,
                             items
                         });
                     }
-                    if (themeName === 'AppTheme') {
+                    if (themeName === settings.manifestThemeName) {
                         appTheme[filename] = true;
                     }
                 }

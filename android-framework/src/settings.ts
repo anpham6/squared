@@ -46,6 +46,8 @@ const settings: UserSettingsAndroid = {
     insertSpaces: 4,
     handleExtensionsAsync: true,
     autoCloseOnWrite: true,
+    manifestThemeName: 'AppTheme',
+    manifestParentThemeName: 'Theme.AppCompat.Light.NoActionBar',
     outputDirectory: 'app/src/main',
     outputMainFileName: 'activity_main.xml',
     outputArchiveFileType: 'zip',

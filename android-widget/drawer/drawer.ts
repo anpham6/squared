@@ -1,4 +1,5 @@
 import { ExtensionResult } from '../../src/base/@types/application';
+import { UserSettingsAndroid } from '../../android-framework/src/@types/application';
 
 import { WIDGET_NAME } from '../lib/constant';
 
@@ -106,8 +107,10 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
     }
 
     private setStyleTheme(api: number) {
+        const settings = <UserSettingsAndroid> this.application.userSettings;
         const options = $utilA.createStyleAttribute(this.options.resource);
-        $util.assignEmptyValue(options, 'parent', 'Theme.AppCompat.Light.NoActionBar');
+        $util.assignEmptyValue(options, 'name', settings.manifestThemeName);
+        $util.assignEmptyValue(options, 'parent', settings.manifestParentThemeName);
         $util.assignEmptyValue(options.items, 'android:windowTranslucentStatus', 'true');
         $Resource.addTheme(options);
         if (api >= 21) {

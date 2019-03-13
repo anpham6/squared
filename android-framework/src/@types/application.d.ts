@@ -8,6 +8,8 @@ export interface UserSettingsAndroid extends UserSettings {
     collapseUnattributedElements: boolean;
     convertPixels: string;
     showAttributes: boolean;
+    manifestThemeName: string;
+    manifestParentThemeName: string;
 }
 
 export interface ResourceStoredMapAndroid extends ResourceStoredMap {
