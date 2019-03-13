@@ -12,9 +12,10 @@ function setMinHeight<T extends Node>(node: T, offset: number) {
 }
 
 function applyMarginCollapse<T extends Node>(parent: T, node: T, direction: boolean) {
-    if (!node.lineBreak && !node.plainText && node === parent[direction ? 'firstChild' : 'lastChild'] && (
+    if (node.blockStatic && !node.plainText && !node.lineBreak && (
             parent.tagName === 'FORM' ||
-            parent[direction ? 'marginTop' : 'marginBottom'] > 0 && parent[direction ? 'borderTopWidth' : 'borderBottomWidth'] === 0 && parent[direction ? 'paddingTop' : 'paddingBottom'] === 0
+            direction && node === parent.firstChild && parent.marginTop > 0 && parent.borderTopWidth === 0 && parent.paddingTop === 0 ||
+            !direction && node === parent.lastChild && parent.marginBottom > 0 && parent.borderBottomWidth === 0 && parent.paddingBottom === 0
        ))
     {
         node.modifyBox(direction ? BOX_STANDARD.MARGIN_TOP : BOX_STANDARD.MARGIN_BOTTOM, null);

@@ -129,11 +129,11 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         for (const tag in nameMap) {
             const sorted: StyleList[] = [];
             for (let node of nameMap[tag]) {
+                const stored: FontAttribute = node.data(Resource.KEY_NAME, 'fontStyle');
                 const { id, companion } = node;
                 if (companion && !companion.visible && companion.tagName === 'LABEL') {
                     node = companion as T;
                 }
-                const stored: FontAttribute = { ...node.data(Resource.KEY_NAME, 'fontStyle') };
                 let system = false;
                 if (stored.backgroundColor) {
                     stored.backgroundColor = Resource.addColor(stored.backgroundColor);

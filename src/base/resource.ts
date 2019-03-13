@@ -180,6 +180,18 @@ function getBackgroundSize<T extends Node>(node: T, index: number, value?: strin
     return undefined;
 }
 
+function applyTextTransform(value: string, transform: string | null) {
+    switch (transform) {
+        case 'uppercase':
+            value = value.toUpperCase();
+            break;
+        case 'lowercase':
+            value = value.toLowerCase();
+            break;
+    }
+    return value;
+}
+
 export default abstract class Resource<T extends Node> implements squared.base.Resource<T> {
     public static KEY_NAME = 'squared.resource';
 
@@ -254,6 +266,33 @@ export default abstract class Resource<T extends Node> implements squared.base.R
             return result;
         }
         return '';
+    }
+
+    public static getOptionArray(element: HTMLSelectElement, replaceEntities = false) {
+        const stringArray: string[] = [];
+        const textTransform = $css.getStyle(element).textTransform;
+        let numberArray: string[] | undefined = [];
+        let i = -1;
+        while (++i < element.children.length) {
+            const item = <HTMLOptionElement> element.children[i];
+            const value = item.text.trim();
+            if (value !== '') {
+                if (numberArray && stringArray.length === 0 && $util.isNumber(value)) {
+                    numberArray.push(value);
+                }
+                else {
+                    if (numberArray && numberArray.length) {
+                        i = -1;
+                        numberArray = undefined;
+                        continue;
+                    }
+                    if (value !== '') {
+                        stringArray.push(applyTextTransform(replaceEntities ? $xml.replaceEntity(value) : value, textTransform));
+                    }
+                }
+            }
+        }
+        return [stringArray.length ? stringArray : undefined, numberArray && numberArray.length ? numberArray : undefined];
     }
 
     public static isBorderVisible(border: BorderAttribute | undefined) {
@@ -792,7 +831,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         }
                     }
                     if (value !== '') {
-                        node.data(Resource.KEY_NAME, 'valueString', { name, value });
+                        node.data(Resource.KEY_NAME, 'valueString', { name, value: applyTextTransform(value, node.css('textTransform')) });
                     }
                 }
             }

@@ -109,6 +109,7 @@ export default (Base: Constructor<squared.base.Node>) => {
         private _localSettings: LocalSettings = {
             targetAPI: BUILD_ANDROID.LATEST,
             supportRTL: false,
+            floatPrecision: 3,
             constraintPercentPrecision: 4
         };
         private __android: StringMap = {};
@@ -540,14 +541,14 @@ export default (Base: Constructor<squared.base.Node>) => {
                 if (!this.inlineStatic && this.has('width') || this.toInt('width') > 0 && !this.cssInitial('width')) {
                     const width = this.css('width');
                     if ($util.isLength(width)) {
-                        const widthParent = renderParent ? $util.convertInt((renderParent as T).android('layout_width')) : 0;
                         const value = this.parseUnit(width);
-                        this.android('layout_width', parent === renderParent && widthParent > 0 && value >= widthParent ? 'match_parent' : $util.formatPX(value));
+                        const widthParent = parent === renderParent && this.positionStatic ? $util.convertInt((renderParent as T).android('layout_width')) : 0;
+                        this.android('layout_width', widthParent > 0 && value >= widthParent ? 'match_parent' : $util.formatPX(value));
                     }
                     else if ($util.isPercent(width)) {
                         if (renderParent && renderParent.is(CONTAINER_NODE.GRID)) {
                             this.android('layout_width', '0px', false);
-                            this.android('layout_columnWeight', (parseInt(width) / 100).toPrecision(2), false);
+                            this.android('layout_columnWeight', (parseInt(width) / 100).toPrecision(this.localSettings.floatPrecision), false);
                         }
                         else {
                             this.android('layout_width', width === '100%' ? 'match_parent' : this.convertPX(width));
@@ -588,14 +589,14 @@ export default (Base: Constructor<squared.base.Node>) => {
                         return;
                     }
                     else if (
-                        this.flexElement && renderParent.hasWidth ||
-                        this.groupParent && renderChildren.some(node => !(node.plainText && node.multiline) && node.linear.width >= this.documentParent.box.width) ||
-                        blockStatic && (this.documentBody || (
+                        blockStatic && (
                             parent.documentBody ||
                             parent.has('width', $enum.CSS_STANDARD.PERCENT) ||
                             parent.blockStatic && (this.singleChild || this.alignedVertically(this.previousSiblings()))
-                        )) ||
-                        this.layoutFrame && ($NodeList.floated(renderChildren).size === 2 || renderChildren.some(node => node.blockStatic && (node.autoMargin.leftRight || node.rightAligned))))
+                        ) ||
+                        this.groupParent && renderChildren.some(node => !(node.plainText && node.multiline) && node.linear.width >= this.documentParent.box.width) ||
+                        this.layoutFrame && ($NodeList.floated(renderChildren).size === 2 || renderChildren.some(node => node.blockStatic && (node.autoMargin.leftRight || node.rightAligned))) ||
+                        this.flexElement && renderParent.hasWidth)
                     {
                         this.android('layout_width', 'match_parent', false);
                         return;
@@ -612,7 +613,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                             parent.flexElement ||
                             parent.gridElement
                         );
-                        if ((!wrap || blockStatic) && (this.linear.width >= parent.box.width || this.layoutVertical && !this.autoMargin.horizontal || !this.documentRoot && renderChildren.some(node => node.layoutVertical && !node.autoMargin.horizontal && !node.hasWidth && !node.floating))) {
+                        if ((!wrap || blockStatic) && (this.linear.width >= parent.box.width || this.layoutVertical && !this.autoMargin.horizontal && !this.floating || !this.documentRoot && renderChildren.some(node => node.layoutVertical && !node.autoMargin.horizontal && !node.hasWidth && !node.floating))) {
                             this.android('layout_width', 'match_parent', false);
                             return;
                         }

@@ -64,20 +64,9 @@ const TEMPLATES = {
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 
 function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = false): string {
-    const borderWidth = parseInt(border.width);
     const solid = `android:color="@color/${border.color}"`;
-    const dashed = `${solid} android:dashWidth="${borderWidth}px" android:dashGap="${borderWidth}px"`;
-    const result = {
-        solid,
-        double: solid,
-        inset: solid,
-        outset: solid,
-        dashed,
-        dotted: dashed,
-        groove: '',
-        ridge: ''
-    };
     const style = border.style;
+    const borderWidth = parseInt(border.width);
     const groove = style === 'groove';
     if (borderWidth > 1 && (groove || style === 'ridge')) {
         const color = $color.parseColor(border.color);
@@ -97,31 +86,35 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
                         switch (direction) {
                             case 0:
                             case 3:
-                                result[style] = attribute;
-                                break;
+                                return attribute;
                             case 1:
                             case 2:
-                                result[style] = result.solid;
-                                break;
+                                return solid;
                         }
                     }
                     else {
                         switch (direction) {
                             case 0:
                             case 3:
-                                result[style] = result.solid;
-                                break;
+                                return solid;
                             case 1:
                             case 2:
-                                result[style] = attribute;
-                                break;
+                                return attribute;
                         }
                     }
                 }
             }
         }
     }
-    return result[style] || result.solid;
+    else {
+        switch (style) {
+            case 'dotted':
+                return `${solid} android:dashWidth="${borderWidth}px" android:dashGap="${borderWidth}px"`;
+            case 'dashed':
+                return `${solid} android:dashWidth="${borderWidth}px" android:dashGap="${borderWidth * 2}px"`;
+        }
+    }
+    return solid;
 }
 
 function getShapeAttribute(boxStyle: BoxStyle, attr: string, direction = -1, hasInset = false, isInset = false): StringMap[] | false {
@@ -168,43 +161,41 @@ function getShapeAttribute(boxStyle: BoxStyle, attr: string, direction = -1, has
     return false;
 }
 
-function insertDoubleBorder(layerList: LayerListTemplate, border: BorderAttribute, top: boolean, right: boolean, bottom: boolean, left: boolean, borderRadius: StringMap[] | false) {
-    if (layerList.C) {
-        const width = parseInt(border.width);
-        const baseWidth = Math.floor(width / 3);
-        const remainder = width % 3;
-        const offset =  remainder === 2 ? 1 : 0;
-        const leftWidth = baseWidth + offset;
-        const rightWidth = baseWidth + offset;
-        let indentWidth = `${$util.formatPX(width - baseWidth)}`;
-        let hideWidth = `-${indentWidth}`;
-        layerList.C.push({
-            top: top ? '' : hideWidth,
-            right: right ? '' : hideWidth,
-            bottom: bottom ? '' : hideWidth,
-            left: left ? '' :  hideWidth,
-            stroke: [{
-                width: $util.formatPX(leftWidth),
-                borderStyle: getBorderStyle(border)
-            }],
-            corners: borderRadius
-        });
-        if (width === 3) {
-            indentWidth = `${$util.formatPX(width)}`;
-            hideWidth = `-${indentWidth}`;
-        }
-        layerList.C.push({
-            top: top ? indentWidth : hideWidth,
-            right: right ? indentWidth : hideWidth,
-            bottom: bottom ? indentWidth : hideWidth,
-            left: left ? indentWidth : hideWidth,
-            stroke: [{
-                width: $util.formatPX(rightWidth),
-                borderStyle: getBorderStyle(border)
-            }],
-            corners: borderRadius
-        });
+function insertDoubleBorder(items: BorderData[], border: BorderAttribute, top: boolean, right: boolean, bottom: boolean, left: boolean, borderRadius: StringMap[] | false) {
+    const width = parseInt(border.width);
+    const baseWidth = Math.floor(width / 3);
+    const remainder = width % 3;
+    const offset =  remainder === 2 ? 1 : 0;
+    const leftWidth = baseWidth + offset;
+    const rightWidth = baseWidth + offset;
+    let indentWidth = `${$util.formatPX(width - baseWidth)}`;
+    let hideWidth = `-${indentWidth}`;
+    items.push({
+        top: top ? '' : hideWidth,
+        right: right ? '' : hideWidth,
+        bottom: bottom ? '' : hideWidth,
+        left: left ? '' :  hideWidth,
+        stroke: [{
+            width: $util.formatPX(leftWidth),
+            borderStyle: getBorderStyle(border)
+        }],
+        corners: borderRadius
+    });
+    if (width === 3) {
+        indentWidth = `${$util.formatPX(width)}`;
+        hideWidth = `-${indentWidth}`;
     }
+    items.push({
+        top: top ? indentWidth : hideWidth,
+        right: right ? indentWidth : hideWidth,
+        bottom: bottom ? indentWidth : hideWidth,
+        left: left ? indentWidth : hideWidth,
+        stroke: [{
+            width: $util.formatPX(rightWidth),
+            borderStyle: getBorderStyle(border)
+        }],
+        corners: borderRadius
+    });
 }
 
 function checkBackgroundPosition(value: string, adjacent: string, fallback: string) {
@@ -777,7 +768,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             const width = parseInt(borderData.width);
                             if (borderData.style === 'double' && width > 2) {
                                 insertDoubleBorder.apply(null, [
-                                    layerList,
+                                    layerList.C,
                                     borderData,
                                     borderVisible[0],
                                     borderVisible[1],
@@ -808,7 +799,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     const width = parseInt(item.width);
                                     if (item.style === 'double' && width > 2) {
                                         insertDoubleBorder.apply(null, [
-                                            layerList,
+                                            layerList.C,
                                             item,
                                             i === 0,
                                             i === 1,

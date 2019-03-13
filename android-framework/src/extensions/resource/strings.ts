@@ -7,32 +7,6 @@ const $css = squared.lib.css;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
-function getOptionArray(element: HTMLSelectElement, replaceEntities = false) {
-    const stringArray: string[] = [];
-    let numberArray: string[] | undefined = [];
-    let i = -1;
-    while (++i < element.children.length) {
-        const item = <HTMLOptionElement> element.children[i];
-        const value = item.text.trim();
-        if (value !== '') {
-            if (numberArray && stringArray.length === 0 && $util.isNumber(value)) {
-                numberArray.push(value);
-            }
-            else {
-                if (numberArray && numberArray.length) {
-                    i = -1;
-                    numberArray = undefined;
-                    continue;
-                }
-                if (value !== '') {
-                    stringArray.push(replaceEntities ? $xml.replaceEntity(value) : value);
-                }
-            }
-        }
-    }
-    return [stringArray.length ? stringArray : undefined, numberArray && numberArray.length ? numberArray : undefined];
-}
-
 export default class ResourceStrings<T extends android.base.View> extends squared.base.Extension<T> {
     public readonly options: ResourceStringsOptions = {
         numberResourceValue: false
@@ -46,7 +20,7 @@ export default class ResourceStrings<T extends android.base.View> extends square
                 switch (node.tagName) {
                     case 'SELECT': {
                         const element = <HTMLSelectElement> node.element;
-                        const [stringArray, numberArray] = getOptionArray(<HTMLSelectElement> element, this.application.userSettings.replaceCharacterEntities);
+                        const [stringArray, numberArray] = Resource.getOptionArray(element, this.application.userSettings.replaceCharacterEntities);
                         let result: string[] | undefined;
                         if (!this.options.numberResourceValue && numberArray && numberArray.length) {
                             result = numberArray;

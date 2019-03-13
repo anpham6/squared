@@ -1910,6 +1910,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             target.localSettings = {
                 targetAPI: settings.targetAPI !== undefined ? settings.targetAPI : BUILD_ANDROID.LATEST,
                 supportRTL: settings.supportRTL !== undefined ? settings.supportRTL : true,
+                floatPrecision: this.localSettings.floatPrecision,
                 constraintPercentPrecision: this.localSettings.constraint.percentPrecision
             };
         };
