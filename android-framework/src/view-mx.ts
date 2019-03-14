@@ -584,13 +584,24 @@ export default (Base: Constructor<squared.base.Node>) => {
                         this.android('layout_width', this.actualWidth > renderParent.box.width && this.multiline && this.alignParent('left') ? 'match_parent' : 'wrap_content', false);
                         return;
                     }
-                    else if (renderChildren.some(node => Math.ceil(node.actualWidth) >= this.box.width && !node.autoMargin.horizontal && (renderParent.inlineWidth || node.inlineStatic && !node.plainText || $util.isLength(node.cssInitial('width'))))) {
+                    else if (
+                        !this.pageFlow ||
+                        renderParent.is(CONTAINER_NODE.GRID) ||
+                        this.groupParent && this.renderChildren.every(node => node.inlineVertical) ||
+                        this.tableElement ||
+                        parent.gridElement ||
+                        parent.flexElement ||
+                        renderChildren.some(node => Math.ceil(node.actualWidth) >= this.box.width && !node.autoMargin.horizontal && (renderParent.inlineWidth || node.inlineStatic && !node.plainText || $util.isLength(node.cssInitial('width')))))
+                    {
                         this.android('layout_width', 'wrap_content', false);
                         return;
                     }
                     else if (
                         blockStatic && (
+                            this.linear.width >= parent.box.width ||
                             parent.documentBody ||
+                            this.layoutVertical && !this.autoMargin.horizontal && !this.floating ||
+                            !this.documentRoot && renderChildren.some(node => node.layoutVertical && !node.autoMargin.horizontal && !node.hasWidth && !node.floating) ||
                             parent.has('width', $enum.CSS_STANDARD.PERCENT) ||
                             parent.blockStatic && (this.singleChild || this.alignedVertically(this.previousSiblings()))
                         ) ||
@@ -600,23 +611,6 @@ export default (Base: Constructor<squared.base.Node>) => {
                     {
                         this.android('layout_width', 'match_parent', false);
                         return;
-                    }
-                    else {
-                        const wrap = !blockStatic && (
-                            this.containerType < CONTAINER_NODE.INLINE ||
-                            this.inlineFlow ||
-                            !this.pageFlow ||
-                            this.tableElement ||
-                            this.flexElement ||
-                            this.groupParent && this.renderChildren.every(node => node.inlineVertical) ||
-                            renderParent.is(CONTAINER_NODE.GRID) ||
-                            parent.flexElement ||
-                            parent.gridElement
-                        );
-                        if ((!wrap || blockStatic) && (this.linear.width >= parent.box.width || this.layoutVertical && !this.autoMargin.horizontal && !this.floating || !this.documentRoot && renderChildren.some(node => node.layoutVertical && !node.autoMargin.horizontal && !node.hasWidth && !node.floating))) {
-                            this.android('layout_width', 'match_parent', false);
-                            return;
-                        }
                     }
                 }
                 this.android('layout_width', 'wrap_content', false);
@@ -629,6 +623,9 @@ export default (Base: Constructor<squared.base.Node>) => {
                 let textAlign = checkTextAlign(this.cssInitial('textAlign', true));
                 if (this.pageFlow) {
                     let floating = '';
+                    if (this.documentId === '@+id/imageview_1') {
+                        console.log(1);
+                    }
                     if (this.inlineVertical && (renderParent.layoutHorizontal && !renderParent.support.container.positionRelative || renderParent.is(CONTAINER_NODE.GRID))) {
                         const gravity = this.display === 'table-cell' ? 'gravity' : 'layout_gravity';
                         switch (this.cssInitial('verticalAlign', true)) {
@@ -665,7 +662,19 @@ export default (Base: Constructor<squared.base.Node>) => {
                             renderParent.mergeGravity('layout_gravity', floating);
                         }
                         if (renderParent.display === 'table-cell' && this.singleChild) {
-                            this.mergeGravity('layout_gravity', 'center_vertical');
+                            let gravity: string | undefined;
+                            switch (renderParent.css('verticalAlign')) {
+                                case 'top':
+                                    gravity = 'top';
+                                    break;
+                                case 'bottom':
+                                    gravity = 'bottom';
+                                    break;
+                                default:
+                                    gravity = 'center_vertical';
+                                    break;
+                            }
+                            this.mergeGravity('layout_gravity', gravity);
                         }
                     }
                     if (floating !== '') {
@@ -687,11 +696,11 @@ export default (Base: Constructor<squared.base.Node>) => {
                     if (renderParent.layoutFrame && this.pageFlow && !this.floating && !this.autoMargin.horizontal && !this.blockWidth) {
                         this.mergeGravity('layout_gravity', textAlignParent);
                     }
-                    if (!this.imageElement && textAlign === '') {
+                    if (textAlign === '' && !this.blockStatic && !this.imageElement) {
                         textAlign = textAlignParent;
                     }
                 }
-                if (textAlign !== '' && !this.layoutConstraint) {
+                if (textAlign !== '' && !this.layoutVertical && !this.layoutConstraint) {
                     this.mergeGravity('gravity', textAlign);
                 }
             }

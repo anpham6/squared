@@ -690,7 +690,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             if (this.documentBody) {
                 if (this.marginTop > 0) {
                     const firstChild = this.firstChild;
-                    if (firstChild && firstChild.blockStatic && !firstChild.lineBreak && firstChild.marginTop >= this.marginTop && (firstChild.has('marginTop') || /^H\d$/.test(firstChild.tagName))) {
+                    if (firstChild && firstChild.blockStatic && !firstChild.lineBreak && firstChild.marginTop >= this.marginTop) {
                         this.css('marginTop', '0px', true);
                     }
                 }
@@ -735,7 +735,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     this._boxReset[attr] = 1;
                 }
                 else {
-
                     this._boxAdjustment[attr] += offset;
                     if (!negative && this._boxAdjustment[attr] < 0) {
                         this._boxAdjustment[attr] = 0;

@@ -862,8 +862,19 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         const element = <HTMLImageElement> node.element;
                         const widthPercent = node.has('width', $enum.CSS_STANDARD.PERCENT);
                         const heightPercent = node.has('height', $enum.CSS_STANDARD.PERCENT);
-                        const width = node.toFloat('width');
-                        const height = node.toFloat('height');
+                        let width = node.toFloat('width');
+                        let height = node.toFloat('height');
+                        if (width === 0 || height === 0) {
+                            const image = this.application.session.image.get(element.src);
+                            if (image) {
+                                if (width === 0) {
+                                    width = image.width;
+                                }
+                                if (height === 0) {
+                                    height = image.height;
+                                }
+                            }
+                        }
                         let scaleType: string;
                         if (widthPercent || heightPercent) {
                             scaleType = widthPercent && heightPercent ? 'fitXY' : 'fitCenter';

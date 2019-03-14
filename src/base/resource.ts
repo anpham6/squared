@@ -295,7 +295,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
         return [stringArray.length ? stringArray : undefined, numberArray && numberArray.length ? numberArray : undefined];
     }
 
-    public static isBorderVisible(border: BorderAttribute | undefined) {
+    public static isBorderVisible(border: BorderAttribute | undefined): border is BorderAttribute {
         return border !== undefined && !(border.style === 'none' || border.width === '0px' || border.color === '' || border.color.length === 9 && border.color.endsWith('00'));
     }
 
@@ -363,71 +363,35 @@ export default abstract class Resource<T extends Node> implements squared.base.R
     public setBoxStyle() {
         for (const node of this.cache) {
             if (node.visible && node.styleElement) {
-                const boxStyle: Optional<BoxStyle> = {
-                    borderTop: undefined,
-                    borderRight: undefined,
-                    borderBottom: undefined,
-                    borderLeft: undefined,
-                    borderRadius: undefined,
-                    backgroundColor: undefined,
-                    backgroundSize: undefined,
-                    backgroundRepeat: undefined,
-                    backgroundPositionX: undefined,
-                    backgroundPositionY: undefined,
-                    backgroundImage: undefined
-                };
+                let boxStyle: Optional<BoxStyle>;
+                if (node.css('border') === '0px none rgb(0, 0, 0)') {
+                    boxStyle = {
+                        backgroundColor: undefined,
+                        backgroundSize: undefined,
+                        backgroundRepeat: undefined,
+                        backgroundPositionX: undefined,
+                        backgroundPositionY: undefined,
+                        backgroundImage: undefined
+                    } as any;
+                }
+                else {
+                    boxStyle = {
+                        borderTop: undefined,
+                        borderRight: undefined,
+                        borderBottom: undefined,
+                        borderLeft: undefined,
+                        borderRadius: undefined,
+                        backgroundColor: undefined,
+                        backgroundSize: undefined,
+                        backgroundRepeat: undefined,
+                        backgroundPositionX: undefined,
+                        backgroundPositionY: undefined,
+                        backgroundImage: undefined
+                    };
+                }
                 for (const attr in boxStyle) {
                     const value = node.css(attr);
                     switch (attr) {
-                        case 'borderTop':
-                        case 'borderRight':
-                        case 'borderBottom':
-                        case 'borderLeft': {
-                            let borderColor = node.css(`${attr}Color`);
-                            switch (borderColor.toLowerCase()) {
-                                case 'initial':
-                                    borderColor = '#000000';
-                                    break;
-                                case 'inherit':
-                                case 'currentcolor':
-                                    borderColor = $css.getInheritedStyle(node.element, `${attr}Color`);
-                                    break;
-                            }
-                            const style = node.css(`${attr}Style`) || 'none';
-                            let width = node.css(`${attr}Width`) || '1px';
-                            let color: ColorData | undefined;
-                            switch (style) {
-                                case 'none':
-                                    break;
-                                case 'inset':
-                                    if (width === '0px') {
-                                        width = '1px';
-                                    }
-                                default:
-                                    color = $color.parseColor(borderColor, node.css('opacity'));
-                                    break;
-                            }
-                            boxStyle[attr] = <BorderAttribute> {
-                                width,
-                                style,
-                                color: color ? color.valueAsRGBA : ''
-                            };
-                            break;
-                        }
-                        case 'borderRadius': {
-                            const horizontal = node.actualWidth >= node.actualHeight;
-                            const top = node.convertPX(node.css('borderTopLeftRadius'), horizontal, false);
-                            const right = node.convertPX(node.css('borderTopRightRadius'), horizontal, false);
-                            const bottom = node.convertPX(node.css('borderBottomLeftRadius'), horizontal, false);
-                            const left = node.convertPX(node.css('borderBottomRightRadius'), horizontal, false);
-                            if (top === right && right === bottom && bottom === left) {
-                                boxStyle.borderRadius = top !== '0px' ? [top] : undefined;
-                            }
-                            else {
-                                boxStyle.borderRadius = [top, right, bottom, left];
-                            }
-                            break;
-                        }
                         case 'backgroundColor':
                             if (!node.has('backgroundColor') && (value === node.cssAscend('backgroundColor', false, true) || node.documentParent.visible && $css.isInheritedStyle(node.element, 'backgroundColor'))) {
                                 boxStyle.backgroundColor = '';
@@ -604,6 +568,65 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         case 'backgroundPositionY':
                             boxStyle[attr] = value;
                             break;
+                        case 'borderTop':
+                        case 'borderRight':
+                        case 'borderBottom':
+                        case 'borderLeft': {
+                            const style = node.css(`${attr}Style`) || 'none';
+                            let width = node.css(`${attr}Width`) || '0px';
+                            switch (width) {
+                                case 'thin':
+                                    width = '1px';
+                                    break;
+                                case 'medium':
+                                    width = '2px';
+                                    break;
+                                case 'thick':
+                                    width = '3px';
+                                    break;
+                            }
+                            let color = node.css(`${attr}Color`) || 'initial';
+                            switch (color.toLowerCase()) {
+                                case 'initial':
+                                    color = 'rgb(0, 0, 0)';
+                                    break;
+                                case 'inherit':
+                                case 'currentcolor':
+                                    color = $css.getInheritedStyle(node.element, `${attr}Color`);
+                                    break;
+                            }
+                            const borderColor = style !== 'none' && width !== '0px' ? $color.parseColor(color, node.css('opacity')) : undefined;
+                            boxStyle[attr] = <BorderAttribute> {
+                                width,
+                                style,
+                                color: borderColor ? borderColor.valueAsRGBA : ''
+                            };
+                            break;
+                        }
+                        case 'borderRadius': {
+                            if (value !== 'none') {
+                                const horizontal = node.actualWidth >= node.actualHeight;
+                                const [A, B] = node.css('borderTopLeftRadius').split(' ');
+                                const [C, D] = node.css('borderTopRightRadius').split(' ');
+                                const [E, F] = node.css('borderBottomRightRadius').split(' ');
+                                const [G, H] = node.css('borderBottomLeftRadius').split(' ');
+                                let borderRadius: string[];
+                                if (!B && !D && !F && !H) {
+                                    borderRadius = [A, C, E, G];
+                                }
+                                else {
+                                    borderRadius = [A, B || A, C, D || C, E, F || E, G, H || G];
+                                }
+                                if (borderRadius.every(radius => radius === borderRadius[0])) {
+                                    borderRadius.length = 1;
+                                }
+                                for (let i = 0; i < borderRadius.length; i++) {
+                                    borderRadius[i] = node.convertPX(borderRadius[i], horizontal, false);
+                                }
+                                boxStyle.borderRadius = borderRadius;
+                            }
+                            break;
+                        }
                     }
                 }
                 const borderTop = JSON.stringify(boxStyle.borderTop);

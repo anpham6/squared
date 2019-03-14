@@ -63,10 +63,14 @@ const TEMPLATES = {
 };
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 
+function getColorAttribute(value: string) {
+    return `android:color="@color/${value}"`;
+}
+
 function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = false): string {
-    const solid = `android:color="@color/${border.color}"`;
-    const style = border.style;
+    const solid = getColorAttribute(Resource.addColor(border.color));
     const borderWidth = parseInt(border.width);
+    const style = border.style;
     const groove = style === 'groove';
     if (borderWidth > 1 && (groove || style === 'ridge')) {
         const color = $color.parseColor(border.color);
@@ -75,7 +79,6 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
             if (reduced) {
                 const colorName = Resource.addColor(reduced);
                 if (colorName !== '') {
-                    const attribute = `android:color="@color/${colorName}"`;
                     if (direction === 0 || direction === 2) {
                         halfSize = !halfSize;
                     }
@@ -86,7 +89,7 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
                         switch (direction) {
                             case 0:
                             case 3:
-                                return attribute;
+                                return getColorAttribute(colorName);
                             case 1:
                             case 2:
                                 return solid;
@@ -99,7 +102,7 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
                                 return solid;
                             case 1:
                             case 2:
-                                return attribute;
+                                return getColorAttribute(colorName);
                         }
                     }
                 }
@@ -107,11 +110,17 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
         }
     }
     else {
+        let multiplier = 0;
         switch (style) {
             case 'dotted':
-                return `${solid} android:dashWidth="${borderWidth}px" android:dashGap="${borderWidth}px"`;
+                multiplier = 1;
+                break;
             case 'dashed':
-                return `${solid} android:dashWidth="${borderWidth}px" android:dashGap="${borderWidth * 2}px"`;
+                multiplier = 2;
+                break;
+        }
+        if (multiplier > 0) {
+            return `${solid} android:dashWidth="${borderWidth * multiplier}px" android:dashGap="${borderWidth}px"`;
         }
     }
     return solid;
@@ -120,7 +129,7 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
 function getShapeAttribute(boxStyle: BoxStyle, attr: string, direction = -1, hasInset = false, isInset = false): StringMap[] | false {
     switch (attr) {
         case 'stroke':
-            if (boxStyle.border && Resource.isBorderVisible(boxStyle.border)) {
+            if (Resource.isBorderVisible(boxStyle.border)) {
                 if (!hasInset || isInset) {
                     return [{
                         width: boxStyle.border.width,
@@ -129,7 +138,7 @@ function getShapeAttribute(boxStyle: BoxStyle, attr: string, direction = -1, has
                 }
                 else if (hasInset) {
                     return [{
-                        width: $util.formatPX(Math.ceil(parseInt(boxStyle.border.width) / 2)),
+                        width: $util.formatPX(Math.ceil(parseFloat(boxStyle.border.width) / 2)),
                         borderStyle: getBorderStyle(boxStyle.border, direction, true)
                     }];
                 }
@@ -137,22 +146,32 @@ function getShapeAttribute(boxStyle: BoxStyle, attr: string, direction = -1, has
             break;
         case 'radius':
             if (boxStyle.borderRadius) {
-                if (boxStyle.borderRadius.length > 1) {
+                if (boxStyle.borderRadius.length === 1) {
+                    return [{ radius: boxStyle.borderRadius[0] }];
+                }
+                else {
+                    let borderRadius: string[];
+                    if (boxStyle.borderRadius.length === 8) {
+                        borderRadius = [];
+                        for (let i = 0; i < boxStyle.borderRadius.length; i += 2) {
+                            borderRadius.push($util.formatPX((parseFloat(boxStyle.borderRadius[i]) + parseFloat(boxStyle.borderRadius[i + 1])) / 2));
+                        }
+                    }
+                    else {
+                        borderRadius = boxStyle.borderRadius;
+                    }
                     const boxModel = ['topLeft', 'topRight', 'bottomRight', 'bottomLeft'];
                     const result = {};
                     let valid = false;
-                    for (let i = 0; i < boxStyle.borderRadius.length; i++) {
-                        if (boxStyle.borderRadius[i] !== '0px') {
-                            result[`${boxModel[i]}Radius`] = boxStyle.borderRadius[i];
+                    for (let i = 0; i < borderRadius.length; i++) {
+                        if (borderRadius[i] !== '0px') {
+                            result[`${boxModel[i]}Radius`] = borderRadius[i];
                             valid = true;
                         }
                     }
                     if (valid) {
                         return [result];
                     }
-                }
-                else if (boxStyle.borderRadius.length === 1) {
-                    return [{ radius: boxStyle.borderRadius[0] }];
                 }
             }
             break;
@@ -388,13 +407,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 imageDimensions[j] = Resource.ASSETS.images.get(element.src);
                                 backgroundRepeat[j] = 'no-repeat';
                                 backgroundSize[j] = `${image.actualWidth}px ${image.actualHeight}px`;
-                                let position: string;
-                                if (image.tagName === 'IMAGE') {
-                                    position = '0px 0px';
-                                }
-                                else {
-                                    position = `${image.bounds.left - node.bounds.left}px ${image.bounds.top - node.bounds.top}px`;
-                                }
+                                const position = image.tagName === 'IMAGE' ? '0px 0px' : `${image.bounds.left - node.bounds.left}px ${image.bounds.top - node.bounds.top}px`;
                                 backgroundPosition[j] = $css.getBackgroundPosition(position, node.actualDimension, node.fontSize);
                                 j++;
                             }
@@ -424,7 +437,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     const item = borders[i];
                     borderVisible[i] = Resource.isBorderVisible(item);
                     if (borderVisible[i]) {
-                        item.color = Resource.addColor(item.color);
                         borderStyle.add(getBorderStyle(item));
                         borderWidth.add(item.width);
                         borderData = item;
@@ -738,9 +750,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     if (border && !(border.style === 'double' && parseInt(border.width) > 2 || (border.style === 'groove' || border.style === 'ridge') && parseInt(border.width) > 1)) {
                         const stroke = getShapeAttribute(stored, 'stroke') || [];
                         if (backgroundImage.length === 0) {
-                            if (borderRadius && borderRadius[0]['radius'] === undefined) {
-                                borderRadius[0]['radius'] = '1px';
-                            }
                             template = TEMPLATES.SHAPE;
                             shape = {
                                 A: stroke,
@@ -850,13 +859,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                     if (backgroundImage.length) {
                         node.data('RESOURCE', 'backgroundImage', true);
-                        if (this.options.autoSizeBackgroundImage &&
-                            !node.documentRoot &&
-                            !node.imageElement &&
-                            !node.svgElement &&
-                            node.renderParent && !node.renderParent.tableElement &&
-                            !node.hasBit('excludeProcedure', $enum.NODE_PROCEDURE.AUTOFIT))
-                        {
+                        if (this.options.autoSizeBackgroundImage && !node.documentRoot && !node.imageElement && !node.svgElement && node.renderParent && !node.renderParent.tableElement && !node.hasBit('excludeProcedure', $enum.NODE_PROCEDURE.AUTOFIT)) {
                             let parentWidth = 0;
                             let parentHeight = 0;
                             if (node.tagName !== 'IMAGE') {

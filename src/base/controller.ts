@@ -90,11 +90,15 @@ export default abstract class Controller<T extends Node> implements squared.base
             case 'IMG':
                 if (styleMap.width === undefined) {
                     const match = /width="(\d+)"/.exec(element.outerHTML);
-                    styleMap.width = match ? $util.formatPX($util.isPercent(match[1]) ? parseFloat(match[1]) / 100 * (element.parentElement || element).getBoundingClientRect().width : match[1]) : '300px';
+                    if (match) {
+                        styleMap.width = $util.formatPX($util.isPercent(match[1]) ? parseFloat(match[1]) / 100 * (element.parentElement || element).getBoundingClientRect().width : match[1]);
+                    }
                 }
                 if (styleMap.height === undefined) {
                     const match = /height="(\d+)"/.exec(element.outerHTML);
-                    styleMap.height = match ? $util.formatPX($util.isPercent(match[1]) ? parseFloat(match[1]) / 100 * (element.parentElement || element).getBoundingClientRect().height : match[1]) : '150px';
+                    if (match) {
+                        styleMap.height = $util.formatPX($util.isPercent(match[1]) ? parseFloat(match[1]) / 100 * (element.parentElement || element).getBoundingClientRect().height : match[1]);
+                    }
                 }
                 break;
         }

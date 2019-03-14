@@ -12,13 +12,13 @@ function setMinHeight<T extends Node>(node: T, offset: number) {
 }
 
 function applyMarginCollapse<T extends Node>(parent: T, node: T, direction: boolean) {
-    if (node.blockStatic && !node.plainText && !node.lineBreak && (
-            parent.tagName === 'FORM' ||
-            direction && node === parent.firstChild && parent.marginTop > 0 && parent.borderTopWidth === 0 && parent.paddingTop === 0 ||
-            !direction && node === parent.lastChild && parent.marginBottom > 0 && parent.borderBottomWidth === 0 && parent.paddingBottom === 0
-       ))
-    {
-        node.modifyBox(direction ? BOX_STANDARD.MARGIN_TOP : BOX_STANDARD.MARGIN_BOTTOM, null);
+    if (node.blockStatic && !node.plainText && !node.lineBreak) {
+        if (direction && (node.inlineText || parent.marginTop > 0 && parent.borderTopWidth === 0 && parent.paddingTop === 0 || node.firstChild && node.firstChild.plainText)) {
+            node.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
+        }
+        else if (!direction && (node.inlineText || parent.marginBottom > 0 && parent.borderBottomWidth === 0 && parent.paddingBottom === 0 || node.lastChild && node.lastChild.plainText)) {
+            node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
+        }
     }
 }
 
@@ -36,7 +36,6 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                         if (firstChild === undefined) {
                             firstChild = current;
                         }
-                        lastChild = current;
                         if (!current.lineBreak && current.blockStatic) {
                             const previousSiblings = current.previousSiblings();
                             if (previousSiblings.length) {
@@ -45,10 +44,10 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                 if (!previous.lineBreak && (previous.blockStatic || floating)) {
                                     current = (current.renderAs || current) as T;
                                     previous = (previous.renderAs || previous) as T;
-                                    let marginTop = $util.convertInt(current.cssInitial('marginTop', false, true));
-                                    const marginBottom = $util.convertInt(current.cssInitial('marginBottom', false, true));
-                                    const previousMarginTop = $util.convertInt(previous.cssInitial('marginTop', false, true));
-                                    let previousMarginBottom = $util.convertInt(previous.cssInitial('marginBottom', false, true));
+                                    let marginTop = $util.convertFloat(current.cssInitial('marginTop', false, true));
+                                    const marginBottom = $util.convertFloat(current.cssInitial('marginBottom', false, true));
+                                    const previousMarginTop = $util.convertFloat(previous.cssInitial('marginTop', false, true));
+                                    let previousMarginBottom = $util.convertFloat(previous.cssInitial('marginBottom', false, true));
                                     if (previous.excluded && !current.excluded) {
                                         const offset = Math.min(previousMarginTop, previousMarginBottom);
                                         if (offset < 0) {
@@ -63,18 +62,18 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                             processed.add(current);
                                         }
                                     }
-                                    else {
+                                    else if (previousMarginBottom > 0 || marginTop > 0) {
                                         if (previousMarginBottom === 0 && previous.length && !floating) {
                                             const bottomChild = previous.lastChild;
                                             if (bottomChild && bottomChild.blockStatic) {
-                                                previousMarginBottom = $util.convertInt(bottomChild.cssInitial('marginBottom', false, true));
+                                                previousMarginBottom = $util.convertFloat(bottomChild.cssInitial('marginBottom', false, true));
                                                 previous = bottomChild as T;
                                             }
                                         }
                                         if (marginTop === 0 && current.length) {
                                             const topChild = current.firstChild;
                                             if (topChild && topChild.blockStatic) {
-                                                marginTop = $util.convertInt(topChild.cssInitial('marginTop', false, true));
+                                                marginTop = $util.convertFloat(topChild.cssInitial('marginTop', false, true));
                                                 current = topChild as T;
                                             }
                                         }
@@ -90,6 +89,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                 }
                             }
                         }
+                        lastChild = current;
                     }
                 }
                 if (firstChild) {
@@ -114,33 +114,31 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                             continue;
                         }
                         else {
-                            valid = true;
                             const above = previousSiblings.pop() as T;
                             const below = nextSiblings.pop() as T;
                             if (above.inlineStatic && below.inlineStatic && previousSiblings.length === 0) {
                                 processed.add(node);
                                 continue;
                             }
-                            let bottom: number;
-                            let top: number;
-                            if (above.lineHeight > 0 && above.element && above.cssTry('lineHeight', '0px')) {
-                                bottom = above.element.getBoundingClientRect().bottom + above.marginBottom;
-                                above.cssFinally('lineHeight');
-                            }
-                            else {
-                                bottom = above.linear.bottom;
-                            }
+                            valid = true;
+                            let offset: number;
                             if (below.lineHeight > 0 && below.element && below.cssTry('lineHeight', '0px')) {
-                                top = below.element.getBoundingClientRect().top - below.marginTop;
+                                offset = below.element.getBoundingClientRect().top - below.marginTop;
                                 below.cssFinally('lineHeight');
                             }
                             else {
-                                top = below.linear.top;
+                                offset = below.linear.top;
                             }
-                            const aboveParent = above.visible && above.renderParent;
-                            const belowParent = below.visible && below.renderParent;
-                            const offset = top - bottom;
+                            if (above.lineHeight > 0 && above.element && above.cssTry('lineHeight', '0px')) {
+                                offset -= above.element.getBoundingClientRect().bottom + above.marginBottom;
+                                above.cssFinally('lineHeight');
+                            }
+                            else {
+                                offset -= above.linear.bottom;
+                            }
                             if (offset !== 0) {
+                                const aboveParent = above.visible && above.renderParent;
+                                const belowParent = below.visible && below.renderParent;
                                 if (belowParent && belowParent.groupParent && belowParent.firstChild === below) {
                                     belowParent.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
                                 }
