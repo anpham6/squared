@@ -43,7 +43,7 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
 
     public processNode(node: T): ExtensionResult<T> {
         const options = $utilA.createViewAttribute(this.options.self);
-        if (Drawer.findNestedByName(node.element, WIDGET_NAME.MENU)) {
+        if (Drawer.findNestedElement(node.element, WIDGET_NAME.MENU)) {
             $util.assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');
             this.setStyleTheme(node.localSettings.targetAPI);
         }
@@ -73,8 +73,8 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
     public postParseDocument(node: T) {
         const application = this.application;
         const options = $utilA.createViewAttribute(this.options.navigationView);
-        const menu = $util.optionalAsString(Drawer.findNestedByName(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
-        const headerLayout = $util.optionalAsString(Drawer.findNestedByName(node.element, $const.EXT_NAME.EXTERNAL), 'dataset.layoutName');
+        const menu = $util.optionalAsString(Drawer.findNestedElement(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
+        const headerLayout = $util.optionalAsString(Drawer.findNestedElement(node.element, $const.EXT_NAME.EXTERNAL), 'dataset.layoutName');
         if (menu !== '') {
             $util.assignEmptyValue(options, 'app', 'menu', `@menu/${menu}`);
         }
@@ -97,7 +97,7 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
     }
 
     public postProcedure(node: T) {
-        const element = Drawer.findNestedByName(node.element, WIDGET_NAME.COORDINATOR);
+        const element = Drawer.findNestedElement(node.element, WIDGET_NAME.COORDINATOR);
         if (element) {
             const coordinator = $dom.getElementAsNode<T>(element);
             if (coordinator && coordinator.some(item => item.positioned) && coordinator.inlineHeight) {

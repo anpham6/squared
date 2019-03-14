@@ -7,7 +7,7 @@ const $css = squared.lib.css;
 const $util = squared.lib.util;
 
 export default abstract class Extension<T extends Node> implements squared.base.Extension<T> {
-    public static findNestedByName(element: Element | null, name: string) {
+    public static findNestedElement(element: Element | null, name: string) {
         if ($css.hasComputedStyle(element)) {
             for (let i = 0; i < element.children.length; i++) {
                 const item = <HTMLElement> element.children[i];
@@ -19,16 +19,14 @@ export default abstract class Extension<T extends Node> implements squared.base.
         return null;
     }
 
-    public tagNames: string[] = [];
-    public documentRoot = false;
+    public tagNames: string[];
     public eventOnly = false;
     public preloaded = false;
+    public documentRoot = false;
+    public application!: Application<T>;
     public readonly options: ExternalData = {};
     public readonly dependencies: ExtensionDependency[] = [];
     public readonly subscribers = new Set<T>();
-    public readonly subscribersChild = new Set<T>();
-
-    private _application?: Application<T>;
 
     protected constructor(
         public readonly name: string,
@@ -36,9 +34,7 @@ export default abstract class Extension<T extends Node> implements squared.base.
         tagNames?: string[],
         options?: ExternalData)
     {
-        if (Array.isArray(tagNames)) {
-            this.tagNames = $util.replaceMap<string, string>(tagNames, value => value.trim().toUpperCase());
-        }
+        this.tagNames = Array.isArray(tagNames) ? $util.replaceMap<string, string>(tagNames, value => value.trim().toUpperCase()) : [];
         if (options) {
             Object.assign(this.options, options);
         }
@@ -103,6 +99,14 @@ export default abstract class Extension<T extends Node> implements squared.base.
         return { output: '', complete: false };
     }
 
+    public addDescendant(node: T) {
+        const extensions = this.application.session.extensionMap.get(node.id) || [];
+        if (!extensions.includes(this)) {
+            extensions.push(this);
+        }
+        this.application.session.extensionMap.set(node.id, extensions);
+    }
+
     public postBaseLayout(node: T) {}
     public postConstraints(node: T) {}
     public postParseDocument(node: T) {}
@@ -116,13 +120,6 @@ export default abstract class Extension<T extends Node> implements squared.base.
     public afterParseDocument() {}
     public afterProcedure() {}
     public afterFinalize() {}
-
-    set application(value) {
-        this._application = value;
-    }
-    get application() {
-        return this._application || {} as Application<T>;
-    }
 
     get installed() {
         return this.application.extensions ? this.application.extensions.has(this) : false;

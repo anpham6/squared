@@ -3,7 +3,7 @@ export default `<?xml version="1.0" encoding="utf-8"?>
 <<A>>
 	<item>
 		<shape android:shape="rectangle">
-			<solid android:color="@color/{&color}" />
+			<solid android:color="{&color}" />
 		</shape>
 	</item>
 <<A>>
@@ -11,7 +11,7 @@ export default `<?xml version="1.0" encoding="utf-8"?>
 	<item android:left="{~left}" android:top="{~top}" android:right="{~right}" android:bottom="{~bottom}" android:drawable="@drawable/{~src}" android:width="{~width}" android:height="{~height}">
 	<<gradient>>
 		<shape android:shape="rectangle">
-			<gradient android:type="{&type}" android:startColor="@color/{~startColor}" android:endColor="@color/{~endColor}" android:centerColor="@color/{~centerColor}" android:angle="{~angle}" android:centerX="{~centerX}" android:centerY="{~centerY}" android:gradientRadius="{~gradientRadius}" android:visible="{~visible}" />
+			<gradient android:type="{&type}" android:startColor="{~startColor}" android:endColor="{~endColor}" android:centerColor="{~centerColor}" android:angle="{~angle}" android:centerX="{~centerX}" android:centerY="{~centerY}" android:gradientRadius="{~gradientRadius}" android:visible="{~visible}" />
 		</shape>
 	<<gradient>>
 	<<bitmap>>

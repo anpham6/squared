@@ -142,7 +142,7 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
         });
         const output = this.application.controllerHandler.renderNodeStatic(NAVIGATION.MENU, 0, {}, '', '', node, true);
         for (const item of node.cascade()) {
-            this.subscribersChild.add(item as T);
+            this.addDescendant(item as T);
         }
         return { output, complete: true };
     }

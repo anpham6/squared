@@ -25,7 +25,7 @@ export default class Coordinator<T extends android.base.View> extends squared.ba
             node,
             true
         );
-        const element = Coordinator.findNestedByName(node.element, WIDGET_NAME.TOOLBAR);
+        const element = Coordinator.findNestedElement(node.element, WIDGET_NAME.TOOLBAR);
         if (element) {
             const toolbar = $dom.getElementAsNode<T>(element);
             if (toolbar && toolbar.element) {

@@ -25,12 +25,8 @@ export default class FloatingActionButton<T extends android.base.View> extends s
         const element = <HTMLElement> node.element;
         const target = node.dataset.target;
         const options = $utilA.createViewAttribute(this.options[element.id]);
-        const backgroundColor = $color.parseColor(node.css('backgroundColor'), node.css('opacity'));
-        let colorValue = '';
-        if (backgroundColor) {
-            colorValue = $Resource.addColor(backgroundColor);
-        }
-        $util.assignEmptyValue(options, 'android', 'backgroundTint', colorValue !== '' ? `@color/${colorValue}` : '?attr/colorAccent');
+        const colorName = $Resource.addColor($color.parseColor(node.css('backgroundColor'), node.css('opacity')));
+        $util.assignEmptyValue(options, 'android', 'backgroundTint', colorName !== '' ? `@color/${colorName}` : '?attr/colorAccent');
         if (node.hasBit('excludeProcedure', $enum.NODE_PROCEDURE.ACCESSIBILITY)) {
             $util.assignEmptyValue(options, 'android', 'focusable', 'false');
         }

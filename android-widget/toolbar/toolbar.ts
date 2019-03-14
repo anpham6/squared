@@ -61,7 +61,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         const toolbarOptions = $utilA.createViewAttribute(options.self);
         const appBarOptions = $utilA.createViewAttribute(options.appBar);
         const collapsingToolbarOptions = $utilA.createViewAttribute(options.collapsingToolbar);
-        const hasMenu = Toolbar.findNestedByName(element, WIDGET_NAME.MENU);
+        const hasMenu = Toolbar.findNestedElement(element, WIDGET_NAME.MENU);
         const backgroundImage = node.has('backgroundImage');
         const appBarChildren: T[] = [];
         const collapsingToolbarChildren: T[] = [];
@@ -282,7 +282,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
     }
 
     public postProcedure(node: T) {
-        const menu = $util.optionalAsString(Toolbar.findNestedByName(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
+        const menu = $util.optionalAsString(Toolbar.findNestedElement(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
         if (menu !== '') {
             const options: ExternalData = this.options[node.elementId] || {};
             const toolbarOptions = $utilA.createViewAttribute(options.self);
@@ -291,15 +291,18 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         }
         const themeData: ToolbarThemeData = node.data(WIDGET_NAME.TOOLBAR, 'themeData');
         if (themeData) {
+            const settings = <UserSettingsAndroid> this.application.userSettings;
             const options = $utilA.createStyleAttribute(this.options.resource);
             const optionsActionBar = $utilA.createStyleAttribute({ name: '.NoActionBar', output: options.output });
             const optionsAppBar = $utilA.createStyleAttribute({ name: '.AppBarOverlay', output: options.output });
             const optionsPopup = $utilA.createStyleAttribute({ name: '.PopupOverlay', output: options.output });
+            $util.assignEmptyValue(options, 'name', settings.manifestThemeName);
+            $util.assignEmptyValue(options, 'parent', 'Theme.AppCompat.Light.DarkActionBar');
             $util.assignEmptyValue(optionsActionBar.items, 'windowActionBar', 'false');
             $util.assignEmptyValue(optionsActionBar.items, 'windowNoTitle', 'true');
             $util.assignEmptyValue(optionsAppBar, 'parent', themeData.appBarOverlay || 'ThemeOverlay.AppCompat.Dark.ActionBar');
             $util.assignEmptyValue(optionsPopup, 'parent', themeData.popupOverlay || 'ThemeOverlay.AppCompat.Light');
-            $Resource.addTheme(optionsActionBar, optionsAppBar, optionsPopup);
+            $Resource.addTheme(options, optionsActionBar, optionsAppBar, optionsPopup);
         }
     }
 

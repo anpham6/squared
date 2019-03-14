@@ -12,7 +12,6 @@ declare global {
             depth: number;
             siblingIndex: number;
             renderPosition: number;
-            renderExtension: Set<Extension<Node>>;
             documentRoot: boolean;
             positionStatic: boolean;
             baselineActive: boolean;
@@ -33,6 +32,7 @@ declare global {
             renderAs?: Node;
             parent?: Node;
             renderParent?: Node;
+            renderExtension?: Extension<Node>[];
             companion?: Node;
             extracted?: Node[];
             readonly localSettings: {};

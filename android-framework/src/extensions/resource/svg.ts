@@ -493,9 +493,8 @@ function isColorType(attr: string) {
 }
 
 function getColorValue<T>(value: string, asArray = false) {
-    const name = Resource.addColor(value);
-    value = name !== '' ? `@color/${name}` : '';
-    return (asArray ? [value] : value) as T extends true ? string[] : string;
+    const colorName = `@color/${Resource.addColor(value)}`;
+    return (asArray ? [colorName] : colorName) as T extends true ? string[] : string;
 }
 
 function convertValueType<T = string | string[]>(item: SvgAnimation, value: string) {

@@ -44,7 +44,7 @@ export default class BottomNavigation<T extends android.base.View> extends squar
             node
         );
         for (const item of node.cascade()) {
-            this.subscribersChild.add(item as T);
+            this.addDescendant(item as T);
         }
         this.setStyleTheme();
         return { output, complete: true };
@@ -60,7 +60,7 @@ export default class BottomNavigation<T extends android.base.View> extends squar
                 renderParent.android('layout_height', 'match_parent');
             }
         }
-        const menu = $util.optionalAsString(BottomNavigation.findNestedByName(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
+        const menu = $util.optionalAsString(BottomNavigation.findNestedElement(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
         if (menu !== '') {
             const options = $utilA.createViewAttribute(this.options[node.elementId]);
             $util.assignEmptyValue(options, 'app', 'menu', `@menu/${menu}`);

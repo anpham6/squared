@@ -26,9 +26,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public rendered = false;
     public baselineActive = false;
     public positioned = false;
-    public renderExtension = new Set<Extension<T>>();
     public controlId = '';
     public style!: CSSStyleDeclaration;
+    public renderExtension?: Extension<T>[];
     public companion?: T;
     public extracted?: T[];
 

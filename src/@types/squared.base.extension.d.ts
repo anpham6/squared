@@ -13,7 +13,6 @@ declare global {
             readonly options: ExternalData;
             readonly dependencies: ExtensionDependency[];
             readonly subscribers: Set<T>;
-            readonly subscribersChild: Set<T>;
             readonly installed: boolean;
             is(node: T): boolean;
             require(name: string, preload?: boolean): void;
@@ -24,6 +23,7 @@ declare global {
             condition(node: T, parent?: T): boolean;
             processNode(node: T, parent: T): ExtensionResult<T>;
             processChild(node: T, parent: T): ExtensionResult<T>;
+            addDescendant(node: T): void;
             postBaseLayout(node: T): void;
             postConstraints(node: T): void;
             postParseDocument(node: T): void;
@@ -39,7 +39,7 @@ declare global {
         }
 
         class Extension<T extends Node> implements Extension<T> {
-            public static findNestedByName(element: Element | null, name: string): HTMLElement | null;
+            public static findNestedElement(element: Element | null, name: string): HTMLElement | null;
             constructor(name: string, framework: number, tagNames?: string[], options?: ExternalData);
         }
     }

@@ -92,7 +92,8 @@ export default class Application<T extends Node> implements squared.base.Applica
         image: new Map<string, ImageAsset>(),
         renderQueue: new Map<string, string[]>(),
         excluded: new NodeList<T>(),
-        targeted: new Map<string, T[]>()
+        targeted: new Map<string, T[]>(),
+        extensionMap: new Map<number, Extension<T>[]>()
     };
     public readonly processing: AppProcessing<T, NodeList<T>> = {
         cache: new NodeList<T>(),
@@ -191,6 +192,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         this.session.cache.reset();
         this.session.excluded.reset();
         this.session.targeted.clear();
+        this.session.extensionMap.clear();
         this.processing.cache.reset();
         this.controllerHandler.reset();
         this.resourceHandler.reset();
@@ -199,7 +201,6 @@ export default class Application<T extends Node> implements squared.base.Applica
         this._renderPosition.clear();
         for (const ext of this.extensions) {
             ext.subscribers.clear();
-            ext.subscribersChild.clear();
         }
         this.closed = false;
     }
@@ -590,10 +591,13 @@ export default class Application<T extends Node> implements squared.base.Applica
         if (this.processing.cache.length) {
             for (const node of this.processing.cache) {
                 if (node.htmlElement && node.tagName !== 'SELECT') {
-                    const plainText: Element[] = [];
                     let valid = false;
+                    let plainText: Element[] | undefined;
                     (<HTMLElement> node.element).childNodes.forEach((element: Element) => {
                         if (element.nodeName === '#text') {
+                            if (plainText === undefined) {
+                                plainText = [];
+                            }
                             plainText.push(element);
                         }
                         else if (element.tagName !== 'BR') {
@@ -603,7 +607,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                             }
                         }
                     });
-                    if (valid) {
+                    if (valid && plainText) {
                         for (const element of plainText) {
                             this.insertNode(element, node);
                         }
@@ -862,8 +866,6 @@ export default class Application<T extends Node> implements squared.base.Applica
                 const axisY = parent.duplicate() as T[];
                 const hasFloat = axisY.some(node => node.floating);
                 const cleared = hasFloat ? NodeList.clearedAll(parent) : new Map<T, string>();
-                const extensionsParent = parent.renderExtension.size ? Array.from(parent.renderExtension) : [];
-                const extensionsChild = $util.filterArray(extensions, item => item.subscribersChild.size > 0);
                 let k = -1;
                 while (++k < axisY.length) {
                     let nodeY = axisY[k];
@@ -1057,13 +1059,19 @@ export default class Application<T extends Node> implements squared.base.Applica
                             parentY = nodeY.parent as T;
                         }
                     }
+                    const extensionsDescendant = this.session.extensionMap.get(nodeY.id);
                     if (!nodeY.rendered && !nodeY.hasBit('excludeSection', APP_SECTION.EXTENSION)) {
-                        let next = false;
-                        if (extensionsParent.length || extensionsChild.length) {
-                            const combined = extensionsParent.slice(0);
-                            if (extensionsChild.length) {
-                                $util.concatArray(combined, $util.filterArray(extensionsChild, item => item.subscribersChild.has(nodeY)));
+                        let combined = parent.renderExtension ? parent.renderExtension.slice(0) : undefined;
+                        if (extensionsDescendant) {
+                            if (combined) {
+                                $util.concatArray(combined, extensionsDescendant as Extension<T>[]);
                             }
+                            else {
+                                combined = extensionsDescendant.slice(0) as Extension<T>[];
+                            }
+                        }
+                        if (combined) {
+                            let next = false;
                             for (const ext of combined) {
                                 const result = ext.processChild(nodeY, parentY);
                                 if (result.output) {
@@ -1080,13 +1088,14 @@ export default class Application<T extends Node> implements squared.base.Applica
                                     break;
                                 }
                             }
-                        }
-                        if (next) {
-                            continue;
+                            if (next) {
+                                continue;
+                            }
                         }
                         if (nodeY.styleElement) {
+                            let next = false;
                             prioritizeExtensions(<HTMLElement> documentRoot.element, <HTMLElement> nodeY.element, extensions).some(item => {
-                                if (!extensionsParent.includes(item) && !extensionsChild.includes(item) && item.is(nodeY) && item.condition(nodeY, parentY)) {
+                                if (item.is(nodeY) && item.condition(nodeY, parentY) && (parent.renderExtension === undefined || !parent.renderExtension.includes(item)) && (extensionsDescendant === undefined || !extensionsDescendant.includes(item))) {
                                     const result = item.processNode(nodeY, parentY);
                                     if (result.output) {
                                         this.addRenderTemplate(parentY, nodeY, result.output);
@@ -1098,8 +1107,11 @@ export default class Application<T extends Node> implements squared.base.Applica
                                         parentY = result.parent as T;
                                     }
                                     if (result.output || result.include === true) {
+                                        if (nodeY.renderExtension === undefined) {
+                                            nodeY.renderExtension = [];
+                                        }
+                                        nodeY.renderExtension.push(item);
                                         item.subscribers.add(nodeY);
-                                        nodeY.renderExtension.add(item);
                                     }
                                     next = result.next === true;
                                     if (result.complete || next) {
@@ -1185,15 +1197,15 @@ export default class Application<T extends Node> implements squared.base.Applica
                 }
             }
         }
-        if (documentRoot.dataset.layoutName && (!documentRoot.dataset.target || documentRoot.renderExtension.size === 0)) {
+        if (documentRoot.dataset.layoutName && (!documentRoot.dataset.target || documentRoot.renderExtension === undefined)) {
             this.addLayoutFile(
                 documentRoot.dataset.layoutName,
                 empty ? '' : baseTemplate,
                 $util.trimString($util.trimNull(documentRoot.dataset.pathname), '/'),
-                documentRoot.renderExtension.size > 0 && $util.hasInSet(documentRoot.renderExtension, item => item.documentRoot)
+                documentRoot.renderExtension && documentRoot.renderExtension.some(item => item.documentRoot)
             );
         }
-        if (empty && documentRoot.renderExtension.size === 0) {
+        if (empty && documentRoot.renderExtension === undefined) {
             documentRoot.hide();
         }
         this.processing.cache.sort((a, b) => {

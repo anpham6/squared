@@ -311,10 +311,10 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIP
         result.colorStops = convertColorStops(colorStops);
     }
     else {
-        result.startColor = Resource.addColor(colorStops[0].color, true);
-        result.endColor = Resource.addColor(colorStops[colorStops.length - 1].color, true);
+        result.startColor = `@color/${Resource.addColor(colorStops[0].color, true)}`;
+        result.endColor = `@color/${Resource.addColor(colorStops[colorStops.length - 1].color, true)}`;
         if (colorStops.length > 2) {
-            result.centerColor = Resource.addColor(colorStops[Math.floor(colorStops.length / 2)].color, true);
+            result.centerColor = `@color/${Resource.addColor(colorStops[Math.floor(colorStops.length / 2)].color, true)}`;
         }
     }
     return result;
@@ -323,9 +323,8 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIP
 export function convertColorStops(list: ColorStop[], precision?: number) {
     const result: GradientColorStop[] = [];
     for (const stop of list) {
-        const color = `@color/${Resource.addColor(stop.color, true)}`;
         result.push({
-            color,
+            color: `@color/${Resource.addColor(stop.color, true)}`,
             offset: $math.truncate(stop.offset, precision)
         });
     }
@@ -415,14 +414,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                     imageLength = backgroundImage.length;
                 }
-                const companion = node.companion;
-                if (companion && !companion.visible && companion.htmlElement && !$css.isInheritedStyle(companion.element, 'backgroundColor')) {
-                    const boxStyle: BoxStyle = companion.data(Resource.KEY_NAME, 'boxStyle');
-                    const backgroundColor = Resource.addColor(boxStyle.backgroundColor);
-                    if (backgroundColor !== '') {
-                        stored.backgroundColor = backgroundColor;
-                    }
-                }
                 const borders: BorderAttribute[] = [
                     stored.borderTop,
                     stored.borderRight,
@@ -443,6 +434,13 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                 }
                 const hasBorder = borderData !== undefined || stored.borderRadius !== undefined;
+                const companion = node.companion;
+                if (companion && !companion.visible && companion.htmlElement && !$css.isInheritedStyle(companion.element, 'backgroundColor')) {
+                    const companionStyle: BoxStyle = companion.data(Resource.KEY_NAME, 'boxStyle');
+                    if (companionStyle.backgroundColor) {
+                        stored.backgroundColor = companionStyle.backgroundColor;
+                    }
+                }
                 if (imageLength || hasBorder) {
                     const layerList: LayerListTemplate = {
                         A: false,
