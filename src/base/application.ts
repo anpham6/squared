@@ -115,9 +115,9 @@ export default class Application<T extends Node> implements squared.base.Applica
         resourceConstructor: Constructor<T>,
         extensionManagerHandler: Constructor<T>)
     {
-        this.controllerHandler = (<unknown> new controllerConstructor(this, this.processing.cache)) as Controller<T>;
-        this.resourceHandler = (<unknown> new resourceConstructor(this, this.processing.cache)) as Resource<T>;
-        this.extensionManager = (<unknown> new extensionManagerHandler(this, this.processing.cache)) as ExtensionManager<T>;
+        this.controllerHandler = (new controllerConstructor(this, this.processing.cache) as unknown) as Controller<T>;
+        this.resourceHandler = (new resourceConstructor(this, this.processing.cache) as unknown) as Resource<T>;
+        this.extensionManager = (new extensionManagerHandler(this, this.processing.cache) as unknown) as ExtensionManager<T>;
     }
 
     public registerController(handler: Controller<T>) {
@@ -224,10 +224,8 @@ export default class Application<T extends Node> implements squared.base.Applica
         const preloadImages: HTMLImageElement[] = [];
         const parseResume = () => {
             this.initialized = false;
-            if (preloadImages.length) {
-                for (const image of preloadImages) {
-                    documentRoot.removeChild(image);
-                }
+            for (const image of preloadImages) {
+                documentRoot.removeChild(image);
             }
             for (const [uri, image] of this.session.image.entries()) {
                 Resource.ASSETS.images.set(uri, image);
@@ -261,6 +259,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 __THEN.call(this);
             }
         };
+        const images: HTMLImageElement[] = [];
         if (this.userSettings.preloadImages) {
             for (const element of this.parseElements) {
                 element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => {
@@ -298,19 +297,18 @@ export default class Application<T extends Node> implements squared.base.Applica
                     }
                 }
             }
-        }
-        const images: HTMLImageElement[] = [];
-        for (const element of this.parseElements) {
-            element.querySelectorAll('IMG').forEach((image: HTMLImageElement) => {
-                if (image.tagName === 'IMG') {
-                    if (image.complete) {
-                        this.addImagePreload(image);
+            for (const element of this.parseElements) {
+                element.querySelectorAll('IMG').forEach((image: HTMLImageElement) => {
+                    if (image.tagName === 'IMG') {
+                        if (image.complete) {
+                            this.addImagePreload(image);
+                        }
+                        else {
+                            images.push(image);
+                        }
                     }
-                    else {
-                        images.push(image);
-                    }
-                }
-            });
+                });
+            }
         }
         if (images.length === 0) {
             parseResume();
@@ -438,13 +436,9 @@ export default class Application<T extends Node> implements squared.base.Applica
                     }
                 }
             }
-            if (!this.processing.depthMap.has(parent.id)) {
-                this.processing.depthMap.set(parent.id, new Map<string, string>());
-            }
-            const template = this.processing.depthMap.get(parent.id);
-            if (template) {
-                template.set(node.renderPositionId, output);
-            }
+            const template = this.processing.depthMap.get(parent.id) || new Map<string, string>();
+            template.set(node.renderPositionId, output);
+            this.processing.depthMap.set(parent.id, template);
         }
     }
 
@@ -465,27 +459,25 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     public saveRenderPosition(parent: T, required: boolean) {
-        let children: T[];
         if (parent.groupParent) {
             const baseParent = parent.parent as T;
             if (baseParent) {
-                const id = baseParent.id;
-                const mapParent = this._renderPosition.get(id);
+                const mapParent = this._renderPosition.get(baseParent.id);
                 let revised: T[] | undefined;
                 if (mapParent) {
-                    const previous = $util.filterArray(mapParent.children, item => !parent.contains(item)) as T[];
-                    if (parent.siblingIndex < previous.length) {
-                        previous.splice(parent.siblingIndex, 0, parent);
-                        for (let i = parent.siblingIndex + 1; i < previous.length; i++) {
-                            previous[i].siblingIndex = i;
+                    const children = $util.filterArray(mapParent.children, item => !parent.contains(item)) as T[];
+                    if (parent.siblingIndex < children.length) {
+                        children.splice(parent.siblingIndex, 0, parent);
+                        for (let i = parent.siblingIndex + 1; i < children.length; i++) {
+                            children[i].siblingIndex = i;
                         }
-                        revised = previous;
+                        revised = children;
                     }
                     else {
-                        parent.siblingIndex = previous.length;
-                        previous.push(parent);
+                        parent.siblingIndex = children.length;
+                        children.push(parent);
                     }
-                    this._renderPosition.set(id, { parent: baseParent, children: previous });
+                    this._renderPosition.set(baseParent.id, { parent: baseParent, children });
                 }
                 else {
                     revised = baseParent.children as T[];
@@ -501,13 +493,10 @@ export default class Application<T extends Node> implements squared.base.Applica
         }
         if (required) {
             const renderMap = this._renderPosition.get(parent.id);
-            if (renderMap) {
-                children = $util.concatArray($util.filterArray(renderMap.children, item => !parent.contains(item)), parent.children as T[]);
-            }
-            else {
-                children = parent.duplicate() as T[];
-            }
-            this._renderPosition.set(parent.id, { parent, children });
+            this._renderPosition.set(parent.id, {
+                parent,
+                children: renderMap ? $util.concatArray($util.filterArray(renderMap.children, item => !parent.contains(item)), parent.children as T[]) : parent.duplicate() as T[]
+            });
         }
     }
 
@@ -741,7 +730,7 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
             const checkTargeted = this.session.targeted.size > 0;
             for (const node of this.processing.cache) {
-                if (node.htmlElement && node.length) {
+                if (node.length) {
                     let i = 0;
                     (<HTMLElement> node.element).childNodes.forEach((element: Element) => {
                         const item = $dom.getElementAsNode<T>(element);
@@ -825,8 +814,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         let empty = true;
         function setMapY(depth: number, id: number, node: T) {
             const index = mapY.get(depth) || new Map<number, T>();
-            index.set(id, node);
-            mapY.set(depth, index);
+            mapY.set(depth, index.set(id, node));
         }
         function deleteMapY(id: number) {
             for (const mapNode of mapY.values()) {
@@ -865,7 +853,10 @@ export default class Application<T extends Node> implements squared.base.Applica
                 }
                 const axisY = parent.duplicate() as T[];
                 const hasFloat = axisY.some(node => node.floating);
-                const cleared = hasFloat ? NodeList.clearedAll(parent) : new Map<T, string>();
+                let cleared!: Map<T, string>;
+                if (hasFloat) {
+                    cleared = NodeList.clearedAll(parent);
+                }
                 let k = -1;
                 while (++k < axisY.length) {
                     let nodeY = axisY[k];
@@ -2030,7 +2021,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                     styleMap[attr] = value;
                 }
             }
-            if (this.userSettings.preloadImages && $util.hasValue(styleMap.backgroundImage) && styleMap.backgroundImage !== 'initial') {
+            if (this.userSettings.preloadImages && styleMap.backgroundImage && styleMap.backgroundImage !== 'initial') {
                 for (const value of styleMap.backgroundImage.split($util.REGEXP_COMPILED.SEPARATOR)) {
                     const uri = $css.resolveURL(value.trim());
                     if (uri !== '' && !this.session.image.has(uri)) {

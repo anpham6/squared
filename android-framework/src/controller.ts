@@ -92,7 +92,7 @@ function sortHorizontalFloat<T extends View>(list: T[]) {
                     return a.float === 'left' ? -1 : 1;
                 }
                 else if (a.float === 'right' && b.float === 'right') {
-                    return -1;
+                    return 1;
                 }
             }
             return 0;
@@ -203,7 +203,7 @@ function constraintPercentValue<T extends View>(node: T, dimension: string, valu
         }
         else if (value !== '100%') {
             const percent = parseInt(value) / 100 + (node.actualParent ? node.contentBoxWidth / node.actualParent.box.width : 0);
-            node.app(`layout_constraint${dimension}_percent`, percent.toPrecision(node.localSettings.constraintPercentPrecision));
+            node.app(`layout_constraint${dimension}_percent`, percent.toPrecision(node.localSettings.floatPrecision));
             node.android(`layout_${dimension.toLowerCase()}`, '0px');
         }
     }
@@ -331,7 +331,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         if (basis !== 'auto') {
             if ($util.isPercent(basis)) {
                 if (basis !== '0%') {
-                    node.app(`layout_constraint${horizontal ? 'Width' : 'Height'}_percent`, (parseFloat(basis) / 100).toPrecision(node.localSettings.constraintPercentPrecision));
+                    node.app(`layout_constraint${horizontal ? 'Width' : 'Height'}_percent`, (parseFloat(basis) / 100).toPrecision(node.localSettings.floatPrecision));
                     basis = '';
                 }
             }
@@ -396,8 +396,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             subscriptFontScale: -4
         },
         constraint: {
-            withinParentBottomOffset: 3.5,
-            percentPrecision: 4
+            withinParentBottomOffset: 3.5
         }
     };
 
@@ -1070,17 +1069,14 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     [/^(rgba?\(\d+, \d+, \d+(?:, [\d.]+)?\)) ([\d.]+[a-z]+) ([\d.]+[a-z]+) ([\d.]+[a-z]+)$/, /^([\d.]+[a-z]+) ([\d.]+[a-z]+) ([\d.]+[a-z]+) (.+)$/].some((pattern, index) => {
                         const match = node.css('textShadow').match(pattern);
                         if (match) {
-                            const color = $color.parseColor(match[index === 0 ? 1 : 4]);
-                            if (color) {
-                                const colorName = Resource.addColor(color);
-                                if (colorName !== '') {
-                                    node.android('shadowColor', `@color/${colorName}`);
-                                }
+                            const colorName = Resource.addColor($color.parseColor(match[index === 0 ? 1 : 4]));
+                            if (colorName !== '') {
+                                node.android('shadowColor', `@color/${colorName}`);
+                                node.android('shadowDx', $util.convertInt(match[index === 0 ? 2 : 1]).toString());
+                                node.android('shadowDy', $util.convertInt(match[index === 0 ? 3 : 2]).toString());
+                                node.android('shadowRadius', $util.convertInt(match[index === 0 ? 4 : 3]).toString());
+                                return true;
                             }
-                            node.android('shadowDx', $util.convertInt(match[index === 0 ? 2 : 1]).toString());
-                            node.android('shadowDy', $util.convertInt(match[index === 0 ? 3 : 2]).toString());
-                            node.android('shadowRadius', $util.convertInt(match[index === 0 ? 4 : 3]).toString());
-                            return true;
                         }
                         return false;
                     });
@@ -1246,7 +1242,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     }
                     if (percent) {
                         const position = Math.abs(node[dimension][LT] - documentParent.box[LT]) / documentParent.box[horizontal ? 'width' : 'height'];
-                        location = parseFloat((opposite ? 1 - position : position).toPrecision(this.localSettings.constraint.percentPrecision));
+                        location = parseFloat((opposite ? 1 - position : position).toPrecision(this.localSettings.floatPrecision));
                         usePercent = true;
                         beginPercent += 'percent';
                     }
@@ -1389,33 +1385,42 @@ export default class Controller<T extends View> extends squared.base.Controller<
         );
         const checkLineWrap = node.css('whiteSpace') !== 'nowrap';
         const firefoxEdge = $util.isUserAgent($util.USER_AGENT.FIREFOX | $util.USER_AGENT.EDGE);
-        const [right, left] = $util.partitionArray(children, item => item.float === 'right');
         const rows: T[][] = [];
         const rangeMultiLine = new Set<T>();
         let alignmentMultiLine = false;
         let rowWidth = 0;
         let rowPreviousLeft: T | undefined;
         let rowPreviousBottom: T | undefined;
-        sortHorizontalFloat(left);
-        for (const seg of [left, right]) {
-            const alignParent = seg === left ? 'left' : 'right';
+        $util.partitionArray(children, item => item.float !== 'right').forEach((seg, index) => {
+            if (seg.length === 0) {
+                return;
+            }
+            const leftAlign = index === 0;
+            let alignParent: string;
+            if (leftAlign) {
+                sortHorizontalFloat(seg);
+                alignParent = 'left';
+            }
+            else {
+                alignParent = 'right';
+            }
             for (let i = 0; i < seg.length; i++) {
                 const item = seg[i];
                 const previous = seg[i - 1];
-                let dimension = item.bounds;
-                if (item.element && !item.hasWidth && item.inlineText) {
-                    const bounds = $dom.getRangeClientRect(item.element);
-                    if (bounds.multiline > 0 || bounds.width < item.box.width) {
-                        dimension = bounds;
+                let bounds = item.bounds;
+                if (item.inlineText && !item.hasWidth) {
+                    const rect = $dom.getRangeClientRect(<Element> item.element);
+                    if (rect.multiline > 0 || rect.width < item.box.width) {
+                        bounds = rect;
                         if (!item.multiline) {
-                            item.multiline = bounds.multiline > 0;
+                            item.multiline = rect.multiline > 0;
                         }
-                        if (firefoxEdge && bounds.multiline && !$util.REGEXP_COMPILED.LEADINGNEWLINE.test(item.textContent)) {
+                        if (firefoxEdge && rect.multiline && !$util.REGEXP_COMPILED.LEADINGNEWLINE.test(item.textContent)) {
                             rangeMultiLine.add(item);
                         }
                     }
                 }
-                let alignSibling = seg === left ? 'leftRight' : 'rightLeft';
+                let alignSibling = leftAlign ? 'leftRight' : 'rightLeft';
                 let siblings: Element[] | undefined;
                 if (i === 0) {
                     item.anchor(alignParent, 'true');
@@ -1424,8 +1429,14 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 else {
                     function checkWidthWrap() {
                         if (!item.rightAligned) {
-                            const baseWidth = (rowPreviousLeft && rows.length > 1 ? rowPreviousLeft.linear.width : 0) + rowWidth + item.marginLeft + (previous.float === 'left' && !cleared.has(item) ? 0 : dimension.width) - (firefoxEdge ? item.borderRightWidth : 0);
-                            return Math.floor(baseWidth) - (item.styleElement && item.inlineStatic ? item.paddingLeft + item.paddingRight : 0) > boxWidth;
+                            let baseWidth = rowWidth + item.marginLeft + bounds.width;
+                            if (rowPreviousLeft && !rowItems.includes(rowPreviousLeft)) {
+                                baseWidth += rowPreviousLeft.linear.width;
+                            }
+                            if (rowPreviousLeft === undefined || !rowItems.includes(rowPreviousLeft) || cleared.has(item)) {
+                                baseWidth += bounds.width;
+                            }
+                            return Math.floor(baseWidth) - (item.styleElement && item.inlineStatic ? item.paddingLeft + item.paddingRight : 0) - (firefoxEdge ? item.borderRightWidth : 0) > boxWidth;
                         }
                         return false;
                     }
@@ -1455,15 +1466,8 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     if (startNewRow || (
                             viewGroup ||
                             !item.textElement && checkWidthWrap() ||
-                            item.linear.top >= previous.linear.bottom && (
-                                item.blockStatic ||
-                                item.floating && previous.float === item.float
-                            ) ||
-                            !item.floating && (
-                                previous.blockStatic ||
-                                previousSiblings.some(sibling => sibling.lineBreak || sibling.excluded && sibling.blockStatic) ||
-                                siblings !== undefined && siblings.some(element => $element.isLineBreak(element))
-                            ) ||
+                            item.linear.top >= previous.linear.bottom && (item.blockStatic || item.floating && previous.float === item.float) ||
+                            !item.floating && (previous.blockStatic || previousSiblings.some(sibling => sibling.lineBreak || sibling.excluded && sibling.blockStatic) || siblings !== undefined && siblings.some(element => $element.isLineBreak(element))) ||
                             cleared.has(item)
                        ))
                     {
@@ -1497,23 +1501,30 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         rowItems.push(item);
                     }
                 }
-                if (item.float === 'left') {
-                    rowPreviousLeft = item;
+                if (item.float === 'left' && leftAlign) {
+                    if (rowPreviousLeft) {
+                        if (item.linear.bottom >= rowPreviousLeft.linear.bottom) {
+                            rowPreviousLeft = item;
+                        }
+                    }
+                    else {
+                        rowPreviousLeft = item;
+                    }
                 }
                 let previousOffset = 0;
                 if (siblings && !siblings.some(element => !!$dom.getElementAsNode(element) || $element.isLineBreak(element))) {
                     const betweenStart = $dom.getRangeClientRect(siblings[0]);
-                    const betweenEnd = siblings.length > 1 ? $dom.getRangeClientRect(siblings[siblings.length - 1]) : null;
-                    if (!betweenStart.multiline && (betweenEnd === null || !betweenEnd.multiline)) {
+                    const betweenEnd = siblings.length > 1 ? $dom.getRangeClientRect(siblings[siblings.length - 1]) : undefined;
+                    if (!betweenStart.multiline && (betweenEnd === undefined || !betweenEnd.multiline)) {
                         previousOffset = betweenEnd ? betweenStart.left - betweenEnd.right : betweenStart.width;
                     }
                 }
-                rowWidth += previousOffset + item.marginLeft + dimension.width + item.marginRight;
+                rowWidth += previousOffset + item.marginLeft + bounds.width + item.marginRight;
                 if (i < seg.length - 1 && Math.ceil(rowWidth) >= this.userSettings.maxWordWrapWidth && !item.alignParent(alignParent)) {
                     checkSingleLine(item, checkLineWrap);
                 }
             }
-        }
+        });
         if (rows.length > 1) {
             node.alignmentType |= $enum.NODE_ALIGNMENT.MULTILINE;
             alignmentMultiLine = true;
@@ -1709,14 +1720,14 @@ export default class Controller<T extends View> extends squared.base.Controller<
             for (const item of column) {
                 let percent = 0;
                 if (item.has('width', $enum.CSS_STANDARD.PERCENT)) {
-                    percent = item.toInt('width') / 100;
+                    percent = item.toFloat('width') / 100;
                 }
                 else {
                     percent = (1 / columnCount) - percentGap;
                 }
                 if (percent > 0) {
                     item.android('layout_width', '0px');
-                    item.app('layout_constraintWidth_percent', percent.toPrecision(this.localSettings.constraint.percentPrecision));
+                    item.app('layout_constraintWidth_percent', percent.toPrecision(this.localSettings.floatPrecision));
                 }
             }
             chainVertical.push(column);
@@ -1921,8 +1932,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             target.localSettings = {
                 targetAPI: settings.targetAPI !== undefined ? settings.targetAPI : BUILD_ANDROID.LATEST,
                 supportRTL: settings.supportRTL !== undefined ? settings.supportRTL : true,
-                floatPrecision: this.localSettings.floatPrecision,
-                constraintPercentPrecision: this.localSettings.constraint.percentPrecision
+                floatPrecision: this.localSettings.floatPrecision
             };
         };
     }

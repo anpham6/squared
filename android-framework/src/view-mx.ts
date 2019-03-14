@@ -109,8 +109,7 @@ export default (Base: Constructor<squared.base.Node>) => {
         private _localSettings: LocalSettings = {
             targetAPI: BUILD_ANDROID.LATEST,
             supportRTL: false,
-            floatPrecision: 3,
-            constraintPercentPrecision: 4
+            floatPrecision: 3
         };
         private __android: StringMap = {};
         private __app: StringMap = {};
@@ -333,7 +332,7 @@ export default (Base: Constructor<squared.base.Node>) => {
             if (parent !== this) {
                 const left = Math.max(0, this.linear.left - parent.box.left);
                 const right = Math.max(0, parent.box.right - this.linear.right);
-                return calculateBias(left, right, this.localSettings.constraintPercentPrecision);
+                return calculateBias(left, right, this.localSettings.floatPrecision);
             }
             return 0.5;
         }
@@ -343,7 +342,7 @@ export default (Base: Constructor<squared.base.Node>) => {
             if (parent !== this) {
                 const top = Math.max(0, this.linear.top - parent.box.top);
                 const bottom = Math.max(0, parent.box.bottom - this.linear.bottom);
-                return calculateBias(top, bottom, this.localSettings.constraintPercentPrecision);
+                return calculateBias(top, bottom, this.localSettings.floatPrecision);
             }
             return 0.5;
         }

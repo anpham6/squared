@@ -34,7 +34,6 @@ export interface ControllerSettings {
     };
     constraint: {
         withinParentBottomOffset: number;
-        percentPrecision: number;
     };
 }
 

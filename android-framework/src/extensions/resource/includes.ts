@@ -22,12 +22,11 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                 const openTag = $util.hasValue(item.dataset.androidInclude);
                 const closeTag = item.dataset.androidIncludeEnd === 'true';
                 if (openTag || closeTag) {
-                    const merge = item.dataset.androidIncludeMerge === 'true';
                     const data: NodeRenderIndex = {
                         item,
                         name: (item.dataset.androidInclude || '').trim(),
                         index,
-                        merge
+                        merge: item.dataset.androidIncludeMerge === 'true'
                     };
                     if (openTag) {
                         open.push(data);
@@ -73,8 +72,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                             const item = parent.find(sibling => sibling.renderPositionId === key);
                                             if (item) {
                                                 if (k === 0) {
-                                                    const xml = this.application.controllerHandler.renderNodeStatic('include', item.renderDepth, { layout: `@layout/${openData.name}` });
-                                                    templates.set(key, xml);
+                                                    templates.set(key, this.application.controllerHandler.renderNodeStatic('include', item.renderDepth, { layout: `@layout/${openData.name}` }));
                                                     k++;
                                                 }
                                                 else {
@@ -95,10 +93,10 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                     const depth = merge ? 1 : 0;
                                     for (const item of group) {
                                         if (item.renderDepth !== depth) {
-                                            const key = item.renderPositionId;
-                                            const output = content.get(key);
+                                            const id = item.renderPositionId;
+                                            const output = content.get(id);
                                             if (output) {
-                                                content.set(key, controller.replaceIndent(output, depth, controller.cache.children));
+                                                content.set(id, controller.replaceIndent(output, depth, controller.cache.children));
                                             }
                                         }
                                     }
