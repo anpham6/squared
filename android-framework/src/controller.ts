@@ -8,7 +8,7 @@ import ViewGroup from './viewgroup';
 
 import { AXIS_ANDROID, BOX_ANDROID, CONTAINER_ANDROID, XMLNS_ANDROID } from './lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
-import { createViewAttribute, getXmlNs, replaceTab, replaceLength } from './lib/util';
+import { createViewAttribute, getXmlNs, replaceLength } from './lib/util';
 
 import BASE_TMPL from './template/base';
 
@@ -422,7 +422,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         }
         for (const view of templates) {
             view.content = this.removePlaceholders(
-                replaceTab(
+                $xml.replaceTab(
                     replaceLength(
                         view.content.replace(/{#0}/, getRootNamespace(view.content)),
                         this.userSettings.resolutionDPI,
@@ -486,7 +486,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             else {
                 layout.init();
                 if (node.element && $element.hasLineBreak(node.element, true)) {
-                    layout.setType(CONTAINER_NODE.LINEAR, $enum.NODE_ALIGNMENT.VERTICAL, $enum.NODE_ALIGNMENT.UNKNOWN);
+                    layout.setType(layout.some(item => item.positionRelative && !item.positionAuto) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR, $enum.NODE_ALIGNMENT.VERTICAL, $enum.NODE_ALIGNMENT.UNKNOWN);
                 }
                 else if (this.checkConstraintFloat(layout)) {
                     layout.setType(CONTAINER_NODE.CONSTRAINT, $enum.NODE_ALIGNMENT.NOWRAP);
@@ -510,7 +510,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     layout.add($enum.NODE_ALIGNMENT.HORIZONTAL);
                 }
                 else if (layout.linearY) {
-                    layout.setType(CONTAINER_NODE.LINEAR, $enum.NODE_ALIGNMENT.VERTICAL, node.documentRoot ? $enum.NODE_ALIGNMENT.UNKNOWN : 0);
+                    layout.setType(layout.some(item => item.positionRelative && !item.positionAuto) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR, $enum.NODE_ALIGNMENT.VERTICAL, node.documentRoot ? $enum.NODE_ALIGNMENT.UNKNOWN : 0);
                 }
                 else if (layout.every(item => item.inlineFlow)) {
                     if (this.checkFrameHorizontal(layout)) {
@@ -630,11 +630,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     below.push(item);
                 }
             }
-            return $util.concatMultiArray(
-                $util.sortArray(below, true, 'zIndex', 'id'),
-                middle,
-                $util.sortArray(above, true, 'zIndex', 'id')
-            );
+            return $util.concatMultiArray($util.sortArray(below, true, 'zIndex', 'id'), middle, $util.sortArray(above, true, 'zIndex', 'id'));
         }
         return [];
     }
@@ -674,12 +670,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             }
             previousHeight = height;
         }
-        return (
-            !sameHeight &&
-            !layout.parent.hasHeight &&
-            layout.some(node => node.verticalAlign === 'bottom') &&
-            layout.every(node => node.inlineVertical && (node.baseline || node.verticalAlign === 'bottom'))
-        );
+        return !sameHeight && !layout.parent.hasHeight && layout.some(node => node.verticalAlign === 'bottom') && layout.every(node => node.inlineVertical && (node.baseline || node.verticalAlign === 'bottom'));
     }
 
     public checkRelativeHorizontal(layout: $Layout<T>) {
@@ -1289,22 +1280,18 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             [beginPercent]: usePercent ? location.toString() : $util.formatPX(location)
                         }
                     });
-                    this.appendAfter(
-                        node.id,
-                        this.renderNodeStatic(
-                            CONTAINER_ANDROID.GUIDELINE,
-                            node.renderDepth,
-                            options,
-                            'wrap_content',
-                            'wrap_content'
-                        )
-                    );
+                    this.appendAfter(node.id, this.renderNodeStatic(CONTAINER_ANDROID.GUIDELINE, node.renderDepth, options, 'wrap_content', 'wrap_content'));
                     const documentId: string = options['documentId'];
                     node.anchor(LT, documentId, true);
                     node.anchorDelete(RB);
+                    if (horizontal) {
+                        node.constraint.guidelineHorizontal = documentId;
+                    }
+                    else {
+                        node.constraint.guidelineVertical = documentId;
+                    }
                     $util.assignEmptyValue(guideline, value, beginPercent, LT, documentId, location.toString());
                     parent.constraint.guideline = guideline;
-                    node.constraint[horizontal ? 'guidelineHorizontal' : 'guidelineVertical'] = documentId;
                 }
             }
         });
@@ -1347,209 +1334,227 @@ export default class Controller<T extends View> extends squared.base.Controller<
             node.parent = container;
         }
         container.saveAsInitial();
+        container.innerChild = node;
         this.application.processing.cache.append(container, !parent);
+        node.outerParent = container;
         node.unsetCache();
         return container;
     }
 
     protected processRelativeHorizontal(node: T, children: T[]) {
-        const cleared = $NodeList.cleared(children);
-        const boxWidth = Math.min(
-            (() => {
-                const renderParent = node.renderParent;
-                if (renderParent) {
-                    if (renderParent.overflowX) {
-                        if (node.has('width', $enum.CSS_STANDARD.LENGTH)) {
-                            return node.toFloat('width', true);
-                        }
-                        else if (renderParent.has('width', $enum.CSS_STANDARD.LENGTH)) {
-                            return renderParent.toFloat('width', true);
-                        }
-                        else if (renderParent.has('width', $enum.CSS_STANDARD.PERCENT)) {
-                            return renderParent.actualWidth - renderParent.contentBoxWidth;
-                        }
-                    }
-                    else {
-                        let floatStart = Number.NEGATIVE_INFINITY;
-                        $util.captureMap(renderParent.children, item => item.float === 'left' && item.siblingIndex < node.siblingIndex, item => floatStart = Math.max(floatStart, item.linear.right));
-                        if (floatStart !== Number.NEGATIVE_INFINITY && children.some(item => item.linear.left === floatStart)) {
-                            return node.box.right - floatStart;
-                        }
-                    }
-                }
-                return node.box.width;
-            })(),
-            this.userSettings.maxWordWrapWidth
-        );
-        const checkLineWrap = node.css('whiteSpace') !== 'nowrap';
-        const firefoxEdge = $util.isUserAgent($util.USER_AGENT.FIREFOX | $util.USER_AGENT.EDGE);
-        const rows: T[][] = [];
-        const rangeMultiLine = new Set<T>();
+        const alignmentVertical = node.hasAlign($enum.NODE_ALIGNMENT.VERTICAL);
         let alignmentMultiLine = false;
-        let rowWidth = 0;
-        let rowPreviousLeft: T | undefined;
-        let rowPreviousBottom: T | undefined;
-        $util.partitionArray(children, item => item.float !== 'right').forEach((seg, index) => {
-            if (seg.length === 0) {
-                return;
-            }
-            const leftAlign = index === 0;
-            let leftForward = true;
-            let alignParent: string;
-            if (leftAlign) {
-                const actualParent = $NodeList.actualParent(seg);
-                if (actualParent && actualParent.cssInitialAny('textAlign', 'right', 'end')) {
-                    alignParent = 'right';
-                    leftForward = false;
-                }
-                else {
-                    alignParent = 'left';
-                }
-                sortHorizontalFloat(seg);
-            }
-            else {
-                alignParent = 'right';
-            }
-            for (let i = 0; i < seg.length; i++) {
-                const item = seg[i];
-                const previous = seg[i - 1];
-                let bounds = item.bounds;
-                if (item.inlineText && !item.hasWidth) {
-                    const rect = $dom.getRangeClientRect(<Element> item.element);
-                    if (rect.multiline > 0 || rect.width < item.box.width) {
-                        bounds = rect;
-                        if (!item.multiline) {
-                            item.multiline = rect.multiline > 0;
-                        }
-                        if (firefoxEdge && rect.multiline && !$util.REGEXP_COMPILED.LEADINGNEWLINE.test(item.textContent)) {
-                            rangeMultiLine.add(item);
-                        }
-                    }
-                }
-                let alignSibling = leftAlign && leftForward ? 'leftRight' : 'rightLeft';
-                let siblings: Element[] | undefined;
+        const rows: T[][] = [];
+        if (alignmentVertical) {
+            for (let i = 0; i < children.length; i++) {
+                const item = children[i];
+                const previous = children[i - 1];
                 if (i === 0) {
-                    if (leftForward) {
-                        item.anchor(alignParent, 'true');
-                        rows.push([item]);
-                    }
-                    else {
-                        rows.push([]);
-                    }
+                    item.anchor('top', 'true');
                 }
                 else {
-                    const rowItems = rows[rows.length - 1];
-                    function checkWidthWrap() {
-                        let baseWidth = rowWidth + item.marginLeft;
-                        if (rowPreviousLeft && !rowItems.includes(rowPreviousLeft)) {
-                            baseWidth += rowPreviousLeft.linear.width;
-                        }
-                        if (rowPreviousLeft === undefined || !item.plainText || !rowItems.includes(rowPreviousLeft) || cleared.has(item)) {
-                            baseWidth += bounds.width;
-                        }
-                        return Math.floor(baseWidth) - (item.styleElement && item.inlineStatic ? item.paddingLeft + item.paddingRight : 0) - (firefoxEdge ? item.borderRightWidth : 0) > boxWidth;
-                    }
-                    if (adjustFloatingNegativeMargin(item, previous)) {
-                        alignSibling = '';
-                    }
-                    const viewGroup = item.groupParent && !item.hasAlign($enum.NODE_ALIGNMENT.SEGMENTED);
-                    siblings = !viewGroup && item.element && item.inlineVertical && previous.inlineVertical ? $dom.getElementsBetweenSiblings(previous.element, item.element, true) : undefined;
-                    const startNewRow = (() => {
-                        if (item.textElement) {
-                            if (previous.textElement) {
-                                if (i === 1 && siblings === undefined && item.plainText && !$util.REGEXP_COMPILED.TRAILINGSPACE.test(previous.textContent) && !$util.REGEXP_COMPILED.LEADINGSPACE.test(item.textContent)) {
-                                    return false;
-                                }
-                                else if (checkLineWrap && (rangeMultiLine.has(previous) || previous.multiline && $element.hasLineBreak(<Element> previous.element, false, true))) {
-                                    return true;
-                                }
+                    item.anchor('topBottom', previous.documentId);
+                }
+                rows.push([item]);
+            }
+        }
+        else {
+            const cleared = $NodeList.cleared(children);
+            const boxWidth = Math.min(
+                (() => {
+                    const renderParent = node.renderParent;
+                    if (renderParent) {
+                        if (renderParent.overflowX) {
+                            if (node.has('width', $enum.CSS_STANDARD.LENGTH)) {
+                                return node.toFloat('width', true);
                             }
-                            if (checkLineWrap && (checkWidthWrap() || item.multiline && $element.hasLineBreak(<Element> item.element) || item.preserveWhiteSpace && $util.REGEXP_COMPILED.LEADINGNEWLINE.test(item.textContent))) {
-                                return true;
+                            else if (renderParent.has('width', $enum.CSS_STANDARD.LENGTH)) {
+                                return renderParent.toFloat('width', true);
                             }
-                        }
-                        return false;
-                    })();
-                    if (startNewRow || (
-                            viewGroup ||
-                            !item.textElement && checkWidthWrap() ||
-                            item.linear.top >= previous.linear.bottom && (item.blockStatic || item.floating && previous.float === item.float) ||
-                            !item.floating && (previous.blockStatic || item.previousSiblings().some(sibling => sibling.lineBreak || sibling.excluded && sibling.blockStatic) || siblings !== undefined && siblings.some(element => $element.isLineBreak(element))) ||
-                            cleared.has(item)
-                       ))
-                    {
-                        rowPreviousBottom = rowItems.find(sibling => !sibling.floating) || rowItems[0];
-                        for (const sibling of rowItems) {
-                            if (sibling !== rowPreviousBottom && sibling.linear.bottom > rowPreviousBottom.linear.bottom && (!sibling.floating || (sibling.floating && rowPreviousBottom.floating))) {
-                                rowPreviousBottom = sibling;
-                            }
-                        }
-                        item.anchor('topBottom', rowPreviousBottom.documentId);
-                        if (leftForward) {
-                            if (rowPreviousLeft && item.linear.bottom <= rowPreviousLeft.bounds.bottom) {
-                                item.anchor(alignSibling, rowPreviousLeft.documentId);
-                            }
-                            else {
-                                item.anchor(alignParent, 'true');
-                                rowPreviousLeft = undefined;
+                            else if (renderParent.has('width', $enum.CSS_STANDARD.PERCENT)) {
+                                return renderParent.actualWidth - renderParent.contentBoxWidth;
                             }
                         }
                         else {
-                            if (rowPreviousLeft && item.linear.bottom > rowPreviousLeft.bounds.bottom) {
-                                rowPreviousLeft = undefined;
+                            let floatStart = Number.NEGATIVE_INFINITY;
+                            $util.captureMap(renderParent.children, item => item.float === 'left' && item.siblingIndex < node.siblingIndex, item => floatStart = Math.max(floatStart, item.linear.right));
+                            if (floatStart !== Number.NEGATIVE_INFINITY && children.some(item => item.linear.left === floatStart)) {
+                                return node.box.right - floatStart;
                             }
-                            previous.anchor(alignParent, 'true');
                         }
-                        if (startNewRow && item.multiline) {
-                            checkSingleLine(previous, checkLineWrap);
-                        }
-                        rowWidth = Math.min(0, startNewRow && !previous.multiline && item.multiline && !cleared.has(item) ? item.linear.right - node.box.right : 0);
-                        rows.push([item]);
+                    }
+                    return node.box.width;
+                })(),
+                this.userSettings.maxWordWrapWidth
+            );
+            const firefoxEdge = $util.isUserAgent($util.USER_AGENT.FIREFOX | $util.USER_AGENT.EDGE);
+            const checkLineWrap = node.css('whiteSpace') !== 'nowrap';
+            const rangeMultiLine = new Set<T>();
+            let rowWidth = 0;
+            let rowPreviousLeft: T | undefined;
+            let rowPreviousBottom: T | undefined;
+            $util.partitionArray(children, item => item.float !== 'right').forEach((seg, index) => {
+                if (seg.length === 0) {
+                    return;
+                }
+                const leftAlign = index === 0;
+                let leftForward = true;
+                let alignParent: string;
+                if (leftAlign) {
+                    const actualParent = $NodeList.actualParent(seg);
+                    if (actualParent && actualParent.cssInitialAny('textAlign', 'right', 'end')) {
+                        alignParent = 'right';
+                        leftForward = false;
                     }
                     else {
-                        if (alignSibling !== '') {
+                        alignParent = 'left';
+                    }
+                    sortHorizontalFloat(seg);
+                }
+                else {
+                    alignParent = 'right';
+                }
+                for (let i = 0; i < seg.length; i++) {
+                    const item = seg[i];
+                    const previous = seg[i - 1];
+                    let bounds = item.bounds;
+                    if (item.inlineText && !item.hasWidth) {
+                        const rect = $dom.getRangeClientRect(<Element> item.element);
+                        if (rect.multiline > 0 || rect.width < item.box.width) {
+                            bounds = rect;
+                            if (!item.multiline) {
+                                item.multiline = rect.multiline > 0;
+                            }
+                            if (firefoxEdge && rect.multiline && !$util.REGEXP_COMPILED.LEADINGNEWLINE.test(item.textContent)) {
+                                rangeMultiLine.add(item);
+                            }
+                        }
+                    }
+                    let alignSibling = leftAlign && leftForward ? 'leftRight' : 'rightLeft';
+                    let siblings: Element[] | undefined;
+                    if (i === 0) {
+                        if (leftForward) {
+                            item.anchor(alignParent, 'true');
+                            rows.push([item]);
+                        }
+                        else {
+                            rows.push([]);
+                        }
+                    }
+                    else {
+                        const rowItems = rows[rows.length - 1];
+                        function checkWidthWrap() {
+                            let baseWidth = rowWidth + item.marginLeft;
+                            if (rowPreviousLeft && !rowItems.includes(rowPreviousLeft)) {
+                                baseWidth += rowPreviousLeft.linear.width;
+                            }
+                            if (rowPreviousLeft === undefined || !item.plainText || !rowItems.includes(rowPreviousLeft) || cleared.has(item)) {
+                                baseWidth += bounds.width;
+                            }
+                            return Math.floor(baseWidth) - (item.styleElement && item.inlineStatic ? item.paddingLeft + item.paddingRight : 0) - (firefoxEdge ? item.borderRightWidth : 0) > boxWidth;
+                        }
+                        if (adjustFloatingNegativeMargin(item, previous)) {
+                            alignSibling = '';
+                        }
+                        const viewGroup = item.groupParent && !item.hasAlign($enum.NODE_ALIGNMENT.SEGMENTED);
+                        siblings = !viewGroup && item.element && item.inlineVertical && previous.inlineVertical ? $dom.getElementsBetweenSiblings(previous.element, item.element, true) : undefined;
+                        const startNewRow = alignmentVertical || (() => {
+                            if (item.textElement) {
+                                if (previous.textElement) {
+                                    if (i === 1 && siblings === undefined && item.plainText && !$util.REGEXP_COMPILED.TRAILINGSPACE.test(previous.textContent) && !$util.REGEXP_COMPILED.LEADINGSPACE.test(item.textContent)) {
+                                        return false;
+                                    }
+                                    else if (checkLineWrap && (rangeMultiLine.has(previous) || previous.multiline && $element.hasLineBreak(<Element> previous.element, false, true))) {
+                                        return true;
+                                    }
+                                }
+                                if (checkLineWrap && (checkWidthWrap() || item.multiline && $element.hasLineBreak(<Element> item.element) || item.preserveWhiteSpace && $util.REGEXP_COMPILED.LEADINGNEWLINE.test(item.textContent))) {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        })();
+                        if (startNewRow || (
+                                viewGroup ||
+                                !item.textElement && checkWidthWrap() ||
+                                item.linear.top >= previous.linear.bottom && (item.blockStatic || item.floating && previous.float === item.float) ||
+                                !item.floating && (previous.blockStatic || item.previousSiblings().some(sibling => sibling.lineBreak || sibling.excluded && sibling.blockStatic) || siblings !== undefined && siblings.some(element => $element.isLineBreak(element))) ||
+                                cleared.has(item)
+                           ))
+                        {
+                            rowPreviousBottom = rowItems.find(sibling => !sibling.floating) || rowItems[0];
+                            for (const sibling of rowItems) {
+                                if (sibling !== rowPreviousBottom && sibling.linear.bottom > rowPreviousBottom.linear.bottom && (!sibling.floating || (sibling.floating && rowPreviousBottom.floating))) {
+                                    rowPreviousBottom = sibling;
+                                }
+                            }
+                            item.anchor('topBottom', rowPreviousBottom.documentId);
                             if (leftForward) {
-                                item.anchor(alignSibling, previous.documentId);
+                                if (rowPreviousLeft && item.linear.bottom <= rowPreviousLeft.bounds.bottom) {
+                                    item.anchor(alignSibling, rowPreviousLeft.documentId);
+                                }
+                                else {
+                                    item.anchor(alignParent, 'true');
+                                    rowPreviousLeft = undefined;
+                                }
                             }
                             else {
-                                previous.anchor(alignSibling, item.documentId);
+                                if (rowPreviousLeft && item.linear.bottom > rowPreviousLeft.bounds.bottom) {
+                                    rowPreviousLeft = undefined;
+                                }
+                                previous.anchor(alignParent, 'true');
+                            }
+                            if (startNewRow && item.multiline) {
+                                checkSingleLine(previous, checkLineWrap);
+                            }
+                            rowWidth = Math.min(0, startNewRow && !previous.multiline && item.multiline && !cleared.has(item) ? item.linear.right - node.box.right : 0);
+                            rows.push([item]);
+                        }
+                        else {
+                            if (alignSibling !== '') {
+                                if (leftForward) {
+                                    item.anchor(alignSibling, previous.documentId);
+                                }
+                                else {
+                                    previous.anchor(alignSibling, item.documentId);
+                                }
+                            }
+                            if (rowPreviousBottom) {
+                                item.anchor('topBottom', rowPreviousBottom.documentId);
+                            }
+                            rowItems.push(item);
+                        }
+                    }
+                    if (item.float === 'left' && leftAlign) {
+                        if (rowPreviousLeft) {
+                            if (item.linear.bottom >= rowPreviousLeft.linear.bottom) {
+                                rowPreviousLeft = item;
                             }
                         }
-                        if (rowPreviousBottom) {
-                            item.anchor('topBottom', rowPreviousBottom.documentId);
-                        }
-                        rowItems.push(item);
-                    }
-                }
-                if (item.float === 'left' && leftAlign) {
-                    if (rowPreviousLeft) {
-                        if (item.linear.bottom >= rowPreviousLeft.linear.bottom) {
+                        else {
                             rowPreviousLeft = item;
                         }
                     }
-                    else {
-                        rowPreviousLeft = item;
+                    let previousOffset = 0;
+                    if (siblings && !siblings.some(element => !!$dom.getElementAsNode(element) || $element.isLineBreak(element))) {
+                        const betweenStart = $dom.getRangeClientRect(siblings[0]);
+                        const betweenEnd = siblings.length > 1 ? $dom.getRangeClientRect(siblings[siblings.length - 1]) : undefined;
+                        if (!betweenStart.multiline && (betweenEnd === undefined || !betweenEnd.multiline)) {
+                            previousOffset = betweenEnd ? betweenStart.left - betweenEnd.right : betweenStart.width;
+                        }
+                    }
+                    rowWidth += previousOffset + item.marginLeft + bounds.width + item.marginRight;
+                    if (i < seg.length - 1) {
+                        if (Math.ceil(rowWidth) >= this.userSettings.maxWordWrapWidth && !item.alignParent(alignParent)) {
+                            checkSingleLine(item, checkLineWrap);
+                        }
+                    }
+                    else if (!leftForward) {
+                        item.anchor(alignParent, 'true');
                     }
                 }
-                let previousOffset = 0;
-                if (siblings && !siblings.some(element => !!$dom.getElementAsNode(element) || $element.isLineBreak(element))) {
-                    const betweenStart = $dom.getRangeClientRect(siblings[0]);
-                    const betweenEnd = siblings.length > 1 ? $dom.getRangeClientRect(siblings[siblings.length - 1]) : undefined;
-                    if (!betweenStart.multiline && (betweenEnd === undefined || !betweenEnd.multiline)) {
-                        previousOffset = betweenEnd ? betweenStart.left - betweenEnd.right : betweenStart.width;
-                    }
-                }
-                rowWidth += previousOffset + item.marginLeft + bounds.width + item.marginRight;
-                if (i < seg.length - 1) {
-                    if (Math.ceil(rowWidth) >= this.userSettings.maxWordWrapWidth && !item.alignParent(alignParent)) {
-                        checkSingleLine(item, checkLineWrap);
-                    }
-                }
-                else if (!leftForward) {
-                    item.anchor(alignParent, 'true');
-                }
-            }
-        });
+            });
+        }
         if (rows.length > 1) {
             node.alignmentType |= $enum.NODE_ALIGNMENT.MULTILINE;
             alignmentMultiLine = true;
@@ -1867,20 +1872,23 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     const previousRow = chainHorizontal[i - 1];
                     const aboveEnd = previousRow[previousRow.length - 1];
                     const previousEnd = reverse ? rowEnd : rowStart;
-                    const nodes: T[] = [];
-                    if (aboveEnd) {
-                        nodes.push(aboveEnd);
-                        if (chain.element) {
-                            const elements = $dom.getElementsBetweenSiblings(aboveEnd.element, chain.element);
-                            if (elements) {
-                                $util.concatArray(nodes, $util.flatMap(elements, element => $dom.getElementAsNode<T>(element) as T));
+                    let nodes: T[] | undefined;
+                    if (!cleared.has(chain)) {
+                        nodes = [];
+                        if (aboveEnd) {
+                            nodes.push(aboveEnd);
+                            if (chain.element) {
+                                const elements = $dom.getElementsBetweenSiblings(aboveEnd.element, chain.element);
+                                if (elements) {
+                                    $util.concatArray(nodes, $util.flatMap(elements, element => $dom.getElementAsNode<T>(element) as T));
+                                }
                             }
                         }
+                        else {
+                            nodes.push(previousEnd);
+                        }
                     }
-                    else {
-                        nodes.push(previousEnd);
-                    }
-                    if (floating && (cleared.size === 0 || !nodes.some(item => cleared.has(item)))) {
+                    if (floating && (cleared.size === 0 || nodes && !nodes.some(item => cleared.has(item)))) {
                         if (previousRow.length) {
                             chain.anchor('topBottom', aboveEnd.documentId);
                             if (aboveEnd.alignSibling('bottomTop') === '') {

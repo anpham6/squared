@@ -29,6 +29,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public controlId = '';
     public style!: CSSStyleDeclaration;
     public renderExtension?: Extension<T>[];
+    public outerParent?: T;
+    public innerChild?: T;
     public companion?: T;
     public extracted?: T[];
 
@@ -368,7 +370,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 if (cleared && cleared.has(this)) {
                     return true;
                 }
-                else if (checkFloat && this.floating && (this.linear.top >= siblings[siblings.length - 1].linear.bottom || this.float === 'left' && siblings.find(node => node.siblingIndex < this.siblingIndex && $util.withinRange(this.linear.left, node.linear.left)) !== undefined || this.float === 'right' && siblings.find(node => node.siblingIndex < this.siblingIndex && $util.withinRange(this.linear.right, node.linear.right)) !== undefined)) {
+                else if (checkFloat && this.floating && (this.linear.top >= Math.floor(siblings[siblings.length - 1].linear.bottom) || this.float === 'left' && siblings.find(node => node.siblingIndex < this.siblingIndex && $util.withinRange(this.linear.left, node.linear.left)) !== undefined || this.float === 'right' && siblings.find(node => node.siblingIndex < this.siblingIndex && $util.withinRange(this.linear.right, node.linear.right)) !== undefined)) {
                     return true;
                 }
             }
@@ -706,13 +708,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (this.styleElement) {
             this._bounds = $dom.assignRect((<HTMLElement> this._element).getBoundingClientRect());
             if (this.documentBody) {
-                if (this.marginTop > 0) {
+                let marginTop = this.marginTop;
+                if (marginTop > 0) {
                     const firstChild = this.firstChild;
-                    if (firstChild && firstChild.blockStatic && !firstChild.lineBreak && firstChild.marginTop >= this.marginTop) {
-                        this.css('marginTop', '0px', true);
+                    if (firstChild && firstChild.blockStatic && !firstChild.lineBreak && firstChild.marginTop >= marginTop) {
+                        marginTop = 0;
                     }
                 }
-                this._bounds.top = this.marginTop;
+                this._bounds.top = marginTop;
             }
         }
         else if (this.plainText) {
@@ -771,8 +774,15 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         const applyReset = (attrs: string[], start: number) => {
             for (let i = 0; i < attrs.length; i++) {
                 this._boxReset[attrs[i]] = 1;
-                if (node) {
-                    node.modifyBox(CSS_SPACING_KEYS[i + (fromParent ? 0 : 4)], this[CSS_SPACING.get(CSS_SPACING_KEYS[i + start]) as string]);
+                const attr = CSS_SPACING.get(CSS_SPACING_KEYS[i + start]) as string;
+                const value = this[attr];
+                if (node && value !== 0) {
+                    if (!node.naturalElement && node[attr] === 0) {
+                        node.css(attr, $util.formatPX(value));
+                    }
+                    else {
+                        node.modifyBox(CSS_SPACING_KEYS[i + (fromParent ? 0 : 4)], value);
+                    }
                 }
             }
         };
@@ -1321,16 +1331,16 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get borderTopWidth() {
-        return this.css('borderTopStyle') !== 'none' ? $util.convertInt(this.css('borderTopWidth')) : 0;
+        return this.has('borderTopStyle') ? this.toInt('borderTopWidth') : 0;
     }
     get borderRightWidth() {
-        return this.css('borderRightStyle') !== 'none' ? $util.convertInt(this.css('borderRightWidth')) : 0;
+        return this.has('borderRightStyle') ? this.toInt('borderRightWidth') : 0;
     }
     get borderBottomWidth() {
-        return this.css('borderBottomStyle') !== 'none' ? $util.convertInt(this.css('borderBottomWidth')) : 0;
+        return this.has('borderBottomStyle') ? this.toInt('borderBottomWidth') : 0;
     }
     get borderLeftWidth() {
-        return this.css('borderLeftStyle') !== 'none' ? $util.convertInt(this.css('borderLeftWidth')) : 0;
+        return this.has('borderLeftStyle') ? this.toInt('borderLeftWidth') : 0;
     }
 
     get paddingTop() {
@@ -1394,9 +1404,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
     get inlineText() {
         if (this._cached.inlineText === undefined) {
-            const element = this._element;
             let value = false;
-            if (element && this.htmlElement && !this.svgElement) {
+            if (this.htmlElement && !this.svgElement) {
+                const element = <HTMLElement> this._element;
                 switch (element.tagName) {
                     case 'INPUT':
                     case 'BUTTON':
@@ -1541,13 +1551,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (this._cached.textContent === undefined) {
             const element = <HTMLElement> this._element;
             let value = '';
-            if (element) {
-                if (this.htmlElement) {
-                    value = element.textContent || element.innerText;
-                }
-                else if (this.plainText) {
-                    value = element.textContent || '';
-                }
+            if (this.htmlElement) {
+                value = element.textContent || element.innerText;
+            }
+            else if (this.plainText) {
+                value = element.textContent || '';
             }
             this._cached.textContent = value;
         }
@@ -1737,7 +1745,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get firstChild() {
-        if (this.htmlElement) {
+        if (this.htmlElement && this.naturalElement) {
             const element = <HTMLElement> this._element;
             for (let i = 0; i < element.childNodes.length; i++) {
                 const node = $dom.getElementAsNode<T>(<Element> element.childNodes[i]);
@@ -1746,11 +1754,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 }
             }
         }
+        else if (this.length) {
+            return this.nodes[0];
+        }
         return undefined;
     }
 
     get lastChild() {
-        if (this.htmlElement) {
+        if (this.htmlElement && this.naturalElement) {
             const element = <HTMLElement> this._element;
             for (let i = element.childNodes.length - 1; i >= 0; i--) {
                 const node = $dom.getElementAsNode<T>(<Element> element.childNodes[i]);
@@ -1758,6 +1769,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     return node;
                 }
             }
+        }
+        else if (this.length) {
+            return this.nodes[this.nodes.length - 1];
         }
         return undefined;
     }

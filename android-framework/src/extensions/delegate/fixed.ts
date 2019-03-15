@@ -87,13 +87,14 @@ export default class Fixed<T extends View> extends squared.base.Extension<T> {
             }
         }
         container.parent = node;
+        container.innerChild = node;
         this.application.processing.cache.append(container);
         for (let i = 0; i < children.length; i++) {
             children[i].siblingIndex = i;
         }
         node.sort($NodeList.siblingIndex);
         node.resetBox($enum.BOX_STANDARD.PADDING | (node.documentBody ? $enum.BOX_STANDARD.MARGIN : 0), container, true);
-        node.companion = container;
+        node.outerParent = container;
         const layout = new $Layout(
             parent,
             node,
@@ -106,17 +107,17 @@ export default class Fixed<T extends View> extends squared.base.Extension<T> {
     }
 
     public postBaseLayout(node: T) {
-        if (node.hasWidth && node.companion) {
+        if (node.hasWidth && node.outerParent) {
             const width = node.cssInitial('width', true);
             const minWidth = node.cssInitial('minWidth', true);
             if (node.documentBody && node.some(item => item.has('right'))) {
                 node.cssApply({ width: 'auto', minWidth: 'auto' }, true);
-                node.companion.cssApply({ width, minWidth }, true);
+                node.outerParent.cssApply({ width, minWidth }, true);
                 node.android('layout_width', 'match_parent');
             }
             else {
                 const offset = node.paddingLeft + node.paddingRight + (node.documentBody ? node.marginLeft + node.marginRight : 0);
-                node.companion.cssApply({ width: reduceContainerWidth(node, width, offset), minWidth: reduceContainerWidth(node, minWidth, offset) }, true);
+                node.outerParent.cssApply({ width: reduceContainerWidth(node, width, offset), minWidth: reduceContainerWidth(node, minWidth, offset) }, true);
             }
         }
     }

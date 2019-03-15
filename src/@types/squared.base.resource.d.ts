@@ -20,7 +20,6 @@ declare global {
             public static ASSETS: ResourceAssetMap;
             public static STORED: ResourceStoredMap;
             public static generateId(section: string, name: string, start?: number): string;
-            public static getStoredName(asset: string, value: any): string;
             public static insertStoredAsset(asset: string, name: string, value: any): string;
             public static getOptionArray(element: HTMLSelectElement, replaceEntities?: boolean): [string[] | undefined, string[] | undefined];
             public static isBorderVisible(border: BorderAttribute | undefined): border is BorderAttribute;

@@ -5,7 +5,15 @@ import Resource from '../../resource';
 const $enum = squared.base.lib.enumeration;
 const $css = squared.lib.css;
 const $util = squared.lib.util;
-const $xml = squared.lib.xml;
+
+export function replaceCharacter(value: string) {
+    return value
+        .replace(/&nbsp;/g, '&#160;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '&quot;');
+}
 
 export default class ResourceStrings<T extends android.base.View> extends squared.base.Extension<T> {
     public readonly options: ResourceStringsOptions = {
@@ -30,31 +38,24 @@ export default class ResourceStrings<T extends android.base.View> extends square
                             if (resourceArray) {
                                 result = [];
                                 for (let value of resourceArray) {
-                                    value = Resource.addString($xml.replaceCharacter(value), '', this.options.numberResourceValue);
-                                    result.push(value !== '' ? `@string/${value}` : '');
+                                    value = Resource.addString(replaceCharacter(value), '', this.options.numberResourceValue);
+                                    if (value !== '') {
+                                        result.push(`@string/${value}`);
+                                    }
                                 }
                             }
                         }
                         if (result && result.length) {
-                            const arrayValue = result.join('-');
-                            let arrayName = '';
-                            for (const [storedName, storedResult] of Resource.STORED.arrays.entries()) {
-                                if (arrayValue === storedResult.join('-')) {
-                                    arrayName = storedName;
-                                    break;
-                                }
+                            const arrayName = Resource.insertStoredAsset('arrays', `${node.controlId}_array`, result);
+                            if (arrayName !== '') {
+                                node.android('entries', `@array/${arrayName}`);
                             }
-                            if (arrayName === '') {
-                                arrayName = `${node.controlId}_array`;
-                                Resource.STORED.arrays.set(arrayName, result);
-                            }
-                            node.android('entries', `@array/${arrayName}`, false);
                         }
                         break;
                     }
                     case 'IFRAME': {
                         const stored: NameValue = node.data(Resource.KEY_NAME, 'valueString');
-                        const value = $xml.replaceCharacter(stored.value);
+                        const value = replaceCharacter(stored.value);
                         Resource.addString(value, stored.name);
                         break;
                     }
@@ -82,7 +83,7 @@ export default class ResourceStrings<T extends android.base.View> extends square
                                     }
                                 }
                             }
-                            value = $xml.replaceCharacter(value);
+                            value = replaceCharacter(value);
                             if (node.htmlElement) {
                                 if (node.css('fontVariant') === 'small-caps') {
                                     value = value.toUpperCase();

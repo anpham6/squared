@@ -5,7 +5,7 @@ import { Constraint, LocalSettings } from './@types/node';
 import { AXIS_ANDROID, CONTAINER_ANDROID, ELEMENT_ANDROID, LAYOUT_ANDROID, RESERVED_JAVA } from './lib/constant';
 import { API_ANDROID, DEPRECATED_ANDROID } from './lib/customization';
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
-import { calculateBias, replaceRTL, stripId, validateString } from './lib/util';
+import { replaceRTL, stripId } from './lib/util';
 
 import $NodeList = squared.base.NodeList;
 import $Resource = squared.base.Resource;
@@ -18,6 +18,7 @@ const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 const REGEXP_FORMATTED = /^(?:([a-z]+):)?(\w+)="((?:@+?[a-z]+\/)?.+)"$/;
+const REGEXP_VALIDSTRING = /[^\w$\-_.]/g;
 
 function checkTextAlign(value: string) {
     switch (value) {
@@ -70,6 +71,22 @@ function setAutoMargin(node: T) {
         }
     }
     return false;
+}
+
+function validateString(value: string) {
+    return value ? value.trim().replace(REGEXP_VALIDSTRING, '_') : '';
+}
+
+function calculateBias(start: number, end: number, accuracy = 4) {
+    if (start === 0) {
+        return 0;
+    }
+    else if (end === 0) {
+        return 1;
+    }
+    else {
+        return parseFloat(Math.max(start / (start + end), 0).toPrecision(accuracy));
+    }
 }
 
 export default (Base: Constructor<squared.base.Node>) => {
@@ -621,6 +638,12 @@ export default (Base: Constructor<squared.base.Node>) => {
             const renderParent = this.renderParent as T;
             if (renderParent) {
                 let textAlign = checkTextAlign(this.cssInitial('textAlign', true));
+                if (textAlign === '' && this.groupParent) {
+                    const absoluteParent = this.absoluteParent;
+                    if (absoluteParent) {
+                        textAlign = checkTextAlign(absoluteParent.cssInitial('textAlign', true));
+                    }
+                }
                 if (this.pageFlow) {
                     let floating = '';
                     if (this.inlineVertical && (renderParent.layoutHorizontal && !renderParent.support.container.positionRelative || renderParent.is(CONTAINER_NODE.GRID))) {
@@ -700,7 +723,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                         textAlign = textAlignParent;
                     }
                 }
-                if (textAlign !== '' && !this.layoutVertical && !this.layoutConstraint) {
+                if (textAlign !== '' && !this.layoutConstraint && (!this.layoutVertical || this.groupParent)) {
                     this.mergeGravity('gravity', textAlign);
                 }
             }

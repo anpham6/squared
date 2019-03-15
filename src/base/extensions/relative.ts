@@ -2,7 +2,7 @@ import Extension from '../extension';
 import Layout from '../layout';
 import Node from '../node';
 
-import { BOX_STANDARD } from '../lib/enumeration';
+import { BOX_STANDARD, NODE_ALIGNMENT } from '../lib/enumeration';
 
 const $util = squared.lib.util;
 
@@ -31,14 +31,16 @@ export default abstract class Relative<T extends Node> extends Extension<T> {
                 );
                 this.application.controllerHandler.appendAfter(node.id, this.application.renderLayout(layout));
                 this.application.session.cache.append(target, false);
-                renderParent.renderEach(item => {
-                    if (item.alignSibling('topBottom') === node.documentId) {
-                        item.alignSibling('topBottom', target.documentId);
-                    }
-                    else if (item.alignSibling('bottomTop') === node.documentId) {
-                        item.alignSibling('bottomTop', target.documentId);
-                    }
-                });
+                if (!renderParent.hasAlign(NODE_ALIGNMENT.VERTICAL)) {
+                    renderParent.renderEach(item => {
+                        if (item.alignSibling('topBottom') === node.documentId) {
+                            item.alignSibling('topBottom', target.documentId);
+                        }
+                        else if (item.alignSibling('bottomTop') === node.documentId) {
+                            item.alignSibling('bottomTop', target.documentId);
+                        }
+                    });
+                }
             }
             if (node.top !== 0) {
                 target.modifyBox(BOX_STANDARD.MARGIN_TOP, node.top);

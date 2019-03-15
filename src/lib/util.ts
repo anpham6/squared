@@ -829,7 +829,7 @@ export function flatMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[
     let j = 0;
     for (let i = 0; i < list.length; i++) {
         const item = predicate(list[i], i, list);
-        if (item !== undefined && item !== null) {
+        if (hasValue(item)) {
             result[j++] = item;
         }
     }

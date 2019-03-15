@@ -122,7 +122,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
 
     public static toFractionList(value: string, delimiter = ';') {
         let previous = 0;
-        const result = $util.flatMap(value.split(delimiter), seg => {
+        const result = $util.replaceMap<string, number>(value.split(delimiter), seg => {
             const fraction = parseFloat(seg);
             if (!isNaN(fraction) && fraction >= previous && fraction <= 1) {
                 previous = fraction;
@@ -159,7 +159,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             const values = $css.getNamedItem(animationElement, 'values');
             const keyTimes = this.duration !== -1 ? SvgAnimate.toFractionList($css.getNamedItem(animationElement, 'keyTimes')) : [];
             if (values !== '') {
-                this.values = $util.flatMap(values.split(';'), value => value.trim());
+                this.values = $util.trimEnd(values, ';').split(/\s*;\s*/);
                 if (this.length > 1 && keyTimes.length === this.length) {
                     this.from = this.values[0];
                     this.to = this.values[this.length - 1];

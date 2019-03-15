@@ -229,39 +229,26 @@ export default abstract class Resource<T extends Node> implements squared.base.R
         return name;
     }
 
-    public static getStoredName(asset: string, value: any): string {
-        if (Resource.STORED[asset]) {
-            for (const [name, data] of Resource.STORED[asset].entries()) {
-                if (JSON.stringify(value) === JSON.stringify(data)) {
-                    return name;
-                }
-            }
-        }
-        return '';
-    }
-
     public static insertStoredAsset(asset: string, name: string, value: any) {
         const stored: Map<string, any> = Resource.STORED[asset];
-        if (stored) {
+        if (stored && $util.hasValue(value)) {
             let result = this.getStoredName(asset, value);
             if (result === '') {
                 if ($util.isNumber(name)) {
                     name = `__${name}`;
                 }
-                if ($util.hasValue(value)) {
-                    let i = 0;
-                    do {
-                        result = name;
-                        if (i > 0) {
-                            result += `_${i}`;
-                        }
-                        if (!stored.has(result)) {
-                            stored.set(result, value);
-                        }
-                        i++;
+                let i = 0;
+                do {
+                    result = name;
+                    if (i > 0) {
+                        result += `_${i}`;
                     }
-                    while (stored.has(result) && stored.get(result) !== value);
+                    if (!stored.has(result)) {
+                        stored.set(result, value);
+                    }
+                    i++;
                 }
+                while (stored.has(result) && stored.get(result) !== value);
             }
             return result;
         }
@@ -334,6 +321,17 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                 break;
         }
         return width > 0 && height > 0 ? { width: Math.round(width), height: Math.round(height) } : undefined;
+    }
+
+    private static getStoredName(asset: string, value: any): string {
+        if (Resource.STORED[asset]) {
+            for (const [name, data] of Resource.STORED[asset].entries()) {
+                if (JSON.stringify(value) === JSON.stringify(data)) {
+                    return name;
+                }
+            }
+        }
+        return '';
     }
 
     public fileHandler?: File<T>;

@@ -1,5 +1,5 @@
 import { ImageAsset, TemplateDataA } from '../../../../src/base/@types/application';
-import { ResourceStoredMapAndroid, UserSettingsAndroid } from '../../@types/application';
+import { UserSettingsAndroid } from '../../@types/application';
 import { ResourceBackgroundOptions } from '../../@types/extension';
 import { GradientColorStop, GradientTemplate } from '../../@types/resource';
 
@@ -61,7 +61,6 @@ const TEMPLATES = {
     SHAPE: $xml.parseTemplate(SHAPE_TMPL),
     VECTOR: $xml.parseTemplate(VECTOR_TMPL)
 };
-const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 
 function getColorAttribute(value: string) {
     return `android:color="@color/${value}"`;
@@ -702,13 +701,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     }],
                                     B: false
                                 };
-                                const xml = $xml.createTemplate(TEMPLATES.VECTOR, vectorData, true);
-                                let vectorName = Resource.getStoredName('drawables', xml);
-                                if (vectorName === '') {
-                                    vectorName = `${node.tagName.toLowerCase()}_${node.controlId}_gradient_${i}`;
-                                    STORED.drawables.set(vectorName, xml);
-                                }
-                                imageData.src = vectorName;
+                                imageData.src = Resource.insertStoredAsset('drawables', `${node.tagName.toLowerCase()}_${node.controlId}_gradient_${i}`, $xml.createTemplate(TEMPLATES.VECTOR, vectorData, true));
                             }
                             else {
                                 imageData.gradient = [value];
@@ -850,12 +843,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                     }
                     if (template) {
-                        const xml = $xml.createTemplate(template, shape || layerList, layerList.B.some(item => !!item.src));
-                        resourceName = Resource.getStoredName('drawables', xml);
-                        if (resourceName === '') {
-                            resourceName = `${node.tagName.toLowerCase()}_${node.controlId}`;
-                            STORED.drawables.set(resourceName, xml);
-                        }
+                        resourceName = Resource.insertStoredAsset('drawables', `${node.tagName.toLowerCase()}_${node.controlId}`, $xml.createTemplate(template, shape || layerList, layerList.B.some(item => !!item.src)));
                     }
                     if (backgroundImage.length) {
                         node.data('RESOURCE', 'backgroundImage', true);
@@ -905,7 +893,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             }
                         }
                     }
-                    node.android('background', `@drawable/${resourceName}`, false);
+                    if (resourceName !== '') {
+                        node.android('background', `@drawable/${resourceName}`, false);
+                    }
                 }
                 else if (stored.backgroundColor) {
                     let colorName = Resource.addColor(stored.backgroundColor);

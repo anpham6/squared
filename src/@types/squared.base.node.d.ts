@@ -33,6 +33,8 @@ declare global {
             parent?: Node;
             renderParent?: Node;
             renderExtension?: Extension<Node>[];
+            outerParent?: Node;
+            innerChild?: Node;
             companion?: Node;
             extracted?: Node[];
             readonly localSettings: {};

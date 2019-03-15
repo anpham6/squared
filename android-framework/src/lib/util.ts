@@ -5,7 +5,6 @@ import { XMLNS_ANDROID } from './constant';
 import { BUILD_ANDROID } from './enumeration';
 
 const $util = squared.lib.util;
-const $xml = squared.lib.xml;
 
 const REGEXP_RTL = {
     LEFT: /left/,
@@ -14,7 +13,6 @@ const REGEXP_RTL = {
     RIGHT_UPPER: /Right/g
 };
 const REGEXP_UNIT = /([">])(-)?(\d+(?:\.\d+)?px)(["<])/g;
-const REGEXP_VALIDSTRING = /[^\w$\-_.]/g;
 
 export function stripId(value: string) {
     return value ? value.replace(/@\+?id\//, '') : '';
@@ -48,10 +46,6 @@ export function createStyleAttribute(options?: ExternalData) {
     return result;
 }
 
-export function validateString(value: string) {
-    return value ? value.trim().replace(REGEXP_VALIDSTRING, '_') : '';
-}
-
 export function convertLength(value: string, dpi = 160, font = false) {
     let result = parseFloat(value);
     if (!isNaN(result)) {
@@ -67,22 +61,6 @@ export function replaceLength(value: string, dpi = 160, format = 'dp', font = fa
         return value.replace(REGEXP_UNIT, (match, ...capture) => capture[0] + (capture[1] || '') + convertLength(capture[2], dpi, font) + capture[3]);
     }
     return value;
-}
-
-export function replaceTab(value: string, spaces = 4, preserve = false) {
-    return $xml.replaceTab(value, spaces, preserve);
-}
-
-export function calculateBias(start: number, end: number, accuracy = 4) {
-    if (start === 0) {
-        return 0;
-    }
-    else if (end === 0) {
-        return 1;
-    }
-    else {
-        return parseFloat(Math.max(start / (start + end), 0).toPrecision(accuracy));
-    }
 }
 
 export function replaceRTL(value: string, rtl = true, api = BUILD_ANDROID.OREO) {

@@ -99,15 +99,6 @@ export function replaceEntity(value: string) {
         .replace(/\u200F/g, '&#8207;');
 }
 
-export function replaceCharacter(value: string) {
-    return value
-        .replace(/&nbsp;/g, '&#160;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/'/g, '&apos;')
-        .replace(/"/g, '&quot;');
-}
-
 export function escapeNonEntity(value: string) {
     return value.replace(/&(?!#?[A-Za-z0-9]{2,};)/g, '&amp;');
 }

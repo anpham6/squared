@@ -690,12 +690,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                         }
                         xml = xml.replace(`!!${entries[i][0]}!!`, partial);
                     }
-                    xml = $xml.formatTemplate(xml);
-                    vectorName = Resource.getStoredName('drawables', xml);
-                    if (vectorName === '') {
-                        vectorName = getFilename();
-                        STORED.drawables.set(vectorName, xml);
-                    }
+                    vectorName = Resource.insertStoredAsset('drawables', getFilename(), $xml.formatTemplate(xml));
                 }
                 if (this.ANIMATE_DATA.size) {
                     const data: TemplateDataA = {
@@ -1243,26 +1238,25 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                     animatorData = <AnimatorData<true>> A.AA[0];
                                 }
                             }
-                            const xml = animatorData ? $xml.createTemplate(TEMPLATES.OBJECTANIMATOR, animatorData) : $xml.createTemplate(TEMPLATES.SET_OBJECTANIMATOR, targetSetData);
-                            targetData.animationName = Resource.getStoredName('animators', xml);
-                            if (targetData.animationName === '') {
-                                targetData.animationName = getFilename('anim', name);
-                                STORED.animators.set(targetData.animationName, xml);
+                            targetData.animationName = Resource.insertStoredAsset(
+                                'animators',
+                                getFilename('anim', name),
+                                animatorData ? $xml.createTemplate(TEMPLATES.OBJECTANIMATOR, animatorData) : $xml.createTemplate(TEMPLATES.SET_OBJECTANIMATOR, targetSetData)
+                            );
+                            if (targetData.animationName !== '') {
+                                data.A.push(targetData);
                             }
-                            data.A.push(targetData);
                         }
                     }
                     if (data.A.length) {
-                        const xml = $xml.createTemplate(TEMPLATES.ANIMATED, data);
-                        vectorName = Resource.getStoredName('drawables', xml);
-                        if (vectorName === '') {
-                            vectorName = getFilename('anim');
-                            STORED.drawables.set(vectorName, xml);
-                        }
+                        vectorName = Resource.insertStoredAsset('drawables', getFilename('anim'), $xml.createTemplate(TEMPLATES.ANIMATED, data));
                     }
                 }
                 if (this.IMAGE_DATA.length) {
-                    const B: StringMap[] = [{ src: vectorName }];
+                    const B: StringMap[] = [];
+                    if (vectorName !== '') {
+                        B.push({ src: vectorName });
+                    }
                     const data = <ExternalData> {
                         A: false,
                         B,
@@ -1298,12 +1292,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                         }
                         B.push(imageData);
                     }
-                    const xml = $xml.formatTemplate($xml.createTemplate(TEMPLATES.LAYER_LIST, data));
-                    drawable = Resource.getStoredName('drawables', xml);
-                    if (drawable === '') {
-                        drawable = templateName;
-                        STORED.drawables.set(drawable, xml);
-                    }
+                    drawable = Resource.insertStoredAsset('drawables', templateName, $xml.formatTemplate($xml.createTemplate(TEMPLATES.LAYER_LIST, data)));
                 }
                 else {
                     drawable = vectorName;

@@ -11,19 +11,36 @@ function setMinHeight<T extends Node>(node: T, offset: number) {
     node.css('minHeight', $util.formatPX(Math.max(offset, minHeight)));
 }
 
-function applyMarginCollapse<T extends Node>(parent: T, node: T, direction: boolean) {
-    if (node.blockStatic && !node.plainText && !node.lineBreak) {
+function applyMarginCollapse<T extends Node>(node: T, child: T, direction: boolean) {
+    if (child.blockStatic && !child.lineBreak) {
         if (direction) {
-            if ((parent.marginTop > 0 || !parent.documentBody && parent.marginTop === 0 && node.inlineText) && parent.borderTopWidth === 0 && parent.paddingTop === 0) {
-                node.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
-                if (node.companion) {
-                    node.companion.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
+            if (node.borderTopWidth === 0 && node.paddingTop === 0) {
+                if (node.marginTop < child.marginTop) {
+                    node.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
+                    if (node.naturalElement && child.pageFlow) {
+                        node.modifyBox(BOX_STANDARD.MARGIN_TOP, child.marginTop);
+                    }
+                }
+                if (node.naturalElement) {
+                    child.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
+                    if (child.companion) {
+                        child.companion.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
+                    }
                 }
             }
         }
-        else {
-            if ((parent.marginBottom > 0 || !parent.documentBody && parent.marginBottom === 0 && node.inlineText) && parent.borderBottomWidth === 0 && parent.paddingBottom === 0) {
+        else if (node.borderBottomWidth === 0 && node.paddingBottom === 0) {
+            if (node.marginBottom < child.marginBottom) {
                 node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
+                if (node.naturalElement && child.pageFlow) {
+                    node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, child.marginBottom);
+                }
+            }
+            if (node.naturalElement) {
+                child.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
+                if (child.companion) {
+                    child.companion.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
+                }
             }
         }
     }
@@ -33,78 +50,88 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
     public afterBaseLayout() {
         const processed = new Set<T>();
         for (const node of this.application.processing.cache) {
-            if (node.htmlElement && node.blockStatic) {
-                const element = <HTMLElement> node.element;
+            if (node.htmlElement) {
                 let firstChild: T | undefined;
                 let lastChild: T | undefined;
-                for (let i = 0; i < element.children.length; i++) {
-                    let current = $dom.getElementAsNode<T>(element.children[i]);
-                    if (current && current.pageFlow) {
-                        if (firstChild === undefined) {
-                            firstChild = current;
-                        }
-                        if (!current.lineBreak && current.blockStatic) {
-                            const previousSiblings = current.previousSiblings();
-                            if (previousSiblings.length) {
-                                let previous = previousSiblings[0] as T;
-                                const floating = previous.block && previous.floating;
-                                if (!previous.lineBreak && (previous.blockStatic || floating)) {
-                                    current = (current.renderAs || current) as T;
-                                    previous = (previous.renderAs || previous) as T;
-                                    let marginTop = $util.convertFloat(current.cssInitial('marginTop', false, true));
-                                    const marginBottom = $util.convertFloat(current.cssInitial('marginBottom', false, true));
-                                    const previousMarginTop = $util.convertFloat(previous.cssInitial('marginTop', false, true));
-                                    let previousMarginBottom = $util.convertFloat(previous.cssInitial('marginBottom', false, true));
-                                    if (previous.excluded && !current.excluded) {
-                                        const offset = Math.min(previousMarginTop, previousMarginBottom);
-                                        if (offset < 0) {
-                                            const top = Math.abs(offset) >= marginTop ? null : offset;
-                                            current.modifyBox(BOX_STANDARD.MARGIN_TOP, top);
-                                            if (current.companion) {
-                                                current.companion.modifyBox(BOX_STANDARD.MARGIN_TOP, top);
-                                            }
-                                            processed.add(previous);
-                                        }
-                                    }
-                                    else if (!previous.excluded && current.excluded) {
-                                        const offset = Math.min(marginTop, marginBottom);
-                                        if (offset < 0) {
-                                            previous.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, Math.abs(offset) >= previousMarginBottom ? null : offset);
-                                            processed.add(current);
-                                        }
-                                    }
-                                    else if (previousMarginBottom > 0 || marginTop > 0) {
-                                        if (previousMarginBottom === 0 && previous.length && !floating) {
-                                            const bottomChild = previous.lastChild;
-                                            if (bottomChild && bottomChild.blockStatic) {
-                                                previousMarginBottom = $util.convertFloat(bottomChild.cssInitial('marginBottom', false, true));
-                                                previous = bottomChild as T;
-                                            }
-                                        }
-                                        if (marginTop === 0 && current.length) {
-                                            const topChild = current.firstChild;
-                                            if (topChild && topChild.blockStatic) {
-                                                marginTop = $util.convertFloat(topChild.cssInitial('marginTop', false, true));
-                                                current = topChild as T;
-                                            }
-                                        }
-                                        if ((previousMarginBottom > 0 || floating) && marginTop > 0) {
-                                            if (marginTop <= previousMarginBottom || floating && previousMarginBottom === 0) {
-                                                current.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
+                if (node.naturalElement && node.block) {
+                    const element = <HTMLElement> node.element;
+                    for (let i = 0; i < element.children.length; i++) {
+                        let current = $dom.getElementAsNode<T>(element.children[i]);
+                        if (current && current.block) {
+                            if (node.blockStatic) {
+                                if (firstChild === undefined) {
+                                    firstChild = current;
+                                }
+                                lastChild = current;
+                            }
+                            if (!current.lineBreak) {
+                                const previousSiblings = current.previousSiblings(true, true, true);
+                                if (previousSiblings.length) {
+                                    let previous = previousSiblings.find(item => !item.floating) as T | undefined;
+                                    if (previous && !previous.lineBreak && previous.blockStatic) {
+                                        current = (current.renderAs || current) as T;
+                                        previous = (previous.renderAs || previous) as T;
+                                        let marginTop = $util.convertFloat(current.cssInitial('marginTop', false, true));
+                                        const marginBottom = $util.convertFloat(current.cssInitial('marginBottom', false, true));
+                                        const previousMarginTop = $util.convertFloat(previous.cssInitial('marginTop', false, true));
+                                        let previousMarginBottom = $util.convertFloat(previous.cssInitial('marginBottom', false, true));
+                                        if (previous.excluded && !current.excluded) {
+                                            const offset = Math.min(previousMarginTop, previousMarginBottom);
+                                            if (offset < 0) {
+                                                const top = Math.abs(offset) >= marginTop ? null : offset;
+                                                current.modifyBox(BOX_STANDARD.MARGIN_TOP, top);
                                                 if (current.companion) {
-                                                    current.companion.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
+                                                    current.companion.modifyBox(BOX_STANDARD.MARGIN_TOP, top);
+                                                }
+                                                processed.add(previous);
+                                            }
+                                        }
+                                        else if (!previous.excluded && current.excluded) {
+                                            const offset = Math.min(marginTop, marginBottom);
+                                            if (offset < 0) {
+                                                previous.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, Math.abs(offset) >= previousMarginBottom ? null : offset);
+                                                processed.add(current);
+                                            }
+                                        }
+                                        else if (previousMarginBottom > 0 || marginTop > 0) {
+                                            if (previousMarginBottom === 0 && previous.length) {
+                                                const bottomChild = previous.lastChild;
+                                                if (bottomChild && bottomChild.blockStatic) {
+                                                    previousMarginBottom = $util.convertFloat(bottomChild.cssInitial('marginBottom', false, true));
+                                                    previous = bottomChild as T;
                                                 }
                                             }
-                                            else {
-                                                previous.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
+                                            if (marginTop === 0 && current.length) {
+                                                const topChild = current.firstChild;
+                                                if (topChild && topChild.blockStatic) {
+                                                    marginTop = $util.convertFloat(topChild.cssInitial('marginTop', false, true));
+                                                    current = topChild as T;
+                                                }
+                                            }
+                                            if (previousMarginBottom > 0 && marginTop > 0) {
+                                                if (marginTop <= previousMarginBottom) {
+                                                    current.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
+                                                    if (current.companion) {
+                                                        current.companion.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
+                                                    }
+                                                }
+                                                else {
+                                                    previous.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
+                                                    if (previous.companion) {
+                                                        previous.companion.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
+                                                    }
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
                         }
-                        lastChild = current;
                     }
+                }
+                else if (node.innerChild) {
+                    firstChild = node.innerChild.firstChild as T;
+                    lastChild = node.innerChild.lastChild as T;
                 }
                 if (firstChild) {
                     applyMarginCollapse(node, firstChild, true);
@@ -114,7 +141,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                 }
             }
         }
-        if (this.application.processing.node && this.application.processing.node.htmlElement) {
+        if (this.application.processing.node) {
             const elements = (<HTMLElement> this.application.processing.node.element).getElementsByTagName('BR');
             for (let i = 0; i < elements.length; i++) {
                 const node = $dom.getElementAsNode<T>(elements[i]);
@@ -223,24 +250,21 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
         }
         for (const node of this.application.processing.excluded) {
             if (!processed.has(node) && !node.lineBreak) {
-                const nextSiblings = node.nextSiblings(true, true, true);
-                if (nextSiblings.length) {
-                    const below = nextSiblings.pop() as T;
-                    if (below.visible) {
-                        const previousSiblings = node.previousSiblings(false, false) as T[];
-                        let offset = 0;
-                        if (previousSiblings.length) {
-                            const previous = previousSiblings.pop() as T;
-                            offset = below.linear.top - previous.linear.bottom;
-                        }
-                        else {
-                            offset = below.linear.top - node.linear.top;
-                        }
-                        if (offset > 0) {
-                            below.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
-                        }
-                        processed.add(node);
+                const below = node.nextSiblings(true, true, true).pop();
+                if (below && below.visible) {
+                    const previousSiblings = node.previousSiblings(false, false) as T[];
+                    let offset = 0;
+                    if (previousSiblings.length) {
+                        const previous = previousSiblings.pop() as T;
+                        offset = below.linear.top - previous.linear.bottom;
                     }
+                    else {
+                        offset = below.linear.top - node.linear.top;
+                    }
+                    if (offset > 0) {
+                        below.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
+                    }
+                    processed.add(node);
                 }
             }
         }
@@ -257,7 +281,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                     if (previous.length && !previous.some(item => item.lineBreak || item.excluded && item.blockStatic)) {
                         const previousSibling = previous[previous.length - 1];
                         if (previousSibling.inlineVertical) {
-                            const offset = node.linear.left - previous[previous.length - 1].actualRight();
+                            const offset = node.linear.left - previousSibling.actualRight();
                             if (offset !== 0) {
                                 (node.renderAs || node).modifyBox(BOX_STANDARD.MARGIN_LEFT, offset);
                             }

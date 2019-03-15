@@ -4,7 +4,7 @@ import { ResourceStoredMapAndroid, UserSettingsAndroid } from './@types/applicat
 import View from './view';
 
 import { BUILD_ANDROID } from './lib/enumeration';
-import { getXmlNs, replaceTab, replaceLength } from './lib/util';
+import { getXmlNs, replaceLength } from './lib/util';
 
 import COLOR_TMPL from './template/resource/color';
 import DIMEN_TMPL from './template/resource/dimen';
@@ -162,7 +162,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             data.A.push({ name, value });
         }
         result.push(
-            replaceTab(
+            $xml.replaceTab(
                 $xml.createTemplate(TEMPLATES.string, data),
                 this.userSettings.insertSpaces,
                 true
@@ -186,7 +186,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 });
             }
             result.push(
-                replaceTab(
+                $xml.replaceTab(
                     $xml.createTemplate(TEMPLATES.string_array, data),
                     this.userSettings.insertSpaces,
                     true
@@ -225,7 +225,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     xml = xml.replace(/\s+android:/g, ' app:');
                 }
                 result.push(
-                    replaceTab(
+                    $xml.replaceTab(
                         xml,
                         settings.insertSpaces
                     )
@@ -247,7 +247,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 data.A.push({ name, value });
             }
             result.push(
-                replaceTab(
+                $xml.replaceTab(
                     $xml.createTemplate(TEMPLATES.color, data),
                     this.userSettings.insertSpaces
                 )
@@ -298,7 +298,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         }
         for (const style of files) {
             result.push(
-                replaceTab(
+                $xml.replaceTab(
                     replaceLength(
                         $xml.createTemplate(TEMPLATES.style, style.data).replace('filename: {0}', `filename: ${style.filename}`),
                         settings.resolutionDPI,
@@ -325,7 +325,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 data.A.push({ name, value });
             }
             result.push(
-                replaceTab(
+                $xml.replaceTab(
                     replaceLength(
                         $xml.createTemplate(TEMPLATES.dimen, data),
                         settings.resolutionDPI,
@@ -347,7 +347,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             const settings = this.userSettings;
             for (const [name, value] of this.stored.drawables.entries()) {
                 result.push(
-                    replaceTab(
+                    $xml.replaceTab(
                         replaceLength(
                             $xml.createTemplate(TEMPLATES.drawable, { name: `res/drawable/${name}.xml`, value }),
                             settings.resolutionDPI,
@@ -372,7 +372,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 if (Object.keys(images).length > 1) {
                     for (const dpi in images) {
                         result.push(
-                            replaceTab(
+                            $xml.replaceTab(
                                 $xml.createTemplate(TEMPLATES.drawable, {
                                     name: `res/drawable-${dpi}/${name}.${$util.fromLastIndexOf(images[dpi], '.')}`,
                                     value: `<!-- image: ${images[dpi]} -->`
@@ -384,7 +384,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 }
                 else if (images.mdpi) {
                     result.push(
-                        replaceTab(
+                        $xml.replaceTab(
                             $xml.createTemplate(TEMPLATES.drawable, {
                                 name: `res/drawable/${name}.${$util.fromLastIndexOf(images.mdpi, '.')}`,
                                 value: `<!-- image: ${images.mdpi} -->`
@@ -406,7 +406,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         if (this.stored.animators.size) {
             for (const [name, value] of this.stored.animators.entries()) {
                 result.push(
-                    replaceTab(
+                    $xml.replaceTab(
                         $xml.createTemplate(TEMPLATES.drawable, { name: `res/anim/${name}.xml`, value }),
                         this.userSettings.insertSpaces
                     )
