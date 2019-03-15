@@ -54,6 +54,7 @@ declare global {
             readonly gridElement: boolean;
             readonly textElement: boolean;
             readonly tableElement: boolean;
+            readonly inputElement: boolean;
             readonly groupParent: boolean;
             readonly documentBody: boolean;
             readonly dataset: DOMStringMap;
@@ -163,6 +164,8 @@ declare global {
             css(attr: string, value?: string, cache?: boolean): string;
             cssApply(values: StringMap, cache?: boolean): this;
             cssInitial(attr: string, modified?: boolean, computed?: boolean): string;
+            cssAny(attr: string, ...values: string[]): boolean;
+            cssInitialAny(attr: string, ...values: string[]): boolean;
             cssAscend(attr: string, startChild?: boolean, visible?: boolean): string;
             cssSort(attr: string, ascending?: boolean, duplicate?: boolean): Node[];
             cssPX(attr: string, value: number, negative?: boolean, cache?: boolean): string;

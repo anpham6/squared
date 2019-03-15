@@ -33,7 +33,7 @@ const settings: UserSettingsAndroid = {
     supportRTL: true,
     preloadImages: true,
     ellipsisOnTextOverflow: true,
-    maxWordWrapWidth: 732,
+    maxWordWrapWidth: 800,
     supportNegativeLeftTop: true,
     floatOverlapDisabled: false,
     collapseUnattributedElements: true,

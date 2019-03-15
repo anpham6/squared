@@ -519,27 +519,29 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         break;
                                 }
                             }
-                            if (backgroundRepeat[i] === 'no-repeat') {
-                                tileMode = 'disabled';
-                            }
-                            else {
-                                switch (backgroundRepeat[i]) {
-                                    case 'repeat':
-                                        if (!dimension || dimension.width < node.actualWidth || dimension.height < node.actualHeight) {
-                                            tileMode = 'repeat';
-                                        }
-                                        break;
-                                    case 'repeat-x':
-                                        if (!dimension || dimension.width < node.actualWidth) {
-                                            tileModeX = 'repeat';
-                                        }
-                                        break;
-                                    case 'repeat-y':
-                                        if (!dimension || dimension.height < node.actualHeight) {
-                                            tileModeY = 'repeat';
-                                        }
-                                        break;
-                                }
+                            switch (backgroundRepeat[i]) {
+                                case 'repeat':
+                                    if (!dimension || dimension.width < node.actualWidth || dimension.height < node.actualHeight) {
+                                        tileMode = 'repeat';
+                                    }
+                                    break;
+                                case 'repeat-x':
+                                    if (!dimension || dimension.width < node.actualWidth) {
+                                        tileModeX = 'repeat';
+                                    }
+                                    break;
+                                case 'repeat-y':
+                                    if (!dimension || dimension.height < node.actualHeight) {
+                                        tileModeY = 'repeat';
+                                    }
+                                    break;
+                                default:
+                                    tileMode = 'disabled';
+                                    if (dimension) {
+                                        width = $util.formatPX(dimension.width);
+                                        height = $util.formatPX(dimension.height);
+                                    }
+                                    break;
                             }
                             if (gravity !== '' && node.renderChildren.length === 0 && dimension && dimension.width > 0 && dimension.height > 0) {
                                 if (tileModeY === 'repeat') {

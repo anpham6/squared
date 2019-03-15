@@ -734,6 +734,11 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                     value = node.companion.textContent.trim();
                                 }
                                 break;
+                            case 'submit':
+                                if (value === '') {
+                                    value = 'Submit';
+                                }
+                                break;
                             case 'time':
                                 if (value === '') {
                                     value = '--:-- --';

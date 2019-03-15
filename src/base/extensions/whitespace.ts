@@ -13,11 +13,18 @@ function setMinHeight<T extends Node>(node: T, offset: number) {
 
 function applyMarginCollapse<T extends Node>(parent: T, node: T, direction: boolean) {
     if (node.blockStatic && !node.plainText && !node.lineBreak) {
-        if (direction && (node.inlineText || parent.marginTop > 0 && parent.borderTopWidth === 0 && parent.paddingTop === 0 || node.firstChild && node.firstChild.plainText)) {
-            node.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
+        if (direction) {
+            if ((parent.marginTop > 0 || !parent.documentBody && parent.marginTop === 0 && node.inlineText) && parent.borderTopWidth === 0 && parent.paddingTop === 0) {
+                node.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
+                if (node.companion) {
+                    node.companion.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
+                }
+            }
         }
-        else if (!direction && (node.inlineText || parent.marginBottom > 0 && parent.borderBottomWidth === 0 && parent.paddingBottom === 0 || node.lastChild && node.lastChild.plainText)) {
-            node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
+        else {
+            if ((parent.marginBottom > 0 || !parent.documentBody && parent.marginBottom === 0 && node.inlineText) && parent.borderBottomWidth === 0 && parent.paddingBottom === 0) {
+                node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
+            }
         }
     }
 }
@@ -51,7 +58,11 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                     if (previous.excluded && !current.excluded) {
                                         const offset = Math.min(previousMarginTop, previousMarginBottom);
                                         if (offset < 0) {
-                                            current.modifyBox(BOX_STANDARD.MARGIN_TOP, Math.abs(offset) >= marginTop ? null : offset);
+                                            const top = Math.abs(offset) >= marginTop ? null : offset;
+                                            current.modifyBox(BOX_STANDARD.MARGIN_TOP, top);
+                                            if (current.companion) {
+                                                current.companion.modifyBox(BOX_STANDARD.MARGIN_TOP, top);
+                                            }
                                             processed.add(previous);
                                         }
                                     }
@@ -80,6 +91,9 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                         if ((previousMarginBottom > 0 || floating) && marginTop > 0) {
                                             if (marginTop <= previousMarginBottom || floating && previousMarginBottom === 0) {
                                                 current.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
+                                                if (current.companion) {
+                                                    current.companion.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
+                                                }
                                             }
                                             else {
                                                 previous.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
@@ -173,7 +187,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                             const previousStart = previousSiblings[previousSiblings.length - 1];
                             const offset = actualParent.box.bottom - previousStart.linear[previousStart.lineBreak || previousStart.excluded ? 'top' : 'bottom'];
                             if (offset !== 0) {
-                                if (previousStart.visible) {
+                                if (previousStart.rendered) {
                                     actualParent.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);
                                 }
                                 else if (!actualParent.hasHeight) {
@@ -185,7 +199,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                             const nextStart = nextSiblings[nextSiblings.length - 1];
                             const offset = nextStart.linear[nextStart.lineBreak || nextStart.excluded ? 'bottom' : 'top'] - actualParent.box.top;
                             if (offset !== 0) {
-                                if (nextStart.visible) {
+                                if (nextStart.rendered) {
                                     actualParent.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
                                 }
                                 else if (!actualParent.hasHeight) {

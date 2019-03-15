@@ -92,9 +92,7 @@ export function assignRect(rect: DOMRect | RectDimension): RectDimension {
 }
 
 export function removeElementsByClassName(className: string) {
-    const elements = document.getElementsByClassName(className);
-    for (let i = 0; i < elements.length; i++) {
-        const element = elements[i];
+    for (const element of Array.from(document.getElementsByClassName(className))) {
         if (element.parentElement) {
             element.parentElement.removeChild(element);
         }

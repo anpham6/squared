@@ -585,6 +585,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                     }
                     else if (
                         !this.pageFlow ||
+                        this.inputElement ||
                         renderParent.is(CONTAINER_NODE.GRID) ||
                         this.groupParent && this.renderChildren.every(node => node.inlineVertical) ||
                         this.tableElement ||
@@ -622,9 +623,6 @@ export default (Base: Constructor<squared.base.Node>) => {
                 let textAlign = checkTextAlign(this.cssInitial('textAlign', true));
                 if (this.pageFlow) {
                     let floating = '';
-                    if (this.documentId === '@+id/imageview_1') {
-                        console.log(1);
-                    }
                     if (this.inlineVertical && (renderParent.layoutHorizontal && !renderParent.support.container.positionRelative || renderParent.is(CONTAINER_NODE.GRID))) {
                         const gravity = this.display === 'table-cell' ? 'gravity' : 'layout_gravity';
                         switch (this.cssInitial('verticalAlign', true)) {
@@ -643,8 +641,11 @@ export default (Base: Constructor<squared.base.Node>) => {
                         if (this.floating) {
                             this.mergeGravity('layout_gravity', this.float);
                         }
-                        else {
-                            setAutoMargin(this);
+                        else if (!setAutoMargin(this) && textAlign !== '' && this.length === 0) {
+                            this.mergeGravity('layout_gravity', textAlign);
+                            if (!this.documentRoot) {
+                                textAlign = '';
+                            }
                         }
                     }
                     if (this.hasAlign($enum.NODE_ALIGNMENT.FLOAT)) {
@@ -692,10 +693,10 @@ export default (Base: Constructor<squared.base.Node>) => {
                 }
                 const textAlignParent = checkTextAlign(this.cssAscend('textAlign'));
                 if (textAlignParent !== '' && textAlignParent !== 'left' && textAlignParent !== 'start') {
-                    if (renderParent.layoutFrame && this.pageFlow && !this.floating && !this.autoMargin.horizontal && !this.blockWidth) {
+                    if (renderParent.layoutFrame && this.pageFlow && !this.blockWidth && !this.floating && !this.autoMargin.horizontal) {
                         this.mergeGravity('layout_gravity', textAlignParent);
                     }
-                    if (textAlign === '' && !this.blockStatic && !this.imageElement) {
+                    else if (textAlign === '' && this.textElement && !this.blockStatic) {
                         textAlign = textAlignParent;
                     }
                 }
@@ -794,12 +795,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                 this.autoSizeBoxModel();
                 this.alignHorizontalLayout();
                 this.alignVerticalLayout();
-                switch (this.cssAscend('visibility', true)) {
-                    case 'hidden':
-                    case 'collapse':
-                        this.hide(true);
-                        break;
-                }
+                this.setVisibility();
             }
         }
 
@@ -824,62 +820,59 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         public setBoxSpacing() {
-            const renderParent = this.renderParent;
-            if (renderParent) {
-                const supported = this.localSettings.targetAPI >= BUILD_ANDROID.OREO;
-                const setBoxModel = (attrs: string[], prefix: string, mergeable = true) => {
-                    const [top, right, bottom, left] = attrs;
-                    const boxModel: ObjectMap<number> = {};
-                    let mergeAll = 0;
-                    let mergeHorizontal = 0;
-                    let mergeVertical = 0;
-                    for (const attr of attrs) {
-                        boxModel[attr] = this._boxAdjustment[attr] + (this._boxReset[attr] === 0 && !(attr === 'marginRight' && this.inline && this.bounds.right >= this.documentParent.box.right) ? this[attr] : 0);
-                    }
-                    if (supported && mergeable) {
-                        if (boxModel[top] === boxModel[right] && boxModel[right] === boxModel[bottom] && boxModel[bottom] === boxModel[left]) {
-                            mergeAll = boxModel[top];
-                        }
-                        else {
-                            if (boxModel[left] === boxModel[right]) {
-                                mergeHorizontal = boxModel[left];
-                            }
-                            if (boxModel[top] === boxModel[bottom]) {
-                                mergeVertical = boxModel[top];
-                            }
-                        }
-                    }
-                    if (mergeAll !== 0) {
-                        this.android(prefix, $util.formatPX(mergeAll));
+            const supported = this.localSettings.targetAPI >= BUILD_ANDROID.OREO;
+            const setBoxModel = (attrs: string[], prefix: string, mergeable = true) => {
+                const [top, right, bottom, left] = attrs;
+                const boxModel: ObjectMap<number> = {};
+                let mergeAll = 0;
+                let mergeHorizontal = 0;
+                let mergeVertical = 0;
+                for (const attr of attrs) {
+                    boxModel[attr] = this._boxAdjustment[attr] + (this._boxReset[attr] === 0 && !(attr === 'marginRight' && this.inline && this.bounds.right >= this.documentParent.box.right) ? this[attr] : 0);
+                }
+                if (supported && mergeable) {
+                    if (boxModel[top] === boxModel[right] && boxModel[right] === boxModel[bottom] && boxModel[bottom] === boxModel[left]) {
+                        mergeAll = boxModel[top];
                     }
                     else {
-                        if (mergeHorizontal !== 0) {
-                            this.android(`${prefix}Horizontal`, $util.formatPX(mergeHorizontal));
+                        if (boxModel[left] === boxModel[right]) {
+                            mergeHorizontal = boxModel[left];
                         }
-                        else {
-                            if (boxModel[left] !== 0) {
-                                this.android(prefix + this.localizeString('Left'), $util.formatPX(boxModel[left]));
-                            }
-                            if (boxModel[right] !== 0) {
-                                this.android(prefix + this.localizeString('Right'), $util.formatPX(boxModel[right]));
-                            }
-                        }
-                        if (mergeVertical !== 0) {
-                            this.android(`${prefix}Vertical`, $util.formatPX(mergeVertical));
-                        }
-                        else {
-                            if (boxModel[top] !== 0) {
-                                this.android(`${prefix}Top`, $util.formatPX(boxModel[top]));
-                            }
-                            if (boxModel[bottom] !== 0) {
-                                this.android(`${prefix}Bottom`, $util.formatPX(boxModel[bottom]));
-                            }
+                        if (boxModel[top] === boxModel[bottom]) {
+                            mergeVertical = boxModel[top];
                         }
                     }
-                };
-                setBoxModel($css.BOX_MARGIN, 'layout_margin', !renderParent.is(CONTAINER_NODE.GRID));
-                setBoxModel($css.BOX_PADDING, 'padding');
-            }
+                }
+                if (mergeAll !== 0) {
+                    this.android(prefix, $util.formatPX(mergeAll));
+                }
+                else {
+                    if (mergeHorizontal !== 0) {
+                        this.android(`${prefix}Horizontal`, $util.formatPX(mergeHorizontal));
+                    }
+                    else {
+                        if (boxModel[left] !== 0) {
+                            this.android(prefix + this.localizeString('Left'), $util.formatPX(boxModel[left]));
+                        }
+                        if (boxModel[right] !== 0) {
+                            this.android(prefix + this.localizeString('Right'), $util.formatPX(boxModel[right]));
+                        }
+                    }
+                    if (mergeVertical !== 0) {
+                        this.android(`${prefix}Vertical`, $util.formatPX(mergeVertical));
+                    }
+                    else {
+                        if (boxModel[top] !== 0) {
+                            this.android(`${prefix}Top`, $util.formatPX(boxModel[top]));
+                        }
+                        if (boxModel[bottom] !== 0) {
+                            this.android(`${prefix}Bottom`, $util.formatPX(boxModel[bottom]));
+                        }
+                    }
+                }
+            };
+            setBoxModel($css.BOX_MARGIN, 'layout_margin', this.renderParent === undefined || !this.renderParent.is(CONTAINER_NODE.GRID));
+            setBoxModel($css.BOX_PADDING, 'padding');
         }
 
         private autoSizeBoxModel() {
@@ -1006,6 +999,19 @@ export default (Base: Constructor<squared.base.Node>) => {
                         });
                     }
                 }
+            }
+        }
+
+        private setVisibility() {
+            const renderParent = this.renderParent as T;
+            switch (this.cssAscend('visibility', true)) {
+                case 'hidden':
+                case 'collapse':
+                    this.hide(true);
+                    break;
+            }
+            if (renderParent.tableElement && renderParent.css('empty-cells') === 'hide' && this.actualChildren.length === 0 && this.inlineText && this.textContent === '') {
+                this.hide(true);
             }
         }
 

@@ -601,9 +601,8 @@ export function resolvePath(value: string) {
                 value = `${location.origin + pathname.join('/')}/${value}`;
             }
         }
-        return value;
     }
-    return '';
+    return value;
 }
 
 export function trimNull(value: string | undefined) {

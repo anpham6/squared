@@ -461,6 +461,24 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return value || '';
     }
 
+    public cssAny(attr: string, ...values: string[]) {
+        for (const value of values) {
+            if (this.css(attr) === value) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public cssInitialAny(attr: string, ...values: string[]) {
+        for (const value of values) {
+            if (this.cssInitial(attr) === value) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public cssAscend(attr: string, startChild = false, visible = false) {
         let value = '';
         let current = startChild ? this : this.actualParent;
@@ -989,6 +1007,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this.tagName === 'TABLE' || this.display === 'table';
     }
 
+    get inputElement() {
+        return this._element !== null && this._element.tagName === 'INPUT';
+    }
+
     get groupParent() {
         return false;
     }
@@ -1393,6 +1415,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                 }
                             }
                         }
+                        else if (element.children.length === 0 && !element.textContent) {
+                            value = true;
+                        }
                         break;
                 }
             }
@@ -1441,7 +1466,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get rightAligned() {
         if (this._cached.rightAligned === undefined) {
-            this._cached.rightAligned = this.float === 'right' || this.autoMargin.left || this.inlineVertical && this.cssAscend('textAlign', true) === 'right' || !this.pageFlow && this.has('right');
+            this._cached.rightAligned = this.float === 'right' || this.autoMargin.left || !this.pageFlow && this.has('right');
         }
         return this._cached.rightAligned || this.hasAlign(NODE_ALIGNMENT.RIGHT);
     }
@@ -1514,11 +1539,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get textContent() {
         if (this._cached.textContent === undefined) {
-            const element = this._element;
+            const element = <HTMLElement> this._element;
             let value = '';
             if (element) {
                 if (this.htmlElement) {
-                    value = element.textContent || (<HTMLElement> element).innerText;
+                    value = element.textContent || element.innerText;
                 }
                 else if (this.plainText) {
                     value = element.textContent || '';

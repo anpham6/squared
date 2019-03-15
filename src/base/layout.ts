@@ -41,14 +41,10 @@ export default class Layout<T extends Node> extends squared.lib.base.Container<T
     }
 
     public add(value: number) {
-        this.alignmentType |= value;
+        if (!$util.hasBit(this.alignmentType, value)) {
+            this.alignmentType |= value;
+        }
         return this.alignmentType;
-    }
-
-    public retain(list: T[]) {
-        super.retain(list);
-        this.itemCount = list.length;
-        return this;
     }
 
     public delete(value: number) {
@@ -56,6 +52,12 @@ export default class Layout<T extends Node> extends squared.lib.base.Container<T
             this.alignmentType ^= value;
         }
         return this.alignmentType;
+    }
+
+    public retain(list: T[]) {
+        super.retain(list);
+        this.itemCount = list.length;
+        return this;
     }
 
     public getFloated(parent = false) {
