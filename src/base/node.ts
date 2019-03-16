@@ -1201,7 +1201,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         return parseFloat(value) > 0;
                     }
                 }
-                else if ($util.isLength(value) && value !== '0px' || this.toInt('minHeight') > 0) {
+                else if ($util.isLength(value) && value !== '0px' || this.toFloat('minHeight') > 0) {
                     return true;
                 }
                 return false;
@@ -1212,13 +1212,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get lineHeight() {
         if (this._cached.lineHeight === undefined) {
-            if (this.length === 0 || this.textElement) {
-                this._cached.lineHeight = this.toInt('lineHeight');
-            }
-            else {
-                const lineHeight = $util.convertInt(this.cssAscend('lineHeight', true));
-                this._cached.lineHeight = lineHeight > this.actualHeight || this.some(node => node.plainText) ? lineHeight : 0;
-            }
+            const lineHeight = $util.convertFloat(this.cssAscend('lineHeight', true));
+            this._cached.lineHeight = lineHeight > this.actualHeight || this.some(node => node.plainText) ? lineHeight : 0;
         }
         return this._cached.lineHeight;
     }

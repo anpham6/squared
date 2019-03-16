@@ -24,6 +24,9 @@ export interface ControllerSettings {
         pathName: string;
         fileExtension: string;
     };
+    svg: {
+        enabled: boolean
+    };
     unsupported: {
         excluded: Set<string>,
         tagName: Set<string>

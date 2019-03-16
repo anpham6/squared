@@ -24,9 +24,7 @@ export default abstract class Sprite<T extends Node> extends Extension<T> {
                     const dimension = node.actualDimension;
                     const fontSize = node.fontSize;
                     const position = $css.getBackgroundPosition(`${node.css('backgroundPositionX')} ${node.css('backgroundPositionY')}`, dimension, fontSize);
-                    const width = $util.convertLength(node.has('width') ? node.css('width') : node.css('minWidth'), dimension.width, fontSize);
-                    const height = $util.convertLength(node.has('height') ? node.css('width') : node.css('minHeight'), dimension.height, fontSize);
-                    if (position.left <= 0 && position.top <= 0 && image.width > width && image.height > height) {
+                    if (position.left <= 0 && position.top <= 0 && image.width > dimension.width && image.height > dimension.height) {
                         image.position = { x: position.left, y: position.top };
                         node.data(EXT_NAME.SPRITE, 'mainData', image);
                         valid = true;

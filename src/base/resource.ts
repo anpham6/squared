@@ -616,6 +616,9 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                     borderRadius = [A, B || A, C, D || C, E, F || E, G, H || G];
                                 }
                                 if (borderRadius.every(radius => radius === borderRadius[0])) {
+                                    if (borderRadius[0] === '0px') {
+                                        continue;
+                                    }
                                     borderRadius.length = 1;
                                 }
                                 for (let i = 0; i < borderRadius.length; i++) {

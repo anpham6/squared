@@ -888,7 +888,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                     if (axisY.length > 1 && k < axisY.length - 1 && nodeY.pageFlow && (parentY.alignmentType === 0 || extendable || unknownParent) && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && !nodeY.hasBit('excludeSection', APP_SECTION.DOM_TRAVERSE)) {
                         const horizontal: T[] = [];
                         const vertical: T[] = [];
-                        const floatSegment = new Set();
+                        const floatSegment = new Set<string>();
                         let verticalExtended = false;
                         function checkHorizontal(node: T) {
                             if (vertical.length || verticalExtended) {
@@ -1026,10 +1026,9 @@ export default class Application<T extends Node> implements squared.base.Applica
                             unknownParent = false;
                         }
                         if (result) {
-                            const layout = result.layout;
-                            const output = this.renderLayout(layout);
+                            const output = this.renderLayout(result.layout);
                             if (output !== '') {
-                                this.addRenderTemplate(parentY, layout.node, output, true);
+                                this.addRenderTemplate(parentY, result.layout.node, output, true);
                                 parentY = nodeY.parent as T;
                             }
                         }
@@ -1047,15 +1046,15 @@ export default class Application<T extends Node> implements squared.base.Applica
                             parentY = nodeY.parent as T;
                         }
                     }
-                    const extensionsDescendant = this.session.extensionMap.get(nodeY.id);
+                    const extensionDescendant = this.session.extensionMap.get(nodeY.id);
                     if (!nodeY.rendered && !nodeY.hasBit('excludeSection', APP_SECTION.EXTENSION)) {
                         let combined = parent.renderExtension ? parent.renderExtension.slice(0) : undefined;
-                        if (extensionsDescendant) {
+                        if (extensionDescendant) {
                             if (combined) {
-                                $util.concatArray(combined, extensionsDescendant as Extension<T>[]);
+                                $util.concatArray(combined, extensionDescendant as Extension<T>[]);
                             }
                             else {
-                                combined = extensionsDescendant.slice(0) as Extension<T>[];
+                                combined = extensionDescendant.slice(0) as Extension<T>[];
                             }
                         }
                         if (combined) {
@@ -1083,7 +1082,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         if (nodeY.styleElement) {
                             let next = false;
                             prioritizeExtensions(<HTMLElement> documentRoot.element, <HTMLElement> nodeY.element, extensions).some(item => {
-                                if (item.is(nodeY) && item.condition(nodeY, parentY) && (parent.renderExtension === undefined || !parent.renderExtension.includes(item)) && (extensionsDescendant === undefined || !extensionsDescendant.includes(item))) {
+                                if (item.is(nodeY) && item.condition(nodeY, parentY) && (parent.renderExtension === undefined || !parent.renderExtension.includes(item)) && (extensionDescendant === undefined || !extensionDescendant.includes(item))) {
                                     const result = item.processNode(nodeY, parentY);
                                     if (result.output) {
                                         this.addRenderTemplate(parentY, nodeY, result.output);
@@ -1829,7 +1828,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 });
             }
         }
-        else if (element.parentElement instanceof HTMLElement) {
+        else if (!this.controllerHandler.localSettings.svg.enabled || element.parentElement instanceof HTMLElement) {
             node = this.createNode(element);
             if (!this.controllerHandler.localSettings.unsupported.excluded.has(element.tagName) && this.conditionElement(element)) {
                 if (!this.userSettings.exclusionsDisabled) {

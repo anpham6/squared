@@ -17,7 +17,7 @@ function applyMarginCollapse<T extends Node>(node: T, child: T, direction: boole
             if (node.borderTopWidth === 0 && node.paddingTop === 0) {
                 if (node.marginTop < child.marginTop) {
                     node.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
-                    if (node.naturalElement && child.pageFlow) {
+                    if (node.naturalElement && child.pageFlow && child.valueBox(BOX_STANDARD.MARGIN_TOP)[0] !== 1) {
                         node.modifyBox(BOX_STANDARD.MARGIN_TOP, child.marginTop);
                     }
                 }
@@ -32,7 +32,7 @@ function applyMarginCollapse<T extends Node>(node: T, child: T, direction: boole
         else if (node.borderBottomWidth === 0 && node.paddingBottom === 0) {
             if (node.marginBottom < child.marginBottom) {
                 node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
-                if (node.naturalElement && child.pageFlow) {
+                if (node.naturalElement && child.pageFlow && child.valueBox(BOX_STANDARD.MARGIN_BOTTOM)[0] !== 1) {
                     node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, child.marginBottom);
                 }
             }
@@ -57,13 +57,13 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                     const element = <HTMLElement> node.element;
                     for (let i = 0; i < element.children.length; i++) {
                         let current = $dom.getElementAsNode<T>(element.children[i]);
-                        if (current && current.block) {
-                            if (node.blockStatic) {
-                                if (firstChild === undefined) {
-                                    firstChild = current;
-                                }
-                                lastChild = current;
+                        if (node.blockStatic) {
+                            if (firstChild === undefined) {
+                                firstChild = current;
                             }
+                            lastChild = current;
+                        }
+                        if (current && current.block) {
                             if (!current.lineBreak) {
                                 const previousSiblings = current.previousSiblings(true, true, true);
                                 if (previousSiblings.length) {

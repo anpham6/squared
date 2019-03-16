@@ -630,7 +630,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 TEMPLATES.SET_OBJECTANIMATOR = $xml.parseTemplate(SETOBJECTANIMATOR_TMPL);
             }
             $SvgBuild.setName();
-            this.application.controllerHandler.localSettings.unsupported.tagName.delete('svg');
+            this.application.controllerHandler.localSettings.svg.enabled = true;
         }
     }
 
@@ -1316,7 +1316,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
     }
 
     public afterFinalize() {
-        this.application.controllerHandler.localSettings.unsupported.tagName.add('svg');
+        this.application.controllerHandler.localSettings.svg.enabled = false;
     }
 
     private parseVectorData(group: SvgGroup) {

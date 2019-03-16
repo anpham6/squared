@@ -227,11 +227,11 @@ function checkBackgroundPosition(value: string, adjacent: string, fallback: stri
     return value;
 }
 
-function setBodyBackgroundColor(name: string, parent: string, value: string) {
+function setBodyBackground(name: string, parent: string, attr: string, value: string) {
     Resource.addTheme({
         name,
         parent,
-        items: { 'android:windowBackground': value }
+        items: { [attr]: value }
     });
 }
 
@@ -536,7 +536,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     break;
                                 default:
                                     tileMode = 'disabled';
-                                    if (dimension) {
+                                    if (dimension && (node.inputElement || node.imageElement)) {
                                         width = $util.formatPX(dimension.width);
                                         height = $util.formatPX(dimension.height);
                                     }
@@ -727,13 +727,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     if (stored.backgroundColor) {
                         const colorName = Resource.addColor(stored.backgroundColor);
                         if (colorName !== '') {
-                            const color = `@color/${colorName}`;
-                            if (node.documentBody) {
-                                setBodyBackgroundColor(settings.manifestThemeName, settings.manifestParentThemeName, color);
-                            }
-                            else {
-                                backgroundColor = [{ color }];
-                            }
+                            backgroundColor = [{ color: `@color/${colorName}` }];
                         }
                     }
                     const borderRadius = getShapeAttribute(stored, 'radius');
@@ -894,7 +888,13 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                     }
                     if (resourceName !== '') {
-                        node.android('background', `@drawable/${resourceName}`, false);
+                        resourceName = `@drawable/${resourceName}`;
+                        if (node.documentBody) {
+                            setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, 'android:background', resourceName);
+                        }
+                        else {
+                            node.android('background', resourceName, false);
+                        }
                     }
                 }
                 else if (stored.backgroundColor) {
@@ -902,7 +902,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     if (colorName !== '') {
                         colorName = `@color/${colorName}`;
                         if (node.documentBody) {
-                            setBodyBackgroundColor(settings.manifestThemeName, settings.manifestParentThemeName, colorName);
+                            setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, 'android:windowBackground', colorName);
                         }
                         else {
                             const fontStyle: FontAttribute = node.data(Resource.KEY_NAME, 'fontStyle');

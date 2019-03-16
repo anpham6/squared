@@ -607,8 +607,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                         this.groupParent && this.renderChildren.every(node => node.inlineVertical) ||
                         this.tableElement ||
                         parent.gridElement ||
-                        parent.flexElement ||
-                        renderChildren.some(node => Math.ceil(node.actualWidth) >= this.box.width && !node.autoMargin.horizontal && (renderParent.inlineWidth || node.inlineStatic && !node.plainText || $util.isLength(node.cssInitial('width')))))
+                        parent.flexElement)
                     {
                         this.android('layout_width', 'wrap_content', false);
                         return;
@@ -616,9 +615,10 @@ export default (Base: Constructor<squared.base.Node>) => {
                     else if (
                         blockStatic && (
                             this.linear.width >= parent.box.width ||
-                            parent.documentBody ||
+                            this.visibleStyle.background ||
                             this.layoutVertical && !this.autoMargin.horizontal && !this.floating ||
                             !this.documentRoot && renderChildren.some(node => node.layoutVertical && !node.autoMargin.horizontal && !node.hasWidth && !node.floating) ||
+                            parent.documentBody ||
                             parent.has('width', $enum.CSS_STANDARD.PERCENT) ||
                             parent.blockStatic && (this.singleChild || this.alignedVertically(this.previousSiblings()))
                         ) ||
@@ -719,18 +719,18 @@ export default (Base: Constructor<squared.base.Node>) => {
                     if (renderParent.layoutFrame && this.pageFlow && !this.blockWidth && !this.floating && !this.autoMargin.horizontal) {
                         this.mergeGravity('layout_gravity', textAlignParent);
                     }
-                    else if (textAlign === '' && this.textElement && !this.blockStatic) {
+                    else if (textAlign === '') {
                         textAlign = textAlignParent;
                     }
                 }
-                if (textAlign !== '' && !this.layoutConstraint && (!this.layoutVertical || this.groupParent)) {
+                if (textAlign !== '') {
                     this.mergeGravity('gravity', textAlign);
                 }
             }
         }
 
         public mergeGravity(attr: string, ...alignment: string[]) {
-            if (this.layoutFrame && attr === 'gravity') {
+            if (attr === 'gravity' && (this.layoutFrame || this.layoutConstraint)) {
                 return '';
             }
             const direction = new Set<string>();
@@ -801,9 +801,9 @@ export default (Base: Constructor<squared.base.Node>) => {
             }
         }
 
-        public setLineHeight(value: number) {
-            const offset = value - (this.hasHeight ? this.height : this.bounds.height);
-            if (offset > 0) {
+        public setLineHeight(value: number, height = true) {
+            const offset = value - (height ? (this.hasHeight ? this.height : this.bounds.height) : 0);
+            if (Math.floor(offset) > 0) {
                 this.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.floor(offset / 2) - (this.inlineVertical ? $util.convertInt(this.verticalAlign) : 0));
                 this.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, Math.ceil(offset / 2));
             }
@@ -1005,13 +1005,11 @@ export default (Base: Constructor<squared.base.Node>) => {
                         }
                     };
                     if (this.length === 0) {
-                        if (!this.layoutHorizontal) {
-                            if (this.support.lineHeight || this.inlineStatic && this.visibleStyle.background) {
-                                this.setLineHeight(lineHeight);
-                            }
-                            else {
-                                setMinHeight();
-                            }
+                        if (this.support.lineHeight && this.block || this.inlineStatic && this.visibleStyle.background) {
+                            this.setLineHeight(lineHeight);
+                        }
+                        else {
+                            setMinHeight();
                         }
                     }
                     else if (this.layoutVertical) {

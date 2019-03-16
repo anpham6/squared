@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Border Image</title>
+		<style type="text/css">
+			p {
+				width: 197px;
+				height: 54px;
+				border: 11px solid #ffffff;}
+			p.one {
+				border-image: url("images/dots.gif") 11 11 11 11 stretch;}
+			p.two {
+				border-image: url("images/dots.gif") 11 11 11 11 round;}
+		</style>
+	<script src="/node_modules/systemjs/dist/system.js"></script>
+	<script src="../../squared.js"></script>
+	</head>
+	<body>
+		<p class="one"></p>
+		<p class="two"></p>
+	</body>
+</html>
