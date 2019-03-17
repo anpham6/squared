@@ -1,2 +1,1 @@
-export default `<?xml version="1.0" encoding="utf-8"?>
-{:0}`;
+export default '<?xml version="1.0" encoding="utf-8"?>\n';

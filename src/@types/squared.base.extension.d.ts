@@ -4,7 +4,7 @@ declare global {
     namespace squared.base {
         interface Extension<T extends Node> {
             tagNames: string[];
-            documentRoot: boolean;
+            documentBase: boolean;
             eventOnly: boolean;
             preloaded: boolean;
             application: Application<T>;
@@ -29,7 +29,6 @@ declare global {
             postParseDocument(node: T): void;
             postProcedure(node: T): void;
             beforeParseDocument(): void;
-            afterDepthLevel(): void;
             afterBaseLayout(): void;
             afterConstraints(): void;
             afterResources(): void;

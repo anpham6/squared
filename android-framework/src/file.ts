@@ -24,8 +24,8 @@ type StyleXML = {
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
-const REGEXP_IMAGE = /^<!-- image: (.+) -->\n<!-- filename: (.+)\/(.+?\.\w+) -->$/;
-const REGEXP_FILE = /^[\w\W]*?(<!-- filename: (.+)\/(.+?\.xml) -->)$/;
+const REGEXP_IMAGE = /^<!-- image: (.+) -->\n<!-- filename: (.+)\/(.+?\.\w+) -->\n*$/;
+const REGEXP_FILE = /^[\w\W]*?(<!-- filename: (.+)\/(.+?\.xml) -->)\n*$/;
 
 const TEMPLATES = {
     color: $xml.parseTemplate(COLOR_TMPL),

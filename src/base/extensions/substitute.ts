@@ -20,12 +20,6 @@ export default class Substitute<T extends Node> extends Extension<T> {
 
     public processNode(node: T, parent: T): ExtensionResult<T> {
         const data = $css.getDataSet(<HTMLElement> node.element, this.name);
-        let output = '';
-        if (data.tag) {
-            node.setControlType(data.tag);
-            node.render(parent);
-            output = this.application.controllerHandler.renderNodeStatic(data.tag, node.renderDepth, {}, '', '', node, node.length > 0);
-        }
         if (data.tagChild) {
             node.each(item => {
                 if (item.styleElement) {
@@ -34,6 +28,11 @@ export default class Substitute<T extends Node> extends Extension<T> {
                 }
             });
         }
-        return { output };
+        if (data.tag) {
+            node.setControlType(data.tag);
+            node.render(parent);
+            return { output: this.application.controllerHandler.renderNodeStatic(data.tag, node.renderDepth, {}, '', '', node, node.length > 0) };
+        }
+        return { output: '' };
     }
 }

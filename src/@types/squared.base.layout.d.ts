@@ -15,6 +15,7 @@ declare global {
             linearX: boolean;
             linearY: boolean;
             renderPosition: boolean;
+            alwaysRender: boolean;
             readonly visible: T[];
             init(): void;
             setType(containerType: number, ...alignmentType: number[]): void;

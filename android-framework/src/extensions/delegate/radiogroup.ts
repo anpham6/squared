@@ -6,7 +6,6 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 import $NodeList = squared.base.NodeList;
 
 const $enum = squared.base.lib.enumeration;
-const $xml = squared.lib.xml;
 
 export default class ScrollView<T extends android.base.View> extends squared.base.Extension<T> {
     public condition(node: T) {
@@ -57,10 +56,10 @@ export default class ScrollView<T extends android.base.View> extends squared.bas
             this.subscribers.add(container);
             return {
                 output: '',
-                complete: true,
                 parent: container,
                 renderAs: container,
-                outputAs: controller.getEnclosingTag(controlName, container.id, target ? -1 : container.renderDepth, $xml.formatPlaceholder(container.id))
+                outputAs: controller.getEnclosingTag(controlName, container.id, target ? -1 : container.renderDepth, ''),
+                complete: true
             };
         }
         return { output: '' };

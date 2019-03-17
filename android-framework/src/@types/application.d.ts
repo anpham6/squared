@@ -7,7 +7,6 @@ export interface UserSettingsAndroid extends UserSettings {
     ellipsisOnTextOverflow: boolean;
     collapseUnattributedElements: boolean;
     convertPixels: string;
-    showAttributes: boolean;
     manifestThemeName: string;
     manifestParentThemeName: string;
 }

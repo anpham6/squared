@@ -28,8 +28,7 @@ export default class Guideline<T extends android.base.View> extends squared.base
             node.length,
             node.children as T[]
         );
-        const output = this.application.renderNode(layout);
-        return { output };
+        return { output: this.application.renderNode(layout) };
     }
 
     public afterConstraints() {

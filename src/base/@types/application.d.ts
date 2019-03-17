@@ -3,11 +3,11 @@ export interface UserSettings {
     preloadImages: boolean;
     maxWordWrapWidth: number;
     supportNegativeLeftTop: boolean;
-    floatOverlapDisabled: boolean;
     exclusionsDisabled: boolean;
     customizationsDisabled: boolean;
     customizationsOverwritePrivilege: boolean;
     replaceCharacterEntities: boolean;
+    showAttributes: boolean;
     insertSpaces: number;
     handleExtensionsAsync: boolean;
     autoCloseOnWrite: boolean;
@@ -63,18 +63,17 @@ export interface AppHandler<T extends squared.base.Node> {
 
 export interface AppSession<T extends squared.base.Node, U> {
     cache: U;
+    documentRoot: T[];
     image: Map<string, ImageAsset>;
-    renderQueue: Map<string, string[]>;
     excluded: squared.base.NodeList<T>;
-    targeted: Map<string, T[]>;
+    targetQueue: Map<T, string>;
+    renderPosition: Map<T, T[]>;
     extensionMap: Map<number, squared.base.Extension<T>[]>;
 }
 
 export interface AppProcessing<T extends squared.base.Node, U> {
     cache: U;
-    depthMap: Map<number, Map<string, string>>;
     node: T | undefined;
-    layout: FileAsset | undefined;
     excluded: squared.base.NodeList<T>;
 }
 
@@ -93,6 +92,7 @@ export interface ExtensionResult<T extends squared.base.Node> {
     complete?: boolean;
     next?: boolean;
     parent?: T;
+    parentAs?: T;
     renderAs?: T;
     outputAs?: string;
     include?: boolean;
@@ -158,6 +158,7 @@ export interface TemplateDataAAA {
 }
 
 export interface Asset {
+    id?: number;
     uri?: string;
 }
 

@@ -60,7 +60,7 @@ export function replaceIndent(value: string, depth: number, pattern: RegExp) {
                 if (indent === -1) {
                     indent = match[2].length;
                 }
-                return match[1] + '\t'.repeat(depth + (match[2].length - indent)) + match[3];
+                return (match[1] || '') + '\t'.repeat(depth + (match[2].length - indent)) + match[3];
             }
             return line;
         });

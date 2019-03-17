@@ -11,14 +11,16 @@ const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
-const REGEXP_INDENT = /^({[^}]+})(\t*)(<.*)/;
+const REGEXP_INDENT = /^({[^}]+})*(\t*)(<.*)/;
 const REGEXP_PLACEHOLDER = /{[<:@#>]\d+(\^\d+)?}\n?/g;
 
 export default abstract class Controller<T extends Node> implements squared.base.Controller<T> {
     public abstract readonly localSettings: ControllerSettings;
 
-    private _before: ObjectIndex<string[]> = {};
-    private _after: ObjectIndex<string[]> = {};
+    private _beforeOutside: ObjectIndex<string[]> = {};
+    private _beforeInside: ObjectIndex<string[]> = {};
+    private _afterInside: ObjectIndex<string[]> = {};
+    private _afterOutside: ObjectIndex<string[]> = {};
 
     protected constructor(
         public application: Application<T>,
@@ -31,7 +33,7 @@ export default abstract class Controller<T extends Node> implements squared.base
     public abstract processTraverseHorizontal(layout: Layout<T>, siblings?: T[]): LayoutResult<T>;
     public abstract processTraverseVertical(layout: Layout<T>, siblings?: T[]): LayoutResult<T>;
     public abstract processLayoutHorizontal(layout: Layout<T>, strictMode?: boolean): LayoutResult<T>;
-    public abstract sortRenderPosition(parent: T, children: T[]): T[];
+    public abstract sortRenderPosition(parent: T, children: T[]): T[] | undefined;
     public abstract renderNode(layout: Layout<T>): string;
     public abstract renderNodeGroup(layout: Layout<T>): string;
     public abstract renderNodeStatic(controlName: string, depth: number, options?: {}, width?: string, height?: string, node?: T, children?: boolean): string;
@@ -45,8 +47,8 @@ export default abstract class Controller<T extends Node> implements squared.base
     public abstract get afterInsertNode(): BindGeneric<T, void>;
 
     public reset() {
-        this._before = {};
-        this._after = {};
+        this._beforeOutside = {};
+        this._afterOutside = {};
     }
 
     public applyDefaultStyles(element: Element) {
@@ -105,57 +107,119 @@ export default abstract class Controller<T extends Node> implements squared.base
         $dom.setElementCache(element, 'styleMap', styleMap);
     }
 
-    public replaceRenderQueue(output: string) {
-        for (const id in this._before) {
-            output = output.replace(`{<${id}}`, this._before[id].join(''));
+    public addBeforeOutsideTemplate(id: number, value: string, index = -1) {
+        if (this._beforeOutside[id] === undefined) {
+            this._beforeOutside[id] = [];
         }
-        for (const id in this._after) {
-            output = output.replace(`{>${id}}`, this._after[id].join(''));
-        }
-        return output;
-    }
-
-    public prependBefore(id: number, output: string, index = -1) {
-        if (this._before[id] === undefined) {
-            this._before[id] = [];
-        }
-        if (index !== -1 && index < this._before[id].length) {
-            this._before[id].splice(index, 0, output);
+        if (index !== -1 && index < this._beforeOutside[id].length) {
+            this._beforeOutside[id].splice(index, 0, value);
         }
         else {
-            this._before[id].push(output);
+            this._beforeOutside[id].push(value);
         }
     }
 
-    public appendAfter(id: number, output: string, index = -1) {
-        if (this._after[id] === undefined) {
-            this._after[id] = [];
+    public addBeforeInsideTemplate(id: number, value: string, index = -1) {
+        if (this._beforeInside[id] === undefined) {
+            this._beforeInside[id] = [];
         }
-        if (index !== -1 && index < this._after[id].length) {
-            this._after[id].splice(index, 0, output);
+        if (index !== -1 && index < this._beforeInside[id].length) {
+            this._beforeInside[id].splice(index, 0, value);
         }
         else {
-            this._after[id].push(output);
+            this._beforeInside[id].push(value);
         }
+    }
+
+    public addAfterInsideTemplate(id: number, value: string, index = -1) {
+        if (this._afterInside[id] === undefined) {
+            this._afterInside[id] = [];
+        }
+        if (index !== -1 && index < this._afterInside[id].length) {
+            this._afterInside[id].splice(index, 0, value);
+        }
+        else {
+            this._afterInside[id].push(value);
+        }
+    }
+
+    public addAfterOutsideTemplate(id: number, value: string, index = -1) {
+        if (this._afterOutside[id] === undefined) {
+            this._afterOutside[id] = [];
+        }
+        if (index !== -1 && index < this._afterOutside[id].length) {
+            this._afterOutside[id].splice(index, 0, value);
+        }
+        else {
+            this._afterOutside[id].push(value);
+        }
+    }
+
+    public getBeforeOutsideTemplate(id: number): string {
+        return this._beforeOutside[id] ? this._beforeOutside[id].join('') : '';
+    }
+
+    public getBeforeInsideTemplate(id: number): string {
+        return this._beforeInside[id] ? this._beforeInside[id].join('') : '';
+    }
+
+    public getAfterInsideTemplate(id: number): string {
+        return this._afterInside[id] ? this._afterInside[id].join('') : '';
+    }
+
+    public getAfterOutsideTemplate(id: number): string {
+        return this._afterOutside[id] ? this._afterOutside[id].join('') : '';
     }
 
     public hasAppendProcessing(id: number) {
-        return this._before[id] !== undefined || this._after[id] !== undefined;
+        return this._beforeOutside[id] !== undefined || this._beforeInside[id] !== undefined || this._afterInside[id] !== undefined || this._afterOutside[id] !== undefined;
     }
 
-    public getEnclosingTag(controlName: string, id: number, depth: number, xml = '') {
+    public cascadeDocument(templates: string[], children: T[]) {
+        let output = '';
+        for (let i = 0; i < templates.length; i++) {
+            if (templates[i] !== '') {
+                const item = children[i] as T;
+                let template = templates[i].replace($xml.formatPlaceholder(item.id, '@'), this.userSettings.showAttributes ? item.extractAttributes() : '');
+                if (item.renderTemplates) {
+                    let cascadeTemplate!: string[];
+                    let cascadeChildren = this.application.session.renderPosition.get(item);
+                    let valid = false;
+                    cascadeChildren = cascadeChildren ? this.sortRenderPosition(item, cascadeChildren) : this.sortRenderPosition(item, item.renderChildren as T[]);
+                    if (cascadeChildren) {
+                        cascadeTemplate = [];
+                        for (const child of cascadeChildren) {
+                            const index = item.renderChildren.findIndex(node => node.id === child.id);
+                            if (index !== -1) {
+                                cascadeTemplate.push(item.renderTemplates[i]);
+                            }
+                        }
+                        if (cascadeTemplate.length === item.renderTemplates.length) {
+                            valid = true;
+                        }
+                    }
+                    if (!valid) {
+                        cascadeTemplate = item.renderTemplates;
+                        cascadeChildren = item.renderChildren as T[];
+                    }
+                    template = template.replace($xml.formatPlaceholder(item.id), this.getBeforeInsideTemplate(item.id) + this.cascadeDocument(cascadeTemplate, cascadeChildren as T[]) + this.getAfterInsideTemplate(item.id));
+                }
+                output += this.getBeforeOutsideTemplate(item.id) + template + this.getAfterOutsideTemplate(item.id);
+            }
+        }
+        return output;
+    }
+
+    public getEnclosingTag(controlName: string, id: number, depth: number, innerXml?: string) {
         const indent = '\t'.repeat(Math.max(0, depth));
-        let output = `{<${id}}`;
-        if (xml !== '') {
-            output += indent + `<${controlName}${depth === 0 ? '{#0}' : ''}{@${id}}>\n` +
-                               xml +
-                      indent + `</${controlName}>\n`;
+        if (innerXml !== undefined) {
+            return indent + `<${controlName}${depth === 0 ? '{#0}' : ''}{@${id}}>\n` +
+                             (innerXml || $xml.formatPlaceholder(id)) +
+                   indent + `</${controlName}>\n`;
         }
         else {
-            output += indent + `<${controlName}${depth === 0 ? '{#0}' : ''}{@${id}} />\n`;
+            return indent + `<${controlName}${depth === 0 ? '{#0}' : ''}{@${id}} />\n`;
         }
-        output += `{>${id}}`;
-        return output;
     }
 
     public removePlaceholders(value: string) {

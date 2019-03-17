@@ -22,7 +22,7 @@ export default abstract class Extension<T extends Node> implements squared.base.
     public tagNames: string[];
     public eventOnly = false;
     public preloaded = false;
-    public documentRoot = false;
+    public documentBase = false;
     public application!: Application<T>;
     public readonly options: ExternalData = {};
     public readonly dependencies: ExtensionDependency[] = [];
@@ -113,7 +113,6 @@ export default abstract class Extension<T extends Node> implements squared.base.
     public postProcedure(node: T) {}
 
     public beforeParseDocument() {}
-    public afterDepthLevel() {}
     public afterBaseLayout() {}
     public afterConstraints() {}
     public afterResources() {}

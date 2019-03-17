@@ -122,7 +122,6 @@ squared.settings = {
     preloadImages: true,
     ellipsisOnTextOverflow: true,
     supportNegativeLeftTop: true,
-    floatOverlapDisabled: false,
     collapseUnattributedElements: true,
     customizationsDisabled: true,
     customizationsOverwritePrivilege: true,

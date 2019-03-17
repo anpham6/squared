@@ -19,7 +19,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public alignmentType = 0;
     public depth = -1;
     public siblingIndex = Number.POSITIVE_INFINITY;
-    public renderPosition = -1;
     public documentRoot = false;
     public visible = true;
     public excluded = false;
@@ -28,7 +27,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public positioned = false;
     public controlId = '';
     public style!: CSSStyleDeclaration;
+    public renderParent?: T;
     public renderExtension?: Extension<T>[];
+    public renderTemplates?: string[];
     public outerParent?: T;
     public innerChild?: T;
     public companion?: T;
@@ -43,7 +44,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     protected _bounds?: RectDimension;
     protected _linear?: RectDimension;
     protected _controlName?: string;
-    protected _renderParent?: T;
     protected _documentParent?: T;
     protected readonly _initial: InitialData<T> = {
         iteration: -1,
@@ -62,7 +62,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     private _excludeResource = 0;
     private _parent?: T;
     private _renderAs?: T;
-    private _renderPositionId?: string;
     private readonly _element: Element | null = null;
 
     protected constructor(
@@ -82,9 +81,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public abstract setControlType(viewName: string, containerType?: number): void;
     public abstract setLayout(width?: number, height?: number): void;
     public abstract setAlignment(): void;
-    public abstract setBoxSpacing(): void;
     public abstract applyOptimizations(): void;
     public abstract applyCustomizations(overwrite?: boolean): void;
+    public abstract setBoxSpacing(): void;
+    public abstract extractAttributes(depth?: number): string;
     public abstract alignParent(position: string): boolean;
     public abstract alignSibling(position: string, documentId?: string): string;
     public abstract localizeString(value: string): string;
@@ -1680,25 +1680,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             }
         }
         return current;
-    }
-
-    set renderParent(value) {
-        if (value) {
-            if (value !== this && value.renderChildren.indexOf(this) === -1) {
-                value.renderChildren.push(this);
-            }
-            this._renderParent = value;
-        }
-    }
-    get renderParent() {
-        return this._renderParent;
-    }
-
-    set renderPositionId(value) {
-        this._renderPositionId = value;
-    }
-    get renderPositionId() {
-        return this._renderPositionId || this.id + (this.renderPosition !== -1 ? `^${this.renderPosition}` : '');
     }
 
     get actualParent() {

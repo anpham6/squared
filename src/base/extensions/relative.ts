@@ -29,7 +29,7 @@ export default abstract class Relative<T extends Node> extends Extension<T> {
                     target.containerType,
                     target.alignmentType
                 );
-                this.application.controllerHandler.appendAfter(node.id, this.application.renderLayout(layout));
+                this.application.controllerHandler.addAfterOutsideTemplate(node.id, this.application.renderLayout(layout));
                 this.application.session.cache.append(target, false);
                 if (!renderParent.hasAlign(NODE_ALIGNMENT.VERTICAL)) {
                     renderParent.renderEach(item => {

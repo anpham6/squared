@@ -24,11 +24,17 @@ declare global {
             renderNodeGroup(layout: Layout<T>): string;
             renderNodeStatic(controlName: string, depth: number, options?: ExternalData, width?: string, height?: string, node?: T, children?: boolean): string;
             createNodeGroup(node: T, children: T[], parent?: T, replacement?: T): T;
-            replaceRenderQueue(output: string): string;
-            prependBefore(id: number, output: string, index?: number): void;
-            appendAfter(id: number, output: string, index?: number): void;
+            addBeforeOutsideTemplate(id: number, value: string, index?: number): void;
+            addBeforeInsideTemplate(id: number, value: string, index?: number): void;
+            addAfterInsideTemplate(id: number, value: string, index?: number): void;
+            addAfterOutsideTemplate(id: number, value: string, index?: number): void;
+            getBeforeOutsideTemplate(id: number): string;
+            getBeforeInsideTemplate(id: number): string;
+            getAfterInsideTemplate(id: number): string;
+            getAfterOutsideTemplate(id: number): string;
             hasAppendProcessing(id: number): boolean;
-            getEnclosingTag(controlName: string, id: number, depth: number, xml?: string): string;
+            cascadeDocument(templates: string[], children: T[]): string;
+            getEnclosingTag(controlName: string, id: number, depth: number, innerXml?: string): string;
             removePlaceholders(value: string): string;
             replaceIndent(value: string, depth: number, cache: T[]): string;
         }

@@ -9,6 +9,7 @@ const $const = squared.base.lib.constant;
 const $enum = squared.base.lib.enumeration;
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
+const $element = squared.lib.element;
 const $util = squared.lib.util;
 const $constA = android.lib.constant;
 const $enumA = android.lib.enumeration;
@@ -133,6 +134,7 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
     }
 
     public processNode(node: T): ExtensionResult<T> {
+        const parentAs = this.application.createNode($element.createElement(null));
         node.documentRoot = true;
         node.alignmentType |= $enum.NODE_ALIGNMENT.AUTO_LAYOUT;
         node.setControlType(NAVIGATION.MENU, $enumA.CONTAINER_NODE.INLINE);
@@ -140,11 +142,16 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
             procedure: $enum.NODE_PROCEDURE.ALL,
             resource: $enum.NODE_RESOURCE.ALL
         });
-        const output = this.application.controllerHandler.renderNodeStatic(NAVIGATION.MENU, 0, {}, '', '', node, true);
         for (const item of node.cascade()) {
             this.addDescendant(item as T);
         }
-        return { output, complete: true };
+        node.render(parentAs);
+        node.dataset.pathname = 'res/menu';
+        return {
+            output: this.application.controllerHandler.renderNodeStatic(NAVIGATION.MENU, 0, {}, '', '', node, true),
+            parentAs,
+            complete: true
+        };
     }
 
     public processChild(node: T, parent: T): ExtensionResult<T> {
@@ -241,10 +248,6 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
                     $dom.deleteElementCache(item, 'squaredExternalDisplay');
                 }
             });
-            const processing = this.application.processing;
-            if (node === processing.node && processing.layout) {
-                processing.layout.pathname = 'res/menu';
-            }
         }
     }
 }

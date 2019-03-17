@@ -13,32 +13,30 @@ const $utilA = android.lib.util;
 export default class Coordinator<T extends android.base.View> extends squared.base.Extension<T> {
     public processNode(node: T, parent: T): ExtensionResult<T> {
         const options = $utilA.createViewAttribute(this.options[node.elementId]);
-        node.setControlType($constA.SUPPORT_ANDROID.COORDINATOR, $enumA.CONTAINER_NODE.BLOCK);
-        node.exclude({ resource: $enum.NODE_RESOURCE.ASSET });
-        node.render(parent);
-        const output = this.application.controllerHandler.renderNodeStatic(
-            $constA.SUPPORT_ANDROID.COORDINATOR,
-            node.renderDepth,
-            $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')),
-            '',
-            '',
-            node,
-            true
-        );
         const element = Coordinator.findNestedElement(node.element, WIDGET_NAME.TOOLBAR);
         if (element) {
             const toolbar = $dom.getElementAsNode<T>(element);
-            if (toolbar && toolbar.element) {
+            if (toolbar) {
                 const extension = this.application.extensionManager.retrieve(WIDGET_NAME.TOOLBAR);
-                if (extension) {
-                    const toolbarOptions = $utilA.createViewAttribute(extension.options[toolbar.elementId]);
-                    if ('collapsingToolbar' in toolbarOptions) {
-                        node.android('fitsSystemWindows', 'true');
-                    }
+                if (extension && 'collapsingToolbar' in $utilA.createViewAttribute(extension.options[toolbar.elementId])) {
+                    node.android('fitsSystemWindows', 'true');
                 }
             }
         }
-        return { output };
+        node.setControlType($constA.SUPPORT_ANDROID.COORDINATOR, $enumA.CONTAINER_NODE.BLOCK);
+        node.exclude({ resource: $enum.NODE_RESOURCE.ASSET });
+        node.render(parent);
+        return {
+            output: this.application.controllerHandler.renderNodeStatic(
+                $constA.SUPPORT_ANDROID.COORDINATOR,
+                node.renderDepth,
+                $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')),
+                '',
+                '',
+                node,
+                true
+            )
+        };
     }
 
     public postProcedure(node: T) {

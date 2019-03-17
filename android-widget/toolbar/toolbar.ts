@@ -186,7 +186,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                 node.exclude({ resource: $enum.NODE_RESOURCE.IMAGE_SOURCE });
             }
         }
-        let outer = '';
+        let outputAs = '';
         let appBarNode: T | undefined;
         let collapsingToolbarNode: T | undefined;
         if (hasAppBar) {
@@ -203,12 +203,12 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             else {
                 $util.assignEmptyValue(appBarOptions, 'android', 'theme', '@style/ThemeOverlay.AppCompat.Dark.ActionBar');
             }
-            appBarNode = this.createPlaceholder(node, appBarChildren);
+            appBarNode = this.createPlaceholder(node, appBarChildren, target);
             appBarNode.parent = node.parent;
             appBarNode.controlId = $utilA.stripId(appBarOptions.android.id);
             appBarNode.setControlType($constA.SUPPORT_ANDROID.APPBAR, $enumA.CONTAINER_NODE.BLOCK);
             application.processing.cache.append(appBarNode, appBarChildren.length > 0);
-            outer = controller.renderNodeStatic(
+            outputAs = controller.renderNodeStatic(
                 $constA.SUPPORT_ANDROID.APPBAR,
                 target ? -1 : depth,
                 $Resource.formatOptions(appBarOptions, numberResourceValue),
@@ -226,7 +226,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                 }
                 $util.assignEmptyValue(collapsingToolbarOptions, 'app', 'layout_scrollFlags', 'scroll|exitUntilCollapsed');
                 $util.assignEmptyValue(collapsingToolbarOptions, 'app', 'toolbarId', node.documentId);
-                collapsingToolbarNode = this.createPlaceholder(node, collapsingToolbarChildren);
+                collapsingToolbarNode = this.createPlaceholder(node, collapsingToolbarChildren, target);
                 collapsingToolbarNode.parent = appBarNode;
                 if (collapsingToolbarNode) {
                     collapsingToolbarNode.each(item => item.dataset.target = (collapsingToolbarNode as T).controlId);
@@ -241,12 +241,11 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                         collapsingToolbarNode,
                         true
                     );
-                    outer = $xml.replacePlaceholder(outer, appBarNode.id, content);
+                    outputAs = $xml.replacePlaceholder(outputAs, appBarNode.id, content);
                 }
             }
         }
         if (appBarNode) {
-            output = $xml.replacePlaceholder(outer, collapsingToolbarNode ? collapsingToolbarNode.id : appBarNode.id, output);
             appBarNode.render(target ? application.resolveTarget(target, appBarNode) : parent);
             if (!collapsingToolbarNode) {
                 node.parent = appBarNode;
@@ -269,7 +268,12 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         }
         node.containerType = $enumA.CONTAINER_NODE.BLOCK;
         node.exclude({ resource: $enum.NODE_RESOURCE.FONT_STYLE });
-        return { output };
+        if (appBarNode) {
+            return { output, parentAs: node.parent as T, renderAs: appBarNode, outputAs };
+        }
+        else {
+            return { output };
+        }
     }
 
     public processChild(node: T): ExtensionResult<T> {
@@ -306,8 +310,11 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         }
     }
 
-    private createPlaceholder(node: T, children: T[]) {
+    private createPlaceholder(node: T, children: T[], target?: string) {
         const placeholder = this.application.createNode($element.createElement(node.actualParent ? node.actualParent.element : null, node.block));
+        if (target) {
+            placeholder.dataset.target = target;
+        }
         placeholder.inherit(node, 'base');
         placeholder.exclude({ resource: $enum.NODE_RESOURCE.ALL });
         placeholder.positioned = true;

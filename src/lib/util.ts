@@ -872,7 +872,7 @@ export function joinMap<T>(list: T[], predicate: IteratorPredicate<T, string>, c
             result += value + char;
         }
     }
-    return result.substring(0, result.length - char.length);
+    return result;
 }
 
 export function captureMap<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, any>) {

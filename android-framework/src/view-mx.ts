@@ -17,6 +17,7 @@ const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
+const REGEXP_DATASETATTR = /^attr[A-Z]/;
 const REGEXP_FORMATTED = /^(?:([a-z]+):)?(\w+)="((?:@+?[a-z]+\/)?.+)"$/;
 const REGEXP_VALIDSTRING = /[^\w$\-_.]/g;
 
@@ -896,6 +897,32 @@ export default (Base: Constructor<squared.base.Node>) => {
             };
             setBoxModel($css.BOX_MARGIN, 'layout_margin', this.renderParent === undefined || !this.renderParent.is(CONTAINER_NODE.GRID));
             setBoxModel($css.BOX_PADDING, 'padding');
+        }
+
+        public extractAttributes(depth?: number) {
+            if (this.dir === 'rtl') {
+                this.android(this.length ? 'layoutDirection' : 'textDirection', 'rtl');
+            }
+            if (this.styleElement) {
+                const dataset = $css.getDataSet(<HTMLElement> this.element, 'android');
+                for (const name in dataset) {
+                    if (REGEXP_DATASETATTR.test(name)) {
+                        const obj = $util.capitalize(name.substring(4), false);
+                        for (const values of dataset[name].split(';')) {
+                            const [key, value] = values.split('::');
+                            if (key && value) {
+                                this.attr(obj, key, value);
+                            }
+                        }
+                    }
+                }
+            }
+            const indent = '\t'.repeat(depth !== undefined ? depth : this.renderDepth + 1);
+            let output = '';
+            for (const value of this.combine()) {
+                output += `\n${indent + value}`;
+            }
+            return output;
         }
 
         private autoSizeBoxModel() {

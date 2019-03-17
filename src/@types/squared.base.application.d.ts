@@ -29,10 +29,10 @@ declare global {
             parseDocument(...elements: (string | HTMLElement)[]): FunctionMap<void>;
             renderNode(layout: Layout<T>): string;
             renderLayout(layout: Layout<T>): string;
-            addLayoutFile(filename: string, content: string, pathname?: string, documentRoot?: boolean): void;
-            addIncludeFile(filename: string, content: string): void;
-            addRenderTemplate(node: T, parent: T, output: string, group: boolean): void;
-            addRenderQueue(id: string, template: string): void;
+            addLayoutFile(filename: string, content: string, pathname: string, documentBase?: boolean): void;
+            addIncludeFile(id: number, filename: string, content: string): void;
+            addRenderLayout(layout: Layout<T>, floating?: boolean): boolean;
+            addRenderTemplate(parent: T, node: T, value: string): boolean;
             addImagePreload(element: HTMLImageElement | undefined): void;
             saveRenderPosition(parent: T, required: boolean): void;
             createNode(element: Element): T;

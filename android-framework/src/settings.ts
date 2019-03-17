@@ -35,7 +35,6 @@ const settings: UserSettingsAndroid = {
     ellipsisOnTextOverflow: true,
     maxWordWrapWidth: 800,
     supportNegativeLeftTop: true,
-    floatOverlapDisabled: false,
     collapseUnattributedElements: true,
     exclusionsDisabled: true,
     customizationsDisabled: true,

@@ -21,7 +21,7 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
         options?: ExternalData)
     {
         super(name, framework, tagNames, options);
-        this.documentRoot = true;
+        this.documentBase = true;
         this.require($const.EXT_NAME.EXTERNAL, true);
         this.require(WIDGET_NAME.MENU);
         this.require(WIDGET_NAME.COORDINATOR);
@@ -41,7 +41,7 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
         return false;
     }
 
-    public processNode(node: T): ExtensionResult<T> {
+    public processNode(node: T, parent: T): ExtensionResult<T> {
         const options = $utilA.createViewAttribute(this.options.self);
         if (Drawer.findNestedElement(node.element, WIDGET_NAME.MENU)) {
             $util.assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');
@@ -58,16 +58,19 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
         node.documentRoot = true;
         node.setControlType($constA.SUPPORT_ANDROID.DRAWER, $enumA.CONTAINER_NODE.BLOCK);
         node.exclude({ resource: $enum.NODE_RESOURCE.FONT_STYLE });
-        const output = this.application.controllerHandler.renderNodeStatic(
-            $constA.SUPPORT_ANDROID.DRAWER,
-            0,
-            $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')),
-            'match_parent',
-            'match_parent',
-            node,
-            true
-        );
-        return { output, complete: true };
+        node.render(parent);
+        return {
+            output: this.application.controllerHandler.renderNodeStatic(
+                $constA.SUPPORT_ANDROID.DRAWER,
+                0,
+                $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')),
+                'match_parent',
+                'match_parent',
+                node,
+                true
+            ),
+            complete: true
+        };
     }
 
     public postParseDocument(node: T) {
@@ -85,14 +88,16 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
             $util.assignEmptyValue(options, 'android', 'id', `${node.documentId}_navigation`);
             $util.assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');
             $util.assignEmptyValue(options, 'android', 'layout_gravity', node.localizeString('left'));
-            const output = application.controllerHandler.renderNodeStatic(
-                $constA.SUPPORT_ANDROID.NAVIGATION_VIEW,
-                1,
-                $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')),
-                'wrap_content',
-                'match_parent'
+            application.controllerHandler.addAfterInsideTemplate(
+                node.id,
+                application.controllerHandler.renderNodeStatic(
+                    $constA.SUPPORT_ANDROID.NAVIGATION_VIEW,
+                    1,
+                    $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')),
+                    'wrap_content',
+                    'match_parent'
+                )
             );
-            application.addRenderQueue(node.id.toString(), output);
         }
     }
 
@@ -100,7 +105,7 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
         const element = Drawer.findNestedElement(node.element, WIDGET_NAME.COORDINATOR);
         if (element) {
             const coordinator = $dom.getElementAsNode<T>(element);
-            if (coordinator && coordinator.some(item => item.positioned) && coordinator.inlineHeight) {
+            if (coordinator && coordinator.inlineHeight && coordinator.some(item => item.positioned)) {
                 coordinator.android('layout_height', 'match_parent');
             }
         }

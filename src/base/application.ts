@@ -1,4 +1,4 @@
-import { AppSession, AppProcessing, FileAsset, ImageAsset, LayoutResult, LayoutType, SessionData, UserSettings } from './@types/application';
+import { AppProcessing, AppSession, FileAsset, ImageAsset, LayoutResult, LayoutType, SessionData, UserSettings } from './@types/application';
 
 import Controller from './controller';
 import Extension from './extension';
@@ -14,7 +14,6 @@ const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 const $element = squared.lib.element;
 const $util = squared.lib.util;
-const $xml = squared.lib.xml;
 
 function prioritizeExtensions<T extends Node>(documentRoot: HTMLElement, element: HTMLElement, extensions: Extension<T>[]) {
     const tagged: string[] = [];
@@ -89,21 +88,19 @@ export default class Application<T extends Node> implements squared.base.Applica
     public readonly parseElements = new Set<HTMLElement>();
     public readonly session: AppSession<T, NodeList<T>> = {
         cache: new NodeList<T>(),
+        documentRoot: [],
         image: new Map<string, ImageAsset>(),
-        renderQueue: new Map<string, string[]>(),
+        targetQueue: new Map<T, string>(),
         excluded: new NodeList<T>(),
-        targeted: new Map<string, T[]>(),
+        renderPosition: new Map<T, T[]>(),
         extensionMap: new Map<number, Extension<T>[]>()
     };
     public readonly processing: AppProcessing<T, NodeList<T>> = {
         cache: new NodeList<T>(),
-        depthMap: new Map<number, Map<string, string>>(),
         node: undefined,
-        layout: undefined,
         excluded: new NodeList<T>()
     };
 
-    private _renderPosition = new Map<number, { parent: T; children: T[] }>();
     private _userSettings?: UserSettings;
     private readonly _views: FileAsset[] = [];
     private readonly _includes: FileAsset[] = [];
@@ -133,7 +130,17 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     public finalize() {
+        const controller = this.controllerHandler;
         const rendered = this.rendered;
+        for (const [node, template] of this.session.targetQueue.entries()) {
+            if (node.dataset.target) {
+                const parent = this.resolveTarget(node.dataset.target, node);
+                if (parent) {
+                    node.render(parent);
+                    this.addRenderTemplate(parent, node, controller.replaceIndent(template, node.renderDepth, rendered));
+                }
+            }
+        }
         for (const node of rendered) {
             if (!node.hasBit('excludeProcedure', NODE_PROCEDURE.LAYOUT)) {
                 node.setLayout();
@@ -163,10 +170,20 @@ export default class Application<T extends Node> implements squared.base.Applica
         for (const ext of this.extensions) {
             ext.afterProcedure();
         }
-        this.processRenderQueue();
+        for (const node of this.session.documentRoot) {
+            const parent = node.renderParent;
+            if (parent && parent.renderTemplates) {
+                this.addLayoutFile(
+                    node.dataset.layoutName as string,
+                    controller.localSettings.baseTemplate + controller.cascadeDocument(parent.renderTemplates, parent.renderChildren as T[]),
+                    node.dataset.pathname,
+                    !!node.renderExtension && node.renderExtension.some(item => item.documentBase)
+                );
+            }
+        }
         const sessionData = this.sessionData;
         this.resourceHandler.finalize(sessionData);
-        this.controllerHandler.finalize(sessionData);
+        controller.finalize(sessionData);
         for (const ext of this.extensions) {
             ext.afterFinalize();
         }
@@ -187,18 +204,18 @@ export default class Application<T extends Node> implements squared.base.Applica
             element.dataset.layoutName = '';
         }
         this.appName = '';
-        this.session.renderQueue.clear();
+        this.session.documentRoot.length = 0;
+        this.session.targetQueue.clear();
         this.session.image.clear();
         this.session.cache.reset();
         this.session.excluded.reset();
-        this.session.targeted.clear();
+        this.session.renderPosition.clear();
         this.session.extensionMap.clear();
         this.processing.cache.reset();
         this.controllerHandler.reset();
         this.resourceHandler.reset();
         this._views.length = 0;
         this._includes.length = 0;
-        this._renderPosition.clear();
         for (const ext of this.extensions) {
             ext.subscribers.clear();
         }
@@ -361,103 +378,73 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     public renderLayout(layout: Layout<T>) {
-        const floating = $util.hasBit(layout.renderType, NODE_ALIGNMENT.FLOAT);
-        let output = '';
-        if (floating && $util.hasBit(layout.renderType, NODE_ALIGNMENT.HORIZONTAL)) {
-            output = this.processFloatHorizontal(layout);
+        if ($util.hasBit(layout.renderType, NODE_ALIGNMENT.FLOAT)) {
+            if ($util.hasBit(layout.renderType, NODE_ALIGNMENT.HORIZONTAL)) {
+                layout = this.processFloatHorizontal(layout);
+            }
+            else if ($util.hasBit(layout.renderType, NODE_ALIGNMENT.VERTICAL)) {
+                this.processFloatVertical(layout);
+            }
         }
-        else if (floating && $util.hasBit(layout.renderType, NODE_ALIGNMENT.VERTICAL)) {
-            output = this.processFloatVertical(layout);
-        }
-        else if (layout.containerType !== 0) {
-            output = this.renderNode(layout);
-        }
-        return output;
+        return layout.containerType !== 0 ? this.renderNode(layout) : '';
     }
 
-    public addLayoutFile(filename: string, content: string, pathname?: string, documentRoot = false) {
-        pathname = pathname || this.controllerHandler.localSettings.layout.pathName;
-        const layout: FileAsset = {
-            pathname,
-            filename,
-            content
-        };
-        if (documentRoot && this._views.length && this._views[0].content === '') {
-            this._views[0] = layout;
+    public addLayoutFile(filename: string, content: string, pathname?: string, documentBase = false) {
+        if (content !== '') {
+            const layout: FileAsset = {
+                pathname: $util.trimString(pathname || this.controllerHandler.localSettings.layout.pathName, '/'),
+                filename,
+                content
+            };
+            if (documentBase) {
+                this._views.unshift(layout);
+            }
+            else {
+                this._views.push(layout);
+            }
         }
-        else {
-            this._views.push(layout);
-        }
-        this.processing.layout = layout;
     }
 
-    public addIncludeFile(filename: string, content: string) {
+    public addIncludeFile(id: number, filename: string, content: string) {
         this._includes.push({
+            id,
             filename,
             content,
             pathname: this.controllerHandler.localSettings.layout.pathName
         });
     }
 
-    public addRenderTemplate(parent: T, node: T, output: string, group = false) {
-        if (output !== '') {
-            if (group) {
-                node.renderChildren.some((item: T) => {
-                    for (const templates of this.processing.depthMap.values()) {
-                        const key = item.renderPositionId;
-                        const value = templates.get(key);
-                        if (value) {
-                            const indent = node.renderDepth + 1;
-                            if (item.renderDepth !== indent) {
-                                templates.set(key, this.controllerHandler.replaceIndent(value, indent, this.processing.cache.children));
-                            }
-                            return true;
-                        }
-                    }
-                    return false;
-                });
-            }
-            if (!this.parseElements.has(<HTMLElement> node.element)) {
-                if (node.dataset.target) {
-                    const target = document.getElementById(node.dataset.target);
-                    if (target) {
-                        parent = this.resolveTarget(node.dataset.target, node) as T;
-                        if (parent === undefined) {
-                            this.addRenderQueue(node.dataset.target, output);
-                            node.positioned = true;
-                            return;
-                        }
-                    }
-                }
-                else if (parent.dataset.target) {
-                    const target = document.getElementById(parent.dataset.target);
-                    if (target) {
-                        const id = parent.elementId || parent.controlId;
-                        this.addRenderQueue(id, output);
-                        node.dataset.target = id;
-                        return;
-                    }
-                }
-            }
-            const template = this.processing.depthMap.get(parent.id) || new Map<string, string>();
-            template.set(node.renderPositionId, output);
-            this.processing.depthMap.set(parent.id, template);
-        }
+    public addRenderLayout(layout: Layout<T>, floating = false) {
+        return this.addRenderTemplate(layout.parent, layout.node, floating ? this.renderLayout(layout) : this.renderNode(layout));
     }
 
-    public addRenderQueue(id: string, template: string) {
-        const items = this.session.renderQueue.get(id) || [];
-        items.push(template);
-        this.session.renderQueue.set(id, items);
-     }
+    public addRenderTemplate(parent: T, node: T, value: string) {
+        if (value !== '') {
+            if (node.renderParent === undefined) {
+                this.session.targetQueue.set(node, value);
+            }
+            else {
+                if (parent.renderTemplates === undefined) {
+                    parent.renderTemplates = [];
+                }
+                parent.renderChildren.push(node);
+                parent.renderTemplates.push(value);
+            }
+            return true;
+        }
+        return false;
+    }
 
     public addImagePreload(element: HTMLImageElement | undefined) {
-        if (element && element.complete && $util.hasValue(element.src)) {
-            this.session.image.set(element.src, {
-                width: element.naturalWidth,
-                height: element.naturalHeight,
-                uri: element.src
-            });
+        if (element && element.complete) {
+            const uri = element.src.trim();
+            if (uri !== '') {
+                this.session.image.set(uri, {
+                    width: element.naturalWidth,
+                    height: element.naturalHeight,
+                    uri
+                });
+            }
         }
     }
 
@@ -465,10 +452,10 @@ export default class Application<T extends Node> implements squared.base.Applica
         if (parent.groupParent) {
             const baseParent = parent.parent as T;
             if (baseParent) {
-                const mapParent = this._renderPosition.get(baseParent.id);
+                let children = this.session.renderPosition.get(baseParent);
                 let revised: T[] | undefined;
-                if (mapParent) {
-                    const children = $util.filterArray(mapParent.children, item => !parent.contains(item)) as T[];
+                if (children) {
+                    children = $util.filterArray(children, item => !parent.contains(item)) as T[];
                     if (parent.siblingIndex < children.length) {
                         children.splice(parent.siblingIndex, 0, parent);
                         for (let i = parent.siblingIndex + 1; i < children.length; i++) {
@@ -480,7 +467,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         parent.siblingIndex = children.length;
                         children.push(parent);
                     }
-                    this._renderPosition.set(baseParent.id, { parent: baseParent, children });
+                    this.session.renderPosition.set(baseParent, children);
                 }
                 else {
                     revised = baseParent.children as T[];
@@ -495,11 +482,8 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
         }
         if (required) {
-            const renderMap = this._renderPosition.get(parent.id);
-            this._renderPosition.set(parent.id, {
-                parent,
-                children: renderMap ? $util.concatArray($util.filterArray(renderMap.children, item => !parent.contains(item)), parent.children as T[]) : parent.duplicate() as T[]
-            });
+            const children = this.session.renderPosition.get(parent);
+            this.session.renderPosition.set(parent, children ? $util.concatArray($util.filterArray(children, item => !parent.contains(item)), parent.children as T[]) : parent.duplicate() as T[]);
         }
     }
 
@@ -518,9 +502,6 @@ export default class Application<T extends Node> implements squared.base.Applica
                 return parent;
             }
         }
-        const nodes = this.session.targeted.get(target) || [];
-        nodes.push(node);
-        this.session.targeted.set(target, nodes);
         return undefined;
     }
 
@@ -729,7 +710,6 @@ export default class Application<T extends Node> implements squared.base.Applica
                     }
                 }
             }
-            const checkTargeted = this.session.targeted.size > 0;
             for (const node of this.processing.cache) {
                 if (node.length) {
                     let i = 0;
@@ -781,15 +761,6 @@ export default class Application<T extends Node> implements squared.base.Applica
                     node.sort(NodeList.siblingIndex);
                 }
                 node.saveAsInitial();
-                if (checkTargeted && node.elementId) {
-                    const children = this.session.targeted.get(node.elementId);
-                    if (children) {
-                        for (const target of children) {
-                            target.render(node);
-                        }
-                        this.session.targeted.delete(node.elementId);
-                    }
-                }
             }
             $util.sortArray(this.processing.cache.children, true, 'depth', 'id');
             for (const ext of extensions) {
@@ -801,8 +772,7 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     protected setBaseLayout() {
-        const settings = this.userSettings;
-        const localSettings = this.controllerHandler.localSettings;
+        const controller = this.controllerHandler;
         const extensions: Extension<T>[] = [];
         for (const item of this.extensions) {
             if (!item.eventOnly) {
@@ -811,8 +781,6 @@ export default class Application<T extends Node> implements squared.base.Applica
         }
         const documentRoot = this.processing.node as T;
         const mapY = new Map<number, Map<number, T>>();
-        let baseTemplate = localSettings.baseTemplate;
-        let empty = true;
         function setMapY(depth: number, id: number, node: T) {
             const index = mapY.get(depth) || new Map<number, T>();
             mapY.set(depth, index.set(id, node));
@@ -847,7 +815,6 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
         };
         for (const depth of mapY.values()) {
-            this.processing.depthMap.clear();
             for (const parent of depth.values()) {
                 if (parent.length === 0 || parent.every(node => node.rendered)) {
                     continue;
@@ -953,10 +920,9 @@ export default class Application<T extends Node> implements squared.base.Applica
                                                 $util.concatArray(siblings, vertical);
                                             }
                                             siblings.push(item);
-                                            const startNewRow = item.alignedVertically(previousSiblings, siblings, cleared, false);
-                                            if (startNewRow || settings.floatOverlapDisabled && previous.floating && item.blockStatic && floatSegment.size === 2) {
+                                            if (item.alignedVertically(previousSiblings, siblings, cleared, false)) {
                                                 if (horizontal.length) {
-                                                    if (!settings.floatOverlapDisabled && floatSegment.size && !previous.autoMargin.horizontal && cleared.get(item) !== 'both' && !previousSiblings.some(node => node.lineBreak && !cleared.has(node))) {
+                                                    if (floatSegment.size && !previous.autoMargin.horizontal && cleared.get(item) !== 'both' && !previousSiblings.some(node => node.lineBreak && !cleared.has(node))) {
                                                         let floatBottom = Number.NEGATIVE_INFINITY;
                                                         $util.captureMap(horizontal, node => node.floating, node => floatBottom = Math.max(floatBottom, node.linear.bottom));
                                                         if (!item.floating || item.linear.top < floatBottom) {
@@ -970,7 +936,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                                                 }
                                                                 break domNested;
                                                             }
-                                                            else if (!startNewRow || floated.size === 1 && (!item.floating || floatSegment.has(item.float))) {
+                                                            else if (floated.size === 1 && (!item.floating || floatSegment.has(item.float))) {
                                                                 horizontal.push(item);
                                                                 if (item.linear.bottom > floatBottom) {
                                                                     break domNested;
@@ -1009,13 +975,13 @@ export default class Application<T extends Node> implements squared.base.Applica
                         if (horizontal.length > 1) {
                             const layout = new Layout(parentY, nodeY, 0, 0, horizontal.length, horizontal);
                             layout.init();
-                            result = this.controllerHandler.processTraverseHorizontal(layout, axisY);
+                            result = controller.processTraverseHorizontal(layout, axisY);
                             segEnd = horizontal[horizontal.length - 1];
                         }
                         else if (vertical.length > 1) {
                             const layout = new Layout(parentY, nodeY, 0, 0, vertical.length, vertical);
                             layout.init();
-                            result = this.controllerHandler.processTraverseVertical(layout, axisY);
+                            result = controller.processTraverseVertical(layout, axisY);
                             segEnd = vertical[vertical.length - 1];
                             if (!segEnd.blockStatic && segEnd !== axisY[axisY.length - 1]) {
                                 segEnd.alignmentType |= NODE_ALIGNMENT.EXTENDABLE;
@@ -1025,12 +991,8 @@ export default class Application<T extends Node> implements squared.base.Applica
                             parentY.alignmentType ^= NODE_ALIGNMENT.UNKNOWN;
                             unknownParent = false;
                         }
-                        if (result) {
-                            const output = this.renderLayout(result.layout);
-                            if (output !== '') {
-                                this.addRenderTemplate(parentY, result.layout.node, output, true);
-                                parentY = nodeY.parent as T;
-                            }
+                        if (result && this.addRenderLayout(result.layout, true)) {
+                            parentY = nodeY.parent as T;
                         }
                     }
                     if (extendable) {
@@ -1062,7 +1024,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                             for (const ext of combined) {
                                 const result = ext.processChild(nodeY, parentY);
                                 if (result.output) {
-                                    this.addRenderTemplate(parentY, nodeY, result.output);
+                                    this.addRenderTemplate(<T> result.parentAs || parentY, nodeY, result.output);
                                 }
                                 if (result.renderAs && result.outputAs) {
                                     this.addRenderTemplate(parentY, result.renderAs as T, result.outputAs);
@@ -1085,7 +1047,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                 if (item.is(nodeY) && item.condition(nodeY, parentY) && (parent.renderExtension === undefined || !parent.renderExtension.includes(item)) && (extensionDescendant === undefined || !extensionDescendant.includes(item))) {
                                     const result = item.processNode(nodeY, parentY);
                                     if (result.output) {
-                                        this.addRenderTemplate(parentY, nodeY, result.output);
+                                        this.addRenderTemplate(<T> result.parentAs || parentY, nodeY, result.output);
                                     }
                                     if (result.renderAs && result.outputAs) {
                                         this.addRenderTemplate(parentY, result.renderAs as T, result.outputAs);
@@ -1113,87 +1075,20 @@ export default class Application<T extends Node> implements squared.base.Applica
                         }
                     }
                     if (!nodeY.rendered && !nodeY.hasBit('excludeSection', APP_SECTION.RENDER)) {
-                        let layout = new Layout(
-                            parentY,
-                            nodeY,
-                            nodeY.containerType,
-                            nodeY.alignmentType,
-                            nodeY.length,
-                            nodeY.children as T[]
-                        );
-                        if (layout.containerType === 0) {
-                            const result = nodeY.length ? this.controllerHandler.processUnknownParent(layout) : this.controllerHandler.processUnknownChild(layout);
-                            if (result.next === true) {
-                                continue;
-                            }
-                            else if (result.renderAs) {
-                                axisY[k] = result.renderAs as T;
-                                k--;
-                                continue;
-                            }
-                            else {
-                                layout = result.layout;
-                            }
+                        const layout = this.createLayoutControl(parentY, nodeY);
+                        const result = nodeY.length ? controller.processUnknownParent(layout) : controller.processUnknownChild(layout);
+                        if (result.next === true) {
+                            continue;
                         }
-                        const output = this.renderLayout(layout);
-                        if (output !== '') {
-                            this.addRenderTemplate(parentY, nodeY, output);
+                        else if (result.renderAs) {
+                            axisY[k] = result.renderAs as T;
+                            k--;
+                            continue;
                         }
+                        this.addRenderLayout(result.layout, true);
                     }
                 }
             }
-            for (const [id, templates] of this.processing.depthMap.entries()) {
-                const position = this._renderPosition.get(id);
-                let children: T[] | undefined;
-                if (position) {
-                    children = this.controllerHandler.sortRenderPosition(position.parent, position.children);
-                }
-                else if (id !== 0) {
-                    const parent = this.processing.cache.find('id', id);
-                    if (parent) {
-                        children = this.controllerHandler.sortRenderPosition(parent, parent.children as T[]);
-                    }
-                }
-                if (children && children.length) {
-                    const sorted = new Map<string, string>();
-                    for (const node of children) {
-                        const positionId = node.renderPositionId;
-                        const template = templates.get(positionId) || node.companion && templates.get(node.companion.renderPositionId);
-                        if (template) {
-                            sorted.set(positionId, template);
-                        }
-                    }
-                    if (sorted.size === templates.size) {
-                        this.processing.depthMap.set(id, sorted);
-                    }
-                }
-            }
-            for (const ext of this.extensions) {
-                ext.afterDepthLevel();
-            }
-            for (const [id, templates] of this.processing.depthMap.entries()) {
-                for (const [key, view] of templates.entries()) {
-                    const hash = $xml.formatPlaceholder(key.indexOf('^') !== -1 ? key : id);
-                    if (baseTemplate.indexOf(hash) !== -1) {
-                        baseTemplate = $xml.replacePlaceholder(baseTemplate, hash, view);
-                        empty = false;
-                    }
-                    else {
-                        this.addRenderQueue(key.indexOf('^') !== -1 ? `${id}|${key}` : id.toString(), view);
-                    }
-                }
-            }
-        }
-        if (documentRoot.dataset.layoutName && (!documentRoot.dataset.target || documentRoot.renderExtension === undefined)) {
-            this.addLayoutFile(
-                documentRoot.dataset.layoutName,
-                empty ? '' : baseTemplate,
-                $util.trimString($util.trimNull(documentRoot.dataset.pathname), '/'),
-                documentRoot.renderExtension && documentRoot.renderExtension.some(item => item.documentRoot)
-            );
-        }
-        if (empty && documentRoot.renderExtension === undefined) {
-            documentRoot.hide();
         }
         this.processing.cache.sort((a, b) => {
             if (!a.visible || !a.rendered) {
@@ -1216,6 +1111,11 @@ export default class Application<T extends Node> implements squared.base.Applica
         }
         for (const ext of this.extensions) {
             ext.afterBaseLayout();
+        }
+        for (const node of this.processing.cache) {
+            if (node.documentRoot && node.rendered) {
+                this.session.documentRoot.push(documentRoot);
+            }
         }
     }
 
@@ -1240,46 +1140,13 @@ export default class Application<T extends Node> implements squared.base.Applica
         }
     }
 
-    protected processRenderQueue() {
-        const template: StringMap = {};
-        for (const [id, templates] of this.session.renderQueue.entries()) {
-            const [parentId, positionId] = id.split('|');
-            let replaceId = parentId;
-            if (!$util.isNumber(replaceId)) {
-                const element = document.getElementById(replaceId);
-                if (element) {
-                    const target = $dom.getElementAsNode<T>(element);
-                    if (target) {
-                        replaceId = target.id.toString();
-                    }
-                }
-            }
-            let output = templates.join('\n');
-            if (replaceId !== parentId) {
-                const target = this.session.cache.find('id', parseInt(replaceId));
-                if (target) {
-                    output = this.controllerHandler.replaceIndent(output, target.renderDepth + 1, this.session.cache.children);
-                }
-            }
-            template[positionId || replaceId] = output;
-        }
-        for (const view of this.viewData) {
-            for (const id in template) {
-                view.content = view.content.replace($xml.formatPlaceholder(id), template[id]);
-            }
-            view.content = this.controllerHandler.replaceRenderQueue(view.content);
-        }
-    }
-
-    protected processFloatHorizontal(data: Layout<T>) {
-        const settings = this.userSettings;
-        let layerIndex: Array<T[] | T[][]> = [];
-        let output = '';
-        if (data.cleared.size === 0 && !data.some(node => node.autoMargin.horizontal)) {
+    protected processFloatHorizontal(layout: Layout<T>) {
+        let layerIndex: Array<T[] | T[][]> | undefined;
+        if (layout.cleared.size === 0 && !layout.some(node => node.autoMargin.horizontal)) {
             const inline: T[] = [];
             const left: T[] = [];
             const right: T[] = [];
-            for (const node of data) {
+            for (const node of layout) {
                 if (node.float === 'right') {
                     right.push(node);
                 }
@@ -1290,20 +1157,11 @@ export default class Application<T extends Node> implements squared.base.Applica
                     inline.push(node);
                 }
             }
-            const layout = new Layout(
-                data.parent,
-                data.node,
-                0,
-                0,
-                data.itemCount,
-                data.children
-            );
             layout.init();
             if (inline.length === layout.itemCount || left.length === layout.itemCount || right.length === layout.itemCount) {
                 this.controllerHandler.processLayoutHorizontal(layout);
-                return this.renderNode(layout);
             }
-            else if ((left.length === 0 || right.length === 0) && (this.userSettings.floatOverlapDisabled || !inline.some(item => item.blockStatic))) {
+            else if ((left.length === 0 || right.length === 0) && !inline.some(item => item.blockStatic)) {
                 const subgroup: T[] = [];
                 if (right.length === 0) {
                     $util.concatMultiArray(subgroup, left, inline);
@@ -1318,7 +1176,6 @@ export default class Application<T extends Node> implements squared.base.Applica
                     layerIndex = [inline, right];
                 }
                 layout.retain(subgroup);
-                output = this.renderNode(layout);
             }
         }
         const inlineAbove: T[] = [];
@@ -1329,12 +1186,12 @@ export default class Application<T extends Node> implements squared.base.Applica
         const rightBelow: T[] = [];
         let leftSub: T[] | T[][] = [];
         let rightSub: T[] | T[][] = [];
-        if (layerIndex.length === 0) {
+        if (layerIndex === undefined) {
+            layerIndex = [];
             let current = '';
             let pendingFloat = 0;
-            for (let i = 0; i < data.length; i++) {
-                const node = data.item(i) as T;
-                const direction = data.cleared.get(node);
+            for (const node of layout) {
+                const direction = layout.cleared.get(node);
                 if (direction && ($util.hasBit(pendingFloat, direction === 'right' ? 4 : 2) || pendingFloat !== 0 && direction === 'both')) {
                     switch (direction) {
                         case 'left':
@@ -1418,7 +1275,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         if (rightBelow.length === 0) {
                             pendingFloat |= 4;
                         }
-                        if (!settings.floatOverlapDisabled && current !== 'right' && rightAbove.length) {
+                        if (current !== 'right' && rightAbove.length) {
                             rightAbove.push(node);
                         }
                         else {
@@ -1429,7 +1286,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         if (leftBelow.length === 0) {
                             pendingFloat |= 2;
                         }
-                        if (!settings.floatOverlapDisabled && current !== 'left' && leftAbove.length) {
+                        if (current !== 'left' && leftAbove.length) {
                             leftAbove.push(node);
                         }
                         else {
@@ -1480,190 +1337,157 @@ export default class Application<T extends Node> implements squared.base.Applica
             else if (rightBelow.length) {
                 rightSub = rightBelow;
             }
-            const layout = new Layout(
-                data.parent,
-                data.node,
+            layout = new Layout(
+                layout.parent,
+                layout.node,
                 0,
-                rightAbove.length + rightBelow.length === data.length ? NODE_ALIGNMENT.RIGHT : 0
+                rightAbove.length + rightBelow.length === layout.length ? NODE_ALIGNMENT.RIGHT : 0
             );
-            if (settings.floatOverlapDisabled) {
-                if (data.node.groupParent && data.parent.layoutVertical) {
-                    data.node.alignmentType |= layout.alignmentType;
-                    output = $xml.formatPlaceholder(data.node.id);
-                    data.node.render(data.parent);
-                    data.node.renderDepth--;
+            if (inlineAbove.length) {
+                if (rightBelow.length) {
+                    leftSub = [inlineAbove, leftAbove];
+                    layerIndex.push(leftSub, rightSub);
+                }
+                else if (leftBelow.length) {
+                    rightSub = [inlineAbove, rightAbove];
+                    layerIndex.push(rightSub, leftSub);
                 }
                 else {
-                    const vertical = this.controllerHandler.containerTypeVertical;
-                    layout.setType(vertical.containerType, vertical.alignmentType);
-                    output = this.renderNode(layout);
+                    layerIndex.push(inlineAbove, leftSub, rightSub);
                 }
-                if (inlineAbove.length) {
-                    layerIndex.push(inlineAbove);
-                }
-                if (leftAbove.length || rightAbove.length) {
-                    layerIndex.push([leftAbove, rightAbove]);
-                }
-                if (leftBelow.length || rightBelow.length) {
-                    layerIndex.push([leftBelow, rightBelow]);
-                }
-                if (inlineBelow.length) {
-                    layerIndex.push(inlineBelow);
-                }
-                layout.itemCount = layerIndex.length;
             }
             else {
-                if (inlineAbove.length) {
-                    if (rightBelow.length) {
-                        leftSub = [inlineAbove, leftAbove];
-                        layerIndex.push(leftSub, rightSub);
-                    }
-                    else if (leftBelow.length) {
-                        rightSub = [inlineAbove, rightAbove];
-                        layerIndex.push(rightSub, leftSub);
+                if (leftSub === leftBelow && rightSub === rightAbove || leftSub === leftAbove && rightSub === rightBelow) {
+                    if (leftBelow.length === 0) {
+                        layerIndex.push([leftAbove, rightBelow]);
                     }
                     else {
-                        layerIndex.push(inlineAbove, leftSub, rightSub);
+                        layerIndex.push([rightAbove, leftBelow]);
                     }
                 }
                 else {
-                    if (leftSub === leftBelow && rightSub === rightAbove || leftSub === leftAbove && rightSub === rightBelow) {
-                        if (leftBelow.length === 0) {
-                            layerIndex.push([leftAbove, rightBelow]);
-                        }
-                        else {
-                            layerIndex.push([rightAbove, leftBelow]);
-                        }
-                    }
-                    else {
-                        layerIndex.push(leftSub, rightSub);
-                    }
+                    layerIndex.push(leftSub, rightSub);
                 }
-                $util.spliceArray(layerIndex, item => item.length === 0);
-                layout.itemCount = layerIndex.length;
-                const vertical = inlineAbove.length === 0 && (leftSub.length === 0 || rightSub.length === 0) ? this.controllerHandler.containerTypeVertical : this.controllerHandler.containerTypeVerticalMargin;
-                layout.setType(vertical.containerType, vertical.alignmentType);
-                output = this.renderNode(layout);
             }
+            $util.spliceArray(layerIndex, item => item.length === 0);
+            layout.itemCount = layerIndex.length;
+            const vertical = inlineAbove.length === 0 && (leftSub.length === 0 || rightSub.length === 0) ? this.controllerHandler.containerTypeVertical : this.controllerHandler.containerTypeVerticalMargin;
+            layout.setType(vertical.containerType, vertical.alignmentType);
         }
-        if (layerIndex.length) {
-            let floatgroup: T | undefined;
-            for (let i = 0; i < layerIndex.length; i++) {
-                const item = layerIndex[i];
-                let segments: T[][];
-                if (Array.isArray(item[0])) {
-                    segments = item as T[][];
-                    const grouping: T[] = [];
-                    for (const seg of segments) {
-                        $util.concatArray(grouping, seg);
-                    }
-                    grouping.sort(NodeList.siblingIndex);
-                    floatgroup = this.controllerHandler.createNodeGroup(grouping[0], grouping, data.node);
-                    const layout = new Layout(
-                        data.node,
-                        floatgroup,
-                        0,
-                        segments.some(seg => seg === rightSub || seg === rightAbove) ? NODE_ALIGNMENT.RIGHT : 0,
-                        segments.length
-                    );
-                    let vertical: LayoutType | undefined;
-                    if (settings.floatOverlapDisabled) {
-                        vertical = this.controllerHandler.containerTypeVerticalMargin;
-                    }
-                    else {
-                        if (data.node.layoutVertical) {
-                            floatgroup = data.node;
-                        }
-                        else {
-                            vertical = this.controllerHandler.containerTypeVertical;
-                        }
-                    }
-                    if (vertical) {
-                        layout.setType(vertical.containerType, vertical.alignmentType);
-                        output = $xml.replacePlaceholder(output, data.node.id, this.renderNode(layout));
-                    }
-                }
-                else {
-                    segments = [item as T[]];
-                    floatgroup = undefined;
-                }
+        let floatgroup: T | undefined;
+        layout.node.renderDepth = layout.parent.renderDepth + 1;
+        for (let i = 0; i < layerIndex.length; i++) {
+            const item = layerIndex[i];
+            let segments: T[][];
+            if (Array.isArray(item[0])) {
+                segments = item as T[][];
+                const grouping: T[] = [];
                 for (const seg of segments) {
-                    const basegroup = floatgroup && (seg === inlineAbove || seg === leftAbove || seg === leftBelow || seg === rightAbove || seg === rightBelow) ? floatgroup : data.node;
-                    let target: T | undefined;
-                    if (seg.length > 1) {
-                        target = this.controllerHandler.createNodeGroup(seg[0], seg, basegroup);
-                        const layout = new Layout(
-                            basegroup,
-                            target,
-                            0,
-                            NODE_ALIGNMENT.SEGMENTED,
-                            seg.length,
-                            seg
-                        );
-                        if (layout.linearY) {
-                            const vertical = this.controllerHandler.containerTypeVertical;
-                            layout.setType(vertical.containerType, vertical.alignmentType);
-                        }
-                        else {
-                            layout.init();
-                            this.controllerHandler.processLayoutHorizontal(layout);
-                        }
-                        output = $xml.replacePlaceholder(output, basegroup.id, this.renderNode(layout));
+                    $util.concatArray(grouping, seg);
+                }
+                grouping.sort(NodeList.siblingIndex);
+                floatgroup = this.controllerHandler.createNodeGroup(grouping[0], grouping, layout.node);
+                const layoutGroup = new Layout(
+                    layout.node,
+                    floatgroup,
+                    0,
+                    segments.some(seg => seg === rightSub || seg === rightAbove) ? NODE_ALIGNMENT.RIGHT : 0,
+                    segments.length
+                );
+                let vertical: LayoutType | undefined;
+                if (layout.node.layoutVertical) {
+                    floatgroup = layout.node;
+                }
+                else {
+                    vertical = this.controllerHandler.containerTypeVertical;
+                }
+                if (vertical) {
+                    layoutGroup.setType(vertical.containerType, vertical.alignmentType);
+                    this.addRenderLayout(layoutGroup);
+                }
+            }
+            else {
+                segments = [item as T[]];
+                floatgroup = undefined;
+            }
+            for (const seg of segments) {
+                const basegroup = floatgroup && (seg === inlineAbove || seg === leftAbove || seg === leftBelow || seg === rightAbove || seg === rightBelow) ? floatgroup : layout.node;
+                let target: T;
+                if (seg.length > 1) {
+                    target = this.controllerHandler.createNodeGroup(seg[0], seg, basegroup);
+                    const layoutGroup = new Layout(
+                        basegroup,
+                        target,
+                        0,
+                        NODE_ALIGNMENT.SEGMENTED,
+                        seg.length,
+                        seg
+                    );
+                    if (layoutGroup.linearY) {
+                        const vertical = this.controllerHandler.containerTypeVertical;
+                        layoutGroup.setType(vertical.containerType, vertical.alignmentType);
                     }
                     else {
-                        target = seg[0];
-                        target.alignmentType |= NODE_ALIGNMENT.SINGLE;
-                        target.renderPosition = i;
-                        output = $xml.replacePlaceholder(output, basegroup.id, $xml.formatPlaceholder(target.renderPositionId));
+                        layoutGroup.init();
+                        this.controllerHandler.processLayoutHorizontal(layoutGroup);
                     }
-                    if (!settings.floatOverlapDisabled && target && seg === inlineAbove && seg.some(subitem => subitem.blockStatic && !subitem.hasWidth)) {
-                        const vertical = this.controllerHandler.containerTypeVertical;
-                        const targeted = target.of(vertical.containerType, vertical.alignmentType) ? target.children : [target];
-                        if (leftAbove.length) {
-                            let boundsRight = Number.NEGATIVE_INFINITY;
-                            let boundsLeft = Number.POSITIVE_INFINITY;
-                            for (const child of leftAbove) {
-                                boundsRight = Math.max(boundsRight, child.linear.right);
-                            }
-                            for (const child of seg) {
-                                boundsLeft = Math.min(boundsLeft, child.bounds.left);
-                            }
-                            for (const child of targeted) {
-                                child.modifyBox(BOX_STANDARD.PADDING_LEFT, boundsRight - boundsLeft);
-                            }
+                    this.addRenderLayout(layoutGroup);
+                }
+                else {
+                    target = seg[0];
+                    const layoutChild = this.createLayoutControl(basegroup, target);
+                    layoutChild.alwaysRender = true;
+                    layoutChild.add(NODE_ALIGNMENT.SINGLE);
+                    if (layoutChild.containerType === 0) {
+                        this.controllerHandler.processUnknownChild(layoutChild);
+                    }
+                    this.addRenderLayout(layoutChild);
+                }
+                if (seg === inlineAbove && seg.some(subitem => subitem.blockStatic && !subitem.hasWidth)) {
+                    const vertical = this.controllerHandler.containerTypeVertical;
+                    const targeted = target.of(vertical.containerType, vertical.alignmentType) ? target.children : [target];
+                    if (leftAbove.length) {
+                        let boundsRight = Number.NEGATIVE_INFINITY;
+                        let boundsLeft = Number.POSITIVE_INFINITY;
+                        for (const child of leftAbove) {
+                            boundsRight = Math.max(boundsRight, child.linear.right);
                         }
-                        if (rightAbove.length) {
-                            let boundsLeft = Number.POSITIVE_INFINITY;
-                            let boundsRight = Number.NEGATIVE_INFINITY;
-                            for (const child of rightAbove) {
-                                boundsLeft = Math.min(boundsLeft, child.bounds.left);
-                            }
-                            for (const child of seg) {
-                                boundsRight = Math.max(boundsRight, child.bounds.right);
-                            }
-                            for (const child of targeted) {
-                                child.modifyBox(BOX_STANDARD.PADDING_RIGHT, boundsRight - boundsLeft);
-                            }
+                        for (const child of seg) {
+                            boundsLeft = Math.min(boundsLeft, child.bounds.left);
+                        }
+                        for (const child of targeted) {
+                            child.modifyBox(BOX_STANDARD.PADDING_LEFT, boundsRight - boundsLeft);
+                        }
+                    }
+                    if (rightAbove.length) {
+                        let boundsLeft = Number.POSITIVE_INFINITY;
+                        let boundsRight = Number.NEGATIVE_INFINITY;
+                        for (const child of rightAbove) {
+                            boundsLeft = Math.min(boundsLeft, child.bounds.left);
+                        }
+                        for (const child of seg) {
+                            boundsRight = Math.max(boundsRight, child.bounds.right);
+                        }
+                        for (const child of targeted) {
+                            child.modifyBox(BOX_STANDARD.PADDING_RIGHT, boundsRight - boundsLeft);
                         }
                     }
                 }
             }
         }
-        return output;
+        return layout;
     }
 
-    protected processFloatVertical(data: Layout<T>) {
+    protected processFloatVertical(layout: Layout<T>) {
         const controller = this.controllerHandler;
         const vertical = controller.containerTypeVertical;
-        const group = data.node;
-        const layoutGroup = new Layout(
-            data.parent,
-            group,
+        this.addRenderLayout(new Layout(
+            layout.parent,
+            layout.node,
             vertical.containerType,
             vertical.alignmentType,
-            data.length
-        );
-        let output = this.renderNode(layoutGroup);
+            layout.length
+        ));
         const staticRows: T[][] = [];
         const floatedRows: Null<T[]>[] = [];
         const current: T[] = [];
@@ -1671,13 +1495,13 @@ export default class Application<T extends Node> implements squared.base.Applica
         let clearReset = false;
         let blockArea = false;
         let layoutVertical = true;
-        for (const node of data) {
+        for (const node of layout) {
             if (node.blockStatic && floated.length === 0) {
                 current.push(node);
                 blockArea = true;
             }
             else {
-                if (data.cleared.has(node)) {
+                if (layout.cleared.has(node)) {
                     if (!node.floating) {
                         node.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
                         staticRows.push(current.slice(0));
@@ -1700,7 +1524,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                     floated.push(node);
                 }
                 else {
-                    if (clearReset && !data.cleared.has(node)) {
+                    if (clearReset && !layout.cleared.has(node)) {
                         layoutVertical = false;
                     }
                     current.push(node);
@@ -1714,37 +1538,38 @@ export default class Application<T extends Node> implements squared.base.Applica
             staticRows.push(current);
         }
         if (!layoutVertical) {
-            let xml = '';
             for (let i = 0; i < Math.max(floatedRows.length, staticRows.length); i++) {
                 const pageFlow = staticRows[i] || [];
                 if (floatedRows[i] === null && pageFlow.length) {
                     if (pageFlow.length > 1) {
                         const layoutType = controller.containerTypeVertical;
                         layoutType.alignmentType |= NODE_ALIGNMENT.SEGMENTED;
-                        const layout = new Layout(
-                            group,
-                            controller.createNodeGroup(pageFlow[0], pageFlow, group),
+                        this.addRenderLayout(new Layout(
+                            layout.node,
+                            controller.createNodeGroup(pageFlow[0], pageFlow, layout.node),
                             layoutType.containerType,
                             layoutType.alignmentType,
                             pageFlow.length,
                             pageFlow
-                        );
-                        xml += this.renderNode(layout);
+                        ));
                     }
                     else {
-                        const single = pageFlow[0];
-                        single.alignmentType |= NODE_ALIGNMENT.SINGLE;
-                        single.renderPosition = i;
-                        output = $xml.replacePlaceholder(output, group.id, $xml.formatPlaceholder(single.renderPositionId));
+                        const layoutChild = this.createLayoutControl(layout.node, pageFlow[0]);
+                        layoutChild.alwaysRender = true;
+                        layoutChild.add(NODE_ALIGNMENT.SINGLE);
+                        if (layoutChild.containerType === 0) {
+                            this.controllerHandler.processUnknownChild(layoutChild);
+                        }
+                        this.addRenderLayout(layoutChild);
                     }
                 }
                 else {
                     const floating = floatedRows[i] || [];
                     if (pageFlow.length || floating.length) {
-                        const basegroup = controller.createNodeGroup(floating[0] || pageFlow[0], [], group);
+                        const basegroup = controller.createNodeGroup(floating[0] || pageFlow[0], [], layout.node);
                         const verticalMargin = controller.containerTypeVerticalMargin;
-                        const layout = new Layout(
-                            group,
+                        const layoutGroup = new Layout(
+                            layout.node,
                             basegroup,
                             verticalMargin.containerType,
                             verticalMargin.alignmentType
@@ -1754,9 +1579,9 @@ export default class Application<T extends Node> implements squared.base.Applica
                         if (floating.length) {
                             if (floating.length > 1) {
                                 subgroup = controller.createNodeGroup(floating[0], floating, basegroup);
-                                layout.add(NODE_ALIGNMENT.FLOAT);
+                                layoutGroup.add(NODE_ALIGNMENT.FLOAT);
                                 if (pageFlow.length === 0 && floating.every(item => item.float === 'right')) {
-                                    layout.add(NODE_ALIGNMENT.RIGHT);
+                                    layoutGroup.add(NODE_ALIGNMENT.RIGHT);
                                 }
                             }
                             else {
@@ -1781,30 +1606,39 @@ export default class Application<T extends Node> implements squared.base.Applica
                             children.push(subgroup);
                         }
                         basegroup.init();
-                        layout.itemCount = children.length;
-                        xml += this.renderNode(layout);
+                        layoutGroup.itemCount = children.length;
+                        this.addRenderLayout(layoutGroup);
                         for (const node of children) {
-                            if (data.contains(node) || node.length === 0) {
-                                xml = $xml.replacePlaceholder(xml, basegroup.id, $xml.formatPlaceholder(node.id));
+                            if (node.length === 0) {
+                                const layoutChild = this.createLayoutControl(basegroup, node);
+                                layoutChild.alwaysRender = true;
+                                if (layoutChild.containerType === 0) {
+                                    this.controllerHandler.processUnknownChild(layoutChild);
+                                }
+                                this.addRenderLayout(layoutChild);
+                            }
+                            else if (layout.contains(node)) {
+                                const layoutParent = this.createLayoutControl(basegroup, node);
+                                layoutParent.alwaysRender = true;
+                                this.controllerHandler.processUnknownParent(layoutParent);
+                                this.addRenderLayout(layoutParent, true);
                             }
                             else {
-                                const layoutSegment = new Layout(
+                                this.addRenderLayout(new Layout(
                                     basegroup,
                                     node,
                                     vertical.containerType,
                                     vertical.alignmentType | NODE_ALIGNMENT.SEGMENTED,
                                     node.length,
                                     node.children as T[]
-                                );
-                                xml = $xml.replacePlaceholder(xml, basegroup.id, this.renderNode(layoutSegment));
+                                ));
                             }
                         }
                     }
                 }
             }
-            output = $xml.replacePlaceholder(output, group.id, xml);
         }
-        return output;
+        return layout;
     }
 
     protected insertNode(element: Element, parent?: T) {
@@ -1876,6 +1710,17 @@ export default class Application<T extends Node> implements squared.base.Applica
         else {
             return $element.isPlainText(element);
         }
+    }
+
+    private createLayoutControl(parent: T, node: T) {
+        return new Layout(
+            parent,
+            node,
+            node.containerType,
+            node.alignmentType,
+            node.length,
+            node.children as T[]
+        );
     }
 
     private setStyleMap() {

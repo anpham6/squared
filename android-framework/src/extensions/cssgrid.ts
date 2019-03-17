@@ -398,7 +398,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 if (percentTotal < 100) {
                     node.android('columnCount', (mainData.column.count + 1).toString());
                     for (let i = 0; i < mainData.row.count; i++) {
-                        controller.appendAfter(
+                        controller.addAfterOutsideTemplate(
                             lastChild.id,
                             controller.renderSpace(
                                 node.renderDepth + 1,
@@ -423,7 +423,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 if (item) {
                     for (let j = 0; j < item.length; j++) {
                         if (item[j] === 1) {
-                            controller.appendAfter(
+                            controller.addAfterOutsideTemplate(
                                 lastChild.id,
                                 controller.renderSpace(
                                     node.renderDepth + 1,

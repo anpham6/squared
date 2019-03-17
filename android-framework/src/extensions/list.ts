@@ -78,7 +78,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     }
                 }
                 ordinal.parent = parent;
-                controller.prependBefore(node.id, this.application.renderNode(layout));
+                controller.addBeforeOutsideTemplate(node.id, this.application.renderNode(layout));
                 if (columnCount === 3) {
                     node.android('layout_columnSpan', '2');
                 }
@@ -143,7 +143,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         'wrap_content',
                         'wrap_content'
                     );
-                    controller.prependBefore(node.id, xml);
+                    controller.addBeforeOutsideTemplate(node.id, xml);
                     minWidth = '24px';
                 }
                 else if (columnCount === 3) {
@@ -194,7 +194,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         'wrap_content',
                         companion
                     );
-                    controller.prependBefore(node.id, xml);
+                    controller.addBeforeOutsideTemplate(node.id, xml);
                 }
             }
             if (columnCount > 0) {
@@ -250,7 +250,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         layout_columnSpan: columnCount.toString()
                     }
                 });
-                controller.prependBefore(
+                controller.addBeforeOutsideTemplate(
                     item.id,
                     controller.renderNodeStatic(CONTAINER_ANDROID.SPACE, item.renderDepth, options, 'match_parent', $util.formatPX(spaceHeight)),
                     0

@@ -11,7 +11,6 @@ declare global {
             alignmentType: number;
             depth: number;
             siblingIndex: number;
-            renderPosition: number;
             documentRoot: boolean;
             positionStatic: boolean;
             baselineActive: boolean;
@@ -23,7 +22,6 @@ declare global {
             tagName: string;
             controlName: string;
             renderDepth: number;
-            renderPositionId: string;
             inlineText: boolean;
             baseline: boolean;
             multiline: boolean;
@@ -33,6 +31,7 @@ declare global {
             parent?: Node;
             renderParent?: Node;
             renderExtension?: Extension<Node>[];
+            renderTemplates?: string[];
             outerParent?: Node;
             innerChild?: Node;
             companion?: Node;
@@ -185,6 +184,7 @@ declare global {
             setExclusions(): void;
             setBounds(): void;
             setBoxSpacing(): void;
+            extractAttributes(depth?: number): string;
             resetBox(region: number, node?: Node, fromParent?: boolean): void;
             inheritBox(region: number, node: Node): void;
             actualRight(dimension?: string): number;
