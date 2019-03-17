@@ -665,7 +665,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                         if (this.floating) {
                             this.mergeGravity('layout_gravity', this.float);
                         }
-                        else if (!setAutoMargin(this) && textAlign !== '' && this.length === 0) {
+                        else if (!setAutoMargin(this) && textAlign !== '' && this.length === 0 && !renderParent.flexElement) {
                             this.mergeGravity('layout_gravity', textAlign);
                             if (!this.documentRoot) {
                                 textAlign = '';
@@ -876,10 +876,10 @@ export default (Base: Constructor<squared.base.Node>) => {
                     }
                     else {
                         if (boxModel[left] !== 0) {
-                            this.android(prefix + this.localizeString('Left'), $util.formatPX(boxModel[left]));
+                            this.android(this.localizeString(prefix + 'Left'), $util.formatPX(boxModel[left]));
                         }
                         if (boxModel[right] !== 0) {
-                            this.android(prefix + this.localizeString('Right'), $util.formatPX(boxModel[right]));
+                            this.android(this.localizeString(prefix + 'Right'), $util.formatPX(boxModel[right]));
                         }
                     }
                     if (mergeVertical !== 0) {

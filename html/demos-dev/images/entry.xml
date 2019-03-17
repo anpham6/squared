@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:android="http://schemas.android.com/apk/res/android" 
     android:id="@+id/squared_ui"
     android:layout_height="wrap_content"
     android:layout_width="wrap_content"
@@ -17,7 +17,7 @@
         android:id="@+id/entry"
         android:background="@drawable/form_entry"
         android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:orientation="vertical"
         android:paddingHorizontal="@dimen/form_padding_horizontal"
         android:paddingVertical="@dimen/form_padding_vertical">
@@ -79,7 +79,7 @@
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@+id/textview_18"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol46930"
+                    android:text="@string/__symbol76028"
                     style="@style/Plaintext" />
             </RelativeLayout>
             <LinearLayout
@@ -92,11 +92,11 @@
                     style="@style/Linearlayout_1">
                     <Spinner
                         android:id="@+id/month0"
-                        android:entries="@array/custommonth0_array"
+                        android:entries="@array/month0_array"
                         style="@style/Select.Linearlayout_2" />
                     <Spinner
                         android:id="@+id/day0"
-                        android:entries="@array/customday0_array"
+                        android:entries="@array/day0_array"
                         android:layout_marginStart="@dimen/select_margin_start"
                         style="@style/Select.Linearlayout_2" />
                     <Spinner
@@ -111,11 +111,11 @@
                     style="@style/Linearlayout_1">
                     <Spinner
                         android:id="@+id/month1"
-                        android:entries="@array/custommonth0_array"
+                        android:entries="@array/month0_array"
                         style="@style/Select.Linearlayout_2" />
                     <Spinner
                         android:id="@+id/day1"
-                        android:entries="@array/customday0_array"
+                        android:entries="@array/day0_array"
                         android:layout_marginStart="@dimen/select_margin_start"
                         style="@style/Select.Linearlayout_2" />
                     <Spinner
@@ -130,11 +130,11 @@
                     style="@style/Linearlayout_1">
                     <Spinner
                         android:id="@+id/month2"
-                        android:entries="@array/custommonth0_array"
+                        android:entries="@array/month0_array"
                         style="@style/Select.Linearlayout_2" />
                     <Spinner
                         android:id="@+id/day2"
-                        android:entries="@array/customday0_array"
+                        android:entries="@array/day0_array"
                         android:layout_marginStart="@dimen/select_margin_start"
                         style="@style/Select.Linearlayout_2" />
                     <Spinner
@@ -188,10 +188,10 @@
                 style="@style/Label" />
             <Spinner
                 android:id="@+id/typeofentry"
-                android:background="@drawable/select_typeofentry"
-                android:entries="@array/typeofentry_array"
+                android:background="@drawable/select_series_1"
+                android:entries="@array/subset_1_array"
                 android:layout_height="wrap_content"
-                android:layout_width="@dimen/select_width"
+                android:layout_width="@dimen/select_width_1"
                 android:minWidth="@dimen/select_min_width"
                 android:paddingHorizontal="@dimen/select_padding_horizontal"
                 android:paddingVertical="@dimen/select_padding_vertical"
@@ -228,7 +228,7 @@
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@+id/textview_21"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol46930"
+                    android:text="@string/__symbol76028"
                     style="@style/Plaintext" />
             </RelativeLayout>
             <LinearLayout
@@ -249,8 +249,8 @@
                     style="@style/Text" />
                 <Spinner
                     android:id="@+id/prominence0"
-                    android:background="@drawable/select_typeofentry"
-                    android:entries="@array/typeofentry_array"
+                    android:background="@drawable/select_series_1"
+                    android:entries="@array/subset_1_array"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/select_margin_start"
                     android:layout_width="wrap_content"
@@ -274,10 +274,10 @@
                 style="@style/Label" />
             <Spinner
                 android:id="@+id/series"
-                android:background="@drawable/select_typeofentry"
-                android:entries="@array/series_array"
+                android:background="@drawable/select_series_1"
+                android:entries="@array/series_1_array"
                 android:layout_height="wrap_content"
-                android:layout_width="@dimen/select_width_1"
+                android:layout_width="@dimen/select_width"
                 android:minWidth="@dimen/select_min_width"
                 android:paddingHorizontal="@dimen/select_padding_horizontal"
                 android:paddingVertical="@dimen/select_padding_vertical"
@@ -297,8 +297,8 @@
                 style="@style/Label" />
             <Spinner
                 android:id="@+id/subset"
-                android:background="@drawable/select_typeofentry"
-                android:entries="@array/typeofentry_array"
+                android:background="@drawable/select_series_1"
+                android:entries="@array/subset_1_array"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:minWidth="@dimen/select_min_width"
@@ -320,7 +320,7 @@
                 style="@style/Label" />
             <Spinner
                 android:id="@+id/entryactive"
-                android:background="@drawable/select_typeofentry"
+                android:background="@drawable/select_series_1"
                 android:entries="@array/entryactive_array"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
@@ -354,10 +354,10 @@
                 style="@style/Label_1" />
             <Spinner
                 android:id="@+id/series_1"
-                android:background="@drawable/select_typeofentry"
-                android:entries="@array/series_array"
+                android:background="@drawable/select_series_1"
+                android:entries="@array/series_1_array"
                 android:layout_height="wrap_content"
-                android:layout_width="@dimen/select_width_1"
+                android:layout_width="@dimen/select_width"
                 android:minWidth="@dimen/select_min_width"
                 android:paddingHorizontal="@dimen/select_padding_horizontal"
                 android:paddingVertical="@dimen/select_padding_vertical"
@@ -377,8 +377,8 @@
                 style="@style/Label" />
             <Spinner
                 android:id="@+id/subset_1"
-                android:background="@drawable/select_typeofentry"
-                android:entries="@array/typeofentry_array"
+                android:background="@drawable/select_series_1"
+                android:entries="@array/subset_1_array"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:minWidth="@dimen/select_min_width"
@@ -406,10 +406,10 @@
                 android:orientation="horizontal">
                 <Spinner
                     android:id="@+id/entry_1"
-                    android:background="@drawable/select_typeofentry"
-                    android:entries="@array/typeofentry_array"
+                    android:background="@drawable/select_series_1"
+                    android:entries="@array/subset_1_array"
                     android:layout_height="wrap_content"
-                    android:layout_width="@dimen/select_width_1"
+                    android:layout_width="@dimen/select_width"
                     android:minWidth="@dimen/select_min_width"
                     android:paddingHorizontal="@dimen/select_padding_horizontal"
                     android:paddingVertical="@dimen/select_padding_vertical"
@@ -417,7 +417,7 @@
                 <Button
                     android:id="@+id/button_1"
                     android:background="@drawable/button_button_1"
-                    android:focusable="false"
+                    android:enabled="false"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/button_margin_start"
                     android:layout_width="wrap_content"
@@ -431,7 +431,7 @@
                 <Button
                     android:id="@+id/button_2"
                     android:background="@drawable/button_button_1"
-                    android:focusable="false"
+                    android:enabled="false"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/button_margin_start"
                     android:layout_width="wrap_content"
@@ -458,7 +458,7 @@
                 style="@style/Label" />
             <Spinner
                 android:id="@+id/mode"
-                android:background="@drawable/select_typeofentry"
+                android:background="@drawable/select_series_1"
                 android:entries="@array/mode_array"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
@@ -481,8 +481,8 @@
                 style="@style/Label" />
             <Spinner
                 android:id="@+id/style1"
-                android:background="@drawable/select_typeofentry"
-                android:entries="@array/typeofentry_array"
+                android:background="@drawable/select_series_1"
+                android:entries="@array/subset_1_array"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:minWidth="@dimen/select_min_width"
@@ -504,7 +504,7 @@
                 style="@style/Label" />
             <Spinner
                 android:id="@+id/calendar"
-                android:background="@drawable/select_typeofentry"
+                android:background="@drawable/select_series_1"
                 android:entries="@array/calendar_array"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
@@ -533,7 +533,7 @@
                 android:orientation="horizontal">
                 <Spinner
                     android:id="@+id/version"
-                    android:background="@drawable/select_typeofentry"
+                    android:background="@drawable/select_series_1"
                     android:entries="@array/version_array"
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
@@ -543,7 +543,7 @@
                     style="@style/Select" />
                 <Spinner
                     android:id="@+id/version_update"
-                    android:background="@drawable/select_typeofentry"
+                    android:background="@drawable/select_series_1"
                     android:entries="@array/version_array"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/select_margin_start"
@@ -587,7 +587,7 @@
                 android:orientation="horizontal">
                 <Spinner
                     android:id="@+id/branch"
-                    android:background="@drawable/select_typeofentry"
+                    android:background="@drawable/select_series_1"
                     android:entries="@array/branch_array"
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
@@ -597,7 +597,7 @@
                     style="@style/Select" />
                 <Spinner
                     android:id="@+id/branch_update"
-                    android:background="@drawable/select_typeofentry"
+                    android:background="@drawable/select_series_1"
                     android:entries="@array/branch_array"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/select_margin_start"
@@ -665,7 +665,7 @@
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@+id/textview_24"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol46930"
+                    android:text="@string/__symbol76028"
                     style="@style/Plaintext" />
             </RelativeLayout>
             <LinearLayout
@@ -686,8 +686,8 @@
                     style="@style/Text" />
                 <Spinner
                     android:id="@+id/custommonth0"
-                    android:background="@drawable/select_typeofentry"
-                    android:entries="@array/custommonth0_array"
+                    android:background="@drawable/select_series_1"
+                    android:entries="@array/month0_array"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/select_margin_start"
                     android:layout_width="wrap_content"
@@ -697,8 +697,8 @@
                     style="@style/Select" />
                 <Spinner
                     android:id="@+id/customday0"
-                    android:background="@drawable/select_typeofentry"
-                    android:entries="@array/customday0_array"
+                    android:background="@drawable/select_series_1"
+                    android:entries="@array/day0_array"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/select_margin_start"
                     android:layout_width="wrap_content"
@@ -728,8 +728,8 @@
                 android:orientation="horizontal">
                 <Spinner
                     android:id="@+id/person"
-                    android:background="@drawable/select_typeofentry"
-                    android:entries="@array/typeofentry_array"
+                    android:background="@drawable/select_series_1"
+                    android:entries="@array/subset_1_array"
                     android:layout_height="wrap_content"
                     android:layout_width="@dimen/select_width_2"
                     android:minWidth="@dimen/select_min_width"
@@ -794,7 +794,7 @@
     <string name="app_name">squared_ui</string>
     <string name="__00_inactive">00 - Inactive</string>
     <string name="__01_active">01 - Active</string>
-    <string name="__symbol46930">):</string>
+    <string name="__symbol76028">):</string>
     <string name="active">Active:</string>
     <string name="add">Add</string>
     <string name="all">All</string>
@@ -846,7 +846,7 @@
         <item>@string/birth</item>
         <item>@string/death</item>
     </string-array>
-    <string-array name="customday0_array">
+    <string-array name="day0_array">
         <item>01</item>
         <item>02</item>
         <item>03</item>
@@ -878,20 +878,6 @@
         <item>29</item>
         <item>30</item>
         <item>31</item>
-    </string-array>
-    <string-array name="custommonth0_array">
-        <item>01</item>
-        <item>02</item>
-        <item>03</item>
-        <item>04</item>
-        <item>05</item>
-        <item>06</item>
-        <item>07</item>
-        <item>08</item>
-        <item>09</item>
-        <item>10</item>
-        <item>11</item>
-        <item>12</item>
     </string-array>
     <string-array name="entryactive_array">
         <item>@string/yes</item>
@@ -933,11 +919,25 @@
         <item>@string/variant</item>
         <item>@string/predefined</item>
     </string-array>
-    <string-array name="series_array">
+    <string-array name="month0_array">
+        <item>01</item>
+        <item>02</item>
+        <item>03</item>
+        <item>04</item>
+        <item>05</item>
+        <item>06</item>
+        <item>07</item>
+        <item>08</item>
+        <item>09</item>
+        <item>10</item>
+        <item>11</item>
+        <item>12</item>
+    </string-array>
+    <string-array name="series_1_array">
         <item>@string/__00_inactive</item>
         <item>@string/__01_active</item>
     </string-array>
-    <string-array name="typeofentry_array">
+    <string-array name="subset_1_array">
         <item>0</item>
         <item>1</item>
     </string-array>
@@ -1001,9 +1001,9 @@
         <item name="android:textColor">@color/gray</item>
     </style>
     <style name="Checkbox">
-        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:fontFamily">arial</item>
         <item name="android:textColor">@color/black</item>
-        <item name="android:textSize">11sp</item>
+        <item name="android:textSize">13sp</item>
     </style>
     <style name="H2">
         <item name="android:fontFamily">tahoma</item>
@@ -1047,7 +1047,7 @@
         <item name="android:textSize">11sp</item>
     </style>
     <style name="Select.Linearlayout_2">
-        <item name="android:background">@drawable/select_typeofentry</item>
+        <item name="android:background">@drawable/select_series_1</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_width">wrap_content</item>
         <item name="android:minWidth">@dimen/select_min_width</item>
@@ -1093,8 +1093,8 @@
     <dimen name="select_min_width">37dp</dimen>
     <dimen name="select_padding_horizontal">1dp</dimen>
     <dimen name="select_padding_vertical">3dp</dimen>
-    <dimen name="select_width">160dp</dimen>
-    <dimen name="select_width_1">200dp</dimen>
+    <dimen name="select_width">200dp</dimen>
+    <dimen name="select_width_1">160dp</dimen>
     <dimen name="select_width_2">100dp</dimen>
     <dimen name="space_height">6dp</dimen>
     <dimen name="text_margin_end">5dp</dimen>
@@ -1132,7 +1132,7 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
     <stroke android:width="1dp" android:color="@color/darkgray" />
 </shape>
-<!-- filename: res/drawable/select_typeofentry.xml -->
+<!-- filename: res/drawable/select_series_1.xml -->
 
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">

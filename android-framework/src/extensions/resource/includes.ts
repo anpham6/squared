@@ -56,10 +56,8 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                 const controller = this.application.controllerHandler;
                                 const merge = openData.merge || templates.length > 1;
                                 const depth = merge ? 1 : 0;
-                                for (let k = 0; k < children.length; k++) {
-                                    if (children[k].renderDepth !== depth) {
-                                        templates[k] = controller.replaceIndent(templates[k], depth, controller.cache.children);
-                                    }
+                                for (const item of children) {
+                                    item.renderDepth = depth;
                                 }
                                 if (!merge && !openData.item.documentRoot) {
                                     const hash = $xml.formatPlaceholder(openData.item.id, '@');
@@ -70,7 +68,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                 if (merge) {
                                     xml = controller.getEnclosingTag('merge', 0, 0, xml).replace('{@0}', '');
                                 }
-                                this.application.addIncludeFile(openData.item.id, openData.name, xml);
+                                this.application.addIncludeFile(openData.item.id, openData.name, $xml.formatTemplate(xml, false, 0));
                                 close.splice(j, 1);
                                 break;
                             }

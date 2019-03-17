@@ -28,6 +28,10 @@ export interface CachedValue<T> {
     paddingRight?: number;
     paddingBottom?: number;
     paddingLeft?: number;
+    borderTopWidth?: number;
+    borderRightWidth?: number;
+    borderBottomWidth?: number;
+    borderLeftWidth?: number;
     inlineText?: boolean;
     inline?: boolean;
     inlineStatic?: boolean;

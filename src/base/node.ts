@@ -1213,7 +1213,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get lineHeight() {
         if (this._cached.lineHeight === undefined) {
             const lineHeight = $util.convertFloat(this.cssAscend('lineHeight', true));
-            this._cached.lineHeight = lineHeight > this.actualHeight || this.some(node => node.plainText) ? lineHeight : 0;
+            this._cached.lineHeight = this.has('lineHeight') || lineHeight > this.actualHeight || this.some(node => node.plainText) ? lineHeight : 0;
         }
         return this._cached.lineHeight;
     }
@@ -1326,16 +1326,28 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get borderTopWidth() {
-        return this.has('borderTopStyle') ? this.toInt('borderTopWidth') : 0;
+        if (this._cached.borderTopWidth === undefined) {
+            this._cached.borderTopWidth = this.styleElement && this.css('borderTopStyle') !== 'none' ? $util.convertInt(this.css('borderTopWidth')) : 0;
+        }
+        return this._cached.borderTopWidth;
     }
     get borderRightWidth() {
-        return this.has('borderRightStyle') ? this.toInt('borderRightWidth') : 0;
+        if (this._cached.borderRightWidth === undefined) {
+            this._cached.borderRightWidth = this.styleElement && this.css('borderRightStyle') !== 'none' ? $util.convertInt(this.css('borderRightWidth')) : 0;
+        }
+        return this._cached.borderRightWidth;
     }
     get borderBottomWidth() {
-        return this.has('borderBottomStyle') ? this.toInt('borderBottomWidth') : 0;
+        if (this._cached.borderBottomWidth === undefined) {
+            this._cached.borderBottomWidth = this.styleElement && this.css('borderBottomStyle') !== 'none' ? $util.convertInt(this.css('borderBottomWidth')) : 0;
+        }
+        return this._cached.borderBottomWidth;
     }
     get borderLeftWidth() {
-        return this.has('borderLeftStyle') ? this.toInt('borderLeftWidth') : 0;
+        if (this._cached.borderLeftWidth === undefined) {
+            this._cached.borderLeftWidth = this.styleElement && this.css('borderLeftStyle') !== 'none' ? $util.convertInt(this.css('borderLeftWidth')) : 0;
+        }
+        return this._cached.borderLeftWidth;
     }
 
     get paddingTop() {

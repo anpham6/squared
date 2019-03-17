@@ -24,8 +24,8 @@ type StyleXML = {
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
-const REGEXP_IMAGE = /^<!-- image: (.+) -->\n<!-- filename: (.+)\/(.+?\.\w+) -->\n*$/;
-const REGEXP_FILE = /^[\w\W]*?(<!-- filename: (.+)\/(.+?\.xml) -->)\n*$/;
+const REGEXP_IMAGE = /^<!-- image: (.+) -->\n<!-- filename: (.+)\/(.+?\.\w+) -->$/;
+const REGEXP_FILE = /^[\w\W]*?(<!-- filename: (.+)\/(.+?\.xml) -->)$/;
 
 const TEMPLATES = {
     color: $xml.parseTemplate(COLOR_TMPL),
@@ -59,7 +59,7 @@ function parseFileDetails(files: string[]) {
         const match = REGEXP_FILE.exec(xml);
         if (match) {
             result.push({
-                content: match[0].replace(match[1], '').trim(),
+                content: match[0].replace(match[1], ''),
                 pathname: match[2],
                 filename: match[3]
             });
@@ -167,6 +167,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 this.userSettings.insertSpaces,
                 true
             )
+            .trim()
         );
         if (saveToDisk) {
             this.saveToDisk(parseFileDetails(result));
@@ -191,6 +192,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     this.userSettings.insertSpaces,
                     true
                 )
+                .trim()
             );
             if (saveToDisk) {
                 this.saveToDisk(parseFileDetails(result));

@@ -170,7 +170,7 @@ declare global {
             function escapeNonEntity(value: string): string;
             function parseTemplate(value: string): StringMap;
             function createTemplate(templates: StringMap, data: ExternalData, format?: boolean): string;
-            function formatTemplate(value: string, closeEmpty?: boolean, char?: string): string;
+            function formatTemplate(value: string, closeEmpty?: boolean, startIndent?: number, char?: string): string;
         }
     }
 }

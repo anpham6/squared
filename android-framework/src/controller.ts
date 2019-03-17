@@ -582,7 +582,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     below.push(item);
                 }
             }
-            return $util.concatMultiArray($util.sortArray(below, true, 'zIndex', 'id'), middle, $util.sortArray(above, true, 'zIndex', 'id'));
+            return $util.concatMultiArray($util.sortArray(below, true, 'zIndex', 'siblingIndex'), middle, $util.sortArray(above, true, 'zIndex', 'siblingIndex'));
         }
         return undefined;
     }
@@ -1026,8 +1026,8 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             if (node.multiline) {
                                 node.android('lineSpacingExtra', $util.formatPX(spacing));
                             }
-                            else if (node.blockStatic) {
-                                node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, spacing);
+                            else if (!node.hasHeight || node.lineHeight >= node.height) {
+                                node.mergeGravity('gravity', 'center_vertical');
                             }
                         }
                     }
@@ -1080,12 +1080,14 @@ export default class Controller<T extends View> extends squared.base.Controller<
         if (node.containerType === 0 || node.controlName === '') {
             node.setControlType(controlName);
         }
-        let output = this.getEnclosingTag(controlName, node.id, depth === 0 && !node.documentRoot ? -1 : depth, children ? '' : undefined);
-        if (this.userSettings.showAttributes && node.id === 0) {
-            output = output.replace($xml.formatPlaceholder(node.id, '@'), node.extractAttributes(renderDepth + 1));
-        }
         options.documentId = node.documentId;
-        return output;
+        return this.getEnclosingTag(
+            controlName,
+            node.id,
+            depth === 0 && !node.documentRoot ? -1 : depth,
+            children ? null : undefined,
+            this.userSettings.showAttributes && node.id === 0 ? node.extractAttributes(renderDepth + 1) : undefined
+        );
     }
 
     public renderSpace(depth: number, width: string, height = '', columnSpan = 0, rowSpan = 0, options?: ViewAttribute) {

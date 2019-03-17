@@ -80,7 +80,7 @@ export default class Fixed<T extends View> extends squared.base.Extension<T> {
         });
         const [children, nested] = $util.partitionArray(getFixedNodes(node), item => item.absoluteParent === node) as [T[], T[]];
         children.push(container);
-        $util.concatArray($util.sortArray(children, true, 'zIndex', 'id'), $util.sortArray(nested, true, 'zIndex', 'id'));
+        $util.concatArray($util.sortArray(children, true, 'zIndex', 'siblingIndex'), $util.sortArray(nested, true, 'zIndex', 'siblingIndex'));
         for (const item of node.duplicate()) {
             if (!children.includes(item as T)) {
                 item.parent = container;

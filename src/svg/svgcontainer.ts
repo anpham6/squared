@@ -159,11 +159,12 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
 
     public clipViewBox(x: number, y: number, width: number, height: number, precision?: number, documentRoot = false) {
         if (documentRoot) {
-            this.clipRegion = SvgBuild.drawRect(width - x, height - y, x < 0 ? x * -1 : 0, y < 0 ? y * -1 : 0, precision);
+            width -= x;
+            height -= y;
+            x = x < 0 ? x * -1 : 0;
+            y = y < 0 ? y * -1 : 0;
         }
-        else {
-            this.clipRegion = SvgBuild.drawRect(width, height, x, y, precision);
-        }
+        this.clipRegion = SvgBuild.drawRect(width, height, x, y, precision);
     }
 
     public synchronize(options?: SvgSynchronizeOptions) {

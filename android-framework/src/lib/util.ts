@@ -6,12 +6,6 @@ import { BUILD_ANDROID } from './enumeration';
 
 const $util = squared.lib.util;
 
-const REGEXP_RTL = {
-    LEFT: /left/,
-    LEFT_UPPER: /Left/g,
-    RIGHT: /right/,
-    RIGHT_UPPER: /Right/g
-};
 const REGEXP_UNIT = /([">])(-)?(\d+(?:\.\d+)?px)(["<])/g;
 
 export function stripId(value: string) {
@@ -63,13 +57,34 @@ export function replaceLength(value: string, dpi = 160, format = 'dp', font = fa
     return value;
 }
 
-export function replaceRTL(value: string, rtl = true, api = BUILD_ANDROID.OREO) {
+export function replaceRTL(value: string, rtl: boolean, api: number) {
     if (rtl && api >= BUILD_ANDROID.JELLYBEAN_1) {
-        value = value
-            .replace(REGEXP_RTL.LEFT, 'start')
-            .replace(REGEXP_RTL.LEFT_UPPER, 'Start')
-            .replace(REGEXP_RTL.RIGHT, 'end')
-            .replace(REGEXP_RTL.RIGHT_UPPER, 'End');
+        switch (value) {
+            case 'left':
+                return 'start';
+            case 'right':
+                return 'end';
+            case 'layout_alignParentLeft':
+                return 'layout_alignParentStart';
+            case 'layout_alignParentRight':
+                return 'layout_alignParentEnd';
+            case 'layout_alignLeft':
+                return 'layout_alignStart';
+            case 'layout_alignRight':
+                return 'layout_alignEnd';
+            case 'layout_toRightOf':
+                return 'layout_toEndOf';
+            case 'layout_toLeftOf':
+                return 'layout_toStartOf';
+            case 'layout_constraintLeft_toLeftOf':
+                return 'layout_constraintStart_toStartOf';
+            case 'layout_constraintRight_toRightOf':
+                return 'layout_constraintEnd_toEndOf';
+            case 'layout_constraintLeft_toRightOf':
+                return 'layout_constraintStart_toEndOf';
+            case 'layout_constraintRight_toLeftOf':
+                return 'layout_constraintEnd_toStartOf';
+        }
     }
     return value;
 }

@@ -34,7 +34,7 @@ declare global {
             getAfterOutsideTemplate(id: number): string;
             hasAppendProcessing(id: number): boolean;
             cascadeDocument(templates: string[], children: T[]): string;
-            getEnclosingTag(controlName: string, id: number, depth: number, innerXml?: string): string;
+            getEnclosingTag(controlName: string, id: number, depth: number, innerXml?: string | null, attributeXml?: string): string;
             removePlaceholders(value: string): string;
             replaceIndent(value: string, depth: number, cache: T[]): string;
         }

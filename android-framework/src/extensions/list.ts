@@ -185,6 +185,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         companion.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, left);
                     }
                     node.companion = companion;
+                    companion.render(parent);
                     this.application.processing.cache.append(companion, false);
                     const xml = controller.renderNodeStatic(
                         companion.controlName,
@@ -194,7 +195,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         'wrap_content',
                         companion
                     );
-                    controller.addBeforeOutsideTemplate(node.id, xml);
+                    this.application.addRenderTemplate(parent, companion, xml);
                 }
             }
             if (columnCount > 0) {

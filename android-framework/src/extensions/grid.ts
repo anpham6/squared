@@ -76,11 +76,11 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
             if (node.display === 'table-cell') {
                 node.mergeGravity('layout_gravity', 'fill');
             }
-            const siblings = cellData.siblings ? cellData.siblings.slice(0) : [];
-            if (siblings.length) {
+            const siblings = cellData.siblings && cellData.siblings.length ? cellData.siblings.slice(0) : undefined;
+            if (siblings) {
                 const controller = <android.base.Controller<T>> this.application.controllerHandler;
                 siblings.unshift(node);
-                const layout = new $Layout(
+                let layout = new $Layout(
                     parent,
                     node,
                     0,
@@ -95,12 +95,13 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                 else {
                     layout.init();
                     const result = controller.processTraverseHorizontal(layout);
-                    layout.node = result.layout.node;
+                    layout = result.layout;
                 }
                 if (layout.containerType !== 0) {
                     transferData(layout.node, siblings);
                     return {
                         output: '',
+                        parent: layout.node,
                         renderAs: layout.node,
                         outputAs: this.application.renderNode(layout),
                         complete: true

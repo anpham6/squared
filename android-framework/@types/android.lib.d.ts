@@ -38,7 +38,7 @@ declare global {
             function createStyleAttribute(options?: ExternalData): Required<StyleAttribute>;
             function convertLength(value: string, dpi?: number, font?: boolean): string;
             function replaceLength(value: string, dpi?: number, format?: string, font?: boolean): string;
-            function replaceRTL(value: string, rtl?: boolean, api?: number): string;
+            function replaceRTL(value: string, rtl: boolean, api: number): string;
             function getXmlNs(...values: string[]): string;
         }
     }

@@ -199,7 +199,7 @@ export function createTemplate(templates: StringMap, data: ExternalData, format 
     return output.replace(REGEXP_CREATE.ATTRIBUTE, '');
 }
 
-export function formatTemplate(value: string, closeEmpty = true, char = '\t') {
+export function formatTemplate(value: string, closeEmpty = true, startIndent = -1, char = '\t') {
     const lines: XMLTagData[] = [];
     let match: RegExpExecArray | null;
     while ((match = REGEXP_FORAMT.ITEM.exec(value)) !== null) {
@@ -211,7 +211,7 @@ export function formatTemplate(value: string, closeEmpty = true, char = '\t') {
         });
     }
     let output = '';
-    let indent = -1;
+    let indent = startIndent;
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         let previous = indent;

@@ -63,7 +63,7 @@ export interface AppHandler<T extends squared.base.Node> {
 
 export interface AppSession<T extends squared.base.Node, U> {
     cache: U;
-    documentRoot: T[];
+    documentRoot: { node: T, layoutName: string }[];
     image: Map<string, ImageAsset>;
     excluded: squared.base.NodeList<T>;
     targetQueue: Map<T, string>;

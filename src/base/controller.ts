@@ -191,7 +191,7 @@ export default abstract class Controller<T extends Node> implements squared.base
                         for (const child of cascadeChildren) {
                             const index = item.renderChildren.findIndex(node => node.id === child.id);
                             if (index !== -1) {
-                                cascadeTemplate.push(item.renderTemplates[i]);
+                                cascadeTemplate.push(item.renderTemplates[index]);
                             }
                         }
                         if (cascadeTemplate.length === item.renderTemplates.length) {
@@ -210,15 +210,14 @@ export default abstract class Controller<T extends Node> implements squared.base
         return output;
     }
 
-    public getEnclosingTag(controlName: string, id: number, depth: number, innerXml?: string) {
+    public getEnclosingTag(controlName: string, id: number, depth: number, innerXml?: string, attributeXml?: string) {
         const indent = '\t'.repeat(Math.max(0, depth));
+        const output = indent + `<${controlName + (depth === 0 ? '{#0}' : '') + (attributeXml || `{@${id}}`)}`;
         if (innerXml !== undefined) {
-            return indent + `<${controlName}${depth === 0 ? '{#0}' : ''}{@${id}}>\n` +
-                             (innerXml || $xml.formatPlaceholder(id)) +
-                   indent + `</${controlName}>\n`;
+            return output + '>\n' + (innerXml || $xml.formatPlaceholder(id)) + indent + `</${controlName}>\n`;
         }
         else {
-            return indent + `<${controlName}${depth === 0 ? '{#0}' : ''}{@${id}} />\n`;
+            return output + ' />\n';
         }
     }
 
