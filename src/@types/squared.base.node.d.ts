@@ -178,8 +178,10 @@ declare global {
             parseUnit(value: string, horizontal?: boolean, parent?: boolean): number;
             convertPX(value: string, horizontal?: boolean, parent?: boolean): string;
             has(attr: string, checkType?: number, options?: {}): boolean;
-            hasBit(attr: string, value: number): boolean;
             hasAlign(value: number): boolean;
+            hasProcedure(value: number): boolean;
+            hasResource(value: number): boolean;
+            hasSection(value: number): boolean;
             exclude(options: { section?: number, procedure?: number, resource?: number }): void;
             setExclusions(): void;
             setBounds(): void;

@@ -341,7 +341,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         const settings = <UserSettingsAndroid> this.application.userSettings;
         for (const node of this.application.processing.cache.duplicate().sort(a => !a.visible ? -1 : 0)) {
             const stored: BoxStyle = node.data(Resource.KEY_NAME, 'boxStyle');
-            if (stored && !node.hasBit('excludeResource', $enum.NODE_RESOURCE.BOX_STYLE)) {
+            if (stored && node.hasResource($enum.NODE_RESOURCE.BOX_STYLE)) {
                 const backgroundRepeat = stored.backgroundRepeat.split($util.REGEXP_COMPILED.SEPARATOR);
                 const backgroundSize = stored.backgroundSize.split($util.REGEXP_COMPILED.SEPARATOR);
                 const backgroundPositionX = stored.backgroundPositionX.split($util.REGEXP_COMPILED.SEPARATOR);
@@ -350,7 +350,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 const backgroundPosition: RectPosition[] = [];
                 const imageDimensions: Undefined<Dimension>[] = [];
                 let imageLength = 0;
-                if (!node.hasBit('excludeResource', $enum.NODE_RESOURCE.IMAGE_SOURCE)) {
+                if (node.hasResource($enum.NODE_RESOURCE.IMAGE_SOURCE)) {
                     if (stored.backgroundImage)  {
                         imageLength = stored.backgroundImage.length;
                         while (backgroundSize.length < imageLength) {
@@ -841,7 +841,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                     if (backgroundImage.length) {
                         node.data('RESOURCE', 'backgroundImage', true);
-                        if (this.options.autoSizeBackgroundImage && !node.documentRoot && !node.imageElement && !node.svgElement && node.renderParent && !node.renderParent.tableElement && !node.hasBit('excludeProcedure', $enum.NODE_PROCEDURE.AUTOFIT)) {
+                        if (this.options.autoSizeBackgroundImage && !node.documentRoot && !node.imageElement && !node.svgElement && node.renderParent && !node.renderParent.tableElement && node.hasProcedure($enum.NODE_PROCEDURE.AUTOFIT)) {
                             let parentWidth = 0;
                             let parentHeight = 0;
                             if (node.tagName !== 'IMAGE') {

@@ -14,6 +14,7 @@ const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 const $element = squared.lib.element;
 const $util = squared.lib.util;
+const $xml = squared.lib.xml;
 
 function prioritizeExtensions<T extends Node>(element: HTMLElement, extensions: Extension<T>[], documentRoot: HTMLElement | null) {
     const tagged: string[] = [];
@@ -132,28 +133,27 @@ export default class Application<T extends Node> implements squared.base.Applica
     public finalize() {
         const controller = this.controllerHandler;
         const rendered = this.rendered;
-        for (const [node, template] of this.session.targetQueue.entries()) {
+        for (const node of this.session.targetQueue.keys()) {
             if (node.dataset.target) {
-                const parent = this.resolveTarget(node.dataset.target, node);
+                const parent = this.resolveTarget(node.dataset.target);
                 if (parent) {
                     node.render(parent);
-                    this.addRenderTemplate(parent, node, controller.replaceIndent(template, node.renderDepth, rendered));
                 }
             }
         }
         for (const node of rendered) {
-            if (!node.hasBit('excludeProcedure', NODE_PROCEDURE.LAYOUT)) {
+            if (node.hasProcedure(NODE_PROCEDURE.LAYOUT)) {
                 node.setLayout();
             }
-            if (!node.hasBit('excludeProcedure', NODE_PROCEDURE.ALIGNMENT)) {
+            if (node.hasProcedure(NODE_PROCEDURE.ALIGNMENT)) {
                 node.setAlignment();
             }
         }
         for (const node of rendered) {
-            if (!node.hasBit('excludeProcedure', NODE_PROCEDURE.OPTIMIZATION)) {
+            if (node.hasProcedure(NODE_PROCEDURE.OPTIMIZATION)) {
                 node.applyOptimizations();
             }
-            if (!this.userSettings.customizationsDisabled && !node.hasBit('excludeProcedure', NODE_PROCEDURE.CUSTOMIZATION)) {
+            if (!this.userSettings.customizationsDisabled && node.hasProcedure(NODE_PROCEDURE.CUSTOMIZATION)) {
                 node.applyCustomizations(this.userSettings.customizationsOverwritePrivilege);
             }
         }
@@ -163,12 +163,21 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
         }
         for (const node of this.rendered) {
-            if (!node.hasBit('excludeResource', NODE_RESOURCE.BOX_SPACING)) {
+            if (node.hasResource(NODE_RESOURCE.BOX_SPACING)) {
                 node.setBoxSpacing();
             }
         }
         for (const ext of this.extensions) {
             ext.afterProcedure();
+        }
+        for (const [node, template] of this.session.targetQueue.entries()) {
+            if (node.renderParent) {
+                let output = controller.replaceIndent(template, node.renderDepth, rendered);
+                if (node.renderTemplates) {
+                    output = output.replace($xml.formatPlaceholder(node.id), controller.cascadeDocument(node.renderTemplates, node.renderChildren as T[]));
+                }
+                this.addRenderTemplate(node.renderParent as T, node, $xml.formatTemplate(output, false, node.renderDepth));
+            }
         }
         for (const layout of this.session.documentRoot) {
             const node = layout.node;
@@ -413,8 +422,8 @@ export default class Application<T extends Node> implements squared.base.Applica
         });
     }
 
-    public addRenderLayout(layout: Layout<T>, floating = false) {
-        return this.addRenderTemplate(layout.parent, layout.node, floating ? this.renderLayout(layout) : this.renderNode(layout));
+    public addRenderLayout(layout: Layout<T>, renderType = false) {
+        return this.addRenderTemplate(layout.parent, layout.node, renderType ? this.renderLayout(layout) : this.renderNode(layout));
     }
 
     public addRenderTemplate(parent: T, node: T, value: string) {
@@ -490,7 +499,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         return new this.nodeConstructor(this.nextId, element, this.controllerHandler.afterInsertNode);
     }
 
-    public resolveTarget(target: string, node: T) {
+    public resolveTarget(target: string) {
         for (const parent of this.processing.cache) {
             if (parent.elementId === target || parent.controlId === target) {
                 return parent;
@@ -835,7 +844,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                     const extendable = nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE);
                     let parentY = nodeY.parent as T;
                     let unknownParent = parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN);
-                    if (axisY.length > 1 && k < axisY.length - 1 && nodeY.pageFlow && (parentY.alignmentType === 0 || extendable || unknownParent) && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && !nodeY.hasBit('excludeSection', APP_SECTION.DOM_TRAVERSE)) {
+                    if (axisY.length > 1 && k < axisY.length - 1 && nodeY.pageFlow && (parentY.alignmentType === 0 || extendable || unknownParent) && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
                         const horizontal: T[] = [];
                         const vertical: T[] = [];
                         const floatSegment = new Set<string>();
@@ -992,7 +1001,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         }
                     }
                     const extensionDescendant = this.session.extensionMap.get(nodeY.id);
-                    if (!nodeY.rendered && !nodeY.hasBit('excludeSection', APP_SECTION.EXTENSION)) {
+                    if (!nodeY.rendered && nodeY.hasSection(APP_SECTION.EXTENSION)) {
                         let combined = parent.renderExtension ? parent.renderExtension.slice(0) : undefined;
                         if (extensionDescendant) {
                             if (combined) {
@@ -1057,7 +1066,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                             }
                         }
                     }
-                    if (!nodeY.rendered && !nodeY.hasBit('excludeSection', APP_SECTION.RENDER)) {
+                    if (!nodeY.rendered && nodeY.hasSection(APP_SECTION.RENDER)) {
                         const layout = this.createLayoutControl(parentY, nodeY);
                         const result = nodeY.length ? controller.processUnknownParent(layout) : controller.processUnknownChild(layout);
                         if (result.next === true) {

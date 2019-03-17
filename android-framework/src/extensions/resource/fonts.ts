@@ -118,7 +118,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         const nameMap: ObjectMap<T[]> = {};
         const groupMap: ObjectMap<StyleList[]> = {};
         for (const node of this.application.session.cache) {
-            if (node.visible && node.data(Resource.KEY_NAME, 'fontStyle') && !node.hasBit('excludeResource', $enum.NODE_RESOURCE.FONT_STYLE)) {
+            if (node.visible && node.data(Resource.KEY_NAME, 'fontStyle') && node.hasResource($enum.NODE_RESOURCE.FONT_STYLE)) {
                 if (nameMap[node.tagName] === undefined) {
                     nameMap[node.tagName] = [];
                 }

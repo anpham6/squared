@@ -652,15 +652,20 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return false;
     }
 
-    public hasBit(attr: string, value: number) {
-        if (this[attr] !== undefined) {
-            return $util.hasBit(this[attr], value);
-        }
-        return false;
-    }
-
     public hasAlign(value: number) {
         return $util.hasBit(this.alignmentType, value);
+    }
+
+    public hasProcedure(value: number) {
+        return !$util.hasBit(this.excludeProcedure, value);
+    }
+
+    public hasResource(value: number) {
+        return !$util.hasBit(this.excludeResource, value);
+    }
+
+    public hasSection(value: number) {
+        return !$util.hasBit(this.excludeSection, value);
     }
 
     public exclude({ section = 0, procedure = 0, resource = 0 }) {

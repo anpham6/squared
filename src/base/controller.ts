@@ -203,6 +203,7 @@ export default abstract class Controller<T extends Node> implements squared.base
                         cascadeChildren = item.renderChildren as T[];
                     }
                     template = template.replace($xml.formatPlaceholder(item.id), this.getBeforeInsideTemplate(item.id) + this.cascadeDocument(cascadeTemplate, cascadeChildren as T[]) + this.getAfterInsideTemplate(item.id));
+                    item.renderTemplates = undefined;
                 }
                 output += this.getBeforeOutsideTemplate(item.id) + template + this.getAfterOutsideTemplate(item.id);
             }

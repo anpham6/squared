@@ -400,7 +400,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                             }
                             break;
                         case 'backgroundImage':
-                            if (value !== 'none' && !node.hasBit('excludeResource', NODE_RESOURCE.IMAGE_SOURCE)) {
+                            if (value !== 'none' && node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
                                 const images: (string | Gradient)[] = [];
                                 const opacity = node.css('opacity');
                                 let match: RegExpExecArray | null;

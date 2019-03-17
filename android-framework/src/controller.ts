@@ -359,7 +359,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         },
         unsupported: {
             excluded: new Set(['BR']),
-            tagName: new Set(['OPTION', 'INPUT:hidden', 'MAP', 'AREA', 'svg'])
+            tagName: new Set(['OPTION', 'INPUT:hidden', 'MAP', 'AREA'])
         },
         relative: {
             superscriptFontScale: -4,
@@ -634,7 +634,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
 
     public setConstraints() {
         for (const node of this.cache) {
-            if (node.visible && (node.layoutRelative || node.layoutConstraint) && !node.hasBit('excludeProcedure', $enum.NODE_PROCEDURE.CONSTRAINT)) {
+            if (node.visible && (node.layoutRelative || node.layoutConstraint) && node.hasProcedure($enum.NODE_PROCEDURE.CONSTRAINT)) {
                 const children = node.renderFilter(item => !item.positioned) as T[];
                 if (children.length) {
                     if (node.layoutRelative) {
@@ -784,7 +784,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             const controlName = View.getControlName(containerType);
             node.alignmentType |= alignmentType;
             node.setControlType(controlName, containerType);
-            node.render(target ? this.application.resolveTarget(target, node) : parent);
+            node.render(target ? this.application.resolveTarget(target) : parent);
             node.apply(options);
             return this.getEnclosingTag(controlName, node.id, target ? -1 : node.renderDepth, '');
         }
@@ -800,7 +800,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         if (node.element) {
             switch (node.element.tagName) {
                 case 'IMG': {
-                    if (!node.hasBit('excludeResource', $enum.NODE_RESOURCE.IMAGE_SOURCE)) {
+                    if (node.hasResource($enum.NODE_RESOURCE.IMAGE_SOURCE)) {
                         const element = <HTMLImageElement> node.element;
                         const widthPercent = node.has('width', $enum.CSS_STANDARD.PERCENT);
                         const heightPercent = node.has('height', $enum.CSS_STANDARD.PERCENT);
@@ -879,7 +879,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                 else {
                                     container.android('layout_height', 'wrap_content');
                                 }
-                                container.render(target ? this.application.resolveTarget(target, container) : parent);
+                                container.render(target ? this.application.resolveTarget(target) : parent);
                                 container.companion = node;
                                 container.saveAsInitial();
                                 node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, node.top);
@@ -1061,7 +1061,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 node.android('maxHeight', node.convertPX(node.css('maxHeight'), false));
             }
         }
-        node.render(target ? this.application.resolveTarget(target, node) : parent);
+        node.render(target ? this.application.resolveTarget(target) : parent);
         return this.getEnclosingTag(controlName, node.id, target ? -1 : node.renderDepth);
     }
 

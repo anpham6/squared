@@ -27,7 +27,7 @@ export default class FloatingActionButton<T extends android.base.View> extends s
         const options = $utilA.createViewAttribute(this.options[element.id]);
         const colorName = $Resource.addColor($color.parseColor(node.css('backgroundColor'), node.css('opacity')));
         $util.assignEmptyValue(options, 'android', 'backgroundTint', colorName !== '' ? `@color/${colorName}` : '?attr/colorAccent');
-        if (node.hasBit('excludeProcedure', $enum.NODE_PROCEDURE.ACCESSIBILITY)) {
+        if (!node.hasProcedure($enum.NODE_PROCEDURE.ACCESSIBILITY)) {
             $util.assignEmptyValue(options, 'android', 'focusable', 'false');
         }
         let src = '';
@@ -107,7 +107,7 @@ export default class FloatingActionButton<T extends android.base.View> extends s
                     node.delete('android', 'layout_gravity');
                 }
                 node.exclude({ procedure: $enum.NODE_PROCEDURE.ALIGNMENT });
-                node.render(this.application.resolveTarget(target, node));
+                node.render(this.application.resolveTarget(target));
             }
             else {
                 node.render(parent);

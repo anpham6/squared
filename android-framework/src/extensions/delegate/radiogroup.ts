@@ -52,7 +52,7 @@ export default class ScrollView<T extends android.base.View> extends squared.bas
                 item.hide();
             }
             container.android('orientation', $NodeList.linearX(children) ? AXIS_ANDROID.HORIZONTAL : AXIS_ANDROID.VERTICAL);
-            container.render(target ? this.application.resolveTarget(target, container) : parent);
+            container.render(target ? this.application.resolveTarget(target) : parent);
             this.subscribers.add(container);
             return {
                 output: '',

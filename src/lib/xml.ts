@@ -245,9 +245,9 @@ export function formatTemplate(value: string, closeEmpty = true, startIndent = -
             }
         }
         else {
-            output += line.tag + '\n';
+            output += (startIndent > 0 ? char.repeat(startIndent) : '') + line.tag + '\n';
         }
         output += line.value;
     }
-    return output.trim();
+    return output;
 }

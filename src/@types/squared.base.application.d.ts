@@ -31,12 +31,12 @@ declare global {
             renderLayout(layout: Layout<T>): string;
             addLayoutFile(filename: string, content: string, pathname: string, documentBase?: boolean): void;
             addIncludeFile(id: number, filename: string, content: string): void;
-            addRenderLayout(layout: Layout<T>, floating?: boolean): boolean;
+            addRenderLayout(layout: Layout<T>, renderType?: boolean): boolean;
             addRenderTemplate(parent: T, node: T, value: string): boolean;
             addImagePreload(element: HTMLImageElement | undefined): void;
             saveRenderPosition(parent: T, required: boolean): void;
             createNode(element: Element): T;
-            resolveTarget(target: string, node: T): T | undefined;
+            resolveTarget(target: string): T | undefined;
             toString(): string;
         }
 

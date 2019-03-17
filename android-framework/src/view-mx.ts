@@ -404,7 +404,7 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         public localizeString(value: string) {
-            if (!this.hasBit('excludeProcedure', $enum.NODE_PROCEDURE.LOCALIZATION)) {
+            if (this.hasProcedure($enum.NODE_PROCEDURE.LOCALIZATION)) {
                 return replaceRTL(value, this.localSettings.supportRTL, this.localSettings.targetAPI);
             }
             return value;
@@ -926,7 +926,7 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         private autoSizeBoxModel() {
-            if (!this.hasBit('excludeProcedure', $enum.NODE_PROCEDURE.AUTOFIT)) {
+            if (this.hasProcedure($enum.NODE_PROCEDURE.AUTOFIT)) {
                 const renderParent = this.renderParent as T;
                 let layoutWidth = $util.convertInt(this.android('layout_width'));
                 let layoutHeight = $util.convertInt(this.android('layout_height'));
@@ -945,7 +945,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                     if (this.tableElement) {
                         borderWidth = this.css('boxSizing') === 'content-box' || $util.isUserAgent($util.USER_AGENT.FIREFOX | $util.USER_AGENT.EDGE);
                     }
-                    else if (this.styleElement && !this.hasBit('excludeResource', $enum.NODE_RESOURCE.BOX_SPACING)) {
+                    else if (this.styleElement && this.hasResource($enum.NODE_RESOURCE.BOX_SPACING)) {
                         if (this.css('boxSizing') !== 'border-box' && !renderParent.tableElement) {
                             if (layoutWidth > 0 && this.toInt('width', !this.imageElement) > 0 && this.contentBoxWidth > 0) {
                                 this.android('layout_width', $util.formatPX(layoutWidth + this.contentBoxWidth));

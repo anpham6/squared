@@ -24,7 +24,7 @@ export default class ResourceStrings<T extends android.base.View> extends square
 
     public afterResources() {
         for (const node of this.application.processing.cache) {
-            if (!node.hasBit('excludeResource', $enum.NODE_RESOURCE.VALUE_STRING)) {
+            if (node.hasResource($enum.NODE_RESOURCE.VALUE_STRING)) {
                 switch (node.tagName) {
                     case 'SELECT': {
                         const element = <HTMLSelectElement> node.element;
