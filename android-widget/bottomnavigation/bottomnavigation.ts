@@ -1,4 +1,3 @@
-import { ExtensionResult } from '../../src/base/@types/application';
 import { UserSettingsAndroid } from '../../android-framework/src/@types/application';
 
 import { WIDGET_NAME } from '../lib/constant';
@@ -22,7 +21,7 @@ export default class BottomNavigation<T extends android.base.View> extends squar
         this.require(WIDGET_NAME.MENU);
     }
 
-    public processNode(node: T, parent: T): ExtensionResult<T> {
+    public processNode(node: T, parent: T) {
         const options = $utilA.createViewAttribute(this.options[node.elementId]);
         $util.assignEmptyValue(options, 'android', 'background', `?android:attr/windowBackground`);
         for (let i = 5; i < node.length; i++) {
@@ -35,19 +34,21 @@ export default class BottomNavigation<T extends android.base.View> extends squar
         node.setControlType($constA.SUPPORT_ANDROID.BOTTOM_NAVIGATION, $enumA.CONTAINER_NODE.BLOCK);
         node.exclude({ resource: $enum.NODE_RESOURCE.ASSET });
         node.render(parent);
-        const output = this.application.controllerHandler.renderNodeStatic(
-            $constA.SUPPORT_ANDROID.BOTTOM_NAVIGATION,
-            node.renderDepth,
-            $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')),
-            'match_parent',
-            'wrap_content',
-            node
-        );
         for (const item of node.cascade()) {
             this.addDescendant(item as T);
         }
         this.setStyleTheme();
-        return { output, complete: true };
+        return {
+            output: this.application.controllerHandler.renderNodeStatic(
+                $constA.SUPPORT_ANDROID.BOTTOM_NAVIGATION,
+                node.renderDepth,
+                $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')),
+                'match_parent',
+                'wrap_content',
+                node
+            ),
+            complete: true
+        };
     }
 
     public postBaseLayout(node: T) {

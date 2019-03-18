@@ -122,9 +122,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             this._initial.documentParent = this._documentParent;
         }
         if (this._bounds) {
-             this._initial.bounds = $dom.assignRect(this._bounds);
-             this._initial.linear = $dom.assignRect(this.linear);
-             this._initial.box = $dom.assignRect(this.box);
+            this._initial.bounds = $dom.assignRect(this._bounds);
+            this._initial.linear = $dom.assignRect(this.linear);
+            this._initial.box = $dom.assignRect(this.box);
         }
         this._initial.iteration++;
     }
@@ -347,14 +347,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     $util.assignEmptyProperty(this._styleMap, node.unsafe('styleMap'));
                     break;
                 case 'textStyle':
-                    const style = { whiteSpace: node.css('whiteSpace') };
-                    for (const attr in node.style) {
-                        if (attr.startsWith('font') || attr.startsWith('color')) {
-                            const key = $util.convertCamelCase(attr);
-                            style[key] = node.style[key];
-                        }
-                    }
-                    this.cssApply(style);
+                    this.cssApply({
+                        fontFamily: node.css('fontFamily'),
+                        fontSize: node.css('fontSize'),
+                        fontWeight: node.css('fontWeight'),
+                        color: node.css('color'),
+                        whiteSpace: node.css('whiteSpace'),
+                        opacity: node.css('opacity')
+                    });
                     break;
             }
         }
@@ -731,33 +731,32 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public appendTry(node: T, withNode: T, append = true) {
+        let valid = false;
         for (let i = 0; i < this.length; i++) {
-            if (node === this.item(i)) {
+            if (this.children[i] === node) {
                 withNode.siblingIndex = node.siblingIndex;
-                this.item(i, withNode);
+                this.children[i] = withNode;
                 withNode.parent = this;
-                return true;
+                withNode.innerChild = node;
+                valid = true;
+                break;
             }
         }
         if (append) {
-            let index = -1;
-            this.each(item => {
-                if (item.siblingIndex !== Number.POSITIVE_INFINITY) {
-                    index = Math.max(item.siblingIndex, index);
-                }
-            });
-            withNode.siblingIndex = index + 1;
             withNode.parent = this;
-            return true;
+            valid = true;
         }
-        return false;
+        if (valid) {
+            this.each((item, index) => item.siblingIndex = index);
+        }
+        return valid;
     }
 
     public modifyBox(region: number, offset: number | null, negative = true) {
         if (offset !== 0) {
             const attr = CSS_SPACING.get(region);
             if (attr) {
-                if (offset === null) {
+                if (offset === null || !negative && this._boxAdjustment[attr] === 0 && offset < 0) {
                     this._boxReset[attr] = 1;
                 }
                 else {
@@ -783,7 +782,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 const value = this[attr];
                 if (node && value !== 0) {
                     if (!node.naturalElement && node[attr] === 0) {
-                        node.css(attr, $util.formatPX(value));
+                        node.css(attr, $util.formatPX(value), true);
                     }
                     else {
                         node.modifyBox(CSS_SPACING_KEYS[i + (fromParent ? 0 : 4)], value);
@@ -973,6 +972,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get element() {
+        if (!this.naturalElement && this.innerChild) {
+            const element: Element | null = this.innerChild.unsafe('element');
+            if (element) {
+                return element;
+            }
+        }
         return this._element;
     }
 
@@ -1357,7 +1362,17 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get paddingTop() {
         if (this._cached.paddingTop === undefined) {
-            this._cached.paddingTop = this.convertBox('padding', 'Top');
+            let top = 0;
+            for (const node of this.children) {
+                if (node.inline) {
+                    top = Math.max(top, node.paddingTop);
+                }
+                else {
+                    top = 0;
+                    break;
+                }
+            }
+            this._cached.paddingTop = Math.max(0, this.convertBox('padding', 'Top') - top);
         }
         return this._cached.paddingTop;
     }
@@ -1369,7 +1384,17 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
     get paddingBottom() {
         if (this._cached.paddingBottom === undefined) {
-            this._cached.paddingBottom = this.convertBox('padding', 'Bottom');
+            let bottom = 0;
+            for (const node of this.children) {
+                if (node.inline) {
+                    bottom = Math.max(bottom, node.paddingBottom);
+                }
+                else {
+                    bottom = 0;
+                    break;
+                }
+            }
+            this._cached.paddingBottom = Math.max(0, this.convertBox('padding', 'Bottom') - bottom);
         }
         return this._cached.paddingBottom;
     }
@@ -1425,6 +1450,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     case 'IMG':
                     case 'SELECT':
                     case 'TEXTAREA':
+                    case 'HR':
                         break;
                     default:
                         if ($element.hasFreeFormText(element)) {
@@ -1458,7 +1484,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get blockStatic() {
         if (this._cached.blockStatic === undefined) {
-            this._cached.blockStatic = this.block && this.pageFlow && (!this.floating || this.cssInitial('width') === '100%');
+            this._cached.blockStatic = (this.block || this.gridElement || this.display === 'flex') && this.pageFlow && (!this.floating || this.cssInitial('width') === '100%');
         }
         return this._cached.blockStatic;
     }
@@ -1466,7 +1492,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get blockDimension() {
         if (this._cached.blockDimension === undefined) {
             const display = this.display;
-            this._cached.blockDimension = this.block || display === 'inline-block' || display === 'table-cell';
+            this._cached.blockDimension = this.block || display === 'inline-block' || display === 'table-cell' || display === 'inline-flex';
         }
         return this._cached.blockDimension;
     }

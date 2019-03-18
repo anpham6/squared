@@ -30,8 +30,9 @@ function removeExcluded<T extends Node>(element: HTMLElement, attr: string) {
 }
 
 function parseColorStops<T extends Node>(node: T, gradient: Gradient, value: string, opacity: string) {
-    const repeating = !!(<RepeatingGradient> gradient).repeating;
-    const extent = repeating && gradient.type === 'radial' ? (<RadialGradient> gradient).radiusExtent / (<RadialGradient> gradient).radius : 1;
+    const radial = <RadialGradient> gradient;
+    const repeating = !!radial.repeating;
+    const extent = repeating && gradient.type === 'radial' ? radial.radiusExtent / radial.radius : 1;
     const result: ColorStop[] = [];
     const pattern = new RegExp(STRING_COLORSTOP, 'g');
     let match: RegExpExecArray | null;
@@ -49,8 +50,8 @@ function parseColorStops<T extends Node>(node: T, gradient: Gradient, value: str
                     item.offset = parseFloat(match[2]) / 100;
                 }
                 else if (repeating) {
-                    const horizontal = (<RadialGradient> gradient).horizontal;
-                    const dimension = (<Dimension> gradient.dimension)[horizontal ? 'width' : 'height'];
+                    const horizontal = radial.horizontal;
+                    const dimension = gradient.type === 'radial' ? radial.radius : (<Dimension> gradient.dimension)[horizontal ? 'width' : 'height'];
                     if ($util.isLength(match[2])) {
                         item.offset = node.parseUnit(match[2], horizontal, false) / dimension;
                     }
@@ -641,13 +642,12 @@ export default abstract class Resource<T extends Node> implements squared.base.R
 
     public setFontStyle() {
         for (const node of this.cache) {
-            const backgroundImage = Resource.isBackgroundVisible(node.data(Resource.KEY_NAME, 'boxStyle'));
             if (!(node.element === null ||
                 node.renderChildren.length ||
                 node.imageElement ||
                 node.svgElement ||
                 node.tagName === 'HR' ||
-                node.inlineText && !backgroundImage && !node.preserveWhiteSpace && node.element.innerHTML.trim() === ''))
+                node.inlineText && !node.preserveWhiteSpace && node.element.innerHTML.trim() === '' && !Resource.isBackgroundVisible(node.data(Resource.KEY_NAME, 'boxStyle'))))
             {
                 const opacity = node.css('opacity');
                 const color = $color.parseColor(node.css('color'), opacity);
@@ -736,7 +736,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                 }
                                 break;
                             case 'submit':
-                                if (value === '') {
+                                if (value === '' && !$util.REGEXP_COMPILED.URL.test(node.css('background'))) {
                                     value = 'Submit';
                                 }
                                 break;
@@ -798,7 +798,9 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                     default:
                         if (node.plainText) {
                             name = node.textContent.trim();
-                            value = node.textContent.replace(/&[A-Za-z]+;/g, match => match.replace('&', '&amp;'));
+                            value = node.textContent
+                                .replace(/&[A-Za-z]+;/g, match => match.replace('&', '&amp;'))
+                                .replace(/\u00A0/g, '&#160;');
                             [value, inlineTrim] = replaceWhiteSpace(node, element, value);
                         }
                         else if (node.inlineText) {

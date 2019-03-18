@@ -61,7 +61,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
         this.assets.length = 0;
     }
 
-    public saveToDisk(files: FileAsset[]) {
+    public saveToDisk(files: FileAsset[], appName?: string) {
         if (!location.protocol.startsWith('http')) {
             alert('SERVER (required): See README for instructions');
             return;
@@ -71,7 +71,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
             $util.concatArray(files, this.assets);
             fetch(`/api/savetodisk` +
                 `?directory=${encodeURIComponent($util.trimString(settings.outputDirectory, '/'))}` +
-                `&appname=${encodeURIComponent(this.appName.trim())}` +
+                (appName ? `&appname=${encodeURIComponent(appName.trim())}` : '') +
                 `&filetype=${settings.outputArchiveFileType.toLowerCase()}` +
                 `&processingtime=${settings.outputMaxProcessingTime.toString().trim()}`,
                 {

@@ -1,4 +1,3 @@
-import { ExtensionResult } from '../@types/application';
 import { FlexboxData } from '../@types/extension';
 import { InitialData } from '../@types/node';
 
@@ -31,12 +30,12 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
         return node.flexElement && node.length > 0;
     }
 
-    public processNode(node: T): ExtensionResult<T> {
+    public processNode(node: T) {
         const controller = this.application.controllerHandler;
-        const pageFlow = node.filter(item => item.pageFlow) as T[];
-        const mainData = Flexbox.createDataAttribute(node, pageFlow);
+        const children = node.filter(item => item.pageFlow) as T[];
+        const mainData = Flexbox.createDataAttribute(node, children);
         if (node.cssTry('display', 'block')) {
-            for (const item of pageFlow) {
+            for (const item of children) {
                 if (item.element) {
                     const bounds = item.element.getBoundingClientRect();
                     const initial: InitialData<T> = item.unsafe('initial');
@@ -48,13 +47,13 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
         if (mainData.wrap) {
             function setDirection(align: string, sort: string, size: string) {
                 const map = new Map<number, T[]>();
-                pageFlow.sort((a, b) => {
+                children.sort((a, b) => {
                     if (!$util.withinRange(a.linear[align], b.linear[align])) {
-                        return a.linear[align] < b.linear[align] ? -1 : 1;
+                        return a.linear[align] >= b.linear[align] ? 1 : -1;
                     }
                     return a.linear[sort] >= b.linear[sort] ? 1 : -1;
                 });
-                for (const item of pageFlow) {
+                for (const item of children) {
                     const point = Math.round(item.linear[align]);
                     const items: T[] = map.get(point) || [];
                     items.push(item);
@@ -62,6 +61,7 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
                 }
                 let maxCount = 0;
                 let i = 0;
+                node.clear();
                 for (const seg of map.values()) {
                     const group = controller.createNodeGroup(seg[0], seg, node);
                     group.siblingIndex = i++;
@@ -90,7 +90,7 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
             }
         }
         else {
-            if (pageFlow.some(item => item.flexbox.order !== 0)) {
+            if (children.some(item => item.flexbox.order !== 0)) {
                 if (mainData.directionReverse) {
                     node.sort((a, b) => a.flexbox.order <= b.flexbox.order ? 1 : -1);
                 }
@@ -108,6 +108,6 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
             }
         }
         node.data(EXT_NAME.FLEXBOX, 'mainData', mainData);
-        return { output: '' };
+        return undefined;
     }
 }

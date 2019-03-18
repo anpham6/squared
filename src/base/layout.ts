@@ -9,8 +9,9 @@ export default class Layout<T extends Node> extends squared.lib.base.Container<T
     public rowCount = 0;
     public columnCount = 0;
     public renderType = 0;
-    public alwaysRender = false;
-    public renderPosition = false;
+    public renderIndex = -1;
+
+    public orderAltered = false;
 
     private _floated?: Set<string>;
     private _cleared?: Map<T, string>;

@@ -64,6 +64,14 @@ export function replaceRTL(value: string, rtl: boolean, api: number) {
                 return 'start';
             case 'right':
                 return 'end';
+            case 'layout_marginLeft':
+                return 'layout_marginStart';
+            case 'layout_marginRight':
+                return 'layout_marginEnd';
+            case 'paddingLeft':
+                return 'paddingStart';
+            case 'paddingRight':
+                return 'paddingEnd';
             case 'layout_alignParentLeft':
                 return 'layout_alignParentStart';
             case 'layout_alignParentRight':

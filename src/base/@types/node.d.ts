@@ -77,7 +77,6 @@ export interface VisibleStyle {
 }
 
 export interface Support {
-    lineHeight: boolean;
     container: {
         positionRelative: boolean;
     };

@@ -32,7 +32,7 @@ function getDisplayName(value: string) {
 export default class ResourceDimens<T extends android.base.View> extends squared.base.Extension<T> {
     public readonly eventOnly = true;
 
-    public afterProcedure() {
+    public beforeCascadeDocument() {
         const groups: ObjectMapNested<T[]> = {};
         for (const node of this.application.session.cache) {
             if (node.visible) {

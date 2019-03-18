@@ -1,4 +1,4 @@
-import { ImageAsset, ExtensionResult } from '../../../src/base/@types/application';
+import { ImageAsset } from '../../../src/base/@types/application';
 
 import Resource from '../resource';
 
@@ -12,7 +12,7 @@ const $enum = squared.base.lib.enumeration;
 const $util = squared.lib.util;
 
 export default class <T extends android.base.View> extends squared.base.extensions.Sprite<T> {
-    public processNode(node: T, parent: T): ExtensionResult<T> {
+    public processNode(node: T, parent: T) {
         const mainData = <Required<ImageAsset>> node.data($const.EXT_NAME.SPRITE, 'mainData');
         if (mainData) {
             const container = this.application.createNode(<HTMLElement> node.element);
@@ -58,20 +58,22 @@ export default class <T extends android.base.View> extends squared.base.extensio
             node.unsetCache();
             node.android('src', `@drawable/${Resource.addImage({ mdpi: mainData.uri })}`);
             node.parent = container;
-            const layout = new $Layout(
-                parent,
-                container,
-                CONTAINER_NODE.FRAME,
-                $enum.NODE_ALIGNMENT.SINGLE,
-                1,
-                container.children as T[]
-            );
             return {
-                output: this.application.renderLayout(layout),
+                renderAs: container,
+                outputAs: this.application.renderNode(
+                    new $Layout(
+                        parent,
+                        container,
+                        CONTAINER_NODE.FRAME,
+                        $enum.NODE_ALIGNMENT.SINGLE,
+                        1,
+                        container.children as T[]
+                    )
+                ),
                 parent: container,
                 complete: true
             };
         }
-        return { output: '' };
+        return undefined;
     }
 }

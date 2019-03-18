@@ -121,6 +121,7 @@ squared.settings = {
     supportRTL: true,
     preloadImages: true,
     ellipsisOnTextOverflow: true,
+    maxWordWrapWidth: 1024,
     supportNegativeLeftTop: true,
     collapseUnattributedElements: true,
     customizationsDisabled: true,
@@ -131,6 +132,7 @@ squared.settings = {
     convertPixels: 'dp',
     handleExtensionsAsync: true,
     autoCloseOnWrite: true,
+    manifestLabelAppName: 'android',
     manifestThemeName: 'AppTheme',
     manifestParentThemeName: 'Theme.AppCompat.Light.NoActionBar',
     outputDirectory: 'app/src/main',
@@ -186,7 +188,7 @@ System or extension generated attributes can be overridden with dataset. They wi
 
 ```xml
 <div
-    data-android-attr-android="layout_width::match_parent;layout_height::match_parent"
+    data-android-attr="layout_width::match_parent;layout_height::match_parent"
     data-android-attr-app="layout_scrollFlags::scroll|exitUntilCollapsed">
 </div>
 ```
@@ -199,9 +201,11 @@ It is sometimes necessary to append elements into other containers when trying t
 <div>
     <span>Item 1</span>
     <span data-target="location">Item 2</span>
+    <span data-target="location" data-target-index="1">Item 3</span>
 <div>
 <ul id="location">
-    <li>Item 3</li>
+    <li>Item 4</li>
+    <li>Item 5</li>
     <!-- span -->
 </ul>
 ```
@@ -211,7 +215,9 @@ It is sometimes necessary to append elements into other containers when trying t
     <TextView>Item 1</TextView>
 </LinearLayout>
 <LinearLayout>
+    <TextView>Item 4</TextView>
     <TextView>Item 3</TextView>
+    <TextView>Item 5</TextView>
     <TextView>Item 2</TextView>
 </LinearLayout>
 ```

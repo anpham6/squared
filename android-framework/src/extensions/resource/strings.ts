@@ -97,7 +97,7 @@ export default class ResourceStrings<T extends android.base.View> extends square
                                 }
                                 if (textIndent !== 0 && (node.blockDimension || actualParent.firstChild === node)) {
                                     if (textIndent > 0) {
-                                        value = '&#160;'.repeat(Math.floor(textIndent / 7)) + value;
+                                        value = '&#160;'.repeat(Math.floor(textIndent / (node.fontSize / 2))) + value;
                                     }
                                     else if (node.toInt('textIndent') + node.bounds.width < 0) {
                                         value = '';

@@ -1,4 +1,3 @@
-import { ExtensionResult } from '../@types/application';
 import { CssGridCellData, CssGridData, CssGridDirectionData } from '../@types/extension';
 
 import Extension from '../extension';
@@ -110,7 +109,7 @@ export default class CssGrid<T extends Node> extends Extension<T> {
         return node.gridElement && node.length > 0;
     }
 
-    public processNode(node: T): ExtensionResult<T> {
+    public processNode(node: T) {
         const mainData = { ...CssGrid.createDataAttribute(),
             alignItems: node.css('alignItems'),
             alignContent: node.css('alignContent'),
@@ -646,6 +645,6 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                 node.data(EXT_NAME.CSS_GRID, 'mainData', mainData);
             }
         }
-        return { output: '' };
+        return undefined;
     }
 }

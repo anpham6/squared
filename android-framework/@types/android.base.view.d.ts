@@ -20,7 +20,6 @@ declare global {
             app(attr: string, value?: string, overwrite?: boolean): string;
             formatted(value: string, overwrite?: boolean): void;
             mergeGravity(attr: string, ...alignment: string[]): string;
-            setLineHeight(value: number, height?: boolean): void;
             anchor(position: string, documentId?: string, overwrite?: boolean): boolean;
             anchorParent(orientation: string, overwrite?: boolean, constraintBias?: boolean): boolean;
             anchorDelete(...position: string[]): void;

@@ -85,23 +85,45 @@ export default abstract class Controller<T extends Node> implements squared.base
                     }
                 }
                 break;
+            case 'FORM':
+                if (styleMap.marginTop === undefined) {
+                    styleMap.marginTop = '0px';
+                }
+                break;
             case 'IFRAME':
                 if (styleMap.display === undefined) {
                     styleMap.display = 'block';
                 }
             case 'IMG':
-                if (styleMap.width === undefined) {
-                    const match = /width="(\d+)"/.exec(element.outerHTML);
-                    if (match) {
-                        styleMap.width = $util.formatPX($util.isPercent(match[1]) ? parseFloat(match[1]) / 100 * (element.parentElement || element).getBoundingClientRect().width : match[1]);
+                const setDimension = (attr: string, opposing: string) => {
+                    if (styleMap[attr] === undefined || styleMap[attr] === 'auto') {
+                        const match = new RegExp(`${attr}="(\\d+)"`).exec(element.outerHTML);
+                        if (match) {
+                            styleMap[attr] = $util.formatPX($util.isPercent(match[1]) ? parseFloat(match[1]) / 100 * (element.parentElement || element).getBoundingClientRect()[attr] : match[1]);
+                        }
+                        else if (element.tagName === 'IFRAME') {
+                            if (attr ===  'width') {
+                                styleMap.width = '300px';
+                            }
+                            else {
+                                styleMap.height = '150px';
+                            }
+                        }
+                        else {
+                            if (styleMap[opposing] && $util.isPercent(styleMap[opposing])) {
+                                styleMap[attr] = styleMap[opposing];
+                            }
+                            else {
+                                const image = this.application.session.image.get((<HTMLImageElement> element).src);
+                                if (image && image.width > 0 && image.height > 0) {
+                                    styleMap[attr] = $util.formatPX(image[attr] * (styleMap[opposing] && $util.isLength(styleMap[opposing]) ? (parseFloat(styleMap[opposing]) / image[opposing]) : 1));
+                                }
+                            }
+                        }
                     }
-                }
-                if (styleMap.height === undefined) {
-                    const match = /height="(\d+)"/.exec(element.outerHTML);
-                    if (match) {
-                        styleMap.height = $util.formatPX($util.isPercent(match[1]) ? parseFloat(match[1]) / 100 * (element.parentElement || element).getBoundingClientRect().height : match[1]);
-                    }
-                }
+                };
+                setDimension('width', 'height');
+                setDimension('height', 'width');
                 break;
         }
         $dom.setElementCache(element, 'styleMap', styleMap);

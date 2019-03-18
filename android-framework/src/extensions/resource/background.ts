@@ -330,6 +330,20 @@ export function convertColorStops(list: ColorStop[], precision?: number) {
     return result;
 }
 
+function getPercentOffset(direction: string, position: RectPosition, bounds: RectDimension, dimension: Dimension) {
+    if (direction === 'left') {
+        if ($util.isPercent(position.horizontal)) {
+            return parseFloat(position.horizontal) / 100 * (bounds.width - dimension.width);
+        }
+    }
+    else {
+        if ($util.isPercent(position.horizontal)) {
+            return parseFloat(position.horizontal) / 100 * (bounds.height - dimension.height);
+        }
+    }
+    return position[direction];
+}
+
 export default class ResourceBackground<T extends View> extends squared.base.Extension<T> {
     public readonly options: ResourceBackgroundOptions = {
         autoSizeBackgroundImage: true
@@ -498,23 +512,39 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         resetHorizontal();
                                         gravity = node.localizeString('right');
                                         break;
+                                    default:
+                                        if (position.right !== 0) {
+                                            gravity += node.localizeString('right');
+                                        }
+                                        else {
+                                            gravity += node.localizeString('left');
+                                        }
+                                        break;
                                 }
-                                const separator = gravity !== '' ? '|' : '';
+                                gravity += '|';
                                 switch (position.vertical) {
                                     case '0%':
                                     case 'top':
                                         resetVertical();
-                                        gravity += separator + 'top';
+                                        gravity += 'top';
                                         break;
                                     case '50%':
                                     case 'center':
                                         resetVertical();
-                                        gravity += separator + 'center_vertical';
+                                        gravity += 'center_vertical';
                                         break;
                                     case '100%':
                                     case 'bottom':
                                         resetVertical();
-                                        gravity += separator + 'bottom';
+                                        gravity += 'bottom';
+                                        break;
+                                    default:
+                                        if (position.bottom !== 0) {
+                                            gravity += 'bottom';
+                                        }
+                                        else {
+                                            gravity += 'top';
+                                        }
                                         break;
                                 }
                             }
@@ -669,10 +699,22 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     imageData.src = value;
                                 }
                             }
+                            if (position.top !== 0) {
+                                imageData.top = $util.formatPX(position.top);
+                            }
+                            if (position.right !== 0) {
+                                imageData.right = $util.formatPX(position.right);
+                            }
+                            if (position.bottom !== 0) {
+                                imageData.bottom = $util.formatPX(position.bottom);
+                            }
+                            if (position.left !== 0) {
+                                imageData.left = $util.formatPX(position.left);
+                            }
                         }
                         else {
+                            const dimension = <Dimension> imageDimensions[i];
                             if (value.colorStops) {
-                                const dimension = <Dimension> imageDimensions[i];
                                 const width = Math.round(dimension.width);
                                 const height = Math.round(dimension.height);
                                 imageData.width = $util.formatPX(width);
@@ -706,20 +748,14 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             else {
                                 imageData.gradient = [value];
                             }
-                        }
-                        if (imageData.src || imageData.bitmap || imageData.gradient) {
                             if (position.top !== 0) {
-                                imageData.top = $util.formatPX(position.top);
-                            }
-                            if (position.right !== 0) {
-                                imageData.right = $util.formatPX(position.right);
-                            }
-                            if (position.bottom !== 0) {
-                                imageData.bottom = $util.formatPX(position.bottom);
+                                imageData.top = $util.formatPX(getPercentOffset('top', position, node.bounds, dimension));
                             }
                             if (position.left !== 0) {
-                                imageData.left = $util.formatPX(position.left);
+                                imageData.left = $util.formatPX(getPercentOffset('left', position, node.bounds, dimension));
                             }
+                        }
+                        if (imageData.src || imageData.bitmap || imageData.gradient) {
                             layerList.B.push(imageData);
                         }
                     }
@@ -735,21 +771,21 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     let shape: TemplateDataA | undefined;
                     const border = stored.border;
                     if (border && !(border.style === 'double' && parseInt(border.width) > 2 || (border.style === 'groove' || border.style === 'ridge') && parseInt(border.width) > 1)) {
-                        const stroke = getShapeAttribute(stored, 'stroke') || [];
-                        if (backgroundImage.length === 0) {
-                            template = TEMPLATES.SHAPE;
-                            shape = {
-                                A: stroke,
-                                B: backgroundColor,
-                                C: borderRadius
-                            };
-                        }
-                        else {
+                        const stroke = getShapeAttribute(stored, 'stroke');
+                        if (backgroundImage.length) {
                             template = TEMPLATES.LAYER_LIST;
                             layerList.A = backgroundColor;
                             if (borderData || borderRadius) {
                                 layerList.C = [{ stroke, corners: borderRadius }];
                             }
+                        }
+                        else {
+                            template = TEMPLATES.SHAPE;
+                            shape = {
+                                A: stroke as [],
+                                B: backgroundColor,
+                                C: borderRadius
+                            };
                         }
                     }
                     else {

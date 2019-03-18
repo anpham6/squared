@@ -1,5 +1,3 @@
-import { ExtensionResult } from '../../src/base/@types/application';
-
 import { WIDGET_NAME } from '../lib/constant';
 
 import $Resource = android.base.Resource;
@@ -21,7 +19,7 @@ export default class FloatingActionButton<T extends android.base.View> extends s
         return this.included(<HTMLElement> node.element);
     }
 
-    public processNode(node: T, parent: T): ExtensionResult<T> {
+    public processNode(node: T, parent: T) {
         const element = <HTMLElement> node.element;
         const target = node.dataset.target;
         const options = $utilA.createViewAttribute(this.options[element.id]);
@@ -52,6 +50,8 @@ export default class FloatingActionButton<T extends android.base.View> extends s
         }
         node.setControlType($constA.SUPPORT_ANDROID.FLOATING_ACTION_BUTTON, $enumA.CONTAINER_NODE.BUTTON);
         node.exclude({ resource: $enum.NODE_RESOURCE.BOX_STYLE | $enum.NODE_RESOURCE.ASSET });
+        $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
+        let parentAs: T | undefined;
         if (!node.pageFlow || target) {
             const horizontalBias = node.horizontalBias();
             const verticalBias = node.verticalBias();
@@ -93,6 +93,7 @@ export default class FloatingActionButton<T extends android.base.View> extends s
                     node.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, documentParent.box.bottom - node.linear.bottom);
                 }
             }
+            node.positioned = true;
             if (target) {
                 let anchor = parent.documentId;
                 if (parent.controlName === $constA.SUPPORT_ANDROID.TOOLBAR) {
@@ -108,23 +109,23 @@ export default class FloatingActionButton<T extends android.base.View> extends s
                 }
                 node.exclude({ procedure: $enum.NODE_PROCEDURE.ALIGNMENT });
                 node.render(this.application.resolveTarget(target));
+                parentAs = node.renderParent as T;
             }
-            else {
-                node.render(parent);
-            }
-            node.positioned = true;
         }
-        else {
+        if (!target) {
             node.render(parent);
         }
-        const output = this.application.controllerHandler.renderNodeStatic(
-            $constA.SUPPORT_ANDROID.FLOATING_ACTION_BUTTON,
-            target ? -1 : node.renderDepth,
-            $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')),
-            'wrap_content',
-            'wrap_content',
-            node
-        );
-        return { output, complete: true };
+        return {
+            parentAs,
+            output: this.application.controllerHandler.renderNodeStatic(
+                $constA.SUPPORT_ANDROID.FLOATING_ACTION_BUTTON,
+                node.renderDepth,
+                options,
+                'wrap_content',
+                'wrap_content',
+                node
+            ),
+            complete: true
+        };
     }
 }

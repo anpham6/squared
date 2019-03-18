@@ -11,7 +11,7 @@ declare global {
             saveAllToDisk(data: SessionData<NodeList<T>>): void;
             addAsset(pathname: string, filename: string, content?: string, uri?: string): void;
             reset(): void;
-            saveToDisk(files: FileAsset[]): void;
+            saveToDisk(files: FileAsset[], appName?: string): void;
         }
 
         class File<T extends Node> implements File<T> {

@@ -1,4 +1,3 @@
-import { ExtensionResult } from '../../../src/base/@types/application';
 import { VerticalAlignData } from '../../../src/base/@types/extension';
 
 import { CONTAINER_NODE } from '../lib/enumeration';
@@ -9,7 +8,7 @@ const $const = squared.base.lib.constant;
 const $enum = squared.base.lib.enumeration;
 
 export default class <T extends android.base.View> extends squared.base.extensions.VerticalAlign<T> {
-    public processNode(node: T, parent: T): ExtensionResult<T> {
+    public processNode(node: T, parent: T) {
         super.processNode(node, parent);
         const mainData: VerticalAlignData<T> = node.data($const.EXT_NAME.VERTICAL_ALIGN, 'mainData');
         if (mainData) {
@@ -24,6 +23,6 @@ export default class <T extends android.base.View> extends squared.base.extensio
             layout.floated = layout.getFloated(true);
             return { output: this.application.renderNode(layout) };
         }
-        return { output: '' };
+        return undefined;
     }
 }

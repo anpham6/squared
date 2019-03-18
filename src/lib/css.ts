@@ -57,7 +57,7 @@ export function getKeyframeRules(): CSSRuleData {
 
 export function hasComputedStyle(element: Element | null): element is HTMLElement {
     if (element) {
-        return typeof element['style'] === 'object' && element['style'] !== null;
+        return typeof element['style'] === 'object' && element['style'] !== null && element['style']['display'] !== null;
     }
     return false;
 }
@@ -193,7 +193,7 @@ export function isInheritedStyle(element: Element | null, attr: string) {
 }
 
 export function getInlineStyle(element: Element, attr: string) {
-    let value: string = hasComputedStyle(element) ? element['style'][attr] : '';
+    let value: string = hasComputedStyle(element) ? element.style[attr] : '';
     if (!value) {
         const styleMap: StringMap = getElementCache(element, 'styleMap');
         if (styleMap) {

@@ -1,4 +1,3 @@
-import { ExtensionResult } from '../@types/application';
 import { ListData } from '../@types/extension';
 
 import Extension from '../extension';
@@ -25,6 +24,9 @@ export default abstract class List<T extends Node> extends Extension<T> {
 
     public condition(node: T) {
         return super.condition(node) && node.length > 0 && (
+            node.some(item => item.display === 'list-item' && (item.css('listStyleType') !== 'none' || hasSingleImage(item))) ||
+            node.every(item => item.tagName !== 'LI' && item.cssInitial('listStyleType') === 'none' && hasSingleImage(item))
+        ) && (
             node.every(item => item.blockStatic) ||
             node.every(item => item.inlineVertical) ||
             node.every(item => item.floating) && NodeList.floated(node.children).size === 1 ||
@@ -34,13 +36,10 @@ export default abstract class List<T extends Node> extends Extension<T> {
                 item.blockStatic ||
                 item.inlineFlow && (node.item(index - 1) as T).blockStatic && (node.item(index + 1) as T).blockStatic
             ))
-        ) && (
-            node.some(item => item.display === 'list-item' && (item.css('listStyleType') !== 'none' || hasSingleImage(item))) ||
-            node.every(item => item.tagName !== 'LI' && item.cssInitial('listStyleType') === 'none' && hasSingleImage(item))
         );
     }
 
-    public processNode(node: T): ExtensionResult<T> {
+    public processNode(node: T) {
         let i = 0;
         node.each(item => {
             const mainData = List.createDataAttribute();
@@ -99,7 +98,7 @@ export default abstract class List<T extends Node> extends Extension<T> {
             }
             item.data(EXT_NAME.LIST, 'mainData', mainData);
         });
-        return { output: '' };
+        return undefined;
     }
 
     public postBaseLayout(node: T) {

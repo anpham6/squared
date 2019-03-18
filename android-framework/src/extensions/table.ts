@@ -1,4 +1,3 @@
-import { ExtensionResult } from '../../../src/base/@types/application';
 import { TableData } from '../../../src/base/@types/extension';
 
 import View from '../view';
@@ -12,7 +11,7 @@ const $enum = squared.base.lib.enumeration;
 const $util = squared.lib.util;
 
 export default class <T extends View> extends squared.base.extensions.Table<T> {
-    public processNode(node: T, parent: T): ExtensionResult<T> {
+    public processNode(node: T, parent: T) {
         super.processNode(node, parent);
         const mainData: TableData = node.data($const.EXT_NAME.TABLE, 'mainData');
         if (mainData) {
@@ -89,10 +88,10 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                 complete: true
             };
         }
-        return { output: '' };
+        return undefined;
     }
 
-    public processChild(node: T, parent: T): ExtensionResult<T> {
+    public processChild(node: T, parent: T) {
         const rowSpan = $util.convertInt(node.data($const.EXT_NAME.TABLE, 'rowSpan'));
         const columnSpan = $util.convertInt(node.data($const.EXT_NAME.TABLE, 'colSpan'));
         const spaceSpan = $util.convertInt(node.data($const.EXT_NAME.TABLE, 'spaceSpan'));
@@ -107,7 +106,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
             const controller = <android.base.Controller<T>> this.application.controllerHandler;
             controller.addAfterOutsideTemplate(node.id, controller.renderSpace(parent.renderDepth + 1, 'wrap_content', 'wrap_content', spaceSpan));
         }
-        return { output: '' };
+        return undefined;
     }
 
     public postProcedure(node: T) {

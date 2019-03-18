@@ -1,5 +1,3 @@
-import { ExtensionResult } from '../../../../src/base/@types/application';
-
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import $Layout = squared.base.Layout;
@@ -11,7 +9,7 @@ export default class MaxWidthHeight<T extends android.base.View> extends squared
         return !node.textElement && !node.imageElement && !node.svgElement && (node.has('maxWidth') || node.has('maxHeight'));
     }
 
-    public processNode(node: T, parent: T): ExtensionResult<T> {
+    public processNode(node: T, parent: T) {
         const container = (<android.base.Controller<T>> this.application.controllerHandler).createNodeWrapper(node, parent);
         container.css('display', 'block', true);
         if (node.has('maxWidth')) {
@@ -37,10 +35,9 @@ export default class MaxWidthHeight<T extends android.base.View> extends squared
             container.children as T[]
         );
         return {
-            output: '',
             parent: container,
             renderAs: container,
-            outputAs: this.application.renderLayout(layout)
+            outputAs: this.application.renderNode(layout)
         };
     }
 }

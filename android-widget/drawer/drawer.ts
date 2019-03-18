@@ -1,4 +1,3 @@
-import { ExtensionResult } from '../../src/base/@types/application';
 import { UserSettingsAndroid } from '../../android-framework/src/@types/application';
 
 import { WIDGET_NAME } from '../lib/constant';
@@ -41,7 +40,7 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
         return false;
     }
 
-    public processNode(node: T, parent: T): ExtensionResult<T> {
+    public processNode(node: T, parent: T) {
         const options = $utilA.createViewAttribute(this.options.self);
         if (Drawer.findNestedElement(node.element, WIDGET_NAME.MENU)) {
             $util.assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');

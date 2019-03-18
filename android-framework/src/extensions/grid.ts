@@ -1,4 +1,3 @@
-import { ExtensionResult } from '../../../src/base/@types/application';
 import { GridCellData, GridData } from '../../../src/base/@types/extension';
 
 import { CONTAINER_NODE } from '../lib/enumeration';
@@ -42,7 +41,7 @@ function transferData<T extends View>(parent: T, siblings: T[])  {
 }
 
 export default class <T extends View> extends squared.base.extensions.Grid<T> {
-    public processNode(node: T, parent: T): ExtensionResult<T> {
+    public processNode(node: T, parent: T) {
         super.processNode(node, parent);
         const mainData: GridData = node.data($const.EXT_NAME.GRID, 'mainData');
         if (mainData) {
@@ -60,10 +59,10 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                 complete: true
             };
         }
-        return { output: '' };
+        return undefined;
     }
 
-    public processChild(node: T, parent: T): ExtensionResult<T> {
+    public processChild(node: T, parent: T) {
         const mainData: GridData = parent.data($const.EXT_NAME.GRID, 'mainData');
         const cellData: GridCellData<T> = node.data($const.EXT_NAME.GRID, 'cellData');
         if (mainData && cellData) {
@@ -100,7 +99,6 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                 if (layout.containerType !== 0) {
                     transferData(layout.node, siblings);
                     return {
-                        output: '',
                         parent: layout.node,
                         renderAs: layout.node,
                         outputAs: this.application.renderNode(layout),
@@ -109,7 +107,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                 }
             }
         }
-        return { output: '' };
+        return undefined;
     }
 
     public postBaseLayout(node: T) {

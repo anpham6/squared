@@ -16,8 +16,8 @@ declare global {
             public static cleared<T>(list: T[], parent?: boolean): Map<T, string>;
             public static floatedAll<T>(parent: T): Set<string>;
             public static clearedAll<T>(parent: T): Map<T, string>;
-            public static linearX<T>(list: T[]): boolean;
-            public static linearY<T>(list: T[]): boolean;
+            public static linearX<T>(list: T[], segmented?: boolean): boolean;
+            public static linearY<T>(list: T[], segmented?: boolean): boolean;
             public static partitionRows<T>(list: T[], parent?: T): T[][];
             public static siblingIndex(): number;
             constructor(children?: T[]);

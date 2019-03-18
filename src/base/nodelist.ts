@@ -172,8 +172,17 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
         return this.cleared($util.filterArray(parent.actualChildren as T[], item => item.pageFlow), false);
     }
 
-    public static linearX<T extends Node>(list: T[]) {
-        const nodes = $util.filterArray(list, node => node.pageFlow).sort(NodeList.siblingIndex);
+    public static linearX<T extends Node>(list: T[], segmented = false) {
+        const nodes: T[] = [];
+        let hasFloat = false;
+        for (const item of list) {
+            if (item.pageFlow) {
+                nodes.push(item);
+            }
+            if (item.floating) {
+                hasFloat = true;
+            }
+        }
         switch (nodes.length) {
             case 0:
                 return false;
@@ -182,53 +191,59 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
             default:
                 const parent = this.actualParent(nodes);
                 if (parent) {
-                    const cleared = this.clearedAll(parent);
+                    const cleared = hasFloat ? this.clearedAll(parent) : undefined;
                     for (let i = 1; i < nodes.length; i++) {
-                        if (nodes[i].alignedVertically(nodes[i].previousSiblings(), undefined, cleared)) {
+                        const previousSiblings = nodes[i].previousSiblings() as T[];
+                        if (segmented) {
+                            $util.spliceArray(previousSiblings, item => !list.includes(item));
+                        }
+                        if (nodes[i].alignedVertically(previousSiblings, undefined, cleared)) {
                             return false;
                         }
                     }
-                    let boxLeft = Number.POSITIVE_INFINITY;
-                    let boxRight = Number.NEGATIVE_INFINITY;
-                    let floatLeft = Number.NEGATIVE_INFINITY;
-                    let floatRight = Number.POSITIVE_INFINITY;
-                    for (const node of nodes) {
-                        boxLeft = Math.min(boxLeft, node.linear.left);
-                        boxRight = Math.max(boxRight, node.linear.right);
-                        if (node.floating) {
-                            if (node.float === 'left') {
-                                floatLeft = Math.max(floatLeft, node.linear.right);
-                            }
-                            else {
-                                floatRight = Math.min(floatRight, node.linear.left);
-                            }
-                        }
-                    }
-                    for (let i = 0, j = 0, k = 0, l = 0, m = 0; i < nodes.length; i++) {
-                        const item = nodes[i];
-                        if (Math.floor(item.linear.left) <= boxLeft) {
-                            j++;
-                        }
-                        if (Math.ceil(item.linear.right) >= boxRight) {
-                            k++;
-                        }
-                        if (!item.floating) {
-                            if (item.linear.left === floatLeft) {
-                                l++;
-                            }
-                            if (item.linear.right === floatRight) {
-                                m++;
+                    if (hasFloat) {
+                        let boxLeft = Number.POSITIVE_INFINITY;
+                        let boxRight = Number.NEGATIVE_INFINITY;
+                        let floatLeft = Number.NEGATIVE_INFINITY;
+                        let floatRight = Number.POSITIVE_INFINITY;
+                        for (const node of nodes) {
+                            boxLeft = Math.min(boxLeft, node.linear.left);
+                            boxRight = Math.max(boxRight, node.linear.right);
+                            if (node.floating) {
+                                if (node.float === 'left') {
+                                    floatLeft = Math.max(floatLeft, node.linear.right);
+                                }
+                                else {
+                                    floatRight = Math.min(floatRight, node.linear.left);
+                                }
                             }
                         }
-                        if (i === 0) {
-                            continue;
-                        }
-                        if (j === 2 || k === 2 || l === 2 || m === 2) {
-                            return false;
-                        }
-                        const previous = nodes[i - 1];
-                        if (previous.floating && item.linear.top >= previous.linear.bottom || $util.withinRange(item.linear.left, previous.linear.left)) {
-                            return false;
+                        for (let i = 0, j = 0, k = 0, l = 0, m = 0; i < nodes.length; i++) {
+                            const item = nodes[i];
+                            if (Math.floor(item.linear.left) <= boxLeft) {
+                                j++;
+                            }
+                            if (Math.ceil(item.linear.right) >= boxRight) {
+                                k++;
+                            }
+                            if (!item.floating) {
+                                if (item.linear.left === floatLeft) {
+                                    l++;
+                                }
+                                if (item.linear.right === floatRight) {
+                                    m++;
+                                }
+                            }
+                            if (i === 0) {
+                                continue;
+                            }
+                            if (j === 2 || k === 2 || l === 2 || m === 2) {
+                                return false;
+                            }
+                            const previous = nodes[i - 1];
+                            if (previous.floating && item.linear.top >= previous.linear.bottom || $util.withinRange(item.linear.left, previous.linear.left)) {
+                                return false;
+                            }
                         }
                     }
                     return true;
@@ -237,8 +252,17 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
         }
     }
 
-    public static linearY<T extends Node>(list: T[]) {
-        const nodes = $util.filterArray(list, node => node.pageFlow).sort(NodeList.siblingIndex);
+    public static linearY<T extends Node>(list: T[], segmented = false) {
+        const nodes: T[] = [];
+        let hasFloat = false;
+        for (const item of list) {
+            if (item.pageFlow) {
+                nodes.push(item);
+            }
+            if (item.floating) {
+                hasFloat = true;
+            }
+        }
         switch (nodes.length) {
             case 0:
                 return false;
@@ -247,9 +271,13 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
             default:
                 const parent = this.actualParent(nodes);
                 if (parent) {
-                    const cleared = this.clearedAll(parent);
+                    const cleared = hasFloat ? this.clearedAll(parent) : undefined;
                     for (let i = 1; i < nodes.length; i++) {
-                        if (!nodes[i].alignedVertically(nodes[i].previousSiblings(), nodes, cleared)) {
+                        const previousSiblings = nodes[i].previousSiblings() as T[];
+                        if (segmented) {
+                            $util.spliceArray(previousSiblings, item => !list.includes(item));
+                        }
+                        if (!nodes[i].alignedVertically(previousSiblings, nodes, cleared)) {
                             return false;
                         }
                     }
@@ -260,14 +288,39 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
     }
 
     public static partitionRows<T extends Node>(list: T[]) {
-        const [children, cleared] = ((): [T[], Map<T, string>] => {
-            const parent = this.actualParent(list);
-            return parent ? [parent.actualChildren as T[], this.clearedAll(parent)] : [list, this.cleared(list)];
-        })();
+        let children: T[];
+        let cleared: Map<T, string>;
+        const parent = this.actualParent(list);
+        if (parent) {
+            children = parent.actualChildren as T[];
+            cleared = this.clearedAll(parent);
+        }
+        else {
+            children = list;
+            cleared = this.cleared(list);
+        }
+        const groupParent = $util.filterArray(list, node => node.groupParent);
         const result: T[][] = [];
         let row: T[] = [];
         for (let i = 0; i < children.length; i++) {
             const node = children[i];
+            let next = false;
+            for (let j = 0; j < groupParent.length; j++) {
+                const group = groupParent[j];
+                if (group.contains(node) || group === node) {
+                    if (row.length) {
+                        result.push(row);
+                    }
+                    result.push([group]);
+                    row = [];
+                    groupParent.splice(j, 1);
+                    next = true;
+                    break;
+                }
+            }
+            if (next) {
+                continue;
+            }
             const previousSiblings = node.previousSiblings() as T[];
             if (i === 0 || previousSiblings.length === 0) {
                 if (list.includes(node)) {

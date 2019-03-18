@@ -99,7 +99,8 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 parseFileDetails(this.resourceDrawableToXml()),
                 parseImageDetails(this.resourceDrawableImageToXml()),
                 parseFileDetails(this.resourceAnimToXml())
-            )
+            ),
+            this.userSettings.manifestLabelAppName
         );
     }
 
@@ -114,7 +115,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             }
         }
         if (saveToDisk) {
-            this.saveToDisk(files);
+            this.saveToDisk(files, this.userSettings.manifestLabelAppName);
         }
         return result;
     }
@@ -146,7 +147,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     $util.concatArray(files, parseFileDetails(result[name]));
                 }
             }
-            this.saveToDisk(files);
+            this.saveToDisk(files, this.userSettings.manifestLabelAppName);
         }
         return result;
     }
@@ -154,11 +155,10 @@ export default class File<T extends View> extends squared.base.File<T> implement
     public resourceStringToXml(saveToDisk = false) {
         const result: string[] = [];
         const data: TemplateDataA = { A: [] };
-        this.stored.strings = new Map(Array.from(this.stored.strings.entries()).sort(caseInsensitive));
-        if (this.appName !== '' && !this.stored.strings.has('app_name')) {
-            data.A.push({ name: 'app_name', value: this.appName });
+        if (!this.stored.strings.has('app_name')) {
+            data.A.push({ name: 'app_name', value: this.userSettings.manifestLabelAppName });
         }
-        for (const [name, value] of this.stored.strings.entries()) {
+        for (const [name, value] of Array.from(this.stored.strings.entries()).sort(caseInsensitive)) {
             data.A.push({ name, value });
         }
         result.push(
@@ -170,7 +170,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             .trim()
         );
         if (saveToDisk) {
-            this.saveToDisk(parseFileDetails(result));
+            this.saveToDisk(parseFileDetails(result), this.userSettings.manifestLabelAppName);
         }
         return result;
     }
@@ -179,8 +179,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         const result: string[] = [];
         if (this.stored.arrays.size) {
             const data: TemplateDataA = { A: [] };
-            this.stored.arrays = new Map(Array.from(this.stored.arrays.entries()).sort());
-            for (const [name, values] of this.stored.arrays.entries()) {
+            for (const [name, values] of Array.from(this.stored.arrays.entries()).sort()) {
                 data.A.push({
                     name,
                     AA: $util.objectMap<string, {}>(values, value => ({ value }))
@@ -195,7 +194,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 .trim()
             );
             if (saveToDisk) {
-                this.saveToDisk(parseFileDetails(result));
+                this.saveToDisk(parseFileDetails(result), this.userSettings.manifestLabelAppName);
             }
         }
         return result;
@@ -205,9 +204,8 @@ export default class File<T extends View> extends squared.base.File<T> implement
         const result: string[] = [];
         if (this.stored.fonts.size) {
             const settings = this.userSettings;
-            this.stored.fonts = new Map(Array.from(this.stored.fonts.entries()).sort());
             const namespace = settings.targetAPI < BUILD_ANDROID.OREO ? 'app' : 'android';
-            for (const [name, font] of this.stored.fonts.entries()) {
+            for (const [name, font] of Array.from(this.stored.fonts.entries()).sort()) {
                 const data: TemplateDataA = {
                     name,
                     namespace: getXmlNs(namespace),
@@ -234,7 +232,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 );
             }
             if (saveToDisk) {
-                this.saveToDisk(parseFileDetails(result));
+                this.saveToDisk(parseFileDetails(result), this.userSettings.manifestLabelAppName);
             }
         }
         return result;
@@ -244,8 +242,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         const result: string[] = [];
         if (this.stored.colors.size) {
             const data: TemplateDataA = { A: [] };
-            this.stored.colors = new Map(Array.from(this.stored.colors.entries()).sort());
-            for (const [name, value] of this.stored.colors.entries()) {
+            for (const [name, value] of Array.from(this.stored.colors.entries()).sort()) {
                 data.A.push({ name, value });
             }
             result.push(
@@ -255,7 +252,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 )
             );
             if (saveToDisk) {
-                this.saveToDisk(parseFileDetails(result));
+                this.saveToDisk(parseFileDetails(result), this.userSettings.manifestLabelAppName);
             }
         }
         return result;
@@ -312,7 +309,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
             );
         }
         if (saveToDisk) {
-            this.saveToDisk(parseFileDetails(result));
+            this.saveToDisk(parseFileDetails(result), this.userSettings.manifestLabelAppName);
         }
         return result;
     }
@@ -322,8 +319,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
         if (this.stored.dimens.size) {
             const settings = this.userSettings;
             const data: TemplateDataA = { A: [] };
-            this.stored.dimens = new Map(Array.from(this.stored.dimens.entries()).sort());
-            for (const [name, value] of this.stored.dimens.entries()) {
+            for (const [name, value] of Array.from(this.stored.dimens.entries()).sort()) {
                 data.A.push({ name, value });
             }
             result.push(
@@ -337,7 +333,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 )
             );
             if (saveToDisk) {
-                this.saveToDisk(parseFileDetails(result));
+                this.saveToDisk(parseFileDetails(result), this.userSettings.manifestLabelAppName);
             }
         }
         return result;
@@ -360,7 +356,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 );
             }
             if (saveToDisk) {
-                this.saveToDisk(parseFileDetails(result));
+                this.saveToDisk(parseFileDetails(result), this.userSettings.manifestLabelAppName);
             }
         }
         return result;
@@ -397,7 +393,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 }
             }
             if (saveToDisk) {
-                this.saveToDisk(parseImageDetails(result));
+                this.saveToDisk(parseImageDetails(result), this.userSettings.manifestLabelAppName);
             }
         }
         return result;
@@ -415,7 +411,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 );
             }
             if (saveToDisk) {
-                this.saveToDisk(parseFileDetails(result));
+                this.saveToDisk(parseFileDetails(result), this.userSettings.manifestLabelAppName);
             }
         }
         return result;

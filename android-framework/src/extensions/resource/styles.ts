@@ -12,7 +12,7 @@ const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 export default class ResourceStyles<T extends View> extends squared.base.Extension<T> {
     public readonly eventOnly = true;
 
-    public afterProcedure() {
+    public beforeCascadeDocument() {
         const styles: ObjectMap<string[]> = {};
         for (const node of this.application.session.cache) {
             if (node.visible) {

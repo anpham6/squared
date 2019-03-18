@@ -1,4 +1,3 @@
-import { ExtensionResult } from '../../../src/base/@types/application';
 import { CssGridCellData, CssGridData, CssGridDirectionData } from '../../../src/base/@types/extension';
 
 import View from '../view';
@@ -142,7 +141,7 @@ function setContentSpacing<T extends View>(mainData: CssGridData<T>, node: T, al
 }
 
 export default class <T extends View> extends squared.base.extensions.CssGrid<T> {
-    public processNode(node: T, parent: T): ExtensionResult<T> {
+    public processNode(node: T, parent: T) {
         super.processNode(node, parent);
         const mainData: CssGridData<T> = node.data($const.EXT_NAME.CSS_GRID, 'mainData');
         if (mainData) {
@@ -161,17 +160,17 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 complete: true
             };
         }
-        return { output: '' };
+        return undefined;
     }
 
-    public processChild(node: T, parent: T): ExtensionResult<T> {
+    public processChild(node: T, parent: T) {
         const mainData: CssGridData<T> = parent.data($const.EXT_NAME.CSS_GRID, 'mainData');
         const cellData: CssGridCellData = node.data($const.EXT_NAME.CSS_GRID, 'cellData');
-        let output = '';
+        let outputAs = '';
         let container: T | undefined;
         if (mainData && cellData) {
             function applyLayout(item: T, direction: string, dimension: string) {
-                const data = <CssGridDirectionData> mainData[direction];
+                const data: CssGridDirectionData = mainData[direction];
                 const cellStart = `${direction}Start`;
                 const cellSpan = `${direction}Span`;
                 const cellTotal = cellData[cellSpan] - cellData[cellStart];
@@ -341,7 +340,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     1,
                     container.children as T[]
                 );
-                output = this.application.renderLayout(layout);
+                outputAs = this.application.renderNode(layout);
             }
             const target = container || node;
             applyLayout(target, 'column', 'width');
@@ -358,9 +357,9 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             }
         }
         return {
-            output,
             parent: container,
-            complete: output !== ''
+            renderAs: container,
+            outputAs
         };
     }
 
@@ -393,7 +392,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
         if (mainData) {
             const controller = <android.base.Controller<T>> this.application.controllerHandler;
             const lastChild = Array.from(mainData.children)[mainData.children.size - 1];
-            if (mainData.column.unit.every(value => $util.isPercent(value))) {
+            if (mainData.column.unit.length && mainData.column.unit.every(value => $util.isPercent(value))) {
                 const percentTotal = mainData.column.unit.reduce((a, b) => a + parseFloat(b), 0);
                 if (percentTotal < 100) {
                     node.android('columnCount', (mainData.column.count + 1).toString());

@@ -1,4 +1,3 @@
-import { ExtensionResult } from '../@types/application';
 import { GridCellData, GridData, GridOptions } from '../@types/extension';
 
 import Extension from '../extension';
@@ -50,16 +49,38 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
     };
 
     public condition(node: T) {
-        return node.length > 1 && !node.flexElement && !node.gridElement && !node.has('listStyle') && (
-            node.every(item => item.pageFlow && !item.visibleStyle.background && (!item.inlineFlow || item.blockStatic)) && (
-                node.some(item => item.length > 1) && node.every(item => item.length > 0 && NodeList.linearX(item.children)) ||
-                node.every(item => item.display === 'list-item' && !item.has('listStyleType'))
-            ) ||
-            node.display === 'table' && node.every(item => item.display === 'table-row' && item.every(child => child.display === 'table-cell'))
-        );
+        if (node.length > 1 && !node.flexElement && !node.gridElement && !node.has('listStyle')) {
+            if (node.display === 'table') {
+                return node.every(item => item.display === 'table-row' && item.every(child => child.display === 'table-cell'));
+            }
+            else {
+                let multipleLength = 0;
+                let listItemCount = 0;
+                for (const item of node) {
+                    if (item.pageFlow && !item.visibleStyle.background && item.blockStatic) {
+                        if (item.length > 1) {
+                            multipleLength++;
+                        }
+                        if (item.display === 'list-item' && !item.has('listStyleType')) {
+                            listItemCount++;
+                        }
+                    }
+                    else {
+                        return false;
+                    }
+                }
+                if (listItemCount === node.length) {
+                    return true;
+                }
+                else if (multipleLength > 0) {
+                    return node.every(item => item.length > 0 && NodeList.linearX(item.children));
+                }
+            }
+        }
+        return false;
     }
 
-    public processNode(node: T): ExtensionResult<T> {
+    public processNode(node: T) {
         const columnEnd: number[] = [];
         const columnBalance = this.options.columnBalanceEqual;
         const columns: T[][] = [];
@@ -158,7 +179,7 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                 for (let i = 0; i < nextCoordsX.length; i++) {
                     const nextAxisX = nextMapX[nextCoordsX[i]];
                     if (i === 0 && nextAxisX.length === 0) {
-                        return { output: '' };
+                        return undefined;
                     }
                     columnRight[i] = i === 0 ? 0 : columnRight[i - 1];
                     for (let j = 0; j < nextAxisX.length; j++) {
@@ -176,7 +197,7 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                                     columns[i][index] = nextX;
                                 }
                                 else {
-                                    return { output: '' };
+                                    return undefined;
                                 }
                             }
                         }
@@ -319,6 +340,6 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
             }
             node.data(EXT_NAME.GRID, 'mainData', mainData);
         }
-        return { output: '' };
+        return undefined;
     }
 }

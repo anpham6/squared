@@ -12,25 +12,24 @@ export default abstract class Relative<T extends Node> extends Extension<T> {
     }
 
     public processNode() {
-        return { output: '', include: true };
+        return { include: true };
     }
 
     public postProcedure(node: T) {
         const renderParent = node.renderParent as T;
         if (renderParent) {
-            const verticalAlign = $util.convertInt(node.verticalAlign);
+            const verticalAlign = $util.convertFloat(node.verticalAlign);
             let target = node;
             if (renderParent.support.container.positionRelative && node.length === 0 && (node.top !== 0 || node.bottom !== 0 || verticalAlign !== 0)) {
                 target = node.clone(this.application.nextId, true, true) as T;
                 node.hide(true);
-                const layout = new Layout(
+                this.application.session.cache.append(target, false);
+                this.application.addRenderLayout(new Layout(
                     renderParent,
                     target,
                     target.containerType,
                     target.alignmentType
-                );
-                this.application.controllerHandler.addAfterOutsideTemplate(node.id, this.application.renderLayout(layout));
-                this.application.session.cache.append(target, false);
+                ));
                 if (!renderParent.hasAlign(NODE_ALIGNMENT.VERTICAL)) {
                     renderParent.renderEach(item => {
                         if (item.alignSibling('topBottom') === node.documentId) {

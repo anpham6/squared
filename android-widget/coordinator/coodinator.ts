@@ -1,5 +1,3 @@
-import { ExtensionResult } from '../../src/base/@types/application';
-
 import { WIDGET_NAME } from '../lib/constant';
 
 import $Resource = android.base.Resource;
@@ -11,8 +9,9 @@ const $enumA = android.lib.enumeration;
 const $utilA = android.lib.util;
 
 export default class Coordinator<T extends android.base.View> extends squared.base.Extension<T> {
-    public processNode(node: T, parent: T): ExtensionResult<T> {
+    public processNode(node: T, parent: T) {
         const options = $utilA.createViewAttribute(this.options[node.elementId]);
+        $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
         const element = Coordinator.findNestedElement(node.element, WIDGET_NAME.TOOLBAR);
         if (element) {
             const toolbar = $dom.getElementAsNode<T>(element);
@@ -30,7 +29,7 @@ export default class Coordinator<T extends android.base.View> extends squared.ba
             output: this.application.controllerHandler.renderNodeStatic(
                 $constA.SUPPORT_ANDROID.COORDINATOR,
                 node.renderDepth,
-                $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')),
+                options,
                 '',
                 '',
                 node,
@@ -42,22 +41,20 @@ export default class Coordinator<T extends android.base.View> extends squared.ba
     public postProcedure(node: T) {
         if (node.documentRoot) {
             if (node.inlineWidth) {
-                node.some((item: T) => {
+                for (const item of node) {
                     if (item.rightAligned) {
                         node.android('layout_width', 'match_parent', true);
-                        return true;
+                        break;
                     }
-                    return false;
-                });
+                }
             }
             if (node.inlineHeight) {
-                node.some((item: T) => {
+                for (const item of node) {
                     if (item.bottomAligned) {
                         node.android('layout_height', 'match_parent', true);
-                        return true;
+                        break;
                     }
-                    return false;
-                });
+                }
             }
         }
     }

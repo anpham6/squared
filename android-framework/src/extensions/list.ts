@@ -1,4 +1,3 @@
-import { ExtensionResult } from '../../../src/base/@types/application';
 import { ListData } from '../../../src/base/@types/extension';
 
 import Resource from '../resource';
@@ -18,7 +17,7 @@ const $element = squared.lib.element;
 const $util = squared.lib.util;
 
 export default class <T extends View> extends squared.base.extensions.List<T> {
-    public processNode(node: T, parent: T): ExtensionResult<T> {
+    public processNode(node: T, parent: T) {
         super.processNode(node, parent);
         const layout = new $Layout(
             parent,
@@ -44,10 +43,10 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 complete: true
             };
         }
-        return { output: '' };
+        return undefined;
     }
 
-    public processChild(node: T, parent: T): ExtensionResult<T> {
+    public processChild(node: T, parent: T) {
         const mainData: ListData = node.data($const.EXT_NAME.LIST, 'mainData');
         if (mainData) {
             const controller = <android.base.Controller<T>> this.application.controllerHandler;
@@ -62,7 +61,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             else if (parent.item(0) === node) {
                 paddingLeft += parentLeft;
             }
-            const ordinal = mainData.ordinal === '' && node.find(item => item.float === 'left' && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) as T | undefined;
+            let ordinal = mainData.ordinal === '' ? node.find(item => item.float === 'left' && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) as T : undefined;
             if (ordinal) {
                 const layout = new $Layout(parent, ordinal);
                 if (ordinal.inlineText || ordinal.length === 0) {
@@ -78,7 +77,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     }
                 }
                 ordinal.parent = parent;
-                controller.addBeforeOutsideTemplate(node.id, this.application.renderNode(layout));
+                ordinal.render(parent);
                 if (columnCount === 3) {
                     node.android('layout_columnSpan', '2');
                 }
@@ -87,6 +86,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     ordinal.android('minWidth', $util.formatPX(paddingLeft));
                 }
                 ordinal.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, null);
+                this.application.addRenderTemplate(parent, ordinal, this.application.renderNode(layout));
             }
             else {
                 const columnWeight = columnCount > 0 ? '0' : '';
@@ -113,38 +113,31 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     paddingLeft += node.paddingLeft;
                     node.modifyBox($enum.BOX_STANDARD.PADDING_LEFT, null);
                 }
-                const paddingRight = (() => {
-                    const ratio = image ? 2 : 1;
-                    if (paddingLeft <= 24) {
-                        return 6 / ratio;
-                    }
-                    else if (paddingLeft <= 32) {
-                        return 8 / ratio;
-                    }
-                    else {
-                        return 12 / ratio;
-                    }
-                })();
-                let minWidth = paddingLeft > 0 ? $util.formatPX(paddingLeft) : '';
+                const paddingRight = (paddingLeft * 0.25) / (image ? 2 : 1);
+                let minWidth = paddingLeft;
                 const options = createViewAttribute({
                     android: {
                         layout_columnWeight: columnWeight
                     }
                 });
+                const element = $element.createElement(node.actualParent ? node.actualParent.element : null);
+                ordinal = this.application.createNode(element);
                 if (inside) {
-                    const xml = controller.renderNodeStatic(
-                        CONTAINER_ANDROID.SPACE,
-                        parent.renderDepth + 1, {
-                            android: {
-                                minWidth,
-                                layout_columnWeight: columnWeight
-                            }
-                        },
-                        'wrap_content',
-                        'wrap_content'
+                    controller.addBeforeOutsideTemplate(
+                        ordinal.id,
+                        controller.renderNodeStatic(
+                            CONTAINER_ANDROID.SPACE,
+                            parent.renderDepth + 1, {
+                                android: {
+                                    minWidth: $util.formatPX(minWidth),
+                                    layout_columnWeight: columnWeight
+                                }
+                            },
+                            'wrap_content',
+                            'wrap_content'
+                        )
                     );
-                    controller.addBeforeOutsideTemplate(node.id, xml);
-                    minWidth = '24px';
+                    minWidth = 24;
                 }
                 else if (columnCount === 3) {
                     node.android('layout_columnSpan', '2');
@@ -153,49 +146,57 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     node.android('layout_columnSpan', columnCount.toString());
                 }
                 else {
-                    const companion = this.application.createNode($element.createElement(node.actualParent ? node.actualParent.element : null));
-                    companion.tagName = `${node.tagName}_ORDINAL`;
+                    ordinal.tagName = `${node.tagName}_ORDINAL`;
                     if (image) {
                         Object.assign(options.android, {
                             src: `@drawable/${image}`,
                             scaleType: !inside && gravity === 'right' ? 'fitEnd' : 'fitStart'
                         });
-                        companion.setControlType(CONTAINER_ANDROID.IMAGE);
+                        ordinal.setControlType(CONTAINER_ANDROID.IMAGE);
+                        if (left) {
+                            minWidth = Math.max(0, minWidth - left);
+                        }
+                    }
+                    else if (mainData.ordinal !== '') {
+                        element.innerHTML = mainData.ordinal;
+                        ordinal.setControlType(CONTAINER_ANDROID.TEXT);
                     }
                     else {
-                        options.android.text = mainData.ordinal;
-                        companion.setControlType(mainData.ordinal !== '' ? CONTAINER_ANDROID.TEXT : CONTAINER_ANDROID.SPACE);
+                        ordinal.setControlType(CONTAINER_ANDROID.SPACE);
                     }
-                    companion.inherit(node, 'textStyle');
-                    companion.cssApply({
-                        minWidth,
+                    ordinal.inherit(node, 'textStyle');
+                    ordinal.cssApply({
+                        minWidth: $util.formatPX(minWidth),
                         marginTop: node.marginTop !== 0 ? $util.formatPX(node.marginTop) : '',
                         paddingTop: node.paddingTop > 0 ? $util.formatPX(node.paddingTop) : '',
                         paddingRight: gravity === 'right' ? $util.formatPX(paddingRight) : '',
                         paddingLeft: gravity === '' && !image ? $util.formatPX(paddingRight) : '',
-                        fontSize: mainData.ordinal !== '' && !/[A-Za-z\d]+\./.test(mainData.ordinal) && companion.toInt('fontSize') > 12 ? '12px' : ''
+                        fontSize: mainData.ordinal !== '' && !/[A-Za-z\d]+\./.test(mainData.ordinal) && ordinal.toInt('fontSize') > 12 ? '12px' : ''
                     });
-                    if (!inside && paddingLeft > 20) {
-                        companion.mergeGravity('gravity', node.localizeString(gravity));
+                    if (!inside) {
+                        ordinal.mergeGravity('gravity', paddingLeft > 20 ? node.localizeString(gravity) : 'center_horizontal');
                     }
                     if (top) {
-                        companion.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, top);
+                        ordinal.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, top);
                     }
                     if (left) {
-                        companion.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, left);
+                        ordinal.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, left);
                     }
-                    node.companion = companion;
-                    companion.render(parent);
-                    this.application.processing.cache.append(companion, false);
-                    const xml = controller.renderNodeStatic(
-                        companion.controlName,
-                        parent.renderDepth + 1,
-                        options,
-                        'wrap_content',
-                        'wrap_content',
-                        companion
+                    ordinal.render(parent);
+                    this.application.processing.cache.append(ordinal, false);
+                    this.application.addRenderTemplate(
+                        parent,
+                        ordinal,
+                        controller.renderNodeStatic(
+                            ordinal.controlName,
+                            parent.renderDepth + 1,
+                            options,
+                            'wrap_content',
+                            'wrap_content',
+                            ordinal
+                        )
                     );
-                    this.application.addRenderTemplate(parent, companion, xml);
+                    node.companion = ordinal;
                 }
             }
             if (columnCount > 0) {
@@ -220,7 +221,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 }
             }
         }
-        return { output: '' };
+        return undefined;
     }
 
     public postBaseLayout(node: T) {

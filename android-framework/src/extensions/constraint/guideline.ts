@@ -1,4 +1,3 @@
-import { ExtensionResult } from '../../../../src/base/@types/application';
 import { ConstraintGuidelineOptions } from '../../@types/extension';
 
 import { AXIS_ANDROID } from '../../lib/constant';
@@ -18,7 +17,7 @@ export default class Guideline<T extends android.base.View> extends squared.base
         return this.included(<HTMLElement> node.element) && node.length > 0;
     }
 
-    public processNode(node: T, parent: T): ExtensionResult<T> {
+    public processNode(node: T, parent: T) {
         node.exclude({ procedure: $enum.NODE_PROCEDURE.CONSTRAINT });
         const layout = new $Layout(
             parent,

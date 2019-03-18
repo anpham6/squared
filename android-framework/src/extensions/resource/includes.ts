@@ -12,8 +12,8 @@ const $xml = squared.lib.xml;
 export default class ResourceIncludes<T extends View> extends squared.base.Extension<T> {
     public readonly eventOnly = true;
 
-    public afterProcedure() {
-        for (const node of this.application.processing.cache) {
+    public beforeCascadeDocument() {
+        for (const node of this.application.session.cache) {
             if (node.renderParent && node.renderTemplates) {
                 const open: NodeRenderIndex[] = [];
                 const close: NodeRenderIndex[] = [];

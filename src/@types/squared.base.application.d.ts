@@ -4,7 +4,6 @@ declare global {
     namespace squared.base {
         interface Application<T extends Node> {
             framework: number;
-            appName: string;
             controllerHandler: Controller<T>;
             resourceHandler: Resource<T>;
             extensionManager: ExtensionManager<T>;
@@ -28,13 +27,13 @@ declare global {
             saveAllToDisk(): void;
             parseDocument(...elements: (string | HTMLElement)[]): FunctionMap<void>;
             renderNode(layout: Layout<T>): string;
-            renderLayout(layout: Layout<T>): string;
+            renderLayout(layout: Layout<T>, outerParent: T): string;
             addLayoutFile(filename: string, content: string, pathname: string, documentBase?: boolean): void;
             addIncludeFile(id: number, filename: string, content: string): void;
-            addRenderLayout(layout: Layout<T>, renderType?: boolean): boolean;
-            addRenderTemplate(parent: T, node: T, value: string): boolean;
+            addRenderLayout(layout: Layout<T>, outerParent?: T): boolean;
+            addRenderTemplate(parent: T, node: T, value: string, index?: number): boolean;
             addImagePreload(element: HTMLImageElement | undefined): void;
-            saveRenderPosition(parent: T, required: boolean): void;
+            saveRenderPosition(parent: T): void;
             createNode(element: Element): T;
             resolveTarget(target: string): T | undefined;
             toString(): string;

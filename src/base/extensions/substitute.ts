@@ -1,5 +1,3 @@
-import { ExtensionResult } from '../@types/application';
-
 import Extension from '../extension';
 import Node from '../node';
 
@@ -18,7 +16,7 @@ export default class Substitute<T extends Node> extends Extension<T> {
         this.require(EXT_NAME.EXTERNAL, true);
     }
 
-    public processNode(node: T, parent: T): ExtensionResult<T> {
+    public processNode(node: T, parent: T) {
         const data = $css.getDataSet(<HTMLElement> node.element, this.name);
         if (data.tagChild) {
             node.each(item => {
@@ -33,6 +31,6 @@ export default class Substitute<T extends Node> extends Extension<T> {
             node.render(parent);
             return { output: this.application.controllerHandler.renderNodeStatic(data.tag, node.renderDepth, {}, '', '', node, node.length > 0) };
         }
-        return { output: '' };
+        return undefined;
     }
 }

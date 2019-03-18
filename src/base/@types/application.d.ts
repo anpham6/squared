@@ -88,7 +88,7 @@ export interface ExtensionDependency {
 }
 
 export interface ExtensionResult<T extends squared.base.Node> {
-    output: string;
+    output?: string;
     complete?: boolean;
     next?: boolean;
     parent?: T;

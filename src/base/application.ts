@@ -22,7 +22,7 @@ function prioritizeExtensions<T extends Node>(element: HTMLElement, extensions: 
     while (current) {
         if (current.dataset.use) {
             for (const value of current.dataset.use.split($util.REGEXP_COMPILED.SEPARATOR)) {
-                tagged.push(value.trim());
+                tagged.push(value);
             }
         }
         if (documentRoot === null || current === documentRoot) {
@@ -132,15 +132,18 @@ export default class Application<T extends Node> implements squared.base.Applica
 
     public finalize() {
         const controller = this.controllerHandler;
-        const rendered = this.rendered;
         for (const node of this.session.targetQueue.keys()) {
             if (node.dataset.target) {
                 const parent = this.resolveTarget(node.dataset.target);
                 if (parent) {
                     node.render(parent);
                 }
+                else if (node.renderParent === undefined) {
+                    this.session.cache.remove(node);
+                }
             }
         }
+        let rendered = this.rendered;
         for (const node of rendered) {
             if (node.hasProcedure(NODE_PROCEDURE.LAYOUT)) {
                 node.setLayout();
@@ -162,13 +165,11 @@ export default class Application<T extends Node> implements squared.base.Applica
                 ext.postProcedure(node);
             }
         }
-        for (const node of this.rendered) {
+        rendered = this.rendered;
+        for (const node of rendered) {
             if (node.hasResource(NODE_RESOURCE.BOX_SPACING)) {
                 node.setBoxSpacing();
             }
-        }
-        for (const ext of this.extensions) {
-            ext.afterProcedure();
         }
         for (const [node, template] of this.session.targetQueue.entries()) {
             if (node.renderParent) {
@@ -176,8 +177,11 @@ export default class Application<T extends Node> implements squared.base.Applica
                 if (node.renderTemplates) {
                     output = output.replace($xml.formatPlaceholder(node.id), controller.cascadeDocument(node.renderTemplates, node.renderChildren as T[]));
                 }
-                this.addRenderTemplate(node.renderParent as T, node, $xml.formatTemplate(output, false, node.renderDepth));
+                this.addRenderTemplate(node.renderParent as T, node, $xml.formatTemplate(output, false, node.renderDepth), node.dataset.targetIndex ? parseInt(node.dataset.targetIndex) : undefined);
             }
+        }
+        for (const ext of this.extensions) {
+            ext.beforeCascadeDocument();
         }
         for (const layout of this.session.documentRoot) {
             const node = layout.node;
@@ -212,7 +216,6 @@ export default class Application<T extends Node> implements squared.base.Applica
         for (const element of this.parseElements) {
             element.dataset.iteration = '';
         }
-        this.appName = '';
         this.session.documentRoot.length = 0;
         this.session.targetQueue.clear();
         this.session.image.clear();
@@ -236,7 +239,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         this.parseElements.clear();
         this.initialized = false;
         this.setStyleMap();
-        if (this.appName === '' && elements.length === 0) {
+        if (elements.length === 0) {
             elements.push(document.body);
         }
         for (const value of elements) {
@@ -260,14 +263,12 @@ export default class Application<T extends Node> implements squared.base.Applica
                 ext.beforeParseDocument();
             }
             for (const element of this.parseElements) {
-                if (this.appName === '') {
-                    this.appName = element.id || 'untitled';
-                }
                 const iteration = (element.dataset.iteration ? $util.convertInt(element.dataset.iteration) : -1) + 1;
                 element.dataset.iteration = iteration.toString();
                 if (this.createCache(element)) {
                     const filename = element.dataset.filename && element.dataset.filename.replace(fileExtension, '') || element.id || `document_${this.size}`;
-                    this.setBaseLayout($util.convertWord(iteration > 1 ? `${filename}_${iteration}` : filename, true));
+                    element.dataset.layoutName = $util.convertWord(iteration > 1 ? `${filename}_${iteration}` : filename, true);
+                    this.setBaseLayout(element.dataset.layoutName);
                     this.setConstraints();
                     this.setResources();
                 }
@@ -276,8 +277,6 @@ export default class Application<T extends Node> implements squared.base.Applica
                 for (const node of ext.subscribers) {
                     ext.postParseDocument(node);
                 }
-            }
-            for (const ext of this.extensions) {
                 ext.afterParseDocument();
             }
             if (typeof __THEN === 'function') {
@@ -380,18 +379,20 @@ export default class Application<T extends Node> implements squared.base.Applica
             return this.controllerHandler.renderNode(layout);
         }
         else {
-            this.saveRenderPosition(layout.node, layout.renderPosition);
+            if (layout.orderAltered) {
+                this.saveRenderPosition(layout.node);
+            }
             return this.controllerHandler.renderNodeGroup(layout);
         }
     }
 
-    public renderLayout(layout: Layout<T>) {
+    public renderLayout(layout: Layout<T>, outerParent: T) {
         if ($util.hasBit(layout.renderType, NODE_ALIGNMENT.FLOAT)) {
             if ($util.hasBit(layout.renderType, NODE_ALIGNMENT.HORIZONTAL)) {
                 layout = this.processFloatHorizontal(layout);
             }
             else if ($util.hasBit(layout.renderType, NODE_ALIGNMENT.VERTICAL)) {
-                this.processFloatVertical(layout);
+                layout = this.processFloatVertical(layout, outerParent);
             }
         }
         return layout.containerType !== 0 ? this.renderNode(layout) : '';
@@ -416,17 +417,24 @@ export default class Application<T extends Node> implements squared.base.Applica
     public addIncludeFile(id: number, filename: string, content: string) {
         this._includes.push({
             id,
+            pathname: this.controllerHandler.localSettings.layout.pathName,
             filename,
-            content,
-            pathname: this.controllerHandler.localSettings.layout.pathName
+            content
         });
     }
 
-    public addRenderLayout(layout: Layout<T>, renderType = false) {
-        return this.addRenderTemplate(layout.parent, layout.node, renderType ? this.renderLayout(layout) : this.renderNode(layout));
+    public addRenderLayout(layout: Layout<T>, outerParent?: T) {
+        let output: string;
+        if (outerParent) {
+            output = this.renderLayout(layout, outerParent);
+        }
+        else {
+            output = this.renderNode(layout);
+        }
+        return this.addRenderTemplate(layout.parent, layout.node, output, layout.renderIndex);
     }
 
-    public addRenderTemplate(parent: T, node: T, value: string) {
+    public addRenderTemplate(parent: T, node: T, value: string, index = -1) {
         if (value !== '') {
             if (node.renderParent === undefined) {
                 this.session.targetQueue.set(node, value);
@@ -435,8 +443,14 @@ export default class Application<T extends Node> implements squared.base.Applica
                 if (parent.renderTemplates === undefined) {
                     parent.renderTemplates = [];
                 }
-                parent.renderChildren.push(node);
-                parent.renderTemplates.push(value);
+                if (index >= 0 && index < parent.renderChildren.length) {
+                    parent.renderChildren.splice(index, 0, node);
+                    parent.renderTemplates.splice(index, 0, value);
+                }
+                else {
+                    parent.renderChildren.push(node);
+                    parent.renderTemplates.push(value);
+                }
             }
             return true;
         }
@@ -456,42 +470,13 @@ export default class Application<T extends Node> implements squared.base.Applica
         }
     }
 
-    public saveRenderPosition(parent: T, required: boolean) {
-        if (parent.groupParent) {
-            const baseParent = parent.parent as T;
-            if (baseParent) {
-                let children = this.session.renderPosition.get(baseParent);
-                let revised: T[] | undefined;
-                if (children) {
-                    children = $util.filterArray(children, item => !parent.contains(item)) as T[];
-                    if (parent.siblingIndex < children.length) {
-                        children.splice(parent.siblingIndex, 0, parent);
-                        for (let i = parent.siblingIndex + 1; i < children.length; i++) {
-                            children[i].siblingIndex = i;
-                        }
-                        revised = children;
-                    }
-                    else {
-                        parent.siblingIndex = children.length;
-                        children.push(parent);
-                    }
-                    this.session.renderPosition.set(baseParent, children);
-                }
-                else {
-                    revised = baseParent.children as T[];
-                }
-                if (revised) {
-                    for (let i = parent.siblingIndex + 1; i < revised.length; i++) {
-                        if (revised[i]) {
-                            revised[i].siblingIndex = i;
-                        }
-                    }
-                }
-            }
+    public saveRenderPosition(parent: T) {
+        const children = this.session.renderPosition.get(parent);
+        if (children) {
+            this.session.renderPosition.set(parent, $util.concatArray($util.filterArray(children, item => !parent.contains(item)), parent.children as T[]));
         }
-        if (required) {
-            const children = this.session.renderPosition.get(parent);
-            this.session.renderPosition.set(parent, children ? $util.concatArray($util.filterArray(children, item => !parent.contains(item)), parent.children as T[]) : parent.duplicate() as T[]);
+        else {
+            this.session.renderPosition.set(parent, parent.duplicate() as T[]);
         }
     }
 
@@ -536,7 +521,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 }
                 if (node.tagName !== 'SELECT') {
                     const children: T[] = [];
-                    let valid = false;
+                    let includeText = false;
                     for (let i = 0; i < element.childNodes.length; i++) {
                         const childElement = <HTMLElement> element.childNodes[i];
                         if (childElement.nodeName.charAt(0) === '#') {
@@ -547,20 +532,20 @@ export default class Application<T extends Node> implements squared.base.Applica
                                 }
                             }
                         }
-                        else if (!(localSettings.unsupported.tagName.has(childElement.tagName) || childElement.tagName === 'INPUT' && localSettings.unsupported.tagName.has(`${childElement.tagName}:${(<HTMLInputElement> childElement).type}`))) {
+                        else if (!localSettings.unsupported.tagName.has(childElement.tagName) || childElement.tagName === 'INPUT' && !localSettings.unsupported.tagName.has(`${childElement.tagName}:${(<HTMLInputElement> childElement).type}`)) {
                             prioritizeExtensions(childElement, extensions, null).some(item => item.init(childElement));
                             if (!this.parseElements.has(childElement)) {
                                 const child = cascadeDOM(childElement, depth + 1);
                                 if (child && !child.excluded) {
                                     children.push(child);
-                                    valid = true;
+                                    includeText = true;
                                 }
                             }
                         }
                     }
                     for (let i = 0, j = 0; i < children.length; i++) {
                         const child = children[i];
-                        if (valid || child.tagName !== 'PLAINTEXT') {
+                        if (includeText || child.tagName !== 'PLAINTEXT') {
                             child.parent = node;
                             child.siblingIndex = j++;
                             this.processing.cache.append(child);
@@ -808,7 +793,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         };
         for (const depth of mapY.values()) {
             for (const parent of depth.values()) {
-                if (parent.length === 0 || parent.every(node => node.rendered)) {
+                if (parent.length === 0) {
                     continue;
                 }
                 const axisY = parent.duplicate() as T[];
@@ -820,7 +805,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 let k = -1;
                 while (++k < axisY.length) {
                     let nodeY = axisY[k];
-                    if (nodeY.rendered || !nodeY.visible) {
+                    if (!nodeY.visible || nodeY.rendered) {
                         continue;
                     }
                     else if (nodeY.htmlElement) {
@@ -841,10 +826,10 @@ export default class Application<T extends Node> implements squared.base.Applica
                             }
                         }
                     }
-                    const extendable = nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE);
                     let parentY = nodeY.parent as T;
-                    let unknownParent = parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN);
-                    if (axisY.length > 1 && k < axisY.length - 1 && nodeY.pageFlow && (parentY.alignmentType === 0 || extendable || unknownParent) && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
+                    const extensionDescendant = this.session.extensionMap.get(nodeY.id);
+                    const extendable = nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE);
+                    if (axisY.length > 1 && k < axisY.length - 1 && nodeY.pageFlow && (parentY.alignmentType === 0 || extendable || parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN)) && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
                         const horizontal: T[] = [];
                         const vertical: T[] = [];
                         const floatSegment = new Set<string>();
@@ -979,18 +964,17 @@ export default class Application<T extends Node> implements squared.base.Applica
                                 segEnd.alignmentType |= NODE_ALIGNMENT.EXTENDABLE;
                             }
                         }
-                        if (unknownParent && segEnd === axisY[axisY.length - 1]) {
+                        if (parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) && segEnd === axisY[axisY.length - 1]) {
                             parentY.alignmentType ^= NODE_ALIGNMENT.UNKNOWN;
-                            unknownParent = false;
                         }
-                        if (result && this.addRenderLayout(result.layout, true)) {
+                        if (result && this.addRenderLayout(result.layout, parentY)) {
                             parentY = nodeY.parent as T;
                         }
                     }
-                    if (extendable) {
+                    if (nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) {
                         nodeY.alignmentType ^= NODE_ALIGNMENT.EXTENDABLE;
                     }
-                    if (unknownParent && k === axisY.length - 1) {
+                    if (k === axisY.length - 1 && parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN)) {
                         parentY.alignmentType ^= NODE_ALIGNMENT.UNKNOWN;
                     }
                     if (nodeY.renderAs && parentY.appendTry(nodeY, nodeY.renderAs, false)) {
@@ -1000,7 +984,6 @@ export default class Application<T extends Node> implements squared.base.Applica
                             parentY = nodeY.parent as T;
                         }
                     }
-                    const extensionDescendant = this.session.extensionMap.get(nodeY.id);
                     if (!nodeY.rendered && nodeY.hasSection(APP_SECTION.EXTENSION)) {
                         let combined = parent.renderExtension ? parent.renderExtension.slice(0) : undefined;
                         if (extensionDescendant) {
@@ -1015,18 +998,20 @@ export default class Application<T extends Node> implements squared.base.Applica
                             let next = false;
                             for (const ext of combined) {
                                 const result = ext.processChild(nodeY, parentY);
-                                if (result.output) {
-                                    this.addRenderTemplate(<T> result.parentAs || parentY, nodeY, result.output);
-                                }
-                                if (result.renderAs && result.outputAs) {
-                                    this.addRenderTemplate(parentY, result.renderAs as T, result.outputAs);
-                                }
-                                if (result.parent) {
-                                    parentY = result.parent as T;
-                                }
-                                next = result.next === true;
-                                if (result.complete || next) {
-                                    break;
+                                if (result) {
+                                    if (result.output) {
+                                        this.addRenderTemplate(<T> result.parentAs || parentY, nodeY, result.output);
+                                    }
+                                    if (result.renderAs && result.outputAs) {
+                                        this.addRenderTemplate(parentY, result.renderAs as T, result.outputAs);
+                                    }
+                                    if (result.parent) {
+                                        parentY = result.parent as T;
+                                    }
+                                    next = result.next === true;
+                                    if (result.complete || next) {
+                                        break;
+                                    }
                                 }
                             }
                             if (next) {
@@ -1038,25 +1023,27 @@ export default class Application<T extends Node> implements squared.base.Applica
                             prioritizeExtensions(<HTMLElement> nodeY.element, extensions, <HTMLElement> documentRoot.element).some(item => {
                                 if (item.is(nodeY) && item.condition(nodeY, parentY) && (extensionDescendant === undefined || !extensionDescendant.includes(item))) {
                                     const result = item.processNode(nodeY, parentY);
-                                    if (result.output) {
-                                        this.addRenderTemplate(<T> result.parentAs || parentY, nodeY, result.output);
-                                    }
-                                    if (result.renderAs && result.outputAs) {
-                                        this.addRenderTemplate(parentY, result.renderAs as T, result.outputAs);
-                                    }
-                                    if (result.parent) {
-                                        parentY = result.parent as T;
-                                    }
-                                    if (result.output || result.include === true) {
-                                        if (nodeY.renderExtension === undefined) {
-                                            nodeY.renderExtension = [];
+                                    if (result) {
+                                        if (result.output) {
+                                            this.addRenderTemplate((result.parentAs || parentY) as T, nodeY, result.output);
                                         }
-                                        nodeY.renderExtension.push(item);
-                                        item.subscribers.add(nodeY);
-                                    }
-                                    next = result.next === true;
-                                    if (result.complete || next) {
-                                        return true;
+                                        if (result.renderAs && result.outputAs) {
+                                            this.addRenderTemplate(parentY, result.renderAs as T, result.outputAs);
+                                        }
+                                        if (result.parent) {
+                                            parentY = result.parent as T;
+                                        }
+                                        if (result.output || result.include === true) {
+                                            if (nodeY.renderExtension === undefined) {
+                                                nodeY.renderExtension = [];
+                                            }
+                                            nodeY.renderExtension.push(item);
+                                            item.subscribers.add(nodeY);
+                                        }
+                                        next = result.next === true;
+                                        if (result.complete || next) {
+                                            return true;
+                                        }
                                     }
                                 }
                                 return false;
@@ -1077,28 +1064,23 @@ export default class Application<T extends Node> implements squared.base.Applica
                             k--;
                             continue;
                         }
-                        this.addRenderLayout(result.layout, true);
+                        this.addRenderLayout(result.layout, parentY);
                     }
                 }
             }
         }
         this.session.cache.concat(this.processing.cache.children);
         this.session.excluded.concat(this.processing.excluded.children);
+        for (const node of this.processing.cache) {
+            if (node.documentRoot && node.rendered) {
+                this.session.documentRoot.push({ node, layoutName: node === documentRoot ? layoutName : '' });
+            }
+        }
         for (const ext of this.extensions) {
             for (const node of ext.subscribers) {
                 ext.postBaseLayout(node);
             }
-        }
-        for (const ext of this.extensions) {
             ext.afterBaseLayout();
-        }
-        for (const node of this.processing.cache) {
-            if (node.documentRoot && node.rendered) {
-                this.session.documentRoot.push({
-                    node,
-                    layoutName: node === documentRoot ? layoutName : ''
-                });
-            }
         }
     }
 
@@ -1108,8 +1090,6 @@ export default class Application<T extends Node> implements squared.base.Applica
             for (const node of ext.subscribers) {
                 ext.postConstraints(node);
             }
-        }
-        for (const ext of this.extensions) {
             ext.afterConstraints();
         }
     }
@@ -1395,37 +1375,24 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
             for (const seg of segments) {
                 const basegroup = floatgroup && (seg === inlineAbove || seg === leftAbove || seg === leftBelow || seg === rightAbove || seg === rightBelow) ? floatgroup : layout.node;
-                let target: T;
-                if (seg.length > 1) {
-                    target = this.controllerHandler.createNodeGroup(seg[0], seg, basegroup);
-                    const layoutGroup = new Layout(
-                        basegroup,
-                        target,
-                        0,
-                        NODE_ALIGNMENT.SEGMENTED,
-                        seg.length,
-                        seg
-                    );
-                    if (layoutGroup.linearY) {
-                        const vertical = this.controllerHandler.containerTypeVertical;
-                        layoutGroup.setType(vertical.containerType, vertical.alignmentType);
-                    }
-                    else {
-                        layoutGroup.init();
-                        this.controllerHandler.processLayoutHorizontal(layoutGroup);
-                    }
-                    this.addRenderLayout(layoutGroup);
+                const target = this.controllerHandler.createNodeGroup(seg[0], seg, basegroup);
+                const layoutGroup = new Layout(
+                    basegroup,
+                    target,
+                    0,
+                    NODE_ALIGNMENT.SEGMENTED,
+                    seg.length,
+                    seg
+                );
+                if (seg.length === 1 || NodeList.linearY(seg, true)) {
+                    const vertical = this.controllerHandler.containerTypeVertical;
+                    layoutGroup.setType(vertical.containerType, vertical.alignmentType);
                 }
                 else {
-                    target = seg[0];
-                    const layoutChild = this.createLayoutControl(basegroup, target);
-                    layoutChild.alwaysRender = true;
-                    layoutChild.add(NODE_ALIGNMENT.SINGLE);
-                    if (layoutChild.containerType === 0) {
-                        this.controllerHandler.processUnknownChild(layoutChild);
-                    }
-                    this.addRenderLayout(layoutChild);
+                    layoutGroup.init();
+                    this.controllerHandler.processLayoutHorizontal(layoutGroup);
                 }
+                this.addRenderLayout(layoutGroup);
                 if (seg === inlineAbove && seg.some(subitem => subitem.blockStatic && !subitem.hasWidth)) {
                     const vertical = this.controllerHandler.containerTypeVertical;
                     const targeted = target.of(vertical.containerType, vertical.alignmentType) ? target.children : [target];
@@ -1461,16 +1428,24 @@ export default class Application<T extends Node> implements squared.base.Applica
         return layout;
     }
 
-    protected processFloatVertical(layout: Layout<T>) {
+    protected processFloatVertical(layout: Layout<T>, outerParent: T) {
         const controller = this.controllerHandler;
         const vertical = controller.containerTypeVertical;
-        this.addRenderLayout(new Layout(
-            layout.parent,
-            layout.node,
-            vertical.containerType,
-            vertical.alignmentType,
-            layout.length
-        ));
+        if (layout.containerType !== 0) {
+            const groupWrap = controller.createNodeGroup(layout.node, [layout.node], outerParent);
+            this.addRenderLayout(new Layout(
+                groupWrap,
+                layout.node,
+                vertical.containerType,
+                vertical.alignmentType,
+                layout.length
+            ));
+            layout.node = groupWrap;
+        }
+        else {
+            layout.containerType = vertical.containerType;
+            layout.add(vertical.alignmentType);
+        }
         const staticRows: T[][] = [];
         const floatedRows: Null<T[]>[] = [];
         const current: T[] = [];
@@ -1524,27 +1499,16 @@ export default class Application<T extends Node> implements squared.base.Applica
             for (let i = 0; i < Math.max(floatedRows.length, staticRows.length); i++) {
                 const pageFlow = staticRows[i] || [];
                 if (floatedRows[i] === null && pageFlow.length) {
-                    if (pageFlow.length > 1) {
-                        const layoutType = controller.containerTypeVertical;
-                        layoutType.alignmentType |= NODE_ALIGNMENT.SEGMENTED;
-                        this.addRenderLayout(new Layout(
-                            layout.node,
-                            controller.createNodeGroup(pageFlow[0], pageFlow, layout.node),
-                            layoutType.containerType,
-                            layoutType.alignmentType,
-                            pageFlow.length,
-                            pageFlow
-                        ));
-                    }
-                    else {
-                        const layoutChild = this.createLayoutControl(layout.node, pageFlow[0]);
-                        layoutChild.alwaysRender = true;
-                        layoutChild.add(NODE_ALIGNMENT.SINGLE);
-                        if (layoutChild.containerType === 0) {
-                            this.controllerHandler.processUnknownChild(layoutChild);
-                        }
-                        this.addRenderLayout(layoutChild);
-                    }
+                    const layoutType = controller.containerTypeVertical;
+                    layoutType.alignmentType |= NODE_ALIGNMENT.SEGMENTED;
+                    this.addRenderLayout(new Layout(
+                        layout.node,
+                        controller.createNodeGroup(pageFlow[0], pageFlow, layout.node),
+                        layoutType.containerType,
+                        layoutType.alignmentType,
+                        pageFlow.length,
+                        pageFlow
+                    ));
                 }
                 else {
                     const floating = floatedRows[i] || [];
@@ -1592,30 +1556,14 @@ export default class Application<T extends Node> implements squared.base.Applica
                         layoutGroup.itemCount = children.length;
                         this.addRenderLayout(layoutGroup);
                         for (const node of children) {
-                            if (node.length === 0) {
-                                const layoutChild = this.createLayoutControl(basegroup, node);
-                                layoutChild.alwaysRender = true;
-                                if (layoutChild.containerType === 0) {
-                                    this.controllerHandler.processUnknownChild(layoutChild);
-                                }
-                                this.addRenderLayout(layoutChild);
-                            }
-                            else if (layout.contains(node)) {
-                                const layoutParent = this.createLayoutControl(basegroup, node);
-                                layoutParent.alwaysRender = true;
-                                this.controllerHandler.processUnknownParent(layoutParent);
-                                this.addRenderLayout(layoutParent, true);
-                            }
-                            else {
-                                this.addRenderLayout(new Layout(
-                                    basegroup,
-                                    node,
-                                    vertical.containerType,
-                                    vertical.alignmentType | NODE_ALIGNMENT.SEGMENTED,
-                                    node.length,
-                                    node.children as T[]
-                                ));
-                            }
+                            this.addRenderLayout(new Layout(
+                                basegroup,
+                                node,
+                                vertical.containerType,
+                                vertical.alignmentType | NODE_ALIGNMENT.SEGMENTED,
+                                node.length,
+                                node.children as T[]
+                            ));
                         }
                     }
                 }
@@ -1854,15 +1802,6 @@ export default class Application<T extends Node> implements squared.base.Applica
         });
     }
 
-    set appName(value) {
-        if (this.resourceHandler.fileHandler) {
-            this.resourceHandler.fileHandler.appName = value;
-        }
-    }
-    get appName() {
-        return this.resourceHandler.fileHandler ? this.resourceHandler.fileHandler.appName : '';
-    }
-
     set userSettings(value) {
         this._userSettings = value;
     }
@@ -1887,6 +1826,6 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     get size() {
-        return this._views.length + this._includes.length;
+        return this.session.documentRoot.length;
     }
 }

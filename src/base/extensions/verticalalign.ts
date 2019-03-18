@@ -1,4 +1,3 @@
-import { ExtensionResult } from '../@types/application';
 import { VerticalAlignData } from '../@types/extension';
 
 import Extension from '../extension';
@@ -16,7 +15,7 @@ export default class VerticalAlign<T extends Node> extends Extension<T> {
         return nodes.length > 1 && nodes.some(item => $util.convertInt(item.verticalAlign) !== 0) && NodeList.linearX(node.children);
     }
 
-    public processNode(node: T): ExtensionResult<T> {
+    public processNode(node: T) {
         const belowBaseline: T[] = [];
         const aboveBaseline: T[] = [];
         let minTop = Number.POSITIVE_INFINITY;
@@ -59,7 +58,7 @@ export default class VerticalAlign<T extends Node> extends Extension<T> {
                 belowBaseline
             });
         }
-        return { output: '' };
+        return undefined;
     }
 
     public postProcedure(node: T) {

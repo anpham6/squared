@@ -1,5 +1,3 @@
-import { ExtensionResult } from '../../../../src/base/@types/application';
-
 import { AXIS_ANDROID, CONTAINER_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
@@ -7,12 +5,14 @@ import $NodeList = squared.base.NodeList;
 
 const $enum = squared.base.lib.enumeration;
 
+const CONTROL_NAME = 'RadioGroup';
+
 export default class ScrollView<T extends android.base.View> extends squared.base.Extension<T> {
     public condition(node: T) {
-        return node.tagName === 'RADIO' && !!(<HTMLInputElement> node.element).name;
+        return node.tagName === 'RADIO' && !!(<HTMLInputElement> node.element).name && !!node.parent && node.parent.controlName !== CONTROL_NAME;
     }
 
-    public processNode(node: T, parent: T): ExtensionResult<T> {
+    public processNode(node: T, parent: T) {
         const element = <HTMLInputElement> node.element;
         const target = !node.dataset.use ? node.dataset.target : undefined;
         const pending: T[] = [];
@@ -31,14 +31,12 @@ export default class ScrollView<T extends android.base.View> extends squared.bas
             return input.type === 'radio' && input.name === element.name && !item.rendered ? item : undefined;
         }) as T[];
         if (children.length > 1) {
-            const controller = this.application.controllerHandler;
-            const container = controller.createNodeGroup(node, children, parent, replacement);
-            const controlName = 'RadioGroup';
+            const container = this.application.controllerHandler.createNodeGroup(node, children, parent, replacement);
             container.alignmentType |= $enum.NODE_ALIGNMENT.HORIZONTAL | (parent.length !== children.length ? $enum.NODE_ALIGNMENT.SEGMENTED : 0);
             if (parent.layoutConstraint) {
                 container.companion = replacement || node;
             }
-            container.setControlType(controlName, CONTAINER_NODE.INLINE);
+            container.setControlType(CONTROL_NAME, CONTAINER_NODE.INLINE);
             container.inherit(node, 'alignment');
             container.css('verticalAlign', 'text-bottom');
             container.each((item: T, index) => {
@@ -51,18 +49,18 @@ export default class ScrollView<T extends android.base.View> extends squared.bas
             for (const item of pending) {
                 item.hide();
             }
+            container.exclude({ resource: $enum.NODE_RESOURCE.ASSET });
             container.android('orientation', $NodeList.linearX(children) ? AXIS_ANDROID.HORIZONTAL : AXIS_ANDROID.VERTICAL);
             container.render(target ? this.application.resolveTarget(target) : parent);
             this.subscribers.add(container);
             return {
-                output: '',
                 parent: container,
                 renderAs: container,
-                outputAs: controller.getEnclosingTag(controlName, container.id, target ? -1 : container.renderDepth, ''),
+                outputAs: this.application.controllerHandler.getEnclosingTag(CONTROL_NAME, container.id, target ? -1 : container.renderDepth, ''),
                 complete: true
             };
         }
-        return { output: '' };
+        return undefined;
     }
 
     public postBaseLayout(node: T) {

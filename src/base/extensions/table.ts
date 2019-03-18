@@ -1,4 +1,3 @@
-import { ExtensionResult } from '../@types/application';
 import { TableData } from '../@types/extension';
 
 import Extension from '../extension';
@@ -28,7 +27,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
         };
     }
 
-    public processNode(node: T): ExtensionResult<T> {
+    public processNode(node: T) {
         const mainData = Table.createDataAttribute();
         const table: T[] = [];
         function setAutoWidth(td: T) {
@@ -404,6 +403,10 @@ export default abstract class Table<T extends Node> extends Extension<T> {
             const borderLeftColor = node.css('borderLeftColor');
             const borderLeftStyle = node.css('borderLeftStyle');
             const borderLeftWidth = node.css('borderLeftWidth');
+            let hideTop = false;
+            let hideRight = false;
+            let hideBottom = false;
+            let hideLeft = false;
             for (let i = 0; i < rowCount; i++) {
                 for (let j = 0; j < columnCount; j++) {
                     const td = tableFilled[i][j];
@@ -416,15 +419,18 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                                     borderTopWidth
                                 });
                             }
+                            else {
+                                hideTop = true;
+                            }
                         }
                         if (i >= 0 && i < rowCount - 1) {
                             const next = tableFilled[i + 1][j];
                             if (next && next !== td && next.css('visibility') === 'visible') {
                                 if (td.borderBottomWidth >= next.borderTopWidth) {
-                                    next.css('borderTopWidth', '0px');
+                                    next.css('borderTopWidth', '0px', true);
                                 }
                                 else {
-                                    td.css('borderBottomWidth', '0px');
+                                    td.css('borderBottomWidth', '0px', true);
                                 }
                             }
                         }
@@ -436,6 +442,9 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                                     borderBottomWidth
                                 });
                             }
+                            else {
+                                hideBottom = true;
+                            }
                         }
                         if (j === 0) {
                             if (td.borderLeftWidth < parseInt(borderLeftWidth)) {
@@ -445,15 +454,18 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                                     borderLeftWidth
                                 });
                             }
+                            else {
+                                hideLeft = true;
+                            }
                         }
                         if (j >= 0 && j < columnCount - 1) {
                             const next = tableFilled[i][j + 1];
                             if (next && next !== td && next.css('visibility') === 'visible') {
                                 if (td.borderRightWidth >= next.borderLeftWidth) {
-                                    next.css('borderLeftWidth', '0px');
+                                    next.css('borderLeftWidth', '0px', true);
                                 }
                                 else {
-                                    td.css('borderRightWidth', '0px');
+                                    td.css('borderRightWidth', '0px', true);
                                 }
                             }
                         }
@@ -465,20 +477,25 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                                     borderRightWidth
                                 });
                             }
+                            else {
+                                hideRight = true;
+                            }
                         }
                     }
                 }
             }
-            node.cssApply({
-                borderTopWidth: '0px',
-                borderRightWidth: '0px',
-                borderBottomWidth: '0px',
-                borderLeftWidth: '0px'
-            });
+            if (hideTop || hideRight || hideBottom || hideLeft) {
+                node.cssApply({
+                    borderTopWidth: '0px',
+                    borderRightWidth: '0px',
+                    borderBottomWidth: '0px',
+                    borderLeftWidth: '0px'
+                }, true);
+            }
         }
         mainData.rowCount = rowCount;
         mainData.columnCount = columnCount;
         node.data(EXT_NAME.TABLE, 'mainData', mainData);
-        return { output: '' };
+        return undefined;
     }
 }

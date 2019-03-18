@@ -1,12 +1,9 @@
-import { ExtensionResult } from '../../../../src/base/@types/application';
-
 import View from '../../view';
 
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 const $enum = squared.base.lib.enumeration;
 const $element = squared.lib.element;
-const $xml = squared.lib.xml;
 
 const SCROLL_HORIZONTAL = 'HorizontalScrollView';
 const SCROLL_VERTICAL = 'android.support.v4.widget.NestedScrollView';
@@ -20,11 +17,10 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
         );
     }
 
-    public processNode(node: T, parent: T): ExtensionResult<T> {
-        const target = !node.dataset.use ? node.dataset.target : undefined ;
+    public processNode(node: T, parent: T) {
+        const target = !node.dataset.use ? node.dataset.target : undefined;
         const overflow: string[] = [];
         const scrollView: T[] = [];
-        let outputAs = '';
         if (node.overflowX && node.overflowY) {
             overflow.push(SCROLL_HORIZONTAL, SCROLL_VERTICAL);
         }
@@ -88,16 +84,14 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
                     break;
                 }
             }
+            item.render(i === 0 ? (target ? this.application.resolveTarget(target) : parent) : previous);
             item.unsetCache();
+            this.application.addRenderTemplate(
+                (item.renderParent || parent) as T,
+                item,
+                this.application.controllerHandler.getEnclosingTag(item.controlName, item.id, target ? (i === 0 ? -1 : 0) : item.renderDepth, '')
+            );
             this.application.processing.cache.append(item);
-            item.render(i === 0 ? (target ? item : parent) : previous);
-            const xml = this.application.controllerHandler.getEnclosingTag(item.controlName, item.id, target ? (i === 0 ? -1 : 0) : item.renderDepth, '');
-            if (i === 0) {
-                outputAs = xml;
-            }
-            else {
-                outputAs = $xml.replacePlaceholder(outputAs, previous.id, xml);
-            }
         }
         if (scrollView.length === 2) {
             node.android('layout_width', 'wrap_content');
@@ -113,7 +107,7 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
                 node.android('layout_height', 'wrap_content');
             }
         }
-        const outer = scrollView[scrollView.length - 1];
+        const outer = scrollView.pop() as T;
         node.parent = outer;
         if (parent.layoutConstraint) {
             outer.companion = node;
@@ -121,11 +115,6 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
         node.overflow = 0;
         node.resetBox($enum.BOX_STANDARD.MARGIN);
         node.exclude({ resource: $enum.NODE_RESOURCE.BOX_STYLE });
-        return {
-            output: '',
-            parent: node.parent as T,
-            renderAs: scrollView[0],
-            outputAs
-        };
+        return { parent: node.parent as T };
     }
 }

@@ -133,7 +133,7 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
         return this.included(<HTMLElement> node.element);
     }
 
-    public processNode(node: T): ExtensionResult<T> {
+    public processNode(node: T) {
         const parentAs = this.application.createNode($element.createElement(null));
         node.documentRoot = true;
         node.alignmentType |= $enum.NODE_ALIGNMENT.AUTO_LAYOUT;
@@ -157,7 +157,7 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
     public processChild(node: T, parent: T): ExtensionResult<T> {
         if (node.plainText) {
             node.hide();
-            return { output: '', next: true };
+            return { next: true };
         }
         const options = $utilA.createViewAttribute();
         const element = <HTMLElement> node.element;
@@ -232,7 +232,15 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
         });
         node.render(parent);
         return {
-            output: this.application.controllerHandler.renderNodeStatic(controlName, node.renderDepth, options, '', '', node, layout),
+            output: this.application.controllerHandler.renderNodeStatic(
+                controlName,
+                node.renderDepth,
+                options,
+                '',
+                '',
+                node,
+                layout
+            ),
             complete: true,
             next: controlName === NAVIGATION.MENU
         };

@@ -1,5 +1,3 @@
-import { ExtensionResult } from '../../../../src/base/@types/application';
-
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import $Layout = squared.base.Layout;
@@ -12,13 +10,14 @@ export default class Percent<T extends android.base.View> extends squared.base.E
         return parent.layoutVertical && !node.documentBody && node.pageFlow && !node.imageElement && node.has('width', $enum.CSS_STANDARD.PERCENT, { not: '100%' });
     }
 
-    public processNode(node: T, parent: T): ExtensionResult<T> {
+    public processNode(node: T, parent: T) {
         const container = (<android.base.Controller<T>> this.application.controllerHandler).createNodeWrapper(node, parent);
         container.android('layout_width', 'match_parent');
         container.android('layout_height', 'wrap_content');
         if (!node.has('height', $enum.CSS_STANDARD.LENGTH)) {
             node.css('height', $util.formatPX(node.bounds.height), true);
         }
+        node.resetBox($enum.BOX_STANDARD.MARGIN, container, true);
         const layout = new $Layout(
             parent,
             container,
@@ -28,10 +27,9 @@ export default class Percent<T extends android.base.View> extends squared.base.E
             container.children as T[]
         );
         return {
-            output: '',
             parent: container,
             renderAs: container,
-            outputAs: this.application.renderLayout(layout)
+            outputAs: this.application.renderNode(layout)
         };
     }
 }

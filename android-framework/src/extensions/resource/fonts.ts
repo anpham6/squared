@@ -14,6 +14,8 @@ type NodeStyleMap = ObjectMap<string[]>;
 const $enum = squared.base.lib.enumeration;
 const $util = squared.lib.util;
 
+const REGEXP_TAGNAME = /^(\w*?)(?:_(\d+))?$/;
+
 const FONT_ANDROID = {
     'sans-serif': BUILD_ANDROID.ICE_CREAM_SANDWICH,
     'sans-serif-thin': BUILD_ANDROID.JELLYBEAN,
@@ -294,7 +296,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             }
                             for (const attr in combined) {
                                 const attrs = Array.from(combined[attr]).sort().join(';');
-                                const ids = $util.replaceMap<string, number>(attr.split($util.REGEXP_COMPILED.SEPARATOR), value => parseInt(value));
+                                const ids = $util.objectMap<string, number>(attr.split($util.REGEXP_COMPILED.SEPARATOR), value => parseInt(value));
                                 deleteStyleAttribute(sorted, attrs, ids);
                                 style[tag][attrs] = ids;
                             }
@@ -388,7 +390,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         for (const value of parentStyle) {
             let parent = '';
             for (const name of value.split('.')) {
-                const match = name.match(/^(\w*?)(?:_(\d+))?$/);
+                const match = name.match(REGEXP_TAGNAME);
                 if (match) {
                     const data = resource[match[1].toUpperCase()];
                     const index = $util.convertInt(match[2]);

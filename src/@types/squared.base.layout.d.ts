@@ -14,8 +14,8 @@ declare global {
             cleared: Map<T, string>;
             linearX: boolean;
             linearY: boolean;
-            renderPosition: boolean;
-            alwaysRender: boolean;
+            renderIndex: number;
+            orderAltered: boolean;
             readonly visible: T[];
             init(): void;
             setType(containerType: number, ...alignmentType: number[]): void;

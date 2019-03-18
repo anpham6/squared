@@ -1,4 +1,3 @@
-import { ExtensionResult } from '../../../src/base/@types/application';
 import { FlexboxData } from '../../../src/base/@types/extension';
 import { InitialData } from '../../../src/base/@types/node';
 
@@ -25,7 +24,7 @@ const CHAIN_MAP = {
 };
 
 export default class <T extends View> extends squared.base.extensions.Flexbox<T> {
-    public processNode(node: T, parent: T): ExtensionResult<T> {
+    public processNode(node: T, parent: T) {
         super.processNode(node, parent);
         const mainData: FlexboxData<T> = node.data($const.EXT_NAME.FLEXBOX, 'mainData');
         const layout = new $Layout(
@@ -49,7 +48,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
         };
     }
 
-    public processChild(node: T, parent: T): ExtensionResult<T> {
+    public processChild(node: T, parent: T) {
         if (node.hasAlign($enum.NODE_ALIGNMENT.SEGMENTED)) {
             const layout = new $Layout(
                 parent,
@@ -64,7 +63,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 complete: true
             };
         }
-        return { output: '' };
+        return undefined;
     }
 
     public postBaseLayout(node: T) {

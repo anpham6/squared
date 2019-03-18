@@ -91,12 +91,12 @@ export default abstract class Extension<T extends Node> implements squared.base.
         return false;
     }
 
-    public processNode(node: T, parent: T): ExtensionResult<T> {
-        return { output: '', complete: false };
+    public processNode(node: T, parent: T): ExtensionResult<T> | undefined {
+        return undefined;
     }
 
-    public processChild(node: T, parent: T): ExtensionResult<T> {
-        return { output: '', complete: false };
+    public processChild(node: T, parent: T): ExtensionResult<T> | undefined {
+        return undefined;
     }
 
     public addDescendant(node: T) {
@@ -117,7 +117,7 @@ export default abstract class Extension<T extends Node> implements squared.base.
     public afterConstraints() {}
     public afterResources() {}
     public afterParseDocument() {}
-    public afterProcedure() {}
+    public beforeCascadeDocument() {}
     public afterFinalize() {}
 
     get installed() {
