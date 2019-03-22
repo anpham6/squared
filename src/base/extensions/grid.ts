@@ -7,7 +7,6 @@ import NodeList from '../nodelist';
 import { EXT_NAME } from '../lib/constant';
 import { BOX_STANDARD } from '../lib/enumeration';
 
-const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 function getRowIndex<T extends Node>(columns: T[][], target: T) {
@@ -305,13 +304,10 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                                 }
                             }
                             const index = Math.min(l + (columnSpan - 1), columnEnd.length - 1);
-                            const documentParent = item.documentParent.element;
-                            if (documentParent) {
-                                for (let i = 0; i < documentParent.children.length; i++) {
-                                    const sibling = $dom.getElementAsNode<T>(<Element> documentParent.children[i]);
-                                    if (sibling && sibling.visible && !sibling.rendered && sibling.linear.left >= item.linear.right && sibling.linear.right <= columnEnd[index]) {
-                                        data.siblings.push(sibling);
-                                    }
+                            const actualChildren = item.documentParent.actualChildren;
+                            for (const sibling of actualChildren) {
+                                if (sibling.visible && !sibling.rendered && sibling.linear.left >= item.linear.right && sibling.linear.right <= columnEnd[index]) {
+                                    data.siblings.push(sibling as T);
                                 }
                             }
                             data.rowSpan = rowSpan;

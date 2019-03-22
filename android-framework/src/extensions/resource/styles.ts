@@ -15,9 +15,9 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
     public beforeCascadeDocument() {
         const styles: ObjectMap<string[]> = {};
         for (const node of this.application.session.cache) {
-            if (node.visible) {
+            if (node.visible && node.controlId) {
                 const renderChildren = node.renderChildren;
-                if (node.controlId && renderChildren.length > 1) {
+                if (renderChildren.length > 1) {
                     const attrMap = new Map<string, number>();
                     let style = '';
                     let valid = true;
@@ -72,8 +72,13 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                                     break;
                                 }
                             }
-                            if (!(name !== '' && style !== '' && name.startsWith(`${style}.`))) {
-                                name = $util.convertCamelCase((style !== '' ? `${style}.` : '') + $util.capitalize(node.controlId), '_');
+                            if (!(style !== '' && name.startsWith(`${style}.`))) {
+                                if (style !== '') {
+                                    name = style + '.' + node.controlId;
+                                }
+                                else {
+                                    name = $util.capitalize(node.controlId);
+                                }
                                 styles[name] = common;
                             }
                             for (const item of renderChildren) {

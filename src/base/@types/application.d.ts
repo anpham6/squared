@@ -66,7 +66,7 @@ export interface AppSession<T extends squared.base.Node, U> {
     documentRoot: { node: T, layoutName: string }[];
     image: Map<string, ImageAsset>;
     excluded: squared.base.NodeList<T>;
-    targetQueue: Map<T, string>;
+    targetQueue: Map<T, NodeTemplate<T>>;
     renderPosition: Map<T, T[]>;
     extensionMap: Map<number, squared.base.Extension<T>[]>;
 }
@@ -88,13 +88,13 @@ export interface ExtensionDependency {
 }
 
 export interface ExtensionResult<T extends squared.base.Node> {
-    output?: string;
+    parentAs?: T;
+    output?: NodeTemplate<T>;
+    renderAs?: T;
+    outputAs?: NodeTemplate<T>;
+    parent?: T;
     complete?: boolean;
     next?: boolean;
-    parent?: T;
-    parentAs?: T;
-    renderAs?: T;
-    outputAs?: string;
     include?: boolean;
 }
 
@@ -172,4 +172,19 @@ export interface ImageAsset extends Asset {
     width: number;
     height: number;
     position?: Point;
+}
+
+export interface NodeTemplate<T extends squared.base.Node> {
+    type: number;
+    node: T;
+}
+
+export interface NodeXmlTemplate<T extends squared.base.Node> extends NodeTemplate<T> {
+    controlName?: string;
+    attributes?: string;
+}
+
+export interface NodeIncludeTemplate<T extends squared.base.Node> extends NodeTemplate<T> {
+    content: string;
+    indent?: boolean;
 }

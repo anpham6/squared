@@ -9,7 +9,6 @@ import { NODE_RESOURCE } from './lib/enumeration';
 
 const $color = squared.lib.color;
 const $css = squared.lib.css;
-const $dom = squared.lib.dom;
 const $element = squared.lib.element;
 const $math = squared.lib.math;
 const $util = squared.lib.util;
@@ -17,12 +16,13 @@ const $xml = squared.lib.xml;
 
 const STRING_COLORSTOP = `(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[a-zA-Z\\d]{3,}|[a-z]+)\\s*(${$util.STRING_PATTERN.LENGTH_PERCENTAGE}|${$util.STRING_PATTERN.ANGLE}|(?:${$util.STRING_PATTERN.CALC}(?=,)|${$util.STRING_PATTERN.CALC}))?,?\\s*`;
 const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\("?.+?"?\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|circle|ellipse|closest-side|closest-corner|farthest-side|farthest-corner)?(?:\\s*at [\\w %]+)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
+const REGEXP_TAGNAME = /(<([^>]+)>)/ig;
+const REGEXP_LINEBREAK = /\s*<br[^>]*>\s*/g;
 
-function removeExcluded<T extends Node>(element: HTMLElement, attr: string) {
+function removeExcluded<T extends Node>(node: T, element: Element, attr: string) {
     let value: string = element[attr];
-    for (let i = 0; i < element.children.length; i++) {
-        const item = $dom.getElementAsNode<T>(element.children[i]);
-        if (item && (item.excluded || item.dataset.target && $util.isString(item[attr]))) {
+    for (const item of node.actualChildren) {
+        if (item.excluded || item.dataset.target && $util.isString(item[attr])) {
             value = value.replace(item[attr], '');
         }
     }
@@ -806,15 +806,15 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         else if (node.inlineText) {
                             name = node.textContent.trim();
                             if (element.tagName === 'CODE') {
-                                value = removeExcluded(element, 'innerHTML');
+                                value = removeExcluded(node, element, 'innerHTML');
                             }
                             else if ($element.hasLineBreak(element, true)) {
-                                value = removeExcluded(element, 'innerHTML')
-                                    .replace(/\s*<br[^>]*>\s*/g, '\\n')
-                                    .replace(/(<([^>]+)>)/ig, '');
+                                value = removeExcluded(node, element, 'innerHTML')
+                                    .replace(REGEXP_LINEBREAK, '\\n')
+                                    .replace(REGEXP_TAGNAME, '');
                             }
                             else {
-                                value = removeExcluded(element, 'textContent');
+                                value = removeExcluded(node, element, 'textContent');
                             }
                             [value, inlineTrim] = replaceWhiteSpace(node, element, value);
                         }

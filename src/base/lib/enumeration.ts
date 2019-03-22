@@ -19,6 +19,11 @@ export const enum NODE_ALIGNMENT {
     EXTENDABLE = 8192
 }
 
+export const enum NODE_TEMPLATE {
+    XML = 1,
+    INCLUDE
+}
+
 export const enum CSS_STANDARD {
     LENGTH = 2,
     AUTO = 4,

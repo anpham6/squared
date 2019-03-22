@@ -1,4 +1,4 @@
-import { AppHandler, ControllerSettings, LayoutResult, LayoutType, SessionData, UserSettings } from '../base/@types/application';
+import { AppHandler, ControllerSettings, LayoutResult, LayoutType, NodeTemplate, SessionData, UserSettings } from '../base/@types/application';
 
 declare global {
     namespace squared.base {
@@ -20,10 +20,11 @@ declare global {
             processTraverseVertical(layout: Layout<T>, siblings?: T[]): LayoutResult<T>;
             processLayoutHorizontal(layout: Layout<T>, strictMode?: boolean): LayoutResult<T>;
             setConstraints(): void;
-            renderNode(layout: Layout<T>): string;
-            renderNodeGroup(layout: Layout<T>): string;
-            renderNodeStatic(controlName: string, depth: number, options?: ExternalData, width?: string, height?: string, node?: T, children?: boolean): string;
+            renderNode(layout: Layout<T>): NodeTemplate<T> | undefined;
+            renderNodeGroup(layout: Layout<T>): NodeTemplate<T> | undefined;
+            renderNodeStatic(controlName: string, depth: number, options?: ExternalData, width?: string, height?: string): string;
             createNodeGroup(node: T, children: T[], parent?: T, replacement?: T): T;
+            sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
             addBeforeOutsideTemplate(id: number, value: string, index?: number): void;
             addBeforeInsideTemplate(id: number, value: string, index?: number): void;
             addAfterInsideTemplate(id: number, value: string, index?: number): void;
@@ -33,10 +34,8 @@ declare global {
             getAfterInsideTemplate(id: number): string;
             getAfterOutsideTemplate(id: number): string;
             hasAppendProcessing(id: number): boolean;
-            cascadeDocument(templates: string[], children: T[]): string;
-            getEnclosingTag(controlName: string, id: number, depth: number, innerXml?: string | null, attributeXml?: string): string;
-            removePlaceholders(value: string): string;
-            replaceIndent(value: string, depth: number, cache: T[]): string;
+            cascadeDocument(templates: NodeTemplate<T>[], depth: number): string;
+            getEnclosingTag(type: number, controlName: string, depth?: number, attributeXml?: string, innerXml?: string): string;
         }
 
         class Controller<T extends Node> implements Controller<T> {

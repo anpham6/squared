@@ -21,10 +21,6 @@ function getResourceName(map: Map<string, string>, name: string, value: string) 
     return map.has(name) && map.get(name) !== value ? Resource.generateId('dimen', name) : name;
 }
 
-function getAttributeName(value: string) {
-    return $util.convertUnderscore(value).replace('layout_', '');
-}
-
 function getDisplayName(value: string) {
     return $util.fromLastIndexOf(value, '.');
 }
@@ -59,7 +55,7 @@ export default class ResourceDimens<T extends android.base.View> extends squared
             const group = groups[tagName];
             for (const name in group) {
                 const [namespace, attr, value] = name.split($util.REGEXP_COMPILED.SEPARATOR);
-                const key = getResourceName(STORED.dimens, `${getDisplayName(tagName)}_${getAttributeName(attr)}`, value);
+                const key = getResourceName(STORED.dimens, `${getDisplayName(tagName)}_${$util.convertUnderscore(attr)}`, value);
                 for (const node of group[name]) {
                     node[namespace](attr, `@dimen/${key}`);
                 }
@@ -75,7 +71,7 @@ export default class ResourceDimens<T extends android.base.View> extends squared
             while ((match = REGEXP_WIDGETNAME.exec(content)) !== null) {
                 const controlName = REGEXP_CONTROLNAME.exec(match[0]);
                 if (controlName) {
-                    const key = getResourceName(STORED.dimens, `${getDisplayName(controlName[1]).toLowerCase()}_${getAttributeName(match[2])}`, match[3]);
+                    const key = getResourceName(STORED.dimens, `${getDisplayName(controlName[1]).toLowerCase()}_${$util.convertUnderscore(match[2])}`, match[3]);
                     STORED.dimens.set(key, match[3]);
                     content = content.replace(match[0], match[0].replace(match[3], `@dimen/${key}`));
                 }

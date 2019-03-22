@@ -100,3 +100,13 @@ export function replaceRTL(value: string, rtl: boolean, api: number) {
 export function getXmlNs(...values: string[]) {
     return $util.joinMap(values, namespace => XMLNS_ANDROID[namespace] ? `xmlns:${namespace}="${XMLNS_ANDROID[namespace]}"` : '', ' ');
 }
+
+export function getRootNs(value: string) {
+    let output = '';
+    for (const namespace in XMLNS_ANDROID) {
+        if (value.indexOf(`${namespace}:`) !== -1) {
+            output += `\n\t${getXmlNs(namespace)}`;
+        }
+    }
+    return output;
+}

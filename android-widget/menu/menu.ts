@@ -1,4 +1,4 @@
-import { ExtensionResult } from '../../src/base/@types/application';
+import { ExtensionResult, NodeXmlTemplate } from '../../src/base/@types/application';
 import { ViewAttribute } from '../../android-framework/src/@types/node';
 
 import $Resource = android.base.Resource;
@@ -9,8 +9,8 @@ const $const = squared.base.lib.constant;
 const $enum = squared.base.lib.enumeration;
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
-const $element = squared.lib.element;
 const $util = squared.lib.util;
+const $element = squared.lib.element;
 const $constA = android.lib.constant;
 const $enumA = android.lib.enumeration;
 const $utilA = android.lib.util;
@@ -67,15 +67,14 @@ function parseDataSet(validator: ObjectMap<RegExp>, element: HTMLElement, option
     }
 }
 
-function getTitle<T extends View>(element: HTMLElement) {
+function getTitle<T extends View>(node: T, element: HTMLElement) {
     if (element.title !== '') {
         return element.title;
     }
     else {
-        for (let i = 0; i < element.childNodes.length; i++) {
-            const node = $dom.getElementAsNode<T>(<Element> element.childNodes[i]);
-            if (node && node.textElement) {
-                return node.textContent.trim();
+        for (const child of node.actualChildren) {
+            if (child && child.textElement) {
+                return child.textContent.trim();
             }
         }
     }
@@ -148,7 +147,11 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
         node.render(parentAs);
         node.dataset.pathname = 'res/menu';
         return {
-            output: this.application.controllerHandler.renderNodeStatic(NAVIGATION.MENU, 0, {}, '', '', node, true),
+            output: <NodeXmlTemplate<T>> {
+                type: $enum.NODE_TEMPLATE.XML,
+                node,
+                controlName: NAVIGATION.MENU
+            },
             parentAs,
             complete: true
         };
@@ -163,16 +166,13 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
         const element = <HTMLElement> node.element;
         let controlName: string;
         let title = '';
-        let layout = false;
         if (node.tagName === 'NAV') {
             controlName = NAVIGATION.MENU;
-            title = getTitle(element);
-            layout = true;
+            title = getTitle(node, element);
         }
         else if (node.some(item => item.length > 0)) {
             if (node.some(item => item.tagName === 'NAV')) {
                 controlName = NAVIGATION.ITEM;
-                node.each(item => item.tagName !== 'NAV' && item.hide());
             }
             else {
                 controlName = NAVIGATION.GROUP;
@@ -183,8 +183,7 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
                     options.android.checkableBehavior = 'all';
                 }
             }
-            title = getTitle(element);
-            layout = true;
+            title = getTitle(node, element);
         }
         else {
             controlName = NAVIGATION.ITEM;
@@ -203,7 +202,7 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
                 break;
             case NAVIGATION.ITEM:
                 parseDataSet(REGEXP_ITEM, element, options);
-                if (!$util.hasValue(options.android.icon)) {
+                if (!options.android.icon) {
                     const style = $css.getStyle(element);
                     let src = $Resource.addImageUrl((style.backgroundImage !== 'none' ? style.backgroundImage : style.background) as string, $constA.PREFIX_ANDROID.MENU);
                     if (src !== '') {
@@ -219,11 +218,13 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
                         }
                     }
                 }
+                node.each(item => item.tagName !== 'NAV' && item.hide());
                 break;
         }
         if (title !== '') {
-            const name = $Resource.addString(title, '', this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
-            options.android.title = name !== '' ? `@string/${name}` : title;
+            const numberResourceValue = this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue');
+            const name = $Resource.addString(title, '', numberResourceValue);
+            options.android.title = numberResourceValue || !$util.isNumber(name) ? `@string/${name}` : title;
         }
         node.setControlType(controlName, $enumA.CONTAINER_NODE.INLINE);
         node.exclude({
@@ -231,16 +232,13 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
             resource: $enum.NODE_RESOURCE.ALL
         });
         node.render(parent);
+        node.apply(options);
         return {
-            output: this.application.controllerHandler.renderNodeStatic(
-                controlName,
-                node.renderDepth,
-                options,
-                '',
-                '',
+            output: <NodeXmlTemplate<T>> {
+                type: $enum.NODE_TEMPLATE.XML,
                 node,
-                layout
-            ),
+                controlName
+            },
             complete: true,
             next: controlName === NAVIGATION.MENU
         };
@@ -248,7 +246,7 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
 
     public postBaseLayout(node: T) {
         const element = <HTMLElement> node.element;
-        if (this.included(element)) {
+        if (element) {
             element.querySelectorAll('NAV').forEach((item: HTMLElement) => {
                 const display = $dom.getElementCache(item, 'squaredExternalDisplay');
                 if (display) {

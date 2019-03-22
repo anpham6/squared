@@ -73,15 +73,18 @@ export default class Fixed<T extends View> extends squared.base.Extension<T> {
             node.sort($NodeList.siblingIndex);
             node.resetBox($enum.BOX_STANDARD.PADDING | (node.documentBody ? $enum.BOX_STANDARD.MARGIN : 0), container, true);
             node.outerParent = container;
-            const layout = new $Layout(
-                parent,
-                node,
-                CONTAINER_NODE.CONSTRAINT,
-                $enum.NODE_ALIGNMENT.ABSOLUTE,
-                children.length,
-                children
-            );
-            return { output: this.application.renderNode(layout) };
+            return {
+                output: this.application.renderNode(
+                    new $Layout(
+                        parent,
+                        node,
+                        CONTAINER_NODE.CONSTRAINT,
+                        $enum.NODE_ALIGNMENT.ABSOLUTE,
+                        children.length,
+                        children
+                    )
+                )
+            };
         }
         return undefined;
     }

@@ -279,7 +279,9 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                 const abovePrevious = previousSiblings.pop() as T;
                                 if (abovePrevious.lineBreak) {
                                     abovePrevious.setBounds();
-                                    above = abovePrevious;
+                                    if (abovePrevious.bounds.bottom !== 0) {
+                                        above = abovePrevious;
+                                    }
                                 }
                             }
                         }

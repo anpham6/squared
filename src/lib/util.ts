@@ -26,9 +26,8 @@ interface UtilRegExpPattern {
     LEADINGNEWLINE: RegExp;
 }
 
-const REGEXP_UNDERSCORE = /([a-z][A-Z])/g;
-const REGEXP_WORD = /[^\w]+/g;
-const REGEXP_WORDDASH = /[^a-zA-Z\d]+/g;
+const REGEXP_WORD = /\w/;
+const REGEXP_WORDDASH = /[a-zA-Z\d]/;
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const NUMERALS = [
@@ -113,40 +112,71 @@ export function getDeviceDPI() {
 }
 
 export function capitalize(value: string, upper = true) {
-    if (value) {
-        if (upper) {
-            return value.charAt(0).toUpperCase() + value.substring(1).toLowerCase();
-        }
-        else {
-            return value.charAt(0).toLowerCase() + value.substring(1);
-        }
+    if (upper) {
+        return value.charAt(0).toUpperCase() + value.substring(1).toLowerCase();
     }
-    return value;
+    else {
+        return value.charAt(0).toLowerCase() + value.substring(1);
+    }
 }
 
 export function convertUnderscore(value: string) {
-    value = value.charAt(0).toLowerCase() + value.substring(1);
-    const match = value.match(REGEXP_UNDERSCORE);
-    if (match) {
-        for (const capture of match) {
-            value = value.replace(capture, `${capture[0]}_${capture[1].toLowerCase()}`);
+    let result = value[0].toLowerCase();
+    let lower = true;
+    for (let i = 1; i < value.length; i++) {
+        const char = value[i];
+        const upper = char === char.toUpperCase();
+        if (char !== '_' && lower && upper) {
+            result += '_' + char.toLowerCase();
         }
+        else {
+            result += char;
+        }
+        lower = !upper;
     }
-    return value;
+    return result;
 }
 
 export function convertCamelCase(value: string, char = '-') {
-    const match = value.replace(new RegExp(`^${char}+`), '').match(new RegExp(`(${char}[a-z])`, 'g'));
-    if (match) {
-        for (const capture of match) {
-            value = value.replace(capture, capture[1].toUpperCase());
+    let result = '';
+    let previous = '';
+    for (let i = 0; i < value.length; i++) {
+        if (value[i] !== char) {
+            if (previous === char) {
+                result += value[i].toUpperCase();
+            }
+            else {
+                result += value[i];
+            }
         }
+        previous = value[i];
     }
-    return value;
+    return result;
 }
 
 export function convertWord(value: string, dash = false) {
-    return dash ? value.trim().replace(REGEXP_WORDDASH, '_') : value.replace(REGEXP_WORD, '_');
+    let result = '';
+    if (dash) {
+        for (let i = 0; i < value.length; i++) {
+            if (REGEXP_WORDDASH.test(value[i])) {
+                result += value[i];
+            }
+            else {
+                result += '_';
+            }
+        }
+    }
+    else {
+        for (let i = 0; i < value.length; i++) {
+            if (REGEXP_WORD.test(value[i])) {
+                result += value[i];
+            }
+            else {
+                result += '_';
+            }
+        }
+    }
+    return result;
 }
 
 export function convertInt(value: string) {
@@ -670,15 +700,6 @@ export function searchObject(obj: StringMap, value: string | StringMap) {
 
 export function hasValue<T>(value: T): value is T {
     return value !== undefined && value !== null && value.toString().trim() !== '';
-}
-
-export function hasInSet<T>(list: Set<T>, condition: (x: T) => boolean) {
-    for (const item of list) {
-        if (condition(item)) {
-            return true;
-        }
-    }
-    return false;
 }
 
 export function withinRange(a: number, b: number, offset = 0.5) {

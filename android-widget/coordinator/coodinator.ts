@@ -1,3 +1,5 @@
+import { NodeXmlTemplate } from '../../src/base/@types/application';
+
 import { WIDGET_NAME } from '../lib/constant';
 
 import $Resource = android.base.Resource;
@@ -26,15 +28,11 @@ export default class Coordinator<T extends android.base.View> extends squared.ba
         node.exclude({ resource: $enum.NODE_RESOURCE.ASSET });
         node.render(parent);
         return {
-            output: this.application.controllerHandler.renderNodeStatic(
-                $constA.SUPPORT_ANDROID.COORDINATOR,
-                node.renderDepth,
-                options,
-                '',
-                '',
+            output: <NodeXmlTemplate<T>> {
+                type: $enum.NODE_TEMPLATE.XML,
                 node,
-                true
-            )
+                controlName: $constA.SUPPORT_ANDROID.COORDINATOR
+            }
         };
     }
 

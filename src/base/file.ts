@@ -40,11 +40,11 @@ export default abstract class File<T extends Node> implements squared.base.File<
     public abstract get userSettings(): UserSettings;
 
     public addAsset(pathname: string, filename: string, content = '', uri: string = '') {
-        if (content !== '' || uri !== '') {
+        if (content || uri) {
             const index = this.assets.findIndex(item => item.pathname === pathname && item.filename === filename);
             if (index !== -1) {
-                this.assets[index].content = content || '';
-                this.assets[index].uri = uri || '';
+                this.assets[index].content = content;
+                this.assets[index].uri = uri;
             }
             else {
                 this.assets.push({

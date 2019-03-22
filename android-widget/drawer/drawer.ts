@@ -1,3 +1,4 @@
+import { NodeXmlTemplate } from '../../src/base/@types/application';
 import { UserSettingsAndroid } from '../../android-framework/src/@types/application';
 
 import { WIDGET_NAME } from '../lib/constant';
@@ -57,17 +58,16 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
         node.documentRoot = true;
         node.setControlType($constA.SUPPORT_ANDROID.DRAWER, $enumA.CONTAINER_NODE.BLOCK);
         node.exclude({ resource: $enum.NODE_RESOURCE.FONT_STYLE });
+        node.apply($Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')));
         node.render(parent);
+        node.android('layout_width', 'match_parent');
+        node.android('layout_height', 'match_parent');
         return {
-            output: this.application.controllerHandler.renderNodeStatic(
-                $constA.SUPPORT_ANDROID.DRAWER,
-                0,
-                $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')),
-                'match_parent',
-                'match_parent',
+            output: <NodeXmlTemplate<T>> {
+                type: $enum.NODE_TEMPLATE.XML,
                 node,
-                true
-            ),
+                controlName: $constA.SUPPORT_ANDROID.DRAWER
+            },
             complete: true
         };
     }

@@ -1,3 +1,4 @@
+import { NodeXmlTemplate } from '../../src/base/@types/application';
 import { UserSettingsAndroid } from '../../android-framework/src/@types/application';
 
 import { WIDGET_NAME } from '../lib/constant';
@@ -25,7 +26,7 @@ export default class BottomNavigation<T extends android.base.View> extends squar
         const options = $utilA.createViewAttribute(this.options[node.elementId]);
         $util.assignEmptyValue(options, 'android', 'background', `?android:attr/windowBackground`);
         for (let i = 5; i < node.length; i++) {
-            const item = node.item(i) as T;
+            const item = node.children[i];
             item.hide();
             for (const child of item.cascade()) {
                 child.hide();
@@ -34,19 +35,19 @@ export default class BottomNavigation<T extends android.base.View> extends squar
         node.setControlType($constA.SUPPORT_ANDROID.BOTTOM_NAVIGATION, $enumA.CONTAINER_NODE.BLOCK);
         node.exclude({ resource: $enum.NODE_RESOURCE.ASSET });
         node.render(parent);
+        node.apply($Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')));
+        node.android('layout_width', 'match_parent');
+        node.android('layout_height', 'wrap_content');
         for (const item of node.cascade()) {
             this.addDescendant(item as T);
         }
         this.setStyleTheme();
         return {
-            output: this.application.controllerHandler.renderNodeStatic(
-                $constA.SUPPORT_ANDROID.BOTTOM_NAVIGATION,
-                node.renderDepth,
-                $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')),
-                'match_parent',
-                'wrap_content',
-                node
-            ),
+            output: <NodeXmlTemplate<T>> {
+                type: $enum.NODE_TEMPLATE.XML,
+                node,
+                controlName: $constA.SUPPORT_ANDROID.BOTTOM_NAVIGATION
+            },
             complete: true
         };
     }

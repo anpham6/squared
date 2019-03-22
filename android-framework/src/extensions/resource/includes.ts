@@ -1,4 +1,7 @@
+import { NodeTemplate, NodeIncludeTemplate } from '../../../../src/base/@types/application';
+
 import View from '../../view';
+import { getRootNs } from '../../lib/util';
 
 type NodeRenderIndex = {
     item: View;
@@ -7,7 +10,7 @@ type NodeRenderIndex = {
     merge: boolean;
 };
 
-const $xml = squared.lib.xml;
+const $enum = squared.base.lib.enumeration;
 
 export default class ResourceIncludes<T extends View> extends squared.base.Extension<T> {
     public readonly eventOnly = true;
@@ -45,30 +48,28 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                         for (let j = 0; j < close.length; j++) {
                             const index = close[j].index;
                             if (index >= openData.index) {
-                                const templates: string[] = [];
-                                const children: T[] = [];
+                                const templates: NodeTemplate<T>[] = [];
                                 for (let k = openData.index; k <= index; k++) {
-                                    templates.push(node.renderTemplates[k]);
-                                    children.push(node.renderChildren[k] as T);
-                                    node.renderTemplates[k] = '';
+                                    templates.push(<NodeTemplate<T>> node.renderTemplates[k]);
+                                    node.renderTemplates[k] = null as any;
                                 }
-                                node.renderTemplates[openData.index] = this.application.controllerHandler.renderNodeStatic('include', children[0].renderDepth, { layout: `@layout/${openData.name}` });
                                 const controller = this.application.controllerHandler;
                                 const merge = openData.merge || templates.length > 1;
                                 const depth = merge ? 1 : 0;
-                                for (const item of children) {
-                                    item.renderDepth = depth;
-                                }
+                                node.renderTemplates[openData.index] = <NodeIncludeTemplate<T>> {
+                                    type: $enum.NODE_TEMPLATE.INCLUDE,
+                                    node: templates[0].node,
+                                    content: controller.renderNodeStatic('include', 0, { layout: `@layout/${openData.name}` }, '', ''),
+                                    indent: true
+                                };
                                 if (!merge && !openData.item.documentRoot) {
-                                    const hash = $xml.formatPlaceholder(openData.item.id, '@');
-                                    templates[0] = templates[0].replace(hash, `{#0}${hash}`);
                                     openData.item.documentRoot = true;
                                 }
-                                let xml = controller.cascadeDocument(templates, children);
+                                let output = controller.cascadeDocument(templates, depth);
                                 if (merge) {
-                                    xml = controller.getEnclosingTag('merge', 0, 0, xml).replace('{@0}', '');
+                                    output = controller.getEnclosingTag($enum.NODE_TEMPLATE.XML, 'merge', 0, getRootNs(output), output);
                                 }
-                                this.application.addIncludeFile(openData.item.id, openData.name, $xml.formatTemplate(xml, false, 0));
+                                this.application.addIncludeFile(openData.item.id, openData.name, output);
                                 close.splice(j, 1);
                                 break;
                             }

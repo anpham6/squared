@@ -478,32 +478,14 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         public setControlType(controlName: string, containerType?: number) {
-            if (containerType) {
-                this.containerType = containerType;
-            }
-            else if (this.containerType === 0) {
-                for (const global in CONTAINER_ANDROID) {
-                    if (CONTAINER_ANDROID[global] === controlName) {
-                        for (const local in CONTAINER_NODE) {
-                            if (CONTAINER_NODE[CONTAINER_NODE[local]] === global) {
-                                this.containerType = CONTAINER_NODE[local] as any;
-                                break;
-                            }
-                        }
-                        break;
-                    }
-                }
-            }
             this.controlName = controlName;
-            if (this.android('id') !== '') {
-                this.controlId = stripId(this.android('id'));
-            }
+            this.containerType = containerType || CONTAINER_NODE.UNKNOWN;
+            this.controlId = stripId(this.android('id'));
             if (this.controlId === '') {
-                const element = this.element;
                 let name: string | undefined;
-                if (element) {
-                    const inputName = (<HTMLInputElement> element).name;
-                    name = validateString(element.id || (typeof inputName === 'string' ? inputName : ''));
+                if (this.naturalElement) {
+                    const inputName = (<HTMLInputElement> this.element).name;
+                    name = validateString(this.elementId || (typeof inputName === 'string' ? inputName : ''));
                     if (name === 'parent' || RESERVED_JAVA.includes(name)) {
                         name = `_${name}`;
                     }
@@ -918,7 +900,7 @@ export default (Base: Constructor<squared.base.Node>) => {
             setBoxModel($css.BOX_PADDING, 'padding');
         }
 
-        public extractAttributes(depth?: number) {
+        public extractAttributes(depth: number) {
             if (this.dir === 'rtl') {
                 this.android(this.length ? 'layoutDirection' : 'textDirection', 'rtl');
             }
@@ -936,7 +918,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                     }
                 }
             }
-            const indent = '\t'.repeat(depth !== undefined ? depth : this.renderDepth + 1);
+            const indent = '\t'.repeat(depth);
             let output = '';
             for (const value of this.combine()) {
                 output += `\n${indent + value}`;

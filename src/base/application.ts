@@ -1,4 +1,4 @@
-import { AppProcessing, AppSession, FileAsset, ImageAsset, LayoutResult, LayoutType, SessionData, UserSettings } from './@types/application';
+import { AppProcessing, AppSession, FileAsset, ImageAsset, LayoutResult, LayoutType, NodeTemplate, SessionData, UserSettings } from './@types/application';
 
 import Controller from './controller';
 import Extension from './extension';
@@ -14,7 +14,6 @@ const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 const $element = squared.lib.element;
 const $util = squared.lib.util;
-const $xml = squared.lib.xml;
 
 function prioritizeExtensions<T extends Node>(element: HTMLElement, extensions: Extension<T>[], documentRoot: HTMLElement | null) {
     const tagged: string[] = [];
@@ -91,7 +90,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         cache: new NodeList<T>(),
         documentRoot: [],
         image: new Map<string, ImageAsset>(),
-        targetQueue: new Map<T, string>(),
+        targetQueue: new Map<T, NodeTemplate<T>>(),
         excluded: new NodeList<T>(),
         renderPosition: new Map<T, T[]>(),
         extensionMap: new Map<number, Extension<T>[]>()
@@ -132,11 +131,12 @@ export default class Application<T extends Node> implements squared.base.Applica
 
     public finalize() {
         const controller = this.controllerHandler;
-        for (const node of this.session.targetQueue.keys()) {
+        for (const [node, template] of this.session.targetQueue.entries()) {
             if (node.dataset.target) {
                 const parent = this.resolveTarget(node.dataset.target);
                 if (parent) {
                     node.render(parent);
+                    this.addRenderTemplate(parent, node, template);
                 }
                 else if (node.renderParent === undefined) {
                     this.session.cache.remove(node);
@@ -171,15 +171,6 @@ export default class Application<T extends Node> implements squared.base.Applica
                 node.setBoxSpacing();
             }
         }
-        for (const [node, template] of this.session.targetQueue.entries()) {
-            if (node.renderParent) {
-                let output = controller.replaceIndent(template, node.renderDepth, rendered);
-                if (node.renderTemplates) {
-                    output = output.replace($xml.formatPlaceholder(node.id), controller.cascadeDocument(node.renderTemplates, node.renderChildren as T[]));
-                }
-                this.addRenderTemplate(node.renderParent as T, node, $xml.formatTemplate(output, false, node.renderDepth), node.dataset.targetIndex ? parseInt(node.dataset.targetIndex) : undefined);
-            }
-        }
         for (const ext of this.extensions) {
             ext.beforeCascadeDocument();
         }
@@ -189,7 +180,7 @@ export default class Application<T extends Node> implements squared.base.Applica
             if (parent && parent.renderTemplates) {
                 this.addLayoutFile(
                     layout.layoutName,
-                    controller.localSettings.baseTemplate + controller.cascadeDocument(parent.renderTemplates, parent.renderChildren as T[]),
+                    controller.localSettings.baseTemplate + controller.cascadeDocument(<NodeTemplate<T>[]> parent.renderTemplates, 0),
                     node.dataset.pathname,
                     !!node.renderExtension && node.renderExtension.some(item => item.documentBase)
                 );
@@ -395,7 +386,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 layout = this.processFloatVertical(layout, outerParent);
             }
         }
-        return layout.containerType !== 0 ? this.renderNode(layout) : '';
+        return layout.containerType !== 0 ? this.renderNode(layout) : undefined;
     }
 
     public addLayoutFile(filename: string, content: string, pathname?: string, documentBase = false) {
@@ -424,20 +415,20 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     public addRenderLayout(layout: Layout<T>, outerParent?: T) {
-        let output: string;
+        let template: NodeTemplate<T> | undefined;
         if (outerParent) {
-            output = this.renderLayout(layout, outerParent);
+            template = this.renderLayout(layout, outerParent);
         }
         else {
-            output = this.renderNode(layout);
+            template = this.renderNode(layout);
         }
-        return this.addRenderTemplate(layout.parent, layout.node, output, layout.renderIndex);
+        return this.addRenderTemplate(layout.parent, layout.node, template, layout.renderIndex);
     }
 
-    public addRenderTemplate(parent: T, node: T, value: string, index = -1) {
-        if (value !== '') {
+    public addRenderTemplate(parent: T, node: T, template: NodeTemplate<T> | undefined, index = -1) {
+        if (template) {
             if (node.renderParent === undefined) {
-                this.session.targetQueue.set(node, value);
+                this.session.targetQueue.set(node, template);
             }
             else {
                 if (parent.renderTemplates === undefined) {
@@ -445,11 +436,11 @@ export default class Application<T extends Node> implements squared.base.Applica
                 }
                 if (index >= 0 && index < parent.renderChildren.length) {
                     parent.renderChildren.splice(index, 0, node);
-                    parent.renderTemplates.splice(index, 0, value);
+                    parent.renderTemplates.splice(index, 0, template);
                 }
                 else {
                     parent.renderChildren.push(node);
-                    parent.renderTemplates.push(value);
+                    parent.renderTemplates.push(template);
                 }
             }
             return true;
@@ -985,13 +976,13 @@ export default class Application<T extends Node> implements squared.base.Applica
                         }
                     }
                     if (!nodeY.rendered && nodeY.hasSection(APP_SECTION.EXTENSION)) {
-                        let combined = parent.renderExtension ? parent.renderExtension.slice(0) : undefined;
+                        let combined = parent.renderExtension ? <Extension<T>[]> parent.renderExtension.slice(0) : undefined;
                         if (extensionDescendant) {
                             if (combined) {
-                                $util.concatArray(combined, extensionDescendant as Extension<T>[]);
+                                $util.concatArray(combined, <Extension<T>[]> extensionDescendant);
                             }
                             else {
-                                combined = extensionDescendant.slice(0) as Extension<T>[];
+                                combined = <Extension<T>[]> extensionDescendant.slice(0);
                             }
                         }
                         if (combined) {
@@ -1000,13 +991,13 @@ export default class Application<T extends Node> implements squared.base.Applica
                                 const result = ext.processChild(nodeY, parentY);
                                 if (result) {
                                     if (result.output) {
-                                        this.addRenderTemplate(<T> result.parentAs || parentY, nodeY, result.output);
+                                        this.addRenderTemplate(result.parentAs || parentY, nodeY, result.output);
                                     }
                                     if (result.renderAs && result.outputAs) {
-                                        this.addRenderTemplate(parentY, result.renderAs as T, result.outputAs);
+                                        this.addRenderTemplate(parentY, result.renderAs, result.outputAs);
                                     }
                                     if (result.parent) {
-                                        parentY = result.parent as T;
+                                        parentY = result.parent;
                                     }
                                     next = result.next === true;
                                     if (result.complete || next) {
@@ -1025,10 +1016,10 @@ export default class Application<T extends Node> implements squared.base.Applica
                                     const result = item.processNode(nodeY, parentY);
                                     if (result) {
                                         if (result.output) {
-                                            this.addRenderTemplate((result.parentAs || parentY) as T, nodeY, result.output);
+                                            this.addRenderTemplate(result.parentAs || parentY, nodeY, result.output);
                                         }
                                         if (result.renderAs && result.outputAs) {
-                                            this.addRenderTemplate(parentY, result.renderAs as T, result.outputAs);
+                                            this.addRenderTemplate(parentY, result.renderAs, result.outputAs);
                                         }
                                         if (result.parent) {
                                             parentY = result.parent as T;

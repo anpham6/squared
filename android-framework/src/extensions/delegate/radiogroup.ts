@@ -1,3 +1,5 @@
+import { NodeXmlTemplate } from '../../../../src/base/@types/application';
+
 import { AXIS_ANDROID, CONTAINER_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
@@ -14,7 +16,6 @@ export default class ScrollView<T extends android.base.View> extends squared.bas
 
     public processNode(node: T, parent: T) {
         const element = <HTMLInputElement> node.element;
-        const target = !node.dataset.use ? node.dataset.target : undefined;
         const pending: T[] = [];
         let replacement: T | undefined;
         const children = parent.flatMap((item: T) => {
@@ -50,13 +51,17 @@ export default class ScrollView<T extends android.base.View> extends squared.bas
                 item.hide();
             }
             container.exclude({ resource: $enum.NODE_RESOURCE.ASSET });
+            container.render(!node.dataset.use && node.dataset.target ? this.application.resolveTarget(node.dataset.target) : parent);
             container.android('orientation', $NodeList.linearX(children) ? AXIS_ANDROID.HORIZONTAL : AXIS_ANDROID.VERTICAL);
-            container.render(target ? this.application.resolveTarget(target) : parent);
             this.subscribers.add(container);
             return {
-                parent: container,
                 renderAs: container,
-                outputAs: this.application.controllerHandler.getEnclosingTag(CONTROL_NAME, container.id, target ? -1 : container.renderDepth, ''),
+                outputAs: <NodeXmlTemplate<T>> {
+                    type: $enum.NODE_TEMPLATE.XML,
+                    node: container,
+                    controlName: CONTROL_NAME
+                },
+                parent: container,
                 complete: true
             };
         }

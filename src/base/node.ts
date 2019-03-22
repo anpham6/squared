@@ -1,3 +1,4 @@
+import { NodeTemplate } from './@types/application';
 import { CachedValue, InitialData, Support } from './@types/node';
 
 import Extension from './extension';
@@ -29,7 +30,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public style!: CSSStyleDeclaration;
     public renderParent?: T;
     public renderExtension?: Extension<T>[];
-    public renderTemplates?: string[];
+    public renderTemplates?: NodeTemplate<T>[];
     public outerParent?: T;
     public innerChild?: T;
     public companion?: T;

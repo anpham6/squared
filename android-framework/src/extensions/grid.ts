@@ -93,8 +93,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                 }
                 else {
                     layout.init();
-                    const result = controller.processTraverseHorizontal(layout);
-                    layout = result.layout;
+                    layout = controller.processTraverseHorizontal(layout).layout;
                 }
                 if (layout.containerType !== 0) {
                     transferData(layout.node, siblings);

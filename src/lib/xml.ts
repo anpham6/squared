@@ -10,10 +10,10 @@ type XMLTagData = {
 const STRING_ROOT = '__ROOT__';
 const REGEXP_CREATE = {
     ATTRIBUTE: /\s*((\w+:)?\w+="[^"]*)?{~\w+}"?/g,
-    COLLECTION: /\n*\t*{%\w+}\n+/g,
+    COLLECTION: /\n*({%\w+}\n)+/g,
     LINEBREAK: /\n\n/g
 };
-const REGEXP_FORAMT = {
+const REGEXP_FORMAT = {
     ITEM: /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g,
     OPENTAG: /\s*>$/,
     CLOSETAG: /\/>\n*$/
@@ -35,20 +35,9 @@ export function formatPlaceholder(id: string | number, symbol = ':') {
     return `{${symbol + id.toString()}}`;
 }
 
-export function replacePlaceholder(value: string, id: string | number, content: string, before = false) {
-    const hash = typeof id === 'number' ? formatPlaceholder(id) : id;
-    return value.replace(hash, (before ? hash : '') + content + '\n' + (before ? '' : hash));
-}
-
 export function pushIndent(value: string, depth: number, char = '\t') {
-    const pattern = new RegExp(`^${char.replace('\\', '\\\\')}+`);
-    return joinMap(value.split('\n'), line => {
-        const match = pattern.exec(line);
-        if (match) {
-            return line.replace(match[0], char.repeat(depth + match[0].length));
-        }
-        return line;
-    });
+    const indent = char.repeat(depth);
+    return joinMap(value.split('\n'), line => line !== '' ? indent + line : '');
 }
 
 export function replaceIndent(value: string, depth: number, pattern: RegExp) {
@@ -189,20 +178,20 @@ export function createTemplate(templates: StringMap, data: ExternalData, format 
     }
     if (index === STRING_ROOT) {
         output = output
+            .replace(REGEXP_CREATE.ATTRIBUTE, '')
             .replace(REGEXP_CREATE.COLLECTION, '\n')
-            .replace(REGEXP_CREATE.LINEBREAK, '\n')
             .trim();
         if (format) {
             output = formatTemplate(output);
         }
     }
-    return output.replace(REGEXP_CREATE.ATTRIBUTE, '');
+    return output;
 }
 
 export function formatTemplate(value: string, closeEmpty = true, startIndent = -1, char = '\t') {
     const lines: XMLTagData[] = [];
     let match: RegExpExecArray | null;
-    while ((match = REGEXP_FORAMT.ITEM.exec(value)) !== null) {
+    while ((match = REGEXP_FORMAT.ITEM.exec(value)) !== null) {
         lines.push({
             tag: match[1],
             closing: !!match[2],
@@ -221,11 +210,11 @@ export function formatTemplate(value: string, closeEmpty = true, startIndent = -
             }
             else {
                 previous++;
-                if (!REGEXP_FORAMT.CLOSETAG.exec(line.tag)) {
+                if (!REGEXP_FORMAT.CLOSETAG.exec(line.tag)) {
                     if (closeEmpty && line.value.trim() === '') {
                         const next = lines[i + 1];
                         if (next && next.closing && next.tagName === line.tagName) {
-                            line.tag = line.tag.replace(REGEXP_FORAMT.OPENTAG, ' />');
+                            line.tag = line.tag.replace(REGEXP_FORMAT.OPENTAG, ' />');
                             i++;
                         }
                         else {

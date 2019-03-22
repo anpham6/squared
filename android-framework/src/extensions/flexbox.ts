@@ -50,16 +50,17 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
 
     public processChild(node: T, parent: T) {
         if (node.hasAlign($enum.NODE_ALIGNMENT.SEGMENTED)) {
-            const layout = new $Layout(
-                parent,
-                node,
-                CONTAINER_NODE.CONSTRAINT,
-                $enum.NODE_ALIGNMENT.AUTO_LAYOUT,
-                node.length,
-                node.children as T[]
-            );
             return {
-                output: this.application.renderNode(layout),
+                output: this.application.renderNode(
+                    new $Layout(
+                        parent,
+                        node,
+                        CONTAINER_NODE.CONSTRAINT,
+                        $enum.NODE_ALIGNMENT.AUTO_LAYOUT,
+                        node.length,
+                        node.children as T[]
+                    )
+                ),
                 complete: true
             };
         }

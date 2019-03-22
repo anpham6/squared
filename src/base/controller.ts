@@ -1,18 +1,17 @@
-import { ControllerSettings, LayoutResult, LayoutType, SessionData, UserSettings } from './@types/application';
+import { ControllerSettings, LayoutResult, LayoutType, NodeTemplate, NodeIncludeTemplate, NodeXmlTemplate, SessionData, UserSettings } from './@types/application';
 
 import Application from './application';
 import Layout from './layout';
 import Node from './node';
 import NodeList from './nodelist';
 
+import { NODE_TEMPLATE } from './lib/enumeration';
+
 const $color = squared.lib.color;
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
-
-const REGEXP_INDENT = /^({[^}]+})*(\t*)(<.*)/;
-const REGEXP_PLACEHOLDER = /{[<:@#>]\d+(\^\d+)?}\n?/g;
 
 export default abstract class Controller<T extends Node> implements squared.base.Controller<T> {
     public abstract readonly localSettings: ControllerSettings;
@@ -33,10 +32,10 @@ export default abstract class Controller<T extends Node> implements squared.base
     public abstract processTraverseHorizontal(layout: Layout<T>, siblings?: T[]): LayoutResult<T>;
     public abstract processTraverseVertical(layout: Layout<T>, siblings?: T[]): LayoutResult<T>;
     public abstract processLayoutHorizontal(layout: Layout<T>, strictMode?: boolean): LayoutResult<T>;
-    public abstract sortRenderPosition(parent: T, children: T[]): T[] | undefined;
-    public abstract renderNode(layout: Layout<T>): string;
-    public abstract renderNodeGroup(layout: Layout<T>): string;
-    public abstract renderNodeStatic(controlName: string, depth: number, options?: {}, width?: string, height?: string, node?: T, children?: boolean): string;
+    public abstract sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
+    public abstract renderNode(layout: Layout<T>): NodeTemplate<T> | undefined;
+    public abstract renderNodeGroup(layout: Layout<T>): NodeTemplate<T> | undefined;
+    public abstract renderNodeStatic(controlName: string, depth: number, options?: ExternalData, width?: string, height?: string): string;
     public abstract setConstraints(): void;
     public abstract finalize(data: SessionData<NodeList<T>>): void;
     public abstract createNodeGroup(node: T, children: T[], parent: T): T;
@@ -197,74 +196,49 @@ export default abstract class Controller<T extends Node> implements squared.base
         return this._beforeOutside[id] !== undefined || this._beforeInside[id] !== undefined || this._afterInside[id] !== undefined || this._afterOutside[id] !== undefined;
     }
 
-    public cascadeDocument(templates: string[], children: T[]) {
+    public cascadeDocument(templates: NodeTemplate<T>[], depth: number) {
+        const indent = depth ? '\t'.repeat(depth) : '';
         let output = '';
         for (let i = 0; i < templates.length; i++) {
-            if (templates[i] !== '') {
-                const item = children[i] as T;
-                let template = templates[i].replace($xml.formatPlaceholder(item.id, '@'), this.userSettings.showAttributes ? item.extractAttributes() : '');
-                if (item.renderTemplates) {
-                    let cascadeTemplate!: string[];
-                    let cascadeChildren = this.application.session.renderPosition.get(item);
-                    let valid = false;
-                    cascadeChildren = cascadeChildren ? this.sortRenderPosition(item, cascadeChildren) : this.sortRenderPosition(item, item.renderChildren as T[]);
-                    if (cascadeChildren) {
-                        cascadeTemplate = [];
-                        for (const child of cascadeChildren) {
-                            const index = item.renderChildren.findIndex(node => node.id === child.id);
-                            if (index !== -1) {
-                                cascadeTemplate.push(item.renderTemplates[index]);
-                            }
+            const item = templates[i];
+            if (item) {
+                switch (item.type) {
+                    case NODE_TEMPLATE.XML: {
+                        const node = item.node;
+                        const controlName = (<NodeXmlTemplate<T>> item).controlName;
+                        let template = indent + `<${controlName} ${(depth === 0 ? '{#0} ' : '') + (this.userSettings.showAttributes ? node.extractAttributes(depth + 1) : '')}`;
+                        if (node.renderTemplates) {
+                            template += '>\n' +
+                                        this.getBeforeInsideTemplate(node.id) +
+                                        this.cascadeDocument(this.sortRenderPosition(node, <NodeTemplate<T>[]> node.renderTemplates), depth + 1) +
+                                        this.getAfterInsideTemplate(node.id) +
+                                        indent + `</${controlName}>\n`;
                         }
-                        if (cascadeTemplate.length === item.renderTemplates.length) {
-                            valid = true;
+                        else {
+                            template += ' />\n';
                         }
+                        output += this.getBeforeOutsideTemplate(node.id) + template + this.getAfterOutsideTemplate(node.id);
+                        break;
                     }
-                    if (!valid) {
-                        cascadeTemplate = item.renderTemplates;
-                        cascadeChildren = item.renderChildren as T[];
+                    case NODE_TEMPLATE.INCLUDE: {
+                        const content = (<NodeIncludeTemplate<T>> item).content;
+                        if (content) {
+                            output += (<NodeIncludeTemplate<T>> item).indent ? $xml.pushIndent(content, depth) : content;
+                        }
+                        break;
                     }
-                    template = template.replace($xml.formatPlaceholder(item.id), this.getBeforeInsideTemplate(item.id) + this.cascadeDocument(cascadeTemplate, cascadeChildren as T[]) + this.getAfterInsideTemplate(item.id));
-                    item.renderTemplates = undefined;
                 }
-                output += this.getBeforeOutsideTemplate(item.id) + template + this.getAfterOutsideTemplate(item.id);
             }
         }
         return output;
     }
 
-    public getEnclosingTag(controlName: string, id: number, depth: number, innerXml?: string, attributeXml?: string) {
-        const indent = '\t'.repeat(Math.max(0, depth));
-        const output = indent + `<${controlName + (depth === 0 ? '{#0}' : '') + (attributeXml || `{@${id}}`)}`;
-        if (innerXml !== undefined) {
-            return output + '>\n' + (innerXml || $xml.formatPlaceholder(id)) + indent + `</${controlName}>\n`;
+    public getEnclosingTag(type: number, controlName: string, depth?: number, attributeXml?: string, innerXml?: string) {
+        switch (type) {
+            case NODE_TEMPLATE.XML:
+                const indent = depth ? '\t'.repeat(depth) : '';
+                return indent + '<' + controlName + attributeXml + (innerXml !== undefined ? '>\n' + (innerXml || '{:0}') + indent + '</' + controlName + '>\n' : ' />\n');
         }
-        else {
-            return output + ' />\n';
-        }
-    }
-
-    public removePlaceholders(value: string) {
-        return value.replace(REGEXP_PLACEHOLDER, '').trim();
-    }
-
-    public replaceIndent(value: string, depth: number, cache: T[]) {
-        value = $xml.replaceIndent(value, depth, REGEXP_INDENT);
-        const pattern = /{@(\d+)}/g;
-        let match: RegExpExecArray | null;
-        let i = 0;
-        while ((match = pattern.exec(value)) !== null) {
-            const id = parseInt(match[1]);
-            const node = cache.find(item => item.id === id);
-            if (node) {
-                if (i++ === 0) {
-                    node.renderDepth = depth;
-                }
-                else if (node.renderParent) {
-                    node.renderDepth = node.renderParent.renderDepth + 1;
-                }
-            }
-        }
-        return value;
+        return '';
     }
 }

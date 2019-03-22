@@ -1,3 +1,4 @@
+import { NodeTemplate } from '../base/@types/application';
 import { AutoMargin, Support, VisibleStyle } from '../base/@types/node';
 
 import Container = squared.lib.base.Container;
@@ -31,7 +32,7 @@ declare global {
             parent?: Node;
             renderParent?: Node;
             renderExtension?: Extension<Node>[];
-            renderTemplates?: string[];
+            renderTemplates?: NodeTemplate<Node>[];
             outerParent?: Node;
             innerChild?: Node;
             companion?: Node;
@@ -186,7 +187,7 @@ declare global {
             setExclusions(): void;
             setBounds(): void;
             setBoxSpacing(): void;
-            extractAttributes(depth?: number): string;
+            extractAttributes(depth: number): string;
             resetBox(region: number, node?: Node, fromParent?: boolean): void;
             inheritBox(region: number, node: Node): void;
             actualRight(dimension?: string): number;

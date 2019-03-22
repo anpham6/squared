@@ -1,6 +1,5 @@
 import Node from './node';
 
-const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 export default class NodeList<T extends Node> extends squared.lib.base.Container<T> implements squared.base.NodeList<T> {
@@ -92,25 +91,22 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
 
     public static cleared<T extends Node>(list: T[], parent = true) {
         if (parent && list.length > 1) {
-            list.slice(0).sort(this.siblingIndex);
             const actualParent = this.actualParent(list);
-            const element = actualParent && actualParent.element;
-            if (element) {
+            if (actualParent) {
                 const nodes: T[] = [];
                 const listEnd = list[list.length - 1];
                 let valid = false;
-                for (let i = 0; i < element.childNodes.length; i++) {
-                    const node = $dom.getElementAsNode<T>(<Element> element.childNodes[i]);
-                    if (node) {
-                        if (node === list[0]) {
-                            valid = true;
-                        }
-                        if (valid) {
-                            nodes.push(node);
-                        }
-                        if (node === listEnd) {
-                            break;
-                        }
+                const children = actualParent.actualChildren;
+                for (let i = 0; i < children.length; i++) {
+                    const node = children[i] as T;
+                    if (node === list[0]) {
+                        valid = true;
+                    }
+                    if (valid) {
+                        nodes.push(node);
+                    }
+                    if (node === listEnd) {
+                        break;
                     }
                 }
                 if (nodes.length >= list.length) {
@@ -123,9 +119,9 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
         const previous: ObjectMap<Undefined<T>> = {};
         for (const node of list) {
             if (node.pageFlow) {
-                const clear = node.css('clear');
                 if (floated.size) {
                     const previousFloat = [];
+                    const clear = node.css('clear');
                     switch (clear) {
                         case 'left':
                             previousFloat.push(previous.left);

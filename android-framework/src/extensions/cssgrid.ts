@@ -1,3 +1,4 @@
+import { NodeXmlTemplate } from '../../../src/base/@types/application';
 import { CssGridCellData, CssGridData, CssGridDirectionData } from '../../../src/base/@types/extension';
 
 import View from '../view';
@@ -166,7 +167,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
     public processChild(node: T, parent: T) {
         const mainData: CssGridData<T> = parent.data($const.EXT_NAME.CSS_GRID, 'mainData');
         const cellData: CssGridCellData = node.data($const.EXT_NAME.CSS_GRID, 'cellData');
-        let outputAs = '';
+        let outputAs: NodeXmlTemplate<T> | undefined;
         let container: T | undefined;
         if (mainData && cellData) {
             function applyLayout(item: T, direction: string, dimension: string) {
@@ -332,15 +333,16 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     node.android('layout_height', 'match_parent', false);
                 }
                 node.parent = container;
-                const layout = new $Layout(
-                    parent,
-                    container,
-                    CONTAINER_NODE.FRAME,
-                    $enum.NODE_ALIGNMENT.SINGLE,
-                    1,
-                    container.children as T[]
+                outputAs = this.application.renderNode(
+                    new $Layout(
+                        parent,
+                        container,
+                        CONTAINER_NODE.FRAME,
+                        $enum.NODE_ALIGNMENT.SINGLE,
+                        1,
+                        container.children as T[]
+                    )
                 );
-                outputAs = this.application.renderNode(layout);
             }
             const target = container || node;
             applyLayout(target, 'column', 'width');

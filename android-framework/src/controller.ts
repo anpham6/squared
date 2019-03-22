@@ -1,4 +1,4 @@
-import { ControllerSettings, LayoutType, SessionData } from '../../src/base/@types/application';
+import { ControllerSettings, LayoutType, NodeXmlTemplate, SessionData } from '../../src/base/@types/application';
 import { UserSettingsAndroid } from './@types/application';
 import { ViewAttribute } from './@types/node';
 
@@ -6,9 +6,9 @@ import Resource from './resource';
 import View from './view';
 import ViewGroup from './viewgroup';
 
-import { AXIS_ANDROID, BOX_ANDROID, CONTAINER_ANDROID, XMLNS_ANDROID } from './lib/constant';
+import { AXIS_ANDROID, BOX_ANDROID, CONTAINER_ANDROID } from './lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
-import { createViewAttribute, getXmlNs, replaceLength } from './lib/util';
+import { createViewAttribute, getRootNs, replaceLength } from './lib/util';
 
 import BASE_TMPL from './template/base';
 
@@ -217,16 +217,6 @@ function isTargeted<T extends View>(parent: T, node: T) {
     return false;
 }
 
-function getRootNamespace(value: string) {
-    let output = '';
-    for (const namespace in XMLNS_ANDROID) {
-        if (value.indexOf(`${namespace}:`) !== -1) {
-            output += `\n\t${getXmlNs(namespace)}`;
-        }
-    }
-    return output;
-}
-
 export default class Controller<T extends View> extends squared.base.Controller<T> implements android.base.Controller<T> {
     public static evaluateAnchors<T extends View>(nodes: T[]) {
         const horizontal: T[] = [];
@@ -365,7 +355,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         for (const view of data.templates) {
             view.content = $xml.replaceTab(
                 replaceLength(
-                    view.content.replace(/{#0}/, getRootNamespace(view.content)),
+                    view.content.replace(/{#0}/, getRootNs(view.content)),
                     this.userSettings.resolutionDPI,
                     this.userSettings.convertPixels
                 ),
@@ -564,16 +554,17 @@ export default class Controller<T extends View> extends squared.base.Controller<
         return { layout };
     }
 
-    public sortRenderPosition(parent: T, children: T[]) {
-        if (parent.layoutConstraint && children.some(item => !item.pageFlow)) {
-            const below: T[] = [];
-            const middle: T[] = [];
-            const above: T[] = [];
-            for (const item of children) {
-                if (item.pageFlow || item.actualParent !== parent) {
+    public sortRenderPosition(parent: T, templates: NodeXmlTemplate<T>[]) {
+        if (parent.layoutConstraint && templates.some(item => !item.node.pageFlow)) {
+            const below: NodeXmlTemplate<T>[] = [];
+            const middle: NodeXmlTemplate<T>[] = [];
+            const above: NodeXmlTemplate<T>[] = [];
+            for (const item of templates) {
+                const node = item.node;
+                if (node.pageFlow || node.actualParent !== parent) {
                     middle.push(item);
                 }
-                else if (item.zIndex >= 0) {
+                else if (node.zIndex >= 0) {
                     above.push(item);
                 }
                 else {
@@ -582,7 +573,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             }
             return $util.concatMultiArray($util.sortArray(below, true, 'zIndex', 'siblingIndex'), middle, $util.sortArray(above, true, 'zIndex', 'siblingIndex'));
         }
-        return undefined;
+        return templates;
     }
 
     public checkFrameHorizontal(layout: $Layout<T>) {
@@ -777,15 +768,17 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 break;
         }
         if (valid) {
-            const target = !node.dataset.use ? node.dataset.target : undefined;
-            const controlName = View.getControlName(containerType);
             node.alignmentType |= alignmentType;
-            node.setControlType(controlName, containerType);
-            node.render(target ? this.application.resolveTarget(target) : parent);
+            node.setControlType(View.getControlName(containerType), containerType);
+            node.render(!node.dataset.use && node.dataset.target ? this.application.resolveTarget(node.dataset.target) : parent);
             node.apply(options);
-            return this.getEnclosingTag(controlName, node.id, target ? -1 : node.renderDepth, '');
+            return <NodeXmlTemplate<T>> {
+                type: $enum.NODE_TEMPLATE.XML,
+                node,
+                controlName: node.controlName
+            };
         }
-        return '';
+        return undefined;
     }
 
     public renderNode(layout: $Layout<T>) {
@@ -883,12 +876,11 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                 this.application.addRenderTemplate(
                                     parent,
                                     container,
-                                    this.getEnclosingTag(
-                                        CONTAINER_ANDROID.FRAME,
-                                        container.id,
-                                        target ? -1 : container.renderDepth,
-                                        null
-                                    )
+                                    <NodeXmlTemplate<T>> {
+                                        type: $enum.NODE_TEMPLATE.XML,
+                                        node,
+                                        controlName: CONTAINER_ANDROID.FRAME
+                                    }
                                 );
                                 node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, node.top);
                                 node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, node.left);
@@ -1067,31 +1059,31 @@ export default class Controller<T extends View> extends squared.base.Controller<
             }
         }
         node.render(target ? this.application.resolveTarget(target) : parent);
-        return this.getEnclosingTag(controlName, node.id, target ? -1 : node.renderDepth);
+        return <NodeXmlTemplate<T>> {
+            type: $enum.NODE_TEMPLATE.XML,
+            node,
+            controlName
+        };
     }
 
-    public renderNodeStatic(controlName: string, depth: number, options: ExternalData = {}, width = '', height = '', node?: T, children?: boolean) {
-        const renderDepth = Math.max(0, depth);
-        if (node) {
-            node.renderDepth = renderDepth;
-            node.rendered = true;
+    public renderNodeStatic(controlName: string, depth: number, options?: ExternalData, width?: string, height?: string) {
+        const node = new View(0, undefined, this.afterInsertNode) as T;
+        node.setControlType(controlName);
+        if (width !== '') {
+            node.android('layout_width', width || 'wrap_content');
         }
-        else {
-            node = new View(0, undefined, this.afterInsertNode) as T;
+        if (height !== '') {
+            node.android('layout_height', height || 'wrap_content');
         }
-        node.apply(options);
-        node.android('layout_width', width, false);
-        node.android('layout_height', height, false);
-        if (node.containerType === 0 || node.controlName === '') {
-            node.setControlType(controlName);
+        if (options) {
+            node.apply(options);
+            options.documentId = node.documentId;
         }
-        options.documentId = node.documentId;
         return this.getEnclosingTag(
+            $enum.NODE_TEMPLATE.XML,
             controlName,
-            node.id,
-            depth === 0 && !node.documentRoot ? -1 : depth,
-            children ? null : undefined,
-            this.userSettings.showAttributes && node.id === 0 ? node.extractAttributes(renderDepth + 1) : undefined
+            depth,
+            this.userSettings.showAttributes ? node.extractAttributes(depth + 1) : undefined
         );
     }
 
@@ -1111,7 +1103,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         if (rowSpan > 0) {
             options.android.layout_rowSpan = rowSpan.toString();
         }
-        return this.renderNodeStatic(CONTAINER_ANDROID.SPACE, depth, options, width, $util.hasValue(height) ? height : 'wrap_content');
+        return this.renderNodeStatic(CONTAINER_ANDROID.SPACE, depth, options, width, height || undefined);
     }
 
     public addGuideline(node: T, parent: T, orientation = '', percent = false, opposite = false) {
@@ -1247,7 +1239,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             [beginPercent]: usePercent ? location.toString() : $util.formatPX(location)
                         }
                     });
-                    this.addAfterOutsideTemplate(node.id, this.renderNodeStatic(CONTAINER_ANDROID.GUIDELINE, node.renderDepth, options, 'wrap_content', 'wrap_content'));
+                    this.addAfterOutsideTemplate(node.id, this.renderNodeStatic(CONTAINER_ANDROID.GUIDELINE, node.renderDepth, options));
                     const documentId: string = options['documentId'];
                     node.anchor(LT, documentId, true);
                     node.anchorDelete(RB);
@@ -1324,7 +1316,6 @@ export default class Controller<T extends View> extends squared.base.Controller<
             }
         }
         else {
-            const cleared = $NodeList.cleared(children);
             const boxWidth = (() => {
                 const renderParent = node.renderParent;
                 if (renderParent) {
@@ -1353,6 +1344,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             const alignmentSingle = node.hasAlign($enum.NODE_ALIGNMENT.SEGMENTED) || !node.groupParent && node.inline && node.linear.right <= node.documentParent.box.right;
             const firefoxEdge = $util.isUserAgent($util.USER_AGENT.FIREFOX | $util.USER_AGENT.EDGE);
             const checkLineWrap = node.css('whiteSpace') !== 'nowrap';
+            const cleared = $NodeList.cleared(children);
             const rangeMultiLine = new Set<T>();
             let rowWidth = 0;
             let rowPreviousLeft: T | undefined;

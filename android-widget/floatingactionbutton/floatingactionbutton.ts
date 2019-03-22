@@ -1,3 +1,5 @@
+import { NodeXmlTemplate } from '../../src/base/@types/application';
+
 import { WIDGET_NAME } from '../lib/constant';
 
 import $Resource = android.base.Resource;
@@ -115,16 +117,14 @@ export default class FloatingActionButton<T extends android.base.View> extends s
         if (!target) {
             node.render(parent);
         }
+        node.apply(options);
         return {
             parentAs,
-            output: this.application.controllerHandler.renderNodeStatic(
-                $constA.SUPPORT_ANDROID.FLOATING_ACTION_BUTTON,
-                node.renderDepth,
-                options,
-                'wrap_content',
-                'wrap_content',
-                node
-            ),
+            output: <NodeXmlTemplate<T>> {
+                type: $enum.NODE_TEMPLATE.XML,
+                node,
+                controlName: $constA.SUPPORT_ANDROID.FLOATING_ACTION_BUTTON
+            },
             complete: true
         };
     }

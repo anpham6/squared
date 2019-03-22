@@ -119,9 +119,9 @@ export function checkStyleValue(element: Element, attr: string, value: string, s
 export function getDataSet(element: HTMLElement | null, prefix: string) {
     const result: StringMap = {};
     if (element) {
-        prefix = convertCamelCase(prefix, '\\.');
+        prefix = convertCamelCase(prefix, '.');
         for (const attr in element.dataset) {
-            if (attr.length > prefix.length && attr.startsWith(prefix)) {
+            if (attr.startsWith(prefix)) {
                 result[capitalize(attr.substring(prefix.length), false)] = element.dataset[attr] as string;
             }
         }

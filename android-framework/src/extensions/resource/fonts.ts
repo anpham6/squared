@@ -377,14 +377,11 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 }
             }
         }
-        for (const id in nodeMap) {
-            const node = this.application.session.cache.find('id', parseInt(id));
-            if (node) {
-                const styles = nodeMap[id];
-                if (styles.length) {
-                    parentStyle.add(styles.join('.'));
-                    node.attr('_', 'style', `@style/${styles.pop()}`);
-                }
+        for (const node of this.application.session.cache) {
+            const styles = nodeMap[node.id];
+            if (styles && styles.length) {
+                parentStyle.add(styles.join('.'));
+                node.attr('_', 'style', `@style/${styles.pop()}`);
             }
         }
         for (const value of parentStyle) {
@@ -392,14 +389,9 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             for (const name of value.split('.')) {
                 const match = name.match(REGEXP_TAGNAME);
                 if (match) {
-                    const data = resource[match[1].toUpperCase()];
-                    const index = $util.convertInt(match[2]);
-                    if (data[index]) {
-                        STORED.styles.set(name, {
-                            ...data[index],
-                            name,
-                            parent
-                        });
+                    const data = resource[match[1].toUpperCase()][$util.convertInt(match[2])];
+                    if (data) {
+                        STORED.styles.set(name, { ...data, name, parent });
                         parent = name;
                     }
                 }

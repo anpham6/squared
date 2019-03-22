@@ -18,18 +18,19 @@ export default class Percent<T extends android.base.View> extends squared.base.E
             node.css('height', $util.formatPX(node.bounds.height), true);
         }
         node.resetBox($enum.BOX_STANDARD.MARGIN, container, true);
-        const layout = new $Layout(
-            parent,
-            container,
-            CONTAINER_NODE.CONSTRAINT,
-            $enum.NODE_ALIGNMENT.SINGLE,
-            1,
-            container.children as T[]
-        );
         return {
             parent: container,
             renderAs: container,
-            outputAs: this.application.renderNode(layout)
+            outputAs: this.application.renderNode(
+                new $Layout(
+                    parent,
+                    container,
+                    CONTAINER_NODE.CONSTRAINT,
+                    $enum.NODE_ALIGNMENT.SINGLE,
+                    1,
+                    container.children as T[]
+                )
+            )
         };
     }
 }

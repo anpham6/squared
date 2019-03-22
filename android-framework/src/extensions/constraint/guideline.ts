@@ -19,15 +19,18 @@ export default class Guideline<T extends android.base.View> extends squared.base
 
     public processNode(node: T, parent: T) {
         node.exclude({ procedure: $enum.NODE_PROCEDURE.CONSTRAINT });
-        const layout = new $Layout(
-            parent,
-            node,
-            CONTAINER_NODE.CONSTRAINT,
-            $enum.NODE_ALIGNMENT.ABSOLUTE,
-            node.length,
-            node.children as T[]
-        );
-        return { output: this.application.renderNode(layout) };
+        return {
+            output: this.application.renderNode(
+                new $Layout(
+                    parent,
+                    node,
+                    CONTAINER_NODE.CONSTRAINT,
+                    $enum.NODE_ALIGNMENT.ABSOLUTE,
+                    node.length,
+                    node.children as T[]
+                )
+            )
+        };
     }
 
     public afterConstraints() {

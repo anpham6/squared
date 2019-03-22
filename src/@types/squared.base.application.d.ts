@@ -1,4 +1,4 @@
-import { AppProcessing, AppSession, FileAsset, SessionData, UserSettings } from '../base/@types/application';
+import { AppProcessing, AppSession, FileAsset, NodeTemplate, SessionData, UserSettings } from '../base/@types/application';
 
 declare global {
     namespace squared.base {
@@ -26,12 +26,12 @@ declare global {
             finalize(): void;
             saveAllToDisk(): void;
             parseDocument(...elements: (string | HTMLElement)[]): FunctionMap<void>;
-            renderNode(layout: Layout<T>): string;
-            renderLayout(layout: Layout<T>, outerParent: T): string;
+            renderNode(layout: Layout<T>): NodeTemplate<T> | undefined;
+            renderLayout(layout: Layout<T>, outerParent: T): NodeTemplate<T> | undefined;
             addLayoutFile(filename: string, content: string, pathname: string, documentBase?: boolean): void;
             addIncludeFile(id: number, filename: string, content: string): void;
             addRenderLayout(layout: Layout<T>, outerParent?: T): boolean;
-            addRenderTemplate(parent: T, node: T, value: string, index?: number): boolean;
+            addRenderTemplate(parent: T, node: T, template: NodeTemplate<T> | undefined, index?: number): boolean;
             addImagePreload(element: HTMLImageElement | undefined): void;
             saveRenderPosition(parent: T): void;
             createNode(element: Element): T;

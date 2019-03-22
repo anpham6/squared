@@ -1,3 +1,5 @@
+import { NodeXmlTemplate } from '../../../../src/base/@types/application';
+
 import View from '../../view';
 
 import { CONTAINER_NODE } from '../../lib/enumeration';
@@ -18,7 +20,6 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
     }
 
     public processNode(node: T, parent: T) {
-        const target = !node.dataset.use ? node.dataset.target : undefined;
         const overflow: string[] = [];
         const scrollView: T[] = [];
         if (node.overflowX && node.overflowY) {
@@ -84,12 +85,16 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
                     break;
                 }
             }
-            item.render(i === 0 ? (target ? this.application.resolveTarget(target) : parent) : previous);
+            item.render(i === 0 ? (!node.dataset.use && node.dataset.target ? this.application.resolveTarget(node.dataset.target) : parent) : previous);
             item.unsetCache();
             this.application.addRenderTemplate(
                 (item.renderParent || parent) as T,
                 item,
-                this.application.controllerHandler.getEnclosingTag(item.controlName, item.id, target ? (i === 0 ? -1 : 0) : item.renderDepth, '')
+                <NodeXmlTemplate<T>> {
+                    type: $enum.NODE_TEMPLATE.XML,
+                    node: item,
+                    controlName: item.controlName
+                }
             );
             this.application.processing.cache.append(item);
         }

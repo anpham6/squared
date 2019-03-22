@@ -1,7 +1,10 @@
+import { NodeXmlTemplate } from '../../../src/base/@types/application';
+
 import Extension from '../extension';
 import Node from '../node';
 
 import { EXT_NAME } from '../lib/constant';
+import { NODE_TEMPLATE } from '../lib/enumeration';
 
 const $css = squared.lib.css;
 
@@ -29,7 +32,13 @@ export default class Substitute<T extends Node> extends Extension<T> {
         if (data.tag) {
             node.setControlType(data.tag);
             node.render(parent);
-            return { output: this.application.controllerHandler.renderNodeStatic(data.tag, node.renderDepth, {}, '', '', node, node.length > 0) };
+            return {
+                output: <NodeXmlTemplate<T>> {
+                    type: NODE_TEMPLATE.XML,
+                    node,
+                    controlName: data.tag
+                }
+            };
         }
         return undefined;
     }
