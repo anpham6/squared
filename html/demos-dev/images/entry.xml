@@ -48,6 +48,7 @@
                 android:paddingVertical="@dimen/text_padding_vertical"
                 style="@style/Text" />
             <Space
+                android:id="@+id/space_1"
                 android:layout_columnSpan="2"
                 android:layout_height="@dimen/space_layout_height"
                 android:layout_width="match_parent" />
@@ -78,7 +79,7 @@
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@+id/textview_18"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol14383"
+                    android:text="@string/__symbol70898"
                     style="@style/Plaintext" />
             </RelativeLayout>
             <LinearLayout 
@@ -144,6 +145,7 @@
                 </LinearLayout>
             </LinearLayout>
             <Space
+                android:id="@+id/space_2"
                 android:layout_columnSpan="2"
                 android:layout_height="@dimen/space_layout_height"
                 android:layout_width="match_parent" />
@@ -172,6 +174,7 @@
                     style="@style/Select.linearlayout_2" />
             </LinearLayout>
             <Space
+                android:id="@+id/space_3"
                 android:layout_columnSpan="2"
                 android:layout_height="@dimen/space_layout_height"
                 android:layout_width="match_parent" />
@@ -194,6 +197,7 @@
                 android:paddingVertical="@dimen/select_padding_vertical"
                 style="@style/Select" />
             <Space
+                android:id="@+id/space_4"
                 android:layout_columnSpan="2"
                 android:layout_height="@dimen/space_layout_height"
                 android:layout_width="match_parent" />
@@ -224,7 +228,7 @@
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@+id/textview_21"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol14383"
+                    android:text="@string/__symbol70898"
                     style="@style/Plaintext" />
             </RelativeLayout>
             <LinearLayout 
@@ -256,6 +260,7 @@
                     style="@style/Select" />
             </LinearLayout>
             <Space
+                android:id="@+id/space_5"
                 android:layout_columnSpan="2"
                 android:layout_height="@dimen/space_layout_height"
                 android:layout_width="match_parent" />
@@ -278,6 +283,7 @@
                 android:paddingVertical="@dimen/select_padding_vertical"
                 style="@style/Select" />
             <Space
+                android:id="@+id/space_6"
                 android:layout_columnSpan="2"
                 android:layout_height="@dimen/space_layout_height"
                 android:layout_width="match_parent" />
@@ -300,6 +306,7 @@
                 android:paddingVertical="@dimen/select_padding_vertical"
                 style="@style/Select" />
             <Space
+                android:id="@+id/space_7"
                 android:layout_columnSpan="2"
                 android:layout_height="@dimen/space_layout_height"
                 android:layout_width="match_parent" />
@@ -356,6 +363,7 @@
                 android:paddingVertical="@dimen/select_padding_vertical"
                 style="@style/Select" />
             <Space
+                android:id="@+id/space_8"
                 android:layout_columnSpan="2"
                 android:layout_height="@dimen/space_layout_height"
                 android:layout_width="match_parent" />
@@ -378,6 +386,7 @@
                 android:paddingVertical="@dimen/select_padding_vertical"
                 style="@style/Select" />
             <Space
+                android:id="@+id/space_9"
                 android:layout_columnSpan="2"
                 android:layout_height="@dimen/space_layout_height"
                 android:layout_width="match_parent" />
@@ -435,6 +444,7 @@
                     style="@style/Button_2" />
             </LinearLayout>
             <Space
+                android:id="@+id/space_10"
                 android:layout_columnSpan="2"
                 android:layout_height="@dimen/space_layout_height"
                 android:layout_width="match_parent" />
@@ -457,6 +467,7 @@
                 android:paddingVertical="@dimen/select_padding_vertical"
                 style="@style/Select" />
             <Space
+                android:id="@+id/space_11"
                 android:layout_columnSpan="2"
                 android:layout_height="@dimen/space_layout_height"
                 android:layout_width="match_parent" />
@@ -479,6 +490,7 @@
                 android:paddingVertical="@dimen/select_padding_vertical"
                 style="@style/Select" />
             <Space
+                android:id="@+id/space_12"
                 android:layout_columnSpan="2"
                 android:layout_height="@dimen/space_layout_height"
                 android:layout_width="match_parent" />
@@ -501,6 +513,7 @@
                 android:paddingVertical="@dimen/select_padding_vertical"
                 style="@style/Select" />
             <Space
+                android:id="@+id/space_13"
                 android:layout_columnSpan="2"
                 android:layout_height="@dimen/space_layout_height"
                 android:layout_width="match_parent" />
@@ -554,6 +567,7 @@
                     style="@style/Button_1" />
             </LinearLayout>
             <Space
+                android:id="@+id/space_14"
                 android:layout_columnSpan="2"
                 android:layout_height="@dimen/space_layout_height"
                 android:layout_width="match_parent" />
@@ -620,6 +634,7 @@
                     style="@style/Button_1" />
             </LinearLayout>
             <Space
+                android:id="@+id/space_15"
                 android:layout_columnSpan="2"
                 android:layout_height="@dimen/space_layout_height"
                 android:layout_width="match_parent" />
@@ -650,7 +665,7 @@
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@+id/textview_24"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol14383"
+                    android:text="@string/__symbol70898"
                     style="@style/Plaintext" />
             </RelativeLayout>
             <LinearLayout 
@@ -693,6 +708,7 @@
                     style="@style/Select" />
             </LinearLayout>
             <Space
+                android:id="@+id/space_16"
                 android:layout_columnSpan="2"
                 android:layout_height="@dimen/space_layout_height"
                 android:layout_width="match_parent" />
@@ -778,7 +794,7 @@
     <string name="app_name">android</string>
     <string name="__00_inactive">00 - Inactive</string>
     <string name="__01_active">01 - Active</string>
-    <string name="__symbol536">):</string>
+    <string name="__symbol70898">):</string>
     <string name="active">Active:</string>
     <string name="add">Add</string>
     <string name="all">All</string>

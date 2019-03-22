@@ -953,16 +953,17 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
     get tagName() {
         if (this._cached.tagName === undefined) {
+            const element = <HTMLInputElement> this._element;
             let value = '';
-            if (this._element) {
-                if (this._element.nodeName === '#text') {
+            if (element) {
+                if (element.nodeName === '#text') {
                     value = 'PLAINTEXT';
                 }
-                else if (this._element.tagName === 'INPUT') {
-                    value = (<HTMLInputElement> this._element).type;
+                else if (element.tagName === 'INPUT') {
+                    value = element.type;
                 }
                 else {
-                    value = this._element.tagName;
+                    value = element.tagName;
                 }
             }
             this._cached.tagName = value.toUpperCase();
@@ -1723,7 +1724,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get actualChildren() {
         if (this._cached.actualChildren === undefined) {
-            if (this.htmlElement) {
+            if (this.htmlElement && this.naturalElement) {
                 const actualChildren: T[] = [];
                 (<HTMLElement> this._element).childNodes.forEach((element: Element) => {
                     const node = $dom.getElementAsNode<T>(element);
@@ -1756,14 +1757,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get firstChild() {
-        if (this.htmlElement && this.naturalElement) {
-            const element = <HTMLElement> this._element;
-            for (let i = 0; i < element.childNodes.length; i++) {
-                const node = $dom.getElementAsNode<T>(<Element> element.childNodes[i]);
-                if (node) {
-                    return node;
-                }
-            }
+        if (this.htmlElement && this.naturalElement && this.actualChildren.length) {
+            return this.actualChildren[0];
         }
         else if (this.length) {
             return this.nodes[0];
@@ -1772,14 +1767,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get lastChild() {
-        if (this.htmlElement && this.naturalElement) {
-            const element = <HTMLElement> this._element;
-            for (let i = element.childNodes.length - 1; i >= 0; i--) {
-                const node = $dom.getElementAsNode<T>(<Element> element.childNodes[i]);
-                if (node && node.naturalElement) {
-                    return node;
-                }
-            }
+        if (this.htmlElement && this.naturalElement && this.actualChildren.length) {
+            return this.actualChildren[this.actualChildren.length - 1];
         }
         else if (this.length) {
             return this.nodes[this.nodes.length - 1];

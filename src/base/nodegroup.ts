@@ -3,8 +3,6 @@ import NodeList from './nodelist';
 
 import { NODE_ALIGNMENT } from './lib/enumeration';
 
-const $dom = squared.lib.dom;
-
 export default abstract class NodeGroup extends Node {
     public init() {
         if (this.length) {
@@ -56,13 +54,10 @@ export default abstract class NodeGroup extends Node {
     get firstChild() {
         const actualParent = this.actualParent;
         if (actualParent) {
-            const element = actualParent.element;
-            if (element) {
-                for (let i = 0; i < element.childNodes.length; i++) {
-                    const node = $dom.getElementAsNode<Node>(<Element> element.childNodes[i]);
-                    if (node && this.nodes.includes(node)) {
-                        return node;
-                    }
+            const nodes = this.nodes;
+            for (const node of actualParent.actualChildren) {
+                if (nodes.includes(node)) {
+                    return node;
                 }
             }
         }
@@ -74,14 +69,13 @@ export default abstract class NodeGroup extends Node {
 
     get lastChild() {
         const actualParent = this.actualParent;
-        if (actualParent && actualParent.element) {
-            const element = actualParent.element;
-            if (element) {
-                for (let i = element.childNodes.length - 1; i >= 0; i--) {
-                    const node = $dom.getElementAsNode<Node>(<Element> element.childNodes[i]);
-                    if (node && this.nodes.includes(node)) {
-                        return node;
-                    }
+        if (actualParent) {
+            const nodes = this.nodes;
+            const children = actualParent.actualChildren;
+            for (let i = children.length - 1; i >= 0; i--) {
+                const node = children[i];
+                if (nodes.includes(node)) {
+                    return node;
                 }
             }
         }

@@ -11,8 +11,17 @@ const $util = squared.lib.util;
 
 export default class VerticalAlign<T extends Node> extends Extension<T> {
     public condition(node: T) {
-        const nodes = node.filter(item => item.inlineVertical);
-        return nodes.length > 1 && nodes.some(item => $util.convertInt(item.verticalAlign) !== 0) && NodeList.linearX(node.children);
+        let valid = false;
+        let inlineVertical = 0;
+        for (const item of node) {
+            if (item.inlineVertical) {
+                inlineVertical++;
+                if ($util.convertInt(item.verticalAlign) !== 0) {
+                    valid = true;
+                }
+            }
+        }
+        return valid && inlineVertical > 1 && NodeList.linearData(node.children).linearX;
     }
 
     public processNode(node: T) {

@@ -2,7 +2,6 @@ import { ListData } from '../@types/extension';
 
 import Extension from '../extension';
 import Node from '../node';
-import NodeList from '../nodelist';
 
 import { EXT_NAME } from '../lib/constant';
 import { BOX_STANDARD, NODE_RESOURCE } from '../lib/enumeration';
@@ -23,20 +22,42 @@ export default abstract class List<T extends Node> extends Extension<T> {
     }
 
     public condition(node: T) {
-        return super.condition(node) && node.length > 0 && (
-            node.some(item => item.display === 'list-item' && (item.css('listStyleType') !== 'none' || hasSingleImage(item))) ||
-            node.every(item => item.tagName !== 'LI' && item.cssInitial('listStyleType') === 'none' && hasSingleImage(item))
-        ) && (
-            node.every(item => item.blockStatic) ||
-            node.every(item => item.inlineVertical) ||
-            node.every(item => item.floating) && NodeList.floated(node.children).size === 1 ||
-            node.every((item, index) => !item.floating && (
-                index === 0 ||
-                index === node.length - 1 ||
-                item.blockStatic ||
-                item.inlineFlow && (node.item(index - 1) as T).blockStatic && (node.item(index + 1) as T).blockStatic
-            ))
-        );
+        const length = node.length;
+        if (length && super.condition(node)) {
+            const floated = new Set<string>();
+            let blockStatic = 0;
+            let inlineVertical = 0;
+            let floating = 0;
+            let blockAlternate = 0;
+            let imageType = 0;
+            let listType = 0;
+            for (let i = 0; i < length; i++) {
+                const item = node.children[i];
+                const listStyleType = item.has('listStyleType');
+                const singleImage = hasSingleImage(item);
+                if (item.tagName !== 'LI' && !listStyleType && singleImage) {
+                    imageType++;
+                }
+                if (item.display === 'list-item' && (listStyleType || singleImage)) {
+                    listType++;
+                }
+                if (item.blockStatic) {
+                    blockStatic++;
+                }
+                if (item.inlineVertical) {
+                    inlineVertical++;
+                }
+                if (item.floating) {
+                    floated.add(item.float);
+                    floating++;
+                }
+                else if (i === 0 || i === length - 1 || item.blockStatic || node.children[i - 1].blockStatic && node.children[i + 1].blockStatic) {
+                    blockAlternate++;
+                }
+            }
+            return (imageType === length || listType > 0) && (blockStatic === length || inlineVertical === length || floating === length && floated.size === 1 || blockAlternate === length);
+        }
+        return false;
     }
 
     public processNode(node: T) {

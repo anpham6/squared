@@ -20,7 +20,6 @@ export default class <T extends android.base.View> extends squared.base.extensio
                 node.length,
                 node.children as T[]
             );
-            layout.floated = layout.getFloated(true);
             return { output: this.application.renderNode(layout) };
         }
         return undefined;

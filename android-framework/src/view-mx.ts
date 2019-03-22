@@ -586,33 +586,50 @@ export default (Base: Constructor<squared.base.Node>) => {
                         this.android('layout_width', this.actualWidth > renderParent.box.width && this.multiline && this.alignParent('left') ? 'match_parent' : 'wrap_content', false);
                         return;
                     }
-                    else if (
-                        !this.pageFlow ||
-                        this.inputElement ||
-                        renderParent.is(CONTAINER_NODE.GRID) ||
-                        this.groupParent && this.renderChildren.every(node => node.inlineVertical) ||
-                        this.tableElement || parent.gridElement || parent.flexElement)
-                    {
-                        this.android('layout_width', 'wrap_content', false);
-                        return;
-                    }
-                    else if (
-                        blockStatic && (
-                            this.linear.width >= parent.box.width ||
-                            this.visibleStyle.background ||
-                            this.layoutVertical && !this.autoMargin.horizontal ||
-                            this.gridElement ||
-                            this.flexElement ||
-                            parent.documentBody ||
-                            parent.has('width', $enum.CSS_STANDARD.PERCENT) ||
-                            parent.blockStatic && (this.singleChild || this.alignedVertically(this.previousSiblings()) ||
-                            !this.documentRoot && renderChildren.some(node => node.layoutVertical && !node.autoMargin.horizontal && !node.hasWidth && !node.floating))
-                        ) ||
-                        this.groupParent && (this.layoutVertical && renderChildren.some(node => node.blockStatic) || renderChildren.some(node => !(node.plainText && node.multiline) && node.linear.width >= this.documentParent.box.width)) ||
-                        this.layoutFrame && ($NodeList.floated(renderChildren).size === 2 || this.hasAlign($enum.NODE_ALIGNMENT.COLUMN) || renderChildren.some(node => node.blockStatic && (node.autoMargin.leftRight || node.rightAligned))))
-                    {
-                        this.android('layout_width', 'match_parent', false);
-                        return;
+                    else {
+                        let inlineVertical = 0;
+                        let blockVertical = 0;
+                        let boxHorizotnal = 0;
+                        if (this.groupParent) {
+                            for (const node of renderChildren) {
+                                if (node.inlineVertical) {
+                                    inlineVertical++;
+                                }
+                                if (node.blockStatic) {
+                                    blockVertical++;
+                                }
+                                if (!node.plainText && !node.multiline && node.linear.width >= this.documentParent.box.width) {
+                                    boxHorizotnal++;
+                                }
+                            }
+                        }
+                        if (!this.pageFlow ||
+                            this.inputElement ||
+                            renderParent.is(CONTAINER_NODE.GRID) ||
+                            this.groupParent && inlineVertical === renderChildren.length ||
+                            this.tableElement || parent.gridElement || parent.flexElement)
+                        {
+                            this.android('layout_width', 'wrap_content', false);
+                            return;
+                        }
+                        else if (
+                            blockStatic && (
+                                this.linear.width >= parent.box.width ||
+                                this.visibleStyle.background ||
+                                this.layoutVertical && !this.autoMargin.horizontal ||
+                                this.gridElement ||
+                                this.flexElement ||
+                                parent.documentBody ||
+                                parent.has('width', $enum.CSS_STANDARD.PERCENT) ||
+                                parent.blockStatic && (this.singleChild || this.alignedVertically(this.previousSiblings()) ||
+                                !this.documentRoot && renderChildren.some(node => node.layoutVertical && !node.autoMargin.horizontal && !node.hasWidth && !node.floating))
+                            ) ||
+                            this.groupParent && (boxHorizotnal > 0 || this.layoutVertical && blockVertical > 0) ||
+                            this.layoutFrame && (this.hasAlign($enum.NODE_ALIGNMENT.COLUMN) || $NodeList.linearData(renderChildren, true).floated.size === 2 || renderChildren.some(node => node.blockStatic && (node.autoMargin.leftRight || node.rightAligned))))
+                        {
+                            this.android('layout_width', 'match_parent', false);
+                            return;
+                        }
                     }
                 }
                 this.android('layout_width', 'wrap_content', false);

@@ -1,3 +1,5 @@
+import { LinearData } from './nodelist';
+
 import Node from './node';
 import NodeList from './nodelist';
 
@@ -13,10 +15,7 @@ export default class Layout<T extends Node> extends squared.lib.base.Container<T
 
     public orderAltered = false;
 
-    private _floated?: Set<string>;
-    private _cleared?: Map<T, string>;
-    private _linearX?: boolean;
-    private _linearY?: boolean;
+    private _linearData!: LinearData<T>;
 
     constructor(
         public parent: T,
@@ -30,9 +29,13 @@ export default class Layout<T extends Node> extends squared.lib.base.Container<T
     }
 
     public init() {
-        this.floated = this.getFloated();
-        this.cleared = this.getCleared();
-        this.linearX = this.isLinearX();
+        this._linearData = NodeList.linearData(this.children);
+        if (this._linearData.floated.size) {
+            this.add(NODE_ALIGNMENT.FLOAT);
+        }
+        if (this.every(item => item.float === 'right')) {
+            this.add(NODE_ALIGNMENT.RIGHT);
+        }
     }
 
     public setType(containerType: number, ...alignmentType: number[]) {
@@ -62,63 +65,35 @@ export default class Layout<T extends Node> extends squared.lib.base.Container<T
         return this;
     }
 
-    public getFloated(parent = false) {
-        return parent ? NodeList.floatedAll(this.parent) : NodeList.floated(this.children);
-    }
-
-    public getCleared(parent = false) {
-        return parent ? NodeList.clearedAll(this.parent) : NodeList.cleared(this.children);
-    }
-
-    public isLinearX() {
-        return NodeList.linearX(this.children);
-    }
-
-    public isLinearY() {
-        return NodeList.linearY(this.children);
-    }
-
-    set floated(value) {
-        if (value.size) {
-            this.add(NODE_ALIGNMENT.FLOAT);
-        }
-        else {
-            this.delete(NODE_ALIGNMENT.FLOAT);
-        }
-        if (this.every(item => item.float === 'right')) {
-            this.add(NODE_ALIGNMENT.RIGHT);
-        }
-        else {
-            this.delete(NODE_ALIGNMENT.RIGHT);
-        }
-        this._floated = value;
-    }
     get floated() {
-        return this._floated || this.getFloated();
+        if (this._linearData === undefined) {
+            this.init();
+        }
+        return this._linearData.floated;
     }
 
-    set cleared(value) {
-        this._cleared = value;
-    }
     get cleared() {
-        return this._cleared || this.getCleared();
+        if (this._linearData === undefined) {
+            this.init();
+        }
+        return this._linearData.cleared;
+    }
+
+    get linearX() {
+        if (this._linearData === undefined) {
+            this.init();
+        }
+        return this._linearData.linearX;
+    }
+
+    get linearY() {
+        if (this._linearData === undefined) {
+            this.init();
+        }
+        return this._linearData.linearY;
     }
 
     get visible() {
         return this.filter(node => node.visible);
-    }
-
-    set linearX(value) {
-        this._linearX = value;
-    }
-    get linearX() {
-        return this._linearX || this.isLinearX();
-    }
-
-    set linearY(value) {
-        this._linearY = value;
-    }
-    get linearY() {
-        return this._linearY || this.isLinearY();
     }
 }

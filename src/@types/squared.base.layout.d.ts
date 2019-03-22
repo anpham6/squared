@@ -10,19 +10,15 @@ declare global {
             itemCount: number;
             rowCount: number;
             columnCount: number;
-            floated: Set<string>;
-            cleared: Map<T, string>;
-            linearX: boolean;
-            linearY: boolean;
             renderIndex: number;
             orderAltered: boolean;
+            readonly linearX: boolean;
+            readonly linearY: boolean;
+            readonly floated: Set<string>;
+            readonly cleared: Map<T, string>;
             readonly visible: T[];
             init(): void;
             setType(containerType: number, ...alignmentType: number[]): void;
-            getFloated(parent?: boolean): Set<string>;
-            getCleared(parent?: boolean): Map<T, string>;
-            isLinearX(): boolean;
-            isLinearY(): boolean;
             add(value: number): number;
             delete(value: number): number;
         }

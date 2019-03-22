@@ -72,7 +72,7 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                     return true;
                 }
                 else if (multipleLength > 0) {
-                    return node.every(item => item.length > 0 && NodeList.linearX(item.children));
+                    return node.every(item => item.length > 0 && NodeList.linearData(item.children).linearX);
                 }
             }
         }

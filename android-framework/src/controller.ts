@@ -1343,7 +1343,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             const alignmentSingle = node.hasAlign($enum.NODE_ALIGNMENT.SEGMENTED) || !node.groupParent && node.inline && node.linear.right <= node.documentParent.box.right;
             const firefoxEdge = $util.isUserAgent($util.USER_AGENT.FIREFOX | $util.USER_AGENT.EDGE);
             const checkLineWrap = node.css('whiteSpace') !== 'nowrap';
-            const cleared = $NodeList.cleared(children);
+            const cleared = $NodeList.linearData(children, true).cleared;
             const rangeMultiLine = new Set<T>();
             let rowWidth = 0;
             let rowPreviousLeft: T | undefined;
@@ -1757,7 +1757,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         const chainHorizontal = $NodeList.partitionRows(children);
         const parent = $NodeList.actualParent(children) || node;
         const floating = node.hasAlign($enum.NODE_ALIGNMENT.FLOAT);
-        const cleared = chainHorizontal.length > 1 && node.hasAlign($enum.NODE_ALIGNMENT.NOWRAP) ? $NodeList.clearedAll(parent) : new Map<T, string>();
+        const cleared = chainHorizontal.length > 1 && node.hasAlign($enum.NODE_ALIGNMENT.NOWRAP) ? $NodeList.linearData(parent.actualChildren, true).cleared : new Map<T, string>();
         let reverse = false;
         if (chainHorizontal.length > 1) {
             node.alignmentType |= $enum.NODE_ALIGNMENT.MULTILINE;

@@ -2,6 +2,13 @@ import Node from './node';
 
 const $util = squared.lib.util;
 
+export interface LinearData<T> {
+    linearX: boolean;
+    linearY: boolean;
+    floated: Set<string>;
+    cleared: Map<T, string>;
+}
+
 export default class NodeList<T extends Node> extends squared.lib.base.Container<T> implements squared.base.NodeList<T> {
     public static actualParent<T extends Node>(list: T[]) {
         for (const node of list) {
@@ -79,222 +86,132 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
         });
     }
 
-    public static floated<T extends Node>(list: T[]) {
-        const result = new Set<string>();
-        for (const node of list) {
-            if (node.floating) {
-                result.add(node.float);
-            }
-        }
-        return result;
-    }
-
-    public static cleared<T extends Node>(list: T[], parent = true) {
-        if (parent && list.length > 1) {
-            const actualParent = this.actualParent(list);
-            if (actualParent) {
-                const nodes: T[] = [];
-                const listEnd = list[list.length - 1];
-                let valid = false;
-                const children = actualParent.actualChildren;
-                for (let i = 0; i < children.length; i++) {
-                    const node = children[i] as T;
-                    if (node === list[0]) {
-                        valid = true;
-                    }
-                    if (valid) {
-                        nodes.push(node);
-                    }
-                    if (node === listEnd) {
-                        break;
-                    }
-                }
-                if (nodes.length >= list.length) {
-                    list = nodes;
-                }
-            }
-        }
-        const result = new Map<T, string>();
+    public static linearData<T extends Node>(list: T[], clearOnly = false): LinearData<T> {
+        const nodes: T[] = [];
+        const floating = new Set<string>();
+        const clearable: ObjectMap<Undefined<T>> = {};
         const floated = new Set<string>();
-        const previous: ObjectMap<Undefined<T>> = {};
+        const cleared = new Map<T, string>();
+        let linearX = false;
+        let linearY = false;
         for (const node of list) {
             if (node.pageFlow) {
-                if (floated.size) {
+                if (floating.size) {
                     const previousFloat = [];
                     const clear = node.css('clear');
                     switch (clear) {
                         case 'left':
-                            previousFloat.push(previous.left);
+                            previousFloat.push(clearable.left);
                             break;
                         case 'right':
-                            previousFloat.push(previous.right);
+                            previousFloat.push(clearable.right);
                             break;
                         case 'both':
-                            previousFloat.push(previous.left, previous.right);
+                            previousFloat.push(clearable.left, clearable.right);
                             break;
                     }
                     for (const item of previousFloat) {
-                        if (item && floated.has(item.float) && !node.floating && node.linear.top > item.linear.bottom) {
-                            floated.delete(item.float);
-                            previous[item.float] = undefined;
+                        if (item && floating.has(item.float) && !node.floating && node.linear.top >= item.linear.bottom) {
+                            floating.delete(item.float);
+                            clearable[item.float] = undefined;
                         }
                     }
                     if (clear === 'both') {
-                        result.set(node, floated.size === 2 ? 'both' : floated.values().next().value);
-                        floated.clear();
-                        previous.left = undefined;
-                        previous.right = undefined;
+                        cleared.set(node, floating.size === 2 ? 'both' : floating.values().next().value);
+                        floating.clear();
+                        clearable.left = undefined;
+                        clearable.right = undefined;
                     }
-                    else if (floated.has(clear)) {
-                        result.set(node, clear);
-                        floated.delete(clear);
-                        previous[clear] = undefined;
+                    else if (floating.has(clear)) {
+                        cleared.set(node, clear);
+                        floating.delete(clear);
+                        clearable[clear] = undefined;
                     }
                 }
                 if (node.floating) {
+                    floating.add(node.float);
                     floated.add(node.float);
-                    previous[node.float] = node;
+                    clearable[node.float] = node;
                 }
+                nodes.push(node);
             }
         }
-        return result;
-    }
-
-    public static floatedAll<T extends Node>(parent: T) {
-        return this.floated($util.filterArray(parent.actualChildren as T[], item => item.pageFlow));
-    }
-
-    public static clearedAll<T extends Node>(parent: T) {
-        return this.cleared($util.filterArray(parent.actualChildren as T[], item => item.pageFlow), false);
-    }
-
-    public static linearX<T extends Node>(list: T[], segmented = false) {
-        const nodes: T[] = [];
-        let hasFloat = false;
-        for (const item of list) {
-            if (item.pageFlow) {
-                nodes.push(item);
-            }
-            if (item.floating) {
-                hasFloat = true;
-            }
-        }
-        switch (nodes.length) {
-            case 0:
-                return false;
-            case 1:
-                return true;
-            default:
-                const parent = this.actualParent(nodes);
-                if (parent) {
-                    const cleared = hasFloat ? this.clearedAll(parent) : undefined;
-                    for (let i = 1; i < nodes.length; i++) {
-                        const previousSiblings = nodes[i].previousSiblings() as T[];
-                        if (segmented) {
-                            $util.spliceArray(previousSiblings, item => !list.includes(item));
-                        }
-                        if (nodes[i].alignedVertically(previousSiblings, undefined, cleared)) {
-                            return false;
-                        }
+        if (nodes.length > 0) {
+            linearX = true;
+            linearY = true;
+            if (!clearOnly) {
+                const siblings = [nodes[0]];
+                for (let i = 1; i < nodes.length; i++) {
+                    const previousSiblings = nodes[i].previousSiblings() as T[];
+                    if (nodes[i].alignedVertically(previousSiblings, siblings, cleared)) {
+                        linearX = false;
                     }
-                    if (hasFloat) {
-                        let boxLeft = Number.POSITIVE_INFINITY;
-                        let boxRight = Number.NEGATIVE_INFINITY;
-                        let floatLeft = Number.NEGATIVE_INFINITY;
-                        let floatRight = Number.POSITIVE_INFINITY;
-                        for (const node of nodes) {
-                            boxLeft = Math.min(boxLeft, node.linear.left);
-                            boxRight = Math.max(boxRight, node.linear.right);
-                            if (node.floating) {
-                                if (node.float === 'left') {
-                                    floatLeft = Math.max(floatLeft, node.linear.right);
-                                }
-                                else {
-                                    floatRight = Math.min(floatRight, node.linear.left);
-                                }
+                    else {
+                        linearY = false;
+                    }
+                    siblings.push(nodes[i]);
+                }
+                if (linearX && floated.size) {
+                    let boxLeft = Number.POSITIVE_INFINITY;
+                    let boxRight = Number.NEGATIVE_INFINITY;
+                    let floatLeft = Number.NEGATIVE_INFINITY;
+                    let floatRight = Number.POSITIVE_INFINITY;
+                    for (const node of nodes) {
+                        boxLeft = Math.min(boxLeft, node.linear.left);
+                        boxRight = Math.max(boxRight, node.linear.right);
+                        if (node.floating) {
+                            if (node.float === 'left') {
+                                floatLeft = Math.max(floatLeft, node.linear.right);
                             }
-                        }
-                        for (let i = 0, j = 0, k = 0, l = 0, m = 0; i < nodes.length; i++) {
-                            const item = nodes[i];
-                            if (Math.floor(item.linear.left) <= boxLeft) {
-                                j++;
-                            }
-                            if (Math.ceil(item.linear.right) >= boxRight) {
-                                k++;
-                            }
-                            if (!item.floating) {
-                                if (item.linear.left === floatLeft) {
-                                    l++;
-                                }
-                                if (item.linear.right === floatRight) {
-                                    m++;
-                                }
-                            }
-                            if (i === 0) {
-                                continue;
-                            }
-                            if (j === 2 || k === 2 || l === 2 || m === 2) {
-                                return false;
-                            }
-                            const previous = nodes[i - 1];
-                            if (previous.floating && item.linear.top >= previous.linear.bottom || $util.withinRange(item.linear.left, previous.linear.left)) {
-                                return false;
+                            else {
+                                floatRight = Math.min(floatRight, node.linear.left);
                             }
                         }
                     }
-                    return true;
-                }
-                return false;
-        }
-    }
-
-    public static linearY<T extends Node>(list: T[], segmented = false) {
-        const nodes: T[] = [];
-        let hasFloat = false;
-        for (const item of list) {
-            if (item.pageFlow) {
-                nodes.push(item);
-            }
-            if (item.floating) {
-                hasFloat = true;
-            }
-        }
-        switch (nodes.length) {
-            case 0:
-                return false;
-            case 1:
-                return true;
-            default:
-                const parent = this.actualParent(nodes);
-                if (parent) {
-                    const cleared = hasFloat ? this.clearedAll(parent) : undefined;
-                    for (let i = 1; i < nodes.length; i++) {
-                        const previousSiblings = nodes[i].previousSiblings() as T[];
-                        if (segmented) {
-                            $util.spliceArray(previousSiblings, item => !list.includes(item));
+                    for (let i = 0, j = 0, k = 0, l = 0, m = 0; i < nodes.length; i++) {
+                        const item = nodes[i];
+                        if (Math.floor(item.linear.left) <= boxLeft) {
+                            j++;
                         }
-                        if (!nodes[i].alignedVertically(previousSiblings, nodes, cleared)) {
-                            return false;
+                        if (Math.ceil(item.linear.right) >= boxRight) {
+                            k++;
+                        }
+                        if (!item.floating) {
+                            if (item.linear.left === floatLeft) {
+                                l++;
+                            }
+                            if (item.linear.right === floatRight) {
+                                m++;
+                            }
+                        }
+                        if (i === 0) {
+                            continue;
+                        }
+                        if (j === 2 || k === 2 || l === 2 || m === 2) {
+                            linearX = false;
+                            break;
+                        }
+                        const previous = nodes[i - 1];
+                        if (previous.floating && item.linear.top >= previous.linear.bottom || $util.withinRange(item.linear.left, previous.linear.left)) {
+                            linearX = false;
+                            break;
                         }
                     }
-                    return true;
                 }
-                return false;
+            }
         }
+        return {
+            linearX,
+            linearY,
+            cleared,
+            floated
+        };
     }
 
     public static partitionRows<T extends Node>(list: T[]) {
-        let children: T[];
-        let cleared: Map<T, string>;
         const parent = this.actualParent(list);
-        if (parent) {
-            children = parent.actualChildren as T[];
-            cleared = this.clearedAll(parent);
-        }
-        else {
-            children = list;
-            cleared = this.cleared(list);
-        }
+        const children = parent ? parent.actualChildren as T[] : list;
+        const cleared = this.linearData(list, true).cleared;
         const groupParent = $util.filterArray(list, node => node.groupParent);
         const result: T[][] = [];
         let row: T[] = [];
@@ -335,10 +252,8 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                         row = [];
                     }
                 }
-                else {
-                    if (list.includes(node)) {
-                        row.push(node);
-                    }
+                else if (list.includes(node)) {
+                    row.push(node);
                 }
             }
             if (i === children.length - 1 && row.length) {

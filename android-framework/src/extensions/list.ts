@@ -28,7 +28,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             node.length,
             node.children as T[]
         );
-        if ($NodeList.linearY(layout.children)) {
+        if (layout.linearY) {
             layout.rowCount = node.length;
             layout.columnCount = node.some(item => item.css('listStylePosition') === 'inside') ? 3 : 2;
             layout.setType(CONTAINER_NODE.GRID, $enum.NODE_ALIGNMENT.AUTO_LAYOUT);
@@ -205,15 +205,15 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 node.android('layout_columnWeight', '1');
             }
             if (node.length) {
-                const linearX = $NodeList.linearX(node.children);
-                if (linearX || $NodeList.linearY(node.children)) {
+                const linearData = $NodeList.linearData(node.children);
+                if (linearData.linearX || linearData.linearY) {
                     return {
                         output: this.application.renderNode(
                             new $Layout(
                                 parent,
                                 node,
                                 CONTAINER_NODE.LINEAR,
-                                linearX ? $enum.NODE_ALIGNMENT.HORIZONTAL : $enum.NODE_ALIGNMENT.VERTICAL,
+                                linearData.linearX ? $enum.NODE_ALIGNMENT.HORIZONTAL : $enum.NODE_ALIGNMENT.VERTICAL,
                                 node.length,
                                 node.children as T[]
                             )
