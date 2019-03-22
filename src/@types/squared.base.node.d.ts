@@ -22,7 +22,6 @@ declare global {
             controlId: string;
             tagName: string;
             controlName: string;
-            renderDepth: number;
             inlineText: boolean;
             baseline: boolean;
             multiline: boolean;

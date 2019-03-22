@@ -439,7 +439,6 @@ export default (Base: Constructor<squared.base.Node>) => {
             node.visible = this.visible;
             node.excluded = this.excluded;
             node.rendered = this.rendered;
-            node.renderDepth = this.renderDepth;
             node.renderParent = this.renderParent;
             node.documentParent = this.documentParent;
             node.documentRoot = this.documentRoot;

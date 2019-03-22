@@ -104,7 +104,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
         node.mergeGravity('layout_gravity', 'fill');
         if (spaceSpan > 0) {
             const controller = <android.base.Controller<T>> this.application.controllerHandler;
-            controller.addAfterOutsideTemplate(node.id, controller.renderSpace(parent.renderDepth + 1, 'wrap_content', 'wrap_content', spaceSpan));
+            controller.addAfterOutsideTemplate(node.id, controller.renderSpace('wrap_content', 'wrap_content', spaceSpan));
         }
         return undefined;
     }

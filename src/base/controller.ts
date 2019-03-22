@@ -35,7 +35,7 @@ export default abstract class Controller<T extends Node> implements squared.base
     public abstract sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
     public abstract renderNode(layout: Layout<T>): NodeTemplate<T> | undefined;
     public abstract renderNodeGroup(layout: Layout<T>): NodeTemplate<T> | undefined;
-    public abstract renderNodeStatic(controlName: string, depth: number, options?: ExternalData, width?: string, height?: string): string;
+    public abstract renderNodeStatic(controlName: string, options?: ExternalData, width?: string, height?: string): string;
     public abstract setConstraints(): void;
     public abstract finalize(data: SessionData<NodeList<T>>): void;
     public abstract createNodeGroup(node: T, children: T[], parent: T): T;
@@ -176,20 +176,20 @@ export default abstract class Controller<T extends Node> implements squared.base
         }
     }
 
-    public getBeforeOutsideTemplate(id: number): string {
-        return this._beforeOutside[id] ? this._beforeOutside[id].join('') : '';
+    public getBeforeOutsideTemplate(id: number, depth = 0): string {
+        return this._beforeOutside[id] ? $xml.pushIndent(this._beforeOutside[id].join(''), depth) : '';
     }
 
-    public getBeforeInsideTemplate(id: number): string {
-        return this._beforeInside[id] ? this._beforeInside[id].join('') : '';
+    public getBeforeInsideTemplate(id: number, depth = 0): string {
+        return this._beforeInside[id] ? $xml.pushIndent(this._beforeInside[id].join(''), depth) : '';
     }
 
-    public getAfterInsideTemplate(id: number): string {
-        return this._afterInside[id] ? this._afterInside[id].join('') : '';
+    public getAfterInsideTemplate(id: number, depth = 0): string {
+        return this._afterInside[id] ? $xml.pushIndent(this._afterInside[id].join(''), depth) : '';
     }
 
-    public getAfterOutsideTemplate(id: number): string {
-        return this._afterOutside[id] ? this._afterOutside[id].join('') : '';
+    public getAfterOutsideTemplate(id: number, depth = 0): string {
+        return this._afterOutside[id] ? $xml.pushIndent(this._afterOutside[id].join(''), depth) : '';
     }
 
     public hasAppendProcessing(id: number) {
@@ -202,28 +202,31 @@ export default abstract class Controller<T extends Node> implements squared.base
         for (let i = 0; i < templates.length; i++) {
             const item = templates[i];
             if (item) {
+                const node = item.node;
                 switch (item.type) {
                     case NODE_TEMPLATE.XML: {
-                        const node = item.node;
                         const controlName = (<NodeXmlTemplate<T>> item).controlName;
-                        let template = indent + `<${controlName} ${(depth === 0 ? '{#0} ' : '') + (this.userSettings.showAttributes ? node.extractAttributes(depth + 1) : '')}`;
+                        const attributes = (<NodeXmlTemplate<T>> item).attributes;
+                        let template = indent + `<${controlName} ${(depth === 0 ? '{#0} ' : '') + (this.userSettings.showAttributes ? (attributes ? $xml.pushIndent(attributes, depth + 1) : node.extractAttributes(depth + 1)) : '')}`;
                         if (node.renderTemplates) {
                             template += '>\n' +
-                                        this.getBeforeInsideTemplate(node.id) +
+                                        this.getBeforeInsideTemplate(node.id, depth) +
                                         this.cascadeDocument(this.sortRenderPosition(node, <NodeTemplate<T>[]> node.renderTemplates), depth + 1) +
-                                        this.getAfterInsideTemplate(node.id) +
+                                        this.getAfterInsideTemplate(node.id, depth) +
                                         indent + `</${controlName}>\n`;
                         }
                         else {
                             template += ' />\n';
                         }
-                        output += this.getBeforeOutsideTemplate(node.id) + template + this.getAfterOutsideTemplate(node.id);
+                        output += this.getBeforeOutsideTemplate(node.id, depth) +
+                                  template +
+                                  this.getAfterOutsideTemplate(node.id, depth);
                         break;
                     }
                     case NODE_TEMPLATE.INCLUDE: {
                         const content = (<NodeIncludeTemplate<T>> item).content;
                         if (content) {
-                            output += (<NodeIncludeTemplate<T>> item).indent ? $xml.pushIndent(content, depth) : content;
+                            output += $xml.pushIndent(content, depth);
                         }
                         break;
                     }
@@ -233,11 +236,10 @@ export default abstract class Controller<T extends Node> implements squared.base
         return output;
     }
 
-    public getEnclosingTag(type: number, controlName: string, depth?: number, attributeXml?: string, innerXml?: string) {
+    public getEnclosingTag(type: number, controlName: string, attributeXml = '', innerXml?: string) {
         switch (type) {
             case NODE_TEMPLATE.XML:
-                const indent = depth ? '\t'.repeat(depth) : '';
-                return indent + '<' + controlName + attributeXml + (innerXml !== undefined ? '>\n' + (innerXml || '{:0}') + indent + '</' + controlName + '>\n' : ' />\n');
+                return '<' + controlName + attributeXml + (innerXml ? '>\n' + innerXml + '</' + controlName + '>\n' : ' />\n');
         }
         return '';
     }

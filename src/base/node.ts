@@ -56,7 +56,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     protected abstract readonly _boxAdjustment: BoxModel;
     protected abstract readonly _boxReset: BoxModel;
 
-    private _renderDepth = -1;
     private _data = {};
     private _excludeSection = 0;
     private _excludeProcedure = 0;
@@ -193,7 +192,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public render(parent?: T) {
         this.renderParent = parent;
-        this.renderDepth = this.documentRoot || parent === undefined || parent.dataset.target ? 0 : parent.renderDepth + 1;
         this.rendered = true;
     }
 
@@ -1101,13 +1099,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
     get renderAs() {
         return this._renderAs;
-    }
-
-    set renderDepth(value) {
-        this._renderDepth = value;
-    }
-    get renderDepth() {
-        return this._renderDepth !== -1 ? this._renderDepth : 0;
     }
 
     get dataset(): DOMStringMap {

@@ -36,8 +36,11 @@ export function formatPlaceholder(id: string | number, symbol = ':') {
 }
 
 export function pushIndent(value: string, depth: number, char = '\t') {
-    const indent = char.repeat(depth);
-    return joinMap(value.split('\n'), line => line !== '' ? indent + line : '');
+    if (depth > 0) {
+        const indent = char.repeat(depth);
+        return joinMap(value.split('\n'), line => line !== '' ? indent + line : '');
+    }
+    return value;
 }
 
 export function replaceIndent(value: string, depth: number, pattern: RegExp) {

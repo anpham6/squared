@@ -1066,7 +1066,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         };
     }
 
-    public renderNodeStatic(controlName: string, depth: number, options?: ExternalData, width?: string, height?: string) {
+    public renderNodeStatic(controlName: string, options?: ExternalData, width?: string, height?: string) {
         const node = new View(0, undefined, this.afterInsertNode) as T;
         node.setControlType(controlName);
         if (width !== '') {
@@ -1082,12 +1082,11 @@ export default class Controller<T extends View> extends squared.base.Controller<
         return this.getEnclosingTag(
             $enum.NODE_TEMPLATE.XML,
             controlName,
-            depth,
-            this.userSettings.showAttributes ? node.extractAttributes(depth + 1) : undefined
+            this.userSettings.showAttributes ? node.extractAttributes(1) : undefined
         );
     }
 
-    public renderSpace(depth: number, width: string, height = '', columnSpan = 0, rowSpan = 0, options?: ViewAttribute) {
+    public renderSpace(width: string, height = '', columnSpan = 0, rowSpan = 0, options?: ViewAttribute) {
         options = createViewAttribute(options);
         if ($util.isPercent(width)) {
             options.android.layout_columnWeight = (parseFloat(width) / 100).toPrecision(this.localSettings.floatPrecision);
@@ -1103,7 +1102,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         if (rowSpan > 0) {
             options.android.layout_rowSpan = rowSpan.toString();
         }
-        return this.renderNodeStatic(CONTAINER_ANDROID.SPACE, depth, options, width, height || undefined);
+        return this.renderNodeStatic(CONTAINER_ANDROID.SPACE, options, width, height || undefined);
     }
 
     public addGuideline(node: T, parent: T, orientation = '', percent = false, opposite = false) {
@@ -1239,7 +1238,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             [beginPercent]: usePercent ? location.toString() : $util.formatPX(location)
                         }
                     });
-                    this.addAfterOutsideTemplate(node.id, this.renderNodeStatic(CONTAINER_ANDROID.GUIDELINE, node.renderDepth, options));
+                    this.addAfterOutsideTemplate(node.id, this.renderNodeStatic(CONTAINER_ANDROID.GUIDELINE, options));
                     const documentId: string = options['documentId'];
                     node.anchor(LT, documentId, true);
                     node.anchorDelete(RB);

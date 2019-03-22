@@ -59,7 +59,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                 node.renderTemplates[openData.index] = <NodeIncludeTemplate<T>> {
                                     type: $enum.NODE_TEMPLATE.INCLUDE,
                                     node: templates[0].node,
-                                    content: controller.renderNodeStatic('include', 0, { layout: `@layout/${openData.name}` }, '', ''),
+                                    content: controller.renderNodeStatic('include', { layout: `@layout/${openData.name}` }, '', ''),
                                     indent: true
                                 };
                                 if (!merge && !openData.item.documentRoot) {
@@ -67,7 +67,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                 }
                                 let output = controller.cascadeDocument(templates, depth);
                                 if (merge) {
-                                    output = controller.getEnclosingTag($enum.NODE_TEMPLATE.XML, 'merge', 0, getRootNs(output), output);
+                                    output = controller.getEnclosingTag($enum.NODE_TEMPLATE.XML, 'merge', getRootNs(output), output);
                                 }
                                 this.application.addIncludeFile(openData.item.id, openData.name, output);
                                 close.splice(j, 1);

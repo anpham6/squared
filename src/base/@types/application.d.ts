@@ -186,5 +186,4 @@ export interface NodeXmlTemplate<T extends squared.base.Node> extends NodeTempla
 
 export interface NodeIncludeTemplate<T extends squared.base.Node> extends NodeTemplate<T> {
     content: string;
-    indent?: boolean;
 }

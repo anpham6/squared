@@ -10,7 +10,7 @@ declare global {
             checkConstraintHorizontal(data: squared.base.Layout<T>): boolean;
             checkRelativeHorizontal(data: squared.base.Layout<T>): boolean;
             addGuideline(node: T, parent: T, orientation?: string, percent?: boolean, opposite?: boolean): void;
-            renderSpace(depth: number, width: string, height?: string, columnSpan?: number, rowSpan?: number, options?: ViewAttribute): string;
+            renderSpace(width: string, height?: string, columnSpan?: number, rowSpan?: number, options?: ViewAttribute): string;
             createNodeWrapper(node: T, parent?: T, controlName?: string, containerType?: number): T;
         }
 

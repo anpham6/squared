@@ -132,7 +132,6 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         ordinal.id,
                         controller.renderNodeStatic(
                             CONTAINER_ANDROID.SPACE,
-                            parent.renderDepth + 1,
                             {
                                 android: {
                                     minWidth: $util.formatPX(minWidth),
@@ -257,7 +256,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 });
                 controller.addBeforeOutsideTemplate(
                     item.id,
-                    controller.renderNodeStatic(CONTAINER_ANDROID.SPACE, item.renderDepth, options, 'match_parent', $util.formatPX(spaceHeight)),
+                    controller.renderNodeStatic(CONTAINER_ANDROID.SPACE, options, 'match_parent', $util.formatPX(spaceHeight)),
                     0
                 );
             }

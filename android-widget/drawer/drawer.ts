@@ -91,7 +91,6 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
                 node.id,
                 application.controllerHandler.renderNodeStatic(
                     $constA.SUPPORT_ANDROID.NAVIGATION_VIEW,
-                    1,
                     $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')),
                     'wrap_content',
                     'match_parent'

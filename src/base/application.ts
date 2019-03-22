@@ -1329,7 +1329,6 @@ export default class Application<T extends Node> implements squared.base.Applica
             layout.setType(vertical.containerType, vertical.alignmentType);
         }
         let floatgroup: T | undefined;
-        layout.node.renderDepth = layout.parent.renderDepth + 1;
         for (let i = 0; i < layerIndex.length; i++) {
             const item = layerIndex[i];
             let segments: T[][];

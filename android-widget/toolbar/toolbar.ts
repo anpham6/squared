@@ -231,7 +231,6 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                     node.id,
                     controller.renderNodeStatic(
                         $constA.CONTAINER_ANDROID.IMAGE,
-                        node.renderDepth,
                         $Resource.formatOptions(backgroundImageOptions, numberResourceValue),
                         'match_parent',
                         'match_parent'
