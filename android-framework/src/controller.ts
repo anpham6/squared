@@ -405,6 +405,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     !node.has('maxHeight') &&
                     !node.has('textAlign') &&
                     !node.has('verticalAlign') &&
+                    !node.documentParent.hasAlign($enum.NODE_ALIGNMENT.AUTO_LAYOUT) &&
                     !this.hasAppendProcessing(node.id))
                 {
                     child.documentRoot = node.documentRoot;

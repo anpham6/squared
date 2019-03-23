@@ -22,7 +22,6 @@ declare global {
             public static generateId(section: string, name: string, start?: number): string;
             public static insertStoredAsset(asset: string, name: string, value: any): string;
             public static getOptionArray(element: HTMLSelectElement, replaceEntities?: boolean): [string[] | undefined, string[] | undefined];
-            public static isBorderVisible(border: BorderAttribute | undefined): border is BorderAttribute;
             public static isBackgroundVisible(object: BoxStyle | undefined): boolean;
             public static getBackgroundSize<T extends Node>(node: T, value: string): Dimension | undefined;
             constructor(application: Application<T>, cache: NodeList<T>);

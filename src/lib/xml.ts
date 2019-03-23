@@ -69,7 +69,8 @@ export function replaceTab(value: string, spaces = 4, preserve = false) {
                     return ' '.repeat(spaces * match[1].length) + match[2];
                 }
                 return line;
-            });
+            })
+            .trim();
         }
         else {
             return value.replace(/\t/g, ' '.repeat(spaces));
@@ -182,10 +183,12 @@ export function createTemplate(templates: StringMap, data: ExternalData, format 
     if (index === STRING_ROOT) {
         output = output
             .replace(REGEXP_CREATE.ATTRIBUTE, '')
-            .replace(REGEXP_CREATE.COLLECTION, '\n')
-            .trim();
+            .replace(REGEXP_CREATE.COLLECTION, '\n');
         if (format) {
             output = formatTemplate(output);
+        }
+        else {
+            output = output.trim();
         }
     }
     return output;
@@ -241,5 +244,5 @@ export function formatTemplate(value: string, closeEmpty = true, startIndent = -
         }
         output += line.value;
     }
-    return output;
+    return output.trim();
 }

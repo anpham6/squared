@@ -1728,7 +1728,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 const actualChildren: T[] = [];
                 (<HTMLElement> this._element).childNodes.forEach((element: Element) => {
                     const node = $dom.getElementAsNode<T>(element);
-                    if (node) {
+                    if (node && node.naturalElement) {
                         actualChildren.push(node);
                     }
                 });

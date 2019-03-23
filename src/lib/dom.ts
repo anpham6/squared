@@ -108,7 +108,7 @@ export function getFirstChildElement(element: Element | null, lineBreak = false)
     if (element) {
         for (let i = 0; i < element.childNodes.length; i++) {
             const node = getElementAsNode<T>(<Element> element.childNodes[i]);
-            if (node && (!node.excluded || (lineBreak && node.lineBreak))) {
+            if (node && node.naturalElement && (!node.excluded || (lineBreak && node.lineBreak))) {
                 return node.element;
             }
         }

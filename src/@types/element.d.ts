@@ -75,15 +75,16 @@ interface BoxBorder {
     borderLeft: BorderAttribute;
 }
 
-interface BoxStyle extends BoxBorder {
-    border?: BorderAttribute;
-    borderRadius?: string[];
-    backgroundImage?: (string | Gradient)[];
+interface BoxStyle extends Optional<BoxBorder> {
+
     backgroundColor: string;
     backgroundSize: string;
     backgroundRepeat: string;
     backgroundPositionX: string;
     backgroundPositionY: string;
+    border?: BorderAttribute;
+    borderRadius?: string[];
+    backgroundImage?: (string | Gradient)[];
 }
 
 interface Gradient {

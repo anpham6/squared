@@ -24,8 +24,8 @@ type StyleXML = {
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
-const REGEXP_IMAGE = /^<!-- image: (.+) -->\n<!-- filename: (.+)\/(.+?\.\w+) -->$/;
 const REGEXP_FILE = /^[\w\W]*?(<!-- filename: (.+)\/(.+?\.xml) -->)$/;
+const REGEXP_IMAGE = /^<!-- image: (.+) -->\n<!-- filename: (.+)\/(.+?\.\w+) -->$/;
 
 const TEMPLATES = {
     color: $xml.parseTemplate(COLOR_TMPL),
@@ -37,6 +37,21 @@ const TEMPLATES = {
     style: $xml.parseTemplate(STYLE_TMPL)
 };
 
+function parseFileDetails(files: string[]) {
+    const result: FileAsset[] = [];
+    for (const xml of files) {
+        const match = REGEXP_FILE.exec(xml);
+        if (match) {
+            result.push({
+                pathname: match[2],
+                filename: match[3],
+                content: match[0].replace(match[1], '')
+            });
+        }
+    }
+    return result;
+}
+
 function parseImageDetails(files: string[]) {
     const result: FileAsset[] = [];
     for (const xml of files) {
@@ -47,21 +62,6 @@ function parseImageDetails(files: string[]) {
                 pathname: match[2],
                 filename: match[3],
                 content: ''
-            });
-        }
-    }
-    return result;
-}
-
-function parseFileDetails(files: string[]) {
-    const result: FileAsset[] = [];
-    for (const xml of files) {
-        const match = REGEXP_FILE.exec(xml);
-        if (match) {
-            result.push({
-                content: match[0].replace(match[1], ''),
-                pathname: match[2],
-                filename: match[3]
             });
         }
     }
@@ -167,7 +167,6 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 this.userSettings.insertSpaces,
                 true
             )
-            .trim()
         );
         if (saveToDisk) {
             this.saveToDisk(parseFileDetails(result), this.userSettings.manifestLabelAppName);
@@ -191,7 +190,6 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     this.userSettings.insertSpaces,
                     true
                 )
-                .trim()
             );
             if (saveToDisk) {
                 this.saveToDisk(parseFileDetails(result), this.userSettings.manifestLabelAppName);
@@ -347,7 +345,10 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 result.push(
                     $xml.replaceTab(
                         replaceLength(
-                            $xml.createTemplate(TEMPLATES.drawable, { name: `res/drawable/${name}.xml`, value }),
+                            $xml.createTemplate(TEMPLATES.drawable, {
+                                name: `res/drawable/${name}.xml`,
+                                value
+                            }),
                             settings.resolutionDPI,
                             settings.convertPixels
                         ),
@@ -405,7 +406,10 @@ export default class File<T extends View> extends squared.base.File<T> implement
             for (const [name, value] of this.stored.animators.entries()) {
                 result.push(
                     $xml.replaceTab(
-                        $xml.createTemplate(TEMPLATES.drawable, { name: `res/anim/${name}.xml`, value }),
+                        $xml.createTemplate(TEMPLATES.drawable, {
+                            name: `res/anim/${name}.xml`,
+                            value
+                        }),
                         this.userSettings.insertSpaces
                     )
                 );

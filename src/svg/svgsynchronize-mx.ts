@@ -1548,7 +1548,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                         value = baseValueMap[attr];
                                     }
                                 }
-                                if (value !== undefined && JSON.stringify(repeatingMap[attr].get(maxTime)) !== JSON.stringify(value)) {
+                                if (value !== undefined && !$util.isEqual(<AnimateValue> repeatingMap[attr].get(maxTime), value)) {
                                     maxTime = setTimelineValue(repeatingMap[attr], maxTime, value);
                                     if (transforming) {
                                         setTimeRange(animateTimeRangeMap, type, maxTime);

@@ -22,7 +22,7 @@ const REGEXP_LINEBREAK = /\s*<br[^>]*>\s*/g;
 function removeExcluded<T extends Node>(node: T, element: Element, attr: string) {
     let value: string = element[attr];
     for (const item of node.actualChildren) {
-        if (item.excluded || item.dataset.target && $util.isString(item[attr])) {
+        if ((item.excluded || item.dataset.target) && $util.isString(item[attr])) {
             value = value.replace(item[attr], '');
         }
     }
@@ -283,12 +283,8 @@ export default abstract class Resource<T extends Node> implements squared.base.R
         return [stringArray.length ? stringArray : undefined, numberArray && numberArray.length ? numberArray : undefined];
     }
 
-    public static isBorderVisible(border: BorderAttribute | undefined): border is BorderAttribute {
-        return border !== undefined && !(border.style === 'none' || border.width === '0px' || border.color === '' || border.color.length === 9 && border.color.endsWith('00'));
-    }
-
     public static isBackgroundVisible(object: BoxStyle | undefined) {
-        return object !== undefined && (object.backgroundImage !== undefined || object.borderRadius !== undefined || this.isBorderVisible(object.borderTop) || this.isBorderVisible(object.borderRight) || this.isBorderVisible(object.borderBottom) || this.isBorderVisible(object.borderLeft));
+        return object !== undefined && (object.backgroundImage !== undefined || object.borderTop !== undefined || object.borderRight !== undefined || object.borderBottom !== undefined || object.borderLeft !== undefined);
     }
 
     public static getBackgroundSize<T extends Node>(node: T, value: string): Dimension | undefined {
@@ -327,7 +323,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
     private static getStoredName(asset: string, value: any): string {
         if (Resource.STORED[asset]) {
             for (const [name, data] of Resource.STORED[asset].entries()) {
-                if (JSON.stringify(value) === JSON.stringify(data)) {
+                if ($util.isEqual(value, data)) {
                     return name;
                 }
             }
@@ -362,43 +358,35 @@ export default abstract class Resource<T extends Node> implements squared.base.R
     public setBoxStyle() {
         for (const node of this.cache) {
             if (node.visible && node.styleElement) {
-                let boxStyle: Optional<BoxStyle>;
-                if (node.css('border') === '0px none rgb(0, 0, 0)') {
-                    boxStyle = {
-                        backgroundColor: undefined,
-                        backgroundSize: undefined,
-                        backgroundRepeat: undefined,
-                        backgroundPositionX: undefined,
-                        backgroundPositionY: undefined,
-                        backgroundImage: undefined
-                    } as any;
-                }
-                else {
-                    boxStyle = {
-                        borderTop: undefined,
-                        borderRight: undefined,
-                        borderBottom: undefined,
-                        borderLeft: undefined,
-                        borderRadius: undefined,
-                        backgroundColor: undefined,
-                        backgroundSize: undefined,
-                        backgroundRepeat: undefined,
-                        backgroundPositionX: undefined,
-                        backgroundPositionY: undefined,
-                        backgroundImage: undefined
-                    };
+                const boxStyle: BoxStyle = {
+                    backgroundColor: '',
+                    backgroundSize: '',
+                    backgroundRepeat: '',
+                    backgroundPositionX: '',
+                    backgroundPositionY: '',
+                    backgroundImage: undefined
+                } as any;
+                if (node.css('border') !== '0px none rgb(0, 0, 0)') {
+                    boxStyle.borderTop = undefined;
+                    boxStyle.borderRight = undefined;
+                    boxStyle.borderBottom = undefined;
+                    boxStyle.borderLeft = undefined;
+                    boxStyle.borderRadius = undefined;
                 }
                 for (const attr in boxStyle) {
                     const value = node.css(attr);
                     switch (attr) {
                         case 'backgroundColor':
-                            if (!node.has('backgroundColor') && (value === node.cssAscend('backgroundColor', false, true) || node.documentParent.visible && $css.isInheritedStyle(node.element, 'backgroundColor'))) {
-                                boxStyle.backgroundColor = '';
-                            }
-                            else {
+                            if (!(!node.has('backgroundColor') && (value === node.cssAscend('backgroundColor', false, true) || node.documentParent.visible && $css.isInheritedStyle(node.element, 'backgroundColor')))) {
                                 const color = $color.parseColor(value, node.css('opacity'));
                                 boxStyle.backgroundColor = color ? color.valueAsRGBA : '';
                             }
+                            break;
+                        case 'backgroundSize':
+                        case 'backgroundRepeat':
+                        case 'backgroundPositionX':
+                        case 'backgroundPositionY':
+                            boxStyle[attr] = value;
                             break;
                         case 'backgroundImage':
                             if (value !== 'none' && node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
@@ -561,12 +549,6 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                 }
                             }
                             break;
-                        case 'backgroundSize':
-                        case 'backgroundRepeat':
-                        case 'backgroundPositionX':
-                        case 'backgroundPositionY':
-                            boxStyle[attr] = value;
-                            break;
                         case 'borderTop':
                         case 'borderRight':
                         case 'borderBottom':
@@ -594,12 +576,16 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                     color = $css.getInheritedStyle(node.element, `${attr}Color`);
                                     break;
                             }
-                            const borderColor = style !== 'none' && width !== '0px' ? $color.parseColor(color, node.css('opacity')) : undefined;
-                            boxStyle[attr] = <BorderAttribute> {
-                                width,
-                                style,
-                                color: borderColor ? borderColor.valueAsRGBA : ''
-                            };
+                            if (style !== 'none' && width !== '0px') {
+                                const borderColor = $color.parseColor(color, node.css('opacity'));
+                                if (borderColor && !borderColor.transparent) {
+                                    boxStyle[attr] = <BorderAttribute> {
+                                        width,
+                                        style,
+                                        color: borderColor.valueAsRGBA
+                                    };
+                                }
+                            }
                             break;
                         }
                         case 'borderRadius': {
@@ -631,9 +617,18 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         }
                     }
                 }
-                const borderTop = JSON.stringify(boxStyle.borderTop);
-                if (borderTop === JSON.stringify(boxStyle.borderRight) && borderTop === JSON.stringify(boxStyle.borderBottom) && borderTop === JSON.stringify(boxStyle.borderLeft)) {
-                    boxStyle.border = boxStyle.borderTop;
+                if (boxStyle.borderTop && boxStyle.borderRight && boxStyle.borderBottom && boxStyle.borderLeft) {
+                    let valid = true;
+                    for (const attr in boxStyle.borderTop) {
+                        const value = boxStyle.borderTop[attr];
+                        if (value !== boxStyle.borderRight[attr] || value !== boxStyle.borderBottom[attr] || value !== boxStyle.borderLeft[attr]) {
+                            valid = false;
+                            break;
+                        }
+                    }
+                    if (valid) {
+                        boxStyle.border = boxStyle.borderTop;
+                    }
                 }
                 node.data(Resource.KEY_NAME, 'boxStyle', boxStyle);
             }

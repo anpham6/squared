@@ -611,6 +611,7 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                 for (const column of row) {
                     if (column) {
                         for (const item of column) {
+                            item.positioned = true;
                             mainData.children.add(item);
                         }
                     }
@@ -624,7 +625,7 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                         const column = mainData.rowData[i][j] as T[];
                         if (column) {
                             for (const item of column) {
-                                if (item && !modified.has(item)) {
+                                if (!modified.has(item)) {
                                     const cellData = <CssGridCellData> item.data(EXT_NAME.CSS_GRID, 'cellData');
                                     const x = j + (cellData ? cellData.columnSpan - 1 : 0);
                                     const y = i + (cellData ? cellData.rowSpan - 1 : 0);

@@ -125,56 +125,53 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
     return solid;
 }
 
-function getShapeAttribute(boxStyle: BoxStyle, attr: string, direction = -1, hasInset = false, isInset = false): StringMap[] | false {
-    switch (attr) {
-        case 'stroke':
-            if (Resource.isBorderVisible(boxStyle.border)) {
-                if (!hasInset || isInset) {
-                    return [{
-                        width: boxStyle.border.width,
-                        borderStyle: getBorderStyle(boxStyle.border, isInset ? direction : -1)
-                    }];
-                }
-                else if (hasInset) {
-                    return [{
-                        width: $util.formatPX(Math.ceil(parseFloat(boxStyle.border.width) / 2)),
-                        borderStyle: getBorderStyle(boxStyle.border, direction, true)
-                    }];
-                }
-            }
-            break;
-        case 'radius':
-            if (boxStyle.borderRadius) {
-                if (boxStyle.borderRadius.length === 1) {
-                    return [{ radius: boxStyle.borderRadius[0] }];
-                }
-                else {
-                    let borderRadius: string[];
-                    if (boxStyle.borderRadius.length === 8) {
-                        borderRadius = [];
-                        for (let i = 0; i < boxStyle.borderRadius.length; i += 2) {
-                            borderRadius.push($util.formatPX((parseFloat(boxStyle.borderRadius[i]) + parseFloat(boxStyle.borderRadius[i + 1])) / 2));
-                        }
-                    }
-                    else {
-                        borderRadius = boxStyle.borderRadius;
-                    }
-                    const boxModel = ['topLeft', 'topRight', 'bottomRight', 'bottomLeft'];
-                    const result = {};
-                    let valid = false;
-                    for (let i = 0; i < borderRadius.length; i++) {
-                        if (borderRadius[i] !== '0px') {
-                            result[`${boxModel[i]}Radius`] = borderRadius[i];
-                            valid = true;
-                        }
-                    }
-                    if (valid) {
-                        return [result];
-                    }
-                }
-            }
-            break;
+function getShapeStroke(border: BorderAttribute, direction = -1, hasInset = false, isInset = false): StringMap[] | false {
+    if (border) {
+        if (!hasInset || isInset) {
+            return [{
+                width: border.width,
+                borderStyle: getBorderStyle(border, isInset ? direction : -1)
+            }];
+        }
+        else if (hasInset) {
+            return [{
+                width: $util.formatPX(Math.ceil(parseFloat(border.width) / 2)),
+                borderStyle: getBorderStyle(border, direction, true)
+            }];
+        }
+    }
+    return false;
+}
 
+function getShapeCorners(stored: BoxStyle): StringMap[] | false {
+    if (stored.borderRadius) {
+        if (stored.borderRadius.length === 1) {
+            return [{ radius: stored.borderRadius[0] }];
+        }
+        else {
+            let borderRadius: string[];
+            if (stored.borderRadius.length === 8) {
+                borderRadius = [];
+                for (let i = 0; i < stored.borderRadius.length; i += 2) {
+                    borderRadius.push($util.formatPX((parseFloat(stored.borderRadius[i]) + parseFloat(stored.borderRadius[i + 1])) / 2));
+                }
+            }
+            else {
+                borderRadius = stored.borderRadius;
+            }
+            const boxModel = ['topLeft', 'topRight', 'bottomRight', 'bottomLeft'];
+            const result = {};
+            let valid = false;
+            for (let i = 0; i < borderRadius.length; i++) {
+                if (borderRadius[i] !== '0px') {
+                    result[`${boxModel[i]}Radius`] = borderRadius[i];
+                    valid = true;
+                }
+            }
+            if (valid) {
+                return [result];
+            }
+        }
     }
     return false;
 }
@@ -427,7 +424,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                     imageLength = backgroundImage.length;
                 }
-                const borders: BorderAttribute[] = [
+                const borders: (BorderAttribute | undefined)[] = [
                     stored.borderTop,
                     stored.borderRight,
                     stored.borderBottom,
@@ -439,11 +436,14 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 let borderData: BorderAttribute | undefined;
                 for (let i = 0; i < borders.length; i++) {
                     const item = borders[i];
-                    borderVisible[i] = Resource.isBorderVisible(item);
-                    if (borderVisible[i]) {
+                    if (item) {
+                        borderVisible[i] = true;
                         borderStyle.add(getBorderStyle(item));
                         borderWidth.add(item.width);
                         borderData = item;
+                    }
+                    else {
+                        borderVisible[i] = false;
                     }
                 }
                 const hasBorder = borderData !== undefined || stored.borderRadius !== undefined;
@@ -766,18 +766,16 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             backgroundColor = [{ color: `@color/${colorName}` }];
                         }
                     }
-                    const borderRadius = getShapeAttribute(stored, 'radius');
+                    const border = stored.border;
+                    const borderRadius = getShapeCorners(stored);
                     let template: StringMap;
                     let shape: TemplateDataA | undefined;
-                    const border = stored.border;
-                    if (border && !(border.style === 'double' && parseInt(border.width) > 2 || (border.style === 'groove' || border.style === 'ridge') && parseInt(border.width) > 1)) {
-                        const stroke = getShapeAttribute(stored, 'stroke');
+                    if (borderData === undefined || border && !(border.style === 'double' && parseInt(border.width) > 2 || (border.style === 'groove' || border.style === 'ridge') && parseInt(border.width) > 1)) {
+                        const stroke = border ? getShapeStroke(border) : false;
                         if (backgroundImage.length) {
                             template = TEMPLATES.LAYER_LIST;
                             layerList.A = backgroundColor;
-                            if (borderData || borderRadius) {
-                                layerList.C = [{ stroke, corners: borderRadius }];
-                            }
+                            layerList.C = [{ stroke, corners: borderRadius }];
                         }
                         else {
                             template = TEMPLATES.SHAPE;
@@ -819,15 +817,15 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     right: borderVisible[1] ? (borderVisible[3] || leftTop || leftOnly ? '' : borderData.width) : hideWidth,
                                     bottom: borderVisible[2] ? (borderVisible[0] || leftTop || topOnly ? '' : borderData.width) : hideWidth,
                                     left: borderVisible[3] ? '' : hideWidth,
-                                    stroke: getShapeAttribute(<BoxStyle> { border: borderData }, 'stroke'),
+                                    stroke: getShapeStroke(borderData),
                                     corners: borderRadius
                                 });
                             }
                         }
                         else {
                             for (let i = 0; i < borders.length; i++) {
-                                if (borderVisible[i]) {
-                                    const item = borders[i];
+                                const item = borders[i];
+                                if (item) {
                                     const width = parseInt(item.width);
                                     if (item.style === 'double' && width > 2) {
                                         insertDoubleBorder.apply(null, [
@@ -852,7 +850,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                             right: i === 1 ? (visible ? item.width : '') : hideWidth,
                                             bottom: i === 2 ? (visible ? item.width : '') : hideWidth,
                                             left: i === 3 ? '' : hideWidth,
-                                            stroke: getShapeAttribute(<BoxStyle> { border: item }, 'stroke', i, hasInset),
+                                            stroke: getShapeStroke(item, i, hasInset),
                                             corners: borderRadius
                                         });
                                         if (hasInset) {
@@ -863,7 +861,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                                 right: i === 1 ? (visible ? item.width : '') : hideWidth,
                                                 bottom: i === 2 ? (visible ? item.width : '') : hideWidth,
                                                 left: i === 3 ? '' : hideWidth,
-                                                stroke: getShapeAttribute(<BoxStyle> { border: item }, 'stroke', i, true, true),
+                                                stroke: getShapeStroke(item, i, true, true),
                                                 corners: false
                                             });
                                         }
