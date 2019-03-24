@@ -154,7 +154,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                 switch (td.tagName) {
                     case 'TH':
                         if (!td.cssInitial('textAlign')) {
-                            td.css('textAlign', 'center');
+                            td.css('textAlign', td.css('textAlign'));
                         }
                     case 'TD':
                         if (!td.cssInitial('verticalAlign')) {

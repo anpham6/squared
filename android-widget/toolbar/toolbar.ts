@@ -102,31 +102,28 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             $util.assignEmptyValue(toolbarOptions, 'app', 'layout_collapseMode', 'pin');
         }
         else {
-            if (!hasAppBar) {
-                $util.assignEmptyValue(toolbarOptions, 'android', 'fitsSystemWindows', 'true');
-            }
             $util.assignEmptyValue(toolbarOptions, 'app', 'popupTheme', '@style/ThemeOverlay.AppCompat.Light');
             if (backgroundImage) {
-                $util.assignEmptyValue(appBarChildren.length ? appBarOptions : toolbarOptions, 'android', 'background', `@drawable/${$Resource.addImageUrl(node.css('backgroundImage'))}`);
+                $util.assignEmptyValue(hasAppBar ? appBarOptions : toolbarOptions, 'android', 'background', `@drawable/${$Resource.addImageUrl(node.css('backgroundImage'))}`);
                 node.exclude({ resource: $enum.NODE_RESOURCE.IMAGE_SOURCE });
             }
             else {
                 $util.assignEmptyValue(toolbarOptions, 'app', 'layout_scrollFlags', 'scroll|enterAlways');
             }
         }
-        if (appBarChildren.length) {
-            $util.assignEmptyValue(appBarOptions, 'android', 'layout_height', '?android:attr/actionBarSize');
+        if (hasAppBar) {
+            if (hasMenu) {
+                if (toolbarOptions.app.popupTheme) {
+                    popupOverlay = toolbarOptions.app.popupTheme.replace('@style/', '');
+                }
+                toolbarOptions.app.popupTheme = `@style/${settings.manifestThemeName}.PopupOverlay`;
+            }
         }
         else {
-            $util.assignEmptyValue(toolbarOptions, 'android', 'layout_height', '?android:attr/actionBarSize');
             node.exclude({ procedure: $enum.NODE_PROCEDURE.LAYOUT });
+            $util.assignEmptyValue(toolbarOptions, 'android', 'fitsSystemWindows', 'true');
         }
-        if (hasMenu && hasAppBar) {
-            if (toolbarOptions.app.popupTheme) {
-                popupOverlay = toolbarOptions.app.popupTheme.replace('@style/', '');
-            }
-            toolbarOptions.app.popupTheme = `@style/${settings.manifestThemeName}.PopupOverlay`;
-        }
+        $util.assignEmptyValue(toolbarOptions, 'android', 'layout_height', hasAppBar || !node.has('height') ? '?android:attr/actionBarSize' : '');
         node.setControlType($constA.SUPPORT_ANDROID.TOOLBAR, $enumA.CONTAINER_NODE.BLOCK);
         node.exclude({ resource: $enum.NODE_RESOURCE.FONT_STYLE });
         let appBarNode: T | undefined;
@@ -239,9 +236,8 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                 node.exclude({ resource: $enum.NODE_RESOURCE.IMAGE_SOURCE });
             }
         }
-        node.apply($Resource.formatOptions(toolbarOptions, numberResourceValue));
         node.android('layout_width', 'match_parent');
-        node.android('layout_height', 'wrap_content');
+        node.apply($Resource.formatOptions(toolbarOptions, numberResourceValue));
         const output = <NodeXmlTemplate<T>> {
             type: $enum.NODE_TEMPLATE.XML,
             node,

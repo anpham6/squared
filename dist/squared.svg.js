@@ -1,4 +1,4 @@
-/* squared.svg 0.8.0
+/* squared.svg 0.9.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -10,6 +10,14 @@
     const $css = squared.lib.css;
     const $math = squared.lib.math;
     const $util = squared.lib.util;
+    const STRING_DECIMAL = `(${$util.STRING_PATTERN.DECIMAL})`;
+    const REGEXP_TRANSFORM = {
+        MATRIX: new RegExp(`(matrix(?:3d)?)\\(${STRING_DECIMAL}, ${STRING_DECIMAL}, ${STRING_DECIMAL}, ${STRING_DECIMAL}, ${STRING_DECIMAL}, ${STRING_DECIMAL}(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?\\)`, 'g'),
+        ROTATE: new RegExp(`(rotate[XY]?)\\(${$util.STRING_PATTERN.ANGLE}\\)`, 'g'),
+        SKEW: new RegExp(`(skew[XY]?)\\(${$util.STRING_PATTERN.ANGLE}(?:, ${$util.STRING_PATTERN.ANGLE})?\\)`, 'g'),
+        SCALE: new RegExp(`(scale[XY]?)\\(${STRING_DECIMAL}(?:, ${STRING_DECIMAL})?\\)`, 'g'),
+        TRANSLATE: new RegExp(`(translate[XY]?)\\(${$util.STRING_PATTERN.LENGTH_PERCENTAGE}(?:, ${$util.STRING_PATTERN.LENGTH_PERCENTAGE})?\\)`, 'g')
+    };
     const SHAPES = {
         path: 1,
         line: 2,
@@ -18,14 +26,6 @@
         circle: 5,
         polyline: 6,
         polygon: 7
-    };
-    const REGEXP_DECIMAL = `(${$util.REGEXP_STRING.DECIMAL})`;
-    const REGEXP_TRANSFORM = {
-        MATRIX: `(matrix(?:3d)?)\\(${REGEXP_DECIMAL}, ${REGEXP_DECIMAL}, ${REGEXP_DECIMAL}, ${REGEXP_DECIMAL}, ${REGEXP_DECIMAL}, ${REGEXP_DECIMAL}(?:, ${REGEXP_DECIMAL})?(?:, ${REGEXP_DECIMAL})?(?:, ${REGEXP_DECIMAL})?(?:, ${REGEXP_DECIMAL})?(?:, ${REGEXP_DECIMAL})?(?:, ${REGEXP_DECIMAL})?(?:, ${REGEXP_DECIMAL})?(?:, ${REGEXP_DECIMAL})?(?:, ${REGEXP_DECIMAL})?(?:, ${REGEXP_DECIMAL})?\\)`,
-        ROTATE: `(rotate[XY]?)\\(${$util.REGEXP_STRING.DEGREE}\\)`,
-        SKEW: `(skew[XY]?)\\(${$util.REGEXP_STRING.DEGREE}(?:, ${$util.REGEXP_STRING.DEGREE})?\\)`,
-        SCALE: `(scale[XY]?)\\(${REGEXP_DECIMAL}(?:, ${REGEXP_DECIMAL})?\\)`,
-        TRANSLATE: `(translate[XY]?)\\(${$util.REGEXP_STRING.LENGTH}(?:, ${$util.REGEXP_STRING.LENGTH})?\\)`
     };
     const MATRIX = {
         applyX(matrix, x, y) {
@@ -98,13 +98,12 @@
             };
         },
         parse(element, value) {
-            const transform = value === undefined ? $css.getInlineStyle(element, 'transform') : value;
+            const transform = value || $css.getInlineStyle(element, 'transform');
             if (transform !== '') {
                 const ordered = [];
                 for (const name in REGEXP_TRANSFORM) {
-                    const pattern = new RegExp(REGEXP_TRANSFORM[name], 'g');
-                    let match = null;
-                    while ((match = pattern.exec(transform)) !== null) {
+                    let match;
+                    while ((match = REGEXP_TRANSFORM[name].exec(transform)) !== null) {
                         const isX = match[1].endsWith('X');
                         const isY = match[1].endsWith('Y');
                         if (match[1].startsWith('rotate')) {
@@ -147,8 +146,8 @@
                         }
                         else if (match[1].startsWith('translate')) {
                             const fontSize = $css.getFontSize(element);
-                            const arg1 = $util.calculateUnit(match[2], fontSize);
-                            const arg2 = (!isX && match[3] ? $util.calculateUnit(match[3], fontSize) : 0);
+                            const arg1 = $util.parseUnit(match[2], fontSize);
+                            const arg2 = (!isX && match[3] ? $util.parseUnit(match[3], fontSize) : 0);
                             const x = isY ? 0 : arg1;
                             const y = isY ? arg1 : arg2;
                             const matrix = MATRIX.translate(x, y);
@@ -205,8 +204,8 @@
             if (value !== '') {
                 const viewBox = getNearestViewBox(element);
                 function setPosition(attr, position, dimension) {
-                    if ($util.isUnit(position)) {
-                        result[attr] = $util.calculateUnit(position, $css.getFontSize(element));
+                    if ($util.isLength(position)) {
+                        result[attr] = $util.parseUnit(position, $css.getFontSize(element));
                     }
                     else if ($util.isPercent(position)) {
                         result[attr] = (parseFloat(position) / 100) * dimension;
@@ -655,13 +654,14 @@
             if (commands.length) {
                 let points = SvgBuild.extractPathPoints(commands);
                 if (points.length) {
-                    if (transforms && transforms.length) {
+                    const transformed = transforms && transforms.length > 0;
+                    if (transformed) {
                         points = SvgBuild.applyTransforms(transforms, points, companion && TRANSFORM.origin(companion.element));
                     }
                     if (companion && companion.parent && companion.parent.requireRefit()) {
                         companion.parent.refitPoints(points);
                     }
-                    value = SvgBuild.drawPath(SvgBuild.rebindPathPoints(commands, points), precision);
+                    value = SvgBuild.drawPath(SvgBuild.rebindPathPoints(commands, points, transformed), precision);
                 }
             }
             return value;
@@ -843,29 +843,45 @@
             }
             return result;
         }
-        static rebindPathPoints(values, points) {
+        static rebindPathPoints(values, points, transformed = false) {
             let location;
             invalid: {
                 for (const item of values) {
                     if (item.relative) {
                         if (location) {
-                            for (let i = 0, j = 0; i < item.coordinates.length; i += 2, j++) {
+                            if (transformed && (item.name === 'H' || item.name === 'V')) {
                                 const pt = points.shift();
                                 if (pt) {
-                                    item.coordinates[i] = item.value[j].x - location.x;
-                                    item.coordinates[i + 1] = item.value[j].y - location.y;
-                                    if (item.name === 'a' && pt.rx !== undefined && pt.ry !== undefined) {
-                                        item.radiusX = pt.rx;
-                                        item.radiusY = pt.ry;
-                                    }
-                                    item.value[j] = pt;
+                                    item.coordinates[0] = pt.x;
+                                    item.coordinates[1] = pt.y;
+                                    item.value[0] = pt;
+                                    item.start = pt;
+                                    item.end = pt;
+                                    item.name = 'L';
+                                    item.relative = false;
                                 }
                                 else {
-                                    values = [];
                                     break invalid;
                                 }
                             }
-                            item.name = item.name.toLowerCase();
+                            else {
+                                for (let i = 0, j = 0; i < item.coordinates.length; i += 2, j++) {
+                                    const pt = points.shift();
+                                    if (pt) {
+                                        item.coordinates[i] = pt.x - location.x;
+                                        item.coordinates[i + 1] = pt.y - location.y;
+                                        if (item.name === 'a' && pt.rx !== undefined && pt.ry !== undefined) {
+                                            item.radiusX = pt.rx;
+                                            item.radiusY = pt.ry;
+                                        }
+                                        item.value[j] = pt;
+                                    }
+                                    else {
+                                        break invalid;
+                                    }
+                                }
+                                item.name = item.name.toLowerCase();
+                            }
                             location = item.end;
                         }
                         else {
@@ -1149,8 +1165,8 @@
                 }
                 return false;
             }
-            getBaseValue(attr, defaultValue) {
-                return this._baseVal[attr] === undefined && !this.setBaseValue(attr) ? defaultValue : this._baseVal[attr];
+            getBaseValue(attr, fallback) {
+                return this._baseVal[attr] === undefined && !this.setBaseValue(attr) ? fallback : this._baseVal[attr];
             }
             refitBaseValue(x, y, precision, scaleX = 1, scaleY = 1) {
                 for (const attr in this._baseVal) {
@@ -1348,8 +1364,8 @@
                 const baseElement = this.animationElement && this.animationElement.parentElement || this.element;
                 if (baseElement) {
                     this.baseValue = $util$2.optionalAsString(baseElement, `${value}.baseVal.valueAsString`) || $css$3.getParentAttribute(baseElement, value);
-                    if ($util$2.isUnit(this.baseValue)) {
-                        this.baseValue = $util$2.calculateUnit(this.baseValue, $css$3.getFontSize(baseElement)).toString();
+                    if ($util$2.isLength(this.baseValue)) {
+                        this.baseValue = $util$2.parseUnit(this.baseValue, $css$3.getFontSize(baseElement)).toString();
                     }
                 }
             }
@@ -1449,7 +1465,7 @@
                 const values = $css$4.getNamedItem(animationElement, 'values');
                 const keyTimes = this.duration !== -1 ? SvgAnimate.toFractionList($css$4.getNamedItem(animationElement, 'keyTimes')) : [];
                 if (values !== '') {
-                    this.values = $util$3.flatMap(values.split(';'), value => value.trim());
+                    this.values = $util$3.trimEnd(values, ';').split(/\s*;\s*/);
                     if (this.length > 1 && keyTimes.length === this.length) {
                         this.from = this.values[0];
                         this.to = this.values[this.length - 1];
@@ -1522,14 +1538,14 @@
                     if ($util$3.isNumber(values[index])) {
                         currentValue = [parseFloat(values[index])];
                     }
-                    else if ($util$3.isUnit(values[index])) {
-                        currentValue = [$util$3.calculateUnit(values[index], fontSize)];
+                    else if ($util$3.isLength(values[index])) {
+                        currentValue = [$util$3.parseUnit(values[index], fontSize)];
                     }
                     if ($util$3.isNumber(values[index + 1])) {
                         nextValue = [parseFloat(values[index + 1])];
                     }
-                    else if ($util$3.isUnit(values[index + 1])) {
-                        nextValue = [$util$3.calculateUnit(values[index + 1], fontSize)];
+                    else if ($util$3.isLength(values[index + 1])) {
+                        nextValue = [$util$3.parseUnit(values[index + 1], fontSize)];
                     }
                     break;
             }
@@ -1594,7 +1610,7 @@
         }
         static toFractionList(value, delimiter = ';') {
             let previous = 0;
-            const result = $util$3.flatMap(value.split(delimiter), seg => {
+            const result = $util$3.replaceMap(value.split(delimiter), seg => {
                 const fraction = parseFloat(seg);
                 if (!isNaN(fraction) && fraction >= previous && fraction <= 1) {
                     previous = fraction;
@@ -1641,7 +1657,7 @@
             }
         }
         convertToValues(keyTimes) {
-            if (this.to !== '') {
+            if (this.to) {
                 this.values = [this.from, this.to];
                 this.keyTimes = keyTimes && keyTimes.length === 2 && this.keyTimes[0] === 0 && this.keyTimes[1] <= 1 ? keyTimes : [0, 1];
                 if (this.from === '') {
@@ -1690,7 +1706,7 @@
         set delay(value) {
             super.delay = value;
             const end = $css$4.getNamedItem(this.animationElement, 'end');
-            if (end !== '') {
+            if (end) {
                 const endTime = $util$3.sortNumber($util$3.replaceMap(end.split(';'), time => SvgAnimation.convertClockTime(time)))[0];
                 if (!isNaN(endTime) && (this.iterationCount === -1 || this.duration > 0 && endTime < this.duration * this.iterationCount)) {
                     if (this.delay > endTime) {
@@ -2442,10 +2458,7 @@
         return fromString && typeof value === 'string' ? '' : value;
     }
     function convertToString(value) {
-        if (Array.isArray(value)) {
-            return $util$6.objectMap(value, pt => `${pt.x},${pt.y}`).join(' ');
-        }
-        return value.toString();
+        return Array.isArray(value) ? $util$6.objectMap(value, pt => `${pt.x},${pt.y}`).join(' ') : value.toString();
     }
     function getForwardValue(items, time) {
         let value;
@@ -2613,8 +2626,9 @@
         switch (item.attributeName) {
             case 'transform':
                 if (item.additiveSum && typeof baseValue === 'string') {
-                    const baseArray = $util$6.replaceMap(baseValue.split(/\s+/), value => parseFloat(value));
-                    const valuesArray = $util$6.objectMap(values, value => $util$6.replaceMap(value.trim().split(/\s+/), pt => parseFloat(pt)));
+                    const seperator = /\s+/;
+                    const baseArray = $util$6.replaceMap(baseValue.split(seperator), value => parseFloat(value));
+                    const valuesArray = $util$6.objectMap(values, value => $util$6.replaceMap(value.trim().split(seperator), pt => parseFloat(pt)));
                     if (valuesArray.every(value => baseArray.length === value.length)) {
                         const result = valuesArray[index];
                         if (!item.accumulateSum) {
@@ -2687,16 +2701,11 @@
         }
         return previousValue;
     }
-    function insertSplitValue(item, baseValue, keyTimes, values, keySplines, delay, iteration, time, keyTimeMode, timelineMap, interpolatorMap, transformOriginMap) {
-        let actualTime;
+    function insertSplitValue(item, actualTime, baseValue, keyTimes, values, keySplines, delay, iteration, time, keyTimeMode, timelineMap, interpolatorMap, transformOriginMap) {
         if (delay < 0) {
-            actualTime = time - delay;
+            actualTime -= delay;
             delay = 0;
         }
-        else {
-            actualTime = time;
-        }
-        actualTime = getActualTime(actualTime);
         const fraction = Math.max(0, Math.min((actualTime - (delay + item.duration * iteration)) / item.duration, 1));
         let previousIndex = -1;
         let nextIndex = -1;
@@ -2883,15 +2892,6 @@
                 keySplines.push('');
             }
         }
-    }
-    function getActualTime(value) {
-        if ((value + 1) % 10 === 0) {
-            value++;
-        }
-        else if ((value - 1) % 10 === 0) {
-            value--;
-        }
-        return value;
     }
     function getStartIteration(time, delay, duration) {
         return Math.floor(Math.max(0, time - delay) / duration);
@@ -3600,7 +3600,7 @@
                                                             }
                                                             else {
                                                                 function insertIntermediateValue(splitTime) {
-                                                                    [maxTime, lastValue] = insertSplitValue(item, baseValue, keyTimes, values, keySplines, delay, k, splitTime, keyTimeMode, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
+                                                                    [maxTime, lastValue] = insertSplitValue(item, actualMaxTime, baseValue, keyTimes, values, keySplines, delay, k, splitTime, keyTimeMode, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
                                                                 }
                                                                 if (delay < 0 && maxTime === -1) {
                                                                     if (time > 0) {
@@ -3772,7 +3772,7 @@
                                             let j = Math.floor(durationTotal / duration);
                                             let joined = false;
                                             function insertIntermediateValue(time) {
-                                                return insertSplitValue(item, baseValue, keyTimes, values, keySplines, delay, j, time, keyTimeMode, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
+                                                return insertSplitValue(item, actualMaxTime, baseValue, keyTimes, values, keySplines, delay, j, time, keyTimeMode, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
                                             }
                                             do {
                                                 for (let k = 0; k < keyTimes.length; k++) {
@@ -3842,7 +3842,7 @@
                                             value = baseValueMap[attr];
                                         }
                                     }
-                                    if (value !== undefined && JSON.stringify(repeatingMap[attr].get(maxTime)) !== JSON.stringify(value)) {
+                                    if (value !== undefined && !$util$6.isEqual(repeatingMap[attr].get(maxTime), value)) {
                                         maxTime = setTimelineValue(repeatingMap[attr], maxTime, value);
                                         if (transforming) {
                                             setTimeRange(animateTimeRangeMap, type, maxTime);
@@ -3901,7 +3901,7 @@
                                                 for (let j = 0; j < item.keyTimes.length; j++) {
                                                     let time = getItemTime(delay, item.duration, item.keyTimes, i, j);
                                                     if (!joined && time >= maxTime) {
-                                                        [maxTime, baseValue] = insertSplitValue(item, baseValue, item.keyTimes, values, item.keySplines, delay, i, maxTime, keyTimeMode, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
+                                                        [maxTime, baseValue] = insertSplitValue(item, maxTime, baseValue, item.keyTimes, values, item.keySplines, delay, i, maxTime, keyTimeMode, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
                                                         keyTimesRepeating.add(maxTime);
                                                         joined = true;
                                                     }
@@ -4319,6 +4319,8 @@
 
     const $css$7 = squared.lib.css;
     const $util$8 = squared.lib.util;
+    const STRING_CUBICBEZIER = `cubic-bezier\\((${$util$8.STRING_PATTERN.ZERO_ONE}), (${$util$8.STRING_PATTERN.DECIMAL}), (${$util$8.STRING_PATTERN.ZERO_ONE}), (${$util$8.STRING_PATTERN.DECIMAL})\\)`;
+    const REGEXP_TIMINGFUNCTION = new RegExp(`(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+, (?:start|end)\\)|${STRING_CUBICBEZIER}),?\\s*`, 'g');
     const KEYFRAME_NAME = $css$7.getKeyframeRules();
     const ANIMATION_DEFAULT = {
         'animation-delay': '0s',
@@ -4329,8 +4331,6 @@
         'animation-fill-mode': 'none',
         'animation-timing-function': 'ease'
     };
-    const REGEXP_CUBICBEZIER = `cubic-bezier\\((${$util$8.REGEXP_STRING.ZERO_ONE}), (${$util$8.REGEXP_STRING.DECIMAL}), (${$util$8.REGEXP_STRING.ZERO_ONE}), (${$util$8.REGEXP_STRING.DECIMAL})\\)`;
-    const REGEXP_TIMINGFUNCTION = `(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+, (?:start|end)\\)|${REGEXP_CUBICBEZIER}),?\\s*`;
     function setAttribute(element, attr, value) {
         element.style[attr] = value;
         element.setAttribute(attr, value);
@@ -4338,10 +4338,9 @@
     function parseAttribute(element, attr) {
         const value = $css$7.getAttribute(element, attr);
         if (attr === 'animation-timing-function') {
-            const pattern = new RegExp(REGEXP_TIMINGFUNCTION, 'g');
-            let match;
             const result = [];
-            while ((match = pattern.exec(value)) !== null) {
+            let match;
+            while ((match = REGEXP_TIMINGFUNCTION.exec(value)) !== null) {
                 result.push(match[1]);
             }
             return result;
@@ -4395,11 +4394,11 @@
                 for (let i = 0; i < element.children.length; i++) {
                     const item = element.children[i];
                     if (item instanceof SVGAnimationElement) {
-                        const begin = item.attributes.getNamedItem('begin');
-                        if (begin && /^[a-zA-Z]+$/.test(begin.value.trim())) {
+                        const begin = $css$7.getNamedItem(item, 'begin');
+                        if (begin !== '' && /^[a-zA-Z]+$/.test(begin)) {
                             continue;
                         }
-                        const times = begin ? $util$8.sortNumber($util$8.replaceMap(begin.value.split(';'), value => SvgAnimation.convertClockTime(value))) : [0];
+                        const times = begin ? $util$8.sortNumber($util$8.replaceMap(begin.split(';'), value => SvgAnimation.convertClockTime(value))) : [0];
                         if (times.length) {
                             switch (item.tagName) {
                                 case 'set':
@@ -4646,7 +4645,7 @@
                                                 keySplines[j] = KEYSPLINE_NAME.linear;
                                             }
                                             else {
-                                                const match = new RegExp(REGEXP_CUBICBEZIER).exec(keySplines[j]);
+                                                const match = new RegExp(STRING_CUBICBEZIER).exec(keySplines[j]);
                                                 keySplines[j] = match ? `${match[1]} ${match[2]} ${match[3]} ${match[4]}` : KEYSPLINE_NAME.ease;
                                             }
                                             keySplinesData.push(keySplines[j]);
@@ -4719,18 +4718,17 @@
 
     const $util$9 = squared.lib.util;
     function hasUnsupportedAccess(element) {
-        const domElement = element.parentElement instanceof HTMLElement;
-        return element.tagName === 'svg' && ($util$9.isUserAgent(4 /* SAFARI */) && !domElement ||
-            $util$9.isUserAgent(8 /* FIREFOX */) && domElement);
+        const htmlElement = element.parentElement instanceof HTMLElement;
+        return element.tagName === 'svg' && (!htmlElement && $util$9.isUserAgent(4 /* SAFARI */) || htmlElement && $util$9.isUserAgent(8 /* FIREFOX */));
     }
     var SvgViewRect$MX = (Base) => {
         return class extends Base {
             setRect() {
+                const parent = this.parent;
                 let x = this.x;
                 let y = this.y;
                 let width = this.width;
                 let height = this.height;
-                const parent = this.parent;
                 if (parent) {
                     x = parent.refitX(x);
                     y = parent.refitY(y);
@@ -4876,6 +4874,7 @@
             let precision;
             let initPath = true;
             if (options) {
+                options = Object.assign({}, options);
                 element = options.symbolElement || options.patternElement || options.element || this.element;
                 precision = options.precision;
                 if (options.initPath === false) {
@@ -4963,11 +4962,12 @@
         }
         clipViewBox(x, y, width, height, precision, documentRoot = false) {
             if (documentRoot) {
-                this.clipRegion = SvgBuild.drawRect(width - x, height - y, x < 0 ? x * -1 : 0, y < 0 ? y * -1 : 0, precision);
+                width -= x;
+                height -= y;
+                x = x < 0 ? x * -1 : 0;
+                y = y < 0 ? y * -1 : 0;
             }
-            else {
-                this.clipRegion = SvgBuild.drawRect(width, height, x, y, precision);
-            }
+            this.clipRegion = SvgBuild.drawRect(width, height, x, y, precision);
         }
         synchronize(options) {
             this.each(item => item.synchronize(options));
@@ -5161,10 +5161,10 @@
     const $util$c = squared.lib.util;
     const REGEXP_CLIPPATH = {
         url: $util$c.REGEXP_COMPILED.URL,
-        inset: new RegExp(`inset\\(${$util$c.REGEXP_STRING.LENGTH}\\s?${$util$c.REGEXP_STRING.LENGTH}?\\s?${$util$c.REGEXP_STRING.LENGTH}?\\s?${$util$c.REGEXP_STRING.LENGTH}?\\)`),
+        inset: new RegExp(`inset\\(${$util$c.STRING_PATTERN.LENGTH_PERCENTAGE}\\s?${$util$c.STRING_PATTERN.LENGTH_PERCENTAGE}?\\s?${$util$c.STRING_PATTERN.LENGTH_PERCENTAGE}?\\s?${$util$c.STRING_PATTERN.LENGTH_PERCENTAGE}?\\)`),
         polygon: /polygon\(([^)]+)\)/,
-        circle: new RegExp(`circle\\(${$util$c.REGEXP_STRING.LENGTH}(?: at ${$util$c.REGEXP_STRING.LENGTH} ${$util$c.REGEXP_STRING.LENGTH})?\\)`),
-        ellipse: new RegExp(`ellipse\\(${$util$c.REGEXP_STRING.LENGTH} ${$util$c.REGEXP_STRING.LENGTH}(?: at ${$util$c.REGEXP_STRING.LENGTH} ${$util$c.REGEXP_STRING.LENGTH})?\\)`),
+        circle: new RegExp(`circle\\(${$util$c.STRING_PATTERN.LENGTH_PERCENTAGE}(?: at ${$util$c.STRING_PATTERN.LENGTH_PERCENTAGE} ${$util$c.STRING_PATTERN.LENGTH_PERCENTAGE})?\\)`),
+        ellipse: new RegExp(`ellipse\\(${$util$c.STRING_PATTERN.LENGTH_PERCENTAGE} ${$util$c.STRING_PATTERN.LENGTH_PERCENTAGE}(?: at ${$util$c.STRING_PATTERN.LENGTH_PERCENTAGE} ${$util$c.STRING_PATTERN.LENGTH_PERCENTAGE})?\\)`)
     };
     var SvgPaint$MX = (Base) => {
         return class extends Base {
@@ -5198,24 +5198,24 @@
                                 const width = boxRect.right - boxRect.left;
                                 const height = boxRect.bottom - boxRect.top;
                                 const parent = this.parent;
-                                function convertUnit(value, horizontal = true) {
-                                    return $util$c.convertUnit(value, horizontal ? width : height, fontSize);
+                                function convertLength(value, horizontal = true) {
+                                    return $util$c.convertLength(value, horizontal ? width : height, fontSize);
                                 }
                                 switch (name) {
                                     case 'inset': {
                                         let x1 = 0;
                                         let x2 = 0;
-                                        let y1 = convertUnit(match[1], false);
+                                        let y1 = convertLength(match[1], false);
                                         let y2 = 0;
                                         if (match[4]) {
-                                            x1 = boxRect.left + convertUnit(match[4]);
-                                            x2 = boxRect.right - convertUnit(match[2]);
-                                            y2 = boxRect.bottom - convertUnit(match[3], false);
+                                            x1 = boxRect.left + convertLength(match[4]);
+                                            x2 = boxRect.right - convertLength(match[2]);
+                                            y2 = boxRect.bottom - convertLength(match[3], false);
                                         }
                                         else if (match[2]) {
-                                            x1 = convertUnit(match[2]);
+                                            x1 = convertLength(match[2]);
                                             x2 = boxRect.right - x1;
-                                            y2 = boxRect.bottom - (match[3] ? convertUnit(match[3], false) : y1);
+                                            y2 = boxRect.bottom - (match[3] ? convertLength(match[3], false) : y1);
                                             x1 += boxRect.left;
                                         }
                                         else {
@@ -5238,7 +5238,7 @@
                                     }
                                     case 'polygon': {
                                         const points = $util$c.objectMap(match[1].split($util$c.REGEXP_COMPILED.SEPARATOR), values => {
-                                            let [x, y] = $util$c.replaceMap(values.trim().split(' '), (value, index) => convertUnit(value, index === 0));
+                                            let [x, y] = $util$c.replaceMap(values.trim().split(' '), (value, index) => convertLength(value, index === 0));
                                             x += boxRect.left;
                                             y += boxRect.top;
                                             return { x, y };
@@ -5254,19 +5254,19 @@
                                             let rx;
                                             let ry;
                                             if (name === 'circle') {
-                                                rx = convertUnit(match[1], width < height);
+                                                rx = convertLength(match[1], width < height);
                                                 ry = rx;
                                             }
                                             else {
-                                                rx = convertUnit(match[1]);
-                                                ry = convertUnit(match[2], false);
+                                                rx = convertLength(match[1]);
+                                                ry = convertLength(match[2], false);
                                             }
                                             let cx = boxRect.left;
                                             let cy = boxRect.top;
                                             if (match.length >= 4) {
                                                 const horizontal = width < height;
-                                                cx += convertUnit(match[match.length - 2], horizontal);
-                                                cy += convertUnit(match[match.length - 1], horizontal);
+                                                cx += convertLength(match[match.length - 2], horizontal);
+                                                cy += convertLength(match[match.length - 1], horizontal);
                                             }
                                             if (parent) {
                                                 cx = parent.refitX(cx);
@@ -5289,11 +5289,11 @@
                 if ($util$c.isString(value)) {
                     switch (attr) {
                         case 'stroke-dasharray':
-                            value = $util$c.joinMap(value.split(/,\s*/), item => this.convertUnit(item), ', ');
+                            value = $util$c.joinMap(value.split(/,\s*/), item => this.convertLength(item), ', ');
                             break;
                         case 'stroke-dashoffset':
                         case 'stroke-width':
-                            value = this.convertUnit(value);
+                            value = this.convertLength(value);
                             break;
                         case 'fill':
                         case 'stroke':
@@ -5348,12 +5348,12 @@
                 }
                 return value;
             }
-            convertUnit(value) {
-                if ($util$c.isUnit(value)) {
-                    return $util$c.convertUnit(value, 0, $css$a.getFontSize(this.element)).toString();
+            convertLength(value) {
+                if ($util$c.isLength(value)) {
+                    return $util$c.convertLength(value, 0, $css$a.getFontSize(this.element)).toString();
                 }
                 else if ($util$c.isPercent(value)) {
-                    return $util$c.convertUnit(value, this.element.getBoundingClientRect().width).toString();
+                    return $util$c.convertLength(value, this.element.getBoundingClientRect().width).toString();
                 }
                 return value;
             }
@@ -5727,12 +5727,12 @@
                 residual = options.residual;
                 precision = options.precision;
             }
-            this.transformed = undefined;
             const element = this.element;
             const parent = this.parent;
             const patternParent = this.patternParent;
             const requireRefit = !!parent && parent.requireRefit();
             const requirePatternRefit = !!patternParent && patternParent.patternContentUnits === 2 /* OBJECT_BOUNDING_BOX */;
+            this.transformed = undefined;
             let d;
             if (SVG.path(element)) {
                 d = this.getBaseValue('d');
@@ -5756,7 +5756,7 @@
                             if (requireRefit) {
                                 parent.refitPoints(points);
                             }
-                            d = SvgBuild.drawPath(SvgBuild.rebindPathPoints(commands, points), precision);
+                            d = SvgBuild.drawPath(SvgBuild.rebindPathPoints(commands, points, this.transformed !== undefined), precision);
                         }
                     }
                 }
@@ -6558,9 +6558,7 @@
         build(options) {
             if (this.path) {
                 this.path.parent = this.parent;
-                if (options === undefined) {
-                    options = {};
-                }
+                options = Object.assign({}, options);
                 options.transforms = this.transforms;
                 this.path.build(options);
             }
@@ -6604,6 +6602,7 @@
             const path = new SvgPath(element);
             path.build(options);
             if (path.value) {
+                options = Object.assign({}, options);
                 const precision = options && options.precision;
                 this.clipRegion = path.value;
                 if (path.clipPath) {
@@ -6632,7 +6631,6 @@
                     offsetY = tileHeight - offsetY;
                     remainingHeight += tileHeight;
                 }
-                options = Object.assign({}, options);
                 while (remainingHeight > 0) {
                     const y = boundingY + j * tileHeight - offsetY;
                     let remainingWidth = width;
@@ -6861,9 +6859,9 @@
             this.symbolElement = symbolElement;
         }
         build(options) {
-            this.setRect();
             options = Object.assign({}, options);
             options.symbolElement = this.symbolElement;
+            this.setRect();
             super.build(options);
             const x = this.getBaseValue('x', 0);
             const y = this.getBaseValue('y', 0);

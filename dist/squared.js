@@ -1,4 +1,4 @@
-/* squared 0.8.0
+/* squared 0.9.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -7,72 +7,40 @@
     (global = global || self, factory(global.squared = {}));
 }(this, function (exports) { 'use strict';
 
+    const REGEXP_WORD = /\w/;
+    const REGEXP_WORDDASH = /[a-zA-Z\d]/;
     const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const NUMERALS = [
         '', 'C', 'CC', 'CCC', 'CD', 'D', 'DC', 'DCC', 'DCCC', 'CM',
         '', 'X', 'XX', 'XXX', 'XL', 'L', 'LX', 'LXX', 'LXXX', 'XC',
         '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'
     ];
-    const REGEXP_UNDERSCORE = /([a-z][A-Z])/g;
-    const REGEXP_WORD = /[^\w]+/g;
-    const REGEXP_WORDDASH = /[^a-zA-Z\d]+/g;
-    const REGEXP_CALCSIGN = /(\s+[+\-]\s+|\s*[*/]\s*)/;
-    function compareObject(obj1, obj2, attr, numeric) {
-        const namespaces = attr.split('.');
-        let current1 = obj1;
-        let current2 = obj2;
-        for (const name of namespaces) {
-            if (current1[name] !== undefined && current2[name] !== undefined) {
-                current1 = current1[name];
-                current2 = current2[name];
-            }
-            else if (current1[name] === undefined && current2[name] === undefined) {
-                return false;
-            }
-            else if (current1[name] !== undefined) {
-                return [1, 0];
-            }
-            else {
-                return [0, 1];
-            }
-        }
-        if (numeric) {
-            const value1 = parseFloat(current1);
-            const value2 = parseFloat(current2);
-            if (!isNaN(value1) && !isNaN(value2)) {
-                return [value1, value2];
-            }
-            else if (!isNaN(value1)) {
-                return [1, 0];
-            }
-            else if (!isNaN(value2)) {
-                return [0, 1];
-            }
-        }
-        return [current1, current2];
-    }
-    const REGEXP_STRING = {
+    const UNIT_TYPE = 'px|em|ch|pc|pt|vw|vh|vmin|vmax|mm|cm|in';
+    const STRING_PATTERN = {
         URL: 'url\\("?(.+?)"?\\)',
         DECIMAL: '-?\\d+(?:\\.\\d+)?',
-        ZERO_ONE: '0(?:\\.\\d+)?|1(?:\\.0+)?',
-        PERCENT: '\\d+(\\.\\d+)?%',
+        PERCENT: '\\d+(?:\\.\\d+)?%',
         CALC: 'calc(\\(.+\\))',
-        VAR: 'var\\((--[A-Za-z0-9\\-]+)\\)'
+        VAR: 'var\\((--[A-Za-z0-9\\-]+)\\)',
+        ZERO_ONE: '0(?:\\.\\d+)?|1(?:\\.0+)?'
     };
-    REGEXP_STRING.UNIT = `(${REGEXP_STRING.DECIMAL})(px|em|ch|pc|pt|vw|vh|vmin|vmax|mm|cm|in)`;
-    REGEXP_STRING.DEGREE = `(${REGEXP_STRING.DECIMAL})(deg|rad|turn|grad)`;
-    REGEXP_STRING.LENGTH = `(${REGEXP_STRING.DECIMAL}(?:[a-z]{2,}|%)?)`;
+    STRING_PATTERN.LENGTH = `(${STRING_PATTERN.DECIMAL})(${UNIT_TYPE})?`;
+    STRING_PATTERN.LENGTH_PERCENTAGE = `(${STRING_PATTERN.DECIMAL}(?:${UNIT_TYPE}|%)?)`;
+    STRING_PATTERN.ANGLE = `(${STRING_PATTERN.DECIMAL})(deg|rad|turn|grad)`;
     const REGEXP_COMPILED = {
-        UNIT: new RegExp(`^${REGEXP_STRING.UNIT}$`),
-        DECIMAL: new RegExp(`^${REGEXP_STRING.DECIMAL}$`),
-        PERCENT: new RegExp(`^${REGEXP_STRING.PERCENT}$`),
-        CALC: new RegExp(`^${REGEXP_STRING.CALC}$`),
-        URL: new RegExp(REGEXP_STRING.URL),
-        URI: /^[A-Za-z]+:\/\//,
+        DECIMAL: new RegExp(`^${STRING_PATTERN.DECIMAL}$`),
+        LENGTH: new RegExp(`^${STRING_PATTERN.LENGTH}$`),
+        PERCENT: new RegExp(`^${STRING_PATTERN.PERCENT}$`),
+        ANGLE: new RegExp(`^${STRING_PATTERN.ANGLE}$`),
+        CALC: new RegExp(`^${STRING_PATTERN.CALC}$`),
+        URL: new RegExp(STRING_PATTERN.URL),
+        PROTOCOL: /^[A-Za-z]+:\/\//,
         SEPARATOR: /\s*,\s*/,
         ATTRIBUTE: /([^\s]+)="([^"]+)"/,
         CUSTOMPROPERTY: /^(?:var|calc)\(.+\)$/,
-        PLACEHOLDER: /{(\d+)}/
+        LEADINGSPACE: /^\s+/,
+        TRAILINGSPACE: /\s+$/,
+        LEADINGNEWLINE: /^\s*\n+/
     };
     function isUserAgent(value) {
         if (typeof value === 'string') {
@@ -91,8 +59,8 @@
                 value |= 16 /* EDGE */;
             }
         }
-        let client;
         const userAgent = navigator.userAgent;
+        let client;
         if (userAgent.indexOf('Safari') !== -1 && userAgent.indexOf('Chrome') === -1) {
             client = 4 /* SAFARI */;
         }
@@ -111,37 +79,68 @@
         return window.devicePixelRatio * 96;
     }
     function capitalize(value, upper = true) {
-        if (value !== '') {
-            if (upper) {
-                return value.charAt(0).toUpperCase() + value.substring(1).toLowerCase();
-            }
-            else {
-                return value.charAt(0).toLowerCase() + value.substring(1);
-            }
+        if (upper) {
+            return value.charAt(0).toUpperCase() + value.substring(1).toLowerCase();
         }
-        return value;
+        else {
+            return value.charAt(0).toLowerCase() + value.substring(1);
+        }
     }
     function convertUnderscore(value) {
-        value = value.charAt(0).toLowerCase() + value.substring(1);
-        const match = value.match(REGEXP_UNDERSCORE);
-        if (match) {
-            for (const capture of match) {
-                value = value.replace(capture, `${capture[0]}_${capture[1].toLowerCase()}`);
+        let result = value[0].toLowerCase();
+        let lower = true;
+        for (let i = 1; i < value.length; i++) {
+            const char = value[i];
+            const upper = char === char.toUpperCase();
+            if (char !== '_' && lower && upper) {
+                result += '_' + char.toLowerCase();
             }
+            else {
+                result += char;
+            }
+            lower = !upper;
         }
-        return value;
+        return result;
     }
     function convertCamelCase(value, char = '-') {
-        const match = value.replace(new RegExp(`^${char}+`), '').match(new RegExp(`(${char}[a-z])`, 'g'));
-        if (match) {
-            for (const capture of match) {
-                value = value.replace(capture, capture[1].toUpperCase());
+        let result = '';
+        let previous = '';
+        for (let i = 0; i < value.length; i++) {
+            if (value[i] !== char) {
+                if (previous === char) {
+                    result += value[i].toUpperCase();
+                }
+                else {
+                    result += value[i];
+                }
             }
+            previous = value[i];
         }
-        return value;
+        return result;
     }
     function convertWord(value, dash = false) {
-        return dash ? value.trim().replace(REGEXP_WORDDASH, '_') : value.replace(REGEXP_WORD, '_');
+        let result = '';
+        if (dash) {
+            for (let i = 0; i < value.length; i++) {
+                if (REGEXP_WORDDASH.test(value[i])) {
+                    result += value[i];
+                }
+                else {
+                    result += '_';
+                }
+            }
+        }
+        else {
+            for (let i = 0; i < value.length; i++) {
+                if (REGEXP_WORD.test(value[i])) {
+                    result += value[i];
+                }
+                else {
+                    result += '_';
+                }
+            }
+        }
+        return result;
     }
     function convertInt(value) {
         return value && parseInt(value) || 0;
@@ -151,17 +150,20 @@
     }
     function convertAngle(value, unit = 'deg') {
         let angle = parseFloat(value);
-        switch (unit) {
-            case 'rad':
-                angle *= 180 / Math.PI;
-                break;
-            case 'grad':
-                angle /= 400;
-            case 'turn':
-                angle *= 360;
-                break;
+        if (!isNaN(angle)) {
+            switch (unit) {
+                case 'rad':
+                    angle *= 180 / Math.PI;
+                    break;
+                case 'grad':
+                    angle /= 400;
+                case 'turn':
+                    angle *= 360;
+                    break;
+            }
+            return angle;
         }
-        return angle;
+        return 0;
     }
     function convertPX(value, fontSize) {
         if (value) {
@@ -169,12 +171,15 @@
             if (value.endsWith('%') || value === 'auto') {
                 return value;
             }
-            return `${calculateUnit(value, fontSize)}px`;
+            return `${parseUnit(value, fontSize)}px`;
         }
         return '0px';
     }
-    function convertUnit(value, dimension, fontSize) {
-        return isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : calculateUnit(value, fontSize);
+    function convertLength(value, dimension, fontSize) {
+        return isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseUnit(value, fontSize);
+    }
+    function convertPercent(value, dimension, fontSize) {
+        return isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize) / dimension;
     }
     function convertAlpha(value) {
         let result = '';
@@ -192,8 +197,7 @@
             result += ALPHABET.charAt(index);
             value -= index + ALPHABET.length;
         }
-        result = ALPHABET.charAt(value) + result;
-        return result;
+        return ALPHABET.charAt(value) + result;
     }
     function convertRoman(value) {
         const digits = value.toString().split('');
@@ -232,6 +236,8 @@
             }
         }
         if (opened === closing.length) {
+            const symbol = /(\s+[+\-]\s+|\s*[*/]\s*)/;
+            const placeholder = /{(\d+)}/;
             const equated = [];
             let index = 0;
             while (true) {
@@ -251,7 +257,7 @@
                     if (valid) {
                         const seg = [];
                         const evaluate = [];
-                        for (let partial of value.substring(j + 1, closing[i]).split(REGEXP_CALCSIGN)) {
+                        for (let partial of value.substring(j + 1, closing[i]).split(symbol)) {
                             partial = partial.trim();
                             switch (partial) {
                                 case '+':
@@ -261,18 +267,18 @@
                                     evaluate.push(partial);
                                     break;
                                 default:
-                                    const match = REGEXP_COMPILED.PLACEHOLDER.exec(partial);
+                                    const match = placeholder.exec(partial);
                                     if (match) {
                                         seg.push(equated[parseInt(match[1])]);
                                     }
-                                    else if (isUnit(partial)) {
-                                        seg.push(calculateUnit(partial, fontSize));
+                                    else if (isLength(partial)) {
+                                        seg.push(parseUnit(partial, fontSize));
                                     }
                                     else if (isPercent(partial)) {
                                         seg.push(parseFloat(partial) / 100 * dimension);
                                     }
-                                    else if (isNumber(partial)) {
-                                        seg.push(parseFloat(partial));
+                                    else if (isAngle(partial)) {
+                                        seg.push(parseAngle(partial));
                                     }
                                     else {
                                         return undefined;
@@ -310,9 +316,9 @@
                             }
                             else {
                                 equated[index] = seg[0];
-                                const placeholder = `{${index++}}`;
+                                const hash = `{${index++}}`;
                                 const remaining = closing[i] + 1;
-                                value = value.substring(0, j) + `${placeholder + ' '.repeat(remaining - (j + placeholder.length))}` + value.substring(remaining);
+                                value = value.substring(0, j) + `${hash + ' '.repeat(remaining - (j + hash.length))}` + value.substring(remaining);
                                 closing.splice(i--, 1);
                             }
                         }
@@ -325,9 +331,9 @@
         }
         return undefined;
     }
-    function calculateUnit(value, fontSize) {
+    function parseUnit(value, fontSize) {
         if (value) {
-            const match = value.match(REGEXP_COMPILED.UNIT);
+            const match = value.match(REGEXP_COMPILED.LENGTH);
             if (match) {
                 let result = parseFloat(match[1]);
                 switch (match[2]) {
@@ -364,8 +370,14 @@
                 }
                 return result;
             }
-            else if (isNumber(value)) {
-                return parseFloat(value);
+        }
+        return 0;
+    }
+    function parseAngle(value) {
+        if (value) {
+            const match = REGEXP_COMPILED.ANGLE.exec(value);
+            if (match) {
+                return convertAngle(match[1], match[2]);
             }
         }
         return 0;
@@ -379,9 +391,9 @@
     function formatPercent(value, round = true) {
         if (typeof value === 'string') {
             value = parseFloat(value);
-        }
-        if (isNaN(value)) {
-            return '0%';
+            if (isNaN(value)) {
+                return '0%';
+            }
         }
         return `${round ? Math.round(value) : value}%`;
     }
@@ -395,7 +407,7 @@
         return (value & offset) === offset;
     }
     function isNumber(value) {
-        return value !== '' && REGEXP_COMPILED.DECIMAL.test(value.trim());
+        return typeof value === 'string' && REGEXP_COMPILED.DECIMAL.test(value.trim());
     }
     function isString(value) {
         return typeof value === 'string' && value.trim() !== '';
@@ -403,14 +415,17 @@
     function isArray(value) {
         return Array.isArray(value) && value.length > 0;
     }
-    function isUnit(value) {
-        return REGEXP_COMPILED.UNIT.test(value);
+    function isLength(value) {
+        return REGEXP_COMPILED.LENGTH.test(value);
     }
     function isPercent(value) {
         return REGEXP_COMPILED.PERCENT.test(value);
     }
     function isCalc(value) {
         return REGEXP_COMPILED.CALC.test(value);
+    }
+    function isAngle(value) {
+        return REGEXP_COMPILED.ANGLE.test(value);
     }
     function isEqual(source, values) {
         if (source === values) {
@@ -450,30 +465,30 @@
         return Object.assign(Object.create(Object.getPrototypeOf(value)), value);
     }
     function cloneArray(data, result = [], object = false) {
-        for (const item of data) {
-            if (Array.isArray(item)) {
-                result.push(cloneArray(item, [], object));
+        for (const value of data) {
+            if (Array.isArray(value)) {
+                result.push(cloneArray(value, [], object));
             }
-            else if (object && typeof item === 'object') {
-                result.push(cloneObject(item, {}, true));
+            else if (object && typeof value === 'object' && value !== null) {
+                result.push(cloneObject(value, {}, true));
             }
             else {
-                result.push(item);
+                result.push(value);
             }
         }
         return result;
     }
     function cloneObject(data, result = {}, array = false) {
         for (const attr in data) {
-            const item = data[attr];
-            if (Array.isArray(item)) {
-                result[attr] = array ? cloneArray(item, [], true) : item;
+            const value = data[attr];
+            if (Array.isArray(value)) {
+                result[attr] = array ? cloneArray(value, [], true) : value;
             }
-            else if (item && typeof item === 'object') {
-                result[attr] = cloneObject(item, {}, array);
+            else if (typeof value === 'object' && value !== null) {
+                result[attr] = cloneObject(value, {}, array);
             }
             else {
-                result[attr] = item;
+                result[attr] = value;
             }
         }
         return result;
@@ -518,7 +533,7 @@
         return optional(obj, value, 'boolean');
     }
     function resolvePath(value) {
-        if (!REGEXP_COMPILED.URI.test(value)) {
+        if (!REGEXP_COMPILED.PROTOCOL.test(value)) {
             let pathname = location.pathname.split('/');
             pathname.pop();
             if (value.charAt(0) === '/') {
@@ -543,9 +558,8 @@
                     value = `${location.origin + pathname.join('/')}/${value}`;
                 }
             }
-            return value;
         }
-        return '';
+        return value;
     }
     function trimNull(value) {
         return value ? value.trim() : '';
@@ -606,14 +620,6 @@
     function hasValue(value) {
         return value !== undefined && value !== null && value.toString().trim() !== '';
     }
-    function hasInSet(list, condition) {
-        for (const item of list) {
-            if (condition(item)) {
-                return true;
-            }
-        }
-        return false;
-    }
     function withinRange(a, b, offset = 0.5) {
         return b >= (a - offset) && b <= (a + offset);
     }
@@ -654,20 +660,35 @@
             }
         }
     }
-    function sortNumber(values, descending = false) {
-        return descending ? values.sort((a, b) => a > b ? -1 : 1) : values.sort((a, b) => a < b ? -1 : 1);
+    function sortNumber(values, ascending = true) {
+        return ascending ? values.sort((a, b) => a < b ? -1 : 1) : values.sort((a, b) => a > b ? -1 : 1);
     }
     function sortArray(list, ascending, ...attrs) {
         return list.sort((a, b) => {
             for (const attr of attrs) {
-                const result = compareObject(a, b, attr, true);
-                if (result && result[0] !== result[1]) {
-                    if (ascending) {
-                        return result[0] > result[1] ? 1 : -1;
+                const namespaces = attr.split('.');
+                let valueA = a;
+                let valueB = b;
+                for (const name of namespaces) {
+                    if (valueA[name] !== undefined && valueB[name] !== undefined) {
+                        valueA = valueA[name];
+                        valueB = valueB[name];
+                    }
+                    else if (valueA[name] === undefined && valueB[name] === undefined) {
+                        return 0;
+                    }
+                    else if (valueA[name] !== undefined) {
+                        return -1;
                     }
                     else {
-                        return result[0] < result[1] ? 1 : -1;
+                        return 1;
                     }
+                }
+                if (ascending) {
+                    return valueA >= valueB ? 1 : -1;
+                }
+                else {
+                    return valueA <= valueB ? -1 : 1;
                 }
             }
             return 0;
@@ -676,7 +697,8 @@
     function flatArray(list) {
         let current = list;
         while (current.some(item => Array.isArray(item))) {
-            current = [].concat.apply([], filterArray(current, item => item !== undefined && item !== null));
+            const flatten = [];
+            current = flatten.concat.apply(flatten, filterArray(current, item => item !== undefined && item !== null));
         }
         return current;
     }
@@ -706,12 +728,14 @@
         return list;
     }
     function filterArray(list, predicate) {
-        const result = [];
+        const result = new Array(list.length);
+        let j = 0;
         for (let i = 0; i < list.length; i++) {
             if (predicate(list[i], i, list)) {
-                result.push(list[i]);
+                result[j++] = list[i];
             }
         }
+        result.length = j;
         return result;
     }
     function concatArray(dest, source) {
@@ -729,22 +753,26 @@
         return dest;
     }
     function flatMap(list, predicate) {
-        const result = [];
+        const result = new Array(list.length);
+        let j = 0;
         for (let i = 0; i < list.length; i++) {
             const item = predicate(list[i], i, list);
             if (hasValue(item)) {
-                result.push(item);
+                result[j++] = item;
             }
         }
+        result.length = j;
         return result;
     }
     function filterMap(list, predicate, callback) {
-        const result = [];
+        const result = new Array(list.length);
+        let j = 0;
         for (let i = 0; i < list.length; i++) {
             if (predicate(list[i], i, list)) {
-                result.push(callback(list[i], i, list));
+                result[j++] = callback(list[i], i, list);
             }
         }
+        result.length = j;
         return result;
     }
     function replaceMap(list, predicate) {
@@ -754,7 +782,7 @@
         return list;
     }
     function objectMap(list, predicate) {
-        const result = [];
+        const result = new Array(list.length);
         for (let i = 0; i < list.length; i++) {
             result[i] = predicate(list[i], i, list);
         }
@@ -768,7 +796,7 @@
                 result += value + char;
             }
         }
-        return result.substring(0, result.length - char.length);
+        return result;
     }
     function captureMap(list, predicate, callback) {
         for (let i = 0; i < list.length; i++) {
@@ -782,7 +810,7 @@
     }
 
     var util = /*#__PURE__*/Object.freeze({
-        REGEXP_STRING: REGEXP_STRING,
+        STRING_PATTERN: STRING_PATTERN,
         REGEXP_COMPILED: REGEXP_COMPILED,
         isUserAgent: isUserAgent,
         getDeviceDPI: getDeviceDPI,
@@ -794,12 +822,14 @@
         convertFloat: convertFloat,
         convertAngle: convertAngle,
         convertPX: convertPX,
-        convertUnit: convertUnit,
+        convertLength: convertLength,
+        convertPercent: convertPercent,
         convertAlpha: convertAlpha,
         convertRoman: convertRoman,
         convertEnum: convertEnum,
         calculate: calculate,
-        calculateUnit: calculateUnit,
+        parseUnit: parseUnit,
+        parseAngle: parseAngle,
         formatPX: formatPX,
         formatPercent: formatPercent,
         formatString: formatString,
@@ -807,9 +837,10 @@
         isNumber: isNumber,
         isString: isString,
         isArray: isArray,
-        isUnit: isUnit,
+        isLength: isLength,
         isPercent: isPercent,
         isCalc: isCalc,
+        isAngle: isAngle,
         isEqual: isEqual,
         includes: includes,
         cloneInstance: cloneInstance,
@@ -829,7 +860,6 @@
         fromLastIndexOf: fromLastIndexOf,
         searchObject: searchObject,
         hasValue: hasValue,
-        hasInSet: hasInSet,
         withinRange: withinRange,
         assignEmptyProperty: assignEmptyProperty,
         assignEmptyValue: assignEmptyValue,
@@ -994,7 +1024,11 @@
         }
     }
 
-    const X11_CSS3 = [
+    const STRING_HEX = '0123456789ABCDEF';
+    const REGEXP_HEX = /[A-Za-z\d]{3,}/;
+    const REGEXP_RGBA = /rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/;
+    const CACHE_COLORDATA = {};
+    const COLOR_CSS3 = [
         {
             value: '#000000',
             name: 'black',
@@ -3054,16 +3088,12 @@
             }
         }
     ];
-    for (const color of X11_CSS3) {
+    for (const color of COLOR_CSS3) {
         Object.freeze(color);
     }
-    const CACHE_COLORDATA = {};
-    const CHAR_HEX = '0123456789ABCDEF';
-    const REGEXP_HEX = /[A-Za-z\d]{3,}/;
-    const REGEXP_RGBA = /rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/;
     const parseOpacity = (value) => parseFloat(value.trim() || '1') * 255;
     function findColorName(value) {
-        for (const color of X11_CSS3) {
+        for (const color of COLOR_CSS3) {
             if (color.name === value.toLowerCase()) {
                 return color;
             }
@@ -3076,8 +3106,7 @@
             const hsl = convertHSLA(rgba);
             const result = [];
             let baseline = -1;
-            for (let i = 0; i < X11_CSS3.length; i++) {
-                const color = X11_CSS3[i];
+            for (const color of COLOR_CSS3) {
                 if (color.value === value) {
                     return color;
                 }
@@ -3111,7 +3140,7 @@
                 return result[index];
             }
             else {
-                return X11_CSS3[X11_CSS3.length - 1];
+                return COLOR_CSS3[COLOR_CSS3.length - 1];
             }
         }
         return undefined;
@@ -3195,12 +3224,7 @@
         let output = '';
         for (const value of values) {
             const rgb = Math.max(0, Math.min(value, 255));
-            if (isNaN(rgb)) {
-                output += '00';
-            }
-            else {
-                output += CHAR_HEX.charAt((rgb - (rgb % 16)) / 16) + CHAR_HEX.charAt(rgb % 16);
-            }
+            output += isNaN(rgb) ? '00' : STRING_HEX.charAt((rgb - (rgb % 16)) / 16) + STRING_HEX.charAt(rgb % 16);
         }
         return output;
     }
@@ -3378,9 +3402,7 @@
         };
     }
     function removeElementsByClassName(className) {
-        const elements = document.getElementsByClassName(className);
-        for (let i = 0; i < elements.length; i++) {
-            const element = elements[i];
+        for (const element of Array.from(document.getElementsByClassName(className))) {
             if (element.parentElement) {
                 element.parentElement.removeChild(element);
             }
@@ -3394,7 +3416,7 @@
         if (element) {
             for (let i = 0; i < element.childNodes.length; i++) {
                 const node = getElementAsNode(element.childNodes[i]);
-                if (node && (!node.excluded || (lineBreak && node.lineBreak))) {
+                if (node && node.naturalElement && (!node.excluded || (lineBreak && node.lineBreak))) {
                     return node.element;
                 }
             }
@@ -3435,11 +3457,11 @@
                     else {
                         spliceArray(result, element => element.nodeName.charAt(0) === '#' && (element.nodeName !== 'text' || !!element.textContent && element.textContent.trim() === ''));
                     }
-                    return result;
+                    return result.length ? result : undefined;
                 }
             }
         }
-        return [];
+        return undefined;
     }
     function getPreviousElementSibling(element) {
         if (element) {
@@ -3479,7 +3501,8 @@
         }
     }
     function getElementAsNode(element) {
-        return isString(element.className) && element.className.startsWith('squared') ? undefined : getElementCache(element, 'node');
+        const node = getElementCache(element, 'node');
+        return node && node.naturalElement ? node : undefined;
     }
 
     var dom = /*#__PURE__*/Object.freeze({
@@ -3501,12 +3524,11 @@
         getElementAsNode: getElementAsNode
     });
 
-    const REGEXP_KEYFRAMERULE = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
-    const REGEXP_VAR = new RegExp(`${REGEXP_STRING.VAR}`, 'g');
-    function convertPercent(value, dimension, fontSize) {
-        return isPercent(value) ? parseFloat(value) / 100 : calculateUnit(value, fontSize) / dimension;
-    }
+    const BOX_POSITION = ['top', 'right', 'bottom', 'left'];
+    const BOX_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
+    const BOX_PADDING = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'];
     function getKeyframeRules() {
+        const keyFrameRule = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
         const result = new Map();
         violation: {
             for (let i = 0; i < document.styleSheets.length; i++) {
@@ -3518,7 +3540,7 @@
                             if (item.type === 7) {
                                 const map = {};
                                 for (let k = 0; k < item.cssRules.length; k++) {
-                                    const match = REGEXP_KEYFRAMERULE.exec(item.cssRules[k].cssText);
+                                    const match = keyFrameRule.exec(item.cssRules[k].cssText);
                                     if (match) {
                                         for (let percent of (item.cssRules[k]['keyText'] || match[1].trim()).split(REGEXP_COMPILED.SEPARATOR)) {
                                             percent = percent.trim();
@@ -3554,7 +3576,7 @@
     }
     function hasComputedStyle(element) {
         if (element) {
-            return typeof element['style'] === 'object' && element['style'] !== null;
+            return typeof element['style'] === 'object' && element['style'] !== null && element['style']['display'] !== null;
         }
         return false;
     }
@@ -3563,7 +3585,7 @@
             style = getStyle(element);
         }
         if (value === 'inherit') {
-            value = getInheritedStyle(element.parentElement, attr);
+            value = getInheritedStyle(element, attr);
         }
         if (value && value !== 'initial') {
             if (value !== style[attr]) {
@@ -3604,7 +3626,7 @@
                     case 'paddingRight':
                     case 'paddingBottom':
                     case 'paddingLeft':
-                        return isUnit(value) ? convertPX(value, fontSize) : value;
+                        return isLength(value) ? convertPX(value, fontSize) : value;
                 }
             }
             return value;
@@ -3614,9 +3636,9 @@
     function getDataSet(element, prefix) {
         const result = {};
         if (element) {
-            prefix = convertCamelCase(prefix, '\\.');
+            prefix = convertCamelCase(prefix, '.');
             for (const attr in element.dataset) {
-                if (attr.length > prefix.length && attr.startsWith(prefix)) {
+                if (attr.startsWith(prefix)) {
                     result[capitalize(attr.substring(prefix.length), false)] = element.dataset[attr];
                 }
             }
@@ -3660,7 +3682,7 @@
         if (element) {
             let current = element.parentElement;
             while (current && !tagNames.includes(current.tagName)) {
-                value = getStyle(current)[attr] || '';
+                value = getStyle(current, false)[attr] || '';
                 if (value === 'inherit' || exclude && exclude.test(value)) {
                     value = '';
                 }
@@ -3682,7 +3704,7 @@
         return false;
     }
     function getInlineStyle(element, attr) {
-        let value = hasComputedStyle(element) ? element['style'][attr] : '';
+        let value = hasComputedStyle(element) ? element.style[attr] : '';
         if (!value) {
             const styleMap = getElementCache(element, 'styleMap');
             if (styleMap) {
@@ -3710,9 +3732,10 @@
     }
     function calculateVar(element, value, attr, dimension) {
         const style = getComputedStyle(element);
-        let result = value;
+        const pattern = new RegExp(`${STRING_PATTERN.VAR}`, 'g');
         let match;
-        while ((match = REGEXP_VAR.exec(value)) !== null) {
+        let result = value;
+        while ((match = pattern.exec(value)) !== null) {
             const propertyValue = style.getPropertyValue(match[1]).trim();
             if (propertyValue !== '') {
                 result = result.replace(match[0], propertyValue);
@@ -3722,13 +3745,14 @@
             }
         }
         if (attr && !dimension) {
+            const vertical = /(top|bottom|height)/.test(attr.toLowerCase());
             if (element instanceof SVGElement) {
                 const rect = element.getBoundingClientRect();
-                dimension = attr === 'height' || (attr.length <= 2 && attr.indexOf('y') !== -1) ? rect.height : rect.width;
+                dimension = vertical || attr.length <= 2 && attr.indexOf('y') !== -1 ? rect.height : rect.width;
             }
             else {
                 const rect = (element.parentElement || element).getBoundingClientRect();
-                dimension = attr.toLowerCase().indexOf('height') !== -1 ? rect.height : rect.width;
+                dimension = vertical ? rect.height : rect.width;
             }
         }
         return calculate(result, dimension, getFontSize(element));
@@ -3742,19 +3766,59 @@
         }
         return '';
     }
-    function getBackgroundPosition(value, dimension, fontSize, percent = false) {
+    function getBackgroundPosition(value, dimension, fontSize) {
         const result = {
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
+            topAsPercent: 0,
+            leftAsPercent: 0,
+            rightAsPercent: 0,
+            bottomAsPercent: 0,
             horizontal: 'left',
-            vertical: 'top',
-            originalX: '',
-            originalY: ''
+            vertical: 'top'
         };
         const orientation = value === 'center' ? ['center', 'center'] : value.split(' ');
-        if (orientation.length === 4) {
+        if (orientation.length === 2) {
+            for (let i = 0; i < orientation.length; i++) {
+                const position = orientation[i];
+                let direction;
+                let offsetParent;
+                if (i === 0) {
+                    direction = 'left';
+                    offsetParent = dimension.width;
+                    result.horizontal = position;
+                }
+                else {
+                    direction = 'top';
+                    offsetParent = dimension.height;
+                    result.vertical = position;
+                }
+                const directionAsPercent = `${direction}AsPercent`;
+                switch (position) {
+                    case 'start':
+                        result.horizontal = 'left';
+                        break;
+                    case 'end':
+                        result.horizontal = 'right';
+                    case 'right':
+                    case 'bottom':
+                        result[direction] = offsetParent;
+                        result[directionAsPercent] = 1;
+                        break;
+                    case 'center':
+                        result[direction] = offsetParent / 2;
+                        result[directionAsPercent] = 0.5;
+                        break;
+                    default:
+                        result[direction] = convertLength(position, offsetParent, fontSize);
+                        result[directionAsPercent] = convertPercent(position, offsetParent, fontSize);
+                        break;
+                }
+            }
+        }
+        else if (orientation.length === 4) {
             for (let i = 0; i < orientation.length; i++) {
                 const position = orientation[i];
                 switch (i) {
@@ -3762,20 +3826,22 @@
                         result.horizontal = position;
                         break;
                     case 1: {
-                        const location = percent ? convertPercent(position, dimension.width, fontSize) : convertUnit(position, dimension.width, fontSize);
+                        const location = convertLength(position, dimension.width, fontSize);
+                        const locationAsPercent = convertPercent(position, dimension.width, fontSize);
                         switch (result.horizontal) {
                             case 'end:':
                                 result.horizontal = 'right';
                             case 'right':
                                 result.right = location;
-                                result.left = percent ? 1 - location : dimension.width - location;
-                                result.originalX = isPercent(position) ? formatPercent(100 - parseInt(position)) : formatPX(dimension.width - parseInt(convertPX(position, fontSize)));
+                                result.left = dimension.width - location;
+                                result.rightAsPercent = locationAsPercent;
+                                result.leftAsPercent = 1 - locationAsPercent;
                                 break;
                             case 'start':
                                 result.horizontal = 'left';
                             default:
                                 result.left = location;
-                                result.originalX = position;
+                                result.leftAsPercent = locationAsPercent;
                                 break;
                         }
                         break;
@@ -3784,63 +3850,20 @@
                         result.vertical = position;
                         break;
                     case 3: {
-                        const location = percent ? convertPercent(position, dimension.height, fontSize) : convertUnit(position, dimension.height, fontSize);
+                        const location = convertLength(position, dimension.height, fontSize);
+                        const locationAsPercent = convertPercent(position, dimension.height, fontSize);
                         if (result.vertical === 'bottom') {
                             result.bottom = location;
-                            result.top = percent ? 1 - location : dimension.height - location;
-                            result.originalY = isPercent(position) ? formatPercent(100 - parseInt(position)) : formatPX(dimension.height - parseInt(convertPX(position, fontSize)));
+                            result.top = dimension.height - location;
+                            result.bottomAsPercent = locationAsPercent;
+                            result.topAsPercent = 1 - locationAsPercent;
                         }
                         else {
                             result.top = location;
-                            result.originalY = position;
+                            result.topAsPercent = locationAsPercent;
                         }
                         break;
                     }
-                }
-            }
-        }
-        else if (orientation.length === 2) {
-            for (let i = 0; i < orientation.length; i++) {
-                const position = orientation[i];
-                let offsetParent;
-                let direction;
-                let original;
-                if (i === 0) {
-                    offsetParent = dimension.width;
-                    direction = 'left';
-                    original = 'originalX';
-                    result.horizontal = position;
-                }
-                else {
-                    offsetParent = dimension.height;
-                    direction = 'top';
-                    original = 'originalY';
-                    result.vertical = position;
-                }
-                if (/^[a-z]+$/.test(position)) {
-                    switch (position) {
-                        case 'start':
-                            result.horizontal = 'left';
-                        case 'left':
-                        case 'top':
-                            result[original] = '0%';
-                            break;
-                        case 'end':
-                            result.horizontal = 'right';
-                        case 'right':
-                        case 'bottom':
-                            result[direction] = percent ? 1 : offsetParent;
-                            result[original] = '100%';
-                            break;
-                        case 'center':
-                            result[direction] = percent ? 0.5 : Math.round(offsetParent / 2);
-                            result[original] = '50%';
-                            break;
-                    }
-                }
-                else {
-                    result[direction] = percent ? convertPercent(position, offsetParent, fontSize) : convertUnit(position, offsetParent, fontSize);
-                    result[original] = position;
                 }
             }
         }
@@ -3848,13 +3871,13 @@
     }
     function resolveURL(value) {
         const match = value.match(REGEXP_COMPILED.URL);
-        if (match) {
-            return resolvePath(match[1]);
-        }
-        return '';
+        return match ? resolvePath(match[1]) : '';
     }
 
     var css = /*#__PURE__*/Object.freeze({
+        BOX_POSITION: BOX_POSITION,
+        BOX_MARGIN: BOX_MARGIN,
+        BOX_PADDING: BOX_PADDING,
         getKeyframeRules: getKeyframeRules,
         hasComputedStyle: hasComputedStyle,
         checkStyleValue: checkStyleValue,
@@ -3994,7 +4017,7 @@
         }
         else if (excluded) {
             const node = getElementAsNode(element);
-            return node && node.excluded && node.blockStatic;
+            return !!node && node.excluded && node.blockStatic;
         }
         return false;
     }
@@ -4193,13 +4216,13 @@
         nextMultiple: nextMultiple
     });
 
-    const TEMPLATE_ROOT = '__ROOT__';
+    const STRING_ROOT = '__ROOT__';
     const REGEXP_CREATE = {
         ATTRIBUTE: /\s*((\w+:)?\w+="[^"]*)?{~\w+}"?/g,
-        COLLECTION: /\n*\t*{%\w+}\n+/g,
+        COLLECTION: /\n*({%\w+}\n)+/g,
         LINEBREAK: /\n\n/g
     };
-    const REGEXP_FORAMT = {
+    const REGEXP_FORMAT = {
         ITEM: /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g,
         OPENTAG: /\s*>$/,
         CLOSETAG: /\/>\n*$/
@@ -4217,19 +4240,23 @@
     function formatPlaceholder(id, symbol = ':') {
         return `{${symbol + id.toString()}}`;
     }
-    function replacePlaceholder(value, id, content, before = false) {
-        const hash = typeof id === 'number' ? formatPlaceholder(id) : id;
-        return value.replace(hash, (before ? hash : '') + content + '\n' + (before ? '' : hash));
-    }
-    function pushIndent(value, depth, char = '\t') {
-        const pattern = new RegExp(`^${char.replace('\\', '\\\\')}+`);
-        return joinMap(value.split('\n'), line => {
-            const match = pattern.exec(line);
-            if (match) {
-                return line.replace(match[0], char.repeat(depth + match[0].length));
+    function pushIndent(value, depth, char = '\t', indent) {
+        if (depth > 0) {
+            if (indent === undefined) {
+                indent = char.repeat(depth);
             }
-            return line;
-        });
+            return joinMap(value.split('\n'), line => line !== '' ? indent + line : '');
+        }
+        return value;
+    }
+    function pushIndentArray(values, depth, char = '\t', separator = '') {
+        if (depth > 0) {
+            const indent = char.repeat(depth);
+            for (let i = 0; i < values.length; i++) {
+                values[i] = pushIndent(values[i], depth, char, indent);
+            }
+        }
+        return values.join(separator);
     }
     function replaceIndent(value, depth, pattern) {
         if (depth >= 0) {
@@ -4240,7 +4267,7 @@
                     if (indent === -1) {
                         indent = match[2].length;
                     }
-                    return match[1] + '\t'.repeat(depth + (match[2].length - indent)) + match[3];
+                    return (match[1] || '') + '\t'.repeat(depth + (match[2].length - indent)) + match[3];
                 }
                 return line;
             });
@@ -4256,7 +4283,8 @@
                         return ' '.repeat(spaces * match[1].length) + match[2];
                     }
                     return line;
-                });
+                })
+                    .trim();
             }
             else {
                 return value.replace(/\t/g, ' '.repeat(spaces));
@@ -4267,7 +4295,6 @@
     function replaceEntity(value) {
         return value
             .replace(/&#(\d+);/g, (match, capture) => String.fromCharCode(parseInt(capture)))
-            .replace(/&(?!#?[A-Za-z0-9]{2,};)/g, '&amp;')
             .replace(/\u00A0/g, '&#160;')
             .replace(/\u2002/g, '&#8194;')
             .replace(/\u2003/g, '&#8195;')
@@ -4277,13 +4304,8 @@
             .replace(/\u200E/g, '&#8206;')
             .replace(/\u200F/g, '&#8207;');
     }
-    function replaceCharacter(value) {
-        return value
-            .replace(/&nbsp;/g, '&#160;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/'/g, '&apos;')
-            .replace(/"/g, '&quot;');
+    function escapeNonEntity(value) {
+        return value.replace(/&(?!#?[A-Za-z0-9]{2,};)/g, '&amp;');
     }
     function parseTemplate(value) {
         const result = {};
@@ -4300,12 +4322,12 @@
             Object.assign(result, data);
             return data;
         }
-        result[TEMPLATE_ROOT] = replaceSectionTag(parseSection(value), value);
+        result[STRING_ROOT] = replaceSectionTag(parseSection(value), value);
         return result;
     }
     function createTemplate(templates, data, format = false, index) {
         if (index === undefined) {
-            index = TEMPLATE_ROOT;
+            index = STRING_ROOT;
         }
         let output = templates[index] || '';
         for (const attr in data) {
@@ -4368,20 +4390,23 @@
                 }
             }
         }
-        if (index === TEMPLATE_ROOT) {
+        if (index === STRING_ROOT) {
             output = output
-                .replace(REGEXP_CREATE.COLLECTION, '\n')
-                .replace(REGEXP_CREATE.LINEBREAK, '\n').trim();
+                .replace(REGEXP_CREATE.ATTRIBUTE, '')
+                .replace(REGEXP_CREATE.COLLECTION, '\n');
             if (format) {
                 output = formatTemplate(output);
             }
+            else {
+                output = output.trim();
+            }
         }
-        return output.replace(REGEXP_CREATE.ATTRIBUTE, '');
+        return output;
     }
-    function formatTemplate(value, closeEmpty = true, char = '\t') {
+    function formatTemplate(value, closeEmpty = true, startIndent = -1, char = '\t') {
         const lines = [];
         let match;
-        while ((match = REGEXP_FORAMT.ITEM.exec(value)) !== null) {
+        while ((match = REGEXP_FORMAT.ITEM.exec(value)) !== null) {
             lines.push({
                 tag: match[1],
                 closing: !!match[2],
@@ -4390,7 +4415,7 @@
             });
         }
         let output = '';
-        let indent = -1;
+        let indent = startIndent;
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
             let previous = indent;
@@ -4400,11 +4425,11 @@
                 }
                 else {
                     previous++;
-                    if (!REGEXP_FORAMT.CLOSETAG.exec(line.tag)) {
+                    if (!REGEXP_FORMAT.CLOSETAG.exec(line.tag)) {
                         if (closeEmpty && line.value.trim() === '') {
                             const next = lines[i + 1];
                             if (next && next.closing && next.tagName === line.tagName) {
-                                line.tag = line.tag.replace(REGEXP_FORAMT.OPENTAG, ' />');
+                                line.tag = line.tag.replace(REGEXP_FORMAT.OPENTAG, ' />');
                                 i++;
                             }
                             else {
@@ -4424,7 +4449,7 @@
                 }
             }
             else {
-                output += line.tag + '\n';
+                output += (startIndent > 0 ? char.repeat(startIndent) : '') + line.tag + '\n';
             }
             output += line.value;
         }
@@ -4433,12 +4458,12 @@
 
     var xml = /*#__PURE__*/Object.freeze({
         formatPlaceholder: formatPlaceholder,
-        replacePlaceholder: replacePlaceholder,
         pushIndent: pushIndent,
+        pushIndentArray: pushIndentArray,
         replaceIndent: replaceIndent,
         replaceTab: replaceTab,
         replaceEntity: replaceEntity,
-        replaceCharacter: replaceCharacter,
+        escapeNonEntity: escapeNonEntity,
         parseTemplate: parseTemplate,
         createTemplate: createTemplate,
         formatTemplate: formatTemplate
@@ -4637,20 +4662,20 @@
         xml
     };
 
-    exports.setFramework = setFramework;
-    exports.parseDocument = parseDocument;
+    exports.apply = apply;
+    exports.close = close;
+    exports.configure = configure;
+    exports.exclude = exclude;
     exports.include = include;
     exports.includeAsync = includeAsync;
-    exports.exclude = exclude;
-    exports.configure = configure;
-    exports.apply = apply;
-    exports.retrieve = retrieve;
-    exports.ready = ready;
-    exports.close = close;
-    exports.reset = reset;
-    exports.saveAllToDisk = saveAllToDisk;
-    exports.toString = toString;
     exports.lib = lib;
+    exports.parseDocument = parseDocument;
+    exports.ready = ready;
+    exports.reset = reset;
+    exports.retrieve = retrieve;
+    exports.saveAllToDisk = saveAllToDisk;
+    exports.setFramework = setFramework;
+    exports.toString = toString;
 
     Object.defineProperty(exports, '__esModule', { value: true });
 

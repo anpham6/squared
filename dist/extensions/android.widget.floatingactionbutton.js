@@ -1,4 +1,4 @@
-/* android.widget 0.8.0
+/* android.widget 0.9.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -25,19 +25,15 @@ this.android.widget.floatingactionbutton = (function () {
             const element = node.element;
             const target = node.dataset.target;
             const options = $utilA.createViewAttribute(this.options[element.id]);
-            const backgroundColor = $color.parseColor(node.css('backgroundColor'), node.css('opacity'));
-            let colorValue = '';
-            if (backgroundColor) {
-                colorValue = $Resource.addColor(backgroundColor);
-            }
-            $util.assignEmptyValue(options, 'android', 'backgroundTint', colorValue !== '' ? `@color/${colorValue}` : '?attr/colorAccent');
-            if (node.hasBit('excludeProcedure', $enum.NODE_PROCEDURE.ACCESSIBILITY)) {
+            const colorName = $Resource.addColor($color.parseColor(node.css('backgroundColor'), node.css('opacity')));
+            $util.assignEmptyValue(options, 'android', 'backgroundTint', colorName !== '' ? `@color/${colorName}` : '?attr/colorAccent');
+            if (!node.hasProcedure($enum.NODE_PROCEDURE.ACCESSIBILITY)) {
                 $util.assignEmptyValue(options, 'android', 'focusable', 'false');
             }
             let src = '';
             switch (element.tagName) {
                 case 'IMG':
-                    src = $Resource.addImageSrcSet(element, $constA.PREFIX_ANDROID.DIALOG);
+                    src = $Resource.addImageSrc(element, $constA.PREFIX_ANDROID.DIALOG);
                     break;
                 case 'INPUT':
                     if (element.type === 'image') {
@@ -56,6 +52,8 @@ this.android.widget.floatingactionbutton = (function () {
             }
             node.setControlType($constA.SUPPORT_ANDROID.FLOATING_ACTION_BUTTON, $enumA.CONTAINER_NODE.BUTTON);
             node.exclude({ resource: $enum.NODE_RESOURCE.BOX_STYLE | $enum.NODE_RESOURCE.ASSET });
+            $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
+            let parentAs;
             if (!node.pageFlow || target) {
                 const horizontalBias = node.horizontalBias();
                 const verticalBias = node.verticalBias();
@@ -97,6 +95,7 @@ this.android.widget.floatingactionbutton = (function () {
                         node.modifyBox(8 /* MARGIN_BOTTOM */, documentParent.box.bottom - node.linear.bottom);
                     }
                 }
+                node.positioned = true;
                 if (target) {
                     let anchor = parent.documentId;
                     if (parent.controlName === $constA.SUPPORT_ANDROID.TOOLBAR) {
@@ -111,18 +110,23 @@ this.android.widget.floatingactionbutton = (function () {
                         node.delete('android', 'layout_gravity');
                     }
                     node.exclude({ procedure: $enum.NODE_PROCEDURE.ALIGNMENT });
-                    node.render(this.application.resolveTarget(target, node));
+                    node.render(this.application.resolveTarget(target));
+                    parentAs = node.renderParent;
                 }
-                else {
-                    node.render(parent);
-                }
-                node.positioned = true;
             }
-            else {
+            if (!target) {
                 node.render(parent);
             }
-            const output = this.application.controllerHandler.renderNodeStatic($constA.SUPPORT_ANDROID.FLOATING_ACTION_BUTTON, target ? -1 : node.renderDepth, $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')), 'wrap_content', 'wrap_content', node);
-            return { output, complete: true };
+            node.apply(options);
+            return {
+                parentAs,
+                output: {
+                    type: 1 /* XML */,
+                    node,
+                    controlName: $constA.SUPPORT_ANDROID.FLOATING_ACTION_BUTTON
+                },
+                complete: true
+            };
         }
     }
 

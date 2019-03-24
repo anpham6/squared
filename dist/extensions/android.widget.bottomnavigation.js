@@ -1,4 +1,4 @@
-/* android.widget 0.8.0
+/* android.widget 0.9.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -21,7 +21,7 @@ this.android.widget.bottomnavigation = (function () {
             const options = $utilA.createViewAttribute(this.options[node.elementId]);
             $util.assignEmptyValue(options, 'android', 'background', `?android:attr/windowBackground`);
             for (let i = 5; i < node.length; i++) {
-                const item = node.item(i);
+                const item = node.children[i];
                 item.hide();
                 for (const child of item.cascade()) {
                     child.hide();
@@ -30,12 +30,21 @@ this.android.widget.bottomnavigation = (function () {
             node.setControlType($constA.SUPPORT_ANDROID.BOTTOM_NAVIGATION, $enumA.CONTAINER_NODE.BLOCK);
             node.exclude({ resource: $enum.NODE_RESOURCE.ASSET });
             node.render(parent);
-            const output = this.application.controllerHandler.renderNodeStatic($constA.SUPPORT_ANDROID.BOTTOM_NAVIGATION, node.renderDepth, $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')), 'match_parent', 'wrap_content', node);
+            node.apply($Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')));
+            node.android('layout_width', 'match_parent');
+            node.android('layout_height', 'wrap_content');
             for (const item of node.cascade()) {
-                this.subscribersChild.add(item);
+                this.addDescendant(item);
             }
             this.setStyleTheme();
-            return { output, complete: true };
+            return {
+                output: {
+                    type: 1 /* XML */,
+                    node,
+                    controlName: $constA.SUPPORT_ANDROID.BOTTOM_NAVIGATION
+                },
+                complete: true
+            };
         }
         postBaseLayout(node) {
             const renderParent = node.renderParent;
@@ -47,7 +56,7 @@ this.android.widget.bottomnavigation = (function () {
                     renderParent.android('layout_height', 'match_parent');
                 }
             }
-            const menu = $util.optionalAsString(BottomNavigation.findNestedByName(node.element, "android.widget.menu" /* MENU */), 'dataset.layoutName');
+            const menu = $util.optionalAsString(BottomNavigation.findNestedElement(node.element, "android.widget.menu" /* MENU */), 'dataset.layoutName');
             if (menu !== '') {
                 const options = $utilA.createViewAttribute(this.options[node.elementId]);
                 $util.assignEmptyValue(options, 'app', 'menu', `@menu/${menu}`);
@@ -56,6 +65,7 @@ this.android.widget.bottomnavigation = (function () {
         }
         setStyleTheme() {
             const options = $utilA.createStyleAttribute(this.options.resource);
+            $util.assignEmptyValue(options, 'name', this.application.userSettings.manifestThemeName);
             $util.assignEmptyValue(options, 'parent', 'Theme.AppCompat.Light.DarkActionBar');
             $Resource.addTheme(options);
         }

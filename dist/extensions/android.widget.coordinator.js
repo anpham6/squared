@@ -1,4 +1,4 @@
-/* android.widget 0.8.0
+/* android.widget 0.9.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -15,44 +15,45 @@ this.android.widget.coordinator = (function () {
     class Coordinator extends squared.base.Extension {
         processNode(node, parent) {
             const options = $utilA.createViewAttribute(this.options[node.elementId]);
-            node.setControlType($constA.SUPPORT_ANDROID.COORDINATOR, $enumA.CONTAINER_NODE.BLOCK);
-            node.exclude({ resource: $enum.NODE_RESOURCE.ASSET });
-            node.render(parent);
-            const output = this.application.controllerHandler.renderNodeStatic($constA.SUPPORT_ANDROID.COORDINATOR, node.renderDepth, $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')), '', '', node, true);
-            const element = Coordinator.findNestedByName(node.element, "android.widget.toolbar" /* TOOLBAR */);
+            $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
+            const element = Coordinator.findNestedElement(node.element, "android.widget.toolbar" /* TOOLBAR */);
             if (element) {
                 const toolbar = $dom.getElementAsNode(element);
-                if (toolbar && toolbar.element) {
+                if (toolbar) {
                     const extension = this.application.extensionManager.retrieve("android.widget.toolbar" /* TOOLBAR */);
-                    if (extension) {
-                        const toolbarOptions = $utilA.createViewAttribute(extension.options[toolbar.elementId]);
-                        if ('collapsingToolbar' in toolbarOptions) {
-                            node.android('fitsSystemWindows', 'true');
-                        }
+                    if (extension && 'collapsingToolbar' in $utilA.createViewAttribute(extension.options[toolbar.elementId])) {
+                        node.android('fitsSystemWindows', 'true');
                     }
                 }
             }
-            return { output };
+            node.setControlType($constA.SUPPORT_ANDROID.COORDINATOR, $enumA.CONTAINER_NODE.BLOCK);
+            node.exclude({ resource: $enum.NODE_RESOURCE.ASSET });
+            node.render(parent);
+            return {
+                output: {
+                    type: 1 /* XML */,
+                    node,
+                    controlName: $constA.SUPPORT_ANDROID.COORDINATOR
+                }
+            };
         }
         postProcedure(node) {
             if (node.documentRoot) {
                 if (node.inlineWidth) {
-                    node.some((item) => {
+                    for (const item of node) {
                         if (item.rightAligned) {
                             node.android('layout_width', 'match_parent', true);
-                            return true;
+                            break;
                         }
-                        return false;
-                    });
+                    }
                 }
                 if (node.inlineHeight) {
-                    node.some((item) => {
+                    for (const item of node) {
                         if (item.bottomAligned) {
                             node.android('layout_height', 'match_parent', true);
-                            return true;
+                            break;
                         }
-                        return false;
-                    });
+                    }
                 }
             }
         }

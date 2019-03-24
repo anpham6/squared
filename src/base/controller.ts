@@ -204,10 +204,11 @@ export default abstract class Controller<T extends Node> implements squared.base
                         const attributes = (<NodeXmlTemplate<T>> item).attributes;
                         let template = indent + `<${controlName + (depth === 0 ? '{#0} ' : '') + (this.userSettings.showAttributes ? (attributes ? $xml.pushIndent(attributes, depth + 1) : node.extractAttributes(depth + 1)) : '')}`;
                         if (node.renderTemplates) {
+                            const renderDepth = depth + 1;
                             template += '>\n' +
-                                        this.getBeforeInsideTemplate(node.id, depth) +
-                                        this.cascadeDocument(this.sortRenderPosition(node, <NodeTemplate<T>[]> node.renderTemplates), depth + 1) +
-                                        this.getAfterInsideTemplate(node.id, depth) +
+                                        this.getBeforeInsideTemplate(node.id, renderDepth) +
+                                        this.cascadeDocument(this.sortRenderPosition(node, <NodeTemplate<T>[]> node.renderTemplates), renderDepth) +
+                                        this.getAfterInsideTemplate(node.id, renderDepth) +
                                         indent + `</${controlName}>\n`;
                         }
                         else {

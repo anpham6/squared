@@ -467,24 +467,24 @@ export default class Controller<T extends View> extends squared.base.Controller<
         const node = layout.node;
         let next = false;
         if (layout.containerType === 0) {
-            const has = node.visibleStyle;
-            if (node.textContent.length && (node.inlineText || has.borderWidth)) {
+            const visibleStyle = node.visibleStyle;
+            if (node.textContent.length && (node.inlineText || visibleStyle.borderWidth)) {
                 layout.setType(CONTAINER_NODE.TEXT);
             }
-            else if (has.backgroundImage && !has.backgroundRepeat && (!node.inlineText || node.toInt('textIndent') + node.actualWidth < 0)) {
+            else if (visibleStyle.backgroundImage && !visibleStyle.backgroundRepeat && (!node.inlineText || node.toInt('textIndent') + node.actualWidth < 0)) {
                 layout.setType(CONTAINER_NODE.IMAGE, $enum.NODE_ALIGNMENT.SINGLE);
                 node.exclude({ resource: $enum.NODE_RESOURCE.FONT_STYLE | $enum.NODE_RESOURCE.VALUE_STRING });
             }
-            else if (node.block && (has.borderWidth || has.backgroundImage || has.paddingVertical)) {
+            else if (node.block && (visibleStyle.borderWidth || visibleStyle.backgroundImage || visibleStyle.paddingVertical)) {
                 layout.setType(CONTAINER_NODE.LINE);
             }
             else if (!node.documentRoot) {
-                if (this.userSettings.collapseUnattributedElements && node.element && node.bounds.height === 0 && !has.background && !node.elementId && !node.dataset.use) {
+                if (this.userSettings.collapseUnattributedElements && node.naturalElement && node.bounds.height === 0 && !visibleStyle.background && !node.elementId && !node.dataset.use) {
                     node.hide();
                     next = true;
                 }
                 else {
-                    layout.setType(has.background ? CONTAINER_NODE.TEXT : CONTAINER_NODE.FRAME);
+                    layout.setType(visibleStyle.background ? CONTAINER_NODE.TEXT : CONTAINER_NODE.FRAME);
                 }
             }
         }
@@ -985,7 +985,10 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     break;
                 }
                 case 'LEGEND': {
-                    node.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, Math.floor(node.bounds.height / 2));
+                    const offset = Math.floor((node.bounds.height - node.fontSize) / 2);
+                    if (offset > 0) {
+                        node.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, offset);
+                    }
                     if (!node.hasWidth) {
                         node.css('minWidth', $util.formatPX(node.bounds.width), true);
                     }

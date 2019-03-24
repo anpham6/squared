@@ -683,9 +683,10 @@ export default (Base: Constructor<squared.base.Node>) => {
                 if (!hasHeight) {
                     this.android('layout_height', 'wrap_content', false);
                 }
-                if (this.layoutFrame && !this.blockWidth && this.hasAlign($enum.NODE_ALIGNMENT.FLOAT) && this.length > 1 && this.ascend(true).some(node => node.has('width'))) {
+                if (this.layoutFrame && this.hasAlign($enum.NODE_ALIGNMENT.FLOAT) && this.length > 1 && this.ascend(true).some(node => node.has('width'))) {
                     this.each(node => {
-                        if (node.element && !node.has('width')) {
+                        const target = node.innerChild || node;
+                        if (target.element && !target.has('width')) {
                             node.css('width', $util.formatPX(node.bounds.width));
                         }
                     });
@@ -792,34 +793,35 @@ export default (Base: Constructor<squared.base.Node>) => {
                         textAlignParent = '';
                     }
                 }
-                if (textAlign === '') {
-                    if (this.length === 0 || outerRenderParent.layoutFrame || this.documentParent.hasWidth) {
+                if (textAlignParent !== '') {
+                    if (textAlign === '') {
                         switch (textAlignParent) {
-                            case '':
                             case 'left':
                             case 'start':
                                 break;
                             default:
-                                if (!autoMargin) {
-                                    if (outerRenderParent.layoutFrame) {
-                                        if (alignFloat) {
-                                            break;
+                                if (this.length === 0 || outerRenderParent.layoutFrame || this.documentParent.hasWidth) {
+                                    if (!autoMargin) {
+                                        if (outerRenderParent.layoutFrame) {
+                                            if (alignFloat) {
+                                                break;
+                                            }
+                                            else if (this.pageFlow && !this.floating && !this.autoMargin.horizontal) {
+                                                node.mergeGravity('layout_gravity', textAlignParent);
+                                            }
                                         }
-                                        else if (this.pageFlow && !this.floating && !this.autoMargin.horizontal) {
-                                            node.mergeGravity('layout_gravity', textAlignParent);
+                                        else if (this.blockStatic) {
+                                            node.mergeGravity('layout_gravity', 'left');
                                         }
                                     }
-                                    else if (this.blockStatic) {
-                                        node.mergeGravity('layout_gravity', 'left');
-                                    }
+                                    textAlign = textAlignParent;
                                 }
-                                textAlign = textAlignParent;
                                 break;
                         }
                     }
-                }
-                else if (textAlignParent !== '') {
-                    node.mergeGravity('layout_gravity', textAlign);
+                    else if (!this.blockWidth && textAlignParent !== textAlign) {
+                        this.mergeGravity('layout_gravity', textAlign);
+                    }
                 }
                 if (textAlign !== '' && !(this.layoutFrame || this.layoutConstraint || !this.textElement && this.length === 0)) {
                     this.mergeGravity('gravity', textAlign);
@@ -1200,6 +1202,10 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         get documentId() {
+            const id = this.android('id');
+            if (id !== '') {
+                return id;
+            }
             return this.controlId ? `@+id/${this.controlId}` : '';
         }
 

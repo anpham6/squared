@@ -1,4 +1,4 @@
-/* android.widget 0.8.0
+/* android.widget 0.9.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -12,14 +12,10 @@ this.android.widget.menu = (function () {
     const $css = squared.lib.css;
     const $dom = squared.lib.dom;
     const $util = squared.lib.util;
+    const $element = squared.lib.element;
     const $constA = android.lib.constant;
     const $enumA = android.lib.enumeration;
     const $utilA = android.lib.util;
-    const VIEW_NAVIGATION = {
-        MENU: 'menu',
-        ITEM: 'item',
-        GROUP: 'group'
-    };
     const REGEXP_ITEM = {
         id: /^@\+id\/\w+$/,
         title: /^.+$/,
@@ -49,6 +45,11 @@ this.android.widget.menu = (function () {
         orderInCategory: /^[0-9]+$/
     };
     const NAMESPACE_APP = ['showAsAction', 'actionViewClass', 'actionProviderClass'];
+    const NAVIGATION = {
+        MENU: 'menu',
+        ITEM: 'item',
+        GROUP: 'group'
+    };
     function hasInputType(node, value) {
         return node.some(item => item.element.type === value);
     }
@@ -63,15 +64,14 @@ this.android.widget.menu = (function () {
             }
         }
     }
-    function getTitle(element) {
+    function getTitle(node, element) {
         if (element.title !== '') {
             return element.title;
         }
         else {
-            for (let i = 0; i < element.childNodes.length; i++) {
-                const node = $dom.getElementAsNode(element.childNodes[i]);
-                if (node && node.textElement) {
-                    return node.textContent.trim();
+            for (const child of node.actualChildren) {
+                if (child && child.textElement) {
+                    return child.textContent.trim();
                 }
             }
         }
@@ -121,41 +121,48 @@ this.android.widget.menu = (function () {
             return this.included(node.element);
         }
         processNode(node) {
+            const parentAs = this.application.createNode($element.createElement(null));
             node.documentRoot = true;
             node.alignmentType |= 4 /* AUTO_LAYOUT */;
-            node.setControlType(VIEW_NAVIGATION.MENU, $enumA.CONTAINER_NODE.INLINE);
+            node.setControlType(NAVIGATION.MENU, $enumA.CONTAINER_NODE.INLINE);
             node.exclude({
                 procedure: $enum.NODE_PROCEDURE.ALL,
                 resource: $enum.NODE_RESOURCE.ALL
             });
-            const output = this.application.controllerHandler.renderNodeStatic(VIEW_NAVIGATION.MENU, 0, {}, '', '', node, true);
             for (const item of node.cascade()) {
-                this.subscribersChild.add(item);
+                this.addDescendant(item);
             }
-            return { output, complete: true };
+            node.render(parentAs);
+            node.dataset.pathname = 'res/menu';
+            return {
+                output: {
+                    type: 1 /* XML */,
+                    node,
+                    controlName: NAVIGATION.MENU
+                },
+                parentAs,
+                complete: true
+            };
         }
         processChild(node, parent) {
             if (node.plainText) {
                 node.hide();
-                return { output: '', next: true };
+                return { next: true };
             }
             const options = $utilA.createViewAttribute();
             const element = node.element;
             let controlName;
             let title = '';
-            let layout = false;
             if (node.tagName === 'NAV') {
-                controlName = VIEW_NAVIGATION.MENU;
-                title = getTitle(element);
-                layout = true;
+                controlName = NAVIGATION.MENU;
+                title = getTitle(node, element);
             }
             else if (node.some(item => item.length > 0)) {
                 if (node.some(item => item.tagName === 'NAV')) {
-                    controlName = VIEW_NAVIGATION.ITEM;
-                    node.each(item => item.tagName !== 'NAV' && item.hide());
+                    controlName = NAVIGATION.ITEM;
                 }
                 else {
-                    controlName = VIEW_NAVIGATION.GROUP;
+                    controlName = NAVIGATION.GROUP;
                     if (node.every((item) => hasInputType(item, 'radio'))) {
                         options.android.checkableBehavior = 'single';
                     }
@@ -163,27 +170,26 @@ this.android.widget.menu = (function () {
                         options.android.checkableBehavior = 'all';
                     }
                 }
-                title = getTitle(element);
-                layout = true;
+                title = getTitle(node, element);
             }
             else {
-                controlName = VIEW_NAVIGATION.ITEM;
+                controlName = NAVIGATION.ITEM;
                 title = (element.title || element.innerText).trim();
                 if (hasInputType(node, 'checkbox') && !parent.android('checkableBehavior')) {
                     options.android.checkable = 'true';
                 }
             }
             switch (controlName) {
-                case VIEW_NAVIGATION.MENU:
+                case NAVIGATION.MENU:
                     node.alignmentType |= 4 /* AUTO_LAYOUT */;
                     break;
-                case VIEW_NAVIGATION.GROUP:
+                case NAVIGATION.GROUP:
                     node.alignmentType |= 4 /* AUTO_LAYOUT */;
                     parseDataSet(REGEXP_GROUP, element, options);
                     break;
-                case VIEW_NAVIGATION.ITEM:
+                case NAVIGATION.ITEM:
                     parseDataSet(REGEXP_ITEM, element, options);
-                    if (!$util.hasValue(options.android.icon)) {
+                    if (!options.android.icon) {
                         const style = $css.getStyle(element);
                         let src = $Resource.addImageUrl((style.backgroundImage !== 'none' ? style.backgroundImage : style.background), $constA.PREFIX_ANDROID.MENU);
                         if (src !== '') {
@@ -192,18 +198,20 @@ this.android.widget.menu = (function () {
                         else {
                             const image = node.find(item => item.imageElement);
                             if (image) {
-                                src = $Resource.addImageSrcSet(image.element, $constA.PREFIX_ANDROID.MENU);
+                                src = $Resource.addImageSrc(image.element, $constA.PREFIX_ANDROID.MENU);
                                 if (src !== '') {
                                     options.android.icon = `@drawable/${src}`;
                                 }
                             }
                         }
                     }
+                    node.each(item => item.tagName !== 'NAV' && item.hide());
                     break;
             }
             if (title !== '') {
-                const name = $Resource.addString(title, '', this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
-                options.android.title = name !== '' ? `@string/${name}` : title;
+                const numberResourceValue = this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue');
+                const name = $Resource.addString(title, '', numberResourceValue);
+                options.android.title = numberResourceValue || !$util.isNumber(name) ? `@string/${name}` : title;
             }
             node.setControlType(controlName, $enumA.CONTAINER_NODE.INLINE);
             node.exclude({
@@ -211,24 +219,25 @@ this.android.widget.menu = (function () {
                 resource: $enum.NODE_RESOURCE.ALL
             });
             node.render(parent);
-            const output = this.application.controllerHandler.renderNodeStatic(controlName, node.renderDepth, options, '', '', node, layout);
-            return { output, complete: true, next: controlName === VIEW_NAVIGATION.MENU };
+            node.apply(options);
+            return {
+                output: {
+                    type: 1 /* XML */,
+                    node,
+                    controlName
+                },
+                complete: true,
+                next: controlName === NAVIGATION.MENU
+            };
         }
         postBaseLayout(node) {
-            const element = node.element;
-            if (this.included(element)) {
-                element.querySelectorAll('NAV').forEach((item) => {
-                    const display = $dom.getElementCache(item, 'squaredExternalDisplay');
-                    if (display) {
-                        item.style.display = display;
-                        $dom.deleteElementCache(item, 'squaredExternalDisplay');
-                    }
-                });
-                const processing = this.application.processing;
-                if (node === processing.node && processing.layout) {
-                    processing.layout.pathname = 'res/menu';
+            node.element.querySelectorAll('NAV').forEach((item) => {
+                const display = $dom.getElementCache(item, 'squaredExternalDisplay');
+                if (display) {
+                    item.style.display = display;
+                    $dom.deleteElementCache(item, 'squaredExternalDisplay');
                 }
-            }
+            });
         }
     }
 

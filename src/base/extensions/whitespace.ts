@@ -5,6 +5,8 @@ import { BOX_STANDARD, CSS_STANDARD, NODE_ALIGNMENT } from '../lib/enumeration';
 
 const $util = squared.lib.util;
 
+const HTML5 = document.doctype ? document.doctype.name === 'html' : false;
+
 function setMinHeight<T extends Node>(node: T, offset: number) {
     const minHeight = node.has('minHeight', CSS_STANDARD.LENGTH) ? node.toFloat('minHeight') : 0;
     node.css('minHeight', $util.formatPX(Math.max(offset, minHeight)));
@@ -18,9 +20,15 @@ function getVisibleNode<T extends Node>(node: T) {
     return node.visible || node.excluded ? node : node.renderAs || node.outerParent || node.innerChild || node;
 }
 
+function resetMargin<T extends Node>(node: T, value: number) {
+    node.modifyBox(value, null);
+    if (node.companion) {
+        node.companion.modifyBox(value, null);
+    }
+}
+
 function applyMarginCollapse<T extends Node>(node: T, visibleNode: T, child: T, direction: boolean) {
     if (isBlockElement(child)) {
-        const HTML5 = document.doctype ? document.doctype.name === 'html' : false;
         if (direction) {
             if (node.borderTopWidth === 0 && node.paddingTop === 0) {
                 let replaced = false;
@@ -38,7 +46,10 @@ function applyMarginCollapse<T extends Node>(node: T, visibleNode: T, child: T, 
                         }
                     }
                 }
-                if (HTML5 && node.marginTop < child.marginTop) {
+                if (!HTML5 && node.marginTop === 0 && node.has('marginTop', CSS_STANDARD.ZERO)) {
+                    resetMargin(child, BOX_STANDARD.MARGIN_TOP);
+                }
+                else if (HTML5 && node.marginTop < child.marginTop) {
                     if (node.elementId === '')  {
                         visibleNode.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
                     }
@@ -49,10 +60,7 @@ function applyMarginCollapse<T extends Node>(node: T, visibleNode: T, child: T, 
                             }
                             visibleNode.modifyBox(BOX_STANDARD.MARGIN_TOP, child.marginTop);
                         }
-                        child.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
-                        if (child.companion) {
-                            child.companion.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
-                        }
+                        resetMargin(child, BOX_STANDARD.MARGIN_TOP);
                     }
                 }
                 else if (node.naturalElement && node.marginTop > 0) {
@@ -98,7 +106,10 @@ function applyMarginCollapse<T extends Node>(node: T, visibleNode: T, child: T, 
                         }
                     }
                 }
-                if (HTML5 && node.marginBottom < child.marginBottom) {
+                if (!HTML5 && node.marginBottom === 0 && node.has('marginBottom', CSS_STANDARD.ZERO)) {
+                    resetMargin(child, BOX_STANDARD.MARGIN_BOTTOM);
+                }
+                else if (HTML5 && node.marginBottom < child.marginBottom) {
                     if (node.elementId === '')  {
                         visibleNode.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
                     }
@@ -109,10 +120,7 @@ function applyMarginCollapse<T extends Node>(node: T, visibleNode: T, child: T, 
                             }
                             visibleNode.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, child.marginBottom);
                         }
-                        child.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
-                        if (child.companion) {
-                            child.companion.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
-                        }
+                        resetMargin(child, BOX_STANDARD.MARGIN_BOTTOM);
                     }
                 }
                 else if (node.naturalElement && node.marginBottom > 0) {
