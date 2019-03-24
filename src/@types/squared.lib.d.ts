@@ -161,7 +161,8 @@ declare global {
 
         namespace xml {
             function formatPlaceholder(id: string | number, symbol?: string): string;
-            function pushIndent(value: string, depth: number, char?: string): string;
+            function pushIndent(value: string, depth: number, char?: string, indent?: string): string;
+            function pushIndentArray(values: string[], depth: number, char?: string, separator?: string): string;
             function replaceIndent(value: string, depth: number, pattern: RegExp): string;
             function replaceTab(value: string, spaces?: number, preserve?: boolean): string;
             function replaceEntity(value: string): string;

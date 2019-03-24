@@ -27,7 +27,6 @@ export default class Percent<T extends android.base.View> extends squared.base.E
                     container,
                     CONTAINER_NODE.CONSTRAINT,
                     $enum.NODE_ALIGNMENT.SINGLE,
-                    1,
                     container.children as T[]
                 )
             )

@@ -151,7 +151,6 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 node,
                 CONTAINER_NODE.GRID,
                 $enum.NODE_ALIGNMENT.AUTO_LAYOUT,
-                node.length,
                 node.children as T[]
             );
             layout.rowCount = mainData.row.count;
@@ -339,7 +338,6 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         container,
                         CONTAINER_NODE.FRAME,
                         $enum.NODE_ALIGNMENT.SINGLE,
-                        1,
                         container.children as T[]
                     )
                 );

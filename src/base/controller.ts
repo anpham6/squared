@@ -1,4 +1,4 @@
-import { ControllerSettings, LayoutResult, LayoutType, NodeTemplate, NodeIncludeTemplate, NodeXmlTemplate, SessionData, UserSettings } from './@types/application';
+import { ControllerSettings, LayoutResult, LayoutType, NodeTag, NodeTagXml, NodeTemplate, NodeIncludeTemplate, NodeXmlTemplate, SessionData, UserSettings } from './@types/application';
 
 import Application from './application';
 import Layout from './layout';
@@ -35,7 +35,7 @@ export default abstract class Controller<T extends Node> implements squared.base
     public abstract sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
     public abstract renderNode(layout: Layout<T>): NodeTemplate<T> | undefined;
     public abstract renderNodeGroup(layout: Layout<T>): NodeTemplate<T> | undefined;
-    public abstract renderNodeStatic(controlName: string, options?: ExternalData, width?: string, height?: string): string;
+    public abstract renderNodeStatic(controlName: string, options?: ExternalData, width?: string, height?: string, content?: string): string;
     public abstract setConstraints(): void;
     public abstract finalize(data: SessionData<NodeList<T>>): void;
     public abstract createNodeGroup(node: T, children: T[], parent: T): T;
@@ -108,15 +108,10 @@ export default abstract class Controller<T extends Node> implements squared.base
                                 styleMap.height = '150px';
                             }
                         }
-                        else {
-                            if (styleMap[opposing] && $util.isPercent(styleMap[opposing])) {
-                                styleMap[attr] = styleMap[opposing];
-                            }
-                            else {
-                                const image = this.application.session.image.get((<HTMLImageElement> element).src);
-                                if (image && image.width > 0 && image.height > 0) {
-                                    styleMap[attr] = $util.formatPX(image[attr] * (styleMap[opposing] && $util.isLength(styleMap[opposing]) ? (parseFloat(styleMap[opposing]) / image[opposing]) : 1));
-                                }
+                        else if (styleMap[opposing] === undefined || styleMap[opposing] !== 'auto' && !$util.isPercent(styleMap[opposing])) {
+                            const image = this.application.session.image.get((<HTMLImageElement> element).src);
+                            if (image && image.width > 0 && image.height > 0) {
+                                styleMap[attr] = $util.formatPX(image[attr] * (styleMap[opposing] && $util.isLength(styleMap[opposing]) ? (parseFloat(styleMap[opposing]) / image[opposing]) : 1));
                             }
                         }
                     }
@@ -177,19 +172,19 @@ export default abstract class Controller<T extends Node> implements squared.base
     }
 
     public getBeforeOutsideTemplate(id: number, depth = 0): string {
-        return this._beforeOutside[id] ? $xml.pushIndent(this._beforeOutside[id].join(''), depth) : '';
+        return this._beforeOutside[id] ? $xml.pushIndentArray(this._beforeOutside[id], depth) : '';
     }
 
     public getBeforeInsideTemplate(id: number, depth = 0): string {
-        return this._beforeInside[id] ? $xml.pushIndent(this._beforeInside[id].join(''), depth) : '';
+        return this._beforeInside[id] ? $xml.pushIndentArray(this._beforeInside[id], depth) : '';
     }
 
     public getAfterInsideTemplate(id: number, depth = 0): string {
-        return this._afterInside[id] ? $xml.pushIndent(this._afterInside[id].join(''), depth) : '';
+        return this._afterInside[id] ? $xml.pushIndentArray(this._afterInside[id], depth) : '';
     }
 
     public getAfterOutsideTemplate(id: number, depth = 0): string {
-        return this._afterOutside[id] ? $xml.pushIndent(this._afterOutside[id].join(''), depth) : '';
+        return this._afterOutside[id] ? $xml.pushIndentArray(this._afterOutside[id], depth) : '';
     }
 
     public hasAppendProcessing(id: number) {
@@ -197,7 +192,7 @@ export default abstract class Controller<T extends Node> implements squared.base
     }
 
     public cascadeDocument(templates: NodeTemplate<T>[], depth: number) {
-        const indent = depth ? '\t'.repeat(depth) : '';
+        const indent = depth > 0 ? '\t'.repeat(depth) : '';
         let output = '';
         for (let i = 0; i < templates.length; i++) {
             const item = templates[i];
@@ -207,7 +202,7 @@ export default abstract class Controller<T extends Node> implements squared.base
                     case NODE_TEMPLATE.XML: {
                         const controlName = (<NodeXmlTemplate<T>> item).controlName;
                         const attributes = (<NodeXmlTemplate<T>> item).attributes;
-                        let template = indent + `<${controlName} ${(depth === 0 ? '{#0} ' : '') + (this.userSettings.showAttributes ? (attributes ? $xml.pushIndent(attributes, depth + 1) : node.extractAttributes(depth + 1)) : '')}`;
+                        let template = indent + `<${controlName + (depth === 0 ? '{#0} ' : '') + (this.userSettings.showAttributes ? (attributes ? $xml.pushIndent(attributes, depth + 1) : node.extractAttributes(depth + 1)) : '')}`;
                         if (node.renderTemplates) {
                             template += '>\n' +
                                         this.getBeforeInsideTemplate(node.id, depth) +
@@ -236,10 +231,11 @@ export default abstract class Controller<T extends Node> implements squared.base
         return output;
     }
 
-    public getEnclosingTag(type: number, controlName: string, attributeXml = '', innerXml?: string) {
+    public getEnclosingTag(type: number, options: NodeTag<T>) {
         switch (type) {
             case NODE_TEMPLATE.XML:
-                return '<' + controlName + attributeXml + (innerXml ? '>\n' + innerXml + '</' + controlName + '>\n' : ' />\n');
+                const { controlName, attributes, content } = <NodeTagXml<T>> options;
+                return '<' + controlName + (attributes || '') + (content ? '>\n' + content + '</' + controlName + '>\n' : ' />\n');
         }
         return '';
     }

@@ -78,7 +78,6 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                 node,
                 CONTAINER_NODE.GRID,
                 $enum.NODE_ALIGNMENT.AUTO_LAYOUT,
-                node.length,
                 node.children as T[]
             );
             layout.rowCount = mainData.rowCount;

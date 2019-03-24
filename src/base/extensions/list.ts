@@ -33,7 +33,7 @@ export default abstract class List<T extends Node> extends Extension<T> {
             let listType = 0;
             for (let i = 0; i < length; i++) {
                 const item = node.children[i];
-                const listStyleType = item.has('listStyleType');
+                const listStyleType = item.css('listStyleType') !== 'none';
                 const singleImage = hasSingleImage(item);
                 if (item.tagName !== 'LI' && !listStyleType && singleImage) {
                     imageType++;

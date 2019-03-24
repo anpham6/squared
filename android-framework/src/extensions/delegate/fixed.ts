@@ -80,7 +80,6 @@ export default class Fixed<T extends View> extends squared.base.Extension<T> {
                         node,
                         CONTAINER_NODE.CONSTRAINT,
                         $enum.NODE_ALIGNMENT.ABSOLUTE,
-                        children.length,
                         children
                     )
                 )

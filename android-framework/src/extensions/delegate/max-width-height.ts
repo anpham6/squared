@@ -29,7 +29,6 @@ export default class MaxWidthHeight<T extends android.base.View> extends squared
                     container,
                     CONTAINER_NODE.FRAME,
                     $enum.NODE_ALIGNMENT.SINGLE,
-                    1,
                     container.children as T[]
                 )
             )

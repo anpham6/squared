@@ -1,4 +1,4 @@
-import { NodeTemplate, NodeIncludeTemplate } from '../../../../src/base/@types/application';
+import { NodeTagXml, NodeTemplate, NodeIncludeTemplate } from '../../../../src/base/@types/application';
 
 import View from '../../view';
 import { getRootNs } from '../../lib/util';
@@ -21,7 +21,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                 const open: NodeRenderIndex[] = [];
                 const close: NodeRenderIndex[] = [];
                 node.renderEach((item: T, index) => {
-                    const name = (item.dataset.androidInclude || '').trim();
+                    const name = item.dataset.androidInclude || '';
                     const closing = item.dataset.androidIncludeEnd === 'true';
                     if (name || closing) {
                         const data: NodeRenderIndex = {
@@ -39,6 +39,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                     }
                 });
                 if (open.length && close.length) {
+                    const controller = this.application.controllerHandler;
                     open.length = Math.min(open.length, close.length);
                     for (let i = open.length; i < close.length; i++) {
                         close.shift();
@@ -53,7 +54,6 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                     templates.push(<NodeTemplate<T>> node.renderTemplates[k]);
                                     node.renderTemplates[k] = null as any;
                                 }
-                                const controller = this.application.controllerHandler;
                                 const merge = openData.merge || templates.length > 1;
                                 const depth = merge ? 1 : 0;
                                 node.renderTemplates[openData.index] = <NodeIncludeTemplate<T>> {
@@ -65,11 +65,11 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                 if (!merge && !openData.item.documentRoot) {
                                     openData.item.documentRoot = true;
                                 }
-                                let output = controller.cascadeDocument(templates, depth);
+                                let content = controller.cascadeDocument(templates, depth);
                                 if (merge) {
-                                    output = controller.getEnclosingTag($enum.NODE_TEMPLATE.XML, 'merge', getRootNs(output), output);
+                                    content = controller.getEnclosingTag($enum.NODE_TEMPLATE.XML, <NodeTagXml<T>> { controlName: 'merge', attributes: getRootNs(content), content });
                                 }
-                                this.application.addIncludeFile(openData.item.id, openData.name, output);
+                                this.application.addIncludeFile(openData.item.id, openData.name, content);
                                 close.splice(j, 1);
                                 break;
                             }

@@ -1,4 +1,4 @@
-import { AppHandler, ControllerSettings, LayoutResult, LayoutType, NodeTemplate, SessionData, UserSettings } from '../base/@types/application';
+import { AppHandler, ControllerSettings, LayoutResult, LayoutType, NodeTag, NodeTemplate, SessionData, UserSettings } from '../base/@types/application';
 
 declare global {
     namespace squared.base {
@@ -22,7 +22,7 @@ declare global {
             setConstraints(): void;
             renderNode(layout: Layout<T>): NodeTemplate<T> | undefined;
             renderNodeGroup(layout: Layout<T>): NodeTemplate<T> | undefined;
-            renderNodeStatic(controlName: string, options?: ExternalData, width?: string, height?: string): string;
+            renderNodeStatic(controlName: string, options?: ExternalData, width?: string, height?: string, content?: string): string;
             createNodeGroup(node: T, children: T[], parent?: T, replacement?: T): T;
             sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
             addBeforeOutsideTemplate(id: number, value: string, index?: number): void;
@@ -35,7 +35,7 @@ declare global {
             getAfterOutsideTemplate(id: number, depth: number): string;
             hasAppendProcessing(id: number): boolean;
             cascadeDocument(templates: NodeTemplate<T>[], depth: number): string;
-            getEnclosingTag(type: number, controlName: string, attributeXml?: string, innerXml?: string): string;
+            getEnclosingTag(type: number, options: NodeTag<T>): string;
         }
 
         class Controller<T extends Node> implements Controller<T> {

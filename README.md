@@ -124,12 +124,13 @@ squared.settings = {
     maxWordWrapWidth: 1024,
     supportNegativeLeftTop: true,
     collapseUnattributedElements: true,
+    exclusionsDisabled: true,
     customizationsDisabled: true,
     customizationsOverwritePrivilege: true,
     replaceCharacterEntities: false,
     showAttributes: true,
-    insertSpaces: 4, // tabs: 0
     convertPixels: 'dp',
+    insertSpaces: 4, // tabs: 0
     handleExtensionsAsync: true,
     autoCloseOnWrite: true,
     manifestLabelAppName: 'android',

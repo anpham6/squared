@@ -18,17 +18,17 @@ export default abstract class NodeGroup extends Node {
                 this.parent.sort(NodeList.siblingIndex);
             }
             this.setBounds();
+            this.saveAsInitial();
             const actualParent = this.actualParent;
             if (actualParent) {
                 this.css('direction', actualParent.dir);
             }
-            this.saveAsInitial();
         }
     }
 
     public setBounds() {
         if (this.length) {
-            const bounds = this.outerRegion;
+            const bounds = NodeList.outerRegion(this);
             this._bounds = {
                 ...bounds,
                 width: bounds.right - bounds.left,
@@ -146,35 +146,5 @@ export default abstract class NodeGroup extends Node {
 
     get groupParent() {
         return true;
-    }
-
-    private get outerRegion(): BoxRect {
-        const nodes = this.children.slice(0);
-        let top = nodes[0];
-        let right = top;
-        let bottom = top;
-        let left = top;
-        this.each(node => node.companion && !node.companion.visible && nodes.push(node.companion));
-        for (let i = 1; i < nodes.length; i++) {
-            const node = nodes[i];
-            if (node.linear.top < top.linear.top) {
-                top = node;
-            }
-            if (node.linear.right > right.linear.right) {
-                right = node;
-            }
-            if (node.linear.bottom > bottom.linear.bottom) {
-                bottom = node;
-            }
-            if (node.linear.left < left.linear.left) {
-                left = node;
-            }
-        }
-        return {
-            top: top.linear.top,
-            right: right.linear.right,
-            bottom: bottom.linear.bottom,
-            left: left.linear.left
-        };
     }
 }

@@ -24,12 +24,17 @@ export default abstract class Relative<T extends Node> extends Extension<T> {
                 target = node.clone(this.application.nextId, true, true) as T;
                 node.hide(true);
                 this.application.session.cache.append(target, false);
-                this.application.addRenderLayout(new Layout(
+                const layout = new Layout(
                     renderParent,
                     target,
                     target.containerType,
                     target.alignmentType
-                ));
+                );
+                const index = renderParent.renderChildren.findIndex(item => item === node);
+                if (index !== -1) {
+                    layout.renderIndex = index + 1;
+                }
+                this.application.addRenderLayout(layout);
                 if (!renderParent.hasAlign(NODE_ALIGNMENT.VERTICAL)) {
                     renderParent.renderEach(item => {
                         if (item.alignSibling('topBottom') === node.documentId) {

@@ -26,7 +26,6 @@ export default class Guideline<T extends android.base.View> extends squared.base
                     node,
                     CONTAINER_NODE.CONSTRAINT,
                     $enum.NODE_ALIGNMENT.ABSOLUTE,
-                    node.length,
                     node.children as T[]
                 )
             )

@@ -174,6 +174,15 @@ export interface ImageAsset extends Asset {
     position?: Point;
 }
 
+export interface NodeTag<T extends squared.base.Node> extends Optional<NodeTemplate<T>> {
+}
+
+export interface NodeTagXml<T extends squared.base.Node> extends NodeTag<T> {
+    controlName: string;
+    attributes?: string;
+    content?: string;
+}
+
 export interface NodeTemplate<T extends squared.base.Node> {
     type: number;
     node: T;

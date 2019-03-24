@@ -33,7 +33,6 @@ declare global {
             addRenderLayout(layout: Layout<T>, outerParent?: T): boolean;
             addRenderTemplate(parent: T, node: T, template: NodeTemplate<T> | undefined, index?: number): boolean;
             addImagePreload(element: HTMLImageElement | undefined): void;
-            saveRenderPosition(parent: T): void;
             createNode(element: Element): T;
             resolveTarget(target: string): T | undefined;
             toString(): string;

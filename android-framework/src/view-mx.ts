@@ -495,82 +495,127 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         public setLayout() {
-            const parent = this.absoluteParent as View | undefined;
-            const renderParent = this.renderParent as View | undefined;
-            const renderChildren = this.renderChildren;
-            let hasWidth = true;
-            let hasHeight = true;
-            this.setVisibility();
-            if (this.documentBody) {
-                if (!this.hasWidth && renderChildren.some(node => node.alignParent('right')) || this.visibleStyle.backgroundColor || this.borderRightWidth > 0) {
-                    this.android('layout_width', 'match_parent', false);
-                }
-                if (!this.hasHeight && renderChildren.some(node => node.alignParent('bottom')) || this.visibleStyle.backgroundColor || this.borderBottomWidth > 0) {
-                    this.android('layout_height', 'match_parent', false);
-                }
-            }
-            if (this.android('layout_height') === '') {
-                if (!this.inlineStatic && this.has('height') || this.toInt('height') > 0 && !this.cssInitial('height')) {
-                    const height = this.css('height');
-                    if ($util.isLength(height)) {
-                        const value = this.parseUnit(height, false);
-                        this.android('layout_height', this.css('overflow') === 'hidden' && value < Math.floor(this.box.height) ? 'wrap_content' : $util.formatPX(value));
+            const renderParent = this.renderParent as T | undefined;
+            if (renderParent) {
+                const renderChildren = this.renderChildren;
+                const parent = this.groupParent ? $NodeList.actualParent(renderChildren) : this.absoluteParent as T | undefined;
+                let hasWidth = true;
+                let hasHeight = true;
+                this.setVisibility();
+                if (this.documentBody) {
+                    if (!this.hasWidth && renderChildren.some(node => node.alignParent('right')) || this.visibleStyle.backgroundColor || this.borderRightWidth > 0) {
+                        this.android('layout_width', 'match_parent', false);
                     }
-                    else if ($util.isPercent(height)) {
-                        if (height === '100%') {
-                            this.android('layout_height', 'match_parent');
+                    if (!this.hasHeight && renderChildren.some(node => node.alignParent('bottom')) || this.visibleStyle.backgroundColor || this.borderBottomWidth > 0) {
+                        this.android('layout_height', 'match_parent', false);
+                    }
+                }
+                if (this.android('layout_height') === '') {
+                    if (!this.inlineStatic && this.has('height') || this.toInt('height') > 0 && !this.cssInitial('height')) {
+                        const height = this.css('height');
+                        let value = -1;
+                        if ($util.isLength(height)) {
+                            value = this.parseUnit(height, false);
+                            if (this.positionStatic && !this.layoutFrame && this.documentParent.css('overflow') !== 'hidden') {
+                                const heightParent = $util.convertInt(renderParent.android('layout_height'));
+                                if (heightParent > 0 && value >= heightParent) {
+                                    if (this.singleChild) {
+                                        renderParent.android('layout_height', 'wrap_content');
+                                    }
+                                    else {
+                                        this.android('layout_height', 'match_parent');
+                                        value = -1;
+                                    }
+                                }
+                            }
                         }
-                        else if (this.documentParent.has('height')) {
-                            this.android('layout_height', $util.formatPX(Math.ceil(this.bounds.height) - this.contentBoxHeight));
+                        else if ($util.isPercent(height)) {
+                            if (height === '100%') {
+                                this.android('layout_height', 'match_parent');
+                            }
+                            else if (this.documentParent.has('height')) {
+                                value = Math.ceil(this.bounds.height) - this.contentBoxHeight;
+                            }
+                            else {
+                                hasHeight = false;
+                            }
+                        }
+                        if (value !== -1) {
+                            if (this.display.startsWith('table') && value < Math.floor(this.bounds.height)) {
+                                if (!this.has('minHeight')) {
+                                    this.android('minHeight', $util.formatPX(value));
+                                }
+                                this.android('layout_height', 'wrap_content');
+                            }
+                            else {
+                                this.android('layout_height', $util.formatPX(value));
+                            }
+                        }
+                    }
+                    else {
+                        hasHeight = false;
+                    }
+                }
+                if (this.has('minHeight') && !this.constraint.minHeight) {
+                    this.android('minHeight', this.convertPX(this.css('minHeight'), false), false);
+                    this.android('layout_height', 'wrap_content', false);
+                }
+                if (this.android('layout_width') === '') {
+                    if (!this.inlineStatic && this.has('width') || this.toInt('width') > 0 && !this.cssInitial('width')) {
+                        const width = this.css('width');
+                        let value = -1;
+                        if ($util.isLength(width)) {
+                            value = this.parseUnit(width);
+                            if (this.positionStatic && !this.layoutFrame && this.documentParent.css('overflow') !== 'hidden') {
+                                const widthParent = $util.convertInt(renderParent.android('layout_width'));
+                                if (widthParent > 0 && value >= widthParent) {
+                                    if (this.singleChild) {
+                                        renderParent.android('layout_width', 'wrap_content');
+                                    }
+                                    else {
+                                        this.android('layout_width', 'match_parent');
+                                        value = -1;
+                                    }
+                                }
+                            }
+                        }
+                        else if ($util.isPercent(width)) {
+                            if (renderParent.is(CONTAINER_NODE.GRID)) {
+                                this.android('layout_width', '0px', false);
+                                this.android('layout_columnWeight', (parseInt(width) / 100).toPrecision(this.localSettings.floatPrecision), false);
+                            }
+                            else if (width === '100%') {
+                                this.android('layout_width', 'match_parent');
+                            }
+                            else {
+                                value = this.parseUnit(width);
+                            }
                         }
                         else {
-                            hasHeight = false;
+                            hasWidth = false;
                         }
-                    }
-                }
-                else {
-                    hasHeight = false;
-                }
-            }
-            if (this.has('minHeight') && !this.constraint.minHeight) {
-                this.android('minHeight', this.convertPX(this.css('minHeight'), false), false);
-                this.android('layout_height', 'wrap_content', false);
-            }
-            else if (!hasHeight) {
-                this.android('layout_height', 'wrap_content', false);
-            }
-            if (this.android('layout_width') === '') {
-                if (!this.inlineStatic && this.has('width') || this.toInt('width') > 0 && !this.cssInitial('width')) {
-                    const width = this.css('width');
-                    if ($util.isLength(width)) {
-                        const value = this.parseUnit(width);
-                        const widthParent = parent === renderParent && this.positionStatic ? $util.convertInt((renderParent as T).android('layout_width')) : 0;
-                        this.android('layout_width', widthParent > 0 && value >= widthParent && !this.imageElement && !this.svgElement ? 'match_parent' : $util.formatPX(value));
-                    }
-                    else if ($util.isPercent(width)) {
-                        if (renderParent && renderParent.is(CONTAINER_NODE.GRID)) {
-                            this.android('layout_width', '0px', false);
-                            this.android('layout_columnWeight', (parseInt(width) / 100).toPrecision(this.localSettings.floatPrecision), false);
-                        }
-                        else {
-                            this.android('layout_width', width === '100%' ? 'match_parent' : this.convertPX(width));
+                        if (value !== -1) {
+                            if (this.display.startsWith('table') && value < Math.floor(this.bounds.width)) {
+                                if (!this.has('minWidth')) {
+                                    this.android('minWidth', $util.formatPX(value));
+                                }
+                                this.android('layout_width', 'wrap_content');
+                            }
+                            else {
+                                this.android('layout_width', $util.formatPX(value));
+                            }
                         }
                     }
                     else {
                         hasWidth = false;
                     }
                 }
-                else {
-                    hasWidth = false;
+                if (this.has('minWidth') && !this.constraint.minWidth) {
+                    this.android('minWidth', this.convertPX(this.css('minWidth')), false);
+                    this.android('layout_width', 'wrap_content', false);
                 }
-            }
-            if (this.has('minWidth') && !this.constraint.minWidth) {
-                this.android('minWidth', this.convertPX(this.css('minWidth')), false);
-                this.android('layout_width', 'wrap_content', false);
-            }
-            else if (!hasWidth) {
-                if (parent && renderParent) {
-                    const blockStatic = this.blockStatic && !this.has('maxWidth') && (this.htmlElement || this.svgElement);
+                if (!hasWidth && parent) {
+                    const blockStatic = this.blockStatic && (this.htmlElement || this.svgElement) && (!this.has('maxWidth') || this.some(node => node.blockStatic));
                     if (this.plainText) {
                         if (this.multiline && renderParent.layoutFrame && renderParent.renderChildren.length > 1 && renderParent.ascend(true).some(node => !node.inlineStatic && node.has('width'))) {
                             let width = renderParent.actualWidth;
@@ -584,7 +629,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                             }
                         }
                         this.android('layout_width', this.actualWidth > renderParent.box.width && this.multiline && this.alignParent('left') ? 'match_parent' : 'wrap_content', false);
-                        return;
+                        hasWidth = true;
                     }
                     else {
                         let inlineVertical = 0;
@@ -610,7 +655,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                             this.tableElement || parent.gridElement || parent.flexElement)
                         {
                             this.android('layout_width', 'wrap_content', false);
-                            return;
+                            hasWidth = true;
                         }
                         else if (
                             blockStatic && (
@@ -628,11 +673,23 @@ export default (Base: Constructor<squared.base.Node>) => {
                             this.layoutFrame && (this.hasAlign($enum.NODE_ALIGNMENT.COLUMN) || $NodeList.linearData(renderChildren, true).floated.size === 2 || renderChildren.some(node => node.blockStatic && (node.autoMargin.leftRight || node.rightAligned))))
                         {
                             this.android('layout_width', 'match_parent', false);
-                            return;
+                            hasWidth = true;
                         }
                     }
                 }
-                this.android('layout_width', 'wrap_content', false);
+                if (!hasWidth) {
+                    this.android('layout_width', 'wrap_content', false);
+                }
+                if (!hasHeight) {
+                    this.android('layout_height', 'wrap_content', false);
+                }
+                if (this.layoutFrame && !this.blockWidth && this.hasAlign($enum.NODE_ALIGNMENT.FLOAT) && this.length > 1 && this.ascend(true).some(node => node.has('width'))) {
+                    this.each(node => {
+                        if (node.element && !node.has('width')) {
+                            node.css('width', $util.formatPX(node.bounds.width));
+                        }
+                    });
+                }
             }
         }
 
@@ -640,54 +697,72 @@ export default (Base: Constructor<squared.base.Node>) => {
             const renderParent = this.renderParent as T;
             if (renderParent) {
                 const alignFloat = this.hasAlign($enum.NODE_ALIGNMENT.FLOAT);
-                const textAlignParent = checkTextAlign(this.cssAscend('textAlign'));
+                const node = (this.outerParent || this) as T;
+                const outerRenderParent = (node.renderParent || renderParent) as T;
                 let textAlign = checkTextAlign(this.cssInitial('textAlign', true));
+                let textAlignParent = checkTextAlign(this.cssAscend('textAlign'));
+                let autoMargin = false;
                 if (textAlign === '' && this.groupParent && !alignFloat) {
-                    const absoluteParent = this.absoluteParent;
-                    if (absoluteParent) {
-                        textAlign = checkTextAlign(absoluteParent.cssInitial('textAlign', true));
+                    const actualParent = $NodeList.actualParent(this.renderChildren);
+                    if (actualParent) {
+                        textAlign = checkTextAlign(actualParent.cssInitial('textAlign', true));
                     }
                 }
                 if (this.pageFlow) {
                     let floating = '';
-                    if (this.inlineVertical && (renderParent.layoutHorizontal && !renderParent.support.container.positionRelative || renderParent.is(CONTAINER_NODE.GRID))) {
-                        const gravity = this.display === 'table-cell' ? 'gravity' : 'layout_gravity';
+                    if (this.inlineVertical && (outerRenderParent.layoutHorizontal && !outerRenderParent.support.container.positionRelative || outerRenderParent.is(CONTAINER_NODE.GRID))) {
+                        let gravity: string;
+                        let target: T;
+                        if (this.display === 'table-cell') {
+                            gravity = 'gravity';
+                            target = this;
+                        }
+                        else {
+                            gravity = 'layout_gravity';
+                            target = node;
+                        }
                         switch (this.cssInitial('verticalAlign', true)) {
                             case 'top':
-                                this.mergeGravity(gravity, 'top');
+                                target.mergeGravity(gravity, 'top');
                                 break;
                             case 'middle':
-                                this.mergeGravity(gravity, 'center_vertical');
+                                target.mergeGravity(gravity, 'center_vertical');
                                 break;
                             case 'bottom':
-                                this.mergeGravity(gravity, 'bottom');
+                                target.mergeGravity(gravity, 'bottom');
                                 break;
                         }
                     }
-                    if (!this.blockWidth && (renderParent.layoutVertical || this.documentRoot && (this.layoutVertical || this.layoutFrame))) {
+                    if (!this.blockWidth && (outerRenderParent.layoutVertical || this.documentRoot && (this.layoutVertical || this.layoutFrame))) {
                         if (this.floating) {
-                            this.mergeGravity('layout_gravity', this.float);
+                            node.mergeGravity('layout_gravity', this.float);
                         }
-                        else if (!setAutoMargin(this) && textAlign !== '' && this.hasWidth && !this.blockStatic) {
-                            this.mergeGravity('layout_gravity', textAlign);
+                        else if (setAutoMargin(node)) {
+                            autoMargin = true;
+                        }
+                        else if (textAlign !== '' && this.hasWidth && !this.blockStatic) {
+                            node.mergeGravity('layout_gravity', textAlign);
                         }
                     }
                     if (alignFloat) {
-                        if (this.hasAlign($enum.NODE_ALIGNMENT.RIGHT) || this.renderChildren.length && this.renderChildren.every(node => node.rightAligned)) {
+                        if (this.hasAlign($enum.NODE_ALIGNMENT.RIGHT) || this.renderChildren.length && this.renderChildren.every(item => item.rightAligned)) {
                             floating = 'right';
                         }
                         else if (this.groupParent && !this.renderChildren.some(item => item.float === 'right')) {
                             floating = 'left';
                         }
                     }
-                    if (renderParent.layoutFrame) {
-                        if (!setAutoMargin(this)) {
+                    if (renderParent.layoutFrame && this.innerChild === undefined) {
+                        if (setAutoMargin(node)) {
+                            autoMargin = true;
+                        }
+                        else {
                             floating = this.floating ? this.float : floating;
                             if (floating !== '' && (renderParent.inlineWidth || this.singleChild && !renderParent.documentRoot)) {
                                 renderParent.mergeGravity('layout_gravity', floating);
                             }
                         }
-                        if (this.singleChild && renderParent.display === 'table-cell') {
+                        if (renderParent.display === 'table-cell' && this.singleChild) {
                             let gravity: string | undefined;
                             switch (renderParent.css('verticalAlign')) {
                                 case 'top':
@@ -700,7 +775,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                                     gravity = 'center_vertical';
                                     break;
                             }
-                            this.mergeGravity('layout_gravity', gravity);
+                            node.mergeGravity('layout_gravity', gravity);
                         }
                     }
                     if (floating !== '') {
@@ -710,34 +785,41 @@ export default (Base: Constructor<squared.base.Node>) => {
                             }
                         }
                         else {
-                            this.mergeGravity('layout_gravity', floating);
+                            node.mergeGravity('layout_gravity', floating);
+                        }
+                    }
+                    else if (setAutoMargin(this) && textAlign !== '') {
+                        textAlignParent = '';
+                    }
+                }
+                if (textAlign === '') {
+                    if (this.length === 0 || outerRenderParent.layoutFrame || this.documentParent.hasWidth) {
+                        switch (textAlignParent) {
+                            case '':
+                            case 'left':
+                            case 'start':
+                                break;
+                            default:
+                                if (!autoMargin) {
+                                    if (outerRenderParent.layoutFrame) {
+                                        if (alignFloat) {
+                                            break;
+                                        }
+                                        else if (this.pageFlow && !this.floating && !this.autoMargin.horizontal) {
+                                            node.mergeGravity('layout_gravity', textAlignParent);
+                                        }
+                                    }
+                                    else if (this.blockStatic) {
+                                        node.mergeGravity('layout_gravity', 'left');
+                                    }
+                                }
+                                textAlign = textAlignParent;
+                                break;
                         }
                     }
                 }
-                else {
-                    setAutoMargin(this);
-                }
-                if (textAlign === '' && (this.length === 0 || renderParent.layoutFrame || renderParent.hasWidth && this.blockStatic)) {
-                    switch (textAlignParent) {
-                        case '':
-                        case 'left':
-                        case 'start':
-                            break;
-                        default:
-                            if (renderParent.layoutFrame) {
-                                if (alignFloat) {
-                                    break;
-                                }
-                                if (this.pageFlow && !this.floating && !this.autoMargin.horizontal) {
-                                    this.mergeGravity('layout_gravity', textAlignParent);
-                                }
-                            }
-                            else if (this.blockStatic && !this.hasWidth) {
-                                this.mergeGravity('layout_gravity', 'left');
-                            }
-                            textAlign = textAlignParent;
-                            break;
-                    }
+                else if (textAlignParent !== '') {
+                    node.mergeGravity('layout_gravity', textAlign);
                 }
                 if (textAlign !== '' && !(this.layoutFrame || this.layoutConstraint || !this.textElement && this.length === 0)) {
                     this.mergeGravity('gravity', textAlign);
@@ -1060,7 +1142,9 @@ export default (Base: Constructor<squared.base.Node>) => {
                                     if (node.height < lineHeight) {
                                         node.android('minHeight', $util.formatPX(lineHeight));
                                     }
-                                    node.mergeGravity('gravity', 'center_vertical');
+                                    if (!node.has('verticalAlign')) {
+                                        node.mergeGravity('gravity', 'center_vertical');
+                                    }
                                 }
                             }
                             else {

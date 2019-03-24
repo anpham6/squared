@@ -31,9 +31,9 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
             parent,
             node,
             0,
-            $enum.NODE_ALIGNMENT.AUTO_LAYOUT,
-            node.length
+            $enum.NODE_ALIGNMENT.AUTO_LAYOUT
         );
+        layout.itemCount = node.length;
         layout.rowCount = mainData.rowCount;
         layout.columnCount = mainData.columnCount;
         if (node.find(item => !item.pageFlow) !== undefined || mainData.rowDirection && (mainData.rowCount === 1 || node.hasHeight) || mainData.columnDirection && mainData.columnCount === 1) {
@@ -57,7 +57,6 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         node,
                         CONTAINER_NODE.CONSTRAINT,
                         $enum.NODE_ALIGNMENT.AUTO_LAYOUT,
-                        node.length,
                         node.children as T[]
                     )
                 ),

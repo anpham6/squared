@@ -25,7 +25,6 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             node,
             0,
             0,
-            node.length,
             node.children as T[]
         );
         if (layout.linearY) {
@@ -52,8 +51,8 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
         if (mainData) {
             const controller = <android.base.Controller<T>> this.application.controllerHandler;
             const parentLeft = parent.paddingLeft + parent.marginLeft;
-            let columnCount = 0;
             let paddingLeft = node.marginLeft;
+            let columnCount = 0;
             node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, null);
             if (parent.is(CONTAINER_NODE.GRID)) {
                 columnCount = $util.convertInt(parent.android('columnCount'));
@@ -118,7 +117,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     paddingLeft += node.paddingLeft;
                     node.modifyBox($enum.BOX_STANDARD.PADDING_LEFT, null);
                 }
-                const paddingRight = (paddingLeft * 0.25) / (image ? 2 : 1);
+                const paddingRight = (paddingLeft * 0.2) / (image ? 2 : 1);
                 let minWidth = paddingLeft;
                 const options = createViewAttribute({
                     android: {
@@ -204,7 +203,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 node.android('layout_width', '0px');
                 node.android('layout_columnWeight', '1');
             }
-            if (node.length) {
+            if (node.length && node.every(item => item.baseline)) {
                 const linearData = $NodeList.linearData(node.children);
                 if (linearData.linearX || linearData.linearY) {
                     return {
@@ -214,7 +213,6 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                                 node,
                                 CONTAINER_NODE.LINEAR,
                                 linearData.linearX ? $enum.NODE_ALIGNMENT.HORIZONTAL : $enum.NODE_ALIGNMENT.VERTICAL,
-                                node.length,
                                 node.children as T[]
                             )
                         ),

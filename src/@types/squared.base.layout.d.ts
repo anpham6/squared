@@ -11,7 +11,6 @@ declare global {
             rowCount: number;
             columnCount: number;
             renderIndex: number;
-            orderAltered: boolean;
             readonly linearX: boolean;
             readonly linearY: boolean;
             readonly floated: Set<string>;
@@ -24,7 +23,7 @@ declare global {
         }
 
         class Layout<T extends Node> implements Layout<T> {
-            constructor(parent: T, node: T, containerType?: number, alignmentType?: number, itemCount?: number, children?: T[]);
+            constructor(parent: T, node: T, containerType?: number, alignmentType?: number, children?: T[]);
         }
     }
 }

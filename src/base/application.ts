@@ -1,4 +1,4 @@
-import { AppProcessing, AppSession, FileAsset, ImageAsset, LayoutResult, LayoutType, NodeTemplate, SessionData, UserSettings } from './@types/application';
+import { AppProcessing, AppSession, FileAsset, ImageAsset, LayoutResult, NodeTemplate, SessionData, UserSettings } from './@types/application';
 
 import Controller from './controller';
 import Extension from './extension';
@@ -15,7 +15,7 @@ const $dom = squared.lib.dom;
 const $element = squared.lib.element;
 const $util = squared.lib.util;
 
-function prioritizeExtensions<T extends Node>(element: HTMLElement, extensions: Extension<T>[], documentRoot: HTMLElement | null) {
+function prioritizeExtensions<T extends Node>(element: HTMLElement, extensions: Extension<T>[], documentRoot: HTMLElement | null = null) {
     const tagged: string[] = [];
     let current: HTMLElement | null = element;
     while (current) {
@@ -370,9 +370,6 @@ export default class Application<T extends Node> implements squared.base.Applica
             return this.controllerHandler.renderNode(layout);
         }
         else {
-            if (layout.orderAltered) {
-                this.saveRenderPosition(layout.node);
-            }
             return this.controllerHandler.renderNodeGroup(layout);
         }
     }
@@ -461,16 +458,6 @@ export default class Application<T extends Node> implements squared.base.Applica
         }
     }
 
-    public saveRenderPosition(parent: T) {
-        const children = this.session.renderPosition.get(parent);
-        if (children) {
-            this.session.renderPosition.set(parent, $util.concatArray($util.filterArray(children, item => !parent.contains(item)), parent.children as T[]));
-        }
-        else {
-            this.session.renderPosition.set(parent, parent.duplicate() as T[]);
-        }
-    }
-
     public createNode(element: Element) {
         return new this.nodeConstructor(this.nextId, element, this.controllerHandler.afterInsertNode);
     }
@@ -524,24 +511,30 @@ export default class Application<T extends Node> implements squared.base.Applica
                             }
                         }
                         else if (!localSettings.unsupported.tagName.has(childElement.tagName) || childElement.tagName === 'INPUT' && !localSettings.unsupported.tagName.has(`${childElement.tagName}:${(<HTMLInputElement> childElement).type}`)) {
-                            prioritizeExtensions(childElement, extensions, null).some(item => item.init(childElement));
+                            prioritizeExtensions(childElement, extensions).some(item => item.init(childElement));
                             if (!this.parseElements.has(childElement)) {
                                 const child = cascadeDOM(childElement, depth + 1);
-                                if (child && !child.excluded) {
+                                if (child) {
                                     children.push(child);
-                                    includeText = true;
+                                    if (!child.excluded) {
+                                        includeText = true;
+                                    }
                                 }
                             }
                         }
                     }
-                    for (let i = 0, j = 0; i < children.length; i++) {
+                    for (let i = 0; i < children.length; i++) {
                         const child = children[i];
-                        if (includeText || child.tagName !== 'PLAINTEXT') {
+                        if (child.excluded) {
+                            this.processing.excluded.append(child);
+                        }
+                        else if (includeText || child.tagName !== 'PLAINTEXT') {
                             child.parent = node;
-                            child.siblingIndex = j++;
                             this.processing.cache.append(child);
                         }
+                        child.siblingIndex = i;
                     }
+                    node.actualChildren = children;
                 }
             }
             return node;
@@ -942,11 +935,11 @@ export default class Application<T extends Node> implements squared.base.Applica
                         let result: LayoutResult<T> | undefined;
                         let segEnd: T | undefined;
                         if (horizontal.length > 1) {
-                            result = controller.processTraverseHorizontal(new Layout(parentY, nodeY, 0, 0, horizontal.length, horizontal), axisY);
+                            result = controller.processTraverseHorizontal(new Layout(parentY, nodeY, 0, 0, horizontal), axisY);
                             segEnd = horizontal[horizontal.length - 1];
                         }
                         else if (vertical.length > 1) {
-                            result = controller.processTraverseVertical(new Layout(parentY, nodeY, 0, 0, vertical.length, vertical), axisY);
+                            result = controller.processTraverseVertical(new Layout(parentY, nodeY, 0, 0, vertical), axisY);
                             segEnd = vertical[vertical.length - 1];
                             if (!segEnd.blockStatic && segEnd !== axisY[axisY.length - 1]) {
                                 segEnd.alignmentType |= NODE_ALIGNMENT.EXTENDABLE;
@@ -955,7 +948,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         if (parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) && segEnd === axisY[axisY.length - 1]) {
                             parentY.alignmentType ^= NODE_ALIGNMENT.UNKNOWN;
                         }
-                        if (result && this.addRenderLayout(<Layout<T>> result.layout, parentY)) {
+                        if (result && this.addRenderLayout(result.layout, parentY)) {
                             parentY = nodeY.parent as T;
                         }
                     }
@@ -1052,7 +1045,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                             k--;
                             continue;
                         }
-                        this.addRenderLayout(<Layout<T>> result.layout, parentY);
+                        this.addRenderLayout(result.layout, parentY);
                     }
                 }
             }
@@ -1092,7 +1085,9 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     protected processFloatHorizontal(layout: Layout<T>) {
+        const controller = this.controllerHandler;
         let layerIndex: Array<T[] | T[][]> | undefined;
+        const itemCount = layout.itemCount;
         if (layout.cleared.size === 0 && !layout.some(node => node.autoMargin.horizontal)) {
             const inline: T[] = [];
             const left: T[] = [];
@@ -1108,27 +1103,27 @@ export default class Application<T extends Node> implements squared.base.Applica
                     inline.push(node);
                 }
             }
-            layout.init();
-            if (inline.length === layout.itemCount || left.length === layout.itemCount || right.length === layout.itemCount) {
-                this.controllerHandler.processLayoutHorizontal(layout);
+            if (inline.length === itemCount || left.length === itemCount || right.length === itemCount) {
+                controller.processLayoutHorizontal(layout);
             }
             else if ((left.length === 0 || right.length === 0) && !inline.some(item => item.blockStatic)) {
                 const subgroup: T[] = [];
                 if (right.length === 0) {
                     $util.concatMultiArray(subgroup, left, inline);
-                    const horizontal = this.controllerHandler.containerTypeHorizontal;
+                    const horizontal = controller.containerTypeHorizontal;
                     layout.setType(horizontal.containerType, horizontal.alignmentType);
                     layerIndex = [left, inline];
                 }
                 else {
                     $util.concatMultiArray(subgroup, inline, right);
-                    const vertical = this.controllerHandler.containerTypeVerticalMargin;
-                    layout.setType(vertical.containerType, vertical.alignmentType);
+                    const verticalMargin = controller.containerTypeVerticalMargin;
+                    layout.setType(verticalMargin.containerType, verticalMargin.alignmentType);
                     layerIndex = [inline, right];
                 }
                 layout.retain(subgroup);
             }
         }
+        const vertical = controller.containerTypeVertical;
         const inlineAbove: T[] = [];
         const inlineBelow: T[] = [];
         const leftAbove: T[] = [];
@@ -1322,8 +1317,8 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
             $util.spliceArray(layerIndex, item => item.length === 0);
             layout.itemCount = layerIndex.length;
-            const vertical = inlineAbove.length === 0 && (leftSub.length === 0 || rightSub.length === 0) ? this.controllerHandler.containerTypeVertical : this.controllerHandler.containerTypeVerticalMargin;
-            layout.setType(vertical.containerType, vertical.alignmentType);
+            const outerVertical = inlineAbove.length === 0 && (leftSub.length === 0 || rightSub.length === 0) ? vertical : controller.containerTypeVerticalMargin;
+            layout.setType(outerVertical.containerType, outerVertical.alignmentType);
         }
         let floatgroup: T | undefined;
         for (let i = 0; i < layerIndex.length; i++) {
@@ -1336,23 +1331,18 @@ export default class Application<T extends Node> implements squared.base.Applica
                     $util.concatArray(grouping, seg);
                 }
                 grouping.sort(NodeList.siblingIndex);
-                floatgroup = this.controllerHandler.createNodeGroup(grouping[0], grouping, layout.node);
-                const layoutGroup = new Layout(
-                    layout.node,
-                    floatgroup,
-                    0,
-                    segments.some(seg => seg === rightSub || seg === rightAbove) ? NODE_ALIGNMENT.RIGHT : 0,
-                    segments.length
-                );
-                let vertical: LayoutType | undefined;
                 if (layout.node.layoutVertical) {
                     floatgroup = layout.node;
                 }
                 else {
-                    vertical = this.controllerHandler.containerTypeVertical;
-                }
-                if (vertical) {
-                    layoutGroup.setType(vertical.containerType, vertical.alignmentType);
+                    floatgroup = controller.createNodeGroup(grouping[0], grouping, layout.node);
+                    const layoutGroup = new Layout(
+                        layout.node,
+                        floatgroup,
+                        vertical.containerType,
+                        vertical.alignmentType | (segments.some(seg => seg === rightSub || seg === rightAbove) ? NODE_ALIGNMENT.RIGHT : 0),
+                    );
+                    layoutGroup.itemCount = segments.length;
                     this.addRenderLayout(layoutGroup);
                 }
             }
@@ -1362,26 +1352,26 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
             for (const seg of segments) {
                 const basegroup = floatgroup && (seg === inlineAbove || seg === leftAbove || seg === leftBelow || seg === rightAbove || seg === rightBelow) ? floatgroup : layout.node;
-                const target = this.controllerHandler.createNodeGroup(seg[0], seg, basegroup);
+                const target = controller.createNodeGroup(seg[0], seg, basegroup);
                 const layoutGroup = new Layout(
                     basegroup,
                     target,
                     0,
-                    NODE_ALIGNMENT.SEGMENTED,
-                    seg.length,
+                    seg.length < itemCount ? NODE_ALIGNMENT.SEGMENTED : 0,
                     seg
                 );
                 if (seg.length === 1 || layoutGroup.linearY) {
-                    const vertical = this.controllerHandler.containerTypeVertical;
                     layoutGroup.setType(vertical.containerType, vertical.alignmentType);
+                    if (seg.length === 1) {
+                        target.innerChild = seg[0];
+                        seg[0].outerParent = target;
+                    }
                 }
                 else {
-                    layoutGroup.init();
-                    this.controllerHandler.processLayoutHorizontal(layoutGroup);
+                    controller.processLayoutHorizontal(layoutGroup);
                 }
                 this.addRenderLayout(layoutGroup);
                 if (seg === inlineAbove && seg.some(subitem => subitem.blockStatic && !subitem.hasWidth)) {
-                    const vertical = this.controllerHandler.containerTypeVertical;
                     const targeted = target.of(vertical.containerType, vertical.alignmentType) ? target.children : [target];
                     if (leftAbove.length) {
                         let boundsRight = Number.NEGATIVE_INFINITY;
@@ -1425,7 +1415,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 layout.node,
                 vertical.containerType,
                 vertical.alignmentType,
-                layout.length
+                groupWrap.children as T[]
             ));
             layout.node = groupWrap;
         }
@@ -1493,7 +1483,6 @@ export default class Application<T extends Node> implements squared.base.Applica
                         controller.createNodeGroup(pageFlow[0], pageFlow, layout.node),
                         layoutType.containerType,
                         layoutType.alignmentType,
-                        pageFlow.length,
                         pageFlow
                     ));
                 }
@@ -1542,13 +1531,15 @@ export default class Application<T extends Node> implements squared.base.Applica
                         basegroup.init();
                         layoutGroup.itemCount = children.length;
                         this.addRenderLayout(layoutGroup);
-                        for (const node of children) {
+                        for (let node of children) {
+                            if (!node.groupParent) {
+                                node = controller.createNodeGroup(node, [node], basegroup);
+                            }
                             this.addRenderLayout(new Layout(
                                 basegroup,
                                 node,
                                 vertical.containerType,
                                 vertical.alignmentType | NODE_ALIGNMENT.SEGMENTED,
-                                node.length,
                                 node.children as T[]
                             ));
                         }
@@ -1587,8 +1578,6 @@ export default class Application<T extends Node> implements squared.base.Applica
             else {
                 node.visible = false;
                 node.excluded = true;
-                this.processing.excluded.append(node);
-                return undefined;
             }
         }
         return node;
@@ -1630,7 +1619,6 @@ export default class Application<T extends Node> implements squared.base.Applica
             node,
             node.containerType,
             node.alignmentType,
-            node.length,
             node.children as T[]
         );
     }

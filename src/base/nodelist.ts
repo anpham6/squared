@@ -10,10 +10,48 @@ export interface LinearData<T> {
 }
 
 export default class NodeList<T extends Node> extends squared.lib.base.Container<T> implements squared.base.NodeList<T> {
-    public static actualParent<T extends Node>(list: T[]) {
+    public static outerRegion<T extends Node>(node: T): BoxRect {
+        const nodes = node.duplicate();
+        let top = nodes[0];
+        let right = top;
+        let bottom = top;
+        let left = top;
+        node.each(item => item.companion && !item.companion.visible && nodes.push(item.companion));
+        for (let i = 1; i < nodes.length; i++) {
+            const item = nodes[i];
+            if (item.linear.top < top.linear.top) {
+                top = item;
+            }
+            if (item.linear.right > right.linear.right) {
+                right = item;
+            }
+            if (item.linear.bottom > bottom.linear.bottom) {
+                bottom = item;
+            }
+            if (item.linear.left < left.linear.left) {
+                left = item;
+            }
+        }
+        return {
+            top: top.linear.top,
+            right: right.linear.right,
+            bottom: bottom.linear.bottom,
+            left: left.linear.left
+        };
+    }
+
+    public static actualParent<T extends Node>(list: T[]): T | undefined {
         for (const node of list) {
-            if (node.naturalElement && node.actualParent) {
-                return node.actualParent as T;
+            if (node.naturalElement) {
+                if (node.actualParent) {
+                    return node.actualParent as T;
+                }
+            }
+            else if (node.length) {
+                const parent = NodeList.actualParent(node.children);
+                if (parent) {
+                    return parent as T;
+                }
             }
         }
         return undefined;
@@ -137,20 +175,22 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
             }
         }
         if (nodes.length > 0) {
-            linearX = true;
-            linearY = true;
             if (!clearOnly) {
                 const siblings = [nodes[0]];
+                let x = 1;
+                let y = 1;
                 for (let i = 1; i < nodes.length; i++) {
                     const previousSiblings = nodes[i].previousSiblings() as T[];
                     if (nodes[i].alignedVertically(previousSiblings, siblings, cleared)) {
-                        linearX = false;
+                        y++;
                     }
                     else {
-                        linearY = false;
+                        x++;
                     }
                     siblings.push(nodes[i]);
                 }
+                linearX = x === nodes.length;
+                linearY = y === nodes.length;
                 if (linearX && floated.size) {
                     let boxLeft = Number.POSITIVE_INFINITY;
                     let boxRight = Number.NEGATIVE_INFINITY;

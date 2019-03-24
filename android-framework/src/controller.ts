@@ -1,4 +1,4 @@
-import { ControllerSettings, LayoutType, NodeXmlTemplate, SessionData } from '../../src/base/@types/application';
+import { ControllerSettings, LayoutType, NodeTagXml, NodeXmlTemplate, SessionData } from '../../src/base/@types/application';
 import { UserSettingsAndroid } from './@types/application';
 import { ViewAttribute } from './@types/node';
 
@@ -77,7 +77,7 @@ function createColumnLayout<T extends View>(partition: T[][], horizontal: boolea
 
 function sortHorizontalFloat<T extends View>(list: T[]) {
     if (list.some(node => node.floating)) {
-        const result = list.slice(0).sort((a, b) => {
+        list.sort((a, b) => {
             if (a.floating && !b.floating) {
                 return a.float === 'left' ? -1 : 1;
             }
@@ -94,13 +94,7 @@ function sortHorizontalFloat<T extends View>(list: T[]) {
             }
             return 0;
         });
-        if (!$util.isEqual(list, result)) {
-            list.length = 0;
-            $util.concatArray(list, result);
-            return true;
-        }
     }
-    return false;
 }
 
 function adjustBaseline<T extends View>(baseline: T, nodes: T[]) {
@@ -395,7 +389,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     !node.marginBottom &&
                     !node.hasWidth &&
                     !node.hasHeight &&
-                    !node.lineHeight &&
+                    node.lineHeight <= child.lineHeight &&
                     !node.visibleStyle.padding &&
                     !node.visibleStyle.background &&
                     !node.rightAligned &&
@@ -423,7 +417,6 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 }
             }
             else {
-                layout.init();
                 if (node.element && $element.hasLineBreak(node.element, true)) {
                     layout.setType(layout.some(item => item.positionRelative && !item.positionAuto) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR, $enum.NODE_ALIGNMENT.VERTICAL, $enum.NODE_ALIGNMENT.UNKNOWN);
                 }
@@ -443,7 +436,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     else {
                         layout.setType(CONTAINER_NODE.LINEAR);
                         if (layout.floated.size) {
-                            layout.orderAltered = sortHorizontalFloat(layout.children);
+                            sortHorizontalFloat(layout.children);
                         }
                     }
                     layout.add($enum.NODE_ALIGNMENT.HORIZONTAL);
@@ -546,7 +539,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         else if (!strictMode || layout.linearX && !layout.floated.has('right')) {
             containerType = CONTAINER_NODE.LINEAR;
             if (layout.floated.size) {
-                layout.orderAltered = sortHorizontalFloat(layout.children);
+                sortHorizontalFloat(layout.children);
             }
         }
         if (containerType !== 0) {
@@ -796,21 +789,27 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         const element = <HTMLImageElement> node.element;
                         const widthPercent = node.has('width', $enum.CSS_STANDARD.PERCENT);
                         const heightPercent = node.has('height', $enum.CSS_STANDARD.PERCENT);
+                        const image = this.application.session.image.get(element.src);
                         let width = node.toFloat('width');
                         let height = node.toFloat('height');
                         let scaleType: string;
-                        if (width === 0 || height === 0) {
-                            const image = this.application.session.image.get(element.src);
-                            if (image) {
-                                if (width === 0) {
-                                    width = image.width;
-                                }
-                                if (height === 0) {
-                                    height = image.height;
+                        if (widthPercent || heightPercent) {
+                            if (widthPercent) {
+                                width *= parent.box.width / 100;
+                                node.css('width', $util.formatPX(width));
+                                if (height === 0 && image) {
+                                    height = image.height * (width / image.width);
+                                    node.css('height', $util.formatPX(height));
                                 }
                             }
-                        }
-                        if (widthPercent || heightPercent) {
+                            if (heightPercent) {
+                                height *= parent.box.height / 100;
+                                node.css('height', $util.formatPX(height));
+                                if (width === 0 && image) {
+                                    width = image.width * (height / image.height);
+                                    node.css('width', $util.formatPX(width));
+                                }
+                            }
                             scaleType = widthPercent && heightPercent ? 'fitXY' : 'fitCenter';
                         }
                         else {
@@ -833,6 +832,14 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             }
                         }
                         node.android('scaleType', scaleType);
+                        if (image && (width === 0 || height === 0)) {
+                            if (width === 0) {
+                                width = image.width;
+                            }
+                            if (height === 0) {
+                                height = image.height;
+                            }
+                        }
                         if (width > 0 && height === 0 || width === 0 && height > 0) {
                             node.android('adjustViewBounds', 'true');
                         }
@@ -843,7 +850,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         if (src !== '') {
                             node.android('src', `@drawable/${src}`);
                         }
-                        if (!node.pageFlow && node.left < 0 || node.top < 0) {
+                        if (!node.pageFlow && (node.left < 0 || node.top < 0)) {
                             const absoluteParent = node.absoluteParent;
                             if (absoluteParent && absoluteParent.css('overflow') === 'hidden') {
                                 const container = this.application.createNode($element.createElement(node.actualParent ? node.actualParent.element : null));
@@ -858,6 +865,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                     zIndex: node.zIndex.toString()
                                 });
                                 parent.appendTry(node, container);
+                                node.parent = container;
                                 this.cache.append(container);
                                 if (width > 0) {
                                     container.android('layout_width', width < parent.box.width ? $util.formatPX(width) : 'match_parent');
@@ -873,13 +881,12 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                 }
                                 container.render(target ? this.application.resolveTarget(target) : parent);
                                 container.saveAsInitial();
-                                container.render(parent);
                                 this.application.addRenderTemplate(
                                     parent,
                                     container,
                                     <NodeXmlTemplate<T>> {
                                         type: $enum.NODE_TEMPLATE.XML,
-                                        node,
+                                        node: container,
                                         controlName: CONTAINER_ANDROID.FRAME
                                     }
                                 );
@@ -980,7 +987,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 case 'LEGEND': {
                     node.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, Math.floor(node.bounds.height / 2));
                     if (!node.hasWidth) {
-                        node.css('width', $util.formatPX(node.bounds.width), true);
+                        node.css('minWidth', $util.formatPX(node.bounds.width), true);
                     }
                     break;
                 }
@@ -1067,7 +1074,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         };
     }
 
-    public renderNodeStatic(controlName: string, options?: ExternalData, width?: string, height?: string) {
+    public renderNodeStatic(controlName: string, options?: ExternalData, width?: string, height?: string, content?: string) {
         const node = new View(0, undefined, this.afterInsertNode) as T;
         node.setControlType(controlName);
         if (width !== '') {
@@ -1080,11 +1087,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             node.apply(options);
             options.documentId = node.documentId;
         }
-        return this.getEnclosingTag(
-            $enum.NODE_TEMPLATE.XML,
-            controlName,
-            this.userSettings.showAttributes ? node.extractAttributes(1) : undefined
-        );
+        return this.getEnclosingTag($enum.NODE_TEMPLATE.XML, <NodeTagXml<T>> { controlName, attributes: this.userSettings.showAttributes ? node.extractAttributes(1) : undefined, content });
     }
 
     public renderSpace(width: string, height = '', columnSpan = 0, rowSpan = 0, options?: ViewAttribute) {
@@ -1258,10 +1261,12 @@ export default class Controller<T extends View> extends squared.base.Controller<
 
     public createNodeGroup(node: T, children: T[], parent?: T, replacement?: T) {
         const group = new ViewGroup(this.cache.nextId, node, children, this.afterInsertNode) as T;
-        group.siblingIndex = node.siblingIndex;
         if (parent) {
             parent.appendTry(replacement || node, group);
             group.init();
+        }
+        else {
+            group.siblingIndex = node.siblingIndex;
         }
         this.cache.append(group);
         return group;
@@ -1282,14 +1287,13 @@ export default class Controller<T extends View> extends squared.base.Controller<
             procedure: $enum.NODE_PROCEDURE.CUSTOMIZATION,
             resource: $enum.NODE_RESOURCE.BOX_STYLE | $enum.NODE_RESOURCE.ASSET
         });
-        container.siblingIndex = node.siblingIndex;
         if (parent) {
             parent.appendTry(node, container);
-            node.siblingIndex = 0;
             node.parent = container;
         }
         else {
             container.innerChild = node;
+            container.siblingIndex = node.siblingIndex;
         }
         container.saveAsInitial();
         this.application.processing.cache.append(container, !parent);
@@ -1299,10 +1303,9 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     protected processRelativeHorizontal(node: T, children: T[]) {
-        const alignmentVertical = node.hasAlign($enum.NODE_ALIGNMENT.VERTICAL);
-        let alignmentMultiLine = false;
         const rows: T[][] = [];
-        if (alignmentVertical) {
+        let alignmentMultiLine = false;
+        if (node.hasAlign($enum.NODE_ALIGNMENT.VERTICAL)) {
             for (let i = 0; i < children.length; i++) {
                 const item = children[i];
                 const previous = children[i - 1];
@@ -1330,9 +1333,9 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             return renderParent.actualWidth - renderParent.contentBoxWidth;
                         }
                     }
-                    else {
+                    else if (renderParent.groupParent && renderParent.hasAlign($enum.NODE_ALIGNMENT.FLOAT)) {
                         let floatStart = Number.NEGATIVE_INFINITY;
-                        $util.captureMap(renderParent.children, item => item.float === 'left' && item.siblingIndex < node.siblingIndex, item => floatStart = Math.max(floatStart, item.linear.right));
+                        $util.captureMap(node.documentParent.actualChildren, item => item.float === 'left' && item.siblingIndex < node.siblingIndex, item => floatStart = Math.max(floatStart, item.linear.right));
                         if (floatStart !== Number.NEGATIVE_INFINITY && children.some(item => item.linear.left === floatStart)) {
                             return node.box.right - floatStart;
                         }
@@ -1346,6 +1349,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             const checkLineWrap = node.css('whiteSpace') !== 'nowrap';
             const cleared = $NodeList.linearData(children, true).cleared;
             const rangeMultiLine = new Set<T>();
+            const textIndent = node.toInt('textIndent');
             let rowWidth = 0;
             let rowPreviousLeft: T | undefined;
             let rowPreviousBottom: T | undefined;
@@ -1431,7 +1435,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             if (item.marginRight < 0) {
                                 baseWidth += item.marginRight;
                             }
-                            const maxWidth = (item.plainText || item.inlineText) && item.textContent.indexOf(' ') !== -1 ? maxBoxWidth : boxWidth;
+                            const maxWidth = ((item.plainText || item.inlineText) && item.textContent.indexOf(' ') !== -1 ? maxBoxWidth : boxWidth) - (rows.length === 1 ? textIndent : 0);
                             return Math.floor(baseWidth) - (item.styleElement && item.inlineStatic ? item.paddingLeft + item.paddingRight : 0) - (firefoxEdge ? item.borderRightWidth : 0) > maxWidth;
                         };
                         if (adjustFloatingNegativeMargin(item, previous)) {
@@ -1439,33 +1443,30 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         }
                         const viewGroup = item.groupParent && !item.hasAlign($enum.NODE_ALIGNMENT.SEGMENTED);
                         siblings = !viewGroup && item.element && item.inlineVertical && previous.inlineVertical ? $dom.getElementsBetweenSiblings(previous.element, item.element, true) : undefined;
-                        const startNewRow = (() => {
-                            if (item.textElement) {
-                                if (previous.textElement) {
-                                    if (i === 1 && siblings === undefined && item.plainText && !$util.REGEXP_COMPILED.TRAILINGSPACE.test(previous.textContent) && !$util.REGEXP_COMPILED.LEADINGSPACE.test(item.textContent)) {
-                                        return false;
-                                    }
-                                    else if (checkLineWrap && (rangeMultiLine.has(previous) || previous.multiline && $element.hasLineBreak(<Element> previous.element, false, true))) {
-                                        return true;
-                                    }
-                                }
-                                if (previous.floating && previous.alignParent('left') && rowWidth < maxBoxWidth) {
+                        const startNewRow = () => {
+                            if (previous.textElement) {
+                                if (i === 1 && siblings === undefined && item.plainText && !$util.REGEXP_COMPILED.TRAILINGSPACE.test(previous.textContent) && !$util.REGEXP_COMPILED.LEADINGSPACE.test(item.textContent)) {
                                     return false;
                                 }
-                                else if (checkLineWrap && (checkWidthWrap() || item.multiline && $element.hasLineBreak(<Element> item.element) || item.preserveWhiteSpace && $util.REGEXP_COMPILED.LEADINGNEWLINE.test(item.textContent))) {
+                                else if (checkLineWrap && (previous.multiline && $element.hasLineBreak(<Element> previous.element, false, true) || rangeMultiLine.has(previous))) {
                                     return true;
                                 }
                             }
+                            if (previous.floating && previous.alignParent('left') && rowWidth < maxBoxWidth) {
+                                return false;
+                            }
+                            else if (checkLineWrap && (checkWidthWrap() || item.multiline && $element.hasLineBreak(<Element> item.element) || item.preserveWhiteSpace && $util.REGEXP_COMPILED.LEADINGNEWLINE.test(item.textContent))) {
+                                return true;
+                            }
                             return false;
-                        })();
-                        if (startNewRow || (
-                                viewGroup ||
-                                previous.autoMargin.horizontal ||
-                                !item.textElement && checkWidthWrap() ||
-                                item.linear.top >= previous.linear.bottom && (item.blockStatic || item.floating && previous.float === item.float) ||
-                                !item.floating && (previous.blockStatic || item.previousSiblings().some(sibling => sibling.lineBreak || sibling.excluded && sibling.blockStatic) || siblings !== undefined && siblings.some(element => $element.isLineBreak(element))) ||
-                                cleared.has(item)
-                           ))
+                        };
+                        if (viewGroup ||
+                            item.linear.top >= previous.linear.bottom && (item.blockStatic || item.floating && previous.float === item.float) ||
+                            item.textElement && startNewRow() ||
+                            !item.textElement && checkWidthWrap() ||
+                            !item.floating && (previous.blockStatic || item.previousSiblings().some(sibling => sibling.lineBreak || sibling.excluded && sibling.blockStatic) || !!siblings && siblings.some(element => $element.isLineBreak(element))) ||
+                            cleared.has(item) ||
+                            previous.autoMargin.horizontal)
                         {
                             rowPreviousBottom = rowItems.find(sibling => !sibling.floating) || rowItems[0];
                             for (const sibling of rowItems) {
@@ -1537,7 +1538,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         }
                     }
                     rowWidth += previousOffset + item.marginLeft + bounds.width + item.marginRight;
-                    if (i < seg.length - 1) {
+                    if (i < seg.length - 1 || alignmentSingle) {
                         if (Math.ceil(rowWidth) >= this.userSettings.maxWordWrapWidth && !item.alignParent(alignParent)) {
                             checkSingleLine(item, checkLineWrap);
                         }

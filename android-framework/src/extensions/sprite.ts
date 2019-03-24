@@ -66,7 +66,6 @@ export default class <T extends android.base.View> extends squared.base.extensio
                         container,
                         CONTAINER_NODE.FRAME,
                         $enum.NODE_ALIGNMENT.SINGLE,
-                        1,
                         container.children as T[]
                     )
                 ),

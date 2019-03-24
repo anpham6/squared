@@ -377,7 +377,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 if (previous.blockStatic ||
                     this.blockStatic && (!previous.inlineFlow || !!cleared && cleared.has(previous)) ||
                     cleared && cleared.get(previous) === 'both' && (!$util.isArray(siblings) || siblings[0] !== previous) ||
-                    !previous.floating && (this.blockStatic || !this.floating && !this.inlineFlow) ||
+                    !previous.floating && (this.blockStatic || !this.floating && !this.inlineFlow || siblings && this.display === 'inline-block' && this.linear.top >= Math.floor(siblings[siblings.length - 1].linear.bottom)) ||
                     previous.bounds.width > (actualParent.has('width', CSS_STANDARD.LENGTH) ? actualParent.width : actualParent.box.width) && (!previous.textElement || previous.textElement && previous.css('whiteSpace') === 'nowrap') ||
                     previous.lineBreak ||
                     previous.autoMargin.leftRight ||
@@ -729,20 +729,20 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
     }
 
-    public appendTry(node: T, withNode: T, append = true) {
+    public appendTry(node: T, replacement: T, append = true) {
         let valid = false;
         for (let i = 0; i < this.length; i++) {
             if (this.children[i] === node) {
-                withNode.siblingIndex = node.siblingIndex;
-                this.children[i] = withNode;
-                withNode.parent = this;
-                withNode.innerChild = node;
+                replacement.siblingIndex = node.siblingIndex;
+                this.children[i] = replacement;
+                replacement.parent = this;
+                replacement.innerChild = node;
                 valid = true;
                 break;
             }
         }
         if (append) {
-            withNode.parent = this;
+            replacement.parent = this;
             valid = true;
         }
         if (valid) {
@@ -1129,14 +1129,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (this._cached.flexbox === undefined) {
             const actualParent = this.actualParent;
             this._cached.flexbox = {
-                order: $util.convertInt(this.css('order')),
                 wrap: this.css('flexWrap'),
                 direction: this.css('flexDirection'),
-                alignSelf: !this.has('alignSelf') && actualParent && actualParent.has('alignItems') ? actualParent.css('alignItems') : this.css('alignSelf'),
+                alignSelf: this.has('alignSelf') ? actualParent && actualParent.css('alignItems') || 'auto' : this.css('alignSelf'),
                 justifyContent: this.css('justifyContent'),
                 basis: this.css('flexBasis'),
-                grow: $util.convertInt(this.css('flexGrow')),
-                shrink: $util.convertInt(this.css('flexShrink'))
+                order: this.toInt('order'),
+                grow: this.toInt('flexGrow'),
+                shrink: this.toInt('flexShrink')
             };
         }
         return this._cached.flexbox;
@@ -1216,7 +1216,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get lineHeight() {
         if (this._cached.lineHeight === undefined) {
             const lineHeight = $util.convertFloat(this.cssAscend('lineHeight', true));
-            this._cached.lineHeight = this.has('lineHeight') || lineHeight > this.actualHeight || this.some(node => node.plainText) ? lineHeight : 0;
+            this._cached.lineHeight = this.has('lineHeight') || lineHeight > this.actualHeight || this.block && this.actualChildren.some(node => node.textElement) ? lineHeight : 0;
         }
         return this._cached.lineHeight;
     }
@@ -1720,6 +1720,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get actualParent() {
         return this._element && this._element.parentElement ? $dom.getElementAsNode<T>(this._element.parentElement) : undefined;
+    }
+
+    set actualChildren(value) {
+        this._cached.actualChildren = value;
     }
 
     get actualChildren() {

@@ -50,7 +50,6 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                 node,
                 CONTAINER_NODE.GRID,
                 $enum.NODE_ALIGNMENT.AUTO_LAYOUT,
-                node.length,
                 node.children as T[]
             );
             layout.columnCount = mainData.columnCount;
@@ -84,7 +83,6 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                     node,
                     0,
                     0,
-                    siblings.length,
                     siblings
                 );
                 if (layout.linearY) {
@@ -92,7 +90,6 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                     layout.setType(CONTAINER_NODE.LINEAR, $enum.NODE_ALIGNMENT.VERTICAL);
                 }
                 else {
-                    layout.init();
                     layout = controller.processTraverseHorizontal(layout).layout;
                 }
                 if (layout.containerType !== 0) {

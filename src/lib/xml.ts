@@ -35,12 +35,24 @@ export function formatPlaceholder(id: string | number, symbol = ':') {
     return `{${symbol + id.toString()}}`;
 }
 
-export function pushIndent(value: string, depth: number, char = '\t') {
+export function pushIndent(value: string, depth: number, char = '\t', indent?: string) {
     if (depth > 0) {
-        const indent = char.repeat(depth);
+        if (indent === undefined) {
+            indent = char.repeat(depth);
+        }
         return joinMap(value.split('\n'), line => line !== '' ? indent + line : '');
     }
     return value;
+}
+
+export function pushIndentArray(values: string[], depth: number, char = '\t', separator = '') {
+    if (depth > 0) {
+        const indent = char.repeat(depth);
+        for (let i = 0; i < values.length; i++) {
+            values[i] = pushIndent(values[i], depth, char, indent);
+        }
+    }
+    return values.join(separator);
 }
 
 export function replaceIndent(value: string, depth: number, pattern: RegExp) {

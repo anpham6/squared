@@ -450,7 +450,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 const companion = node.companion;
                 if (companion && !companion.visible && companion.htmlElement && !$css.isInheritedStyle(companion.element, 'backgroundColor')) {
                     const companionStyle: BoxStyle = companion.data(Resource.KEY_NAME, 'boxStyle');
-                    if (companionStyle.backgroundColor) {
+                    if (companionStyle && companionStyle.backgroundColor) {
                         stored.backgroundColor = companionStyle.backgroundColor;
                     }
                 }
@@ -775,7 +775,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         if (backgroundImage.length) {
                             template = TEMPLATES.LAYER_LIST;
                             layerList.A = backgroundColor;
-                            layerList.C = [{ stroke, corners: borderRadius }];
+                            if (stroke || borderRadius) {
+                                layerList.C = [{ stroke, corners: borderRadius }];
+                            }
                         }
                         else {
                             template = TEMPLATES.SHAPE;

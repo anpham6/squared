@@ -27,6 +27,7 @@ declare global {
             multiline: boolean;
             overflow: number;
             documentParent: Node;
+            actualChildren: Node[];
             renderAs?: Node;
             parent?: Node;
             renderParent?: Node;
@@ -116,7 +117,6 @@ declare global {
             readonly support: Support;
             readonly absoluteParent: Node | undefined;
             readonly actualParent: Node | undefined;
-            readonly actualChildren: Node[];
             readonly actualWidth: number;
             readonly actualHeight: number;
             readonly actualDimension: Dimension;
@@ -172,7 +172,7 @@ declare global {
             cssPX(attr: string, value: number, negative?: boolean, cache?: boolean): string;
             cssTry(attr: string, value: string): boolean;
             cssFinally(attr: string): boolean;
-            appendTry(node: Node, withNode: Node, append?: boolean): void;
+            appendTry(node: Node, replacement: Node, append?: boolean): void;
             toInt(attr: string, initial?: boolean, fallback?: number): number;
             toFloat(attr: string, initial?: boolean, fallback?: number): number;
             parseUnit(value: string, horizontal?: boolean, parent?: boolean): number;

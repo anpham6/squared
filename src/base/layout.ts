@@ -1,5 +1,3 @@
-import { LinearData } from './nodelist';
-
 import Node from './node';
 import NodeList from './nodelist';
 
@@ -12,30 +10,39 @@ export default class Layout<T extends Node> extends squared.lib.base.Container<T
     public columnCount = 0;
     public renderType = 0;
     public renderIndex = -1;
+    public itemCount = 0;
 
-    public orderAltered = false;
-
-    private _linearData!: LinearData<T>;
+    private _floated?: Set<string>;
+    private _cleared?: Map<T, string>;
+    private _linearX?: boolean;
+    private _linearY?: boolean;
 
     constructor(
         public parent: T,
         public node: T,
         public containerType = 0,
         public alignmentType = 0,
-        public itemCount = 0,
         children?: T[])
     {
         super(children);
+        if (children) {
+            this.init();
+        }
     }
 
     public init() {
-        this._linearData = NodeList.linearData(this.children);
-        if (this._linearData.floated.size) {
+        const linearData = NodeList.linearData(this.children);
+        this._floated = linearData.floated;
+        this._cleared = linearData.cleared;
+        this._linearX = linearData.linearX;
+        this._linearY = linearData.linearY;
+        if (linearData.floated.size) {
             this.add(NODE_ALIGNMENT.FLOAT);
         }
         if (this.every(item => item.float === 'right')) {
             this.add(NODE_ALIGNMENT.RIGHT);
         }
+        this.itemCount = this.children.length;
     }
 
     public setType(containerType: number, ...alignmentType: number[]) {
@@ -66,31 +73,19 @@ export default class Layout<T extends Node> extends squared.lib.base.Container<T
     }
 
     get floated() {
-        if (this._linearData === undefined) {
-            this.init();
-        }
-        return this._linearData.floated;
+        return this._floated || new Set<string>();
     }
 
     get cleared() {
-        if (this._linearData === undefined) {
-            this.init();
-        }
-        return this._linearData.cleared;
+        return this._cleared || new Map<T, string>();
     }
 
     get linearX() {
-        if (this._linearData === undefined) {
-            this.init();
-        }
-        return this._linearData.linearX;
+        return this._linearX !== undefined ? this._linearX : true;
     }
 
     get linearY() {
-        if (this._linearData === undefined) {
-            this.init();
-        }
-        return this._linearData.linearY;
+        return this._linearY !== undefined ? this._linearY : false;
     }
 
     get visible() {

@@ -17,7 +17,6 @@ export default class <T extends android.base.View> extends squared.base.extensio
                 node,
                 CONTAINER_NODE.RELATIVE,
                 $enum.NODE_ALIGNMENT.HORIZONTAL,
-                node.length,
                 node.children as T[]
             );
             return { output: this.application.renderNode(layout) };
