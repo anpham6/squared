@@ -1,4 +1,4 @@
-import { ImageAsset, TemplateDataA } from '../../../../src/base/@types/application';
+import { ImageAsset } from '../../../../src/base/@types/application';
 import { UserSettingsAndroid } from '../../@types/application';
 import { ResourceBackgroundOptions } from '../../@types/extension';
 import { GradientColorStop, GradientTemplate } from '../../@types/resource';
@@ -6,18 +6,12 @@ import { GradientColorStop, GradientTemplate } from '../../@types/resource';
 import Resource from '../../resource';
 import View from '../../view';
 
+import { XMLNS_ANDROID } from '../../lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from '../../lib/enumeration';
-import { getXmlNs } from '../../lib/util';
 
-import LAYERLIST_TMPL from '../../template/resource/embedded/layer-list';
-import SHAPE_TMPL from '../../template/resource/embedded/shape';
-import VECTOR_TMPL from '../../template/resource/embedded/vector';
-
-interface LayerListTemplate {
-    A: StringMap[] | false;
-    B: BackgroundImageData[];
-    C: BorderData[] | false;
-}
+import LAYERLIST_TMPL from '../../template/resource/layer-list';
+import SHAPE_TMPL from '../../template/resource/shape';
+import VECTORGRADIENT_TMPL from '../../template/resource/vector-gradient';
 
 interface PositionAttribute {
     top?: string;
@@ -26,18 +20,13 @@ interface PositionAttribute {
     left?: string;
 }
 
-interface BorderData extends PositionAttribute {
-    stroke: StringMap[] | false;
-    corners: StringMap[] | false;
-}
-
 interface BackgroundImageData extends PositionAttribute {
     drawable?: string;
     width?: string;
     height?: string;
     bitmap: BitmapData[] | false;
     rotate: StringMap[] | false;
-    gradient: GradientTemplate[] | false;
+    gradient: GradientTemplate | false;
 }
 
 interface BitmapData {
@@ -48,6 +37,12 @@ interface BitmapData {
     tileModeY: string;
 }
 
+type ShapeSolidData = {
+    color: string;
+    dashWidth: string;
+    dashGap: string;
+};
+
 const $SvgBuild = squared.svg && squared.svg.SvgBuild;
 const $enum = squared.base.lib.enumeration;
 const $color = squared.lib.color;
@@ -56,18 +51,12 @@ const $math = squared.lib.math;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
-const TEMPLATES = {
-    LAYER_LIST: $xml.parseTemplate(LAYERLIST_TMPL),
-    SHAPE: $xml.parseTemplate(SHAPE_TMPL),
-    VECTOR: $xml.parseTemplate(VECTOR_TMPL)
-};
-
-function getColorAttribute(value: string) {
-    return `android:color="@color/${value}"`;
+function getColorAttribute(value: string): ShapeSolidData {
+    return { color: `@color/${value}`, dashWidth: '', dashGap: '' };
 }
 
-function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = false): string {
-    const solid = getColorAttribute(Resource.addColor(border.color));
+function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = false): ShapeSolidData {
+    const result = getColorAttribute(Resource.addColor(border.color));
     const borderWidth = parseInt(border.width);
     const style = border.style;
     const groove = style === 'groove';
@@ -91,14 +80,14 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
                                 return getColorAttribute(colorName);
                             case 1:
                             case 2:
-                                return solid;
+                                return result;
                         }
                     }
                     else {
                         switch (direction) {
                             case 0:
                             case 3:
-                                return solid;
+                                return result;
                             case 1:
                             case 2:
                                 return getColorAttribute(colorName);
@@ -119,34 +108,35 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
                 break;
         }
         if (multiplier > 0) {
-            return `${solid} android:dashWidth="${borderWidth * multiplier}px" android:dashGap="${borderWidth}px"`;
+            result.dashWidth = `${borderWidth * multiplier}px`;
+            result.dashGap = `${borderWidth}px`;
         }
     }
-    return solid;
+    return result;
 }
 
-function getShapeStroke(border: BorderAttribute, direction = -1, hasInset = false, isInset = false): StringMap[] | false {
+function getShapeStroke(border: BorderAttribute, direction = -1, hasInset = false, isInset = false): ExternalData | undefined {
     if (border) {
         if (!hasInset || isInset) {
-            return [{
+            return {
                 width: border.width,
-                borderStyle: getBorderStyle(border, isInset ? direction : -1)
-            }];
+                ...getBorderStyle(border, isInset ? direction : -1)
+            };
         }
         else if (hasInset) {
-            return [{
+            return {
                 width: $util.formatPX(Math.ceil(parseFloat(border.width) / 2)),
-                borderStyle: getBorderStyle(border, direction, true)
-            }];
+                ...getBorderStyle(border, direction, true)
+            };
         }
     }
-    return false;
+    return undefined;
 }
 
-function getShapeCorners(stored: BoxStyle): StringMap[] | false {
+function getShapeCorners(stored: BoxStyle): StringMap | undefined {
     if (stored.borderRadius) {
         if (stored.borderRadius.length === 1) {
-            return [{ radius: stored.borderRadius[0] }];
+            return { radius: stored.borderRadius[0] };
         }
         else {
             let borderRadius: string[];
@@ -169,14 +159,14 @@ function getShapeCorners(stored: BoxStyle): StringMap[] | false {
                 }
             }
             if (valid) {
-                return [result];
+                return result;
             }
         }
     }
-    return false;
+    return undefined;
 }
 
-function insertDoubleBorder(items: BorderData[], border: BorderAttribute, top: boolean, right: boolean, bottom: boolean, left: boolean, borderRadius: StringMap[] | false) {
+function insertDoubleBorder(items: ExternalData[], border: BorderAttribute, top: boolean, right: boolean, bottom: boolean, left: boolean, corners: StringMap[] | false) {
     const width = parseInt(border.width);
     const baseWidth = Math.floor(width / 3);
     const remainder = width % 3;
@@ -190,11 +180,14 @@ function insertDoubleBorder(items: BorderData[], border: BorderAttribute, top: b
         right: right ? '' : hideWidth,
         bottom: bottom ? '' : hideWidth,
         left: left ? '' :  hideWidth,
-        stroke: [{
-            width: $util.formatPX(leftWidth),
-            borderStyle: getBorderStyle(border)
-        }],
-        corners: borderRadius
+        shape: {
+            'android:shape': 'rectangle',
+            stroke: {
+                width: $util.formatPX(leftWidth),
+                ...getBorderStyle(border)
+            },
+            corners
+        }
     });
     if (width === 3) {
         indentWidth = `${$util.formatPX(width)}`;
@@ -205,11 +198,14 @@ function insertDoubleBorder(items: BorderData[], border: BorderAttribute, top: b
         right: right ? indentWidth : hideWidth,
         bottom: bottom ? indentWidth : hideWidth,
         left: left ? indentWidth : hideWidth,
-        stroke: [{
-            width: $util.formatPX(rightWidth),
-            borderStyle: getBorderStyle(border)
-        }],
-        corners: borderRadius
+        shape: {
+            'android:shape': 'rectangle',
+            stroke: {
+                width: $util.formatPX(rightWidth),
+                ...getBorderStyle(border)
+            },
+            corners
+        }
     });
 }
 
@@ -235,7 +231,7 @@ function setBodyBackground(name: string, parent: string, attr: string, value: st
 function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIPOP, precision?: number) {
     const result: GradientTemplate = {
         type: gradient.type,
-        colorStops: false
+        item: false
     };
     const hasStop = api >= BUILD_ANDROID.LOLLIPOP;
     switch (gradient.type) {
@@ -304,7 +300,7 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIP
     }
     const colorStops = gradient.colorStops;
     if (hasStop) {
-        result.colorStops = convertColorStops(colorStops);
+        result.item = convertColorStops(colorStops);
     }
     else {
         result.startColor = `@color/${Resource.addColor(colorStops[0].color, true)}`;
@@ -431,15 +427,15 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     stored.borderLeft
                 ];
                 const borderVisible: boolean[] = [];
-                const borderStyle = new Set<string>();
-                const borderWidth = new Set<string>();
+                let borderStyle = true;
                 let borderData: BorderAttribute | undefined;
                 for (let i = 0; i < borders.length; i++) {
                     const item = borders[i];
                     if (item) {
                         borderVisible[i] = true;
-                        borderStyle.add(getBorderStyle(item));
-                        borderWidth.add(item.width);
+                        if (borderData && borderStyle) {
+                            borderStyle = $util.isEqual(borderData, item);
+                        }
                         borderData = item;
                     }
                     else {
@@ -455,11 +451,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                 }
                 if (imageLength || hasBorder) {
-                    const layerList: LayerListTemplate = {
-                        A: false,
-                        B: [],
-                        C: false
-                    };
+                    const images: BackgroundImageData[] = [];
                     let resourceName = '';
                     for (let i = imageLength - 1; i >= 0; i--) {
                         const value = backgroundImage[i];
@@ -472,7 +464,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         const position = backgroundPosition[i];
                         if (typeof value === 'string') {
                             const dimension = <Undefined<ImageAsset>> imageDimensions[i];
-                            const src = `@drawables/${value}`;
+                            const src = `@drawable/${value}`;
                             function resetHorizontal() {
                                 if (!imageSingle) {
                                     position.left = 0;
@@ -715,42 +707,36 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                         else {
                             const dimension = <Dimension> imageDimensions[i];
-                            if (value.colorStops) {
+                            if (value.item) {
                                 const width = Math.round(dimension.width);
                                 const height = Math.round(dimension.height);
                                 imageData.width = $util.formatPX(width);
                                 imageData.height = $util.formatPX(height);
-                                const vectorData: TemplateDataA = {
-                                    namespace: getXmlNs('aapt'),
-                                    width: imageData.width || $util.formatPX(width),
-                                    height: imageData.height || $util.formatPX(height),
-                                    viewportWidth: width.toString(),
-                                    viewportHeight: height.toString(),
-                                    alpha: '',
-                                    A: [{
-                                        region: [[]],
-                                        clipRegion: false,
-                                        path: [[]],
-                                        clipPath: false,
-                                        BB: [{
-                                            render: [[]],
-                                            CCC: [{
-                                                value: $SvgBuild.drawRect(width, height),
-                                                clipElement: false,
-                                                fillPattern: [{ gradients: [value] }]
-                                            }],
-                                            DDD: false
-                                        }]
-                                    }],
-                                    B: false
-                                };
-                                const src = Resource.insertStoredAsset('drawables', `${node.tagName.toLowerCase()}_${node.controlId}_gradient_${i}`, $xml.createTemplate(TEMPLATES.VECTOR, vectorData, true));
+                                const src = Resource.insertStoredAsset(
+                                    'drawables',
+                                    `${node.tagName.toLowerCase()}_${node.controlId}_gradient_${i}`,
+                                    $xml.applyTemplate('vector', VECTORGRADIENT_TMPL, [{
+                                        'xmlns:android': XMLNS_ANDROID.android,
+                                        'xmlns:aapt': XMLNS_ANDROID.aapt,
+                                        'android:width': imageData.width || $util.formatPX(width),
+                                        'android:height': imageData.height || $util.formatPX(height),
+                                        'android:viewportWidth': width.toString(),
+                                        'android:viewportHeight': height.toString(),
+                                        'path': {
+                                            pathData: $SvgBuild.drawRect(width, height),
+                                            'aapt:attr': {
+                                                name: 'android:fillColor',
+                                                gradient: value
+                                            }
+                                        }
+                                    }])
+                                );
                                 if (src !== '') {
-                                    imageData.drawable = `@drawables/${src}`;
+                                    imageData.drawable = `@drawable/${src}`;
                                 }
                             }
                             else {
-                                imageData.gradient = [value];
+                                imageData.gradient = value;
                             }
                             if (position.top !== 0) {
                                 imageData.top = $util.formatPX(getPercentOffset('top', position, node.bounds, dimension));
@@ -760,88 +746,124 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             }
                         }
                         if (imageData.drawable || imageData.bitmap || imageData.gradient) {
-                            layerList.B.push(imageData);
+                            images.push(imageData);
                         }
                     }
-                    let backgroundColor: boolean | {}[] = false;
+                    let solid: StringMap | undefined;
                     if (stored.backgroundColor) {
                         const colorName = Resource.addColor(stored.backgroundColor);
                         if (colorName !== '') {
-                            backgroundColor = [{ color: `@color/${colorName}` }];
+                            solid = { color: `@color/${colorName}` };
                         }
                     }
                     const border = stored.border;
-                    const borderRadius = getShapeCorners(stored);
-                    let template: StringMap;
-                    let shape: TemplateDataA | undefined;
+                    const corners = getShapeCorners(stored);
+                    let layerListData: ExternalData[] | undefined;
+                    let shapeData: ExternalData[] | undefined;
+                    function createLayerList() {
+                        const layerList: ExternalData[] = [{
+                            'xmlns:android': XMLNS_ANDROID.android,
+                            item: []
+                        }];
+                        if (solid) {
+                            layerList[0].item.push({
+                                shape: {
+                                    'android:shape': 'rectangle',
+                                    solid
+                                }
+                            });
+                        }
+                        for (const image of images) {
+                            if (image.gradient) {
+                                layerList[0].item.push({
+                                    shape: {
+                                        'android:shape': 'rectangle',
+                                        gradient: image.gradient
+                                    }
+                                });
+                            }
+                            else {
+                                layerList[0].item.push(image);
+                            }
+                        }
+                        return layerList;
+                    }
                     if (borderData === undefined || border && !(border.style === 'double' && parseInt(border.width) > 2 || (border.style === 'groove' || border.style === 'ridge') && parseInt(border.width) > 1)) {
                         const stroke = border ? getShapeStroke(border) : false;
-                        if (backgroundImage.length) {
-                            template = TEMPLATES.LAYER_LIST;
-                            layerList.A = backgroundColor;
-                            if (stroke || borderRadius) {
-                                layerList.C = [{ stroke, corners: borderRadius }];
+                        if (images.length) {
+                            layerListData = createLayerList();
+                            if (corners || stroke) {
+                                layerListData[0].item.push({
+                                    shape: {
+                                        'android:shape': 'rectangle',
+                                        corners,
+                                        stroke
+                                    }
+                                });
                             }
                         }
                         else {
-                            template = TEMPLATES.SHAPE;
-                            shape = {
-                                A: stroke as [],
-                                B: backgroundColor,
-                                C: borderRadius
-                            };
+                            shapeData = [{
+                                'xmlns:android': XMLNS_ANDROID.android,
+                                'android:shape': 'rectangle',
+                                solid,
+                                corners,
+                                stroke
+                            }];
                         }
                     }
                     else {
-                        template = TEMPLATES.LAYER_LIST;
-                        layerList.A = backgroundColor;
-                        layerList.C = [];
+                        layerListData = createLayerList();
                         const visibleAll = borderVisible[1] && borderVisible[2];
                         function getHideWidth(value: number) {
                             return value + (visibleAll ? 0 : value === 1 ? 1 : 2);
                         }
-                        if (borderStyle.size === 1 && borderWidth.size === 1 && borderData && !(borderData.style === 'groove' || borderData.style === 'ridge')) {
+                        if (borderStyle && borderData && !(borderData.style === 'groove' || borderData.style === 'ridge')) {
                             const width = parseInt(borderData.width);
                             if (borderData.style === 'double' && width > 2) {
                                 insertDoubleBorder.apply(null, [
-                                    layerList.C,
+                                    layerListData[0].item,
                                     borderData,
                                     borderVisible[0],
                                     borderVisible[1],
                                     borderVisible[2],
                                     borderVisible[3],
-                                    borderRadius
+                                    corners
                                 ]);
                             }
-                            else  {
+                            else {
                                 const hideWidth = `-${$util.formatPX(getHideWidth(width))}`;
                                 const leftTop = !borderVisible[0] && !borderVisible[3];
                                 const topOnly = !borderVisible[0] && borderVisible[1] && borderVisible[2] && borderVisible[3];
                                 const leftOnly = borderVisible[0] && borderVisible[1] && borderVisible[2] && !borderVisible[3];
-                                layerList.C.push({
+                                layerListData[0].item.push({
                                     top: borderVisible[0] ? '' : hideWidth,
                                     right: borderVisible[1] ? (borderVisible[3] || leftTop || leftOnly ? '' : borderData.width) : hideWidth,
                                     bottom: borderVisible[2] ? (borderVisible[0] || leftTop || topOnly ? '' : borderData.width) : hideWidth,
                                     left: borderVisible[3] ? '' : hideWidth,
-                                    stroke: getShapeStroke(borderData),
-                                    corners: borderRadius
+                                    shape: {
+                                        'android:shape': 'rectangle',
+                                        corners,
+                                        stroke: getShapeStroke(borderData)
+                                    }
                                 });
                             }
                         }
                         else {
+                            const index: number = layerListData[0].item.length;
                             for (let i = 0; i < borders.length; i++) {
                                 const item = borders[i];
                                 if (item) {
                                     const width = parseInt(item.width);
                                     if (item.style === 'double' && width > 2) {
                                         insertDoubleBorder.apply(null, [
-                                            layerList.C,
+                                            layerListData[0].item,
                                             item,
                                             i === 0,
                                             i === 1,
                                             i === 2,
                                             i === 3,
-                                            borderRadius
+                                            corners
                                         ]);
                                     }
                                     else {
@@ -851,24 +873,29 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         const visible = !visibleAll && item.width === '1px';
                                         let hideWidth = `-${$util.formatPX(baseWidth)}`;
                                         let hideTopWidth = `-${$util.formatPX(baseWidth + (visibleAll ? 1 : 0))}`;
-                                        layerList.C.push({
+                                        layerListData[0].item.push({
                                             top:  i === 0 ? '' : hideTopWidth,
                                             right: i === 1 ? (visible ? item.width : '') : hideWidth,
                                             bottom: i === 2 ? (visible ? item.width : '') : hideWidth,
                                             left: i === 3 ? '' : hideWidth,
-                                            stroke: getShapeStroke(item, i, hasInset),
-                                            corners: borderRadius
+                                            shape: {
+                                                'android:shape': 'rectangle',
+                                                corners,
+                                                stroke: getShapeStroke(item, i, hasInset)
+                                            }
                                         });
                                         if (hasInset) {
                                             hideWidth = `-${$util.formatPX(getHideWidth(width))}`;
                                             hideTopWidth = `-${$util.formatPX(width + (visibleAll ? 1 : 0))}`;
-                                            layerList.C.unshift({
+                                            layerListData[0].item.splice(index, 0, {
                                                 top:  i === 0 ? '' : hideTopWidth,
                                                 right: i === 1 ? (visible ? item.width : '') : hideWidth,
                                                 bottom: i === 2 ? (visible ? item.width : '') : hideWidth,
                                                 left: i === 3 ? '' : hideWidth,
-                                                stroke: getShapeStroke(item, i, true, true),
-                                                corners: false
+                                                shape: {
+                                                    'android:shape': 'rectangle',
+                                                    stroke: getShapeStroke(item, i, true, true)
+                                                }
                                             });
                                         }
                                     }
@@ -876,8 +903,20 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             }
                         }
                     }
-                    if (template) {
-                        resourceName = Resource.insertStoredAsset('drawables', `${node.tagName.toLowerCase()}_${node.controlId}`, $xml.createTemplate(template, shape || layerList, layerList.B.some(item => !!item.drawable)));
+                    const filename = `${node.tagName.toLowerCase()}_${node.controlId}`;
+                    if (shapeData) {
+                        resourceName = Resource.insertStoredAsset(
+                            'drawables',
+                            filename,
+                            $xml.applyTemplate('shape', SHAPE_TMPL, shapeData)
+                        );
+                    }
+                    else if (layerListData) {
+                        resourceName = Resource.insertStoredAsset(
+                            'drawables',
+                            filename,
+                            $xml.applyTemplate('layer-list', LAYERLIST_TMPL, layerListData)
+                        );
                     }
                     if (backgroundImage.length) {
                         node.data('RESOURCE', 'backgroundImage', true);

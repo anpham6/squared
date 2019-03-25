@@ -9,14 +9,15 @@ import View from '../../view';
 
 import { convertColorStops } from '../../extensions/resource/background';
 
+import { XMLNS_ANDROID } from '../../lib/constant';
 import { BUILD_ANDROID } from '../../lib/enumeration';
 import { getXmlNs } from '../../lib/util';
 
-import ANIMATEDVECTOR_TMPL from '../../template/resource/embedded/animated-vector';
-import LAYERLIST_TMPL from '../../template/resource/embedded/layer-list';
+import ANIMATEDVECTOR_TMPL from '../../template/resource/animated-vector';
+import LAYERLIST_TMPL from '../../template/resource/layer-list';
 import OBJECTANIMATOR_TMPL from '../../template/resource/embedded/objectanimator';
-import SETOBJECTANIMATOR_TMPL from '../../template/resource/embedded/set-objectanimator';
-import VECTOR_TMPL from '../../template/resource/embedded/vector';
+import OBJECTANIMATORSET_TMPL from '../../template/resource/embedded/objectanimator-set';
+import VECTOR_TMPL from '../../template/resource/embedded/vector-group';
 
 if (!squared.svg) {
     squared.svg = { lib: {} } as any;
@@ -520,7 +521,7 @@ function getTileMode(value: number) {
 function createFillGradient(gradient: Gradient, path: $SvgPath, precision?: number) {
     const result: GradientTemplate = {
         type: gradient.type,
-        colorStops: convertColorStops(gradient.colorStops, precision)
+        item: convertColorStops(gradient.colorStops, precision)
     };
     switch (gradient.type) {
         case 'radial': {
@@ -596,6 +597,7 @@ function createFillGradient(gradient: Gradient, path: $SvgPath, precision?: numb
 }
 
 const getRadiusPercent = (value: string) => $util.isPercent(value) ? parseFloat(value) / 100 : 0.5;
+const getDrawableSrc = (name: string) => `@drawable/${name}`;
 
 export default class ResourceSvg<T extends View> extends squared.base.Extension<T> {
     public readonly options: ResourceSvgOptions = {
@@ -624,11 +626,9 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
 
     public beforeInit() {
         if ($SvgBuild) {
-            if (TEMPLATES.ANIMATED === undefined) {
-                TEMPLATES.ANIMATED = $xml.parseTemplate(ANIMATEDVECTOR_TMPL);
-                TEMPLATES.LAYER_LIST = $xml.parseTemplate(LAYERLIST_TMPL);
+            if (TEMPLATES.OBJECTANIMATOR === undefined) {
                 TEMPLATES.OBJECTANIMATOR = $xml.parseTemplate(OBJECTANIMATOR_TMPL);
-                TEMPLATES.SET_OBJECTANIMATOR = $xml.parseTemplate(SETOBJECTANIMATOR_TMPL);
+                TEMPLATES.SET_OBJECTANIMATOR = $xml.parseTemplate(OBJECTANIMATORSET_TMPL);
             }
             $SvgBuild.setName();
             this.application.controllerHandler.localSettings.svg.enabled = true;
@@ -658,7 +658,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 this.parseVectorData(svg);
                 this.queueAnimations(svg, svg.name, item => item.attributeName === 'opacity');
                 const templateName = $util.convertWord(`${node.tagName}_${node.controlId}_viewbox`, true).toLowerCase();
-                const getFilename = (prefix = '', suffix = '') => templateName + (prefix !== '' ? `_${prefix}` : '') + (this.IMAGE_DATA.length ? '_vector' : '') + (suffix !== '' ? `_${suffix.toLowerCase()}` : '');
+                const getFilename = (prefix?: string, suffix?: string) => templateName + (prefix ? `_${prefix}` : '') + (this.IMAGE_DATA.length ? '_vector' : '') + (suffix ? `_${suffix.toLowerCase()}` : '');
                 let drawable = '';
                 let vectorName = '';
                 {
@@ -694,10 +694,11 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                     vectorName = Resource.insertStoredAsset('drawables', getFilename(), $xml.formatTemplate(xml));
                 }
                 if (this.ANIMATE_DATA.size) {
-                    const data: TemplateDataA = {
-                        vectorName,
-                        A: []
-                    };
+                    const data: ExternalData[] = [{
+                        'xmlns:android': XMLNS_ANDROID.android,
+                        'android:drawable': getDrawableSrc(vectorName),
+                        target: []
+                    }];
                     for (const [name, group] of this.ANIMATE_DATA.entries()) {
                         const targetData: AnimatedTargetTemplate = { name };
                         const targetSetData: TemplateDataA = { A: [] };
@@ -1246,33 +1247,35 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                             );
                             if (targetData.animation !== '') {
                                 targetData.animation = `@anim/${targetData.animation}`;
-                                data.A.push(targetData);
+                                data[0].target.push(targetData);
                             }
                         }
                     }
-                    if (data.A.length) {
-                        vectorName = Resource.insertStoredAsset('drawables', getFilename('anim'), $xml.createTemplate(TEMPLATES.ANIMATED, data));
+                    if (data[0].target) {
+                        vectorName = Resource.insertStoredAsset(
+                            'drawables',
+                            getFilename('anim'),
+                            $xml.applyTemplate('animated-vector', ANIMATEDVECTOR_TMPL, data)
+                        );
                     }
                 }
-                const getDrawableSrc = (name: string) => `@drawable/${name}`;
                 if (this.IMAGE_DATA.length) {
-                    const B: StringMap[] = [];
+                    const item: ExternalData[] = [];
                     if (vectorName !== '') {
-                        B.push({ drawable: getDrawableSrc(vectorName) });
+                        item.push({ drawable: getDrawableSrc(vectorName) });
                     }
-                    const data = <ExternalData> {
-                        A: false,
-                        B,
-                        C: false
-                    };
-                    for (const item of this.IMAGE_DATA) {
+                    const data: ExternalData[] = [{
+                        'xmlns:android': XMLNS_ANDROID.android,
+                        item
+                    }];
+                    for (const image of this.IMAGE_DATA) {
                         const scaleX = svg.width / svg.viewBox.width;
                         const scaleY = svg.height / svg.viewBox.height;
-                        let x = item.getBaseValue('x', 0) * scaleX;
-                        let y = item.getBaseValue('y', 0) * scaleY;
-                        let width: number = item.getBaseValue('width', 0);
-                        let height: number = item.getBaseValue('height', 0);
-                        const offset = getParentOffset(item.element, <SVGSVGElement> svg.element);
+                        let x = image.getBaseValue('x', 0) * scaleX;
+                        let y = image.getBaseValue('y', 0) * scaleY;
+                        let width: number = image.getBaseValue('width', 0);
+                        let height: number = image.getBaseValue('height', 0);
+                        const offset = getParentOffset(image.element, <SVGSVGElement> svg.element);
                         x += offset.x;
                         y += offset.y;
                         width *= scaleX;
@@ -1283,20 +1286,24 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                             left: x !== 0 ? $util.formatPX(x) : '',
                             top: y !== 0 ? $util.formatPX(y) : ''
                         };
-                        const src = getDrawableSrc(Resource.addImage({ mdpi: item.href }));
-                        if (item.rotateAngle) {
-                            imageData.rotate = [{
+                        const src = getDrawableSrc(Resource.addImage({ mdpi: image.href }));
+                        if (image.rotateAngle) {
+                            imageData.rotate = {
                                 drawable: src,
-                                fromDegrees: item.rotateAngle.toString(),
-                                visible: item.visible ? 'true' : 'false'
-                            }];
+                                fromDegrees: image.rotateAngle.toString(),
+                                visible: image.visible ? 'true' : 'false'
+                            };
                         }
                         else {
                             imageData.drawable = src;
                         }
-                        B.push(imageData);
+                        item.push(imageData);
                     }
-                    drawable = Resource.insertStoredAsset('drawables', templateName, $xml.formatTemplate($xml.createTemplate(TEMPLATES.LAYER_LIST, data)));
+                    drawable = Resource.insertStoredAsset(
+                        'drawables',
+                        templateName,
+                        $xml.applyTemplate('layer-list', LAYERLIST_TMPL, data)
+                    );
                 }
                 else {
                     drawable = vectorName;
@@ -1481,7 +1488,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                                 const backgroundGradient = createFillGradient(gradient, path, this.options.floatPrecisionValue);
                                 if (backgroundGradient) {
                                     result[color] = '';
-                                    result[pattern] = [{ gradients: [backgroundGradient] }];
+                                    result[pattern] = [{ gradient: [backgroundGradient] }];
                                     this.NAMESPACE_AAPT = true;
                                     return;
                                 }

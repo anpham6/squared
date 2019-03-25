@@ -1,6 +1,7 @@
 import * as $css from '../lib/css';
 import * as $element from '../lib/element';
 import * as $util from '../lib/util';
+import * as $xml from '../lib/xml';
 
 declare global {
     namespace squared.lib {
@@ -159,6 +160,7 @@ declare global {
         }
 
         namespace xml {
+            export import STRING_XMLENCODING = $xml.STRING_XMLENCODING;
             function pushIndent(value: string, depth: number, char?: string, indent?: string): string;
             function pushIndentArray(values: string[], depth: number, char?: string, separator?: string): string;
             function replaceIndent(value: string, depth: number, pattern: RegExp): string;
@@ -167,6 +169,7 @@ declare global {
             function escapeNonEntity(value: string): string;
             function parseTemplate(value: string): StringMap;
             function createTemplate(templates: StringMap, data: ExternalData, format?: boolean): string;
+            function applyTemplate(tagName: string, template: ExternalData, children: ExternalData[], depth?: number): string;
             function formatTemplate(value: string, closeEmpty?: boolean, startIndent?: number, char?: string): string;
         }
     }

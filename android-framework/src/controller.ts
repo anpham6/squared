@@ -10,8 +10,6 @@ import { AXIS_ANDROID, BOX_ANDROID, CONTAINER_ANDROID } from './lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
 import { createViewAttribute, getRootNs, replaceLength } from './lib/util';
 
-import BASE_TMPL from './template/base';
-
 import $Layout = squared.base.Layout;
 import $NodeList = squared.base.NodeList;
 
@@ -323,7 +321,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     public readonly localSettings: ControllerSettings = {
-        baseTemplate: BASE_TMPL,
+        baseTemplate: $xml.STRING_XMLENCODING,
         floatPrecision: 3,
         layout: {
             pathName: 'res/layout',

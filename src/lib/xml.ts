@@ -8,6 +8,7 @@ type XMLTagData = {
 };
 
 const STRING_ROOT = '__ROOT__';
+
 const REGEXP_CREATE = {
     ATTRIBUTE: /\s*((\w+:)?\w+="[^"]*)?{~\w+}"?/g,
     COLLECTION: /\n*({%\w+}\n)+/g,
@@ -30,6 +31,8 @@ function replaceSectionTag(data: StringMap, value: string) {
 function getSectionTag(attr: string, value: string) {
     return `((\\t*##${attr}-${value}##\\s*\\n)([\\w\\W]*?\\s*\\n)(\\t*##${attr}-${value}##\\s*\\n))`;
 }
+
+export const STRING_XMLENCODING = '<?xml version="1.0" encoding="utf-8"?>\n';
 
 export function pushIndent(value: string, depth: number, char = '\t', indent?: string) {
     if (depth > 0) {
@@ -195,8 +198,54 @@ export function createTemplate(templates: StringMap, data: ExternalData, format 
         if (format) {
             output = formatTemplate(output);
         }
+    }
+    return output;
+}
+
+export function applyTemplate(tagName: string, template: ExternalData, children: ExternalData[], depth?: number) {
+    const tag = template[tagName];
+    let output = '';
+    let indent = '';
+    if (depth === undefined) {
+        output += STRING_XMLENCODING;
+        depth = 0;
+    }
+    else {
+        indent += '\t'.repeat(depth);
+    }
+    for (const item of children) {
+        output += indent + '<' + tagName;
+        if (tag['@']) {
+            for (const attr of tag['@']) {
+                if (item[attr]) {
+                    output += ` ${(tag['^'] ? tag['^'] + ':' : '') + attr}="${item[attr]}"`;
+                }
+            }
+        }
+        if (tag['>']) {
+            let innerText = '';
+            for (const name in tag['>']) {
+                if (Array.isArray(item[name])) {
+                    innerText += applyTemplate(name, tag['>'], item[name], depth + 1);
+                }
+                else if (typeof item[name] === 'object') {
+                    innerText += applyTemplate(name, tag['>'], [item[name]], depth + 1);
+                }
+            }
+            if (innerText !== '') {
+                output += '>\n' +
+                          innerText +
+                          indent + `</${tagName}>\n`;
+            }
+            else {
+                output += ' />\n';
+            }
+        }
+        else if (tag['~']) {
+            output += `>${item.innerText}</${tagName}>\n`;
+        }
         else {
-            output = output.trim();
+            output += ' />\n';
         }
     }
     return output;
@@ -252,5 +301,5 @@ export function formatTemplate(value: string, closeEmpty = true, startIndent = -
         }
         output += line.value;
     }
-    return output.trim();
+    return output;
 }

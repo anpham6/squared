@@ -27,13 +27,13 @@ export default `<?xml version="1.0" encoding="utf-8"?>
 				<path android:name="{~name}" android:fillColor="{~fillColor}" android:fillAlpha="{~fillAlpha}" android:fillType="{~fillType}" android:strokeColor="{~strokeColor}" android:strokeAlpha="{~strokeAlpha}" android:strokeWidth="{~strokeWidth}" android:strokeLineCap="{~strokeLineCap}" android:strokeLineJoin="{~strokeLineJoin}" android:strokeMiterLimit="{~strokeMiterLimit}" android:trimPathStart="{~trimPathStart}" android:trimPathEnd="{~trimPathEnd}" android:trimPathOffset="{~trimPathOffset}" android:pathData="{&pathData}">
 				<<fillPattern>>
 					<aapt:attr name="android:fillColor">
-					<<gradients>>
+					<<gradient>>
 						<gradient android:type="{&type}" android:startColor="{~startColor}" android:endColor="{~endColor}" android:centerColor="{~centerColor}" android:startX="{~startX}" android:startY="{~startY}" android:endX="{~endX}" android:endY="{~endY}" android:centerX="{~centerX}" android:centerY="{~centerY}" android:gradientRadius="{~gradientRadius}" android:tileMode="{~tileMode}">
-						<<colorStops>>
+						<<item>>
 							<item android:offset="{&offset}" android:color="{&color}" />
-						<<colorStops>>
+						<<item>>
 						</gradient>
-					<<gradients>>
+					<<gradient>>
 					</aapt:attr>
 				<<fillPattern>>
 				</path>
@@ -55,4 +55,5 @@ export default `<?xml version="1.0" encoding="utf-8"?>
 <<B>>
 !!{&templateName}!!
 <<B>>
-</vector>`;
+</vector>
+`;

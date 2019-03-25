@@ -166,9 +166,9 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         stored.fontStyle = '';
                         stored.fontWeight = '';
                     }
-                    if (!system) {
+                    if (!system && (fontStyle || fontWeight)) {
                         const fonts = Resource.STORED.fonts.get(fontFamily) || {};
-                        fonts[`${fontStyle}-${FONTWEIGHT_ANDROID[fontWeight] || fontWeight}`] = true;
+                        fonts[(fontStyle ? fontStyle : 'normal') + '-' + (FONTWEIGHT_ANDROID[fontWeight] || fontWeight || 'normal')] = true;
                         Resource.STORED.fonts.set(fontFamily, fonts);
                     }
                 }

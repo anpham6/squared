@@ -5,7 +5,7 @@ export interface GradientColorStop {
 
 export interface GradientTemplate {
     type: string;
-    colorStops: GradientColorStop[] | false;
+    item: GradientColorStop[] | false;
     startColor?: string;
     endColor?: string;
     centerColor?: string;

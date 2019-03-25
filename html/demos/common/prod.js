@@ -1,8 +1,10 @@
 function stringify(template) {
     var output = '';
     for (var name in template) {
-        for (var xml of template[name]) {
-            output += xml + '\n\n';
+        for (var i = 0; i < template[name].length; i += 2) {
+            output += template[name][i] +
+                      (name === 'drawableImage' ? '\n' : '') +
+                      `<!-- filename: ${template[name][i + 1]} -->\n\n`;
         }
     }
     return output;

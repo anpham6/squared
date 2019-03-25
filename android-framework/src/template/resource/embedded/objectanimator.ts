@@ -46,4 +46,5 @@ export const PARTIAL_FILLREPEAT = `<<fillBefore>>
 export default `<?xml version="1.0" encoding="utf-8"?>
 <set xmlns:android="http://schemas.android.com/apk/res/android" android:ordering="{~ordering}">
 ${PARTIAL_FILLREPEAT}
-</set>`;
+</set>
+`;

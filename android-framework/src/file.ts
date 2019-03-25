@@ -1,14 +1,14 @@
-import { FileAsset, SessionData, TemplateDataA } from '../../src/base/@types/application';
+import { FileAsset, SessionData } from '../../src/base/@types/application';
 import { ResourceStoredMapAndroid, UserSettingsAndroid } from './@types/application';
 
 import View from './view';
 
+import { XMLNS_ANDROID } from './lib/constant';
 import { BUILD_ANDROID } from './lib/enumeration';
-import { getXmlNs, replaceLength } from './lib/util';
+import { replaceLength } from './lib/util';
 
 import COLOR_TMPL from './template/resource/color';
 import DIMEN_TMPL from './template/resource/dimen';
-import DRAWABLE_TMPL from './template/resource/drawable';
 import FONT_TMPL from './template/resource/font';
 import STRING_TMPL from './template/resource/string';
 import STRINGARRAY_TMPL from './template/resource/string-array';
@@ -17,50 +17,44 @@ import STYLE_TMPL from './template/resource/style';
 import $NodeList = squared.base.NodeList;
 
 type StyleXML = {
+    data: ExternalData[];
     filename: string;
-    data: TemplateDataA;
+};
+
+type ItemValue = {
+    name: string;
+    innerText: string;
 };
 
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
-const REGEXP_FILE = /^[\w\W]*?(<!-- filename: (.+)\/(.+?\.xml) -->)$/;
-const REGEXP_IMAGE = /^<!-- image: (.+) -->\n<!-- filename: (.+)\/(.+?\.\w+) -->$/;
+const REGEXP_FILENAME = /^(.+)\/(.+?\.\w+)$/;
 
-const TEMPLATES = {
-    color: $xml.parseTemplate(COLOR_TMPL),
-    dimen: $xml.parseTemplate(DIMEN_TMPL),
-    drawable: $xml.parseTemplate(DRAWABLE_TMPL),
-    font: $xml.parseTemplate(FONT_TMPL),
-    string: $xml.parseTemplate(STRING_TMPL),
-    string_array: $xml.parseTemplate(STRINGARRAY_TMPL),
-    style: $xml.parseTemplate(STYLE_TMPL)
-};
-
-function parseFileDetails(files: string[]) {
+function getFileAssets(items: string[]) {
     const result: FileAsset[] = [];
-    for (const xml of files) {
-        const match = REGEXP_FILE.exec(xml);
+    for (let i = 0; i < items.length; i += 2) {
+        const match = REGEXP_FILENAME.exec(items[i + 1]);
         if (match) {
             result.push({
-                pathname: match[2],
-                filename: match[3],
-                content: match[0].replace(match[1], '')
+                pathname: match[1],
+                filename: match[2],
+                content: items[i]
             });
         }
     }
     return result;
 }
 
-function parseImageDetails(files: string[]) {
+function getImageAssets(items: string[]) {
     const result: FileAsset[] = [];
-    for (const xml of files) {
-        const match = REGEXP_IMAGE.exec(xml);
+    for (let i = 0; i < items.length; i += 2) {
+        const match = REGEXP_FILENAME.exec(items[i + 1]);
         if (match) {
             result.push({
-                uri: match[1],
-                pathname: match[2],
-                filename: match[3],
+                uri: items[i],
+                pathname: match[1],
+                filename: match[2],
                 content: ''
             });
         }
@@ -90,15 +84,15 @@ export default class File<T extends View> extends squared.base.File<T> implement
         this.saveToDisk(
             $util.concatMultiArray(
                 files,
-                parseFileDetails(this.resourceStringToXml()),
-                parseFileDetails(this.resourceStringArrayToXml()),
-                parseFileDetails(this.resourceFontToXml()),
-                parseFileDetails(this.resourceColorToXml()),
-                parseFileDetails(this.resourceStyleToXml()),
-                parseFileDetails(this.resourceDimenToXml()),
-                parseFileDetails(this.resourceDrawableToXml()),
-                parseImageDetails(this.resourceDrawableImageToXml()),
-                parseFileDetails(this.resourceAnimToXml())
+                getFileAssets(this.resourceStringToXml()),
+                getFileAssets(this.resourceStringArrayToXml()),
+                getFileAssets(this.resourceFontToXml()),
+                getFileAssets(this.resourceColorToXml()),
+                getFileAssets(this.resourceDimenToXml()),
+                getFileAssets(this.resourceStyleToXml()),
+                getFileAssets(this.resourceDrawableToXml()),
+                getImageAssets(this.resourceDrawableImageToXml()),
+                getFileAssets(this.resourceAnimToXml())
             ),
             this.userSettings.manifestLabelAppName
         );
@@ -141,10 +135,10 @@ export default class File<T extends View> extends squared.base.File<T> implement
             const files: FileAsset[] = [];
             for (const name in result) {
                 if (name === 'image') {
-                    $util.concatArray(files, parseImageDetails(result[name]));
+                    $util.concatArray(files, getImageAssets(result[name]));
                 }
                 else {
-                    $util.concatArray(files, parseFileDetails(result[name]));
+                    $util.concatArray(files, getFileAssets(result[name]));
                 }
             }
             this.saveToDisk(files, this.userSettings.manifestLabelAppName);
@@ -154,22 +148,22 @@ export default class File<T extends View> extends squared.base.File<T> implement
 
     public resourceStringToXml(saveToDisk = false) {
         const result: string[] = [];
-        const data: TemplateDataA = { A: [] };
+        const data: ExternalData[] = [{ string: [] }];
         if (!this.stored.strings.has('app_name')) {
-            data.A.push({ name: 'app_name', value: this.userSettings.manifestLabelAppName });
+            data[0].string.push({ name: 'app_name', innerText: this.userSettings.manifestLabelAppName });
         }
-        for (const [name, value] of Array.from(this.stored.strings.entries()).sort(caseInsensitive)) {
-            data.A.push({ name, value });
+        for (const [name, innerText] of Array.from(this.stored.strings.entries()).sort(caseInsensitive)) {
+            data[0].string.push(<ItemValue> { name, innerText });
         }
         result.push(
             $xml.replaceTab(
-                $xml.createTemplate(TEMPLATES.string, data),
-                this.userSettings.insertSpaces,
-                true
-            )
+                $xml.applyTemplate('resources', STRING_TMPL, data),
+                this.userSettings.insertSpaces
+            ),
+            STRING_TMPL.filename
         );
         if (saveToDisk) {
-            this.saveToDisk(parseFileDetails(result), this.userSettings.manifestLabelAppName);
+            this.saveToDisk(getFileAssets(result), this.userSettings.manifestLabelAppName);
         }
         return result;
     }
@@ -177,22 +171,22 @@ export default class File<T extends View> extends squared.base.File<T> implement
     public resourceStringArrayToXml(saveToDisk = false) {
         const result: string[] = [];
         if (this.stored.arrays.size) {
-            const data: TemplateDataA = { A: [] };
+            const data: ExternalData[] = [{ 'string-array': [] }];
             for (const [name, values] of Array.from(this.stored.arrays.entries()).sort()) {
-                data.A.push({
+                data[0]['string-array'].push({
                     name,
-                    AA: $util.objectMap<string, {}>(values, value => ({ value }))
+                    item: $util.objectMap<string, {}>(values, innerText => ({ innerText }))
                 });
             }
             result.push(
                 $xml.replaceTab(
-                    $xml.createTemplate(TEMPLATES.string_array, data),
-                    this.userSettings.insertSpaces,
-                    true
-                )
+                    $xml.applyTemplate('resources', STRINGARRAY_TMPL, data),
+                    this.userSettings.insertSpaces
+                ),
+                STRINGARRAY_TMPL.filename
             );
             if (saveToDisk) {
-                this.saveToDisk(parseFileDetails(result), this.userSettings.manifestLabelAppName);
+                this.saveToDisk(getFileAssets(result), this.userSettings.manifestLabelAppName);
             }
         }
         return result;
@@ -202,35 +196,28 @@ export default class File<T extends View> extends squared.base.File<T> implement
         const result: string[] = [];
         if (this.stored.fonts.size) {
             const settings = this.userSettings;
-            const namespace = settings.targetAPI < BUILD_ANDROID.OREO ? 'app' : 'android';
+            const xmlns = XMLNS_ANDROID[settings.targetAPI < BUILD_ANDROID.OREO ? 'app' : 'android'];
             for (const [name, font] of Array.from(this.stored.fonts.entries()).sort()) {
-                const data: TemplateDataA = {
-                    name,
-                    namespace: getXmlNs(namespace),
-                    A: []
-                };
-                let xml = '';
+                const data: ExternalData[] = [{
+                    'xmlns:android': xmlns,
+                    font: []
+                }];
                 for (const attr in font) {
                     const [fontStyle, fontWeight] = attr.split('-');
-                    data.A.push({
+                    data[0].font.push({
                         fontStyle,
                         fontWeight,
-                        font: `@font/${name + (fontStyle === 'normal' && fontWeight === 'normal' ? `_${fontStyle}` : (fontStyle !== 'normal' ? `_${fontStyle}` : '') + (fontWeight !== 'normal' ? `_${fontWeight}` : ''))}`
+                        font: `@font/${name + (fontStyle === 'normal' && fontWeight === 'normal' ? '' : (fontStyle !== 'normal' ? `_${fontStyle}` : '') + (fontWeight !== 'normal' ? `_${fontWeight}` : ''))}`
                     });
                 }
-                xml += $xml.createTemplate(TEMPLATES.font, data);
+                let output = $xml.replaceTab($xml.applyTemplate('font-family', FONT_TMPL, data), this.userSettings.insertSpaces);
                 if (settings.targetAPI < BUILD_ANDROID.OREO) {
-                    xml = xml.replace(/\s+android:/g, ' app:');
+                    output = output.replace(/\s+android:/g, ' app:');
                 }
-                result.push(
-                    $xml.replaceTab(
-                        xml,
-                        settings.insertSpaces
-                    )
-                );
+                result.push(output, `res/font/${name}.xml`);
             }
             if (saveToDisk) {
-                this.saveToDisk(parseFileDetails(result), this.userSettings.manifestLabelAppName);
+                this.saveToDisk(getFileAssets(result), settings.manifestLabelAppName);
             }
         }
         return result;
@@ -239,18 +226,19 @@ export default class File<T extends View> extends squared.base.File<T> implement
     public resourceColorToXml(saveToDisk = false) {
         const result: string[] = [];
         if (this.stored.colors.size) {
-            const data: TemplateDataA = { A: [] };
-            for (const [name, value] of Array.from(this.stored.colors.entries()).sort()) {
-                data.A.push({ name, value });
+            const data: ExternalData[] = [{ color: [] }];
+            for (const [innerText, name] of Array.from(this.stored.colors.entries()).sort()) {
+                data[0].color.push(<ItemValue> { name, innerText });
             }
             result.push(
                 $xml.replaceTab(
-                    $xml.createTemplate(TEMPLATES.color, data),
+                    $xml.applyTemplate('resources', COLOR_TMPL, data),
                     this.userSettings.insertSpaces
-                )
+                ),
+                COLOR_TMPL.filename
             );
             if (saveToDisk) {
-                this.saveToDisk(parseFileDetails(result), this.userSettings.manifestLabelAppName);
+                this.saveToDisk(getFileAssets(result), this.userSettings.manifestLabelAppName);
             }
         }
         return result;
@@ -261,53 +249,61 @@ export default class File<T extends View> extends squared.base.File<T> implement
         const result: string[] = [];
         const files: StyleXML[] = [];
         if (this.stored.styles.size) {
-            const data: TemplateDataA = { A: [] };
+            const data: ExternalData[] = [{ style: [] }];
             for (const style of Array.from(this.stored.styles.values()).sort((a, b) => a.name.toString().toLowerCase() >= b.name.toString().toLowerCase() ? 1 : -1)) {
                 if (Array.isArray(style.items)) {
-                    style.items.sort((a, b) => a.name >= b.name ? 1 : -1);
-                    data.A.push(<ExternalData> style);
+                    const item: ItemValue[] = [];
+                    for (const obj of style.items.sort((a, b) => a.name >= b.name ? 1 : -1)) {
+                        item.push({ name: obj.name, innerText: obj.value });
+                    }
+                    data[0].style.push({
+                        name: style.name,
+                        parent: style.parent,
+                        item
+                    });
                 }
             }
-            files.push({ filename: 'res/values/styles.xml', data });
+            files.push({ data, filename: STYLE_TMPL.filename });
         }
         if (this.stored.themes.size) {
             const appTheme: ObjectMap<boolean> = {};
             for (const [filename, theme] of this.stored.themes.entries()) {
-                const data: TemplateDataA = { A: [] };
+                const data: ExternalData[] = [{ style: [] }];
                 for (const [themeName, themeData] of theme.entries()) {
-                    const items: StringMap[] = [];
+                    const item: ItemValue[] = [];
                     for (const name in themeData.items) {
-                        items.push({ name, value: themeData.items[name] });
+                        item.push({ name, innerText: themeData.items[name] });
                     }
-                    if (!appTheme[filename] || themeName !== settings.manifestThemeName || items.length) {
-                        data.A.push({
+                    if (!appTheme[filename] || themeName !== settings.manifestThemeName || item.length) {
+                        data[0].style.push({
                             name: themeName,
                             parent: themeData.parent,
-                            items
+                            item
                         });
                     }
                     if (themeName === settings.manifestThemeName) {
                         appTheme[filename] = true;
                     }
                 }
-                files.push({ filename, data });
+                files.push({ data, filename });
             }
         }
         for (const style of files) {
             result.push(
                 $xml.replaceTab(
                     replaceLength(
-                        $xml.createTemplate(TEMPLATES.style, style.data).replace('filename: {0}', `filename: ${style.filename}`),
+                        $xml.applyTemplate('resources', STYLE_TMPL, style.data),
                         settings.resolutionDPI,
                         settings.convertPixels,
                         true
                     ),
                     settings.insertSpaces
-                )
+                ),
+                style.filename
             );
         }
         if (saveToDisk) {
-            this.saveToDisk(parseFileDetails(result), this.userSettings.manifestLabelAppName);
+            this.saveToDisk(getFileAssets(result), this.userSettings.manifestLabelAppName);
         }
         return result;
     }
@@ -315,23 +311,26 @@ export default class File<T extends View> extends squared.base.File<T> implement
     public resourceDimenToXml(saveToDisk = false) {
         const result: string[] = [];
         if (this.stored.dimens.size) {
-            const settings = this.userSettings;
-            const data: TemplateDataA = { A: [] };
-            for (const [name, value] of Array.from(this.stored.dimens.entries()).sort()) {
-                data.A.push({ name, value });
+            const data: ExternalData[] = [{ dimen: [] }];
+            for (const [name, innerText] of Array.from(this.stored.dimens.entries()).sort()) {
+                data[0].dimen.push({
+                    name,
+                    innerText
+                });
             }
             result.push(
                 $xml.replaceTab(
                     replaceLength(
-                        $xml.createTemplate(TEMPLATES.dimen, data),
-                        settings.resolutionDPI,
-                        settings.convertPixels
+                        $xml.applyTemplate('resources', DIMEN_TMPL, data),
+                        this.userSettings.resolutionDPI,
+                        this.userSettings.convertPixels
                     ),
-                    settings.insertSpaces
-                )
+                    this.userSettings.insertSpaces
+                ),
+                DIMEN_TMPL.filename
             );
             if (saveToDisk) {
-                this.saveToDisk(parseFileDetails(result), this.userSettings.manifestLabelAppName);
+                this.saveToDisk(getFileAssets(result), this.userSettings.manifestLabelAppName);
             }
         }
         return result;
@@ -344,20 +343,14 @@ export default class File<T extends View> extends squared.base.File<T> implement
             for (const [name, value] of this.stored.drawables.entries()) {
                 result.push(
                     $xml.replaceTab(
-                        replaceLength(
-                            $xml.createTemplate(TEMPLATES.drawable, {
-                                name: `res/drawable/${name}.xml`,
-                                value
-                            }),
-                            settings.resolutionDPI,
-                            settings.convertPixels
-                        ),
+                        replaceLength(value, settings.resolutionDPI, settings.convertPixels),
                         settings.insertSpaces
-                    )
+                    ),
+                    `res/drawable/${name}.xml`
                 );
             }
             if (saveToDisk) {
-                this.saveToDisk(parseFileDetails(result), this.userSettings.manifestLabelAppName);
+                this.saveToDisk(getFileAssets(result), this.userSettings.manifestLabelAppName);
             }
         }
         return result;
@@ -366,35 +359,24 @@ export default class File<T extends View> extends squared.base.File<T> implement
     public resourceDrawableImageToXml(saveToDisk = false) {
         const result: string[] = [];
         if (this.stored.images.size) {
-            const settings = this.userSettings;
             for (const [name, images] of this.stored.images.entries()) {
                 if (Object.keys(images).length > 1) {
                     for (const dpi in images) {
                         result.push(
-                            $xml.replaceTab(
-                                $xml.createTemplate(TEMPLATES.drawable, {
-                                    name: `res/drawable-${dpi}/${name}.${$util.fromLastIndexOf(images[dpi], '.')}`,
-                                    value: `<!-- image: ${images[dpi]} -->`
-                                }),
-                                settings.insertSpaces
-                            )
+                            images[dpi],
+                            `res/drawable-${dpi}/${name}.${$util.fromLastIndexOf(images[dpi], '.')}`
                         );
                     }
                 }
                 else if (images.mdpi) {
                     result.push(
-                        $xml.replaceTab(
-                            $xml.createTemplate(TEMPLATES.drawable, {
-                                name: `res/drawable/${name}.${$util.fromLastIndexOf(images.mdpi, '.')}`,
-                                value: `<!-- image: ${images.mdpi} -->`
-                            }),
-                            settings.insertSpaces
-                        )
+                        images.mdpi,
+                        `res/drawable/${name}.${$util.fromLastIndexOf(images.mdpi, '.')}`
                     );
                 }
             }
             if (saveToDisk) {
-                this.saveToDisk(parseImageDetails(result), this.userSettings.manifestLabelAppName);
+                this.saveToDisk(getImageAssets(result), this.userSettings.manifestLabelAppName);
             }
         }
         return result;
@@ -405,17 +387,12 @@ export default class File<T extends View> extends squared.base.File<T> implement
         if (this.stored.animators.size) {
             for (const [name, value] of this.stored.animators.entries()) {
                 result.push(
-                    $xml.replaceTab(
-                        $xml.createTemplate(TEMPLATES.drawable, {
-                            name: `res/anim/${name}.xml`,
-                            value
-                        }),
-                        this.userSettings.insertSpaces
-                    )
+                    $xml.replaceTab(value, this.userSettings.insertSpaces),
+                    `res/anim/${name}.xml`
                 );
             }
             if (saveToDisk) {
-                this.saveToDisk(parseFileDetails(result), this.userSettings.manifestLabelAppName);
+                this.saveToDisk(getFileAssets(result), this.userSettings.manifestLabelAppName);
             }
         }
         return result;

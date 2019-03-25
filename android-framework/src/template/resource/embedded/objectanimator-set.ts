@@ -26,4 +26,5 @@ ${$xml.pushIndent(PARTIAL_FILLREPEAT, 2)}
 	<<BB>>
 	</set>
 <<A>>
-</set>`;
+</set>
+`;
