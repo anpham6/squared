@@ -2,29 +2,29 @@ export default `<?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android" {~namespace} android:name="{~name}" android:width="{&width}" android:height="{&height}" android:viewportWidth="{&viewportWidth}" android:viewportHeight="{&viewportHeight}" android:alpha="{~alpha}">
 <<A>>
 	##region-start##
-	<group android:name="{~groupName}" android:translateX="{~translateX}" android:translateY="{~translateY}">
+	<group android:name="{~name}" android:translateX="{~translateX}" android:translateY="{~translateY}">
 	##region-start##
 		<<clipRegion>>
-		<clip-path android:name="{~clipName}" android:pathData="{&clipPathData}" />
+		<clip-path android:name="{~name}" android:pathData="{&pathData}" />
 		<<clipRegion>>
 		##path-start##
-		<group android:name="{~groupName}" android:rotation="{~rotation}" android:scaleX="{~scaleX}" android:scaleY="{~scaleY}" android:translateX="{~translateX}" android:translateY="{~translateY}" android:pivotX="{~pivotX}" android:pivotY="{~pivotY}">
+		<group android:name="{~name}" android:rotation="{~rotation}" android:scaleX="{~scaleX}" android:scaleY="{~scaleY}" android:translateX="{~translateX}" android:translateY="{~translateY}" android:pivotX="{~pivotX}" android:pivotY="{~pivotY}">
 		##path-start##
 		<<clipPath>>
-			<clip-path android:name="{~clipName}" android:pathData="{&clipPathData}" />
+			<clip-path android:name="{~name}" android:pathData="{&pathData}" />
 		<<clipPath>>
 		<<BB>>
 			##render-start##
-			<group android:name="{~groupName}" android:rotation="{~rotation}" android:scaleX="{~scaleX}" android:scaleY="{~scaleY}" android:translateX="{~translateX}" android:translateY="{~translateY}" android:pivotX="{~pivotX}" android:pivotY="{~pivotY}">
+			<group android:name="{~name}" android:rotation="{~rotation}" android:scaleX="{~scaleX}" android:scaleY="{~scaleY}" android:translateX="{~translateX}" android:translateY="{~translateY}" android:pivotX="{~pivotX}" android:pivotY="{~pivotY}">
 			##render-start##
 			<<clipGroup>>
-			<clip-path android:name="{~clipName}" android:pathData="{&clipPathData}" />
+			<clip-path android:name="{~name}" android:pathData="{&pathData}" />
 			<<clipGroup>>
 			<<CCC>>
 				<<clipElement>>
-				<clip-path android:name="{~clipName}" android:pathData="{&clipPathData}" />
+				<clip-path android:name="{~name}" android:pathData="{&pathData}" />
 				<<clipElement>>
-				<path android:name="{~name}" android:fillColor="{~fill}" android:fillAlpha="{~fillOpacity}" android:fillType="{~fillRule}" android:strokeColor="{~stroke}" android:strokeAlpha="{~strokeOpacity}" android:strokeWidth="{~strokeWidth}" android:strokeLineCap="{~strokeLinecap}" android:strokeLineJoin="{~strokeLinejoin}" android:strokeMiterLimit="{~strokeMiterlimit}" android:trimPathStart="{~trimPathStart}" android:trimPathEnd="{~trimPathEnd}" android:trimPathOffset="{~trimPathOffset}" android:pathData="{&value}">
+				<path android:name="{~name}" android:fillColor="{~fillColor}" android:fillAlpha="{~fillAlpha}" android:fillType="{~fillType}" android:strokeColor="{~strokeColor}" android:strokeAlpha="{~strokeAlpha}" android:strokeWidth="{~strokeWidth}" android:strokeLineCap="{~strokeLineCap}" android:strokeLineJoin="{~strokeLineJoin}" android:strokeMiterLimit="{~strokeMiterLimit}" android:trimPathStart="{~trimPathStart}" android:trimPathEnd="{~trimPathEnd}" android:trimPathOffset="{~trimPathOffset}" android:pathData="{&pathData}">
 				<<fillPattern>>
 					<aapt:attr name="android:fillColor">
 					<<gradients>>

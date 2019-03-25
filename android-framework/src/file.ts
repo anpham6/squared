@@ -211,11 +211,11 @@ export default class File<T extends View> extends squared.base.File<T> implement
                 };
                 let xml = '';
                 for (const attr in font) {
-                    const [style, weight] = attr.split('-');
+                    const [fontStyle, fontWeight] = attr.split('-');
                     data.A.push({
-                        style,
-                        weight,
-                        font: `@font/${name + (style === 'normal' && weight === 'normal' ? `_${style}` : (style !== 'normal' ? `_${style}` : '') + (weight !== 'normal' ? `_${weight}` : ''))}`
+                        fontStyle,
+                        fontWeight,
+                        font: `@font/${name + (fontStyle === 'normal' && fontWeight === 'normal' ? `_${fontStyle}` : (fontStyle !== 'normal' ? `_${fontStyle}` : '') + (fontWeight !== 'normal' ? `_${fontWeight}` : ''))}`
                     });
                 }
                 xml += $xml.createTemplate(TEMPLATES.font, data);

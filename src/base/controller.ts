@@ -200,8 +200,7 @@ export default abstract class Controller<T extends Node> implements squared.base
                 const node = item.node;
                 switch (item.type) {
                     case NODE_TEMPLATE.XML: {
-                        const controlName = (<NodeXmlTemplate<T>> item).controlName;
-                        const attributes = (<NodeXmlTemplate<T>> item).attributes;
+                        const { controlName, attributes } = <NodeXmlTemplate<T>> item;
                         let template = indent + `<${controlName + (depth === 0 ? '{#0} ' : '') + (this.userSettings.showAttributes ? (attributes ? $xml.pushIndent(attributes, depth + 1) : node.extractAttributes(depth + 1)) : '')}`;
                         if (node.renderTemplates) {
                             const renderDepth = depth + 1;
@@ -220,7 +219,7 @@ export default abstract class Controller<T extends Node> implements squared.base
                         break;
                     }
                     case NODE_TEMPLATE.INCLUDE: {
-                        const content = (<NodeIncludeTemplate<T>> item).content;
+                        const { content } = <NodeIncludeTemplate<T>> item;
                         if (content) {
                             output += $xml.pushIndent(content, depth);
                         }

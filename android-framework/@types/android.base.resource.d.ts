@@ -1,7 +1,4 @@
 import { ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from '../src/@types/application';
-import { GradientColorStop } from '../src/@types/resource';
-
-type SvgPath = squared.svg.SvgPath;
 
 declare global {
     namespace android.base {

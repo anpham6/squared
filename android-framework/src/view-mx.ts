@@ -121,7 +121,6 @@ export default (Base: Constructor<squared.base.Node>) => {
         protected _namespaces = new Set(['android', 'app']);
         protected _controlName = '';
         protected _fontSize = 0;
-        protected _renderParent?: T;
         protected _documentParent?: T;
         protected readonly _boxAdjustment: BoxModel = $dom.newBoxModel();
         protected readonly _boxReset: BoxModel = $dom.newBoxModel();

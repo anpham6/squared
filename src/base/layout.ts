@@ -39,8 +39,14 @@ export default class Layout<T extends Node> extends squared.lib.base.Container<T
         if (linearData.floated.size) {
             this.add(NODE_ALIGNMENT.FLOAT);
         }
-        if (this.every(item => item.float === 'right')) {
+        else {
+            this.delete(NODE_ALIGNMENT.FLOAT);
+        }
+        if (this.every(item => item.rightAligned)) {
             this.add(NODE_ALIGNMENT.RIGHT);
+        }
+        else {
+            this.delete(NODE_ALIGNMENT.RIGHT);
         }
         this.itemCount = this.children.length;
     }
@@ -68,7 +74,7 @@ export default class Layout<T extends Node> extends squared.lib.base.Container<T
 
     public retain(list: T[]) {
         super.retain(list);
-        this.itemCount = list.length;
+        this.init();
         return this;
     }
 

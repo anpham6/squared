@@ -31,10 +31,6 @@ function getSectionTag(attr: string, value: string) {
     return `((\\t*##${attr}-${value}##\\s*\\n)([\\w\\W]*?\\s*\\n)(\\t*##${attr}-${value}##\\s*\\n))`;
 }
 
-export function formatPlaceholder(id: string | number, symbol = ':') {
-    return `{${symbol + id.toString()}}`;
-}
-
 export function pushIndent(value: string, depth: number, char = '\t', indent?: string) {
     if (depth > 0) {
         if (indent === undefined) {

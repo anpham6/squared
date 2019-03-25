@@ -143,7 +143,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 }
             }
         }
-        let rendered = this.rendered;
+        const rendered = this.rendered;
         for (const node of rendered) {
             if (node.hasProcedure(NODE_PROCEDURE.LAYOUT)) {
                 node.setLayout();
@@ -165,8 +165,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 ext.postProcedure(node);
             }
         }
-        rendered = this.rendered;
-        for (const node of rendered) {
+        for (const node of this.rendered) {
             if (node.hasResource(NODE_RESOURCE.BOX_SPACING)) {
                 node.setBoxSpacing();
             }
@@ -1314,6 +1313,9 @@ export default class Application<T extends Node> implements squared.base.Applica
                 else {
                     layerIndex.push(leftSub, rightSub);
                 }
+            }
+            if (inlineBelow.length) {
+                layerIndex.push(inlineBelow);
             }
             $util.spliceArray(layerIndex, item => item.length === 0);
             layout.itemCount = layerIndex.length;

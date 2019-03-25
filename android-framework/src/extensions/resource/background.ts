@@ -32,7 +32,7 @@ interface BorderData extends PositionAttribute {
 }
 
 interface BackgroundImageData extends PositionAttribute {
-    src?: string;
+    drawable?: string;
     width?: string;
     height?: string;
     bitmap: BitmapData[] | false;
@@ -472,6 +472,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         const position = backgroundPosition[i];
                         if (typeof value === 'string') {
                             const dimension = <Undefined<ImageAsset>> imageDimensions[i];
+                            const src = `@drawables/${value}`;
                             function resetHorizontal() {
                                 if (!imageSingle) {
                                     position.left = 0;
@@ -644,7 +645,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 if (position.top > 0) {
                                     node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, position.top);
                                 }
-                                node.android('src', `@drawable/${value}`);
+                                node.android('src', src);
                                 if (!hasBorder) {
                                     return;
                                 }
@@ -688,7 +689,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 imageData.height = height;
                                 if (gravity !== '' || tileMode !== '' || tileModeX !== '' || tileModeY !== '') {
                                     imageData.bitmap = [{
-                                        src: value,
+                                        src,
                                         gravity,
                                         tileMode,
                                         tileModeX,
@@ -696,7 +697,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     }];
                                 }
                                 else {
-                                    imageData.src = value;
+                                    imageData.drawable = src;
                                 }
                             }
                             if (position.top !== 0) {
@@ -743,7 +744,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     }],
                                     B: false
                                 };
-                                imageData.src = Resource.insertStoredAsset('drawables', `${node.tagName.toLowerCase()}_${node.controlId}_gradient_${i}`, $xml.createTemplate(TEMPLATES.VECTOR, vectorData, true));
+                                const src = Resource.insertStoredAsset('drawables', `${node.tagName.toLowerCase()}_${node.controlId}_gradient_${i}`, $xml.createTemplate(TEMPLATES.VECTOR, vectorData, true));
+                                if (src !== '') {
+                                    imageData.drawable = `@drawables/${src}`;
+                                }
                             }
                             else {
                                 imageData.gradient = [value];
@@ -755,7 +759,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 imageData.left = $util.formatPX(getPercentOffset('left', position, node.bounds, dimension));
                             }
                         }
-                        if (imageData.src || imageData.bitmap || imageData.gradient) {
+                        if (imageData.drawable || imageData.bitmap || imageData.gradient) {
                             layerList.B.push(imageData);
                         }
                     }
@@ -873,7 +877,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                     }
                     if (template) {
-                        resourceName = Resource.insertStoredAsset('drawables', `${node.tagName.toLowerCase()}_${node.controlId}`, $xml.createTemplate(template, shape || layerList, layerList.B.some(item => !!item.src)));
+                        resourceName = Resource.insertStoredAsset('drawables', `${node.tagName.toLowerCase()}_${node.controlId}`, $xml.createTemplate(template, shape || layerList, layerList.B.some(item => !!item.drawable)));
                     }
                     if (backgroundImage.length) {
                         node.data('RESOURCE', 'backgroundImage', true);
