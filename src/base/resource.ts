@@ -775,7 +775,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                 }
                                 break;
                             case 'file':
-                                value = 'Choose File';
+                                value = $util.isUserAgent($util.USER_AGENT.FIREFOX) ? 'Browse...' : 'Choose File';
                                 break;
                         }
                         break;

@@ -1366,6 +1366,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     if (actualParent && actualParent.cssInitialAny('textAlign', 'right', 'end')) {
                         alignParent = 'right';
                         leftForward = false;
+                        seg[seg.length - 1].anchor(alignParent, 'true');
                     }
                     else {
                         alignParent = 'left';
@@ -1543,9 +1544,6 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         if (Math.ceil(rowWidth) >= this.userSettings.maxWordWrapWidth && !item.alignParent(alignParent)) {
                             checkSingleLine(item, checkLineWrap);
                         }
-                    }
-                    else if (!leftForward && !anchored) {
-                        item.anchor(alignParent, 'true');
                     }
                 }
             });

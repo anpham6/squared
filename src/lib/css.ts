@@ -96,6 +96,7 @@ export function checkStyleValue(element: Element, attr: string, value: string, s
                 case 'lineHeight':
                 case 'verticalAlign':
                 case 'textIndent':
+                case 'letterSpacing':
                 case 'columnGap':
                 case 'top':
                 case 'right':

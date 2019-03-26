@@ -555,10 +555,6 @@ export default (Base: Constructor<squared.base.Node>) => {
                         hasHeight = false;
                     }
                 }
-                if (this.has('minHeight') && !this.constraint.minHeight) {
-                    this.android('minHeight', this.convertPX(this.css('minHeight'), false), false);
-                    this.android('layout_height', 'wrap_content', false);
-                }
                 if (this.android('layout_width') === '') {
                     if (!this.inlineStatic && this.has('width') || this.toInt('width') > 0 && !this.cssInitial('width')) {
                         const width = this.css('width');
@@ -609,10 +605,6 @@ export default (Base: Constructor<squared.base.Node>) => {
                         hasWidth = false;
                     }
                 }
-                if (this.has('minWidth') && !this.constraint.minWidth) {
-                    this.android('minWidth', this.convertPX(this.css('minWidth')), false);
-                    this.android('layout_width', 'wrap_content', false);
-                }
                 if (!hasWidth && parent) {
                     const blockStatic = this.blockStatic && (this.htmlElement || this.svgElement) && (!this.has('maxWidth') || this.some(node => node.blockStatic));
                     if (this.plainText) {
@@ -661,6 +653,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                                 this.linear.width >= parent.box.width ||
                                 this.visibleStyle.background ||
                                 this.layoutVertical && !this.autoMargin.horizontal ||
+                                this.documentBody ||
                                 this.gridElement ||
                                 this.flexElement ||
                                 parent.documentBody ||
@@ -676,10 +669,18 @@ export default (Base: Constructor<squared.base.Node>) => {
                         }
                     }
                 }
-                if (!hasWidth) {
+                if (this.has('minWidth') && !this.constraint.minWidth) {
+                    this.android('minWidth', this.convertPX(this.css('minWidth')), false);
                     this.android('layout_width', 'wrap_content', false);
                 }
-                if (!hasHeight) {
+                else if (!hasWidth) {
+                    this.android('layout_width', 'wrap_content', false);
+                }
+                if (this.has('minHeight') && !this.constraint.minHeight) {
+                    this.android('minHeight', this.convertPX(this.css('minHeight'), false), false);
+                    this.android('layout_height', 'wrap_content', false);
+                }
+                else if (!hasHeight) {
                     this.android('layout_height', 'wrap_content', false);
                 }
                 if (this.layoutFrame && this.hasAlign($enum.NODE_ALIGNMENT.FLOAT) && this.length > 1 && this.ascend(true).some(node => node.has('width'))) {
@@ -1088,7 +1089,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                     }
                     else {
                         baseline = $NodeList.baseline(renderChildren.filter(node => node.baseline && !node.layoutRelative && !node.layoutConstraint), true)[0];
-                        if (baseline) {
+                        if (baseline && baseline.containerType <= CONTAINER_NODE.INLINE) {
                             this.android('baselineAlignedChildIndex', renderChildren.indexOf(baseline).toString());
                             baseline.baselineActive = true;
                         }
@@ -1201,10 +1202,6 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         get documentId() {
-            const id = this.android('id');
-            if (id !== '') {
-                return id;
-            }
             return this.controlId ? `@+id/${this.controlId}` : '';
         }
 

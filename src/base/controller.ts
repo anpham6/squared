@@ -96,7 +96,7 @@ export default abstract class Controller<T extends Node> implements squared.base
             case 'IMG':
                 const setDimension = (attr: string, opposing: string) => {
                     if (styleMap[attr] === undefined || styleMap[attr] === 'auto') {
-                        const match = new RegExp(`${attr}="(\\d+)"`).exec(element.outerHTML);
+                        const match = new RegExp(`\\s+${attr}="([^"]+)"`).exec(element.outerHTML);
                         if (match) {
                             styleMap[attr] = $util.formatPX($util.isPercent(match[1]) ? parseFloat(match[1]) / 100 * (element.parentElement || element).getBoundingClientRect()[attr] : match[1]);
                         }

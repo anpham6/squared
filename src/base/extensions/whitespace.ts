@@ -400,9 +400,10 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
     }
 
     public afterConstraints() {
+        const modified: number[] = [];
         for (const node of this.application.processing.cache) {
             const renderParent = node.renderAs ? node.renderAs.renderParent : node.renderParent;
-            if (renderParent && !renderParent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && node.pageFlow && node.styleElement && node.inlineVertical && !node.alignParent('left')) {
+            if (renderParent && !renderParent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && node.pageFlow && node.styleElement && node.inlineVertical && !node.alignParent('left') && !modified.includes(node.id)) {
                 const previous: T[] = [];
                 let current = node;
                 while (true) {
@@ -412,7 +413,9 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                         if (previousSibling.inlineVertical) {
                             const offset = node.linear.left - previousSibling.actualRight();
                             if (offset > 0) {
-                                getVisibleNode(node).modifyBox(BOX_STANDARD.MARGIN_LEFT, offset);
+                                const visibleNode = getVisibleNode(node.outerParent || node);
+                                visibleNode.modifyBox(BOX_STANDARD.MARGIN_LEFT, offset);
+                                modified.push(visibleNode.id);
                             }
                         }
                         else if (previousSibling.floating) {
