@@ -12,9 +12,10 @@ export interface ResourceSvgOptions {
 }
 
 export interface ResourceBackgroundOptions {
-    autoSizeBackgroundImage: true;
+    autoSizeBackgroundImage: boolean;
 }
 
 export interface ResourceStringsOptions {
-    numberResourceValue: false;
+    numberResourceValue: boolean;
+    replaceCharacterEntities: boolean;
 }

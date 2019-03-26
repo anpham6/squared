@@ -4,9 +4,7 @@ export interface UserSettingsAndroid extends UserSettings {
     targetAPI: number;
     resolutionDPI: number;
     supportRTL: boolean;
-    ellipsisOnTextOverflow: boolean;
     collapseUnattributedElements: boolean;
-    replaceCharacterEntities: boolean;
     convertPixels: string;
     manifestLabelAppName: string;
     manifestThemeName: string;

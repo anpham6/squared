@@ -6,7 +6,6 @@ export interface UserSettings {
     exclusionsDisabled: boolean;
     customizationsDisabled: boolean;
     customizationsOverwritePrivilege: boolean;
-    replaceCharacterEntities: boolean;
     showAttributes: boolean;
     insertSpaces: number;
     handleExtensionsAsync: boolean;

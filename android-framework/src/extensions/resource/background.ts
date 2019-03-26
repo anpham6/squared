@@ -37,11 +37,11 @@ interface BitmapData {
     tileModeY: string;
 }
 
-type ShapeSolidData = {
+interface ShapeSolidData {
     color: string;
     dashWidth: string;
     dashGap: string;
-};
+}
 
 const $SvgBuild = squared.svg && squared.svg.SvgBuild;
 const $enum = squared.base.lib.enumeration;

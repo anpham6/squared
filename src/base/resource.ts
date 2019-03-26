@@ -12,7 +12,6 @@ const $css = squared.lib.css;
 const $element = squared.lib.element;
 const $math = squared.lib.math;
 const $util = squared.lib.util;
-const $xml = squared.lib.xml;
 
 const STRING_COLORSTOP = `(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[a-zA-Z\\d]{3,}|[a-z]+)\\s*(${$util.STRING_PATTERN.LENGTH_PERCENTAGE}|${$util.STRING_PATTERN.ANGLE}|(?:${$util.STRING_PATTERN.CALC}(?=,)|${$util.STRING_PATTERN.CALC}))?,?\\s*`;
 const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\("?.+?"?\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|circle|ellipse|closest-side|closest-corner|farthest-side|farthest-corner)?(?:\\s*at [\\w %]+)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
@@ -256,7 +255,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
         return '';
     }
 
-    public static getOptionArray(element: HTMLSelectElement, replaceEntities = false) {
+    public static getOptionArray(element: HTMLSelectElement) {
         const stringArray: string[] = [];
         const textTransform = $css.getStyle(element).textTransform;
         let numberArray: string[] | undefined = [];
@@ -275,7 +274,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         continue;
                     }
                     if (value !== '') {
-                        stringArray.push(applyTextTransform(replaceEntities ? $xml.replaceEntity(value) : value, textTransform));
+                        stringArray.push(applyTextTransform(value, textTransform));
                     }
                 }
             }
@@ -818,9 +817,6 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                             performTrim = false;
                         }
                         break;
-                }
-                if (this.application.userSettings.replaceCharacterEntities) {
-                    value = $xml.replaceEntity(value);
                 }
                 if (value !== '') {
                     if (performTrim) {

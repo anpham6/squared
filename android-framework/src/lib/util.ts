@@ -97,6 +97,32 @@ export function replaceRTL(value: string, rtl: boolean, api: number) {
     return value;
 }
 
+export function replaceCharacter(value: string) {
+    return value
+        .replace(/&nbsp;/g, '&#160;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '&quot;');
+}
+
+export function replaceEntity(value: string) {
+    return value
+        .replace(/&#(\d+);/g, (match, capture) => String.fromCharCode(parseInt(capture)))
+        .replace(/\u00A0/g, '&#160;')
+        .replace(/\u2002/g, '&#8194;')
+        .replace(/\u2003/g, '&#8195;')
+        .replace(/\u2009/g, '&#8201;')
+        .replace(/\u200C/g, '&#8204;')
+        .replace(/\u200D/g, '&#8205;')
+        .replace(/\u200E/g, '&#8206;')
+        .replace(/\u200F/g, '&#8207;');
+}
+
+export function escapeNonEntity(value: string) {
+    return value.replace(/&(?!#?[A-Za-z0-9]{2,};)/g, '&amp;');
+}
+
 export function getXmlNs(...values: string[]) {
     return $util.joinMap(values, namespace => XMLNS_ANDROID[namespace] ? `xmlns:${namespace}="${XMLNS_ANDROID[namespace]}"` : '', ' ');
 }

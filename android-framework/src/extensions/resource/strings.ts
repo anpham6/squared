@@ -2,22 +2,16 @@ import { ResourceStringsOptions } from '../../@types/extension';
 
 import Resource from '../../resource';
 
+import { replaceCharacter, replaceEntity } from '../../lib/util';
+
 const $enum = squared.base.lib.enumeration;
 const $css = squared.lib.css;
 const $util = squared.lib.util;
 
-export function replaceCharacter(value: string) {
-    return value
-        .replace(/&nbsp;/g, '&#160;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/'/g, "\\'")
-        .replace(/"/g, '&quot;');
-}
-
 export default class ResourceStrings<T extends android.base.View> extends squared.base.Extension<T> {
     public readonly options: ResourceStringsOptions = {
-        numberResourceValue: false
+        numberResourceValue: false,
+        replaceCharacterEntities: false
     };
 
     public readonly eventOnly = true;
@@ -28,7 +22,7 @@ export default class ResourceStrings<T extends android.base.View> extends square
                 switch (node.tagName) {
                     case 'SELECT': {
                         const element = <HTMLSelectElement> node.element;
-                        const [stringArray, numberArray] = Resource.getOptionArray(element, this.application.userSettings.replaceCharacterEntities);
+                        const [stringArray, numberArray] = Resource.getOptionArray(element, this.options.replaceCharacterEntities);
                         let result: string[] | undefined;
                         if (!this.options.numberResourceValue && numberArray && numberArray.length) {
                             result = numberArray;
@@ -38,6 +32,9 @@ export default class ResourceStrings<T extends android.base.View> extends square
                             if (resourceArray) {
                                 result = [];
                                 for (let value of resourceArray) {
+                                    if (this.options.replaceCharacterEntities) {
+                                        value = replaceEntity(value);
+                                    }
                                     value = Resource.addString(replaceCharacter(value), '', this.options.numberResourceValue);
                                     if (value !== '') {
                                         result.push(`@string/${value}`);
@@ -103,6 +100,9 @@ export default class ResourceStrings<T extends android.base.View> extends square
                                         value = '';
                                     }
                                 }
+                            }
+                            if (this.options.replaceCharacterEntities) {
+                                value = replaceEntity(value);
                             }
                             const name = Resource.addString(value, stored.name, this.options.numberResourceValue);
                             if (name !== '') {

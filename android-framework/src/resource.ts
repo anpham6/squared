@@ -3,12 +3,12 @@ import { ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from '.
 import View from './view';
 
 import { RESERVED_JAVA } from './lib/constant';
+import { escapeNonEntity } from './lib/util';
 
 const $Resource = squared.base.Resource;
 const $color = squared.lib.color;
 const $css = squared.lib.css;
 const $util = squared.lib.util;
-const $xml = squared.lib.xml;
 
 const STORED = <ResourceStoredMapAndroid> $Resource.STORED;
 
@@ -144,7 +144,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                 if (STORED.strings.has(name)) {
                     name = Resource.generateId('string', name);
                 }
-                STORED.strings.set(name, $xml.escapeNonEntity(value));
+                STORED.strings.set(name, escapeNonEntity(value));
             }
             return name;
         }

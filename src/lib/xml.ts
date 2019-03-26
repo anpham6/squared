@@ -90,23 +90,6 @@ export function replaceTab(value: string, spaces = 4, preserve = false) {
     return value;
 }
 
-export function replaceEntity(value: string) {
-    return value
-        .replace(/&#(\d+);/g, (match, capture) => String.fromCharCode(parseInt(capture)))
-        .replace(/\u00A0/g, '&#160;')
-        .replace(/\u2002/g, '&#8194;')
-        .replace(/\u2003/g, '&#8195;')
-        .replace(/\u2009/g, '&#8201;')
-        .replace(/\u200C/g, '&#8204;')
-        .replace(/\u200D/g, '&#8205;')
-        .replace(/\u200E/g, '&#8206;')
-        .replace(/\u200F/g, '&#8207;');
-}
-
-export function escapeNonEntity(value: string) {
-    return value.replace(/&(?!#?[A-Za-z0-9]{2,};)/g, '&amp;');
-}
-
 export function parseTemplate(value: string) {
     const result: StringMap = {};
     function parseSection(section: string) {

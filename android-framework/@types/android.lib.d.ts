@@ -39,6 +39,9 @@ declare global {
             function convertLength(value: string, dpi?: number, font?: boolean): string;
             function replaceLength(value: string, dpi?: number, format?: string, font?: boolean): string;
             function replaceRTL(value: string, rtl: boolean, api: number): string;
+            function replaceCharacter(value: string): string;
+            function replaceEntity(value: string): string;
+            function escapeNonEntity(value: string): string;
             function getXmlNs(...values: string[]): string;
         }
     }
