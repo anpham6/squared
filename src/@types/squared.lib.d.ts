@@ -35,7 +35,8 @@ declare global {
             function getAttribute(element: Element, attr: string, computed?: boolean): string;
             function getParentAttribute(element: Element | null, attr: string): string;
             function getNamedItem(element: Element | null, attr: string): string;
-            function calculateVar(element: HTMLElement | SVGElement, value: string, attr?: string, dimension?: number): number;
+            function parseVar(element: HTMLElement | SVGElement, value: string): string | undefined;
+            function calculateVar(element: HTMLElement | SVGElement, value: string, attr?: string, dimension?: number): number | undefined;
             function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number): RectPosition;
             function resolveURL(value: string): string;
         }
@@ -116,9 +117,10 @@ declare global {
             function isNumber(value: string): boolean;
             function isString(value: any): value is string;
             function isArray<T>(value: any): value is Array<T>;
-            function isLength(value: string): boolean;
+            function isLength(value: string, percent?: boolean): boolean;
             function isPercent(value: string): boolean;
             function isCalc(value: string): boolean;
+            function isCustomProperty(value: string): boolean;
             function isAngle(value: string): boolean;
             function isEqual(source: any, values: any): boolean;
             function includes(source: string | undefined, value: string, delimiter?: string): boolean;

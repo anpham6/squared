@@ -193,6 +193,9 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 if ($util.isCalc(value)) {
                                     value = $css.calculateVar(element, value, name);
                                 }
+                                else if ($util.isCustomProperty(value)) {
+                                    value = $css.parseVar(element, value);
+                                }
                                 if (value !== undefined) {
                                     map[name].push({
                                         index: fraction,

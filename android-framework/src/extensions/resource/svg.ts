@@ -103,7 +103,6 @@ interface GroupTemplateData extends TemplateDataAA {
 interface PathData extends Partial<$SvgPath> {
     name: string;
     clipElement: StringMap[];
-    fillPattern: any;
     pathData?: string;
     trimPathStart?: string;
     trimPathEnd?: string;
@@ -653,14 +652,14 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 });
                 this.parseVectorData(svg);
                 this.queueAnimations(svg, svg.name, item => item.attributeName === 'opacity');
-                const templateName = $util.convertWord(`${node.tagName}_${node.controlId}_viewbox`, true).toLowerCase();
+                const templateName = `${node.tagName}_${$util.convertWord(node.controlId, true)}_viewbox`.toLowerCase();
                 const getFilename = (prefix?: string, suffix?: string) => templateName + (prefix ? `_${prefix}` : '') + (this.IMAGE_DATA.length ? '_vector' : '') + (suffix ? `_${suffix.toLowerCase()}` : '');
                 let drawable = '';
                 let vectorName = '';
                 {
                     const template = { ...TEMPLATES.VECTOR };
                     let xml = $xml.createTemplate(template, {
-                        namespace: this.NAMESPACE_AAPT ? getXmlNs('aapt') : '',
+                        namespace: getXmlNs('android', (this.NAMESPACE_AAPT ? 'aapt' : '')),
                         name: svg.name,
                         width: $util.formatPX(svg.width),
                         height: $util.formatPX(svg.height),
@@ -1485,44 +1484,6 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
         const result: PathData = {
             name: target.name,
             clipElement,
-            fillPattern: false
-        };
-        const setColorPattern = (attr: string, checkPattern = false) => {
-            const color = `${attr}Color`;
-            if (checkPattern) {
-                const pattern = `${attr}Pattern`;
-                const value = result[pattern];
-                if (value) {
-                    const gradient = this.SVG_INSTANCE.definitions.gradient.get(value);
-                    if (gradient) {
-                        switch (path.element.tagName) {
-                            case 'path':
-                                if (!/[zZ]\s*$/.test(path.value)) {
-                                    break;
-                                }
-                            case 'rect':
-                            case 'polygon':
-                            case 'polyline':
-                            case 'circle':
-                            case 'ellipse': {
-                                const backgroundGradient = createFillGradient(gradient, path, this.options.floatPrecisionValue);
-                                if (backgroundGradient) {
-                                    result[color] = '';
-                                    result[pattern] = [{ gradient: [backgroundGradient] }];
-                                    this.NAMESPACE_AAPT = true;
-                                    return;
-                                }
-                                break;
-                            }
-                        }
-                    }
-                    result[pattern] = false;
-                }
-            }
-            const colorName = Resource.addColor(result[color]);
-            if (colorName !== '') {
-                result[color] = `@color/${colorName}`;
-            }
         };
         if ($SvgBuild.asUse(target) && $util.hasValue(target.clipPath)) {
             this.createClipPath(target, clipElement, target.clipPath);
@@ -1569,9 +1530,48 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                         attr = 'pathData';
                         break;
                     case 'fill':
-                        attr = 'fillColor';
+                    case 'stroke':
+                        attr += 'Color';
+                        if (!result[attr]) {
+                            const colorName = Resource.addColor(value);
+                            if (colorName !== '') {
+                                value = `@color/${colorName}`;
+                            }
+                        }
+                        else {
+                            continue;
+                        }
                         break;
                     case 'fillPattern':
+                        const gradient = this.SVG_INSTANCE.definitions.gradient.get(value);
+                        let valid = false;
+                        if (gradient) {
+                            switch (path.element.tagName) {
+                                case 'path':
+                                    if (!/[zZ]\s*$/.test(path.value)) {
+                                        break;
+                                    }
+                                case 'rect':
+                                case 'polygon':
+                                case 'polyline':
+                                case 'circle':
+                                case 'ellipse': {
+                                    const backgroundGradient = createFillGradient(gradient, path, this.options.floatPrecisionValue);
+                                    if (backgroundGradient) {
+                                        value = [{ gradient: [backgroundGradient] }];
+                                        valid = true;
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                        if (valid) {
+                            attr = 'fillColor';
+                            this.NAMESPACE_AAPT = true;
+                        }
+                        else {
+                            continue;
+                        }
                         break;
                     case 'fillRule':
                         if (value === 'evenodd') {
@@ -1581,9 +1581,6 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                         else {
                             continue;
                         }
-                        break;
-                    case 'stroke':
-                        attr = 'strokeColor';
                         break;
                     case 'strokeWidth':
                         if (value === '0') {
@@ -1622,8 +1619,6 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 result[attr] = value;
             }
         }
-        setColorPattern('fill', true);
-        setColorPattern('stroke');
         const replaceMap = new Map<number, FillReplace>();
         const transformResult: $SvgAnimate[] = [];
         const replaceResult: $SvgAnimate[] = [];

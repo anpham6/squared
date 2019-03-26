@@ -1,3 +1,4 @@
+import { parseColor } from './color';
 import { getElementAsNode, getElementCache, setElementCache } from './dom';
 import { REGEXP_COMPILED, STRING_PATTERN, calculate, capitalize, convertCamelCase, convertPX, convertLength, convertPercent, isLength, resolvePath } from './util';
 
@@ -222,32 +223,41 @@ export function getParentAttribute(element: Element | null, attr: string) {
     return value;
 }
 
-export function calculateVar(element: HTMLElement | SVGElement, value: string, attr?: string, dimension?: number) {
+export function parseVar(element: HTMLElement | SVGElement, value: string) {
     const style = getComputedStyle(element);
-    const pattern = new RegExp(`${STRING_PATTERN.VAR}`, 'g');
     let match: RegExpMatchArray | null;
-    let result = value;
-    while ((match = pattern.exec(value)) !== null) {
-        const propertyValue = style.getPropertyValue(match[1]).trim();
+    while ((match = new RegExp(`${STRING_PATTERN.VAR}`).exec(value)) !== null) {
+        let propertyValue = style.getPropertyValue(match[1]).trim();
+        if (match[2] && (isLength(match[2], true) && !isLength(propertyValue, true) || parseColor(match[2]) !== undefined && parseColor(propertyValue) === undefined)) {
+            propertyValue = match[2];
+        }
         if (propertyValue !== '') {
-            result = result.replace(match[0], propertyValue);
+            value = value.replace(match[0], propertyValue);
         }
         else {
             return undefined;
         }
     }
-    if (attr && !dimension) {
-        const vertical = /(top|bottom|height)/.test(attr.toLowerCase());
-        if (element instanceof SVGElement) {
-            const rect = element.getBoundingClientRect();
-            dimension = vertical || attr.length <= 2 && attr.indexOf('y') !== -1 ? rect.height : rect.width;
+    return value;
+}
+
+export function calculateVar(element: HTMLElement | SVGElement, value: string, attr?: string, dimension?: number) {
+    const result = parseVar(element, value);
+    if (result) {
+        if (attr && !dimension) {
+            const vertical = /(top|bottom|height)/.test(attr.toLowerCase());
+            if (element instanceof SVGElement) {
+                const rect = element.getBoundingClientRect();
+                dimension = vertical || attr.length <= 2 && attr.indexOf('y') !== -1 ? rect.height : rect.width;
+            }
+            else {
+                const rect = (element.parentElement || element).getBoundingClientRect();
+                dimension = vertical ? rect.height : rect.width;
+            }
         }
-        else {
-            const rect = (element.parentElement || element).getBoundingClientRect();
-            dimension = vertical ? rect.height : rect.width;
-        }
+        return calculate(result, dimension, getFontSize(element));
     }
-    return calculate(result, dimension, getFontSize(element));
+    return undefined;
 }
 
 export function getNamedItem(element: Element | null, attr: string) {

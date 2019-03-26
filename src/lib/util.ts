@@ -49,7 +49,7 @@ export const STRING_PATTERN: UtilRegExpString = <any> {
     DECIMAL: '-?\\d+(?:\\.\\d+)?',
     PERCENT: '\\d+(?:\\.\\d+)?%',
     CALC: 'calc(\\(.+\\))',
-    VAR: 'var\\((--[A-Za-z0-9\\-]+)\\)',
+    VAR: 'var\\((--[A-Za-z0-9\\-]+)(?!,\\s*var\\()(?:,\\s*([a-z\\-]+\\([^)]+\\)|[^)]+))?\\)',
     ZERO_ONE: '0(?:\\.\\d+)?|1(?:\\.0+)?'
 };
 
@@ -471,8 +471,8 @@ export function isArray<T>(value: any): value is Array<T> {
     return Array.isArray(value) && value.length > 0;
 }
 
-export function isLength(value: string) {
-    return REGEXP_COMPILED.LENGTH.test(value);
+export function isLength(value: string, percent = false) {
+    return REGEXP_COMPILED.LENGTH.test(value) || percent && isPercent(value);
 }
 
 export function isPercent(value: string) {
@@ -481,6 +481,10 @@ export function isPercent(value: string) {
 
 export function isCalc(value: string) {
     return REGEXP_COMPILED.CALC.test(value);
+}
+
+export function isCustomProperty(value: string) {
+    return REGEXP_COMPILED.CUSTOMPROPERTY.test(value);
 }
 
 export function isAngle(value: string) {
@@ -548,7 +552,7 @@ export function cloneObject(data: {}, result = {}, array = false) {
         if (Array.isArray(value)) {
             result[attr] = array ? cloneArray(value, [], true) : value;
         }
-        else if (typeof value === 'object' && value !== null) {
+        else if (typeof value === 'object' && value.constructor === Object) {
             result[attr] = cloneObject(value, {}, array);
         }
         else {

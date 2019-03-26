@@ -124,7 +124,7 @@ export function escapeNonEntity(value: string) {
 }
 
 export function getXmlNs(...values: string[]) {
-    return $util.joinMap(values, namespace => XMLNS_ANDROID[namespace] ? `xmlns:${namespace}="${XMLNS_ANDROID[namespace]}"` : '', ' ');
+    return $util.joinMap(values, namespace => XMLNS_ANDROID[namespace] ? `xmlns:${namespace}="${XMLNS_ANDROID[namespace]}"` : '', ' ').trim();
 }
 
 export function getRootNs(value: string) {

@@ -1,5 +1,5 @@
 export default `<?xml version="1.0" encoding="utf-8"?>
-<vector xmlns:android="http://schemas.android.com/apk/res/android" {~namespace} android:name="{~name}" android:width="{&width}" android:height="{&height}" android:viewportWidth="{&viewportWidth}" android:viewportHeight="{&viewportHeight}" android:alpha="{~alpha}">
+<vector {~namespace} android:name="{~name}" android:width="{&width}" android:height="{&height}" android:viewportWidth="{&viewportWidth}" android:viewportHeight="{&viewportHeight}" android:alpha="{~alpha}">
 <<A>>
 	##region-start##
 	<group android:name="{~name}" android:translateX="{~translateX}" android:translateY="{~translateY}">
@@ -25,7 +25,7 @@ export default `<?xml version="1.0" encoding="utf-8"?>
 				<clip-path android:name="{~name}" android:pathData="{&pathData}" />
 				<<clipElement>>
 				<path android:name="{~name}" android:fillColor="{~fillColor}" android:fillAlpha="{~fillAlpha}" android:fillType="{~fillType}" android:strokeColor="{~strokeColor}" android:strokeAlpha="{~strokeAlpha}" android:strokeWidth="{~strokeWidth}" android:strokeLineCap="{~strokeLineCap}" android:strokeLineJoin="{~strokeLineJoin}" android:strokeMiterLimit="{~strokeMiterLimit}" android:trimPathStart="{~trimPathStart}" android:trimPathEnd="{~trimPathEnd}" android:trimPathOffset="{~trimPathOffset}" android:pathData="{&pathData}">
-				<<fillPattern>>
+				<<fillColor>>
 					<aapt:attr name="android:fillColor">
 					<<gradient>>
 						<gradient android:type="{&type}" android:startColor="{~startColor}" android:endColor="{~endColor}" android:centerColor="{~centerColor}" android:startX="{~startX}" android:startY="{~startY}" android:endX="{~endX}" android:endY="{~endY}" android:centerX="{~centerX}" android:centerY="{~centerY}" android:gradientRadius="{~gradientRadius}" android:tileMode="{~tileMode}">
@@ -35,7 +35,7 @@ export default `<?xml version="1.0" encoding="utf-8"?>
 						</gradient>
 					<<gradient>>
 					</aapt:attr>
-				<<fillPattern>>
+				<<fillColor>>
 				</path>
 			<<CCC>>
 			##render-end##
