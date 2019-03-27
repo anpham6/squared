@@ -1,4 +1,4 @@
-import { ControllerSettings, LayoutResult, LayoutType, NodeTag, NodeTagXml, NodeTemplate, NodeIncludeTemplate, NodeXmlTemplate, SessionData, UserSettings } from './@types/application';
+import { ControllerSettings, LayoutResult, LayoutType, NodeTag, NodeTagXml, NodeIncludeTemplate, NodeTemplate, NodeXmlTemplate, SessionData, UserSettings } from './@types/application';
 
 import Application from './application';
 import Layout from './layout';
@@ -47,6 +47,8 @@ export default abstract class Controller<T extends Node> implements squared.base
 
     public reset() {
         this._beforeOutside = {};
+        this._beforeInside = {};
+        this._afterInside = {};
         this._afterOutside = {};
     }
 

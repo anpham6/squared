@@ -194,7 +194,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             else {
                 node.parent = appBarNode;
             }
-            node.data(WIDGET_NAME.TOOLBAR, 'outerParent', appBarNode.documentId);
+            node.data(WIDGET_NAME.TOOLBAR, 'outerParent', appBarNode.android('id') || appBarNode.documentId);
             node.render(node.parent);
         }
         else {

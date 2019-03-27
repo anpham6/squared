@@ -78,7 +78,10 @@ export default class FloatingActionButton<T extends android.base.View> extends s
             else {
                 gravity.push('center_vertical');
             }
-            const layoutGravity = node.mergeGravity('layout_gravity', ...gravity);
+            let layoutGravity = '';
+            for (const value of gravity) {
+                layoutGravity = node.mergeGravity('layout_gravity', value);
+            }
             if (horizontalBias > 0 && horizontalBias < 1 && horizontalBias !== 0.5) {
                 if (horizontalBias < 0.5) {
                     node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, node.linear.left - documentParent.box.left);

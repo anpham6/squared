@@ -100,10 +100,19 @@ interface GroupTemplateData extends TemplateDataAA {
     BB: TemplateData[];
 }
 
-interface PathData extends Partial<$SvgPath> {
+interface PathData {
     name: string;
     clipElement: StringMap[];
     pathData?: string;
+    fillColor?: string;
+    fillAlpha?: string;
+    fillType?: string;
+    strokeColor?: string;
+    strokeAlpha?: string;
+    strokeWidth?: string;
+    strokeLineCap?: string;
+    strokeLineJoin?: string;
+    strokeMiterLimit?: string;
     trimPathStart?: string;
     trimPathEnd?: string;
     trimPathOffset?: string;
@@ -1360,7 +1369,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                 if ($SvgBuild.isShape(item)) {
                     if (item.path && item.path.value) {
                         const path = this.createPath(item, item.path, render);
-                        if (path.strokeWidth && (path.strokeDasharray || path.strokeDashoffset)) {
+                        if (item.path.strokeWidth && (item.path.strokeDasharray || item.path.strokeDashoffset)) {
                             const animateData = this.ANIMATE_DATA.get(item.name);
                             if (animateData === undefined || animateData.animate.every(animate => animate.attributeName.startsWith('stroke-dash'))) {
                                 const [strokeDash, pathValue, pathData] = item.path.extractStrokeDash(animateData && animateData.animate, this.options.floatPrecisionValue);

@@ -28,6 +28,9 @@ function stringify(template) {
                 output += (name === 'drawableImage' ? '\n' : '') +
                           `<!-- filename: ${template[name][i + 1]} -->\n\n`;
             }
+            else {
+                output += '\n';
+            }
         }
     }
     return output;

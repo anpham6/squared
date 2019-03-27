@@ -1,4 +1,4 @@
-/* squared 0.9.0
+/* squared 0.9.1
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -21,7 +21,7 @@
         DECIMAL: '-?\\d+(?:\\.\\d+)?',
         PERCENT: '\\d+(?:\\.\\d+)?%',
         CALC: 'calc(\\(.+\\))',
-        VAR: 'var\\((--[A-Za-z0-9\\-]+)\\)',
+        VAR: 'var\\((--[A-Za-z0-9\\-]+)(?!,\\s*var\\()(?:,\\s*([a-z\\-]+\\([^)]+\\)|[^)]+))?\\)',
         ZERO_ONE: '0(?:\\.\\d+)?|1(?:\\.0+)?'
     };
     STRING_PATTERN.LENGTH = `(${STRING_PATTERN.DECIMAL})(${UNIT_TYPE})?`;
@@ -415,14 +415,17 @@
     function isArray(value) {
         return Array.isArray(value) && value.length > 0;
     }
-    function isLength(value) {
-        return REGEXP_COMPILED.LENGTH.test(value);
+    function isLength(value, percent = false) {
+        return REGEXP_COMPILED.LENGTH.test(value) || percent && isPercent(value);
     }
     function isPercent(value) {
         return REGEXP_COMPILED.PERCENT.test(value);
     }
     function isCalc(value) {
         return REGEXP_COMPILED.CALC.test(value);
+    }
+    function isCustomProperty(value) {
+        return REGEXP_COMPILED.CUSTOMPROPERTY.test(value);
     }
     function isAngle(value) {
         return REGEXP_COMPILED.ANGLE.test(value);
@@ -484,7 +487,7 @@
             if (Array.isArray(value)) {
                 result[attr] = array ? cloneArray(value, [], true) : value;
             }
-            else if (typeof value === 'object' && value !== null) {
+            else if (typeof value === 'object' && value.constructor === Object) {
                 result[attr] = cloneObject(value, {}, array);
             }
             else {
@@ -840,6 +843,7 @@
         isLength: isLength,
         isPercent: isPercent,
         isCalc: isCalc,
+        isCustomProperty: isCustomProperty,
         isAngle: isAngle,
         isEqual: isEqual,
         includes: includes,
@@ -3613,6 +3617,7 @@
                     case 'lineHeight':
                     case 'verticalAlign':
                     case 'textIndent':
+                    case 'letterSpacing':
                     case 'columnGap':
                     case 'top':
                     case 'right':
@@ -3730,32 +3735,40 @@
         }
         return value;
     }
-    function calculateVar(element, value, attr, dimension) {
+    function parseVar(element, value) {
         const style = getComputedStyle(element);
-        const pattern = new RegExp(`${STRING_PATTERN.VAR}`, 'g');
         let match;
-        let result = value;
-        while ((match = pattern.exec(value)) !== null) {
-            const propertyValue = style.getPropertyValue(match[1]).trim();
+        while ((match = new RegExp(`${STRING_PATTERN.VAR}`).exec(value)) !== null) {
+            let propertyValue = style.getPropertyValue(match[1]).trim();
+            if (match[2] && (isLength(match[2], true) && !isLength(propertyValue, true) || parseColor(match[2]) !== undefined && parseColor(propertyValue) === undefined)) {
+                propertyValue = match[2];
+            }
             if (propertyValue !== '') {
-                result = result.replace(match[0], propertyValue);
+                value = value.replace(match[0], propertyValue);
             }
             else {
                 return undefined;
             }
         }
-        if (attr && !dimension) {
-            const vertical = /(top|bottom|height)/.test(attr.toLowerCase());
-            if (element instanceof SVGElement) {
-                const rect = element.getBoundingClientRect();
-                dimension = vertical || attr.length <= 2 && attr.indexOf('y') !== -1 ? rect.height : rect.width;
+        return value;
+    }
+    function calculateVar(element, value, attr, dimension) {
+        const result = parseVar(element, value);
+        if (result) {
+            if (attr && !dimension) {
+                const vertical = /(top|bottom|height)/.test(attr.toLowerCase());
+                if (element instanceof SVGElement) {
+                    const rect = element.getBoundingClientRect();
+                    dimension = vertical || attr.length <= 2 && attr.indexOf('y') !== -1 ? rect.height : rect.width;
+                }
+                else {
+                    const rect = (element.parentElement || element).getBoundingClientRect();
+                    dimension = vertical ? rect.height : rect.width;
+                }
             }
-            else {
-                const rect = (element.parentElement || element).getBoundingClientRect();
-                dimension = vertical ? rect.height : rect.width;
-            }
+            return calculate(result, dimension, getFontSize(element));
         }
-        return calculate(result, dimension, getFontSize(element));
+        return undefined;
     }
     function getNamedItem(element, attr) {
         if (element) {
@@ -3890,6 +3903,7 @@
         getInlineStyle: getInlineStyle,
         getAttribute: getAttribute,
         getParentAttribute: getParentAttribute,
+        parseVar: parseVar,
         calculateVar: calculateVar,
         getNamedItem: getNamedItem,
         getBackgroundPosition: getBackgroundPosition,
@@ -4237,9 +4251,7 @@
     function getSectionTag(attr, value) {
         return `((\\t*##${attr}-${value}##\\s*\\n)([\\w\\W]*?\\s*\\n)(\\t*##${attr}-${value}##\\s*\\n))`;
     }
-    function formatPlaceholder(id, symbol = ':') {
-        return `{${symbol + id.toString()}}`;
-    }
+    const STRING_XMLENCODING = '<?xml version="1.0" encoding="utf-8"?>\n';
     function pushIndent(value, depth, char = '\t', indent) {
         if (depth > 0) {
             if (indent === undefined) {
@@ -4291,21 +4303,6 @@
             }
         }
         return value;
-    }
-    function replaceEntity(value) {
-        return value
-            .replace(/&#(\d+);/g, (match, capture) => String.fromCharCode(parseInt(capture)))
-            .replace(/\u00A0/g, '&#160;')
-            .replace(/\u2002/g, '&#8194;')
-            .replace(/\u2003/g, '&#8195;')
-            .replace(/\u2009/g, '&#8201;')
-            .replace(/\u200C/g, '&#8204;')
-            .replace(/\u200D/g, '&#8205;')
-            .replace(/\u200E/g, '&#8206;')
-            .replace(/\u200F/g, '&#8207;');
-    }
-    function escapeNonEntity(value) {
-        return value.replace(/&(?!#?[A-Za-z0-9]{2,};)/g, '&amp;');
     }
     function parseTemplate(value) {
         const result = {};
@@ -4397,8 +4394,53 @@
             if (format) {
                 output = formatTemplate(output);
             }
+        }
+        return output;
+    }
+    function applyTemplate(tagName, template, children, depth) {
+        const tag = template[tagName];
+        let output = '';
+        let indent = '';
+        if (depth === undefined) {
+            output += STRING_XMLENCODING;
+            depth = 0;
+        }
+        else {
+            indent += '\t'.repeat(depth);
+        }
+        for (const item of children) {
+            output += indent + '<' + tagName;
+            if (tag['@']) {
+                for (const attr of tag['@']) {
+                    if (item[attr]) {
+                        output += ` ${(tag['^'] ? tag['^'] + ':' : '') + attr}="${item[attr]}"`;
+                    }
+                }
+            }
+            if (tag['>']) {
+                let innerText = '';
+                for (const name in tag['>']) {
+                    if (Array.isArray(item[name])) {
+                        innerText += applyTemplate(name, tag['>'], item[name], depth + 1);
+                    }
+                    else if (typeof item[name] === 'object') {
+                        innerText += applyTemplate(name, tag['>'], [item[name]], depth + 1);
+                    }
+                }
+                if (innerText !== '') {
+                    output += '>\n' +
+                        innerText +
+                        indent + `</${tagName}>\n`;
+                }
+                else {
+                    output += ' />\n';
+                }
+            }
+            else if (tag['~']) {
+                output += `>${item.innerText}</${tagName}>\n`;
+            }
             else {
-                output = output.trim();
+                output += ' />\n';
             }
         }
         return output;
@@ -4453,19 +4495,18 @@
             }
             output += line.value;
         }
-        return output.trim();
+        return output;
     }
 
     var xml = /*#__PURE__*/Object.freeze({
-        formatPlaceholder: formatPlaceholder,
+        STRING_XMLENCODING: STRING_XMLENCODING,
         pushIndent: pushIndent,
         pushIndentArray: pushIndentArray,
         replaceIndent: replaceIndent,
         replaceTab: replaceTab,
-        replaceEntity: replaceEntity,
-        escapeNonEntity: escapeNonEntity,
         parseTemplate: parseTemplate,
         createTemplate: createTemplate,
+        applyTemplate: applyTemplate,
         formatTemplate: formatTemplate
     });
 

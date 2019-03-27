@@ -1,4 +1,4 @@
-/* android.widget 0.9.0
+/* android.widget 0.9.1
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -179,7 +179,7 @@ this.android.widget.toolbar = (function () {
                 else {
                     node.parent = appBarNode;
                 }
-                node.data("android.widget.toolbar" /* TOOLBAR */, 'outerParent', appBarNode.documentId);
+                node.data("android.widget.toolbar" /* TOOLBAR */, 'outerParent', appBarNode.android('id') || appBarNode.documentId);
                 node.render(node.parent);
             }
             else {

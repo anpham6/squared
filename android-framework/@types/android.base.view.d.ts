@@ -19,7 +19,7 @@ declare global {
             android(attr: string, value?: string, overwrite?: boolean): string;
             app(attr: string, value?: string, overwrite?: boolean): string;
             formatted(value: string, overwrite?: boolean): void;
-            mergeGravity(attr: string, ...alignment: string[]): string;
+            mergeGravity(attr: string, alignment: string, overwrite?: boolean): string;
             anchor(position: string, documentId?: string, overwrite?: boolean): boolean;
             anchorParent(orientation: string, overwrite?: boolean, constraintBias?: boolean): boolean;
             anchorDelete(...position: string[]): void;

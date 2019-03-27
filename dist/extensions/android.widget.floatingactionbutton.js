@@ -1,4 +1,4 @@
-/* android.widget 0.9.0
+/* android.widget 0.9.1
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -78,7 +78,10 @@ this.android.widget.floatingactionbutton = (function () {
                 else {
                     gravity.push('center_vertical');
                 }
-                const layoutGravity = node.mergeGravity('layout_gravity', ...gravity);
+                let layoutGravity = '';
+                for (const value of gravity) {
+                    layoutGravity = node.mergeGravity('layout_gravity', value);
+                }
                 if (horizontalBias > 0 && horizontalBias < 1 && horizontalBias !== 0.5) {
                     if (horizontalBias < 0.5) {
                         node.modifyBox(16 /* MARGIN_LEFT */, node.linear.left - documentParent.box.left);

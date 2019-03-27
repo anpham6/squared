@@ -1,4 +1,4 @@
-/* squared.svg 0.9.0
+/* squared.svg 0.9.1
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -4477,6 +4477,9 @@
                                     let value = keyframes[percent][name];
                                     if ($util$8.isCalc(value)) {
                                         value = $css$7.calculateVar(element, value, name);
+                                    }
+                                    else if ($util$8.isCustomProperty(value)) {
+                                        value = $css$7.parseVar(element, value);
                                     }
                                     if (value !== undefined) {
                                         map[name].push({

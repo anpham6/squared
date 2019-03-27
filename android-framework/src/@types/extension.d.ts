@@ -19,3 +19,8 @@ export interface ResourceStringsOptions {
     numberResourceValue: boolean;
     replaceCharacterEntities: boolean;
 }
+
+export interface ResourceFontsOptions {
+    defaultSystemFont: string;
+    fontResourceValue: boolean;
+}
