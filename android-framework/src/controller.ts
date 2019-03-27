@@ -989,6 +989,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     }
                     if (!node.hasWidth) {
                         node.css('minWidth', $util.formatPX(node.bounds.width), true);
+                        node.css('display', 'inline-block', true);
                     }
                     break;
                 }
@@ -1023,20 +1024,16 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     node.android('justificationMode', 'inter_word');
                 }
                 if (node.has('textShadow')) {
-                    [/^(rgba?\(\d+, \d+, \d+(?:, [\d.]+)?\)) ([\d.]+[a-z]+) ([\d.]+[a-z]+) ([\d.]+[a-z]+)$/, /^([\d.]+[a-z]+) ([\d.]+[a-z]+) ([\d.]+[a-z]+) (.+)$/].some((pattern, index) => {
-                        const match = node.css('textShadow').match(pattern);
-                        if (match) {
-                            const colorName = Resource.addColor($color.parseColor(match[index === 0 ? 1 : 4]));
-                            if (colorName !== '') {
-                                node.android('shadowColor', `@color/${colorName}`);
-                                node.android('shadowDx', $util.convertInt(match[index === 0 ? 2 : 1]).toString());
-                                node.android('shadowDy', $util.convertInt(match[index === 0 ? 3 : 2]).toString());
-                                node.android('shadowRadius', $util.convertInt(match[index === 0 ? 4 : 3]).toString());
-                                return true;
-                            }
+                    const match = node.css('textShadow').match(/^(rgba?\(\d+, \d+, \d+(?:, [\d.]+)?\)) (-?[\d.]+[a-z]+) (-?[\d.]+[a-z]+)\s*(-?[\d.]+[a-z]+)?$/);
+                    if (match) {
+                        const colorName = Resource.addColor($color.parseColor(match[1]));
+                        if (colorName !== '') {
+                            node.android('shadowColor', `@color/${colorName}`);
+                            node.android('shadowDx', $util.parseUnit(match[2], node.fontSize).toString());
+                            node.android('shadowDy', $util.parseUnit(match[3], node.fontSize).toString());
+                            node.android('shadowRadius', match[4] ? $util.parseUnit(match[4], node.fontSize).toString() : '0');
                         }
-                        return false;
-                    });
+                    }
                 }
                 if (node.css('whiteSpace') === 'nowrap') {
                     node.android('singleLine', 'true');

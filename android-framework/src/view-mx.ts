@@ -1152,7 +1152,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                             else {
                                 let offset = (lineHeight - ((node === this || node.layoutVertical && node.length > 1 || node.hasAlign($enum.NODE_ALIGNMENT.MULTILINE) ? node.bounds.height : node.fontSize) + node.paddingTop + node.paddingBottom)) / 2;
                                 if (offset > 0) {
-                                    node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.floor(offset) - (node.inlineVertical ? $util.convertFloat(node.verticalAlign) : 0));
+                                    node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.floor(offset) - (node.inlineVertical && !node.baseline ? $util.convertFloat(node.verticalAlign) : 0));
                                     if (bottom && lineHeight > node.height) {
                                         if (node.height > 0) {
                                             offset = lineHeight - node.height;
@@ -1177,7 +1177,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                             }
                             else {
                                 this.renderEach((node: T) => {
-                                    if (!(node.has('lineHeight') || this.textElement && node.multiline)) {
+                                    if (!(node.has('lineHeight') || this.textElement && node.multiline || node.inputElement)) {
                                         setMarginOffset(node);
                                     }
                                 });
@@ -1189,15 +1189,11 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         private setVisibility() {
-            const renderParent = this.renderParent as T;
             switch (this.cssAscend('visibility', true)) {
                 case 'hidden':
                 case 'collapse':
                     this.hide(true);
                     break;
-            }
-            if (renderParent.tableElement && renderParent.css('empty-cells') === 'hide' && this.actualChildren.length === 0 && this.textContent === '') {
-                this.hide(true);
             }
         }
 

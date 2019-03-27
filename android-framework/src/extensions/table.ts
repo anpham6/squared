@@ -90,7 +90,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
         return undefined;
     }
 
-    public processChild(node: T) {
+    public processChild(node: T, parent: T) {
         const rowSpan = $util.convertInt(node.data($const.EXT_NAME.TABLE, 'rowSpan'));
         const columnSpan = $util.convertInt(node.data($const.EXT_NAME.TABLE, 'colSpan'));
         const spaceSpan = $util.convertInt(node.data($const.EXT_NAME.TABLE, 'spaceSpan'));
@@ -104,6 +104,9 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
         if (spaceSpan > 0) {
             const controller = <android.base.Controller<T>> this.application.controllerHandler;
             controller.addAfterOutsideTemplate(node.id, controller.renderSpace('wrap_content', 'wrap_content', spaceSpan));
+        }
+        if (parent.css('empty-cells') === 'hide' && node.actualChildren.length === 0 && node.textContent === '') {
+            node.hide(true);
         }
         return undefined;
     }

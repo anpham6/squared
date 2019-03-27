@@ -172,7 +172,7 @@ declare global {
             cssPX(attr: string, value: number, negative?: boolean, cache?: boolean): string;
             cssTry(attr: string, value: string): boolean;
             cssFinally(attr: string): boolean;
-            appendTry(node: Node, replacement: Node, append?: boolean): void;
+            appendTry(node: Node, replacement: Node, append?: boolean): boolean;
             toInt(attr: string, initial?: boolean, fallback?: number): number;
             toFloat(attr: string, initial?: boolean, fallback?: number): number;
             parseUnit(value: string, horizontal?: boolean, parent?: boolean): number;
