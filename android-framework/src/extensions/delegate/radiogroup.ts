@@ -11,9 +11,7 @@ const $enum = squared.base.lib.enumeration;
 
 const CONTROL_NAME = 'RadioGroup';
 
-function getInputName(element: HTMLInputElement) {
-    return element.name ? element.name.trim() : '';
-}
+const getInputName = (element: HTMLInputElement) => element.name ? element.name.trim() : '';
 
 export default class RadioGroup<T extends View> extends squared.base.Extension<T> {
     public condition(node: T) {
@@ -48,7 +46,6 @@ export default class RadioGroup<T extends View> extends squared.base.Extension<T
     public processNode(node: T, parent: T) {
         if (node.length) {
             node.setControlType(CONTROL_NAME, node.block ? CONTAINER_NODE.BLOCK : CONTAINER_NODE.INLINE);
-            node.mergeGravity('gravity', 'bottom');
             node.android('orientation', AXIS_ANDROID.HORIZONTAL);
             node.render(parent);
             return {

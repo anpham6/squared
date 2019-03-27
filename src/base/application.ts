@@ -15,6 +15,35 @@ const $dom = squared.lib.dom;
 const $element = squared.lib.element;
 const $util = squared.lib.util;
 
+function checkPositionStatic(node: Node, parent?: Node) {
+    const previousSiblings = node.previousSiblings();
+    const nextSiblings = node.nextSiblings();
+    if (!previousSiblings.some(item => item.multiline || item.excluded && !item.blockStatic) && (nextSiblings.every(item => item.blockStatic || item.lineBreak || item.excluded) || parent && node.element === $dom.getLastChildElement(parent.element))) {
+        node.cssApply({
+            display: 'inline-block',
+            verticalAlign: 'top'
+        }, true);
+        node.positionStatic = true;
+        return true;
+    }
+    return false;
+}
+
+function compareRange(operation: string, value: number, range: number) {
+    switch (operation) {
+        case '<=':
+            return value <= range;
+        case '<':
+            return value < range;
+        case '>=':
+            return value >= range;
+        case '>':
+            return value > range;
+        default:
+            return value === range;
+    }
+}
+
 function prioritizeExtensions<T extends Node>(element: HTMLElement, extensions: Extension<T>[], documentRoot: HTMLElement | null = null) {
     const tagged: string[] = [];
     let current: HTMLElement | null = element;
@@ -46,35 +75,6 @@ function prioritizeExtensions<T extends Node>(element: HTMLElement, extensions: 
         return $util.concatArray($util.spliceArray(result, item => item === undefined), untagged);
     }
     return extensions;
-}
-
-function checkPositionStatic<T extends Node>(node: T, parent?: T) {
-    const previousSiblings = node.previousSiblings();
-    const nextSiblings = node.nextSiblings();
-    if (!previousSiblings.some(item => item.multiline || item.excluded && !item.blockStatic) && (nextSiblings.every(item => item.blockStatic || item.lineBreak || item.excluded) || parent && node.element === $dom.getLastChildElement(parent.element))) {
-        node.cssApply({
-            display: 'inline-block',
-            verticalAlign: 'top'
-        }, true);
-        node.positionStatic = true;
-        return true;
-    }
-    return false;
-}
-
-function compareRange(operation: string, value: number, range: number) {
-    switch (operation) {
-        case '<=':
-            return value <= range;
-        case '<':
-            return value < range;
-        case '>=':
-            return value >= range;
-        case '>':
-            return value > range;
-        default:
-            return value === range;
-    }
 }
 
 export default class Application<T extends Node> implements squared.base.Application<T> {

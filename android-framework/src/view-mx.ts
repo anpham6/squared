@@ -34,10 +34,6 @@ function checkTextAlign(value: string) {
     }
 }
 
-function isSingleFrame(node: T) {
-    return node.documentRoot && node.layoutFrame && node.length === 1 && node.has('maxWidth');
-}
-
 function setAutoMargin(node: T) {
     if (!node.blockWidth) {
         const alignment: string[] = [];
@@ -80,10 +76,6 @@ function setAutoMargin(node: T) {
     return false;
 }
 
-function validateString(value: string) {
-    return value ? value.trim().replace(REGEXP_VALIDSTRING, '_') : '';
-}
-
 function calculateBias(start: number, end: number, accuracy = 4) {
     if (start === 0) {
         return 0;
@@ -95,6 +87,10 @@ function calculateBias(start: number, end: number, accuracy = 4) {
         return parseFloat(Math.max(start / (start + end), 0).toPrecision(accuracy));
     }
 }
+
+const isSingleFrame = (node: T) => node.documentRoot && node.layoutFrame && node.length === 1 && node.has('maxWidth');
+
+const validateString = (value: string) => value ? value.trim().replace(REGEXP_VALIDSTRING, '_') : '';
 
 export default (Base: Constructor<squared.base.Node>) => {
     return class View extends Base implements android.base.View {

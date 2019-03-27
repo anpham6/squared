@@ -51,10 +51,6 @@ const NAVIGATION = {
     GROUP: 'group'
 };
 
-function hasInputType(node: View, value: string) {
-    return node.some(item => (<HTMLInputElement> item.element).type === value);
-}
-
 function parseDataSet(validator: ObjectMap<RegExp>, element: HTMLElement, options: ViewAttribute) {
     for (const attr in element.dataset) {
         const value = element.dataset[attr];
@@ -67,7 +63,7 @@ function parseDataSet(validator: ObjectMap<RegExp>, element: HTMLElement, option
     }
 }
 
-function getTitle<T extends View>(node: T, element: HTMLElement) {
+function getTitle(node: View, element: HTMLElement) {
     if (element.title !== '') {
         return element.title;
     }
@@ -80,6 +76,8 @@ function getTitle<T extends View>(node: T, element: HTMLElement) {
     }
     return '';
 }
+
+const hasInputType = (node: View, value: string) => node.some(item => (<HTMLInputElement> item.element).type === value);
 
 export default class Menu<T extends View> extends squared.base.Extension<T> {
     constructor(

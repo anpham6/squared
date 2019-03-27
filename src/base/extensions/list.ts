@@ -8,9 +8,7 @@ import { BOX_STANDARD, NODE_RESOURCE } from '../lib/enumeration';
 
 const $util = squared.lib.util;
 
-function hasSingleImage<T extends Node>(node: T) {
-    return node.visibleStyle.backgroundImage && !node.visibleStyle.backgroundRepeat;
-}
+const hasSingleImage = (node: Node) => node.visibleStyle.backgroundImage && !node.visibleStyle.backgroundRepeat;
 
 export default abstract class List<T extends Node> extends Extension<T> {
     public static createDataAttribute(): ListData {

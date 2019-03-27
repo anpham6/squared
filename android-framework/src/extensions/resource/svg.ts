@@ -204,10 +204,6 @@ function getPaintAttribute(value: string) {
     return '';
 }
 
-function getVectorName(target: SvgView, section: string, index = -1) {
-    return `${target.name}_${section + (index !== -1 ? `_${index + 1}` : '')}`;
-}
-
 function createPathInterpolator(value: string) {
     if (INTERPOLATOR_ANDROID[value]) {
         return INTERPOLATOR_ANDROID[value];
@@ -494,10 +490,6 @@ function getTransformInitialValue(name: string) {
     return undefined;
 }
 
-function isColorType(attr: string) {
-    return attr === 'fill' || attr === 'stroke';
-}
-
 function getColorValue<T>(value: string, asArray = false) {
     const colorName = `@color/${Resource.addColor(value)}`;
     return (asArray ? [colorName] : colorName) as T extends true ? string[] : string;
@@ -600,8 +592,14 @@ function createFillGradient(gradient: Gradient, path: $SvgPath, precision?: numb
     return result;
 }
 
+const isColorType = (attr: string) => attr === 'fill' || attr === 'stroke';
+
+const getVectorName = (target: SvgView, section: string, index = -1) => `${target.name}_${section + (index !== -1 ? `_${index + 1}` : '')}`;
+
 const getRadiusPercent = (value: string) => $util.isPercent(value) ? parseFloat(value) / 100 : 0.5;
+
 const getDrawableSrc = (name: string) => `@drawable/${name}`;
+
 const getFillData = (ordering = ''): FillData => ({ ordering, objectAnimator: [] });
 
 export default class ResourceSvg<T extends View> extends squared.base.Extension<T> {

@@ -60,11 +60,7 @@ function repeatUnit(data: CssGridDirectionData, dimension: string[]) {
     return result;
 }
 
-function convertLength<T extends Node>(node: T, value: string) {
-    return $util.isLength(value) ? node.convertPX(value) : value;
-}
-
-function getColumnTotal<T extends Node>(rows: (T[] | undefined)[]) {
+function getColumnTotal(rows: (Node[] | undefined)[]) {
     let value = 0;
     for (const row of rows) {
         if (row) {
@@ -73,6 +69,8 @@ function getColumnTotal<T extends Node>(rows: (T[] | undefined)[]) {
     }
     return value;
 }
+
+const convertLength = (node: Node, value: string) => $util.isLength(value) ? node.convertPX(value) : value;
 
 export default class CssGrid<T extends Node> extends Extension<T> {
     public static createDataAttribute<T extends Node>(): CssGridData<T> {

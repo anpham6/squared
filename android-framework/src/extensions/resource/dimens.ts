@@ -21,9 +21,7 @@ function getResourceName(map: Map<string, string>, name: string, value: string) 
     return map.has(name) && map.get(name) !== value ? Resource.generateId('dimen', name) : name;
 }
 
-function getDisplayName(value: string) {
-    return $util.fromLastIndexOf(value, '.');
-}
+const getDisplayName = (value: string) => $util.fromLastIndexOf(value, '.');
 
 export default class ResourceDimens<T extends android.base.View> extends squared.base.Extension<T> {
     public readonly eventOnly = true;

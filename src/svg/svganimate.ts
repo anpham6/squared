@@ -9,9 +9,7 @@ const $color = squared.lib.color;
 const $css = squared.lib.css;
 const $util = squared.lib.util;
 
-function invertControlPoint(value: number) {
-    return parseFloat((1 - value).toPrecision(5));
-}
+const invertControlPoint = (value: number) => parseFloat((1 - value).toPrecision(5));
 
 export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgAnimate {
     public static getSplitValue(value: number, next: number, percent: number) {

@@ -62,9 +62,7 @@ function autoClose() {
     return false;
 }
 
-function checkApplication(main?: Application): main is Application {
-    return initialized && !!main && (main.closed || autoClose());
-}
+const checkApplication = (main?: Application): main is Application => initialized && !!main && (main.closed || autoClose());
 
 const lib = {
     constant,

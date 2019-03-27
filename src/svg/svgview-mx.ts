@@ -52,10 +52,6 @@ function parseAttribute(element: SVGElement, attr: string) {
     }
 }
 
-function sortAttribute(value: NumberValue<string>[]) {
-    return value.sort((a, b) => a.index >= b.index ? 1 : -1);
-}
-
 function setVisible(element: SVGGraphicsElement, value: boolean) {
     setAttribute(element, 'display', value ? 'block' : 'none');
     setAttribute(element, 'visibility', value ? 'visible' : 'hidden');
@@ -79,6 +75,8 @@ function setOpacity(element: SVGGraphicsElement, value: string) {
         element.setAttribute('opacity', opacity.toString());
     }
 }
+
+const sortAttribute = (value: NumberValue<string>[]) => value.sort((a, b) => a.index >= b.index ? 1 : -1);
 
 export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
     return class extends Base implements squared.svg.SvgView {

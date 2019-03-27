@@ -8,13 +8,9 @@ import $NodeList = squared.base.NodeList;
 const $enum = squared.base.lib.enumeration;
 const $util = squared.lib.util;
 
-function getFixedNodes<T extends View>(node: T) {
-    return node.filter(item => !item.pageFlow && (item.position === 'fixed' || item.absoluteParent === node));
-}
+const getFixedNodes = (node: View) => node.filter(item => !item.pageFlow && (item.position === 'fixed' || item.absoluteParent === node));
 
-function withinBoxRegion(rect: number[], value: number) {
-    return rect.some(coord => coord < value);
-}
+const withinBoxRegion = (rect: number[], value: number) => rect.some(coord => coord < value);
 
 export default class Fixed<T extends View> extends squared.base.Extension<T> {
     public condition(node: T) {

@@ -18,7 +18,7 @@ const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\("?.+?"?\\)|(repeatin
 const REGEXP_TAGNAME = /(<([^>]+)>)/ig;
 const REGEXP_LINEBREAK = /\s*<br[^>]*>\s*/g;
 
-function removeExcluded<T extends Node>(node: T, element: Element, attr: string) {
+function removeExcluded(node: Node, element: Element, attr: string) {
     let value: string = element[attr];
     for (const item of node.actualChildren) {
         if ((item.excluded || item.dataset.target) && $util.isString(item[attr])) {
@@ -28,7 +28,7 @@ function removeExcluded<T extends Node>(node: T, element: Element, attr: string)
     return value;
 }
 
-function parseColorStops<T extends Node>(node: T, gradient: Gradient, value: string, opacity: string) {
+function parseColorStops(node: Node, gradient: Gradient, value: string, opacity: string) {
     const radial = <RadialGradient> gradient;
     const repeating = !!radial.repeating;
     const extent = repeating && gradient.type === 'radial' ? radial.radiusExtent / radial.radius : 1;
@@ -133,11 +133,7 @@ function parseAngle(value: string) {
     return 0;
 }
 
-function getGradientPosition(value: string) {
-    return value ? /(.+?)?\s*at (.+?)$/.exec(value) : null;
-}
-
-function replaceWhiteSpace<T extends Node>(node: T, element: Element, value: string): [string, boolean] {
+function replaceWhiteSpace(node: Node, element: Element, value: string): [string, boolean] {
     const renderParent = node.renderParent;
     if (node.multiline && renderParent && !renderParent.layoutVertical) {
         value = value.replace(/^\s*\n/, '');
@@ -172,7 +168,7 @@ function replaceWhiteSpace<T extends Node>(node: T, element: Element, value: str
     return [value, true];
 }
 
-function getBackgroundSize<T extends Node>(node: T, index: number, value?: string) {
+function getBackgroundSize(node: Node, index: number, value?: string) {
     if (value) {
         const sizes = value.split($util.REGEXP_COMPILED.SEPARATOR);
         return Resource.getBackgroundSize(node, sizes[index % sizes.length]);
@@ -191,6 +187,8 @@ function applyTextTransform(value: string, transform: string | null) {
     }
     return value;
 }
+
+const getGradientPosition = (value: string) => value ? /(.+?)?\s*at (.+?)$/.exec(value) : null;
 
 export default abstract class Resource<T extends Node> implements squared.base.Resource<T> {
     public static KEY_NAME = 'squared.resource';
@@ -286,7 +284,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
         return object !== undefined && (object.backgroundImage !== undefined || object.borderTop !== undefined || object.borderRight !== undefined || object.borderBottom !== undefined || object.borderLeft !== undefined);
     }
 
-    public static getBackgroundSize<T extends Node>(node: T, value: string): Dimension | undefined {
+    public static getBackgroundSize(node: Node, value: string): Dimension | undefined {
         let width = 0;
         let height = 0;
         switch (value) {

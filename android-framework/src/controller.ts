@@ -23,7 +23,7 @@ const $xml = squared.lib.xml;
 
 const GUIDELINE_AXIS = [AXIS_ANDROID.HORIZONTAL, AXIS_ANDROID.VERTICAL];
 
-function createColumnLayout<T extends View>(partition: T[][], horizontal: boolean) {
+function createColumnLayout(partition: View[][], horizontal: boolean) {
     let LT: string;
     let RB: string;
     let LRTB: string;
@@ -47,8 +47,8 @@ function createColumnLayout<T extends View>(partition: T[][], horizontal: boolea
         rowEnd.anchor(RB, 'parent');
         for (let i = 0; i < seg.length; i++) {
             const chain = seg[i];
-            const previous = seg[i - 1] as T | undefined;
-            const next = seg[i + 1] as T | undefined;
+            const previous = seg[i - 1] as View | undefined;
+            const next = seg[i + 1] as View | undefined;
             if (horizontal) {
                 chain.app('layout_constraintVertical_bias', '0');
             }
@@ -73,7 +73,7 @@ function createColumnLayout<T extends View>(partition: T[][], horizontal: boolea
     }
 }
 
-function sortHorizontalFloat<T extends View>(list: T[]) {
+function sortHorizontalFloat(list: View[]) {
     if (list.some(node => node.floating)) {
         list.sort((a, b) => {
             if (a.floating && !b.floating) {
@@ -95,7 +95,7 @@ function sortHorizontalFloat<T extends View>(list: T[]) {
     }
 }
 
-function adjustBaseline<T extends View>(baseline: T, nodes: T[]) {
+function adjustBaseline(baseline: View, nodes: View[]) {
     for (const node of nodes) {
         if (node !== baseline) {
             if (node.imageElement && node.actualHeight > baseline.actualHeight) {
@@ -110,22 +110,13 @@ function adjustBaseline<T extends View>(baseline: T, nodes: T[]) {
     }
 }
 
-function getTextBottom<T extends View>(nodes: T[]): T | undefined {
-    return $util.filterArray(nodes, node => node.verticalAlign === 'text-bottom').sort((a, b) => {
-        if (a.bounds.height === b.bounds.height) {
-            return a.is(CONTAINER_NODE.SELECT) ? 1 : -1;
-        }
-        return a.bounds.height > b.bounds.height ? -1 : 1;
-    })[0];
-}
-
-function checkSingleLine<T extends View>(node: T, nowrap = false) {
+function checkSingleLine(node: View, nowrap = false) {
     if (node.textElement && node.cssAscend('textAlign', true) !== 'center' && !node.hasWidth && !node.multiline && (nowrap || node.textContent.trim().split(String.fromCharCode(32)).length > 0)) {
         node.android('singleLine', 'true');
     }
 }
 
-function adjustDocumentRootOffset<T extends View>(value: number, parent: T, direction: string, boxReset = false) {
+function adjustDocumentRootOffset(value: number, parent: View, direction: string, boxReset = false) {
     if (value > 0) {
         if (!boxReset) {
             value -= parent[`padding${direction}`];
@@ -138,7 +129,7 @@ function adjustDocumentRootOffset<T extends View>(value: number, parent: T, dire
     return value;
 }
 
-function adjustFloatingNegativeMargin<T extends View>(node: T, previous: T) {
+function adjustFloatingNegativeMargin(node: View, previous: View) {
     if (previous.float === 'left') {
         if (previous.marginRight < 0) {
             const right = Math.abs(previous.marginRight);
@@ -163,7 +154,7 @@ function adjustFloatingNegativeMargin<T extends View>(node: T, previous: T) {
     return false;
 }
 
-function constraintMinMax<T extends View>(node: T, dimension: string) {
+function constraintMinMax(node: View, dimension: string) {
     const minWH = node.cssInitial(`min${dimension}`);
     const maxWH = node.cssInitial(`max${dimension}`);
     if ($util.isLength(minWH)) {
@@ -176,7 +167,7 @@ function constraintMinMax<T extends View>(node: T, dimension: string) {
     }
 }
 
-function constraintPercentValue<T extends View>(node: T, dimension: string, value: string, requirePX: boolean) {
+function constraintPercentValue(node: View, dimension: string, value: string, requirePX: boolean) {
     if ($util.isPercent(value)) {
         if (requirePX) {
             node.android(`layout_${dimension.toLowerCase()}`, node.convertPX(value, dimension === 'Width'));
@@ -189,24 +180,33 @@ function constraintPercentValue<T extends View>(node: T, dimension: string, valu
     }
 }
 
-function constraintPercentWidth<T extends View>(node: T, requirePX = false) {
+function constraintPercentWidth(node: View, requirePX = false) {
     const value = node.has('width') ? node.css('width') : '';
     constraintPercentValue(node, 'Width', value, requirePX);
 }
 
-function constraintPercentHeight<T extends View>(node: T, requirePX = false) {
+function constraintPercentHeight(node: View, requirePX = false) {
     if (node.documentParent.hasHeight) {
         const value = node.has('height') ? node.css('height') : '';
         constraintPercentValue(node, 'Height', value, requirePX);
     }
 }
 
-function isTargeted<T extends View>(parent: T, node: T) {
+function isTargeted(parent: View, node: View) {
     if (parent.element && node.dataset.target) {
         const element = document.getElementById(node.dataset.target);
         return element !== null && element !== parent.element;
     }
     return false;
+}
+
+function getTextBottom<T extends View>(nodes: T[]): T | undefined {
+    return $util.filterArray(nodes, node => node.verticalAlign === 'text-bottom').sort((a, b) => {
+        if (a.bounds.height === b.bounds.height) {
+            return a.is(CONTAINER_NODE.SELECT) ? 1 : -1;
+        }
+        return a.bounds.height > b.bounds.height ? -1 : 1;
+    })[0];
 }
 
 export default class Controller<T extends View> extends squared.base.Controller<T> implements android.base.Controller<T> {

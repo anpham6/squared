@@ -51,10 +51,6 @@ const $math = squared.lib.math;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
-function getColorAttribute(value: string): ShapeSolidData {
-    return { color: `@color/${value}`, dashWidth: '', dashGap: '' };
-}
-
 function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = false): ShapeSolidData {
     const result = getColorAttribute(Resource.addColor(border.color));
     const borderWidth = parseInt(border.width);
@@ -312,17 +308,6 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIP
     return result;
 }
 
-export function convertColorStops(list: ColorStop[], precision?: number) {
-    const result: GradientColorStop[] = [];
-    for (const stop of list) {
-        result.push({
-            color: `@color/${Resource.addColor(stop.color, true)}`,
-            offset: $math.truncate(stop.offset, precision)
-        });
-    }
-    return result;
-}
-
 function getPercentOffset(direction: string, position: RectPosition, bounds: RectDimension, dimension: Dimension) {
     if (direction === 'left') {
         if ($util.isPercent(position.horizontal)) {
@@ -335,6 +320,19 @@ function getPercentOffset(direction: string, position: RectPosition, bounds: Rec
         }
     }
     return position[direction];
+}
+
+const getColorAttribute = (value: string): ShapeSolidData => ({ color: `@color/${value}`, dashWidth: '', dashGap: '' });
+
+export function convertColorStops(list: ColorStop[], precision?: number) {
+    const result: GradientColorStop[] = [];
+    for (const stop of list) {
+        result.push({
+            color: `@color/${Resource.addColor(stop.color, true)}`,
+            offset: $math.truncate(stop.offset, precision)
+        });
+    }
+    return result;
 }
 
 export default class ResourceBackground<T extends View> extends squared.base.Extension<T> {

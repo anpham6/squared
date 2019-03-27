@@ -14,8 +14,8 @@ const $enum = squared.base.lib.enumeration;
 const $element = squared.lib.element;
 const $util = squared.lib.util;
 
-function getRowData<T extends View>(mainData: CssGridData<T>, direction: string) {
-    const result: Undefined<T[]>[][] = [];
+function getRowData(mainData: CssGridData<View>, direction: string) {
+    const result: Undefined<View[]>[][] = [];
     if (direction === 'column') {
         for (let i = 0; i < mainData.column.count; i++) {
             result[i] = [];
@@ -32,7 +32,7 @@ function getRowData<T extends View>(mainData: CssGridData<T>, direction: string)
     return result;
 }
 
-function getGridSize<T extends View>(mainData: CssGridData<T>, direction: string, node: T) {
+function getGridSize(mainData: CssGridData<View>, direction: string, node: View) {
     const dimension = direction === 'column' ? 'width' : 'height';
     let value = 0;
     for (let i = 0; i < mainData[direction].count; i++) {
@@ -42,7 +42,7 @@ function getGridSize<T extends View>(mainData: CssGridData<T>, direction: string
         }
         else {
             let size = 0;
-            $util.captureMap(mainData.rowData[i] as T[][], item => item && item.length > 0, item => size = Math.min(size, item[0].bounds[dimension]));
+            $util.captureMap(mainData.rowData[i] as View[][], item => item && item.length > 0, item => size = Math.min(size, item[0].bounds[dimension]));
             value += size;
         }
     }
@@ -50,7 +50,7 @@ function getGridSize<T extends View>(mainData: CssGridData<T>, direction: string
     return node[dimension] - value;
 }
 
-function setContentSpacing<T extends View>(mainData: CssGridData<T>, node: T, alignment: string, direction: string) {
+function setContentSpacing(mainData: CssGridData<View>, node: View, alignment: string, direction: string) {
     const MARGIN_START = direction === 'column' ? $enum.BOX_STANDARD.MARGIN_LEFT : $enum.BOX_STANDARD.MARGIN_TOP;
     const MARGIN_END = direction === 'column' ? $enum.BOX_STANDARD.MARGIN_RIGHT : $enum.BOX_STANDARD.MARGIN_BOTTOM;
     const PADDING_START = direction === 'column' ? $enum.BOX_STANDARD.PADDING_LEFT : $enum.BOX_STANDARD.PADDING_TOP;
@@ -60,7 +60,7 @@ function setContentSpacing<T extends View>(mainData: CssGridData<T>, node: T, al
     if (sizeTotal > 0) {
         const dimension = direction === 'column' ? 'width' : 'height';
         const itemCount = mainData[direction].count;
-        const adjusted = new Set<T>();
+        const adjusted = new Set<View>();
         switch (alignment) {
             case 'center':
                 node.modifyBox(PADDING_START, Math.floor(sizeTotal / 2));
@@ -78,7 +78,7 @@ function setContentSpacing<T extends View>(mainData: CssGridData<T>, node: T, al
             case 'space-around': {
                 const marginSize = Math.floor(sizeTotal / (itemCount * 2));
                 for (let i = 0; i < itemCount; i++) {
-                    for (const item of new Set<T>($util.flatArray(rowData[i]))) {
+                    for (const item of new Set<View>($util.flatArray(rowData[i]))) {
                         if (!adjusted.has(item)) {
                             item.modifyBox(MARGIN_START, marginSize);
                             if (i < itemCount - 1) {
@@ -98,7 +98,7 @@ function setContentSpacing<T extends View>(mainData: CssGridData<T>, node: T, al
                 const marginSize = Math.floor(sizeTotal / ((itemCount - 1) * 2));
                 const rowLast = $util.flatArray(rowData[itemCount - 1]);
                 for (let i = 0; i < itemCount; i++) {
-                    for (const item of new Set<T>($util.flatArray(rowData[i]))) {
+                    for (const item of new Set<View>($util.flatArray(rowData[i]))) {
                         if (!adjusted.has(item)) {
                             if (i > 0) {
                                 item.modifyBox(MARGIN_START, marginSize);
@@ -121,7 +121,7 @@ function setContentSpacing<T extends View>(mainData: CssGridData<T>, node: T, al
                 const rowLast = $util.flatArray(rowData[itemCount - 1]);
                 for (let i = 0; i < itemCount; i++) {
                     const marginMiddle = Math.floor(marginSize / 2);
-                    for (const item of new Set<T>($util.flatArray(rowData[i]))) {
+                    for (const item of new Set<View>($util.flatArray(rowData[i]))) {
                         if (!adjusted.has(item)) {
                             item.modifyBox(MARGIN_START, i === 0 ? marginSize : marginMiddle);
                             if (i < itemCount - 1 && !rowLast.some(cell => cell === item)) {

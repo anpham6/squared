@@ -10,12 +10,12 @@ const $const = squared.base.lib.constant;
 const $enum = squared.base.lib.enumeration;
 const $util = squared.lib.util;
 
-function transferData<T extends View>(parent: T, siblings: T[])  {
-    let destination: GridCellData<T> | undefined;
+function transferData(parent: View, siblings: View[])  {
+    let destination: GridCellData<View> | undefined;
     for (let i = 0; i < siblings.length; i++) {
         const item = siblings[i];
         if (destination) {
-            const source: GridCellData<T> = item.data($const.EXT_NAME.GRID, 'cellData');
+            const source: GridCellData<View> = item.data($const.EXT_NAME.GRID, 'cellData');
             if (source) {
                 for (const attr in source) {
                     switch (typeof source[attr]) {

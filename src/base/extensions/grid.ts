@@ -9,7 +9,7 @@ import { BOX_STANDARD } from '../lib/enumeration';
 
 const $util = squared.lib.util;
 
-function getRowIndex<T extends Node>(columns: T[][], target: T) {
+function getRowIndex(columns: Node[][], target: Node) {
     for (const column of columns) {
         const index = column.findIndex(item => $util.withinRange(target.linear.top, item.linear.top) || target.linear.top > item.linear.top && target.linear.top < item.linear.bottom);
         if (index !== -1) {

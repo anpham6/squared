@@ -70,9 +70,7 @@ function createFileAsset(pathname: string, filename: string, content: string): F
     };
 }
 
-function caseInsensitive(a: string | string[], b: string | string[]) {
-    return a.toString().toLowerCase() >= b.toString().toLowerCase() ? 1 : -1;
-}
+const caseInsensitive = (a: string | string[], b: string | string[]) => a.toString().toLowerCase() >= b.toString().toLowerCase() ? 1 : -1;
 
 export default class File<T extends View> extends squared.base.File<T> implements android.base.File<T> {
     public saveAllToDisk(data: SessionData<$NodeList<T>>) {

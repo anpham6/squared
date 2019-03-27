@@ -1,10 +1,8 @@
 import { spliceArray, withinRange } from './util';
 
-type T = squared.base.Node;
+type Node = squared.base.Node;
 
-function withinViewport(rect: DOMRect | ClientRect) {
-    return !(rect.left < 0 && rect.top < 0 && Math.abs(rect.left) >= rect.width && Math.abs(rect.top) >= rect.height);
-}
+const withinViewport = (rect: DOMRect | ClientRect) => !(rect.left < 0 && rect.top < 0 && Math.abs(rect.left) >= rect.width && Math.abs(rect.top) >= rect.height);
 
 export function newBoxRect(): BoxRect {
     return {
@@ -107,7 +105,7 @@ export function isElementVisible(element: Element, viewport = false) {
 export function getFirstChildElement(element: Element | null, lineBreak = false) {
     if (element) {
         for (let i = 0; i < element.childNodes.length; i++) {
-            const node = getElementAsNode<T>(<Element> element.childNodes[i]);
+            const node = getElementAsNode<Node>(<Element> element.childNodes[i]);
             if (node && node.naturalElement && (!node.excluded || (lineBreak && node.lineBreak))) {
                 return node.element;
             }
@@ -119,7 +117,7 @@ export function getFirstChildElement(element: Element | null, lineBreak = false)
 export function getLastChildElement(element: Element | null, lineBreak = false) {
     if (element) {
         for (let i = element.childNodes.length - 1; i >= 0; i--) {
-            const node = getElementAsNode<T>(<Element> element.childNodes[i]);
+            const node = getElementAsNode<Node>(<Element> element.childNodes[i]);
             if (node && node.naturalElement && (!node.excluded || (lineBreak && node.lineBreak))) {
                 return node.element;
             }
@@ -162,7 +160,7 @@ export function getPreviousElementSibling(element: Element | null) {
     if (element) {
         element = <Element> element.previousSibling;
         while (element) {
-            const node = getElementAsNode<T>(element);
+            const node = getElementAsNode<Node>(element);
             if (node && (!node.excluded || node.lineBreak)) {
                 return node.element;
             }
@@ -176,7 +174,7 @@ export function getNextElementSibling(element: Element | null) {
     if (element) {
         element = <Element> element.nextSibling;
         while (element) {
-            const node = getElementAsNode<T>(element);
+            const node = getElementAsNode<Node>(element);
             if (node && (!node.excluded || node.lineBreak)) {
                 return node.element;
             }

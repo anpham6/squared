@@ -4,7 +4,7 @@ export default {
         '>': {
             'font': {
                 '^': 'android',
-                '@': ['fontStyle', 'fontWeight', 'font']
+                '@': ['font', 'fontStyle', 'fontWeight']
             }
         }
     }

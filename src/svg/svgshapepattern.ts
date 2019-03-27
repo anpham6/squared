@@ -15,9 +15,7 @@ import { TRANSFORM } from './lib/util';
 const $css = squared.lib.css;
 const $util = squared.lib.util;
 
-function getPercent(value: string) {
-    return $util.isPercent(value) ? parseFloat(value) / 100 : parseFloat(value);
-}
+const getPercent = (value: string) => $util.isPercent(value) ? parseFloat(value) / 100 : parseFloat(value);
 
 export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer))) implements squared.svg.SvgShapePattern {
     public drawRegion?: BoxRect;

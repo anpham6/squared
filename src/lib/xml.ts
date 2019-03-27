@@ -28,9 +28,7 @@ function replaceSectionTag(data: StringMap, value: string) {
     return value;
 }
 
-function getSectionTag(attr: string, value: string) {
-    return `((\\t*##${attr}-${value}##\\s*\\n)([\\w\\W]*?\\s*\\n)(\\t*##${attr}-${value}##\\s*\\n))`;
-}
+const getSectionTag = (attr: string, value: string) => `((\\t*##${attr}-${value}##\\s*\\n)([\\w\\W]*?\\s*\\n)(\\t*##${attr}-${value}##\\s*\\n))`;
 
 export const STRING_XMLENCODING = '<?xml version="1.0" encoding="utf-8"?>\n';
 

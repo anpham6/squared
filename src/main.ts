@@ -10,19 +10,19 @@ import * as math from './lib/math';
 import * as util from './lib/util';
 import * as xml from './lib/xml';
 
-type T = squared.base.Node;
-type Application = squared.base.Application<T>;
-type Extension = squared.base.Extension<T>;
+type Node = squared.base.Node;
+type Application = squared.base.Application<Node>;
+type Extension = squared.base.Extension<Node>;
 
 let main: Application | undefined;
-let framework: AppFramework<T> | undefined;
+let framework: AppFramework<Node> | undefined;
 let settings = <UserSettings> {};
 let system = <FunctionMap<any>> {};
 
 const extensionsAsync = new Set<Extension>();
 const optionsAsync = new Map<string, ExternalData>();
 
-export function setFramework(value: AppFramework<T>, cached = false) {
+export function setFramework(value: AppFramework<Node>, cached = false) {
     if (framework !== value) {
         const appBase = cached ? value.cached() : value.create();
         if (framework === undefined) {

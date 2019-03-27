@@ -7,33 +7,33 @@ const $util = squared.lib.util;
 
 const HTML5 = document.doctype ? document.doctype.name === 'html' : false;
 
-function setMinHeight<T extends Node>(node: T, offset: number) {
+function setMinHeight(node: Node, offset: number) {
     const minHeight = node.has('minHeight', CSS_STANDARD.LENGTH) ? node.toFloat('minHeight') : 0;
     node.css('minHeight', $util.formatPX(Math.max(offset, minHeight)));
 }
 
-function isBlockElement<T extends Node>(node: T | undefined) {
+function isBlockElement(node: Node | undefined) {
     return node ? node.blockStatic && !node.lineBreak && !node.positioned : false;
 }
 
-function getVisibleNode<T extends Node>(node: T) {
+function getVisibleNode(node: Node) {
     return node.visible || node.excluded ? node : node.renderAs || node.outerParent || node.innerChild || node;
 }
 
-function resetMargin<T extends Node>(node: T, value: number) {
+function resetMargin(node: Node, value: number) {
     node.modifyBox(value, null);
     if (node.companion) {
         node.companion.modifyBox(value, null);
     }
 }
 
-function applyMarginCollapse<T extends Node>(node: T, visibleNode: T, child: T, direction: boolean) {
+function applyMarginCollapse(node: Node, visibleNode: Node, child: Node, direction: boolean) {
     if (isBlockElement(child)) {
         if (direction) {
             if (node.borderTopWidth === 0 && node.paddingTop === 0) {
                 let replaced = false;
                 if (child.marginTop === 0 && child.borderTopWidth === 0 && child.paddingTop === 0) {
-                    const firstChild = child.firstChild as T;
+                    const firstChild = child.firstChild as Node;
                     if (isBlockElement(firstChild)) {
                         if (child.has('marginTop', CSS_STANDARD.ZERO)) {
                             if (HTML5 && firstChild.marginTop !== 0) {
@@ -70,12 +70,12 @@ function applyMarginCollapse<T extends Node>(node: T, visibleNode: T, child: T, 
                         valid = true;
                     }
                     else {
-                        let replacement: T | undefined;
+                        let replacement: Node | undefined;
                         if (child.outerParent) {
-                            replacement = child.outerParent as T;
+                            replacement = child.outerParent;
                         }
                         else if (child.innerChild) {
-                            replacement = child.innerChild as T;
+                            replacement = child.innerChild;
                         }
                         if (replacement) {
                             replacement.modifyBox(BOX_STANDARD.MARGIN_TOP, -child.marginTop, false);
@@ -93,7 +93,7 @@ function applyMarginCollapse<T extends Node>(node: T, visibleNode: T, child: T, 
             if (node.paddingBottom === 0 && node.borderBottomWidth === 0) {
                 let replaced = false;
                 if (child.paddingBottom === 0 && child.borderBottomWidth === 0 && child.marginBottom === 0) {
-                    const lastChild = child.lastChild as T;
+                    const lastChild = child.lastChild as Node;
                     if (isBlockElement(lastChild)) {
                         if (child.has('marginBottom', CSS_STANDARD.ZERO)) {
                             if (HTML5 && lastChild.marginBottom !== 0) {
@@ -130,12 +130,12 @@ function applyMarginCollapse<T extends Node>(node: T, visibleNode: T, child: T, 
                         valid = true;
                     }
                     else {
-                        let replacement: T | undefined;
+                        let replacement: Node | undefined;
                         if (child.outerParent) {
-                            replacement = child.outerParent as T;
+                            replacement = child.outerParent;
                         }
                         else if (child.innerChild) {
-                            replacement = child.innerChild as T;
+                            replacement = child.innerChild;
                         }
                         if (replacement) {
                             replacement.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, -child.marginBottom, false);
@@ -175,82 +175,84 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                         const previousSiblings = current.previousSiblings(true, true, true);
                         if (previousSiblings.length) {
                             const previous = previousSiblings.find(item => !item.floating) as T;
-                            const currentVisible = getVisibleNode(current);
-                            if (isBlockElement(previous)) {
-                                const previousVisible = getVisibleNode(previous);
-                                let marginBottom = $util.convertFloat(previous.cssInitial('marginBottom', false, true));
-                                let marginTop = $util.convertFloat(current.cssInitial('marginTop', false, true));
-                                if (previous.excluded && !current.excluded) {
-                                    const offset = Math.min(marginBottom, $util.convertFloat(previous.cssInitial('marginTop', false, true)));
-                                    if (offset < 0) {
-                                        const top = Math.abs(offset) >= marginTop ? null : offset;
-                                        currentVisible.modifyBox(BOX_STANDARD.MARGIN_TOP, top);
-                                        if (currentVisible.companion) {
-                                            currentVisible.companion.modifyBox(BOX_STANDARD.MARGIN_TOP, top);
-                                        }
-                                        processed.add(previous);
-                                    }
-                                }
-                                else if (!previous.excluded && current.excluded) {
-                                    const offset = Math.min(marginTop, $util.convertFloat(current.cssInitial('marginBottom', false, true)));
-                                    if (offset < 0) {
-                                        previousVisible.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, Math.abs(offset) >= marginBottom ? null : offset);
-                                        processed.add(current);
-                                    }
-                                }
-                                else {
-                                    if (previous.paddingBottom === 0 && previous.borderBottomWidth === 0) {
-                                        const bottomChild = previous.lastChild as T;
-                                        if (isBlockElement(bottomChild) && bottomChild.elementId === '') {
-                                            const childMarginBottom = $util.convertFloat(bottomChild.cssInitial('marginBottom', false, true));
-                                            if (childMarginBottom > marginBottom) {
-                                                marginBottom = childMarginBottom;
-                                                previous.css('marginBottom', $util.formatPX(marginBottom), true);
-                                            }
-                                            if (previous.visible) {
-                                                bottomChild.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
-                                                if (bottomChild.companion) {
-                                                    bottomChild.companion.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
-                                                }
-                                            }
-                                        }
-                                    }
-                                    if (current.borderTopWidth === 0 && current.paddingTop === 0) {
-                                        const topChild = current.firstChild as T;
-                                        if (isBlockElement(topChild) && topChild.elementId === '') {
-                                            const childMarginTop = $util.convertFloat(topChild.cssInitial('marginTop', false, true));
-                                            if (childMarginTop > marginTop) {
-                                                marginTop = childMarginTop;
-                                                current.css('marginTop', $util.formatPX(marginTop), true);
-                                            }
-                                            if (current.visible) {
-                                                topChild.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
-                                                if (topChild.companion) {
-                                                    topChild.companion.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
-                                                }
-                                            }
-                                        }
-                                    }
-                                    if (marginBottom > 0 && marginTop > 0) {
-                                        if (marginTop <= marginBottom) {
-                                            currentVisible.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
+                            if (previous) {
+                                const currentVisible = getVisibleNode(current);
+                                if (isBlockElement(previous)) {
+                                    const previousVisible = getVisibleNode(previous);
+                                    let marginBottom = $util.convertFloat(previous.cssInitial('marginBottom', false, true));
+                                    let marginTop = $util.convertFloat(current.cssInitial('marginTop', false, true));
+                                    if (previous.excluded && !current.excluded) {
+                                        const offset = Math.min(marginBottom, $util.convertFloat(previous.cssInitial('marginTop', false, true)));
+                                        if (offset < 0) {
+                                            const top = Math.abs(offset) >= marginTop ? null : offset;
+                                            currentVisible.modifyBox(BOX_STANDARD.MARGIN_TOP, top);
                                             if (currentVisible.companion) {
-                                                currentVisible.companion.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
+                                                currentVisible.companion.modifyBox(BOX_STANDARD.MARGIN_TOP, top);
+                                            }
+                                            processed.add(previous);
+                                        }
+                                    }
+                                    else if (!previous.excluded && current.excluded) {
+                                        const offset = Math.min(marginTop, $util.convertFloat(current.cssInitial('marginBottom', false, true)));
+                                        if (offset < 0) {
+                                            previousVisible.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, Math.abs(offset) >= marginBottom ? null : offset);
+                                            processed.add(current);
+                                        }
+                                    }
+                                    else {
+                                        if (previous.paddingBottom === 0 && previous.borderBottomWidth === 0) {
+                                            const bottomChild = previous.lastChild as T;
+                                            if (isBlockElement(bottomChild) && bottomChild.elementId === '') {
+                                                const childMarginBottom = $util.convertFloat(bottomChild.cssInitial('marginBottom', false, true));
+                                                if (childMarginBottom > marginBottom) {
+                                                    marginBottom = childMarginBottom;
+                                                    previous.css('marginBottom', $util.formatPX(marginBottom), true);
+                                                }
+                                                if (previous.visible) {
+                                                    bottomChild.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
+                                                    if (bottomChild.companion) {
+                                                        bottomChild.companion.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
+                                                    }
+                                                }
                                             }
                                         }
-                                        else {
-                                            previousVisible.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
-                                            if (previousVisible.companion) {
-                                                previousVisible.companion.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
+                                        if (current.borderTopWidth === 0 && current.paddingTop === 0) {
+                                            const topChild = current.firstChild as T;
+                                            if (isBlockElement(topChild) && topChild.elementId === '') {
+                                                const childMarginTop = $util.convertFloat(topChild.cssInitial('marginTop', false, true));
+                                                if (childMarginTop > marginTop) {
+                                                    marginTop = childMarginTop;
+                                                    current.css('marginTop', $util.formatPX(marginTop), true);
+                                                }
+                                                if (current.visible) {
+                                                    topChild.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
+                                                    if (topChild.companion) {
+                                                        topChild.companion.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        if (marginBottom > 0 && marginTop > 0) {
+                                            if (marginTop <= marginBottom) {
+                                                currentVisible.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
+                                                if (currentVisible.companion) {
+                                                    currentVisible.companion.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
+                                                }
+                                            }
+                                            else {
+                                                previousVisible.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
+                                                if (previousVisible.companion) {
+                                                    previousVisible.companion.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
+                                                }
                                             }
                                         }
                                     }
                                 }
-                            }
-                            else if (previous && previous.tagName === 'IMG') {
-                                const offset = current.linear.top - previous.linear.bottom;
-                                if (offset > 0 && !current.ascend(true).some(item => item.has('height'))) {
-                                    currentVisible.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
+                                else if (previous.tagName === 'IMG') {
+                                    const offset = current.linear.top - previous.linear.bottom;
+                                    if (offset > 0 && !current.ascend(true).some(item => item.has('height'))) {
+                                        currentVisible.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
+                                    }
                                 }
                             }
                         }

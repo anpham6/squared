@@ -1,7 +1,7 @@
 import { getStyle, isParentStyle } from './css';
 import { getElementAsNode } from './dom';
 
-type T = squared.base.Node;
+type Node = squared.base.Node;
 
 export const ELEMENT_BLOCK = [
     'ADDRESS',
@@ -127,7 +127,7 @@ export function isLineBreak(element: Element, excluded = true) {
         return true;
     }
     else if (excluded) {
-        const node = getElementAsNode<T>(element);
+        const node = getElementAsNode<Node>(element);
         return !!node && node.excluded && node.blockStatic;
     }
     return false;
@@ -147,7 +147,7 @@ export function hasLineBreak(element: Element, lineBreak = false, trim = false) 
             value = value.trim();
         }
         if (/\n/.test(value)) {
-            const node = getElementAsNode<T>(element);
+            const node = getElementAsNode<Node>(element);
             const whiteSpace = node ? node.css('whiteSpace') : (getStyle(element).whiteSpace || '');
             return ['pre', 'pre-wrap'].includes(whiteSpace) || element.nodeName === '#text' && isParentStyle(element, 'whiteSpace', 'pre', 'pre-wrap');
         }

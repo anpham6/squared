@@ -106,10 +106,6 @@ function convertToAnimateValue(value: AnimateValue, fromString = false) {
     return fromString && typeof value === 'string' ? '' : value;
 }
 
-function convertToString(value: AnimateValue) {
-    return Array.isArray(value) ? $util.objectMap<Point, string>(value, pt => `${pt.x},${pt.y}`).join(' ') : value.toString();
-}
-
 function getForwardValue(items: ForwardValue[], time: number) {
     let value: AnimateValue | undefined;
     if (items) {
@@ -239,10 +235,6 @@ function getRectPoints(values: number[]): Point[] {
     ];
 }
 
-function getEllipsePoints(values: number[]): SvgPoint[] {
-    return [{ x: values[0], y: values[1], rx: values[2], ry: values[values.length - 1] }];
-}
-
 function createKeyTimeMap(map: TimelineMap, keyTimes: number[], forwardMap: ForwardMap) {
     const result = new Map<number, Map<string, AnimateValue>>();
     for (const keyTime of keyTimes) {
@@ -271,10 +263,6 @@ function setTimeRange(map: TimeRangeMap, type: number, startTime: number, endTim
             map.set(endTime, type);
         }
     }
-}
-
-function getItemTime(delay: number, duration: number, keyTimes: number[], iteration: number, index: number) {
-    return Math.round(delay + (keyTimes[index] + iteration) * duration);
 }
 
 function getItemValue(item: SvgAnimate, values: string[], iteration: number, index: number, baseValue?: AnimateValue) {
@@ -551,22 +539,6 @@ function setTransformOrigin(map: TransformOriginMap, item: SvgAnimate, time: num
         map.set(time, item.transformOrigin[index]);
     }
 }
-
-function isKeyTimeFormat(transforming: boolean, keyTimeMode: number) {
-    return $util.hasBit(keyTimeMode, transforming ? SYNCHRONIZE_MODE.KEYTIME_TRANSFORM : SYNCHRONIZE_MODE.KEYTIME_ANIMATE);
-}
-
-function isFromToFormat(transforming: boolean, keyTimeMode: number) {
-    return $util.hasBit(keyTimeMode, transforming ? SYNCHRONIZE_MODE.FROMTO_TRANSFORM : SYNCHRONIZE_MODE.FROMTO_ANIMATE);
-}
-function playableAnimation(item: SvgAnimate) {
-    return item.playable || item.animationElement && item.duration !== -1;
-}
-
-function cloneKeyTimes(item: SvgAnimate): [number[], string[], string[] | undefined] {
-    return [item.keyTimes.slice(0), item.values.slice(0), item.keySplines ? item.keySplines.slice(0) : undefined];
-}
-
 function checkPartialKeyTimes(keyTimes: number[], values: string[], keySplines: string[] | undefined, baseValue?: AnimateValue) {
     if (keyTimes[keyTimes.length - 1] < 1) {
         keyTimes.push(1);
@@ -577,9 +549,21 @@ function checkPartialKeyTimes(keyTimes: number[], values: string[], keySplines: 
     }
 }
 
-function getStartIteration(time: number, delay: number, duration: number) {
-    return Math.floor(Math.max(0, time - delay) / duration);
-}
+const getItemTime = (delay: number, duration: number, keyTimes: number[], iteration: number, index: number) => Math.round(delay + (keyTimes[index] + iteration) * duration);
+
+const getEllipsePoints = (values: number[]): SvgPoint[] => [{ x: values[0], y: values[1], rx: values[2], ry: values[values.length - 1] }];
+
+const convertToString = (value: AnimateValue) => Array.isArray(value) ? $util.objectMap<Point, string>(value, pt => `${pt.x},${pt.y}`).join(' ') : value.toString();
+
+const isKeyTimeFormat = (transforming: boolean, keyTimeMode: number) => $util.hasBit(keyTimeMode, transforming ? SYNCHRONIZE_MODE.KEYTIME_TRANSFORM : SYNCHRONIZE_MODE.KEYTIME_ANIMATE);
+
+const isFromToFormat = (transforming: boolean, keyTimeMode: number) => $util.hasBit(keyTimeMode, transforming ? SYNCHRONIZE_MODE.FROMTO_TRANSFORM : SYNCHRONIZE_MODE.FROMTO_ANIMATE);
+
+const playableAnimation = (item: SvgAnimate) => item.playable || item.animationElement && item.duration !== -1;
+
+const cloneKeyTimes = (item: SvgAnimate): [number[], string[], string[] | undefined] => [item.keyTimes.slice(0), item.values.slice(0), item.keySplines ? item.keySplines.slice(0) : undefined];
+
+const getStartIteration = (time: number, delay: number, duration: number) => Math.floor(Math.max(0, time - delay) / duration);
 
 export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
     return class extends Base implements squared.svg.SvgSynchronize {

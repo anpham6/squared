@@ -2,7 +2,7 @@ import { parseColor } from './color';
 import { getElementAsNode, getElementCache, setElementCache } from './dom';
 import { REGEXP_COMPILED, STRING_PATTERN, calculate, capitalize, convertCamelCase, convertPX, convertLength, convertPercent, isLength, resolvePath } from './util';
 
-type T = squared.base.Node;
+type Node = squared.base.Node;
 
 export const BOX_POSITION = ['top', 'right', 'bottom', 'left'];
 export const BOX_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
@@ -139,7 +139,7 @@ export function getStyle(element: Element | null, cache = true): CSSStyleDeclara
                 return style;
             }
             else {
-                const node = getElementAsNode<T>(element);
+                const node = getElementAsNode<Node>(element);
                 if (node && node.plainText) {
                     return node.unsafe('styleMap') as CSSStyleDeclaration;
                 }
@@ -186,7 +186,7 @@ export function getInheritedStyle(element: Element | null, attr: string, exclude
 
 export function isInheritedStyle(element: Element | null, attr: string) {
     if (hasComputedStyle(element) && element.parentElement) {
-        const node = getElementAsNode<T>(element);
+        const node = getElementAsNode<Node>(element);
         if (node && !node.cssInitial(attr)) {
             return getStyle(element)[attr] === getStyle(element.parentElement)[attr];
         }
@@ -206,7 +206,7 @@ export function getInlineStyle(element: Element, attr: string) {
 }
 
 export function getAttribute(element: Element, attr: string, computed = false) {
-    const node = getElementAsNode<T>(element);
+    const node = getElementAsNode<Node>(element);
     const name = convertCamelCase(attr);
     return node && node.cssInitial(name) || getInlineStyle(element, name) || getNamedItem(element, attr) || computed && getStyle(element)[name] as string || '';
 }
