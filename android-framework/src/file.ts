@@ -7,12 +7,12 @@ import { XMLNS_ANDROID } from './lib/constant';
 import { BUILD_ANDROID } from './lib/enumeration';
 import { replaceLength } from './lib/util';
 
-import COLOR_TMPL from './template/resource/color';
-import DIMEN_TMPL from './template/resource/dimen';
-import FONT_TMPL from './template/resource/font';
-import STRING_TMPL from './template/resource/string';
-import STRINGARRAY_TMPL from './template/resource/string-array';
-import STYLE_TMPL from './template/resource/style';
+import COLOR_TMPL from './template/resources/color';
+import DIMEN_TMPL from './template/resources/dimen';
+import FONTFAMILY_TMPL from './template/font-family';
+import STRING_TMPL from './template/resources/string';
+import STRINGARRAY_TMPL from './template/resources/string-array';
+import STYLE_TMPL from './template/resources/style';
 
 import $NodeList = squared.base.NodeList;
 
@@ -208,7 +208,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                         font: `@font/${name + (fontStyle === 'normal' && fontWeight === 'normal' ? '' : (fontStyle !== 'normal' ? `_${fontStyle}` : '') + (fontWeight !== 'normal' ? `_${fontWeight}` : ''))}`
                     });
                 }
-                let output = $xml.replaceTab($xml.applyTemplate('font-family', FONT_TMPL, data), this.userSettings.insertSpaces);
+                let output = $xml.replaceTab($xml.applyTemplate('font-family', FONTFAMILY_TMPL, data), this.userSettings.insertSpaces);
                 if (settings.targetAPI < BUILD_ANDROID.OREO) {
                     output = output.replace(/\s+android:/g, ' app:');
                 }

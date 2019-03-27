@@ -8,17 +8,6 @@ type XMLTagData = {
 };
 
 const STRING_ROOT = '__ROOT__';
-
-const REGEXP_CREATE = {
-    ATTRIBUTE: /\s*((\w+:)?\w+="[^"]*)?{~\w+}"?/g,
-    COLLECTION: /\n*({%\w+}\n)+/g,
-    LINEBREAK: /\n\n/g
-};
-const REGEXP_FORMAT = {
-    ITEM: /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g,
-    OPENTAG: /\s*>$/,
-    CLOSETAG: /\/>\n*$/
-};
 const REGEXP_INDENT = /^(\t+)(.*)$/;
 
 function replaceSectionTag(data: StringMap, value: string) {
@@ -27,8 +16,6 @@ function replaceSectionTag(data: StringMap, value: string) {
     }
     return value;
 }
-
-const getSectionTag = (attr: string, value: string) => `((\\t*##${attr}-${value}##\\s*\\n)([\\w\\W]*?\\s*\\n)(\\t*##${attr}-${value}##\\s*\\n))`;
 
 export const STRING_XMLENCODING = '<?xml version="1.0" encoding="utf-8"?>\n';
 
@@ -88,103 +75,9 @@ export function replaceTab(value: string, spaces = 4, preserve = false) {
     return value;
 }
 
-export function parseTemplate(value: string) {
-    const result: StringMap = {};
-    function parseSection(section: string) {
-        const data: StringMap = {};
-        const pattern = /(\t*<<(\w+)>>)\n*[\w\W]*\n*\1/g;
-        let match: RegExpExecArray | null;
-        while ((match = pattern.exec(section)) !== null) {
-            match[0] = match[0]
-                .replace(new RegExp(`^${match[1]}\\n`), '')
-                .replace(new RegExp(`${match[1]}$`), '');
-            data[match[2]] = replaceSectionTag(parseSection(match[0]), match[0]);
-        }
-        Object.assign(result, data);
-        return data;
-    }
-    result[STRING_ROOT] = replaceSectionTag(parseSection(value), value);
-    return result;
-}
-
-export function createTemplate(templates: StringMap, data: ExternalData, format = false, index?: string) {
-    if (index === undefined) {
-        index = STRING_ROOT;
-    }
-    let output: string = templates[index] || '';
-    for (const attr in data) {
-        if (data[attr] !== undefined && data[attr] !== null) {
-            const unknown = data[attr];
-            let result: string | false = '';
-            let hash = '';
-            if (Array.isArray(unknown)) {
-                hash = '%';
-                if (Array.isArray(unknown[0])) {
-                    const match = new RegExp(getSectionTag(attr, 'start') + `([\\w\\W]*?)` + getSectionTag(attr, 'end')).exec(output);
-                    if (match) {
-                        const depth = (unknown[0] as any[][]).length;
-                        const guard = { ...templates };
-                        let tagStart = '';
-                        let tagEnd = '';
-                        for (let i = 0; i < depth; i++) {
-                            const key = `${index}_${attr}_${i}`;
-                            guard[key] = match[3];
-                            tagStart += createTemplate(guard, unknown[0][i], format, key);
-                            tagEnd = match[8] + tagEnd;
-                        }
-                        output = output
-                            .replace(match[1], tagStart)
-                            .replace(match[6], tagEnd);
-                    }
-                    else {
-                        result = false;
-                    }
-                }
-                else if (unknown.length === 0 || typeof unknown[0] !== 'object') {
-                    result = false;
-                }
-                else {
-                    for (let i = 0; i < unknown.length; i++) {
-                        result += createTemplate(templates, unknown[i], format, attr.toString());
-                    }
-                    if (result !== '') {
-                        result = trimEnd(result, '\n');
-                    }
-                    else {
-                        result = false;
-                    }
-                }
-            }
-            else {
-                hash = '[&~]';
-                result = typeof unknown === 'boolean' ? false : unknown.toString();
-            }
-            if (!result) {
-                if (new RegExp(`{&${attr}}`).test(output)) {
-                    return '';
-                }
-                else if (hash === '%') {
-                    output = output.replace(new RegExp(`[ \\t]*{%${attr}}\\n*`), '');
-                }
-            }
-            else if (result !== '') {
-                output = output.replace(new RegExp(`{${hash + attr}}`), result);
-            }
-        }
-    }
-    if (index === STRING_ROOT) {
-        output = output
-            .replace(REGEXP_CREATE.ATTRIBUTE, '')
-            .replace(REGEXP_CREATE.COLLECTION, '\n');
-        if (format) {
-            output = formatTemplate(output);
-        }
-    }
-    return output;
-}
-
 export function applyTemplate(tagName: string, template: ExternalData, children: ExternalData[], depth?: number) {
     const tag = template[tagName];
+    const nested = tag['>>'] === true;
     let output = '';
     let indent = '';
     if (depth === undefined) {
@@ -194,7 +87,11 @@ export function applyTemplate(tagName: string, template: ExternalData, children:
     else {
         indent += '\t'.repeat(depth);
     }
-    for (const item of children) {
+    for (let i = 0; i < children.length; i++) {
+        const item = children[i];
+        const include: string | undefined = tag['#'] && item[tag['#']];
+        const closed = !nested && !include;
+        let valid = false;
         output += indent + '<' + tagName;
         if (tag['@']) {
             for (const attr of tag['@']) {
@@ -205,34 +102,65 @@ export function applyTemplate(tagName: string, template: ExternalData, children:
         }
         if (tag['>']) {
             let innerText = '';
+            const childDepth = depth + (nested ? i : 0) + 1;
             for (const name in tag['>']) {
                 if (Array.isArray(item[name])) {
-                    innerText += applyTemplate(name, tag['>'], item[name], depth + 1);
+                    innerText += applyTemplate(name, tag['>'], item[name], childDepth);
                 }
                 else if (typeof item[name] === 'object') {
-                    innerText += applyTemplate(name, tag['>'], [item[name]], depth + 1);
+                    innerText += applyTemplate(name, tag['>'], [item[name]], childDepth);
                 }
             }
             if (innerText !== '') {
                 output += '>\n' +
-                          innerText +
-                          indent + `</${tagName}>\n`;
+                          innerText;
+                if (closed) {
+                    output += indent + `</${tagName}>\n`;
+                }
             }
             else {
-                output += ' />\n';
+                output += closed ? ' />\n' : '>\n';
             }
+            valid = true;
         }
         else if (tag['~']) {
-            output += `>${item.innerText}</${tagName}>\n`;
+            output += '>' + item.innerText;
+            if (closed) {
+                output += `</${tagName}>\n`;
+            }
+            valid = true;
         }
-        else {
+        else if (closed) {
             output += ' />\n';
+        }
+        if (include) {
+            if (!valid) {
+                output += '>\n';
+            }
+            output += include;
+            if (!nested) {
+                output += indent + `</${tagName}>\n`;
+            }
+        }
+        if (nested) {
+            indent += '\t';
+        }
+    }
+    if (nested) {
+        for (let i = 0; i < children.length; i++) {
+            indent = indent.substring(1);
+            output += indent + `</${tagName}>\n`;
         }
     }
     return output;
 }
 
 export function formatTemplate(value: string, closeEmpty = true, startIndent = -1, char = '\t') {
+    const REGEXP_FORMAT = {
+        ITEM: /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g,
+        OPENTAG: /\s*>$/,
+        CLOSETAG: /\/>\n*$/
+    };
     const lines: XMLTagData[] = [];
     let match: RegExpExecArray | null;
     while ((match = REGEXP_FORMAT.ITEM.exec(value)) !== null) {
@@ -281,6 +209,80 @@ export function formatTemplate(value: string, closeEmpty = true, startIndent = -
             output += (startIndent > 0 ? char.repeat(startIndent) : '') + line.tag + '\n';
         }
         output += line.value;
+    }
+    return output;
+}
+
+export function parseTemplate(value: string) {
+    const result: StringMap = {};
+    function parseSection(section: string) {
+        const data: StringMap = {};
+        const pattern = /(\t*<<(\w+)>>)\n*[\w\W]*\n*\1/g;
+        let match: RegExpExecArray | null;
+        while ((match = pattern.exec(section)) !== null) {
+            match[0] = match[0]
+                .replace(new RegExp(`^${match[1]}\\n`), '')
+                .replace(new RegExp(`${match[1]}$`), '');
+            data[match[2]] = replaceSectionTag(parseSection(match[0]), match[0]);
+        }
+        Object.assign(result, data);
+        return data;
+    }
+    result[STRING_ROOT] = replaceSectionTag(parseSection(value), value);
+    return result;
+}
+
+export function createTemplate(templates: StringMap, data: ExternalData, format = false, index?: string) {
+    if (index === undefined) {
+        index = STRING_ROOT;
+    }
+    let output: string = templates[index] || '';
+    for (const attr in data) {
+        if (data[attr] !== undefined && data[attr] !== null) {
+            const unknown = data[attr];
+            let result: string | false = '';
+            let hash = '';
+            if (Array.isArray(unknown)) {
+                hash = '%';
+                if (unknown.length === 0 || typeof unknown[0] !== 'object') {
+                    result = false;
+                }
+                else {
+                    for (let i = 0; i < unknown.length; i++) {
+                        result += createTemplate(templates, unknown[i], format, attr.toString());
+                    }
+                    if (result !== '') {
+                        result = trimEnd(result, '\n');
+                    }
+                    else {
+                        result = false;
+                    }
+                }
+            }
+            else {
+                hash = '[&~]';
+                result = typeof unknown === 'boolean' ? false : unknown.toString();
+            }
+            if (!result) {
+                if (new RegExp(`{&${attr}}`).test(output)) {
+                    return '';
+                }
+                else if (hash === '%') {
+                    output = output.replace(new RegExp(`[ \\t]*{%${attr}}\\n*`), '');
+                }
+            }
+            else {
+                output = output.replace(new RegExp(`{${hash + attr}}`), result);
+            }
+        }
+    }
+    if (index === STRING_ROOT) {
+        output = output
+            .replace(/\s*((\w+:)?\w+="[^"]*)?{~\w+}"?/g, '')
+            .replace(/\n*({%\w+}\n)+/g, '\n');
+        if (format) {
+            output = formatTemplate(output);
+        }
     }
     return output;
 }

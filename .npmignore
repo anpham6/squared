@@ -11,6 +11,6 @@ temp/
 .babelrc
 *.code-workspace
 package-lock.json
-rollup.config.js
+rollup.config.*
 tsconfig.json
 tslint.json

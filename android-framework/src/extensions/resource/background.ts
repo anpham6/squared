@@ -9,9 +9,9 @@ import View from '../../view';
 import { XMLNS_ANDROID } from '../../lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from '../../lib/enumeration';
 
-import LAYERLIST_TMPL from '../../template/resource/layer-list';
-import SHAPE_TMPL from '../../template/resource/shape';
-import VECTORGRADIENT_TMPL from '../../template/resource/vector-gradient';
+import LAYERLIST_TMPL from '../../template/layer-list';
+import SHAPE_TMPL from '../../template/shape';
+import VECTOR_TMPL from '../../template/vector';
 
 interface PositionAttribute {
     top?: string;
@@ -43,7 +43,6 @@ interface ShapeSolidData {
     dashGap: string;
 }
 
-const $SvgBuild = squared.svg && squared.svg.SvgBuild;
 const $enum = squared.base.lib.enumeration;
 const $color = squared.lib.color;
 const $css = squared.lib.css;
@@ -333,6 +332,11 @@ export function convertColorStops(list: ColorStop[], precision?: number) {
         });
     }
     return result;
+}
+
+export function drawRect(width: number, height: number, x = 0, y = 0, precision?: number) {
+    const result = `M${x},${y} ${x + width},${y} ${x + width},${y + height} ${x},${y + height} Z`;
+    return precision ? $math.truncateString(result, precision) : result;
 }
 
 export default class ResourceBackground<T extends View> extends squared.base.Extension<T> {
@@ -713,7 +717,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 const src = Resource.insertStoredAsset(
                                     'drawables',
                                     `${node.tagName.toLowerCase()}_${node.controlId}_gradient_${i}`,
-                                    $xml.applyTemplate('vector', VECTORGRADIENT_TMPL, [{
+                                    $xml.applyTemplate('vector', VECTOR_TMPL, [{
                                         'xmlns:android': XMLNS_ANDROID.android,
                                         'xmlns:aapt': XMLNS_ANDROID.aapt,
                                         'android:width': imageData.width || $util.formatPX(width),
@@ -721,7 +725,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         'android:viewportWidth': width.toString(),
                                         'android:viewportHeight': height.toString(),
                                         'path': {
-                                            pathData: $SvgBuild.drawRect(width, height),
+                                            pathData: drawRect(width, height),
                                             'aapt:attr': {
                                                 name: 'android:fillColor',
                                                 gradient: value

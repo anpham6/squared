@@ -167,10 +167,10 @@ declare global {
             function pushIndentArray(values: string[], depth: number, char?: string, separator?: string): string;
             function replaceIndent(value: string, depth: number, pattern: RegExp): string;
             function replaceTab(value: string, spaces?: number, preserve?: boolean): string;
-            function parseTemplate(value: string): StringMap;
-            function createTemplate(templates: StringMap, data: ExternalData, format?: boolean): string;
             function applyTemplate(tagName: string, template: ExternalData, children: ExternalData[], depth?: number): string;
             function formatTemplate(value: string, closeEmpty?: boolean, startIndent?: number, char?: string): string;
+            function parseTemplate(value: string): StringMap;
+            function createTemplate(templates: StringMap, data: ExternalData, format?: boolean): string;
         }
     }
 }
