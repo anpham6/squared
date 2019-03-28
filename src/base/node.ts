@@ -35,6 +35,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public innerChild?: T;
     public companion?: T;
     public extracted?: T[];
+    public beforePseudoChild?: T;
+    public afterPseudoChild?: T;
 
     public abstract readonly localSettings: {};
     public abstract readonly renderChildren: T[];
@@ -99,16 +101,18 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         const element = <HTMLElement> this._element;
         if (element) {
             $dom.setElementCache(element, 'node', this);
-            this.style = $dom.getElementCache(element, 'style') || $css.getStyle(element, false);
+            this.style = $dom.getElementCache(element, 'style') || $css.getStyle(element, undefined, false);
         }
         if (this.styleElement) {
             const styleMap = $dom.getElementCache(element, 'styleMap') || {};
-            const fontSize = parseInt(this.style.fontSize as string) || undefined;
-            for (let attr of Array.from(element.style)) {
-                attr = $util.convertCamelCase(attr);
-                const value = $css.checkStyleValue(element, attr, element.style[attr], this.style, fontSize);
-                if (value) {
-                    styleMap[attr] = value;
+            if (!this.pseudoElement) {
+                const fontSize = parseInt(element.style.getPropertyValue('fontSize')) || undefined;
+                for (let attr of Array.from(element.style)) {
+                    attr = $util.convertCamelCase(attr);
+                    const value = $css.checkStyleValue(element, attr, element.style.getPropertyValue(attr), undefined, fontSize);
+                    if (value) {
+                        styleMap[attr] = value;
+                    }
                 }
             }
             this._styleMap = { ...styleMap };
@@ -438,7 +442,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 this.unsetCache(attr);
             }
         }
-        return this._styleMap[attr] || this.style && this.style[attr] || '';
+        return this._styleMap[attr] || this.styleElement && this.style.getPropertyValue(attr) || this.style[attr] || '';
     }
 
     public cssApply(values: StringMap, cache = false) {
@@ -457,7 +461,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
         let value = modified ? this._styleMap[attr] : this._initial.styleMap[attr];
         if (computed && !$util.hasValue(value)) {
-            value = this.style[attr];
+            value = this.styleElement && this.style.getPropertyValue(attr) || this.style[attr];
         }
         return value || '';
     }
@@ -539,9 +543,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public cssTry(attr: string, value: string) {
         if (this.styleElement) {
             const element = <HTMLElement> this._element;
-            const current = this.css(attr);
+            let current = this.css(attr);
+            if (value === current) {
+                current = element.style.getPropertyValue(attr);
+            }
             element.style[attr] = value;
-            if (element.style[attr] === value) {
+            if (element.style.getPropertyValue(attr) === value) {
                 $dom.setElementCache(element, attr, current);
                 return true;
             }
@@ -923,7 +930,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     private convertLength(attr: string, value: string, horizontal: boolean, parent = true): string {
         if ($util.isPercent(value)) {
-            return $util.isLength(this.style[attr]) ? this.style[attr] : this.convertPX(value, horizontal, parent);
+            const unit = this.styleElement && this.style.getPropertyValue(attr) || '';
+            return $util.isLength(unit) ? unit : this.convertPX(value, horizontal, parent);
         }
         return value;
     }
@@ -1002,9 +1010,16 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get naturalElement() {
         if (this._cached.naturalElement === undefined) {
-            this._cached.naturalElement = this._element !== null && this._element.className !== '__css.placeholder';
+            this._cached.naturalElement = this._element !== null && this._element.className !== '__squared.placeholder';
         }
         return this._cached.naturalElement;
+    }
+
+    get pseudoElement() {
+        if (this._cached.pseudoElement === undefined) {
+            this._cached.pseudoElement = this._element !== null && this._element.className === '__squared.pseudo';
+        }
+        return this._cached.pseudoElement;
     }
 
     get imageElement() {
@@ -1439,24 +1454,23 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 const element = <HTMLElement> this._element;
                 switch (element.tagName) {
                     case 'INPUT':
-                    case 'BUTTON':
                     case 'IMG':
                     case 'SELECT':
                     case 'TEXTAREA':
                     case 'HR':
                         break;
                     default:
-                        if ($element.hasFreeFormText(element)) {
+                        if ($element.hasFreeFormText(element) && this.beforePseudoChild === undefined && this.afterPseudoChild === undefined) {
                             value = true;
                             for (let i = 0; i < element.children.length; i++) {
                                 const node = $dom.getElementAsNode<T>(element.children[i]);
-                                if (!(node === undefined || node.excluded || node.dataset.target)) {
+                                if (node && !node.excluded && !node.dataset.target) {
                                     value = false;
                                     break;
                                 }
                             }
                         }
-                        else if (element.children.length === 0 && !element.textContent) {
+                        else if (!element.textContent && element.children.length === 0) {
                             value = true;
                         }
                         break;
@@ -1580,15 +1594,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get textContent() {
         if (this._cached.textContent === undefined) {
-            const element = <HTMLElement> this._element;
-            let value = '';
-            if (this.htmlElement) {
-                value = element.textContent || element.innerText;
-            }
-            else if (this.plainText) {
-                value = element.textContent || '';
-            }
-            this._cached.textContent = value;
+            this._cached.textContent = (this.htmlElement || this.plainText) && (<HTMLElement> this._element).textContent || '';
         }
         return this._cached.textContent;
     }

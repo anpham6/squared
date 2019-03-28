@@ -5,7 +5,6 @@ import View from './view';
 
 import { XMLNS_ANDROID } from './lib/constant';
 import { BUILD_ANDROID } from './lib/enumeration';
-import { replaceLength } from './lib/util';
 
 import COLOR_TMPL from './template/resources/color';
 import DIMEN_TMPL from './template/resources/dimen';
@@ -29,6 +28,7 @@ type ItemValue = {
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
+const REGEXP_UNIT = /([">])(-?[\d.]+)px(["<])/g;
 const REGEXP_FILENAME = /^(.+)\/(.+?\.\w+)$/;
 
 function getFileAssets(items: string[]) {
@@ -68,6 +68,23 @@ function createFileAsset(pathname: string, filename: string, content: string): F
         filename,
         content
     };
+}
+
+function convertLength(value: string, dpi = 160, font = false) {
+    let result = parseFloat(value);
+    if (!isNaN(result)) {
+        result /= dpi / 160;
+        value = result >= 1 || result === 0 ? Math.round(result).toString() : result.toPrecision(2);
+        return value + (font ? 'sp' : 'dp');
+    }
+    return '0dp';
+}
+
+function replaceLength(value: string, dpi = 160, format = 'dp', font = false) {
+    if (format === 'dp' || font) {
+        return value.replace(REGEXP_UNIT, (match, ...capture) => capture[0] + convertLength(capture[1], dpi, font) + capture[2]);
+    }
+    return value;
 }
 
 const caseInsensitive = (a: string | string[], b: string | string[]) => a.toString().toLowerCase() >= b.toString().toLowerCase() ? 1 : -1;
@@ -341,7 +358,11 @@ export default class File<T extends View> extends squared.base.File<T> implement
             for (const [name, value] of this.stored.drawables.entries()) {
                 result.push(
                     $xml.replaceTab(
-                        replaceLength(value, settings.resolutionDPI, settings.convertPixels),
+                        replaceLength(
+                            value,
+                            settings.resolutionDPI,
+                            settings.convertPixels
+                        ),
                         settings.insertSpaces
                     ),
                     `res/drawable/${name}.xml`

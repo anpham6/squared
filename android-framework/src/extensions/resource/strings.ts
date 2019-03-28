@@ -2,11 +2,31 @@ import { ResourceStringsOptions } from '../../@types/extension';
 
 import Resource from '../../resource';
 
-import { replaceCharacter, replaceEntity } from '../../lib/util';
-
 const $enum = squared.base.lib.enumeration;
 const $css = squared.lib.css;
 const $util = squared.lib.util;
+
+function replaceCharacter(value: string) {
+    return value
+        .replace(/&nbsp;/g, '&#160;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '&quot;');
+}
+
+function replaceEntity(value: string) {
+    return value
+        .replace(/&#(\d+);/g, (match, capture) => String.fromCharCode(parseInt(capture)))
+        .replace(/\u00A0/g, '&#160;')
+        .replace(/\u2002/g, '&#8194;')
+        .replace(/\u2003/g, '&#8195;')
+        .replace(/\u2009/g, '&#8201;')
+        .replace(/\u200C/g, '&#8204;')
+        .replace(/\u200D/g, '&#8205;')
+        .replace(/\u200E/g, '&#8206;')
+        .replace(/\u200F/g, '&#8207;');
+}
 
 export default class ResourceStrings<T extends android.base.View> extends squared.base.Extension<T> {
     public readonly options: ResourceStringsOptions = {

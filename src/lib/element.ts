@@ -1,4 +1,4 @@
-import { getStyle, isParentStyle } from './css';
+import { isParentStyle } from './css';
 import { getElementAsNode } from './dom';
 
 type Node = squared.base.Node;
@@ -81,19 +81,29 @@ export const ELEMENT_INLINE = [
     'PLAINTEXT'
 ];
 
-export function createElement(parent: Element | null, block = false) {
-    const element = document.createElement(block ? 'div' : 'span');
+export function createElement(parent?: Element | null, tagName = 'span', placeholder = true, index = -1) {
+    const element = document.createElement(tagName);
     const style = element.style;
-    style.position = 'static';
-    style.margin = '0px';
-    style.padding = '0px';
-    style.border = 'none';
-    style.cssFloat = 'none';
-    style.clear = 'none';
+    if (placeholder) {
+        style.position = 'static';
+        style.margin = '0px';
+        style.padding = '0px';
+        style.border = 'none';
+        style.cssFloat = 'none';
+        style.clear = 'none';
+        element.className = '__squared.placeholder';
+    }
+    else {
+        element.className = '__squared.pseudo';
+    }
     style.display = 'none';
-    element.className = '__css.placeholder';
     if (parent) {
-        parent.appendChild(element);
+        if (index >= 0 && index < parent.childNodes.length) {
+            parent.insertBefore(element, parent.childNodes[index]);
+        }
+        else {
+            parent.appendChild(element);
+        }
     }
     return element;
 }
@@ -128,7 +138,9 @@ export function isLineBreak(element: Element, excluded = true) {
     }
     else if (excluded) {
         const node = getElementAsNode<Node>(element);
-        return !!node && node.excluded && node.blockStatic;
+        if (node) {
+            return node.excluded && node.blockStatic;
+        }
     }
     return false;
 }
@@ -147,28 +159,30 @@ export function hasLineBreak(element: Element, lineBreak = false, trim = false) 
             value = value.trim();
         }
         if (/\n/.test(value)) {
+            if (element.nodeName === '#text' && isParentStyle(element, 'whiteSpace', 'pre', 'pre-wrap')) {
+                return true;
+            }
             const node = getElementAsNode<Node>(element);
-            const whiteSpace = node ? node.css('whiteSpace') : (getStyle(element).whiteSpace || '');
-            return ['pre', 'pre-wrap'].includes(whiteSpace) || element.nodeName === '#text' && isParentStyle(element, 'whiteSpace', 'pre', 'pre-wrap');
+            return !!node && node.css('whiteSpace').substring(0, 3) === 'pre';
         }
     }
     return false;
 }
 
 export function hasFreeFormText(element: Element, whiteSpace = true) {
-    function findFreeForm(elements: NodeListOf<ChildNode> | Element[]): boolean {
-        for (let i = 0; i < elements.length; i++) {
-            const child = <Element> elements[i];
-            if (child.nodeName === '#text') {
-                if (isPlainText(child, whiteSpace) || isParentStyle(child, 'whiteSpace', 'pre', 'pre-wrap') && child.textContent && child.textContent !== '') {
-                    return true;
-                }
-            }
-            else if (findFreeForm(child.childNodes)) {
+    if (element.nodeName === '#text') {
+        return isPlainText(element, whiteSpace);
+    }
+    else if (element.childNodes) {
+        for (let i = 0; i < element.childNodes.length; i++) {
+            const item = <Element> element.childNodes[i];
+            if (item.nodeName === '#text' && isPlainText(item, whiteSpace)) {
                 return true;
             }
+            else if (item.children && item.children.length) {
+                return false;
+            }
         }
-        return false;
     }
-    return findFreeForm(element.nodeName === '#text' ? [element] : element.childNodes);
+    return false;
 }

@@ -3,7 +3,6 @@ import { ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from '.
 import View from './view';
 
 import { RESERVED_JAVA } from './lib/constant';
-import { escapeNonEntity } from './lib/util';
 
 const $Resource = squared.base.Resource;
 const $color = squared.lib.color;
@@ -11,6 +10,7 @@ const $css = squared.lib.css;
 const $util = squared.lib.util;
 
 const STORED = <ResourceStoredMapAndroid> $Resource.STORED;
+let IMAGE_FORMAT!: string[];
 
 function formatObject(obj: {}, numberAlias = false) {
     if (obj) {
@@ -51,6 +51,10 @@ function formatObject(obj: {}, numberAlias = false) {
             }
         }
     }
+}
+
+function escapeNonEntity(value: string) {
+    return value.replace(/&(?!#?[A-Za-z0-9]{2,};)/g, '&amp;');
 }
 
 export default class Resource<T extends View> extends squared.base.Resource<T> implements android.base.Resource<T> {
@@ -194,25 +198,14 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
     }
 
     public static addImage(images: StringMap, prefix = '') {
-        let src = '';
         if (images.mdpi) {
-            src = $util.fromLastIndexOf(images.mdpi);
+            const src = $util.fromLastIndexOf(images.mdpi);
             const format = $util.fromLastIndexOf(src, '.').toLowerCase();
-            switch (format) {
-                case 'bmp':
-                case 'cur':
-                case 'gif':
-                case 'ico':
-                case 'jpg':
-                case 'png':
-                    src = Resource.insertStoredAsset('images', prefix + src.substring(0, src.length - format.length - 1).replace(/[^\w+]/g, '_'), images);
-                    break;
-                default:
-                    src = '';
-                    break;
+            if (IMAGE_FORMAT.includes(format)) {
+                return Resource.insertStoredAsset('images', prefix + src.substring(0, src.length - format.length - 1).replace(/[^\w+]/g, '_'), images);
             }
         }
-        return src;
+        return '';
     }
 
     public static addImageUrl(value: string, prefix = '') {
@@ -247,6 +240,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
         STORED.dimens = new Map();
         STORED.drawables = new Map();
         STORED.animators = new Map();
+        IMAGE_FORMAT = application.controllerHandler.localSettings.supported.imageFormat;
     }
 
     get userSettings() {

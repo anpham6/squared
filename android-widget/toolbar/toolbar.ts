@@ -42,7 +42,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             if (element.dataset.target) {
                 const target = document.getElementById(element.dataset.target);
                 if (target && element.parentElement !== target && !$util.includes(target.dataset.use, WIDGET_NAME.COORDINATOR)) {
-                    this.application.parseElements.add(element);
+                    this.application.rootElements.add(element);
                 }
             }
         }
@@ -146,7 +146,6 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             appBarNode.parent = parent;
             appBarNode.controlId = $utilA.stripId(appBarOptions.android.id);
             appBarNode.setControlType($constA.SUPPORT_ANDROID.APPBAR, $enumA.CONTAINER_NODE.BLOCK);
-            application.processing.cache.append(appBarNode, appBarChildren.length > 0);
             if (hasCollapsingToolbar) {
                 $util.assignEmptyValue(collapsingToolbarOptions, 'android', 'id', `${node.documentId}_collapsingtoolbar`);
                 $util.assignEmptyValue(collapsingToolbarOptions, 'android', 'fitsSystemWindows', 'true');
@@ -156,11 +155,10 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                 $util.assignEmptyValue(collapsingToolbarOptions, 'app', 'layout_scrollFlags', 'scroll|exitUntilCollapsed');
                 $util.assignEmptyValue(collapsingToolbarOptions, 'app', 'toolbarId', node.documentId);
                 collapsingToolbarNode = this.createPlaceholder(node, collapsingToolbarChildren, target);
-                collapsingToolbarNode.parent = appBarNode;
                 if (collapsingToolbarNode) {
+                    collapsingToolbarNode.parent = appBarNode;
                     collapsingToolbarNode.each(item => item.dataset.target = (collapsingToolbarNode as T).controlId);
                     collapsingToolbarNode.setControlType($constA.SUPPORT_ANDROID.COLLAPSING_TOOLBAR, $enumA.CONTAINER_NODE.BLOCK);
-                    application.processing.cache.append(collapsingToolbarNode, collapsingToolbarChildren.length > 0);
                 }
             }
         }
@@ -289,7 +287,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
     }
 
     private createPlaceholder(node: T, children: T[], target?: string) {
-        const placeholder = this.application.createNode($element.createElement(node.actualParent ? node.actualParent.element : null, node.block));
+        const placeholder = this.application.createNode($element.createElement(node.actualParent ? node.actualParent.element : null, node.block ? 'div' : 'span'), true, children.length > 0);
         if (target) {
             placeholder.dataset.target = target;
         }

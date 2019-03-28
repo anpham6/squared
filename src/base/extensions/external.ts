@@ -22,7 +22,7 @@ export default abstract class External<T extends Node> extends Extension<T> {
 
     public init(element: HTMLElement) {
         if (this.included(element)) {
-            this.application.parseElements.add(element);
+            this.application.rootElements.add(element);
         }
         return false;
     }

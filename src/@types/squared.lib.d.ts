@@ -26,7 +26,7 @@ declare global {
             function checkStyleValue(element: Element, attr: string, value: string, style?: CSSStyleDeclaration, fontSize?: number): string;
             function hasComputedStyle(element: Element | null): element is HTMLElement;
             function getDataSet(element: HTMLElement | null, prefix: string): StringMap;
-            function getStyle(element: Element | null, cache?: boolean): CSSStyleDeclaration;
+            function getStyle(element: Element | null, target?: string, cache?: boolean): CSSStyleDeclaration;
             function getFontSize(element: Element | null): number;
             function isParentStyle(element: Element | null, attr: string, ...styles: string[]): boolean;
             function getInheritedStyle(element: Element | null, attr: string, exclude?: RegExp, ...tagNames: string[]): string;
@@ -39,6 +39,7 @@ declare global {
             function calculateVar(element: HTMLElement | SVGElement, value: string, attr?: string, dimension?: number): number | undefined;
             function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number): RectPosition;
             function resolveURL(value: string): string;
+            function insertStyleSheetRule(value: string, index?: number): HTMLStyleElement;
         }
 
         namespace dom {
@@ -63,7 +64,7 @@ declare global {
         namespace element {
             export import ELEMENT_BLOCK = $element.ELEMENT_BLOCK;
             export import ELEMENT_INLINE = $element.ELEMENT_INLINE;
-            function createElement(parent: Element | null, block?: boolean): HTMLElement;
+            function createElement(parent?: Element | null, tagName?: string, placeholder?: boolean, index?: number): HTMLElement;
             function isPlainText(element: Element, whiteSpace?: boolean): boolean;
             function isLineBreak(element: Element, excluded?: boolean): boolean;
             function hasLineBreak(element: Element, lineBreak?: boolean, trim?: boolean): boolean;

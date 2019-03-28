@@ -4,22 +4,22 @@ declare global {
     namespace squared.base {
         interface Application<T extends Node> {
             framework: number;
+            nodeConstructor: Constructor<T>;
             controllerHandler: Controller<T>;
             resourceHandler: Resource<T>;
             extensionManager: ExtensionManager<T>;
-            nodeConstructor: Constructor<T>;
             userSettings: UserSettings;
             initialized: boolean;
             closed: boolean;
             readonly builtInExtensions: ObjectMap<Extension<T>>;
             readonly session: AppSession<T, NodeList<T>>;
-            readonly parseElements: Set<Element>;
+            readonly rootElements: Set<Element>;
             readonly processing: AppProcessing<T, NodeList<T>>;
-            readonly extensions: Set<Extension<T>>;
+            readonly extensions: Extension<T>[];
             readonly viewData: FileAsset[];
             readonly sessionData: SessionData<NodeList<T>>;
             readonly nextId: number;
-            readonly size: number;
+            readonly length: number;
             registerController(handler: Controller<T>): void;
             registerResource(handler: Resource<T>): void;
             reset(): void;
@@ -33,7 +33,7 @@ declare global {
             addRenderLayout(layout: Layout<T>, outerParent?: T): boolean;
             addRenderTemplate(parent: T, node: T, template: NodeTemplate<T> | undefined, index?: number): boolean;
             addImagePreload(element: HTMLImageElement | undefined): void;
-            createNode(element: Element): T;
+            createNode(element: Element, append?: boolean, delegate?: boolean): T;
             resolveTarget(target: string): T | undefined;
             toString(): string;
         }

@@ -20,7 +20,9 @@ export default abstract class ExtensionManager<T extends Node> implements square
         else {
             if ((ext.framework === 0 || $util.hasBit(ext.framework, this.application.framework)) && ext.dependencies.every(item => !!this.retrieve(item.name))) {
                 ext.application = this.application;
-                this.application.extensions.add(ext);
+                if (!this.application.extensions.includes(ext)) {
+                    this.application.extensions.push(ext);
+                }
                 return true;
             }
         }
@@ -28,7 +30,13 @@ export default abstract class ExtensionManager<T extends Node> implements square
     }
 
     public exclude(ext: Extension<T>) {
-        return this.application.extensions.delete(ext);
+        for (let i = 0; i < this.application.extensions.length; i++) {
+            if (this.application.extensions[i] === ext) {
+                this.application.extensions.splice(i, 1);
+                return true;
+            }
+        }
+        return false;
     }
 
     public retrieve(name: string) {

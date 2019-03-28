@@ -59,7 +59,7 @@
     "@babel/plugin-transform-for-of": "^7.4.0",
     "@babel/preset-env": "^7.4.2",
     "rimraf": "^2.6.3",
-    "rollup": "^1.7.3",
+    "rollup": "^1.7.4",
     "rollup-plugin-babel": "^4.3.2",
     "rollup-plugin-terser": "^4.0.4",
     "systemjs": "^0.21.6",

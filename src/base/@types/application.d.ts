@@ -17,25 +17,28 @@ export interface UserSettings {
 }
 
 export interface ControllerSettings {
-    baseTemplate: string;
-    floatPrecision: number;
     layout: {
         pathName: string;
         fileExtension: string;
+        baseTemplate: string;
     };
     svg: {
-        enabled: boolean
+        enabled: boolean;
+    };
+    supported: {
+        imageFormat: string[];
     };
     unsupported: {
-        excluded: Set<string>,
-        tagName: Set<string>
+        excluded: Set<string>;
+        tagName: Set<string>;
     };
-    relative: {
-        superscriptFontScale: number;
-        subscriptFontScale: number;
+    precision: {
+        standardFloat: number;
     };
-    constraint: {
-        withinParentBottomOffset: number;
+    deviations: {
+        subscriptBottomOffset: number;
+        superscriptTopOffset: number;
+        parentBottomOffset: number;
     };
 }
 

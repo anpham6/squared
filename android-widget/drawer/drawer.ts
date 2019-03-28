@@ -35,7 +35,7 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
                     item.dataset.use = (item.dataset.use ? `${item.dataset.use}, ` : '') + $const.EXT_NAME.EXTERNAL;
                 }
             }
-            this.application.parseElements.add(element);
+            this.application.rootElements.add(element);
             return true;
         }
         return false;

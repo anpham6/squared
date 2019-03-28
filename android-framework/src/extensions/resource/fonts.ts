@@ -73,12 +73,12 @@ const FONTWEIGHT_ANDROID = {
 };
 
 const FONT_STYLE = {
-    'fontFamily': 'android:fontFamily="{0}"',
-    'fontStyle': 'android:textStyle="{0}"',
-    'fontWeight': 'android:fontWeight="{0}"',
-    'fontSize': 'android:textSize="{0}"',
-    'color': 'android:textColor="@color/{0}"',
-    'backgroundColor': 'android:background="@color/{0}"'
+    'fontFamily': 'android:fontFamily="',
+    'fontStyle': 'android:textStyle="',
+    'fontWeight': 'android:fontWeight="',
+    'fontSize': 'android:textSize="',
+    'color': 'android:textColor="@color/',
+    'backgroundColor': 'android:background="@color/'
 };
 
 if ($util.isUserAgent($util.USER_AGENT.EDGE)) {
@@ -147,7 +147,6 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     let fontFamily = stored.fontFamily.split($util.REGEXP_COMPILED.SEPARATOR)[0].replace(/"/g, '').toLowerCase();
                     let fontStyle = '';
                     let fontWeight = '';
-                    stored.color = Resource.addColor(stored.color);
                     if (this.options.fontResourceValue && FONTREPLACE_ANDROID[fontFamily]) {
                         fontFamily = this.options.defaultSystemFont || FONTREPLACE_ANDROID[fontFamily];
                     }
@@ -175,10 +174,11 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         Resource.STORED.fonts.set(fontFamily, fonts);
                     }
                 }
+                stored.color = Resource.addColor(stored.color);
                 for (let i = 0; i < styleKeys.length; i++) {
                     const value: string = stored[styleKeys[i]];
                     if (value) {
-                        const attr = $util.formatString(FONT_STYLE[styleKeys[i]], value);
+                        const attr = FONT_STYLE[styleKeys[i]] + value + '"';
                         if (sorted[i] === undefined) {
                             sorted[i] = {};
                         }

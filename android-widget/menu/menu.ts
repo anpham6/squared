@@ -105,7 +105,7 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
                 if (valid) {
                     let current = element.parentElement;
                     while (current) {
-                        if (current.tagName === 'NAV' && this.application.parseElements.has(current)) {
+                        if (current.tagName === 'NAV' && this.application.rootElements.has(current)) {
                             valid = false;
                             break;
                         }
@@ -120,7 +120,7 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
                         item.style.display = 'block';
                     }
                 });
-                this.application.parseElements.add(<HTMLElement> element);
+                this.application.rootElements.add(<HTMLElement> element);
             }
         }
         return false;
@@ -131,7 +131,7 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
     }
 
     public processNode(node: T) {
-        const parentAs = this.application.createNode($element.createElement(null));
+        const parentAs = this.application.createNode($element.createElement(), false);
         node.documentRoot = true;
         node.alignmentType |= $enum.NODE_ALIGNMENT.AUTO_LAYOUT;
         node.setControlType(NAVIGATION.MENU, $enumA.CONTAINER_NODE.INLINE);

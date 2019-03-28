@@ -13,15 +13,14 @@ const $element = squared.lib.element;
 const $math = squared.lib.math;
 const $util = squared.lib.util;
 
+const REGEXP_LINEBREAK = /\s*<br[^>]*>\s*/g;
 const STRING_COLORSTOP = `(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[a-zA-Z\\d]{3,}|[a-z]+)\\s*(${$util.STRING_PATTERN.LENGTH_PERCENTAGE}|${$util.STRING_PATTERN.ANGLE}|(?:${$util.STRING_PATTERN.CALC}(?=,)|${$util.STRING_PATTERN.CALC}))?,?\\s*`;
 const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\("?.+?"?\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|circle|ellipse|closest-side|closest-corner|farthest-side|farthest-corner)?(?:\\s*at [\\w %]+)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
-const REGEXP_TAGNAME = /(<([^>]+)>)/ig;
-const REGEXP_LINEBREAK = /\s*<br[^>]*>\s*/g;
 
 function removeExcluded(node: Node, element: Element, attr: string) {
     let value: string = element[attr];
     for (const item of node.actualChildren) {
-        if ((item.excluded || item.dataset.target) && $util.isString(item[attr])) {
+        if ((item.excluded || item.pseudoElement || item.dataset.target) && $util.isString(item[attr])) {
             value = value.replace(item[attr], '');
         }
     }
@@ -134,9 +133,8 @@ function parseAngle(value: string) {
 }
 
 function replaceWhiteSpace(node: Node, element: Element, value: string): [string, boolean] {
-    const renderParent = node.renderParent;
-    if (node.multiline && renderParent && !renderParent.layoutVertical) {
-        value = value.replace(/^\s*\n/, '');
+    if (node.multiline && !node.documentParent.layoutVertical) {
+        value = value.replace(/^\s*?\n/, '');
     }
     switch (node.css('whiteSpace')) {
         case 'nowrap':
@@ -144,7 +142,7 @@ function replaceWhiteSpace(node: Node, element: Element, value: string): [string
             break;
         case 'pre':
         case 'pre-wrap':
-            if (renderParent && !renderParent.layoutVertical) {
+            if (!node.documentParent.layoutVertical) {
                 value = value.replace(/^\n/, '');
             }
             value = value
@@ -362,8 +360,8 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                     backgroundPositionX: '',
                     backgroundPositionY: '',
                     backgroundImage: undefined
-                } as any;
-                if (node.css('border') !== '0px none rgb(0, 0, 0)') {
+                };
+                if (!node.css('border').startsWith('0px none')) {
                     boxStyle.borderTop = undefined;
                     boxStyle.borderRight = undefined;
                     boxStyle.borderBottom = undefined;
@@ -600,7 +598,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                     borderRadius = [A, B || A, C, D || C, E, F || E, G, H || G];
                                 }
                                 if (borderRadius.every(radius => radius === borderRadius[0])) {
-                                    if (borderRadius[0] === '0px') {
+                                    if (borderRadius[0] === '0px' || borderRadius[0] === '') {
                                         continue;
                                     }
                                     borderRadius.length = 1;
@@ -803,7 +801,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                             else if ($element.hasLineBreak(element, true)) {
                                 value = removeExcluded(node, element, 'innerHTML')
                                     .replace(REGEXP_LINEBREAK, '\\n')
-                                    .replace(REGEXP_TAGNAME, '');
+                                    .replace($util.REGEXP_COMPILED.TAGNAME, '');
                             }
                             else {
                                 value = removeExcluded(node, element, 'textContent');

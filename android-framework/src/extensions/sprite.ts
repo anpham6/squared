@@ -23,7 +23,6 @@ export default class <T extends android.base.View> extends squared.base.extensio
                 resource: $enum.NODE_RESOURCE.IMAGE_SOURCE
             });
             parent.appendTry(node, container);
-            this.application.processing.cache.append(container, false);
             node.setControlType(CONTAINER_ANDROID.IMAGE, CONTAINER_NODE.IMAGE);
             node.exclude({
                 procedure: $enum.NODE_PROCEDURE.AUTOFIT,

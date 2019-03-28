@@ -168,7 +168,7 @@ export const TRANSFORM = {
         return undefined;
     },
     matrix(element: SVGElement, value?: string): SvgMatrix | undefined {
-        const match = new RegExp(REGEXP_TRANSFORM.MATRIX).exec(value || $css.getStyle(element, true).transform || '');
+        const match = new RegExp(REGEXP_TRANSFORM.MATRIX).exec(value || $css.getStyle(element).transform || '');
         if (match) {
             switch (match[1]) {
                 case 'matrix':

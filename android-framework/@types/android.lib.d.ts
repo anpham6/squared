@@ -36,13 +36,9 @@ declare global {
             function stripId(value: string): string;
             function createViewAttribute(options?: ExternalData): ViewAttribute;
             function createStyleAttribute(options?: ExternalData): Required<StyleAttribute>;
-            function convertLength(value: string, dpi?: number, font?: boolean): string;
-            function replaceLength(value: string, dpi?: number, format?: string, font?: boolean): string;
-            function replaceRTL(value: string, rtl: boolean, api: number): string;
-            function replaceCharacter(value: string): string;
-            function replaceEntity(value: string): string;
-            function escapeNonEntity(value: string): string;
+            function localizeString(value: string, rtl: boolean, api: number): string;
             function getXmlNs(...values: string[]): string;
+            function getRootNs(value: string): string;
         }
     }
 }

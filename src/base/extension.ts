@@ -121,6 +121,6 @@ export default abstract class Extension<T extends Node> implements squared.base.
     public afterFinalize() {}
 
     get installed() {
-        return this.application.extensions ? this.application.extensions.has(this) : false;
+        return !!this.application && this.application.extensions.includes(this);
     }
 }

@@ -5,7 +5,7 @@ import { Constraint, LocalSettings } from './@types/node';
 import { AXIS_ANDROID, CONTAINER_ANDROID, ELEMENT_ANDROID, LAYOUT_ANDROID, RESERVED_JAVA } from './lib/constant';
 import { API_ANDROID, DEPRECATED_ANDROID } from './lib/customization';
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
-import { replaceRTL, stripId } from './lib/util';
+import { localizeString, stripId } from './lib/util';
 
 import $NodeList = squared.base.NodeList;
 import $Resource = squared.base.Resource;
@@ -406,7 +406,7 @@ export default (Base: Constructor<squared.base.Node>) => {
 
         public localizeString(value: string) {
             if (this.hasProcedure($enum.NODE_PROCEDURE.LOCALIZATION)) {
-                return replaceRTL(value, this.localSettings.supportRTL, this.localSettings.targetAPI);
+                return localizeString(value, this.localSettings.supportRTL, this.localSettings.targetAPI);
             }
             return value;
         }

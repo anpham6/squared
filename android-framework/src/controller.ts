@@ -8,7 +8,7 @@ import ViewGroup from './viewgroup';
 
 import { AXIS_ANDROID, BOX_ANDROID, CONTAINER_ANDROID } from './lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
-import { createViewAttribute, getRootNs, replaceLength } from './lib/util';
+import { createViewAttribute, getRootNs } from './lib/util';
 
 import $Layout = squared.base.Layout;
 import $NodeList = squared.base.NodeList;
@@ -321,36 +321,35 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     public readonly localSettings: ControllerSettings = {
-        baseTemplate: $xml.STRING_XMLENCODING,
-        floatPrecision: 3,
         layout: {
             pathName: 'res/layout',
-            fileExtension: 'xml'
+            fileExtension: 'xml',
+            baseTemplate: $xml.STRING_XMLENCODING
         },
         svg: {
             enabled: false
+        },
+        supported: {
+            imageFormat: ['bmp', 'cur', 'gif', 'ico', 'jpg', 'png']
         },
         unsupported: {
             excluded: new Set(['BR']),
             tagName: new Set(['OPTION', 'INPUT:hidden', 'MAP', 'AREA'])
         },
-        relative: {
-            superscriptFontScale: -4,
-            subscriptFontScale: -4
+        precision: {
+            standardFloat: 3
         },
-        constraint: {
-            withinParentBottomOffset: 3.5
+        deviations: {
+            subscriptBottomOffset: -4,
+            superscriptTopOffset: -4,
+            parentBottomOffset: 3.5
         }
     };
 
     public finalize(data: SessionData<$NodeList<T>>) {
         for (const view of data.templates) {
             view.content = $xml.replaceTab(
-                replaceLength(
-                    view.content.replace(/{#0}/, getRootNs(view.content)),
-                    this.userSettings.resolutionDPI,
-                    this.userSettings.convertPixels
-                ),
+                view.content.replace(/{#0}/, getRootNs(view.content)),
                 this.userSettings.insertSpaces
             );
         }
@@ -864,7 +863,6 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                 });
                                 parent.appendTry(node, container);
                                 node.parent = container;
-                                this.cache.append(container);
                                 if (width > 0) {
                                     container.android('layout_width', width < parent.box.width ? $util.formatPX(width) : 'match_parent');
                                 }
@@ -998,10 +996,10 @@ export default class Controller<T extends View> extends squared.base.Controller<
         if (node.inlineVertical) {
             switch (node.verticalAlign) {
                 case 'sub':
-                    node.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, Math.ceil(node.fontSize / this.localSettings.relative.subscriptFontScale));
+                    node.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, Math.ceil(node.fontSize / this.localSettings.deviations.subscriptBottomOffset));
                     break;
                 case 'super':
-                    node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.ceil(node.fontSize / this.localSettings.relative.superscriptFontScale));
+                    node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.ceil(node.fontSize / this.localSettings.deviations.superscriptTopOffset));
                     break;
             }
         }
@@ -1091,11 +1089,11 @@ export default class Controller<T extends View> extends squared.base.Controller<
     public renderSpace(width: string, height = '', columnSpan = 0, rowSpan = 0, options?: ViewAttribute) {
         options = createViewAttribute(options);
         if ($util.isPercent(width)) {
-            options.android.layout_columnWeight = (parseFloat(width) / 100).toPrecision(this.localSettings.floatPrecision);
+            options.android.layout_columnWeight = (parseFloat(width) / 100).toPrecision(this.localSettings.precision.standardFloat);
             width = '0px';
         }
         if ($util.isPercent(height)) {
-            options.android.layout_rowWeight = (parseFloat(height) / 100).toPrecision(this.localSettings.floatPrecision);
+            options.android.layout_rowWeight = (parseFloat(height) / 100).toPrecision(this.localSettings.precision.standardFloat);
             height = '0px';
         }
         if (columnSpan > 0) {
@@ -1191,7 +1189,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     }
                     if (percent) {
                         const position = Math.abs(node[dimension][LT] - documentParent.box[LT]) / documentParent.box[horizontal ? 'width' : 'height'];
-                        location = parseFloat((opposite ? 1 - position : position).toPrecision(this.localSettings.floatPrecision));
+                        location = parseFloat((opposite ? 1 - position : position).toPrecision(this.localSettings.precision.standardFloat));
                         usePercent = true;
                         beginPercent += 'percent';
                     }
@@ -1271,7 +1269,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     public createNodeWrapper(node: T, parent?: T, controlName?: string, containerType?: number) {
-        const container = this.application.createNode($element.createElement(node.actualParent ? node.actualParent.element : null, node.block));
+        const container = this.application.createNode($element.createElement(node.actualParent ? node.actualParent.element : null, node.block ? 'div' : 'span'), false);
         if (node.documentRoot) {
             container.documentRoot = true;
             node.documentRoot = false;
@@ -1741,7 +1739,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 }
                 if (percent > 0) {
                     item.android('layout_width', '0px');
-                    item.app('layout_constraintWidth_percent', percent.toPrecision(this.localSettings.floatPrecision));
+                    item.app('layout_constraintWidth_percent', percent.toPrecision(this.localSettings.precision.standardFloat));
                 }
             }
             chainVertical.push(column);
@@ -1912,7 +1910,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     private withinParentBottom(bottom: number, boxBottom: number) {
-        return $util.withinRange(bottom, boxBottom, this.localSettings.constraint.withinParentBottomOffset);
+        return $util.withinRange(bottom, boxBottom, this.localSettings.deviations.parentBottomOffset);
     }
 
     get userSettings() {
@@ -1949,7 +1947,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             target.localSettings = {
                 targetAPI: settings.targetAPI !== undefined ? settings.targetAPI : BUILD_ANDROID.LATEST,
                 supportRTL: settings.supportRTL !== undefined ? settings.supportRTL : true,
-                floatPrecision: this.localSettings.floatPrecision
+                floatPrecision: this.localSettings.precision.standardFloat
             };
         };
     }

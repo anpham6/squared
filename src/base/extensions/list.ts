@@ -20,40 +20,44 @@ export default abstract class List<T extends Node> extends Extension<T> {
     }
 
     public condition(node: T) {
-        const length = node.length;
-        if (length && super.condition(node)) {
-            const floated = new Set<string>();
-            let blockStatic = 0;
-            let inlineVertical = 0;
-            let floating = 0;
-            let blockAlternate = 0;
-            let imageType = 0;
-            let listType = 0;
-            for (let i = 0; i < length; i++) {
-                const item = node.children[i];
-                const listStyleType = item.css('listStyleType') !== 'none';
-                const singleImage = hasSingleImage(item);
-                if (item.tagName !== 'LI' && !listStyleType && singleImage) {
-                    imageType++;
+        if (super.condition(node)) {
+            const length = node.length;
+            if (length) {
+                const floated = new Set<string>();
+                let blockStatic = 0;
+                let inlineVertical = 0;
+                let floating = 0;
+                let blockAlternate = 0;
+                let imageType = 0;
+                let listType = 0;
+                for (let i = 0; i < length; i++) {
+                    const item = node.children[i];
+                    const listStyleType = item.css('listStyleType') !== 'none';
+                    const singleImage = hasSingleImage(item);
+                    if (item.display === 'list-item') {
+                        if (listStyleType || singleImage || item.beforePseudoChild) {
+                            listType++;
+                        }
+                    }
+                    else if (singleImage && !listStyleType) {
+                        imageType++;
+                    }
+                    if (item.blockStatic) {
+                        blockStatic++;
+                    }
+                    if (item.inlineVertical) {
+                        inlineVertical++;
+                    }
+                    if (item.floating) {
+                        floated.add(item.float);
+                        floating++;
+                    }
+                    else if (i === 0 || i === length - 1 || item.blockStatic || node.children[i - 1].blockStatic && node.children[i + 1].blockStatic) {
+                        blockAlternate++;
+                    }
                 }
-                if (item.display === 'list-item' && (listStyleType || singleImage)) {
-                    listType++;
-                }
-                if (item.blockStatic) {
-                    blockStatic++;
-                }
-                if (item.inlineVertical) {
-                    inlineVertical++;
-                }
-                if (item.floating) {
-                    floated.add(item.float);
-                    floating++;
-                }
-                else if (i === 0 || i === length - 1 || item.blockStatic || node.children[i - 1].blockStatic && node.children[i + 1].blockStatic) {
-                    blockAlternate++;
-                }
+                return (imageType === length || listType > 0) && (blockStatic === length || inlineVertical === length || floating === length && floated.size === 1 || blockAlternate === length);
             }
-            return (imageType === length || listType > 0) && (blockStatic === length || inlineVertical === length || floating === length && floated.size === 1 || blockAlternate === length);
         }
         return false;
     }
@@ -62,13 +66,13 @@ export default abstract class List<T extends Node> extends Extension<T> {
         let i = 0;
         node.each(item => {
             const mainData = List.createDataAttribute();
-            if (item.display === 'list-item' || item.has('listStyleType') || hasSingleImage(item)) {
-                let src = item.css('listStyleImage');
-                if (src !== '' && src !== 'none') {
-                    mainData.imageSrc = src;
+            const listStyleType = item.css('listStyleType');
+            if (item.display === 'list-item' || listStyleType && listStyleType !== 'none' || hasSingleImage(item)) {
+                if (item.has('listStyleImage')) {
+                    mainData.imageSrc = item.css('listStyleImage');
                 }
                 else {
-                    switch (item.css('listStyleType')) {
+                    switch (listStyleType) {
                         case 'disc':
                             mainData.ordinal = '●';
                             break;
@@ -96,13 +100,13 @@ export default abstract class List<T extends Node> extends Extension<T> {
                             mainData.ordinal = `${$util.convertRoman(i + 1)}.`;
                             break;
                         case 'none':
-                            src = '';
+                            let src = '';
                             let position = '';
                             if (!item.visibleStyle.backgroundRepeat) {
                                 src = item.css('backgroundImage');
                                 position = item.css('backgroundPosition');
                             }
-                            if (src !== '' && src !== 'none') {
+                            if (src && src !== 'none') {
                                 mainData.imageSrc = src;
                                 mainData.imagePosition = position;
                                 item.exclude({ resource: NODE_RESOURCE.IMAGE_SOURCE });

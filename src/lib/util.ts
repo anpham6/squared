@@ -20,6 +20,7 @@ interface UtilRegExpPattern {
     PROTOCOL: RegExp;
     SEPARATOR: RegExp;
     ATTRIBUTE: RegExp;
+    TAGNAME: RegExp;
     CUSTOMPROPERTY: RegExp;
     LEADINGSPACE: RegExp;
     TRAILINGSPACE: RegExp;
@@ -36,6 +37,7 @@ const NUMERALS = [
     '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'
 ];
 const UNIT_TYPE = 'px|em|ch|pc|pt|vw|vh|vmin|vmax|mm|cm|in';
+const CACHE_CAMELCASE: StringMap = {};
 
 export const enum USER_AGENT {
     CHROME = 2,
@@ -64,6 +66,7 @@ export const REGEXP_COMPILED: UtilRegExpPattern = {
     ANGLE: new RegExp(`^${STRING_PATTERN.ANGLE}$`),
     CALC: new RegExp(`^${STRING_PATTERN.CALC}$`),
     URL: new RegExp(STRING_PATTERN.URL),
+    TAGNAME: /(<([^>]+)>)/g,
     PROTOCOL: /^[A-Za-z]+:\/\//,
     SEPARATOR: /\s*,\s*/,
     ATTRIBUTE: /([^\s]+)="([^"]+)"/,
@@ -138,6 +141,9 @@ export function convertUnderscore(value: string) {
 }
 
 export function convertCamelCase(value: string, char = '-') {
+    if (CACHE_CAMELCASE[value]) {
+        return CACHE_CAMELCASE[value];
+    }
     let result = '';
     let previous = '';
     for (let i = 0; i < value.length; i++) {
@@ -151,6 +157,7 @@ export function convertCamelCase(value: string, char = '-') {
         }
         previous = value[i];
     }
+    CACHE_CAMELCASE[value] = result;
     return result;
 }
 

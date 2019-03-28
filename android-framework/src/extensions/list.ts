@@ -9,13 +9,14 @@ import { CONTAINER_NODE } from '../lib/enumeration';
 import { createViewAttribute } from '../lib/util';
 
 import $Layout = squared.base.Layout;
-import $NodeList = squared.base.NodeList;
 
 const $const = squared.base.lib.constant;
 const $enum = squared.base.lib.enumeration;
 const $css = squared.lib.css;
 const $element = squared.lib.element;
 const $util = squared.lib.util;
+
+const MINWIDTH_INSIDE = 24;
 
 export default class <T extends View> extends squared.base.extensions.List<T> {
     public processNode(node: T, parent: T) {
@@ -61,7 +62,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             else if (parent.item(0) === node) {
                 paddingLeft += parentLeft;
             }
-            let ordinal = mainData.ordinal === '' ? node.find(item => item.float === 'left' && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) as T : undefined;
+            let ordinal = !mainData.ordinal ? node.find(item => item.float === 'left' && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) as T : undefined;
             if (ordinal) {
                 const layout = new $Layout(parent, ordinal);
                 if (ordinal.inlineText || ordinal.length === 0) {
@@ -139,7 +140,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                             }
                         )
                     );
-                    minWidth = 24;
+                    minWidth = MINWIDTH_INSIDE;
                 }
                 else if (columnCount === 3) {
                     node.android('layout_columnSpan', '2');
@@ -159,7 +160,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                             minWidth = Math.max(0, minWidth - left);
                         }
                     }
-                    else if (mainData.ordinal !== '') {
+                    else if (mainData.ordinal) {
                         element.innerHTML = mainData.ordinal;
                         ordinal.setControlType(CONTAINER_ANDROID.TEXT, CONTAINER_NODE.TEXT);
                     }
@@ -173,8 +174,9 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         paddingTop: node.paddingTop > 0 ? $util.formatPX(node.paddingTop) : '',
                         paddingRight: gravity === 'right' ? $util.formatPX(paddingRight) : '',
                         paddingLeft: gravity === '' && !image ? $util.formatPX(paddingRight) : '',
-                        fontSize: mainData.ordinal !== '' && !/[A-Za-z\d]+\./.test(mainData.ordinal) && ordinal.toInt('fontSize') > 12 ? '12px' : ''
+                        fontSize: mainData.ordinal && !mainData.ordinal.endsWith('.') ? $util.formatPX(ordinal.toInt('fontSize') * 0.75) : ''
                     });
+                    ordinal.apply(options);
                     if (!inside) {
                         ordinal.mergeGravity('gravity', paddingLeft > 20 ? node.localizeString(gravity) : 'center_horizontal');
                     }
@@ -184,9 +186,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     if (left) {
                         ordinal.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, left);
                     }
-                    ordinal.apply(options);
                     ordinal.render(parent);
-                    this.application.processing.cache.append(ordinal, false);
                     this.application.addRenderTemplate(
                         parent,
                         ordinal,
@@ -204,18 +204,17 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 node.android('layout_columnWeight', '1');
             }
             if (node.length && node.every(item => item.baseline)) {
-                const linearData = $NodeList.linearData(node.children);
-                if (linearData.linearX || linearData.linearY) {
+                const layout = new $Layout(
+                    parent,
+                    node,
+                    CONTAINER_NODE.LINEAR,
+                    0,
+                    node.children as T[]
+                );
+                if (layout.linearX || layout.linearY) {
+                    layout.add(layout.linearX ? $enum.NODE_ALIGNMENT.HORIZONTAL : $enum.NODE_ALIGNMENT.VERTICAL);
                     return {
-                        output: this.application.renderNode(
-                            new $Layout(
-                                parent,
-                                node,
-                                CONTAINER_NODE.LINEAR,
-                                linearData.linearX ? $enum.NODE_ALIGNMENT.HORIZONTAL : $enum.NODE_ALIGNMENT.VERTICAL,
-                                node.children as T[]
-                            )
-                        ),
+                        output: this.application.renderNode(layout),
                         next: true
                     };
                 }

@@ -35,6 +35,8 @@ declare global {
             renderTemplates?: NodeTemplate<Node>[];
             outerParent?: Node;
             innerChild?: Node;
+            beforePseudoChild?: Node;
+            afterPseudoChild?: Node;
             companion?: Node;
             extracted?: Node[];
             readonly localSettings: {};

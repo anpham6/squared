@@ -185,7 +185,7 @@ export function ready() {
 }
 
 export function close() {
-    if (main && !main.initialized && main.size) {
+    if (main && !main.initialized && main.length) {
         main.finalize();
     }
 }
@@ -197,7 +197,7 @@ export function reset() {
 }
 
 export function saveAllToDisk() {
-    if (main && !main.initialized && main.size) {
+    if (main && !main.initialized && main.length) {
         if (!main.closed) {
             main.finalize();
         }

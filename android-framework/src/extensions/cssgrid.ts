@@ -299,7 +299,6 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 });
                 parent.appendTry(node, container);
                 container.render(parent);
-                this.application.processing.cache.append(container, false);
                 node.inheritBox($enum.BOX_STANDARD.MARGIN, container);
                 applyLayout(container, 'column', 'width');
                 applyLayout(container, 'row', 'height');

@@ -6,10 +6,8 @@ import { BUILD_ANDROID } from './enumeration';
 
 const $util = squared.lib.util;
 
-const REGEXP_UNIT = /([">])(-)?(\d+(?:\.\d+)?px)(["<])/g;
-
 export function stripId(value: string) {
-    return value ? value.replace(/@\+?id\//, '') : '';
+    return value ? value.replace(/^@\+?id\//, '') : '';
 }
 
 export function createViewAttribute(options?: ExternalData): ViewAttribute {
@@ -40,24 +38,7 @@ export function createStyleAttribute(options?: ExternalData) {
     return result;
 }
 
-export function convertLength(value: string, dpi = 160, font = false) {
-    let result = parseFloat(value);
-    if (!isNaN(result)) {
-        result /= dpi / 160;
-        value = result >= 1 || result === 0 ? Math.floor(result).toString() : result.toPrecision(2);
-        return value + (font ? 'sp' : 'dp');
-    }
-    return '0dp';
-}
-
-export function replaceLength(value: string, dpi = 160, format = 'dp', font = false) {
-    if (format === 'dp' || font) {
-        return value.replace(REGEXP_UNIT, (match, ...capture) => capture[0] + (capture[1] || '') + convertLength(capture[2], dpi, font) + capture[3]);
-    }
-    return value;
-}
-
-export function replaceRTL(value: string, rtl: boolean, api: number) {
+export function localizeString(value: string, rtl: boolean, api: number) {
     if (rtl && api >= BUILD_ANDROID.JELLYBEAN_1) {
         switch (value) {
             case 'left':
@@ -95,32 +76,6 @@ export function replaceRTL(value: string, rtl: boolean, api: number) {
         }
     }
     return value;
-}
-
-export function replaceCharacter(value: string) {
-    return value
-        .replace(/&nbsp;/g, '&#160;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/'/g, "\\'")
-        .replace(/"/g, '&quot;');
-}
-
-export function replaceEntity(value: string) {
-    return value
-        .replace(/&#(\d+);/g, (match, capture) => String.fromCharCode(parseInt(capture)))
-        .replace(/\u00A0/g, '&#160;')
-        .replace(/\u2002/g, '&#8194;')
-        .replace(/\u2003/g, '&#8195;')
-        .replace(/\u2009/g, '&#8201;')
-        .replace(/\u200C/g, '&#8204;')
-        .replace(/\u200D/g, '&#8205;')
-        .replace(/\u200E/g, '&#8206;')
-        .replace(/\u200F/g, '&#8207;');
-}
-
-export function escapeNonEntity(value: string) {
-    return value.replace(/&(?!#?[A-Za-z0-9]{2,};)/g, '&amp;');
 }
 
 export function getXmlNs(...values: string[]) {

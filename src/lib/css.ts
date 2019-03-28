@@ -1,6 +1,6 @@
 import { parseColor } from './color';
 import { getElementAsNode, getElementCache, setElementCache } from './dom';
-import { REGEXP_COMPILED, STRING_PATTERN, calculate, capitalize, convertCamelCase, convertPX, convertLength, convertPercent, isLength, resolvePath } from './util';
+import { REGEXP_COMPILED, STRING_PATTERN, USER_AGENT, calculate, capitalize, convertCamelCase, convertPX, convertLength, convertPercent, isLength, isUserAgent, resolvePath } from './util';
 
 type Node = squared.base.Node;
 
@@ -64,27 +64,27 @@ export function hasComputedStyle(element: Element | null): element is HTMLElemen
 }
 
 export function checkStyleValue(element: Element, attr: string, value: string, style?: CSSStyleDeclaration, fontSize?: number) {
-    if (style === undefined) {
-        style = getStyle(element);
-    }
     if (value === 'inherit') {
         value = getInheritedStyle(element, attr);
     }
     if (value && value !== 'initial') {
-        if (value !== style[attr]) {
-            switch (attr) {
-                case 'backgroundColor':
-                case 'borderTopColor':
-                case 'borderRightColor':
-                case 'borderBottomColor':
-                case 'borderLeftColor':
-                case 'color':
-                case 'fontSize':
-                case 'fontWeight':
-                    return style[attr];
-            }
-            if (REGEXP_COMPILED.CUSTOMPROPERTY.test(value)) {
-                return style[attr];
+        const computed = style ? style.getPropertyValue(attr) : '';
+        if (value !== computed) {
+            if (computed !== '') {
+                switch (attr) {
+                    case 'backgroundColor':
+                    case 'borderTopColor':
+                    case 'borderRightColor':
+                    case 'borderBottomColor':
+                    case 'borderLeftColor':
+                    case 'color':
+                    case 'fontSize':
+                    case 'fontWeight':
+                        return computed;
+                }
+                if (REGEXP_COMPILED.CUSTOMPROPERTY.test(value)) {
+                    return computed;
+                }
             }
             switch (attr) {
                 case 'width':
@@ -131,23 +131,24 @@ export function getDataSet(element: HTMLElement | null, prefix: string) {
     return result;
 }
 
-export function getStyle(element: Element | null, cache = true): CSSStyleDeclaration {
+export function getStyle(element: Element | null, target?: string, cache = true): CSSStyleDeclaration {
     if (element) {
+        const attr = 'style' + (target ? '::' + target : '');
         if (cache) {
-            const style = getElementCache(element, 'style');
+            const style = getElementCache(element, attr);
             if (style) {
                 return style;
             }
-            else {
+            else if (element.nodeName === '#text') {
                 const node = getElementAsNode<Node>(element);
                 if (node && node.plainText) {
-                    return node.unsafe('styleMap') as CSSStyleDeclaration;
+                    return node.unsafe('styleMap');
                 }
             }
         }
         if (hasComputedStyle(element)) {
-            const style = getComputedStyle(element);
-            setElementCache(element, 'style', style);
+            const style = getComputedStyle(element, target);
+            setElementCache(element, attr, style);
             return style;
         }
         return <CSSStyleDeclaration> {};
@@ -171,7 +172,7 @@ export function getInheritedStyle(element: Element | null, attr: string, exclude
     if (element) {
         let current = element.parentElement;
         while (current && !tagNames.includes(current.tagName)) {
-            value = getStyle(current, false)[attr] || '';
+            value = getStyle(current).getPropertyValue(attr);
             if (value === 'inherit' || exclude && exclude.test(value)) {
                 value = '';
             }
@@ -195,7 +196,7 @@ export function isInheritedStyle(element: Element | null, attr: string) {
 }
 
 export function getInlineStyle(element: Element, attr: string) {
-    let value: string = hasComputedStyle(element) ? element.style[attr] : '';
+    let value = hasComputedStyle(element) ? element.style.getPropertyValue(attr) : '';
     if (!value) {
         const styleMap: StringMap = getElementCache(element, 'styleMap');
         if (styleMap) {
@@ -225,7 +226,7 @@ export function getParentAttribute(element: Element | null, attr: string) {
 }
 
 export function parseVar(element: HTMLElement | SVGElement, value: string) {
-    const style = getComputedStyle(element);
+    const style = getStyle(element);
     let match: RegExpMatchArray | null;
     while ((match = new RegExp(`${STRING_PATTERN.VAR}`).exec(value)) !== null) {
         let propertyValue = style.getPropertyValue(match[1]).trim();
@@ -378,4 +379,22 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
 export function resolveURL(value: string) {
     const match = value.match(REGEXP_COMPILED.URL);
     return match ? resolvePath(match[1]) : '';
+}
+
+export function insertStyleSheetRule(value: string, index = 0) {
+    const style = document.createElement('style');
+    if (isUserAgent(USER_AGENT.SAFARI)) {
+        style.appendChild(document.createTextNode(''));
+    }
+    document.head.appendChild(style);
+    const sheet = style.sheet;
+    if (sheet && typeof sheet['insertRule'] === 'function') {
+        try {
+            (sheet as any).insertRule(value, index);
+        }
+        catch {
+            return null;
+        }
+    }
+    return style;
 }
