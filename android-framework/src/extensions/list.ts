@@ -118,7 +118,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     paddingLeft += node.paddingLeft;
                     node.modifyBox($enum.BOX_STANDARD.PADDING_LEFT, null);
                 }
-                const paddingRight = (paddingLeft * 0.2) / (image ? 2 : 1);
+                const paddingRight = (paddingLeft * 0.15) / (image ? 2 : 1);
                 let minWidth = paddingLeft;
                 const options = createViewAttribute({
                     android: {

@@ -4,7 +4,6 @@ declare global {
     namespace squared.base {
         interface Application<T extends Node> {
             framework: number;
-            nodeConstructor: Constructor<T>;
             controllerHandler: Controller<T>;
             resourceHandler: Resource<T>;
             extensionManager: ExtensionManager<T>;
@@ -42,9 +41,9 @@ declare global {
             constructor(
                 framework: number,
                 nodeConstructor: Constructor<T>,
-                controllerConstructor: Constructor<Controller<T>>,
-                resourceConstructor: Constructor<Resource<T>>,
-                extensionManagerConstructor: Constructor<ExtensionManager<T>>
+                ControllerConstructor: Constructor<Controller<T>>,
+                ResourceConstructor: Constructor<Resource<T>>,
+                ExtensionManagerConstructor: Constructor<ExtensionManager<T>>
             );
         }
     }

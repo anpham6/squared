@@ -38,6 +38,7 @@ declare global {
             function parseVar(element: HTMLElement | SVGElement, value: string): string | undefined;
             function calculateVar(element: HTMLElement | SVGElement, value: string, attr?: string, dimension?: number): number | undefined;
             function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number): RectPosition;
+            function convertListStyle(name: string, value: number, valueAsDefault?: boolean): string;
             function resolveURL(value: string): string;
             function insertStyleSheetRule(value: string, index?: number): HTMLStyleElement;
         }

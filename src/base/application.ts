@@ -16,15 +16,13 @@ const $element = squared.lib.element;
 const $util = squared.lib.util;
 
 const REGEXP_CACHED: ObjectMap<RegExp> = {};
+let NodeConstructor!: Constructor<Node>;
 
 function checkPositionStatic(node: Node, parent?: Node) {
     const previousSiblings = node.previousSiblings();
     const nextSiblings = node.nextSiblings();
     if (!previousSiblings.some(item => item.multiline || item.excluded && !item.blockStatic) && (nextSiblings.every(item => item.blockStatic || item.lineBreak || item.excluded) || parent && node.element === $dom.getLastChildElement(parent.element))) {
-        node.cssApply({
-            display: 'inline-block',
-            verticalAlign: 'top'
-        }, true);
+        node.cssApply({ display: 'inline-block', verticalAlign: 'top' }, true);
         node.positionStatic = true;
         return true;
     }
@@ -94,14 +92,15 @@ export default class Application<T extends Node> implements squared.base.Applica
 
     constructor(
         public framework: number,
-        public nodeConstructor: Constructor<T>,
-        controllerConstructor: Constructor<T>,
-        resourceConstructor: Constructor<T>,
-        extensionManagerHandler: Constructor<T>)
+        nodeConstructor: Constructor<T>,
+        ControllerConstructor: Constructor<T>,
+        ResourceConstructor: Constructor<T>,
+        ExtensionManagerConstructor: Constructor<T>)
     {
-        this.controllerHandler = <Controller<T>> (new controllerConstructor(this, this.processing.cache) as unknown);
-        this.resourceHandler = <Resource<T>> (new resourceConstructor(this, this.processing.cache) as unknown);
-        this.extensionManager = <ExtensionManager<T>> (new extensionManagerHandler(this, this.processing.cache) as unknown);
+        NodeConstructor = nodeConstructor;
+        this.controllerHandler = <Controller<T>> (new ControllerConstructor(this, this.processing.cache) as unknown);
+        this.resourceHandler = <Resource<T>> (new ResourceConstructor(this, this.processing.cache) as unknown);
+        this.extensionManager = <ExtensionManager<T>> (new ExtensionManagerConstructor(this, this.processing.cache) as unknown);
     }
 
     public registerController(handler: Controller<T>) {
@@ -446,7 +445,7 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     public createNode(element: Element, append = true, delegate = false) {
-        const node = new this.nodeConstructor(this.nextId, element, this.controllerHandler.afterInsertNode);
+        const node = new NodeConstructor(this.nextId, element, this.controllerHandler.afterInsertNode) as T;
         if (append) {
             this.processing.cache.append(node, delegate);
         }
@@ -481,7 +480,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         }
         const rootNode = this.cascadeParentNode(documentRoot);
         if (rootNode) {
-            rootNode.parent = new this.nodeConstructor(0, documentRoot.parentElement || document.body, this.controllerHandler.afterInsertNode);
+            rootNode.parent = new NodeConstructor(0, documentRoot.parentElement || document.body, this.controllerHandler.afterInsertNode);
             rootNode.siblingIndex = 0;
             rootNode.documentRoot = true;
             rootNode.documentParent = rootNode.parent;
@@ -1599,15 +1598,17 @@ export default class Application<T extends Node> implements squared.base.Applica
         }
         else if (!this.controllerHandler.localSettings.svg.enabled || element.parentElement instanceof HTMLElement) {
             node = this.createNode(element, false);
-            if (!this.controllerHandler.localSettings.unsupported.excluded.has(element.tagName) && this.conditionElement(element) || node.pseudoElement) {
-                if (!this.userSettings.exclusionsDisabled) {
-                    node.setExclusions();
+            if (!node.pseudoElement) {
+                if (!this.controllerHandler.localSettings.unsupported.excluded.has(element.tagName) && this.conditionElement(element)) {
+                    if (!this.userSettings.exclusionsDisabled) {
+                        node.setExclusions();
+                    }
+                    this.controllerHandler.applyDefaultStyles(element);
                 }
-                this.controllerHandler.applyDefaultStyles(element);
-            }
-            else {
-                node.visible = false;
-                node.excluded = true;
+                else {
+                    node.visible = false;
+                    node.excluded = true;
+                }
             }
         }
         return node;
@@ -1645,7 +1646,7 @@ export default class Application<T extends Node> implements squared.base.Applica
 
     private createPseduoElement(element: HTMLElement, target: string) {
         const styleMap: StringMap = $dom.getElementCache(element, `styleMap::${target}`);
-        if (styleMap && styleMap.content) {
+        if (styleMap && styleMap.content !== undefined) {
             let value: string = styleMap.content;
             if (value === 'inherit') {
                 let current = element.parentElement;
@@ -1682,6 +1683,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 case 'inherit':
                 case 'no-open-quote':
                 case 'no-close-quote':
+                case '""':
                     break;
                 case 'open-quote':
                     content = target === 'before' ? '&quot;' : '';
@@ -1704,31 +1706,37 @@ export default class Application<T extends Node> implements squared.base.Applica
                     }
                     else {
                         if (REGEXP_CACHED.CSS_CONTENT === undefined) {
-                            REGEXP_CACHED.CSS_CONTENT = /\s*(?:attr\((\w+)\)|(counters?)\((.+?)(?:,\s+"([^"]*)")?(?:,\s+(\w+))?\)|"([^"]+)")\s*/g;
+                            REGEXP_CACHED.CSS_CONTENT = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:, ([a-z\-]+))?\)|(counters)\(([^,]+), "([^"]*)"(?:, ([a-z\-]+))?\)|"([^"]+)")\s*/g;
                         }
                         let match: RegExpExecArray | null;
                         while ((match = REGEXP_CACHED.CSS_CONTENT.exec(value)) !== null) {
                             if (match[1]) {
                                 content += $css.getNamedItem(element, match[1].trim());
                             }
-                            else if (match[2]) {
-                                const counterName = match[3];
-                                const getCounterValue = (name: string, reset = false) => {
+                            else if (match[2] || match[5]) {
+                                const counterType = match[2] === 'counter';
+                                let counterName: string;
+                                let styleName: string;
+                                if (counterType) {
+                                    counterName = match[3];
+                                    styleName = match[4] || 'decimal';
+                                }
+                                else {
+                                    counterName = match[6];
+                                    styleName = match[8] || 'decimal';
+                                }
+                                function getCounterValue(name: string) {
                                     if (name !== 'none') {
+                                        const pattern = /\s*([^\-\d][^\-\d]?[^ ]*) (-?\d+)\s*/g;
                                         let counterMatch: RegExpExecArray | null;
-                                        while ((counterMatch = /\s*([\w\-]+)(?: (-?\d+))?\s*/g.exec(name)) !== null) {
+                                        while ((counterMatch = pattern.exec(name)) !== null) {
                                             if (counterMatch[1] === counterName) {
-                                                if (reset) {
-                                                    return counterMatch[2] ? parseInt(counterMatch[2]) : 0;
-                                                }
-                                                else {
-                                                    return counterMatch[2] ? parseInt(counterMatch[2]) : 1;
-                                                }
+                                                return parseInt(counterMatch[2]);
                                             }
                                         }
                                     }
                                     return undefined;
-                                };
+                                }
                                 function getPseduoIncrement(parent: Element) {
                                     const pseduoStyle: StringMap = $dom.getElementCache(parent, `styleMap::${target}`);
                                     if (pseduoStyle && pseduoStyle.counterIncrement) {
@@ -1736,74 +1744,110 @@ export default class Application<T extends Node> implements squared.base.Applica
                                     }
                                     return undefined;
                                 }
-                                let counter = getPseduoIncrement(element) || 0;
+                                const initalValue = (getPseduoIncrement(element) || 0) + (getCounterValue(style.getPropertyValue('counter-reset')) || 0);
                                 let current: Element | null = element;
+                                let counter = initalValue;
+                                let ascending = false;
+                                let lastResetElement: Element | undefined;
+                                const subcounter: number[] = [];
+                                function incrementCounter(increment: number, pseudo = false) {
+                                    if (subcounter.length === 0) {
+                                        counter += increment;
+                                    }
+                                    else if (ascending || pseudo) {
+                                        subcounter[subcounter.length - 1] += increment;
+                                    }
+                                }
                                 function cascadeSibling(sibling: Element) {
-                                    for (let i = 0; i < sibling.children.length; i++) {
-                                        const child = sibling.children[i];
-                                        if (child.className !== '__squared.pseudo') {
-                                            let increment = getPseduoIncrement(child);
-                                            if (increment) {
-                                                counter += increment;
+                                    if (getCounterValue($css.getStyle(sibling).getPropertyValue('counter-reset')) === undefined) {
+                                        for (let i = 0; i < sibling.children.length; i++) {
+                                            const child = sibling.children[i];
+                                            if (child.className !== '__squared.pseudo') {
+                                                let increment = getPseduoIncrement(child);
+                                                if (increment) {
+                                                    incrementCounter(increment, true);
+                                                }
+                                                const childStyle = $css.getStyle(child);
+                                                increment = getCounterValue(childStyle.getPropertyValue('counter-increment'));
+                                                if (increment) {
+                                                    incrementCounter(increment);
+                                                }
+                                                increment = getCounterValue(childStyle.getPropertyValue('counter-reset'));
+                                                if (increment !== undefined) {
+                                                    return;
+                                                }
+                                                cascadeSibling(child);
                                             }
-                                            const childStyle = $css.getStyle(child);
-                                            increment = getCounterValue(childStyle.getPropertyValue('counter-increment'));
-                                            if (increment) {
-                                                counter += increment;
-                                            }
-                                            increment = getCounterValue(childStyle.getPropertyValue('counter-reset'), true);
-                                            if (increment !== undefined) {
-                                                return;
-                                            }
-                                            cascadeSibling(child);
                                         }
                                     }
                                 }
                                 do {
+                                    ascending = false;
                                     if (current.previousElementSibling) {
                                         current = current.previousElementSibling;
                                         cascadeSibling(current);
                                     }
                                     else if (current.parentElement) {
                                         current = current.parentElement;
+                                        ascending = true;
                                     }
                                     else {
                                         break;
                                     }
                                     if (current.className !== '__squared.pseudo') {
-                                        let increment = getPseduoIncrement(current);
-                                        if (increment) {
-                                            counter += increment;
+                                        const pesudoIncrement = getPseduoIncrement(current);
+                                        if (pesudoIncrement) {
+                                            incrementCounter(pesudoIncrement, true);
                                         }
                                         const currentStyle = $css.getStyle(current);
-                                        increment = getCounterValue(currentStyle.getPropertyValue('counter-increment'));
-                                        if (increment) {
-                                            counter += increment;
+                                        const counterIncrement = getCounterValue(currentStyle.getPropertyValue('counter-increment')) || 0;
+                                        if (counterIncrement) {
+                                            incrementCounter(counterIncrement);
                                         }
-                                        increment = getCounterValue(currentStyle.getPropertyValue('counter-reset'), true);
-                                        if (increment !== undefined) {
-                                            counter += increment;
-                                            break;
+                                        const counterReset = getCounterValue(currentStyle.getPropertyValue('counter-reset'));
+                                        if (counterReset !== undefined) {
+                                            if (lastResetElement === undefined) {
+                                                counter += counterReset;
+                                            }
+                                            lastResetElement = current;
+                                            if (counterType) {
+                                                break;
+                                            }
+                                            else if (ascending) {
+                                                subcounter.push((pesudoIncrement || 0) + counterReset);
+                                            }
                                         }
                                     }
                                 }
                                 while (true);
-                                content += counter.toString();
+                                if (lastResetElement) {
+                                    if (!counterType && subcounter.length > 1) {
+                                        subcounter.reverse();
+                                        subcounter.splice(1, 1);
+                                        for (const leading of subcounter) {
+                                            content += $css.convertListStyle(styleName, leading, true) + match[7];
+                                        }
+                                    }
+                                }
+                                else {
+                                    counter = initalValue;
+                                }
+                                content += $css.convertListStyle(styleName, counter, true);
                             }
-                            else {
-                                content += match[6];
+                            else if (match[9]) {
+                                content += match[9];
                             }
                         }
                     }
                     break;
             }
-            if (content) {
+            if (content || value === '""') {
                 const pseudoElement = $element.createElement(element, tagName, false, target === 'before' ? 0 : -1);
                 if (tagName === 'img') {
                     (<HTMLImageElement> pseudoElement).src = content;
                 }
                 else {
-                    pseudoElement.innerHTML = content;
+                    pseudoElement.innerText = content;
                 }
                 for (const attr in styleMap) {
                     if (attr !== 'display') {

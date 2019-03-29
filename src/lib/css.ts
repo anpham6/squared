@@ -1,6 +1,6 @@
 import { parseColor } from './color';
 import { getElementAsNode, getElementCache, setElementCache } from './dom';
-import { REGEXP_COMPILED, STRING_PATTERN, USER_AGENT, calculate, capitalize, convertCamelCase, convertPX, convertLength, convertPercent, isLength, isUserAgent, resolvePath } from './util';
+import { REGEXP_COMPILED, STRING_PATTERN, USER_AGENT, calculate, capitalize, convertAlpha, convertRoman, convertCamelCase, convertPX, convertLength, convertPercent, isLength, isUserAgent, resolvePath } from './util';
 
 type Node = squared.base.Node;
 
@@ -374,6 +374,32 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
         }
     }
     return result;
+}
+
+export function convertListStyle(name: string, value: number, valueAsDefault = false) {
+    switch (name) {
+        case 'decimal':
+            return value.toString();
+        case 'decimal-leading-zero':
+            return (value < 9 ? '0' : '') + value.toString();
+        case 'upper-alpha':
+        case 'upper-latin':
+            if (value >= 1) {
+                return convertAlpha(value - 1);
+            }
+            break;
+        case 'lower-alpha':
+        case 'lower-latin':
+            if (value >= 1) {
+                return convertAlpha(value - 1).toLowerCase();
+            }
+            break;
+        case 'upper-roman':
+            return convertRoman(value);
+        case 'lower-roman':
+            return convertRoman(value).toLowerCase();
+    }
+    return valueAsDefault ? value.toString() : '';
 }
 
 export function resolveURL(value: string) {

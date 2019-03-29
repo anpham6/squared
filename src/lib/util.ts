@@ -232,22 +232,25 @@ export function convertPercent(value: string, dimension: number, fontSize?: numb
 }
 
 export function convertAlpha(value: number) {
-    let result = '';
-    while (value >= ALPHABET.length) {
-        const base = Math.floor(value / ALPHABET.length);
-        if (base > 1 && base <= ALPHABET.length) {
-            result += ALPHABET.charAt(base - 1);
-            value -= base * ALPHABET.length;
+    if (value >= 0) {
+        let result = '';
+        while (value >= ALPHABET.length) {
+            const base = Math.floor(value / ALPHABET.length);
+            if (base > 1 && base <= ALPHABET.length) {
+                result += ALPHABET.charAt(base - 1);
+                value -= base * ALPHABET.length;
+            }
+            else if (base > ALPHABET.length) {
+                result += convertAlpha(base * ALPHABET.length);
+                value -= base * ALPHABET.length;
+            }
+            const index = value % ALPHABET.length;
+            result += ALPHABET.charAt(index);
+            value -= index + ALPHABET.length;
         }
-        else if (base > ALPHABET.length) {
-            result += convertAlpha(base * ALPHABET.length);
-            value -= base * ALPHABET.length;
-        }
-        const index = value % ALPHABET.length;
-        result += ALPHABET.charAt(index);
-        value -= index + ALPHABET.length;
+        return ALPHABET.charAt(value) + result;
     }
-    return ALPHABET.charAt(value) + result;
+    return value.toString();
 }
 
 export function convertRoman(value: number) {

@@ -57,12 +57,9 @@
             counter-increment: index;
             content: counter(index) " ";
         }
-        ol {
-            list-style-type: none;
-        }
         ol li::before {
-            counter-increment: section;
-            content: counter(section) ". ";
+            counter-increment: section 2;
+            content: counters(section, ".") " ";
         }
         .mozimage a {
             text-decoration: none;
@@ -81,14 +78,17 @@
             margin: 1em;
         }
         .reset {
-            counter-reset: section;
+            counter-reset: section -1;
+        }
+        .increment {
+            counter-increment: section;
         }
         #squared_ui {
             counter-reset: section;
         }
         #squared_ui::before {
-            content: counter(section) ". ";
-            counter-increment: section;
+            counter-increment: section 2;
+            content: counters(section, ".") " ";
         }
     </style>
     <script src="/node_modules/systemjs/dist/system.js"></script>
@@ -117,6 +117,42 @@
 <body>
     <!-- START: DEMO -->
     <div id="squared_ui" style="width: 400px;">
+        <div class="reset">
+            <ol class="reset increment">
+                <li>item</li>
+                <li>item
+            </ol>
+            <div class="reset">
+                <ol class="reset">
+                    <li>item</li>
+                    <li>item
+                        <ol class="reset">
+                            <li>item</li>
+                            <li>item</li>
+                            <li>item
+                                <ol>
+                                    <li>item</li>
+                                    <li>item</li>
+                                </ol>
+                                <ol class="reset">
+                                    <li>item</li>
+                                    <li>item</li>
+                                    <li>item
+                                        <ol class="reset">
+                                            <li>item</li>
+                                            <li>item</li>
+                                        </ol>
+                                    </li>
+                                </ol>
+                            </li>
+                            <li>item</li>
+                        </ol>
+                    </li>
+                    <li>item</li>
+                    <li>item</li>
+                </ol>
+            </div>
+        </div>
         <q>Some quotes,</q> he said, <q>are better than none.</q>
         <br /><br />
         <span class="ribbon">Notice where the orange box is.</span>
@@ -133,32 +169,6 @@
             <li><a id="moz" href="http://www.mozilla.org/">Mozilla Home Page</a></li>
             <li><a id="mdn" href="https://developer.mozilla.org/">Mozilla Developer Network</a></li>
         </ul>
-        <ol>
-            <li>item</li>
-            <li>item
-                <ol class="reset">
-                    <li>item</li>
-                    <li>item</li>
-                    <li>item
-                        <ol>
-                            <li>item</li>
-                            <li>item</li>
-                        </ol>
-                        <ol class="reset">
-                            <li>item</li>
-                            <li>item</li>
-                        </ol>
-                    </li>
-                    <li>item</li>
-                </ol>
-            </li>
-            <li>item</li>
-            <li>item</li>
-        </ol>
-        <ol>
-            <li>item</li>
-            <li>item</li>
-        </ol>
         <ul class="counter">
             <li>A</li>
             <li>B</li>

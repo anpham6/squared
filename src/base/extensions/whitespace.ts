@@ -32,18 +32,22 @@ function applyMarginCollapse(node: Node, visibleNode: Node, child: Node, directi
         if (direction) {
             if (node.borderTopWidth === 0 && node.paddingTop === 0) {
                 let replaced = false;
-                if (child.marginTop === 0 && child.borderTopWidth === 0 && child.paddingTop === 0) {
+                while (child.marginTop === 0 && child.borderTopWidth === 0 && child.paddingTop === 0) {
                     const firstChild = child.firstChild as Node;
                     if (isBlockElement(firstChild)) {
                         if (child.has('marginTop', CSS_STANDARD.ZERO)) {
                             if (HTML5 && firstChild.marginTop !== 0) {
                                 firstChild.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
+                                break;
                             }
                         }
                         else {
                             child = firstChild;
                             replaced = true;
                         }
+                    }
+                    else {
+                        break;
                     }
                 }
                 if (!HTML5 && node.marginTop === 0 && node.has('marginTop', CSS_STANDARD.ZERO)) {
@@ -92,18 +96,22 @@ function applyMarginCollapse(node: Node, visibleNode: Node, child: Node, directi
         else {
             if (node.paddingBottom === 0 && node.borderBottomWidth === 0) {
                 let replaced = false;
-                if (child.paddingBottom === 0 && child.borderBottomWidth === 0 && child.marginBottom === 0) {
+                while (child.paddingBottom === 0 && child.borderBottomWidth === 0 && child.marginBottom === 0) {
                     const lastChild = child.lastChild as Node;
                     if (isBlockElement(lastChild)) {
                         if (child.has('marginBottom', CSS_STANDARD.ZERO)) {
                             if (HTML5 && lastChild.marginBottom !== 0) {
                                 lastChild.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
+                                break;
                             }
                         }
                         else {
                             child = lastChild;
                             replaced = true;
                         }
+                    }
+                    else {
+                        break;
                     }
                 }
                 if (!HTML5 && node.marginBottom === 0 && node.has('marginBottom', CSS_STANDARD.ZERO)) {

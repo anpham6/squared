@@ -6,7 +6,7 @@ import Node from '../node';
 import { EXT_NAME } from '../lib/constant';
 import { BOX_STANDARD, NODE_RESOURCE } from '../lib/enumeration';
 
-const $util = squared.lib.util;
+const $css = squared.lib.css;
 
 const hasSingleImage = (node: Node) => node.visibleStyle.backgroundImage && !node.visibleStyle.backgroundRepeat;
 
@@ -63,7 +63,7 @@ export default abstract class List<T extends Node> extends Extension<T> {
     }
 
     public processNode(node: T) {
-        let i = 0;
+        let i = 1;
         node.each(item => {
             const mainData = List.createDataAttribute();
             const listStyleType = item.css('listStyleType');
@@ -72,49 +72,35 @@ export default abstract class List<T extends Node> extends Extension<T> {
                     mainData.imageSrc = item.css('listStyleImage');
                 }
                 else {
-                    switch (listStyleType) {
-                        case 'disc':
-                            mainData.ordinal = '●';
-                            break;
-                        case 'square':
-                            mainData.ordinal = '■';
-                            break;
-                        case 'decimal':
-                            mainData.ordinal = `${(i + 1).toString()}.`;
-                            break;
-                        case 'decimal-leading-zero':
-                            mainData.ordinal = `${(i < 9 ? '0' : '') + (i + 1).toString()}.`;
-                            break;
-                        case 'lower-alpha':
-                        case 'lower-latin':
-                            mainData.ordinal = `${$util.convertAlpha(i).toLowerCase()}.`;
-                            break;
-                        case 'upper-alpha':
-                        case 'upper-latin':
-                            mainData.ordinal = `${$util.convertAlpha(i)}.`;
-                            break;
-                        case 'lower-roman':
-                            mainData.ordinal = `${$util.convertRoman(i + 1).toLowerCase()}.`;
-                            break;
-                        case 'upper-roman':
-                            mainData.ordinal = `${$util.convertRoman(i + 1)}.`;
-                            break;
-                        case 'none':
-                            let src = '';
-                            let position = '';
-                            if (!item.visibleStyle.backgroundRepeat) {
-                                src = item.css('backgroundImage');
-                                position = item.css('backgroundPosition');
-                            }
-                            if (src && src !== 'none') {
-                                mainData.imageSrc = src;
-                                mainData.imagePosition = position;
-                                item.exclude({ resource: NODE_RESOURCE.IMAGE_SOURCE });
-                            }
-                            break;
-                        default:
-                            mainData.ordinal = '○';
-                            break;
+                    mainData.ordinal = $css.convertListStyle(listStyleType, i);
+                    if (mainData.ordinal === '') {
+                        switch (listStyleType) {
+                            case 'disc':
+                                mainData.ordinal = '●';
+                                break;
+                            case 'square':
+                                mainData.ordinal = '■';
+                                break;
+                            case 'none':
+                                let src = '';
+                                let position = '';
+                                if (!item.visibleStyle.backgroundRepeat) {
+                                    src = item.css('backgroundImage');
+                                    position = item.css('backgroundPosition');
+                                }
+                                if (src && src !== 'none') {
+                                    mainData.imageSrc = src;
+                                    mainData.imagePosition = position;
+                                    item.exclude({ resource: NODE_RESOURCE.IMAGE_SOURCE });
+                                }
+                                break;
+                            default:
+                                mainData.ordinal = '○';
+                                break;
+                        }
+                    }
+                    else {
+                        mainData.ordinal += '.';
                     }
                 }
                 i++;
