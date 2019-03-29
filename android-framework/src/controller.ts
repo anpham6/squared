@@ -1569,6 +1569,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 const textBaseline = $NodeList.baseline(items, true)[0] as T | undefined;
                 const baselineAlign: T[] = [];
                 let documentId = i === 0 ? 'true' : (baseline ? baseline.documentId : '');
+                let maxCenterHeight = 0;
                 for (const item of items) {
                     if (item !== baseline) {
                         if (item.baseline) {
@@ -1588,11 +1589,12 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                     }
                                     break;
                                 case 'middle':
+                                    const height = Math.max(item.actualHeight, item.lineHeight);
                                     if (!alignmentMultiLine) {
                                         item.anchor('centerVertical', 'true');
+                                        maxCenterHeight = Math.max(height, maxCenterHeight);
                                     }
                                     else if (baseline) {
-                                        const height = Math.max(item.actualHeight, item.lineHeight);
                                         const heightParent = Math.max(baseline.actualHeight, baseline.lineHeight);
                                         if (height < heightParent) {
                                             item.anchor('top', baseline.documentId);
@@ -1630,6 +1632,9 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 }
                 if (baseline) {
                     baseline.baselineActive = true;
+                    if (maxCenterHeight >= baseline.actualHeight) {
+                        baseline.anchor('centerVertical', 'true');
+                    }
                     if (baselineAlign.length) {
                         adjustBaseline(baseline, baselineAlign);
                     }

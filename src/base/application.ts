@@ -1597,13 +1597,13 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
         }
         else if (!this.controllerHandler.localSettings.svg.enabled || element.parentElement instanceof HTMLElement) {
+            this.controllerHandler.applyDefaultStyles(element);
             node = this.createNode(element, false);
             if (!node.pseudoElement) {
                 if (!this.controllerHandler.localSettings.unsupported.excluded.has(element.tagName) && this.conditionElement(element)) {
                     if (!this.userSettings.exclusionsDisabled) {
                         node.setExclusions();
                     }
-                    this.controllerHandler.applyDefaultStyles(element);
                 }
                 else {
                     node.visible = false;
@@ -1892,7 +1892,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                         REGEXP_CACHED.MEDIA_RULE = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
                                         REGEXP_CACHED.MEDIA_CONDITION = /\(([a-z\-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
                                     }
-                                    const fontSize = $util.convertInt($css.getStyle(document.body).getPropertyValue('fontSize'));
+                                    const fontSize = $util.convertInt($css.getStyle(document.body).getPropertyValue('font-size'));
                                     let match: RegExpExecArray | null;
                                     let statement = false;
                                     while (!statement && ((match = REGEXP_CACHED.MEDIA_RULE.exec((<CSSConditionRule> rule).conditionText)) !== null)) {
@@ -2007,7 +2007,7 @@ export default class Application<T extends Node> implements squared.base.Applica
             const [selectorText, target] = grouping.split('::');
             document.querySelectorAll(selectorText).forEach((element: HTMLElement) => {
                 const style = $css.getStyle(element, target);
-                const fontSize = $util.parseUnit(style.getPropertyValue('fontSize'));
+                const fontSize = $util.parseUnit(style.getPropertyValue('font-size'));
                 const styleMap: StringMap = {};
                 for (const attr of fromRule) {
                     const value = $css.checkStyleValue(element, attr, item.style[attr], target ? undefined : style, fontSize);

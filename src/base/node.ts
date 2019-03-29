@@ -106,10 +106,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (this.styleElement) {
             const styleMap = $dom.getElementCache(element, 'styleMap') || {};
             if (!this.pseudoElement) {
-                const fontSize = parseInt(element.style.getPropertyValue('fontSize')) || undefined;
+                const fontSize = parseInt(element.style.getPropertyValue('font-size')) || undefined;
                 for (let attr of Array.from(element.style)) {
+                    let value = element.style.getPropertyValue(attr);
                     attr = $util.convertCamelCase(attr);
-                    const value = $css.checkStyleValue(element, attr, element.style.getPropertyValue(attr), undefined, fontSize);
+                    value = $css.checkStyleValue(element, attr, value, undefined, fontSize);
                     if (value) {
                         styleMap[attr] = value;
                     }
@@ -442,7 +443,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 this.unsetCache(attr);
             }
         }
-        return this._styleMap[attr] || this.styleElement && this.style.getPropertyValue(attr) || this.style[attr] || '';
+        return this._styleMap[attr] || this.style[attr] || '';
     }
 
     public cssApply(values: StringMap, cache = false) {
@@ -460,8 +461,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             computed = true;
         }
         let value = modified ? this._styleMap[attr] : this._initial.styleMap[attr];
-        if (computed && !$util.hasValue(value)) {
-            value = this.styleElement && this.style.getPropertyValue(attr) || this.style[attr];
+        if (computed && !value) {
+            value = this.style[attr];
         }
         return value || '';
     }
@@ -545,10 +546,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             const element = <HTMLElement> this._element;
             let current = this.css(attr);
             if (value === current) {
-                current = element.style.getPropertyValue(attr);
+                current = element.style[attr];
             }
             element.style[attr] = value;
-            if (element.style.getPropertyValue(attr) === value) {
+            if (element.style[attr] === value) {
                 $dom.setElementCache(element, attr, current);
                 return true;
             }
@@ -930,8 +931,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     private convertLength(attr: string, value: string, horizontal: boolean, parent = true): string {
         if ($util.isPercent(value)) {
-            const unit = this.styleElement && this.style.getPropertyValue(attr) || '';
-            return $util.isLength(unit) ? unit : this.convertPX(value, horizontal, parent);
+            return $util.isLength(this.style[attr]) ? this.style[attr] : this.convertPX(value, horizontal, parent);
         }
         return value;
     }

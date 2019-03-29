@@ -68,7 +68,7 @@ export function checkStyleValue(element: Element, attr: string, value: string, s
         value = getInheritedStyle(element, attr);
     }
     if (value && value !== 'initial') {
-        const computed = style ? style.getPropertyValue(attr) : '';
+        const computed = style ? style[attr] : '';
         if (value !== computed) {
             if (computed !== '') {
                 switch (attr) {
@@ -172,7 +172,7 @@ export function getInheritedStyle(element: Element | null, attr: string, exclude
     if (element) {
         let current = element.parentElement;
         while (current && !tagNames.includes(current.tagName)) {
-            value = getStyle(current).getPropertyValue(attr);
+            value = getStyle(current)[attr];
             if (value === 'inherit' || exclude && exclude.test(value)) {
                 value = '';
             }
@@ -196,7 +196,7 @@ export function isInheritedStyle(element: Element | null, attr: string) {
 }
 
 export function getInlineStyle(element: Element, attr: string) {
-    let value = hasComputedStyle(element) ? element.style.getPropertyValue(attr) : '';
+    let value = hasComputedStyle(element) ? element.style[attr] : '';
     if (!value) {
         const styleMap: StringMap = getElementCache(element, 'styleMap');
         if (styleMap) {

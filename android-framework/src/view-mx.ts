@@ -1123,10 +1123,10 @@ export default (Base: Constructor<squared.base.Node>) => {
                                     node.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, Math.ceil(offset / 2));
                                 }
                                 else {
-                                    if (node.height < lineHeight) {
+                                    if (!node.has('height') && lineHeight > node.toInt('minHeight')) {
                                         node.android('minHeight', $util.formatPX(lineHeight));
                                     }
-                                    if (!node.has('verticalAlign')) {
+                                    if (node.textElement && !node.has('verticalAlign')) {
                                         node.mergeGravity('gravity', 'center_vertical');
                                     }
                                 }
@@ -1144,10 +1144,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                                 }
                             }
                         };
-                        if (this.length === 0) {
-                            setMarginOffset(this);
-                        }
-                        else {
+                        if (this.length) {
                             const baseline = $util.filterArray(this.renderChildren, node => node.baselineActive);
                             if (baseline.length) {
                                 for (let i = 0; i < baseline.length; i++) {
@@ -1165,6 +1162,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                                 });
                             }
                         }
+                        setMarginOffset(this);
                     }
                 }
             }
