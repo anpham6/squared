@@ -94,6 +94,7 @@ export default class CssGrid<T extends Node> extends Extension<T> {
             gap: 0,
             unit: [],
             unitMin: [],
+            unitTotal: [],
             repeat: [],
             auto: [],
             autoFill: false,
@@ -590,28 +591,37 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                 }
             }
         });
-        if (horizontal) {
-            mainData.rowData = rowData;
-        }
-        else {
-            for (let i = 0; i < rowData.length; i++) {
-                for (let j = 0; j < rowData[i].length; j++) {
-                    if (mainData.rowData[j] === undefined) {
-                        mainData.rowData[j] = [];
+        if (rowData.length) {
+            if (horizontal) {
+                mainData.rowData = rowData;
+            }
+            else {
+                for (let i = 0; i < rowData.length; i++) {
+                    for (let j = 0; j < rowData[i].length; j++) {
+                        if (mainData.rowData[j] === undefined) {
+                            mainData.rowData[j] = [];
+                        }
+                        mainData.rowData[j][i] = rowData[i][j];
                     }
-                    mainData.rowData[j][i] = rowData[i][j];
                 }
             }
-        }
-        if (mainData.rowData.length) {
+            const unitTotal = mainData[horizontal ? 'row' : 'column'].unitTotal;
             for (const row of mainData.rowData) {
                 mainData.column.count = Math.max(row.length, mainData.column.count);
-                for (const column of row) {
+                for (let i = 0; i < row.length; i++) {
+                    const column = row[i];
+                    if (unitTotal[i] === undefined) {
+                        unitTotal[i] = 0;
+                    }
                     if (column) {
-                        for (const item of column) {
+                        let maxDimension = 0;
+                        for (let j = 0; j < column.length; j++) {
+                            const item = column[j];
                             item.positioned = true;
                             mainData.children.add(item);
+                            maxDimension = Math.max(maxDimension, horizontal ? item.bounds.height : item.bounds.width);
                         }
+                        unitTotal[i] += maxDimension;
                     }
                 }
             }

@@ -359,14 +359,14 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                     backgroundRepeat: '',
                     backgroundPositionX: '',
                     backgroundPositionY: '',
-                    backgroundImage: undefined
+                    backgroundImage: undefined,
+                    borderRadius: undefined
                 };
                 if (!node.css('border').startsWith('0px none')) {
                     boxStyle.borderTop = undefined;
                     boxStyle.borderRight = undefined;
                     boxStyle.borderBottom = undefined;
                     boxStyle.borderLeft = undefined;
-                    boxStyle.borderRadius = undefined;
                 }
                 for (const attr in boxStyle) {
                     const value = node.css(attr);

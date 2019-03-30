@@ -12,6 +12,7 @@ import $Layout = squared.base.Layout;
 const $const = squared.base.lib.constant;
 const $enum = squared.base.lib.enumeration;
 const $element = squared.lib.element;
+const $math = squared.lib.math;
 const $util = squared.lib.util;
 
 function getRowData(mainData: CssGridData<View>, direction: string) {
@@ -35,19 +36,27 @@ function getRowData(mainData: CssGridData<View>, direction: string) {
 function getGridSize(mainData: CssGridData<View>, direction: string, node: View) {
     const dimension = direction === 'column' ? 'width' : 'height';
     let value = 0;
-    for (let i = 0; i < mainData[direction].unit.length; i++) {
-        const unit = mainData[direction].unit[i];
-        if (unit.endsWith('px')) {
-            value += parseInt(unit);
+    if (mainData[direction].unit.length) {
+        for (let i = 0; i < mainData[direction].unit.length; i++) {
+            const unit = mainData[direction].unit[i];
+            if (unit.endsWith('px')) {
+                value += parseInt(unit);
+            }
+            else {
+                let size = 0;
+                $util.captureMap(mainData.rowData[i] as View[][], item => item && item.length > 0, item => size = Math.min(size, item[0].bounds[dimension]));
+                value += size;
+            }
         }
-        else {
-            let size = 0;
-            $util.captureMap(mainData.rowData[i] as View[][], item => item && item.length > 0, item => size = Math.min(size, item[0].bounds[dimension]));
-            value += size;
+    }
+    else {
+        value = $math.maxArray(mainData[direction].unitTotal);
+        if (value <= 0) {
+            return 0;
         }
     }
     value += (mainData[direction].count - 1) * mainData[direction].gap;
-    return node[dimension] - value;
+    return node[dimension] - node[`contentBox${$util.capitalize(dimension)}`] - value;
 }
 
 function setContentSpacing(mainData: CssGridData<View>, node: View, alignment: string, direction: string) {
@@ -55,39 +64,31 @@ function setContentSpacing(mainData: CssGridData<View>, node: View, alignment: s
     const MARGIN_END = direction === 'column' ? $enum.BOX_STANDARD.MARGIN_RIGHT : $enum.BOX_STANDARD.MARGIN_BOTTOM;
     const PADDING_START = direction === 'column' ? $enum.BOX_STANDARD.PADDING_LEFT : $enum.BOX_STANDARD.PADDING_TOP;
     const data = <CssGridDirectionData> mainData[direction];
-    const rowData = alignment.startsWith('space') ? getRowData(mainData, direction) : [];
-    const sizeTotal = getGridSize(mainData, direction, node);
-    if (sizeTotal > 0) {
+    if (alignment.startsWith('space')) {
+        const rowData = getRowData(mainData, direction);
         const dimension = direction === 'column' ? 'width' : 'height';
         const itemCount = mainData[direction].count;
+        const sizeTotal = getGridSize(mainData, direction, node);
+        const opposing = mainData[direction].unitTotal.length > 0;
         const adjusted = new Set<View>();
         switch (alignment) {
-            case 'center':
-                node.modifyBox(PADDING_START, Math.floor(sizeTotal / 2));
-                data.normal = false;
-                break;
-            case 'right':
-                if (direction === 'row') {
-                    break;
-                }
-            case 'end':
-            case 'flex-end':
-                node.modifyBox(PADDING_START, sizeTotal);
-                data.normal = false;
-                break;
             case 'space-around': {
                 const marginSize = Math.floor(sizeTotal / (itemCount * 2));
-                for (let i = 0; i < itemCount; i++) {
-                    for (const item of new Set<View>($util.flatArray(rowData[i]))) {
-                        if (!adjusted.has(item)) {
-                            item.modifyBox(MARGIN_START, marginSize);
-                            if (i < itemCount - 1) {
-                                item.modifyBox(MARGIN_END, marginSize);
+                if (marginSize > 0) {
+                    for (let i = 0; i < itemCount; i++) {
+                        for (const item of new Set<View>($util.flatArray(rowData[i]))) {
+                            if (item) {
+                                if (!adjusted.has(item)) {
+                                    item.modifyBox(MARGIN_START, marginSize);
+                                    if (i < itemCount - 1 || itemCount === 1 || opposing) {
+                                        item.modifyBox(MARGIN_END, marginSize);
+                                    }
+                                    adjusted.add(item);
+                                }
+                                else {
+                                    item.cssPX(dimension, marginSize * 2);
+                                }
                             }
-                            adjusted.add(item);
-                        }
-                        else {
-                            item.cssPX(dimension, marginSize * 2);
                         }
                     }
                 }
@@ -95,21 +96,27 @@ function setContentSpacing(mainData: CssGridData<View>, node: View, alignment: s
                 break;
             }
             case 'space-between': {
-                const marginSize = Math.floor(sizeTotal / ((itemCount - 1) * 2));
-                const rowLast = $util.flatArray(rowData[itemCount - 1]);
-                for (let i = 0; i < itemCount; i++) {
-                    for (const item of new Set<View>($util.flatArray(rowData[i]))) {
-                        if (!adjusted.has(item)) {
-                            if (i > 0) {
-                                item.modifyBox(MARGIN_START, marginSize);
+                if (itemCount > 1) {
+                    const marginSize = Math.floor(sizeTotal / ((itemCount - 1) * 2));
+                    if (marginSize > 0) {
+                        const rowLast = $util.flatArray(rowData[itemCount - 1]);
+                        for (let i = 0; i < itemCount; i++) {
+                            for (const item of new Set<View>($util.flatArray(rowData[i]))) {
+                                if (item) {
+                                    if (!adjusted.has(item)) {
+                                        if (i > 0) {
+                                            item.modifyBox(MARGIN_START, marginSize);
+                                        }
+                                        if (i < itemCount - 1 && !rowLast.some(cell => cell === item) || opposing) {
+                                            item.modifyBox(MARGIN_END, marginSize);
+                                        }
+                                        adjusted.add(item);
+                                    }
+                                    else {
+                                        item.cssPX(dimension, marginSize * 2);
+                                    }
+                                }
                             }
-                            if (i < itemCount - 1 && !rowLast.some(cell => cell === item)) {
-                                item.modifyBox(MARGIN_END, marginSize);
-                            }
-                            adjusted.add(item);
-                        }
-                        else {
-                            item.cssPX(dimension, marginSize * 2);
                         }
                     }
                 }
@@ -118,24 +125,48 @@ function setContentSpacing(mainData: CssGridData<View>, node: View, alignment: s
             }
             case 'space-evenly': {
                 const marginSize = Math.floor(sizeTotal / (itemCount + 1));
-                const rowLast = $util.flatArray(rowData[itemCount - 1]);
-                for (let i = 0; i < itemCount; i++) {
-                    const marginMiddle = Math.floor(marginSize / 2);
-                    for (const item of new Set<View>($util.flatArray(rowData[i]))) {
-                        if (!adjusted.has(item)) {
-                            item.modifyBox(MARGIN_START, i === 0 ? marginSize : marginMiddle);
-                            if (i < itemCount - 1 && !rowLast.some(cell => cell === item)) {
-                                item.modifyBox(MARGIN_END, marginMiddle);
+                if (marginSize > 0) {
+                    const rowLast = $util.flatArray(rowData[itemCount - 1]);
+                    for (let i = 0; i < itemCount; i++) {
+                        const marginMiddle = itemCount > 1 && !opposing ? Math.floor(marginSize / 2) : marginSize;
+                        for (const item of new Set<View>($util.flatArray(rowData[i]))) {
+                            if (item) {
+                                if (!adjusted.has(item)) {
+                                    item.modifyBox(MARGIN_START, i === 0 || opposing ? marginSize : marginMiddle);
+                                    if (!opposing && i < itemCount - 1 && !rowLast.some(cell => cell === item) || itemCount === 1 || opposing && i > 0) {
+                                        item.modifyBox(MARGIN_END, marginMiddle);
+                                    }
+                                    adjusted.add(item);
+                                }
+                                else {
+                                    item.cssPX(dimension, marginSize);
+                                }
                             }
-                            adjusted.add(item);
-                        }
-                        else {
-                            item.cssPX(dimension, marginSize);
                         }
                     }
                 }
                 data.normal = false;
                 break;
+            }
+        }
+    }
+    else {
+        const sizeTotal = getGridSize(mainData, direction, node);
+        if (sizeTotal > 0) {
+            switch (alignment) {
+                case 'center':
+                    node.modifyBox(PADDING_START, Math.floor(sizeTotal / 2));
+                    data.normal = false;
+                    break;
+                case 'right':
+                    if (direction === 'row') {
+                        break;
+                    }
+                case 'end':
+                case 'flex-end':
+                    node.modifyBox(PADDING_START, sizeTotal);
+                    data.normal = false;
+                    break;
             }
         }
     }
@@ -345,11 +376,13 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             applyLayout(target, 'column', 'width');
             applyLayout(target, 'row', 'height');
             if (!target.has('height')) {
-                if (parent.hasHeight) {
+                if (parent.hasHeight && mainData.alignContent === 'normal') {
                     target.android('layout_height', '0px');
                     target.android('layout_rowWeight', '1');
                 }
-                target.mergeGravity('layout_gravity', 'fill_vertical');
+                if (!(mainData.row.count === 1 && mainData.alignContent === 'space-between')) {
+                    target.mergeGravity('layout_gravity', 'fill_vertical');
+                }
             }
             if (!target.has('width')) {
                 target.mergeGravity('layout_gravity', 'fill_horizontal');

@@ -20,6 +20,7 @@ export interface CssGridDirectionData {
     gap: number;
     unit: string[];
     unitMin: string[];
+    unitTotal: number[];
     auto: string[];
     autoFit: boolean;
     autoFill: boolean;

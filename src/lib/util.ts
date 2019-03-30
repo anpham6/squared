@@ -798,8 +798,7 @@ export function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]) 
 export function flatArray<T>(list: any[]): T[] {
     let current = list;
     while (current.some(item => Array.isArray(item))) {
-        const flatten: any[] = [];
-        current = flatten.concat.apply(flatten, filterArray(current, item => item !== undefined && item !== null));
+        current = [].concat.apply([], filterArray(current, item => item !== undefined && item !== null));
     }
     return current;
 }

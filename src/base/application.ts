@@ -1888,18 +1888,16 @@ export default class Application<T extends Node> implements squared.base.Applica
                                                 return value === range;
                                         }
                                     }
-                                    if (REGEXP_CACHED.MEDIA_RULE === undefined) {
-                                        REGEXP_CACHED.MEDIA_RULE = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
-                                        REGEXP_CACHED.MEDIA_CONDITION = /\(([a-z\-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
-                                    }
+                                    const pattern = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
                                     const fontSize = $util.convertInt($css.getStyle(document.body).getPropertyValue('font-size'));
                                     let match: RegExpExecArray | null;
                                     let statement = false;
-                                    while (!statement && ((match = REGEXP_CACHED.MEDIA_RULE.exec((<CSSConditionRule> rule).conditionText)) !== null)) {
+                                    while (!statement && ((match = pattern.exec((<CSSConditionRule> rule).conditionText)) !== null)) {
                                         const negate = match[1] === 'not';
+                                        const patternCondition = /\(([a-z\-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
                                         let condition: RegExpExecArray | null;
                                         let valid = false;
-                                        while (!statement && (condition = REGEXP_CACHED.MEDIA_CONDITION.exec(match[2])) !== null) {
+                                        while (!statement && (condition = patternCondition.exec(match[2])) !== null) {
                                             const attr = condition[1];
                                             let operation: string;
                                             if (condition[1].startsWith('min')) {
@@ -2005,7 +2003,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         }
         for (const grouping of item.selectorText.split(/\s*,\s*/)) {
             const [selectorText, target] = grouping.split('::');
-            document.querySelectorAll(selectorText).forEach((element: HTMLElement) => {
+            document.querySelectorAll(selectorText || '*').forEach((element: HTMLElement) => {
                 const style = $css.getStyle(element, target);
                 const fontSize = $util.parseUnit(style.getPropertyValue('font-size'));
                 const styleMap: StringMap = {};

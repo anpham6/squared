@@ -1415,11 +1415,17 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get contentBoxWidth() {
-        return this.tableElement && this.css('borderCollapse') === 'collapse' ? 0 : this.borderLeftWidth + this.paddingLeft + this.paddingRight + this.borderRightWidth;
+        if (this._cached.contentBoxWidth === undefined) {
+            this._cached.contentBoxWidth = this.tableElement && this.css('borderCollapse') === 'collapse' ? 0 : this.borderLeftWidth + this.paddingLeft + this.paddingRight + this.borderRightWidth;
+        }
+        return this._cached.contentBoxWidth;
     }
 
     get contentBoxHeight() {
-        return this.tableElement && this.css('borderCollapse') === 'collapse' ? 0 : this.borderTopWidth + this.paddingTop + this.paddingBottom + this.borderBottomWidth;
+        if (this._cached.contentBoxHeight === undefined) {
+            this._cached.contentBoxHeight = this.tableElement && this.css('borderCollapse') === 'collapse' ? 0 : this.borderTopWidth + this.paddingTop + this.paddingBottom + this.borderBottomWidth;
+        }
+        return this._cached.contentBoxHeight;
     }
 
     get inline() {
