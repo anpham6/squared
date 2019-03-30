@@ -661,7 +661,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                                 !this.documentRoot && renderChildren.some(node => node.layoutVertical && !node.autoMargin.horizontal && !node.hasWidth && !node.floating))
                             ) ||
                             this.groupParent && (boxHorizotnal > 0 || this.layoutVertical && blockVertical > 0) ||
-                            this.layoutFrame && (this.hasAlign($enum.NODE_ALIGNMENT.COLUMN) || $NodeList.linearData(renderChildren, true).floated.size === 2 || renderChildren.some(node => node.blockStatic && (node.autoMargin.leftRight || node.rightAligned))))
+                            this.layoutFrame && (this.hasAlign($enum.NODE_ALIGNMENT.COLUMN) || $NodeList.linearData(renderChildren, true).floated.size === 2 || renderChildren.some(node => node.blockStatic && (node.autoMargin.leftRight || node.hasAlign($enum.NODE_ALIGNMENT.AUTO_LAYOUT) || node.rightAligned))))
                         {
                             this.android('layout_width', 'match_parent', false);
                             hasWidth = true;

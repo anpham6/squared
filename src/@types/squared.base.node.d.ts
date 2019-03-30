@@ -26,6 +26,7 @@ declare global {
             baseline: boolean;
             multiline: boolean;
             overflow: number;
+            flexbox: Flexbox;
             documentParent: Node;
             actualChildren: Node[];
             renderAs?: Node;
@@ -63,7 +64,6 @@ declare global {
             readonly documentBody: boolean;
             readonly dataset: DOMStringMap;
             readonly extensions: string[];
-            readonly flexbox: Flexbox;
             readonly rightAligned: boolean;
             readonly bottomAligned: boolean;
             readonly width: number;
@@ -140,7 +140,7 @@ declare global {
             localizeString(value: string): string;
             clone(id?: number, attributes?: boolean, position?: boolean): Node;
             init(): void;
-            saveAsInitial(): void;
+            saveAsInitial(overwrite?: boolean): void;
             is(...containers: number[]): boolean;
             of(containerType: number, ...alignmentType: number[]): boolean;
             unsafe(obj: string): any;

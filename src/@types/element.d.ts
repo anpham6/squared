@@ -46,9 +46,10 @@ interface Flexbox {
     order: number;
     wrap: string;
     direction: string;
-    alignSelf: string;
     alignContent: string;
     justifyContent: string;
+    alignSelf: string;
+    justifySelf: string;
     basis: string;
     grow: number;
     shrink: number;

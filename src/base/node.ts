@@ -120,8 +120,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
     }
 
-    public saveAsInitial() {
-        if (this._initial.iteration === -1) {
+    public saveAsInitial(overwrite = false) {
+        if (this._initial.iteration === -1 || overwrite) {
             this._initial.children = this.duplicate();
             this._initial.styleMap = { ...this._styleMap };
             this._initial.documentParent = this._documentParent;
@@ -1140,6 +1140,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this._cached.extensions;
     }
 
+    set flexbox(value) {
+        this._cached.flexbox = value;
+    }
     get flexbox() {
         if (this._cached.flexbox === undefined) {
             const actualParent = this.actualParent;
@@ -1147,8 +1150,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 wrap: this.css('flexWrap'),
                 direction: this.css('flexDirection'),
                 alignContent: this.css('alignContent'),
-                alignSelf: !this.has('alignSelf') && actualParent && actualParent.has('alignItems') ? actualParent.css('alignItems') : this.css('alignSelf'),
                 justifyContent: this.css('justifyContent'),
+                alignSelf: !this.has('alignSelf') && actualParent && actualParent.has('alignItems') ? actualParent.css('alignItems') : this.css('alignSelf'),
+                justifySelf: !this.has('justifySelf') && actualParent && actualParent.has('justifyItems') ? actualParent.css('justifyItems') : this.css('justifySelf'),
                 basis: this.css('flexBasis'),
                 order: this.toInt('order'),
                 grow: this.toInt('flexGrow'),

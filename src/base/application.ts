@@ -491,6 +491,13 @@ export default class Application<T extends Node> implements squared.base.Applica
         }
         const preAlignment: ObjectIndex<StringMap> = {};
         const direction = new Set<HTMLElement>();
+        function saveAlignment(element: HTMLElement, id: number, attr: string, value: string, restoreValue: string) {
+            if (preAlignment[id] === undefined) {
+                preAlignment[id] = {};
+            }
+            preAlignment[id][attr] = restoreValue;
+            element.style[attr] = value;
+        }
         for (const node of this.processing.cache) {
             if (node.styleElement) {
                 const element = <HTMLElement> node.element;
@@ -500,8 +507,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         case 'center':
                         case 'right':
                         case 'end':
-                            preAlignment[node.id] = { textAlign };
-                            element.style.textAlign = 'left';
+                            saveAlignment(element, node.id, 'textAlign', 'left', textAlign);
                             break;
                     }
                 }
@@ -511,9 +517,21 @@ export default class Application<T extends Node> implements squared.base.Applica
                     }
                     for (const attr of $css.BOX_POSITION) {
                         if (node.has(attr)) {
-                            preAlignment[node.id][attr] = node.css(attr);
-                            element.style[attr] = 'auto';
+                            saveAlignment(element, node.id, attr, 'auto', node.css(attr));
                         }
+                    }
+                }
+                if (node.parent && node.parent.flexElement) {
+                    if (preAlignment[node.id] === undefined) {
+                        preAlignment[node.id] = {};
+                    }
+                    switch (node.flexbox.alignSelf) {
+                        case 'flex-end':
+                        case 'center':
+                        case 'inherit':
+                        case 'unset':
+                            saveAlignment(element, node.id, 'alignSelf', 'normal', node.flexbox.alignSelf);
+                            break;
                     }
                 }
                 if (element.dir === 'rtl') {
