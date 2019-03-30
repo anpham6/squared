@@ -98,8 +98,8 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 const inside = node.css('listStylePosition') === 'inside';
                 let gravity = '';
                 let image: string | undefined;
-                let top: number | undefined;
-                let left: number | undefined;
+                let top = NaN;
+                let left = NaN;
                 if (mainData.imageSrc !== '') {
                     if (mainData.imagePosition) {
                         const position = $css.getBackgroundPosition(mainData.imagePosition, node.actualDimension, node.fontSize);

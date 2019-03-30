@@ -110,6 +110,7 @@ declare global {
             readonly visibleStyle: VisibleStyle;
             readonly textContent: string;
             readonly fontSize: number;
+            readonly src: string;
             readonly overflowX: boolean;
             readonly overflowY: boolean;
             readonly verticalAlign: string;

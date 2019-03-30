@@ -12,16 +12,17 @@ const $util = squared.lib.util;
 
 export default abstract class Flexbox<T extends Node> extends Extension<T> {
     public static createDataAttribute<T extends Node>(node: T, children: T[]): FlexboxData<T> {
-        const flex = node.flexbox;
+        const wrap = node.css('flexWrap');
+        const direction = node.css('flexDirection');
         return {
-            wrap: flex.wrap.startsWith('wrap'),
-            wrapReverse: flex.wrap === 'wrap-reverse',
-            directionReverse: flex.direction.endsWith('reverse'),
-            alignContent: flex.alignContent,
-            justifyContent: flex.justifyContent,
-            rowDirection: flex.direction.startsWith('row'),
+            wrap: wrap.startsWith('wrap'),
+            wrapReverse: wrap === 'wrap-reverse',
+            directionReverse: direction.endsWith('reverse'),
+            alignContent: node.css('alignContent'),
+            justifyContent: node.css('justifyContent'),
+            rowDirection: direction.startsWith('row'),
             rowCount: 0,
-            columnDirection: flex.direction.startsWith('column'),
+            columnDirection: direction.startsWith('column'),
             columnCount: 0,
             children
         };
@@ -35,15 +36,13 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
         const controller = this.application.controllerHandler;
         const children = node.filter(item => item.pageFlow) as T[];
         const mainData = Flexbox.createDataAttribute(node, children);
-        if (node.cssTry('display', 'block')) {
-            for (const item of children) {
-                if (item.element) {
-                    const bounds = item.element.getBoundingClientRect();
-                    const initial: InitialData<T> = item.unsafe('initial');
-                    Object.assign(initial.bounds, { width: bounds.width, height: bounds.height });
-                }
+        for (const item of children) {
+            if (item.element && item.cssTry('alignSelf', 'start')) {
+                const bounds = item.element.getBoundingClientRect();
+                const initial: InitialData<T> = item.unsafe('initial');
+                Object.assign(initial.bounds, { width: bounds.width, height: bounds.height });
+                item.cssFinally('alignSelf');
             }
-            node.cssFinally('display');
         }
         if (mainData.wrap) {
             function setDirection(align: string, sort: string, size: string) {

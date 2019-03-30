@@ -10,6 +10,14 @@ import { CONTAINER_NODE } from '../lib/enumeration';
 import $Layout = squared.base.Layout;
 import $NodeList = squared.base.NodeList;
 
+type FlexBasis = {
+    item: View;
+    basis: number;
+    dimension: number;
+    shrink: number;
+    grow: number;
+};
+
 const $const = squared.base.lib.constant;
 const $enum = squared.base.lib.enumeration;
 const $util = squared.lib.util;
@@ -22,6 +30,66 @@ const CHAIN_MAP = {
     widthHeight: ['Width', 'Height'],
     horizontalVertical: ['Horizontal', 'Vertical']
 };
+
+function adjustGrowRatio(parent: View, items: View[], horizontal: boolean) {
+    const attr = horizontal ? 'width' : 'height';
+    const groupBasis: FlexBasis[] = [];
+    const groupGrow: FlexBasis[] = [];
+    let maxBasis!: View;
+    let maxBasisUnit = 0;
+    let maxDimension = 0;
+    let maxRatio = NaN;
+    for (const item of items) {
+        if (item.flexbox.grow > 0 || item.flexbox.shrink !== 1) {
+            const dimension = item.bounds[attr];
+            const basis = $util.parseUnit(item.flexbox.basis, item.fontSize) || (item.has(attr, $enum.CSS_STANDARD.LENGTH) ? item[attr] : 0);
+            const { shrink, grow } = item.flexbox;
+            const data: FlexBasis = {
+                item,
+                basis,
+                dimension,
+                shrink,
+                grow
+            };
+            if (basis > 0) {
+                let largest = false;
+                if (dimension < basis) {
+                    if (isNaN(maxRatio) || shrink < maxRatio) {
+                        maxRatio = shrink;
+                        largest = true;
+                    }
+                }
+                else {
+                    if (isNaN(maxRatio) || grow > maxRatio) {
+                        maxRatio = grow;
+                        largest = true;
+                    }
+                }
+                if (maxBasis === undefined || largest) {
+                    maxBasis = item;
+                    maxBasisUnit = basis;
+                    maxDimension = dimension;
+                }
+                groupBasis.push(data);
+            }
+            else {
+                groupGrow.push(data);
+            }
+        }
+    }
+    for (const data of groupBasis) {
+        const item = data.item;
+        if (item === maxBasis || data.basis === maxBasisUnit && (maxRatio === data.shrink || maxRatio === data.grow)) {
+            item.flexbox.grow = 1;
+        }
+        else if (data.basis > 0) {
+            item.flexbox.grow = ((data.dimension / data.basis) / (maxDimension / maxBasisUnit)) * data.basis / maxBasisUnit;
+        }
+    }
+    for (const data of groupGrow) {
+        data.item.flexbox.basis = `${data.dimension / parent.box[attr] * 100}%`;
+    }
+}
 
 export default class <T extends View> extends squared.base.extensions.Flexbox<T> {
     public processNode(node: T, parent: T) {
@@ -184,6 +252,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 const horizontal = index === 0;
                 const inverse = horizontal ? 1 : 0;
                 const HV = CHAIN_MAP.horizontalVertical[index];
+                const VH = CHAIN_MAP.horizontalVertical[inverse];
                 const WH = CHAIN_MAP.widthHeight[index];
                 const HW = CHAIN_MAP.widthHeight[inverse];
                 const LT = CHAIN_MAP.leftTop[index];
@@ -201,6 +270,16 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     let baseline: T | undefined;
                     let maxSize = Number.NEGATIVE_INFINITY;
                     $util.captureMap(seg, item => !item.flexElement, item => maxSize = Math.max(maxSize, item.bounds[HWL]));
+                    function setAlignStretch(chain: T) {
+                        const initial: InitialData<T> = chain.unsafe('initial');
+                        if (initial.bounds && initial.bounds[HWL] < maxSize) {
+                            chain.android(`layout_${HWL}`, '0px');
+                            chain.app(`layout_constraint${VH}_weight`, '1');
+                        }
+                    }
+                    if (!groupParent) {
+                        adjustGrowRatio(node, seg, horizontal);
+                    }
                     for (let j = 0; j < seg.length; j++) {
                         const chain = seg[j];
                         const previous = seg[j - 1];
@@ -253,12 +332,6 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 case 'flex-start':
                                     chain.anchor(TL, 'parent');
                                     break;
-                                case 'stretch':
-                                    if (!hasDimension()) {
-                                        chain.anchorParent(horizontal ? AXIS_ANDROID.VERTICAL : AXIS_ANDROID.HORIZONTAL);
-                                        chain.android(`layout_${HWL}`, '0px');
-                                    }
-                                    break;
                                 case 'end':
                                 case 'flex-end':
                                     chain.anchor(BR, 'parent');
@@ -304,11 +377,8 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                         default:
                                             chain.anchor(mainData.wrapReverse ? BR : TL, 'parent');
                                             if (!hasDimension()) {
-                                                const initial: InitialData<T> = chain.unsafe('initial');
-                                                if (initial.bounds && initial.bounds[HWL] < maxSize) {
-                                                    chain.android(`layout_${HW.toLowerCase()}`, '0px');
-                                                    chain.anchor(mainData.wrapReverse ? TL : BR, 'parent');
-                                                }
+                                                chain.anchor(mainData.wrapReverse ? TL : BR, 'parent');
+                                                setAlignStretch(chain);
                                             }
                                             break;
                                     }

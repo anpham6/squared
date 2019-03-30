@@ -243,10 +243,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         this._cached = {};
                         return;
                     case 'width':
+                        this._cached.actualWidth = undefined;
                     case 'minWidth':
                         this._cached.hasWidth = undefined;
                         break;
                     case 'height':
+                        this._cached.actualHeight = undefined;
                     case 'minHeight':
                         this._cached.hasHeight = undefined;
                         break;
@@ -1146,17 +1148,15 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get flexbox() {
         if (this._cached.flexbox === undefined) {
             const actualParent = this.actualParent;
+            const alignSelf = this.css('alignSelf');
+            const justifySelf = this.css('justifySelf');
             this._cached.flexbox = {
-                wrap: this.css('flexWrap'),
-                direction: this.css('flexDirection'),
-                alignContent: this.css('alignContent'),
-                justifyContent: this.css('justifyContent'),
-                alignSelf: !this.has('alignSelf') && actualParent && actualParent.has('alignItems') ? actualParent.css('alignItems') : this.css('alignSelf'),
-                justifySelf: !this.has('justifySelf') && actualParent && actualParent.has('justifyItems') ? actualParent.css('justifyItems') : this.css('justifySelf'),
+                alignSelf: alignSelf === 'auto' && actualParent && actualParent.has('alignItems') ? actualParent.css('alignItems') : alignSelf,
+                justifySelf: justifySelf === 'auto' && actualParent && actualParent.has('justifyItems') ? actualParent.css('justifyItems') : justifySelf,
                 basis: this.css('flexBasis'),
-                order: this.toInt('order'),
-                grow: this.toInt('flexGrow'),
-                shrink: this.toInt('flexShrink')
+                grow: this.toFloat('flexGrow'),
+                shrink: this.toFloat('flexShrink'),
+                order: this.toInt('order')
             };
         }
         return this._cached.flexbox;
@@ -1337,7 +1337,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
     get marginBottom() {
         if (this._cached.marginBottom === undefined) {
-            this._cached.marginBottom = this.inlineStatic && !this.baselineActive ? 0 : this.convertBox('margin', 'Bottom');
+            this._cached.marginBottom = this.inlineStatic && !this.baselineActive || this.every(node => !node.pageFlow || node.floating && node.css('clear') === 'none') && this.css('overflow') !== 'hidden' ? 0 : this.convertBox('margin', 'Bottom');
         }
         return this._cached.marginBottom;
     }
@@ -1610,6 +1610,16 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this._cached.textContent;
     }
 
+    get src() {
+        const element = <HTMLInputElement> this._element;
+        if (element) {
+            if (this.imageElement || element.type === 'image') {
+                return element.src;
+            }
+        }
+        return '';
+    }
+
     set overflow(value) {
         if (value === 0 || value === NODE_ALIGNMENT.VERTICAL || value === NODE_ALIGNMENT.HORIZONTAL || value === (NODE_ALIGNMENT.HORIZONTAL | NODE_ALIGNMENT.VERTICAL)) {
             this._cached.overflow = value;
@@ -1763,14 +1773,22 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get actualWidth() {
-        return this.has('width', CSS_STANDARD.LENGTH) && this.display !== 'table-cell' ? this.toFloat('width') : this.bounds.width;
+        if (this._cached.actualWidth === undefined) {
+            this._cached.actualWidth = this.has('width', CSS_STANDARD.LENGTH) && this.display !== 'table-cell' ? this.toFloat('width') : this.bounds.width;
+        }
+        return this._cached.actualWidth;
     }
 
     get actualHeight() {
-        if (this.has('height', CSS_STANDARD.LENGTH) && this.display !== 'table-cell') {
-            return this.toFloat('height');
+        if (this._cached.actualHeight === undefined) {
+            if (this.has('height', CSS_STANDARD.LENGTH) && this.display !== 'table-cell') {
+                this._cached.actualHeight = this.toFloat('height');
+            }
+            else {
+                this._cached.actualHeight = this.plainText ? this.bounds.bottom - this.bounds.top : this.bounds.height;
+            }
         }
-        return this.plainText ? this.bounds.bottom - this.bounds.top : this.bounds.height;
+        return this._cached.actualHeight;
     }
 
     get actualDimension(): Dimension {

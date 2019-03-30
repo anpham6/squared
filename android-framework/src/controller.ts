@@ -267,42 +267,42 @@ export default class Controller<T extends View> extends squared.base.Controller<
             dimensionA = 'height';
             dimensionB = 'width';
         }
-        let basis = node.flexbox.basis;
-        if (basis !== 'auto') {
-            if ($util.isPercent(basis)) {
-                if (basis !== '0%') {
-                    node.app(`layout_constraint${horizontal ? 'Width' : 'Height'}_percent`, (parseFloat(basis) / 100).toPrecision(node.localSettings.floatPrecision));
-                    basis = '';
-                }
+        const dimensionAA = $util.capitalize(dimensionA);
+        const basis = node.flexbox.basis;
+        function setFlexGrow(value?: string) {
+            node.android(`layout_${dimensionA}`, '0px');
+            if (node.flexbox.grow > 0) {
+                node.app(`layout_constraint${horizontal ? 'Horizontal' : 'Vertical'}_weight`, node.flexbox.grow.toPrecision(node.localSettings.floatPrecision));
             }
-            else if ($util.isLength(basis)) {
-                node.android(`layout_${dimensionA}`, node.convertPX(basis));
-                basis = '';
+            if (value) {
+                if (node.flexbox.grow === 0) {
+                    node.app(`layout_constraint${dimensionAA}_max`, value);
+                }
+                if (node.flexbox.shrink < 1) {
+                    node.app(`layout_constraint${dimensionAA}_min`, $util.formatPX((1 - node.flexbox.shrink) * parseFloat(value)));
+                }
             }
         }
-        if (basis !== '') {
-            const size = node.has(dimensionA) ? node.css(dimensionA) : '';
-            if (node.flexbox.grow > 0) {
-                node.android(`layout_${dimensionA}`, '0px');
-                node.app(`layout_constraint${horizontal ? 'Horizontal' : 'Vertical'}_weight`, node.flexbox.grow.toString());
-            }
-            else if ($util.isLength(size)) {
-                node.android(`layout_${dimensionA}`, size);
-            }
-            else if (node.flexbox.shrink > 1) {
-                node.android(`layout_${dimensionA}`, 'wrap_content');
+        if ($util.isLength(basis)) {
+            setFlexGrow(node.convertPX(basis));
+        }
+        else if ($util.isPercent(basis) && basis !== '0%') {
+            node.app(`layout_constraint${dimensionAA}_percent`, (parseFloat(basis) / 100).toPrecision(node.localSettings.floatPrecision));
+            node.android(`layout_${dimensionA}`, '0px');
+        }
+        else if (node.flexbox.grow > 0) {
+            setFlexGrow();
+        }
+        else {
+            if (horizontal) {
+                constraintPercentWidth(node);
             }
             else {
-                if (horizontal) {
-                    constraintPercentWidth(node);
-                }
-                else {
-                    constraintPercentHeight(node);
-                }
+                constraintPercentHeight(node);
             }
-            if (node.flexbox.shrink < 1) {
-                node.app(`layout_constrained${horizontal ? 'Width' : 'Height'}`, 'true');
-            }
+        }
+        if (node.flexbox.shrink > 1) {
+            node.app(`layout_constrained${horizontal ? 'Width' : 'Height'}`, 'true');
         }
         const sizeB = node.has(dimensionB) ? node.css(dimensionB) : '';
         if ($util.isLength(sizeB)) {
@@ -1055,11 +1055,56 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 break;
         }
         if (node.textElement || node.imageElement || node.svgElement) {
+            let maxWidth = 0;
+            let maxHeight = 0;
             if (node.has('maxWidth')) {
-                node.android('maxWidth', $util.formatPX(node.parseUnit(node.css('maxWidth'))));
+                maxWidth = node.parseUnit(node.css('maxWidth'));
             }
             if (node.has('maxHeight')) {
-                node.android('maxHeight', $util.formatPX(node.parseUnit(node.css('maxHeight'), false)));
+                maxHeight = node.parseUnit(node.css('maxHeight'), false);
+            }
+            if (node.imageElement) {
+                const image = this.application.session.image.get(node.src);
+                if (image) {
+                    if (maxWidth > 0 && maxHeight === 0) {
+                        maxHeight = image.height * (maxWidth / image.width);
+                    }
+                    else if (maxHeight > 0 && maxWidth === 0) {
+                        maxWidth = image.width * (maxHeight / image.height);
+                    }
+                    maxWidth = Math.min(maxWidth, image.width);
+                    maxHeight = Math.min(maxHeight, image.height);
+                    if (!node.has('width')) {
+                        if (image.width >= parent.box.width && node.css('maxWidth') === '100%') {
+                            node.android('layout_width', 'match_parent');
+                        }
+                        else if (maxWidth === image.width) {
+                            node.android('layout_height', 'wrap_content');
+                        }
+                        else {
+                            node.css('width', $util.formatPX(maxWidth), true);
+                        }
+                        maxWidth = 0;
+                    }
+                    if (!node.has('height')) {
+                        if (image.height >= parent.box.height && node.css('maxHeight') === '100%') {
+                            node.android('layout_height', 'match_parent');
+                        }
+                        else if (maxHeight === image.height) {
+                            node.android('layout_height', 'wrap_content');
+                        }
+                        else {
+                            node.css('height', $util.formatPX(maxHeight), true);
+                        }
+                        maxHeight = 0;
+                    }
+                }
+            }
+            if (maxWidth > 0) {
+                node.android('maxWidth', $util.formatPX(maxWidth));
+            }
+            if (maxHeight > 0) {
+                node.android('maxHeight', $util.formatPX(maxHeight));
             }
         }
         node.render(target ? this.application.resolveTarget(target) : parent);

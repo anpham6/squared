@@ -37,7 +37,7 @@ export default class FloatingActionButton<T extends android.base.View> extends s
                 break;
             case 'INPUT':
                 if ((<HTMLInputElement> element).type === 'image') {
-                    src = $Resource.addImage({ mdpi: (<HTMLInputElement> element).src }, $constA.PREFIX_ANDROID.DIALOG);
+                    src = $Resource.addImage({ mdpi: node.src }, $constA.PREFIX_ANDROID.DIALOG);
                 }
                 else {
                     src = $Resource.addImageUrl(node.css('backgroundImage'), $constA.PREFIX_ANDROID.DIALOG);

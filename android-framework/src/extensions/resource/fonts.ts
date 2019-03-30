@@ -170,7 +170,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     }
                     if (!system && (fontStyle || fontWeight)) {
                         const fonts = Resource.STORED.fonts.get(fontFamily) || {};
-                        fonts[(fontStyle ? fontStyle : 'normal') + '-' + (FONTWEIGHT_ANDROID[fontWeight] || fontWeight || 'normal')] = true;
+                        fonts[(fontStyle ? fontStyle : 'normal') + '-' + (FONTWEIGHT_ANDROID[fontWeight] || fontWeight || '400')] = true;
                         Resource.STORED.fonts.set(fontFamily, fonts);
                     }
                 }

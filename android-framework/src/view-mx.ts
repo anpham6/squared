@@ -1116,30 +1116,36 @@ export default (Base: Constructor<squared.base.Node>) => {
                     const hasLineHeight = this.has('lineHeight');
                     if (this.length || hasLineHeight) {
                         const setMarginOffset = (node: T, bottom = true) => {
-                            if (hasLineHeight && node === this) {
-                                const offset = lineHeight - (node.hasHeight ? node.height : node.bounds.height);
-                                if (offset > 0) {
-                                    node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.floor(offset / 2));
-                                    node.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, Math.ceil(offset / 2));
+                            let height = node.actualHeight;
+                            if (height === 0) {
+                                height = node.height;
+                            }
+                            if (height > 0) {
+                                if (hasLineHeight && node === this) {
+                                    const offset = lineHeight - (node.hasHeight ? node.height : height);
+                                    if (offset > 0) {
+                                        node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.floor(offset / 2));
+                                        node.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, Math.ceil(offset / 2));
+                                    }
+                                    else {
+                                        if (!node.has('height') && lineHeight > node.toInt('minHeight')) {
+                                            node.android('minHeight', $util.formatPX(lineHeight));
+                                        }
+                                        if (node.textElement && !node.has('verticalAlign')) {
+                                            node.mergeGravity('gravity', 'center_vertical');
+                                        }
+                                    }
                                 }
                                 else {
-                                    if (!node.has('height') && lineHeight > node.toInt('minHeight')) {
-                                        node.android('minHeight', $util.formatPX(lineHeight));
-                                    }
-                                    if (node.textElement && !node.has('verticalAlign')) {
-                                        node.mergeGravity('gravity', 'center_vertical');
-                                    }
-                                }
-                            }
-                            else {
-                                let offset = (lineHeight - ((node === this || node.layoutVertical && node.length > 1 || node.hasAlign($enum.NODE_ALIGNMENT.MULTILINE) ? node.bounds.height : node.fontSize) + node.paddingTop + node.paddingBottom)) / 2;
-                                if (offset > 0) {
-                                    node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.floor(offset) - (node.inlineVertical && !node.baseline ? $util.convertFloat(node.verticalAlign) : 0));
-                                    if (bottom && lineHeight > node.height) {
-                                        if (node.height > 0) {
-                                            offset = lineHeight - node.height;
+                                    let offset = (lineHeight - ((node === this || node.layoutVertical && node.length > 1 || node.hasAlign($enum.NODE_ALIGNMENT.MULTILINE) ? height : node.fontSize) + node.paddingTop + node.paddingBottom)) / 2;
+                                    if (offset > 0) {
+                                        node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.floor(offset) - (node.inlineVertical && !node.baseline ? $util.convertFloat(node.verticalAlign) : 0));
+                                        if (bottom && lineHeight > node.height) {
+                                            if (node.height > 0) {
+                                                offset = lineHeight - node.height;
+                                            }
+                                            node.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, Math.ceil(offset));
                                         }
-                                        node.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, Math.ceil(offset));
                                     }
                                 }
                             }

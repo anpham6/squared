@@ -59,6 +59,8 @@ export interface CachedValue<T> {
     textContent?: string;
     float?: string;
     actualChildren?: T[];
+    actualWidth?: number;
+    actualHeight?: number;
     flexbox?: Flexbox;
     autoMargin?: AutoMargin;
     visibleStyle?: VisibleStyle;

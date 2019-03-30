@@ -56,7 +56,7 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                 let multipleLength = 0;
                 let listItemCount = 0;
                 for (const item of node) {
-                    if (item.pageFlow && !item.visibleStyle.background && item.blockStatic) {
+                    if (item.pageFlow && !item.visibleStyle.background && item.blockStatic && !item.autoMargin.leftRight && !item.autoMargin.left) {
                         if (item.length > 1) {
                             multipleLength++;
                         }

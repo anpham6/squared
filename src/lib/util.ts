@@ -36,7 +36,7 @@ const NUMERALS = [
     '', 'X', 'XX', 'XXX', 'XL', 'L', 'LX', 'LXX', 'LXXX', 'XC',
     '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'
 ];
-const UNIT_TYPE = 'px|em|ch|pc|pt|vw|vh|vmin|vmax|mm|cm|in';
+const UNIT_TYPE = 'px|em|pt|rem|ch|pc|vw|vh|vmin|vmax|mm|cm|in';
 const CACHE_CAMELCASE: StringMap = {};
 
 export const enum USER_AGENT {
@@ -399,6 +399,9 @@ export function parseUnit(value: string, fontSize?: number) {
                 case 'em':
                 case 'ch':
                     result *= fontSize || 16;
+                    break;
+                case 'rem':
+                    result *= convertFloat(getComputedStyle(document.body).getPropertyValue('font-size')) || 16;
                     break;
                 case 'pc':
                     result *= 12;

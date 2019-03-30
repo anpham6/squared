@@ -222,7 +222,7 @@ export default class File<T extends View> extends squared.base.File<T> implement
                     data[0].font.push({
                         fontStyle,
                         fontWeight,
-                        font: `@font/${name + (fontStyle === 'normal' && fontWeight === 'normal' ? '' : (fontStyle !== 'normal' ? `_${fontStyle}` : '') + (fontWeight !== 'normal' ? `_${fontWeight}` : ''))}`
+                        font: `@font/${name + (fontStyle === 'normal' && fontWeight === '400' ? '' : (fontStyle !== 'normal' ? `_${fontStyle}` : '') + (fontWeight !== '400' ? `_${fontWeight}` : ''))}`
                     });
                 }
                 let output = $xml.replaceTab($xml.applyTemplate('font-family', FONTFAMILY_TMPL, data), this.userSettings.insertSpaces);

@@ -18,7 +18,8 @@ button {
 .output {
     width: 400px;
     overflow: auto;
-    float: left;
+    vertical-align: top;
+    display: inline-block;
 }
 
 .output pre {

@@ -43,16 +43,12 @@ interface BoxModel extends BoxMargin, BoxPadding {
 }
 
 interface Flexbox {
-    order: number;
-    wrap: string;
-    direction: string;
-    alignContent: string;
-    justifyContent: string;
     alignSelf: string;
     justifySelf: string;
     basis: string;
     grow: number;
     shrink: number;
+    order: number;
 }
 
 interface BorderAttribute {

@@ -1,6 +1,6 @@
 import { parseColor } from './color';
 import { getElementAsNode, getElementCache, setElementCache } from './dom';
-import { REGEXP_COMPILED, STRING_PATTERN, USER_AGENT, calculate, capitalize, convertAlpha, convertRoman, convertCamelCase, convertPX, convertLength, convertPercent, isLength, isUserAgent, resolvePath } from './util';
+import { REGEXP_COMPILED, STRING_PATTERN, USER_AGENT, calculate, capitalize, convertAlpha, convertRoman, convertCamelCase, convertPX, convertLength, convertPercent, isLength, isNumber, isUserAgent, resolvePath } from './util';
 
 type Node = squared.base.Node;
 
@@ -109,8 +109,12 @@ export function checkStyleValue(element: Element, attr: string, value: string, s
                 case 'paddingTop':
                 case 'paddingRight':
                 case 'paddingBottom':
-                case 'paddingLeft':
+                case 'paddingLeft': {
+                    if (isNumber(value)) {
+                        return computed;
+                    }
                     return isLength(value) ? convertPX(value, fontSize) : value;
+                }
             }
         }
         return value;
