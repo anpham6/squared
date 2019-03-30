@@ -1106,7 +1106,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     public addGuideline(node: T, parent: T, orientation = '', percent = false, opposite = false) {
-        const documentParent = parent.groupParent ? parent : node.documentParent as T;
+        const documentParent = parent.groupParent && !node.documentParent.hasAlign($enum.NODE_ALIGNMENT.AUTO_LAYOUT) ? parent : node.documentParent as T;
         GUIDELINE_AXIS.forEach(value => {
             if (!node.constraint[value] && (orientation === '' || value === orientation)) {
                 const horizontal = value === AXIS_ANDROID.HORIZONTAL;

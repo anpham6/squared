@@ -47,6 +47,7 @@ interface Flexbox {
     wrap: string;
     direction: string;
     alignSelf: string;
+    alignContent: string;
     justifyContent: string;
     basis: string;
     grow: number;

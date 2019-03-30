@@ -35,7 +35,7 @@ function getRowData(mainData: CssGridData<View>, direction: string) {
 function getGridSize(mainData: CssGridData<View>, direction: string, node: View) {
     const dimension = direction === 'column' ? 'width' : 'height';
     let value = 0;
-    for (let i = 0; i < mainData[direction].count; i++) {
+    for (let i = 0; i < mainData[direction].unit.length; i++) {
         const unit = mainData[direction].unit[i];
         if (unit.endsWith('px')) {
             value += parseInt(unit);

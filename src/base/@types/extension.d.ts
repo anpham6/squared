@@ -39,6 +39,7 @@ export interface FlexboxData<T> {
     wrap: boolean;
     wrapReverse: boolean;
     directionReverse: boolean;
+    alignContent: string;
     justifyContent: string;
     rowCount: number;
     rowDirection: boolean;

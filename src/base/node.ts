@@ -1146,6 +1146,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             this._cached.flexbox = {
                 wrap: this.css('flexWrap'),
                 direction: this.css('flexDirection'),
+                alignContent: this.css('alignContent'),
                 alignSelf: !this.has('alignSelf') && actualParent && actualParent.has('alignItems') ? actualParent.css('alignItems') : this.css('alignSelf'),
                 justifyContent: this.css('justifyContent'),
                 basis: this.css('flexBasis'),

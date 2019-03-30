@@ -17,6 +17,7 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
             wrap: flex.wrap.startsWith('wrap'),
             wrapReverse: flex.wrap === 'wrap-reverse',
             directionReverse: flex.direction.endsWith('reverse'),
+            alignContent: flex.alignContent,
             justifyContent: flex.justifyContent,
             rowDirection: flex.direction.startsWith('row'),
             rowCount: 0,
