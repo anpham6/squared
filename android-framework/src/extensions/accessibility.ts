@@ -14,10 +14,10 @@ export default class <T extends android.base.View> extends squared.base.extensio
                 switch (node.controlName) {
                     case CONTAINER_ANDROID.EDIT:
                         if (!node.companion) {
-                            [$dom.getPreviousElementSibling(element), $dom.getNextElementSibling(element)].some((sibling: HTMLLabelElement | null) => {
+                            [$dom.getPreviousElementSibling(element, node.cacheIndex), $dom.getNextElementSibling(element, node.cacheIndex)].some((sibling: HTMLLabelElement | null) => {
                                 if (sibling) {
-                                    const label = $dom.getElementAsNode<T>(sibling);
-                                    const labelParent = sibling && sibling.parentElement && sibling.parentElement.tagName === 'LABEL' ? $dom.getElementAsNode<T>(sibling.parentElement) : undefined;
+                                    const label = $dom.getElementAsNode<T>(sibling, node.cacheIndex);
+                                    const labelParent = sibling && sibling.parentElement && sibling.parentElement.tagName === 'LABEL' ? $dom.getElementAsNode<T>(sibling.parentElement, node.cacheIndex) : undefined;
                                     if (label && label.visible && label.pageFlow) {
                                         if ($util.hasValue(sibling.htmlFor) && sibling.htmlFor === element.id) {
                                             label.android('labelFor', node.documentId);

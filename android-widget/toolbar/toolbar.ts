@@ -81,7 +81,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                 }
             }
             if (!item.dataset.target) {
-                const targetNode = $dom.getElementAsNode<T>(item);
+                const targetNode = $dom.getElementAsNode<T>(item, node.cacheIndex);
                 if (targetNode) {
                     switch (item.dataset.targetModule) {
                         case 'appBar':

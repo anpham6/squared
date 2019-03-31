@@ -70,11 +70,13 @@ export interface AppSession<T extends squared.base.Node, U> {
     excluded: squared.base.NodeList<T>;
     targetQueue: Map<T, NodeTemplate<T>>;
     renderPosition: Map<T, T[]>;
+    cacheIndex: number[];
     extensionMap: Map<number, squared.base.Extension<T>[]>;
 }
 
 export interface AppProcessing<T extends squared.base.Node, U> {
     cache: U;
+    cacheIndex: number;
     node: T | undefined;
     excluded: squared.base.NodeList<T>;
 }

@@ -53,7 +53,7 @@ export default abstract class Controller<T extends Node> implements squared.base
     }
 
     public applyDefaultStyles(element: Element) {
-        const styleMap: StringMap = $dom.getElementCache(element, 'styleMap') || {};
+        const styleMap: StringMap = $dom.getElementCache(element, 'styleMap', this.application.processing.cacheIndex) || {};
         if ($util.isUserAgent($util.USER_AGENT.FIREFOX)) {
             if (styleMap.display === undefined) {
                 switch (element.tagName) {
@@ -122,7 +122,7 @@ export default abstract class Controller<T extends Node> implements squared.base
                 setDimension('height', 'width');
                 break;
         }
-        $dom.setElementCache(element, 'styleMap', styleMap);
+        $dom.setElementCache(element, 'styleMap', this.application.processing.cacheIndex, styleMap);
     }
 
     public addBeforeOutsideTemplate(id: number, value: string, index = -1) {
@@ -240,5 +240,9 @@ export default abstract class Controller<T extends Node> implements squared.base
                 return '<' + controlName + (attributes || '') + (content ? '>\n' + content + '</' + controlName + '>\n' : ' />\n');
         }
         return '';
+    }
+
+    get generateCacheIndex() {
+        return new Date().getTime();
     }
 }

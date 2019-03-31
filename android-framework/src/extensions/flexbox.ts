@@ -34,14 +34,16 @@ const CHAIN_MAP = {
 function adjustGrowRatio(parent: View, items: View[], horizontal: boolean) {
     const attr = horizontal ? 'width' : 'height';
     const groupBasis: FlexBasis[] = [];
-    const groupGrow: FlexBasis[] = [];
+    function setPercent(flexbox: Flexbox, dimension: number) {
+        flexbox.basis = `${dimension / parent.box[attr] * 100}%`;
+    }
     let maxBasis!: View;
     let maxBasisUnit = 0;
     let maxDimension = 0;
     let maxRatio = NaN;
     for (const item of items) {
+        const dimension = item.bounds[attr];
         if (item.flexbox.grow > 0 || item.flexbox.shrink !== 1) {
-            const dimension = item.bounds[attr];
             const basis = $util.parseUnit(item.flexbox.basis, item.fontSize) || (item.has(attr, $enum.CSS_STANDARD.LENGTH) ? item[attr] : 0);
             const { shrink, grow } = item.flexbox;
             const data: FlexBasis = {
@@ -73,8 +75,11 @@ function adjustGrowRatio(parent: View, items: View[], horizontal: boolean) {
                 groupBasis.push(data);
             }
             else {
-                groupGrow.push(data);
+                setPercent(item.flexbox, dimension);
             }
+        }
+        else if (item.flexbox.alignSelf === 'auto' && !item.has(attr, $enum.CSS_STANDARD.LENGTH)) {
+            setPercent(item.flexbox, dimension);
         }
     }
     for (const data of groupBasis) {
@@ -85,9 +90,6 @@ function adjustGrowRatio(parent: View, items: View[], horizontal: boolean) {
         else if (data.basis > 0) {
             item.flexbox.grow = ((data.dimension / data.basis) / (maxDimension / maxBasisUnit)) * data.basis / maxBasisUnit;
         }
-    }
-    for (const data of groupGrow) {
-        data.item.flexbox.basis = `${data.dimension / parent.box[attr] * 100}%`;
     }
 }
 

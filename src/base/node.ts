@@ -68,6 +68,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     protected constructor(
         public readonly id: number,
+        public readonly cacheIndex = 0,
         element?: Element)
     {
         super();
@@ -100,11 +101,13 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public init() {
         const element = <HTMLElement> this._element;
         if (element) {
-            $dom.setElementCache(element, 'node', this);
-            this.style = $dom.getElementCache(element, 'style') || $css.getStyle(element, undefined, false);
+            if (this.cacheIndex > 0) {
+                $dom.setElementCache(element, 'node', this.cacheIndex, this);
+            }
+            this.style = $dom.getElementCache(element, 'style', 0) || $css.getStyle(element, undefined, undefined, false);
         }
-        if (this.styleElement) {
-            const styleMap = $dom.getElementCache(element, 'styleMap') || {};
+        if (this.styleElement && this.cacheIndex > 0) {
+            const styleMap = $dom.getElementCache(element, 'styleMap', this.cacheIndex) || this._styleMap;
             if (!this.pseudoElement) {
                 const fontSize = parseInt(element.style.getPropertyValue('font-size')) || undefined;
                 for (let attr of Array.from(element.style)) {
@@ -552,7 +555,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             }
             element.style[attr] = value;
             if (element.style[attr] === value) {
-                $dom.setElementCache(element, attr, current);
+                $dom.setElementCache(element, attr, this.cacheIndex, current);
                 return true;
             }
         }
@@ -562,10 +565,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public cssFinally(attr: string) {
         if (this.styleElement) {
             const element = <HTMLElement> this._element;
-            const value: string = $dom.getElementCache(element, attr);
+            const value: string = $dom.getElementCache(element, attr, this.cacheIndex);
             if (value) {
                 element.style[attr] = value;
-                $dom.deleteElementCache(element, attr);
+                $dom.deleteElementCache(element, attr, this.cacheIndex);
                 return true;
             }
         }
@@ -836,7 +839,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             element = children.length && children[0].element ? <Element> children[0].element.previousSibling : null;
         }
         while (element) {
-            const node = $dom.getElementAsNode<T>(element);
+            const node = $dom.getElementAsNode<T>(element, this.cacheIndex);
             if (node) {
                 if (lineBreak && node.lineBreak || excluded && node.excluded) {
                     result.push(node);
@@ -867,7 +870,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             }
         }
         while (element) {
-            const node = $dom.getElementAsNode<T>(element);
+            const node = $dom.getElementAsNode<T>(element, this.cacheIndex);
             if (node) {
                 if (node.naturalElement) {
                     if (lineBreak && node.lineBreak || excluded && node.excluded) {
@@ -1148,14 +1151,24 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get flexbox() {
         if (this._cached.flexbox === undefined) {
             const actualParent = this.actualParent;
+            const getFlexValue = (attr: string, initialValue: number, parent?: Node): number => {
+                const value = (parent || this).css(attr);
+                if ($util.isNumber(value)) {
+                    return parseFloat(value);
+                }
+                else if (value === 'inherit' && actualParent && parent === undefined) {
+                    return getFlexValue(attr, initialValue, actualParent);
+                }
+                return initialValue;
+            };
             const alignSelf = this.css('alignSelf');
             const justifySelf = this.css('justifySelf');
             this._cached.flexbox = {
                 alignSelf: alignSelf === 'auto' && actualParent && actualParent.has('alignItems') ? actualParent.css('alignItems') : alignSelf,
                 justifySelf: justifySelf === 'auto' && actualParent && actualParent.has('justifyItems') ? actualParent.css('justifyItems') : justifySelf,
                 basis: this.css('flexBasis'),
-                grow: this.toFloat('flexGrow'),
-                shrink: this.toFloat('flexShrink'),
+                grow: getFlexValue('flexGrow', 0),
+                shrink: getFlexValue('flexShrink', 1),
                 order: this.toInt('order')
             };
         }
@@ -1474,7 +1487,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         if ($element.hasFreeFormText(element) && this.beforePseudoChild === undefined && this.afterPseudoChild === undefined) {
                             value = true;
                             for (let i = 0; i < element.children.length; i++) {
-                                const node = $dom.getElementAsNode<T>(element.children[i]);
+                                const node = $dom.getElementAsNode<T>(element.children[i], this.cacheIndex);
                                 if (node && !node.excluded && !node.dataset.target) {
                                     value = false;
                                     break;
@@ -1746,7 +1759,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get actualParent() {
-        return this._element && this._element.parentElement ? $dom.getElementAsNode<T>(this._element.parentElement) : undefined;
+        return this._element && this._element.parentElement ? $dom.getElementAsNode<T>(this._element.parentElement, this.cacheIndex) : undefined;
     }
 
     set actualChildren(value) {
@@ -1758,7 +1771,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             if (this.htmlElement && this.naturalElement) {
                 const actualChildren: T[] = [];
                 (<HTMLElement> this._element).childNodes.forEach((element: Element) => {
-                    const node = $dom.getElementAsNode<T>(element);
+                    const node = $dom.getElementAsNode<T>(element, this.cacheIndex);
                     if (node && node.naturalElement) {
                         actualChildren.push(node);
                     }

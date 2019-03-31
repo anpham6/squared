@@ -1,6 +1,6 @@
 import SvgBuild from './svgbuild';
 
-import { getAttributeUrl } from './lib/util';
+import { getAttribute, parseAttributeUrl } from './lib/util';
 
 type SvgShapePattern = squared.svg.SvgShapePattern;
 type SvgUse = squared.svg.SvgUse;
@@ -170,7 +170,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                         break;
                     case 'fill':
                     case 'stroke':
-                        const url = getAttributeUrl(value);
+                        const url = parseAttributeUrl(value);
                         if (url !== '') {
                             this[`${attr}Pattern`] = url;
                         }
@@ -183,7 +183,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                     this[attr] = '';
                                     break;
                                 case 'currentcolor':
-                                    color = $color.parseColor(this.color || $css.getAttribute(this.element, attr, true));
+                                    color = $color.parseColor(this.color || getAttribute(this.element, attr, true));
                                     break;
                                 default:
                                     color = $color.parseColor(value);
@@ -200,7 +200,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
         }
 
         public getAttribute(attr: string, computed = false, inherited = true) {
-            let value = $css.getAttribute(this.element, attr, computed);
+            let value = getAttribute(this.element, attr, computed);
             if (inherited && !$util.isString(value)) {
                 if (this.patternParent) {
                     switch (attr) {
@@ -213,7 +213,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                 }
                 let current = this.useParent || this.parent;
                 while (current) {
-                    value = $css.getAttribute(current.element, attr);
+                    value = getAttribute(current.element, attr);
                     if ($util.isString(value)) {
                         break;
                     }

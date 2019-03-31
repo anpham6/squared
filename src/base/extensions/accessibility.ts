@@ -19,10 +19,10 @@ export default abstract class Accessibility<T extends Node> extends Extension<T>
                                 break;
                             case 'radio':
                             case 'checkbox':
-                                [$dom.getNextElementSibling(element), $dom.getPreviousElementSibling(element)].some((sibling: HTMLLabelElement) => {
+                                [$dom.getNextElementSibling(element, node.cacheIndex), $dom.getPreviousElementSibling(element, node.cacheIndex)].some((sibling: HTMLLabelElement) => {
                                     if (sibling) {
-                                        const label = $dom.getElementAsNode<T>(sibling);
-                                        const labelParent = sibling.parentElement && sibling.parentElement.tagName === 'LABEL' ? $dom.getElementAsNode<T>(sibling.parentElement) : undefined;
+                                        const label = $dom.getElementAsNode<T>(sibling, node.cacheIndex);
+                                        const labelParent = sibling.parentElement && sibling.parentElement.tagName === 'LABEL' ? $dom.getElementAsNode<T>(sibling.parentElement, node.cacheIndex) : undefined;
                                         if (label && label.visible && label.pageFlow) {
                                             if ($util.hasValue(sibling.htmlFor) && sibling.htmlFor === element.id) {
                                                 node.companion = label;

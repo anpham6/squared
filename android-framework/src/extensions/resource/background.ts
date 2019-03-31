@@ -446,7 +446,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
                 const hasBorder = borderData !== undefined || stored.borderRadius !== undefined;
                 const companion = node.companion;
-                if (companion && !companion.visible && companion.htmlElement && !$css.isInheritedStyle(companion.element, 'backgroundColor')) {
+                if (companion && !companion.visible && companion.htmlElement && !Resource.isInheritedStyle(companion, 'backgroundColor')) {
                     const companionStyle: BoxStyle = companion.data(Resource.KEY_NAME, 'boxStyle');
                     if (companionStyle && companionStyle.backgroundColor) {
                         stored.backgroundColor = companionStyle.backgroundColor;

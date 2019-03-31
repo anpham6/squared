@@ -7,7 +7,7 @@ const $dom = squared.lib.dom;
 export default abstract class External<T extends Node> extends Extension<T> {
     public beforeInit(element: HTMLElement, internal = false) {
         if (internal || this.included(element)) {
-            if (!$dom.getElementCache(element, 'squaredExternalDisplay')) {
+            if (!$dom.getElementCache(element, 'squaredExternalDisplay', this.application.processing.cacheIndex)) {
                 const display: string[] = [];
                 let current: HTMLElement | null = <HTMLElement> element;
                 while (current) {
@@ -15,7 +15,7 @@ export default abstract class External<T extends Node> extends Extension<T> {
                     current.style.display = 'block';
                     current = current.parentElement;
                 }
-                $dom.setElementCache(element, 'squaredExternalDisplay', display);
+                $dom.setElementCache(element, 'squaredExternalDisplay', this.application.processing.cacheIndex, display);
             }
         }
     }
@@ -29,9 +29,8 @@ export default abstract class External<T extends Node> extends Extension<T> {
 
     public afterInit(element: HTMLElement, internal = false) {
         if (internal || this.included(element)) {
-            const data = $dom.getElementCache(element, 'squaredExternalDisplay');
-            if (data) {
-                const display: string[] = data;
+            const display: string[] = $dom.getElementCache(element, 'squaredExternalDisplay', this.application.processing.cacheIndex);
+            if (Array.isArray(display)) {
                 let current: HTMLElement | null = element;
                 let i = 0;
                 while (current) {
@@ -39,7 +38,7 @@ export default abstract class External<T extends Node> extends Extension<T> {
                     current = current.parentElement;
                     i++;
                 }
-                $dom.deleteElementCache(element, 'squaredExternalDisplay');
+                $dom.deleteElementCache(element, 'squaredExternalDisplay', this.application.processing.cacheIndex);
             }
         }
     }

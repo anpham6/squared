@@ -7,7 +7,7 @@ import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 
 import { KEYSPLINE_NAME } from './lib/constant';
-import { TRANSFORM } from './lib/util';
+import { TRANSFORM, getAttribute } from './lib/util';
 
 interface AttributeData extends NumberValue<string> {
     transformOrigin?: Point;
@@ -38,7 +38,7 @@ function setAttribute(element: SVGElement, attr: string, value: string) {
 }
 
 function parseAttribute(element: SVGElement, attr: string) {
-    const value = $css.getAttribute(element, attr);
+    const value = getAttribute(element, attr);
     if (attr === 'animation-timing-function') {
         const result: string[] = [];
         let match: RegExpMatchArray | null;
@@ -58,8 +58,8 @@ function setVisible(element: SVGGraphicsElement, value: boolean) {
 }
 
 function isVisible(element: Element) {
-    const value = $css.getAttribute(element, 'visibility', true);
-    return value !== 'hidden' && value !== 'collapse' && $css.getAttribute(element, 'display', true) !== 'none';
+    const value = getAttribute(element, 'visibility', true);
+    return value !== 'hidden' && value !== 'collapse' && getAttribute(element, 'display', true) !== 'none';
 }
 
 function setOpacity(element: SVGGraphicsElement, value: string) {
@@ -432,7 +432,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             setOpacity(this.element, value);
         }
         get opacity() {
-            return $css.getAttribute(this.element, 'opacity') || '1';
+            return getAttribute(this.element, 'opacity') || '1';
         }
     };
 };

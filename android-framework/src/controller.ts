@@ -414,7 +414,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 }
             }
             else {
-                if (node.element && $element.hasLineBreak(node.element, true)) {
+                if (node.element && Resource.hasLineBreak(node, true)) {
                     layout.setType(layout.some(item => item.positionRelative && !item.positionAuto) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR, $enum.NODE_ALIGNMENT.VERTICAL, $enum.NODE_ALIGNMENT.UNKNOWN);
                 }
                 else if (this.checkConstraintFloat(layout)) {
@@ -1116,7 +1116,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     public renderNodeStatic(controlName: string, options?: ExternalData, width?: string, height?: string, content?: string) {
-        const node = new View(0, undefined, this.afterInsertNode) as T;
+        const node = new View(0, 0, undefined, this.afterInsertNode) as T;
         node.setControlType(controlName);
         if (width !== '') {
             node.android('layout_width', width || 'wrap_content');
@@ -1490,14 +1490,14 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                 if (i === 1 && siblings === undefined && item.plainText && !$util.REGEXP_COMPILED.TRAILINGSPACE.test(previous.textContent) && !$util.REGEXP_COMPILED.LEADINGSPACE.test(item.textContent)) {
                                     return false;
                                 }
-                                else if (checkLineWrap && (previous.multiline && $element.hasLineBreak(<Element> previous.element, false, true) || rangeMultiLine.has(previous))) {
+                                else if (checkLineWrap && (previous.multiline && Resource.hasLineBreak(previous, false, true) || rangeMultiLine.has(previous))) {
                                     return true;
                                 }
                             }
                             if (previous.floating && previous.alignParent('left') && rowWidth < maxBoxWidth) {
                                 return false;
                             }
-                            else if (checkLineWrap && (checkWidthWrap() || item.multiline && $element.hasLineBreak(<Element> item.element) || item.preserveWhiteSpace && $util.REGEXP_COMPILED.LEADINGNEWLINE.test(item.textContent))) {
+                            else if (checkLineWrap && (checkWidthWrap() || item.multiline && Resource.hasLineBreak(item) || item.preserveWhiteSpace && $util.REGEXP_COMPILED.LEADINGNEWLINE.test(item.textContent))) {
                                 return true;
                             }
                             return false;
@@ -1506,7 +1506,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             item.linear.top >= previous.linear.bottom && (item.blockStatic || item.floating && previous.float === item.float) ||
                             item.textElement && startNewRow() ||
                             !item.textElement && checkWidthWrap() ||
-                            !item.floating && (previous.blockStatic || item.previousSiblings().some(sibling => sibling.lineBreak || sibling.excluded && sibling.blockStatic) || !!siblings && siblings.some(element => $element.isLineBreak(element))) ||
+                            !item.floating && (previous.blockStatic || item.previousSiblings().some(sibling => sibling.lineBreak || sibling.excluded && sibling.blockStatic) || !!siblings && siblings.some(element => $element.isLineBreak(element, node.cacheIndex))) ||
                             cleared.has(item) ||
                             previous.autoMargin.horizontal)
                         {
@@ -1572,7 +1572,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         }
                     }
                     let previousOffset = 0;
-                    if (siblings && !siblings.some(element => !!$dom.getElementAsNode(element) || $element.isLineBreak(element))) {
+                    if (siblings && !siblings.some(element => !!$dom.getElementAsNode(element, item.cacheIndex) || $element.isLineBreak(element, item.cacheIndex))) {
                         const betweenStart = $dom.getRangeClientRect(siblings[0]);
                         const betweenEnd = siblings.length > 1 ? $dom.getRangeClientRect(siblings[siblings.length - 1]) : undefined;
                         if (!betweenStart.multiline && (betweenEnd === undefined || !betweenEnd.multiline)) {
@@ -1908,7 +1908,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             if (chain.element) {
                                 const elements = $dom.getElementsBetweenSiblings(aboveEnd.element, chain.element);
                                 if (elements) {
-                                    $util.concatArray(nodes, $util.flatMap(elements, element => $dom.getElementAsNode<T>(element) as T));
+                                    $util.concatArray(nodes, $util.flatMap(elements, element => $dom.getElementAsNode<T>(element, node.cacheIndex) as T));
                                 }
                             }
                         }

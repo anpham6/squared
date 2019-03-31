@@ -102,10 +102,10 @@ export function isElementVisible(element: Element, viewport = false) {
     return rect.width !== 0 && rect.height !== 0 && (!viewport || withinViewport(rect));
 }
 
-export function getFirstChildElement(element: Element | null, lineBreak = false) {
+export function getFirstChildElement(element: Element | null, index: number, lineBreak = false) {
     if (element) {
         for (let i = 0; i < element.childNodes.length; i++) {
-            const node = getElementAsNode<Node>(<Element> element.childNodes[i]);
+            const node = getElementAsNode<Node>(<Element> element.childNodes[i], index);
             if (node && node.naturalElement && (!node.excluded || (lineBreak && node.lineBreak))) {
                 return node.element;
             }
@@ -114,10 +114,10 @@ export function getFirstChildElement(element: Element | null, lineBreak = false)
     return null;
 }
 
-export function getLastChildElement(element: Element | null, lineBreak = false) {
+export function getLastChildElement(element: Element | null, index: number, lineBreak = false) {
     if (element) {
         for (let i = element.childNodes.length - 1; i >= 0; i--) {
-            const node = getElementAsNode<Node>(<Element> element.childNodes[i]);
+            const node = getElementAsNode<Node>(<Element> element.childNodes[i], index);
             if (node && node.naturalElement && (!node.excluded || (lineBreak && node.lineBreak))) {
                 return node.element;
             }
@@ -156,11 +156,11 @@ export function getElementsBetweenSiblings(elementStart: Element | null, element
     return undefined;
 }
 
-export function getPreviousElementSibling(element: Element | null) {
+export function getPreviousElementSibling(element: Element | null, index: number) {
     if (element) {
         element = <Element> element.previousSibling;
         while (element) {
-            const node = getElementAsNode<Node>(element);
+            const node = getElementAsNode<Node>(element, index);
             if (node && (!node.excluded || node.lineBreak)) {
                 return node.element;
             }
@@ -170,11 +170,11 @@ export function getPreviousElementSibling(element: Element | null) {
     return null;
 }
 
-export function getNextElementSibling(element: Element | null) {
+export function getNextElementSibling(element: Element | null, index: number) {
     if (element) {
         element = <Element> element.nextSibling;
         while (element) {
-            const node = getElementAsNode<Node>(element);
+            const node = getElementAsNode<Node>(element, index);
             if (node && (!node.excluded || node.lineBreak)) {
                 return node.element;
             }
@@ -184,21 +184,19 @@ export function getNextElementSibling(element: Element | null) {
     return null;
 }
 
-export function setElementCache(element: Element, attr: string, data: any) {
-    element[`__${attr}`] = data;
+export function setElementCache(element: Element, attr: string, index: number, data: any) {
+    element[`__${attr}::${index}`] = data;
 }
 
-export function getElementCache(element: Element, attr: string) {
-    return element[`__${attr}`] || undefined;
+export function getElementCache(element: Element, attr: string, index: number) {
+    return element[`__${attr}::${index}`];
 }
 
-export function deleteElementCache(element: Element, ...attrs: string[]) {
-    for (const attr of attrs) {
-        element[`__${attr}`] = undefined;
-    }
+export function deleteElementCache(element: Element, attr: string, index: number) {
+    delete element[`__${attr}::${index}`];
 }
 
-export function getElementAsNode<T>(element: Element): T | undefined {
-    const node = getElementCache(element, 'node');
+export function getElementAsNode<T>(element: Element, index: number): T | undefined {
+    const node = getElementCache(element, 'node', index);
     return node && node.naturalElement ? node : undefined;
 }

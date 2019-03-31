@@ -155,10 +155,10 @@ function replaceWhiteSpace(node: Node, element: Element, value: string): [string
                 .replace(/\s+/g, ' ');
             break;
         default:
-            if (element.previousSibling && $element.isLineBreak(<Element> element.previousSibling)) {
+            if (element.previousSibling && $element.isLineBreak(<Element> element.previousSibling, node.cacheIndex)) {
                 value = value.replace($util.REGEXP_COMPILED.LEADINGSPACE, '');
             }
-            if (element.nextSibling && $element.isLineBreak(<Element> element.nextSibling)) {
+            if (element.nextSibling && $element.isLineBreak(<Element> element.nextSibling, node.cacheIndex)) {
                 value = value.replace($util.REGEXP_COMPILED.TRAILINGSPACE, '');
             }
             return [value, false];
@@ -315,6 +315,35 @@ export default abstract class Resource<T extends Node> implements squared.base.R
         return width > 0 && height > 0 ? { width: Math.round(width), height: Math.round(height) } : undefined;
     }
 
+    public static isInheritedStyle(node: Node, attr: string) {
+        if (node.styleElement) {
+            const actualParent = node.actualParent;
+            if (actualParent && !node.cssInitial(attr)) {
+                return node.style[attr] === actualParent.style[attr];
+            }
+        }
+        return false;
+    }
+
+    public static hasLineBreak(node: Node, lineBreak = false, trim = false) {
+        if (node.actualChildren.length) {
+            return node.actualChildren.some(item => item.lineBreak);
+        }
+        else if (!lineBreak && node.element) {
+            let value = node.element.textContent || '';
+            if (trim) {
+                value = value.trim();
+            }
+            if (/\n/.test(value)) {
+                if (node.plainText && $css.isParentStyle(node.element, 'whiteSpace', 'pre', 'pre-wrap')) {
+                    return true;
+                }
+                return node.css('whiteSpace').substring(0, 3) === 'pre';
+            }
+        }
+        return false;
+    }
+
     private static getStoredName(asset: string, value: any): string {
         if (Resource.STORED[asset]) {
             for (const [name, data] of Resource.STORED[asset].entries()) {
@@ -372,7 +401,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                     const value = node.css(attr);
                     switch (attr) {
                         case 'backgroundColor':
-                            if (!(!node.has('backgroundColor') && (value === node.cssAscend('backgroundColor', false, true) || node.documentParent.visible && $css.isInheritedStyle(node.element, 'backgroundColor')))) {
+                            if (!(!node.has('backgroundColor') && (value === node.cssAscend('backgroundColor', false, true) || node.documentParent.visible && Resource.isInheritedStyle(node, 'backgroundColor')))) {
                                 const color = $color.parseColor(value, node.css('opacity'));
                                 boxStyle.backgroundColor = color ? color.valueAsRGBA : '';
                             }
@@ -798,7 +827,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                             if (element.tagName === 'CODE') {
                                 value = removeExcluded(node, element, 'innerHTML');
                             }
-                            else if ($element.hasLineBreak(element, true)) {
+                            else if (Resource.hasLineBreak(node, true)) {
                                 value = removeExcluded(node, element, 'innerHTML')
                                     .replace(REGEXP_LINEBREAK, '\\n')
                                     .replace($util.REGEXP_COMPILED.TAGNAME, '');
@@ -840,7 +869,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                 previousSibling.block ||
                                 previousSibling.lineBreak ||
                                 previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
-                                node.multiline && $element.hasLineBreak(element)) ? '' : '&#160;'
+                                node.multiline && Resource.hasLineBreak(node)) ? '' : '&#160;'
                             );
                             value = value.replace($util.REGEXP_COMPILED.TRAILINGSPACE, node.display === 'table-cell' || nextSibling && nextSibling.lineBreak || node.blockStatic ? '' : '&#160;');
                         }

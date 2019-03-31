@@ -24,6 +24,8 @@ declare global {
             public static getOptionArray(element: HTMLSelectElement, replaceEntities?: boolean): [string[] | undefined, string[] | undefined];
             public static isBackgroundVisible(object: BoxStyle | undefined): boolean;
             public static getBackgroundSize<T extends Node>(node: T, value: string): Dimension | undefined;
+            public static isInheritedStyle(node: Node, attr: string): boolean;
+            public static hasLineBreak(node: Node, lineBreak?: boolean, trim?: boolean): boolean;
             constructor(application: Application<T>, cache: NodeList<T>);
         }
     }

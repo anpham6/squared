@@ -2,7 +2,7 @@ import { SvgPoint } from './@types/object';
 
 import SvgBuild from './svgbuild';
 
-const $css = squared.lib.css;
+import { getAttribute } from './lib/util';
 
 function adjustPoints(values: SvgPoint[], x: number, y: number, scaleX: number, scaleY: number) {
     for (const pt of values) {
@@ -29,7 +29,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             else {
                 switch (attr) {
                     case 'd':
-                        this._baseVal[attr] = $css.getAttribute(this.element, 'd');
+                        this._baseVal[attr] = getAttribute(this.element, 'd');
                         return true;
                     case 'points':
                         const points: SVGPointList = this.element[attr];

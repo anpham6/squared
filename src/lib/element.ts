@@ -1,4 +1,3 @@
-import { isParentStyle } from './css';
 import { getElementAsNode } from './dom';
 
 type Node = squared.base.Node;
@@ -132,38 +131,14 @@ export function isPlainText(element: Element, whiteSpace = false) {
     return false;
 }
 
-export function isLineBreak(element: Element, excluded = true) {
+export function isLineBreak(element: Element, index: number) {
     if (element.tagName === 'BR') {
         return true;
     }
-    else if (excluded) {
-        const node = getElementAsNode<Node>(element);
+    else {
+        const node = getElementAsNode<Node>(element, index);
         if (node) {
             return node.excluded && node.blockStatic;
-        }
-    }
-    return false;
-}
-
-export function hasLineBreak(element: Element, lineBreak = false, trim = false) {
-    if (element.children) {
-        for (let i = 0; i < element.children.length; i++) {
-            if (element.children[i].tagName === 'BR') {
-                return true;
-            }
-        }
-    }
-    else if (!lineBreak) {
-        let value = element.textContent || '';
-        if (trim) {
-            value = value.trim();
-        }
-        if (/\n/.test(value)) {
-            if (element.nodeName === '#text' && isParentStyle(element, 'whiteSpace', 'pre', 'pre-wrap')) {
-                return true;
-            }
-            const node = getElementAsNode<Node>(element);
-            return !!node && node.css('whiteSpace').substring(0, 3) === 'pre';
         }
     }
     return false;

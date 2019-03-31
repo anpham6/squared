@@ -13,6 +13,8 @@ declare global {
             export import MATRIX = $util.MATRIX;
             export import SVG = $util.SVG;
             export import TRANSFORM = $util.TRANSFORM;
+            function getAttribute(element: Element, attr: string, computed?: boolean): string;
+            function parseAttributeUrl(value: string): string;
             function getDOMRect(element: SVGElement): DOMRect;
             function getTargetElement(element: SVGElement, rootElement?: HTMLElement | SVGElement | null): SVGElement | null;
             function getNearestViewBox(element: SVGElement): DOMRect | undefined;

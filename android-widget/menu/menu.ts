@@ -116,7 +116,7 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
             if (valid) {
                 element.querySelectorAll('NAV').forEach((item: HTMLElement) => {
                     if ($css.getStyle(element).display === 'none') {
-                        $dom.setElementCache(item, 'squaredExternalDisplay', 'none');
+                        $dom.setElementCache(item, 'squaredExternalDisplay', this.application.processing.cacheIndex, 'none');
                         item.style.display = 'block';
                     }
                 });
@@ -244,10 +244,10 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
 
     public postBaseLayout(node: T) {
         (<HTMLElement> node.element).querySelectorAll('NAV').forEach((item: HTMLElement) => {
-            const display = $dom.getElementCache(item, 'squaredExternalDisplay');
+            const display: string = $dom.getElementCache(item, 'squaredExternalDisplay', node.cacheIndex);
             if (display) {
                 item.style.display = display;
-                $dom.deleteElementCache(item, 'squaredExternalDisplay');
+                $dom.deleteElementCache(item, 'squaredExternalDisplay', node.cacheIndex);
             }
         });
     }

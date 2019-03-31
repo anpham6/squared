@@ -16,7 +16,7 @@ export default class Coordinator<T extends android.base.View> extends squared.ba
         $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
         const element = Coordinator.findNestedElement(node.element, WIDGET_NAME.TOOLBAR);
         if (element) {
-            const toolbar = $dom.getElementAsNode<T>(element);
+            const toolbar = $dom.getElementAsNode<T>(element, node.cacheIndex);
             if (toolbar) {
                 const extension = this.application.extensionManager.retrieve(WIDGET_NAME.TOOLBAR);
                 if (extension && 'collapsingToolbar' in $utilA.createViewAttribute(extension.options[toolbar.elementId])) {

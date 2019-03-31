@@ -40,6 +40,7 @@ declare global {
             afterPseudoChild?: Node;
             companion?: Node;
             extracted?: Node[];
+            readonly cacheIndex: number;
             readonly localSettings: {};
             readonly excludeSection: number;
             readonly excludeProcedure: number;

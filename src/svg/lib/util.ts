@@ -195,7 +195,7 @@ export const TRANSFORM = {
     },
     origin(element: SVGElement, value?: string) {
         if (value === undefined) {
-            value = $css.getAttribute(element, 'transform-origin');
+            value = getAttribute(element, 'transform-origin');
         }
         const result: Point = { x: 0, y: 0 };
         if (value !== '') {
@@ -379,7 +379,11 @@ export function getDOMRect(element: SVGElement) {
     return <DOMRect> result;
 }
 
-export function getAttributeUrl(value: string) {
+export function getAttribute(element: Element, attr: string, computed = false) {
+    return $css.getNamedItem(element, attr) || computed && $css.getStyle(element)[name] as string || '';
+}
+
+export function parseAttributeUrl(value: string) {
     const match = /url\("?(#.+?)"?\)/.exec(value);
     return match ? match[1] : '';
 }

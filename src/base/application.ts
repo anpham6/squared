@@ -21,7 +21,7 @@ let NodeConstructor!: Constructor<Node>;
 function checkPositionStatic(node: Node, parent?: Node) {
     const previousSiblings = node.previousSiblings();
     const nextSiblings = node.nextSiblings();
-    if (!previousSiblings.some(item => item.multiline || item.excluded && !item.blockStatic) && (nextSiblings.every(item => item.blockStatic || item.lineBreak || item.excluded) || parent && node.element === $dom.getLastChildElement(parent.element))) {
+    if (!previousSiblings.some(item => item.multiline || item.excluded && !item.blockStatic) && (nextSiblings.every(item => item.blockStatic || item.lineBreak || item.excluded) || parent && node.element === $dom.getLastChildElement(parent.element, parent.cacheIndex))) {
         node.cssApply({ display: 'inline-block', verticalAlign: 'top' }, true);
         node.positionStatic = true;
         return true;
@@ -78,12 +78,14 @@ export default class Application<T extends Node> implements squared.base.Applica
         targetQueue: new Map<T, NodeTemplate<T>>(),
         excluded: new NodeList<T>(),
         renderPosition: new Map<T, T[]>(),
+        cacheIndex: [],
         extensionMap: new Map<number, Extension<T>[]>()
     };
     public readonly processing: AppProcessing<T, NodeList<T>> = {
         cache: new NodeList<T>(),
         node: undefined,
-        excluded: new NodeList<T>()
+        excluded: new NodeList<T>(),
+        cacheIndex: 0
     };
 
     private _userSettings?: UserSettings;
@@ -189,11 +191,19 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     public reset() {
-        this.session.cache.each(node => node.element && $dom.deleteElementCache(node.element, 'node', 'style', 'styleMap'));
+        for (const index of this.session.cacheIndex) {
+            this.session.cache.each(node => {
+                if (node.element && node.naturalElement && !node.pseudoElement) {
+                    $dom.deleteElementCache(node.element, 'node', index);
+                    $dom.deleteElementCache(node.element, 'styleMap', index);
+                }
+            });
+        }
         for (const element of this.rootElements) {
             element.dataset.iteration = '';
         }
         this.session.documentRoot.length = 0;
+        this.session.cacheIndex.length = 0;
         this.session.targetQueue.clear();
         this.session.image.clear();
         this.session.cache.reset();
@@ -215,6 +225,8 @@ export default class Application<T extends Node> implements squared.base.Applica
         let __THEN: () => void;
         this.rootElements.clear();
         this.initialized = false;
+        this.processing.cacheIndex = this.controllerHandler.generateCacheIndex;
+        this.session.cacheIndex.push(this.processing.cacheIndex);
         this.setStyleMap();
         if (elements.length === 0) {
             elements.push(document.body);
@@ -445,7 +457,7 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     public createNode(element: Element, append = true, delegate = false) {
-        const node = new NodeConstructor(this.nextId, element, this.controllerHandler.afterInsertNode) as T;
+        const node = new NodeConstructor(this.nextId, this.processing.cacheIndex, element, this.controllerHandler.afterInsertNode) as T;
         if (append) {
             this.processing.cache.append(node, delegate);
         }
@@ -480,7 +492,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         }
         const rootNode = this.cascadeParentNode(documentRoot);
         if (rootNode) {
-            rootNode.parent = new NodeConstructor(0, documentRoot.parentElement || document.body, this.controllerHandler.afterInsertNode);
+            rootNode.parent = new NodeConstructor(0, this.processing.cacheIndex, documentRoot.parentElement || document.body, this.controllerHandler.afterInsertNode);
             rootNode.siblingIndex = 0;
             rootNode.documentRoot = true;
             rootNode.documentParent = rootNode.parent;
@@ -1663,7 +1675,7 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     private createPseduoElement(element: HTMLElement, target: string) {
-        const styleMap: StringMap = $dom.getElementCache(element, `styleMap::${target}`);
+        const styleMap: StringMap = $dom.getElementCache(element, `styleMap::${target}`, this.processing.cacheIndex);
         if (styleMap && styleMap.content !== undefined) {
             let value: string = styleMap.content;
             if (value === 'inherit') {
@@ -1755,13 +1767,13 @@ export default class Application<T extends Node> implements squared.base.Applica
                                     }
                                     return undefined;
                                 }
-                                function getPseduoIncrement(parent: Element) {
-                                    const pseduoStyle: StringMap = $dom.getElementCache(parent, `styleMap::${target}`);
+                                const getPseduoIncrement = (parent: Element) => {
+                                    const pseduoStyle: StringMap = $dom.getElementCache(parent, `styleMap::${target}`, this.processing.cacheIndex);
                                     if (pseduoStyle && pseduoStyle.counterIncrement) {
                                         return getCounterValue(pseduoStyle.counterIncrement);
                                     }
                                     return undefined;
-                                }
+                                };
                                 const initalValue = (getPseduoIncrement(element) || 0) + (getCounterValue(style.getPropertyValue('counter-reset')) || 0);
                                 let current: Element | null = element;
                                 let counter = initalValue;
@@ -1872,7 +1884,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         pseudoElement.style[attr] = styleMap[attr];
                     }
                 }
-                $dom.setElementCache(pseudoElement, 'styleMap', styleMap);
+                $dom.setElementCache(pseudoElement, 'styleMap', this.processing.cacheIndex, styleMap);
                 return pseudoElement;
             }
         }
@@ -2045,13 +2057,13 @@ export default class Application<T extends Node> implements squared.base.Applica
                     }
                 }
                 const attrStyle = `styleMap${target ? '::' + target : ''}`;
-                const data = $dom.getElementCache(element, attrStyle);
+                const data = $dom.getElementCache(element, attrStyle, this.processing.cacheIndex);
                 if (data) {
                     Object.assign(data, styleMap);
                 }
                 else {
-                    $dom.setElementCache(element, `style${target ? '::' + target : ''}`, style);
-                    $dom.setElementCache(element, attrStyle, styleMap);
+                    $dom.setElementCache(element, `style${target ? '::' + target : ''}`, 0, style);
+                    $dom.setElementCache(element, attrStyle, this.processing.cacheIndex, styleMap);
                 }
             });
         }

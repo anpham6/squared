@@ -96,7 +96,7 @@ export default (Base: Constructor<squared.base.Node>) => {
     return class View extends Base implements android.base.View {
         public static documentBody() {
             if (View._documentBody === undefined) {
-                const body = new View(0, document.body);
+                const body = new View(0, 0, document.body);
                 body.hide();
                 body.setBounds();
                 View._documentBody = body;
@@ -135,10 +135,11 @@ export default (Base: Constructor<squared.base.Node>) => {
 
         constructor(
             id = 0,
+            cacheIndex = 0,
             element?: Element | null,
             afterInit?: BindGeneric<T, void>)
         {
-            super(id, element);
+            super(id, cacheIndex, element);
             if (afterInit) {
                 afterInit(this);
             }
@@ -421,7 +422,7 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         public clone(id?: number, attributes = false, position = false): T {
-            const node = new View(id || this.id, this.element);
+            const node = new View(id || this.id, this.cacheIndex, this.element);
             Object.assign(node.localSettings, this.localSettings);
             node.tagName = this.tagName;
             if (id !== undefined) {
@@ -1137,7 +1138,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                                     }
                                 }
                                 else {
-                                    let offset = (lineHeight - ((node === this || node.layoutVertical && node.length > 1 || node.hasAlign($enum.NODE_ALIGNMENT.MULTILINE) ? height : node.fontSize) + node.paddingTop + node.paddingBottom)) / 2;
+                                    let offset = (lineHeight - ((node === this || !node.textElement ? height : node.fontSize) + node.paddingTop + node.paddingBottom)) / 2;
                                     if (offset > 0) {
                                         node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.floor(offset) - (node.inlineVertical && !node.baseline ? $util.convertFloat(node.verticalAlign) : 0));
                                         if (bottom && lineHeight > node.height) {

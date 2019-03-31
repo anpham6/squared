@@ -7,21 +7,20 @@ import SvgViewRect$MX from './svgviewrect-mx';
 import SvgContainer from './svgcontainer';
 
 import { INSTANCE_TYPE } from './lib/constant';
-import { SVG, getDOMRect, getTargetElement } from './lib/util';
+import { SVG, getDOMRect, getAttribute, getTargetElement } from './lib/util';
 
 const $color = squared.lib.color;
-const $css = squared.lib.css;
 const $util = squared.lib.util;
 
 function getColorStop(element: SVGGradientElement) {
     const result: ColorStop[] = [];
     const stops = element.getElementsByTagName('stop');
     for (let i = 0; i < stops.length; i++) {
-        const color = $color.parseColor($css.getAttribute(stops[i], 'stop-color'), $css.getAttribute(stops[i], 'stop-opacity'));
+        const color = $color.parseColor(getAttribute(stops[i], 'stop-color'), getAttribute(stops[i], 'stop-opacity'));
         if (color) {
             result.push({
                 color,
-                offset: parseFloat($css.getAttribute(stops[i], 'offset')) / 100
+                offset: parseFloat(getAttribute(stops[i], 'offset')) / 100
             });
         }
     }

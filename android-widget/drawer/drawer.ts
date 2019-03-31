@@ -102,7 +102,7 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
     public postProcedure(node: T) {
         const element = Drawer.findNestedElement(node.element, WIDGET_NAME.COORDINATOR);
         if (element) {
-            const coordinator = $dom.getElementAsNode<T>(element);
+            const coordinator = $dom.getElementAsNode<T>(element, node.cacheIndex);
             if (coordinator && coordinator.inlineHeight && coordinator.some(item => item.positioned)) {
                 coordinator.android('layout_height', 'match_parent');
             }

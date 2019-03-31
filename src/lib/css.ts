@@ -135,16 +135,16 @@ export function getDataSet(element: HTMLElement | null, prefix: string) {
     return result;
 }
 
-export function getStyle(element: Element | null, target?: string, cache = true): CSSStyleDeclaration {
+export function getStyle(element: Element | null, target?: string, index?: number, cache = true): CSSStyleDeclaration {
     if (element) {
         const attr = 'style' + (target ? '::' + target : '');
         if (cache) {
-            const style = getElementCache(element, attr);
+            const style = getElementCache(element, attr, 0);
             if (style) {
                 return style;
             }
-            else if (element.nodeName === '#text') {
-                const node = getElementAsNode<Node>(element);
+            else if (element.nodeName === '#text' && index) {
+                const node = getElementAsNode<Node>(element, index);
                 if (node && node.plainText) {
                     return node.unsafe('styleMap');
                 }
@@ -152,7 +152,7 @@ export function getStyle(element: Element | null, target?: string, cache = true)
         }
         if (hasComputedStyle(element)) {
             const style = getComputedStyle(element, target);
-            setElementCache(element, attr, style);
+            setElementCache(element, attr, 0, style);
             return style;
         }
         return <CSSStyleDeclaration> {};
@@ -189,20 +189,10 @@ export function getInheritedStyle(element: Element | null, attr: string, exclude
     return value;
 }
 
-export function isInheritedStyle(element: Element | null, attr: string) {
-    if (hasComputedStyle(element) && element.parentElement) {
-        const node = getElementAsNode<Node>(element);
-        if (node && !node.cssInitial(attr)) {
-            return getStyle(element)[attr] === getStyle(element.parentElement)[attr];
-        }
-    }
-    return false;
-}
-
-export function getInlineStyle(element: Element, attr: string) {
+export function getInlineStyle(element: Element, attr: string, index?: number) {
     let value = hasComputedStyle(element) ? element.style[attr] : '';
-    if (!value) {
-        const styleMap: StringMap = getElementCache(element, 'styleMap');
+    if (!value && index) {
+        const styleMap: StringMap = getElementCache(element, 'styleMap', index);
         if (styleMap) {
             value = styleMap[attr];
         }
@@ -210,10 +200,16 @@ export function getInlineStyle(element: Element, attr: string) {
     return value || '';
 }
 
-export function getAttribute(element: Element, attr: string, computed = false) {
-    const node = getElementAsNode<Node>(element);
-    const name = convertCamelCase(attr);
-    return node && node.cssInitial(name) || getInlineStyle(element, name) || getNamedItem(element, attr) || computed && getStyle(element)[name] as string || '';
+export function getAttribute(element: Element, attr: string, index?: number, computed = false) {
+    if (index) {
+        const node = getElementAsNode<Node>(element, index);
+        const name = convertCamelCase(attr);
+        const value = node && node.cssInitial(name) || getInlineStyle(element, name, index);
+        if (value) {
+            return value;
+        }
+    }
+    return getNamedItem(element, attr) || computed && getStyle(element)[name] as string || '';
 }
 
 export function getParentAttribute(element: Element | null, attr: string) {

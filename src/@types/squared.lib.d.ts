@@ -26,13 +26,12 @@ declare global {
             function checkStyleValue(element: Element, attr: string, value: string, style?: CSSStyleDeclaration, fontSize?: number): string;
             function hasComputedStyle(element: Element | null): element is HTMLElement;
             function getDataSet(element: HTMLElement | null, prefix: string): StringMap;
-            function getStyle(element: Element | null, target?: string, cache?: boolean): CSSStyleDeclaration;
+            function getStyle(element: Element | null, target?: string, index?: number, cache?: boolean): CSSStyleDeclaration;
             function getFontSize(element: Element | null): number;
             function isParentStyle(element: Element | null, attr: string, ...styles: string[]): boolean;
             function getInheritedStyle(element: Element | null, attr: string, exclude?: RegExp, ...tagNames: string[]): string;
-            function isInheritedStyle(element: Element | null, attr: string): boolean;
-            function getInlineStyle(element: Element, attr: string): string;
-            function getAttribute(element: Element, attr: string, computed?: boolean): string;
+            function getInlineStyle(element: Element, attr: string, index?: number): string;
+            function getAttribute(element: Element, attr: string, index?: number, computed?: boolean): string;
             function getParentAttribute(element: Element | null, attr: string): string;
             function getNamedItem(element: Element | null, attr: string): string;
             function parseVar(element: HTMLElement | SVGElement, value: string): string | undefined;
@@ -50,16 +49,16 @@ declare global {
             function getRangeClientRect(element: Element): TextDimension;
             function assignRect(rect: DOMRect | RectDimension): RectDimension;
             function removeElementsByClassName(className: string): void;
-            function getFirstChildElement(elements: Element | null, lineBreak?: boolean): Element | null;
-            function getLastChildElement(elements: Element | null, lineBreak?: boolean): Element | null;
+            function getFirstChildElement(elements: Element | null, index: number, lineBreak?: boolean): Element | null;
+            function getLastChildElement(elements: Element | null, index: number, lineBreak?: boolean): Element | null;
             function getElementsBetweenSiblings(elementStart: Element | null, elementEnd: Element, whiteSpace?: boolean): Element[] | undefined;
-            function getPreviousElementSibling(element: Element | null): Element | null;
-            function getNextElementSibling(element: Element | null): Element | null;
+            function getPreviousElementSibling(element: Element | null, index: number): Element | null;
+            function getNextElementSibling(element: Element | null, index: number): Element | null;
             function isElementVisible(element: Element, viewport?: boolean): boolean;
-            function setElementCache(element: Element, attr: string, data: any): void;
-            function getElementCache(element: Element, attr: string): any;
-            function deleteElementCache(element: Element, ...attrs: string[]): void;
-            function getElementAsNode<T>(element: Element): T | undefined;
+            function setElementCache(element: Element, attr: string, index: number, data: any): void;
+            function getElementCache(element: Element, attr: string, index: number): any;
+            function deleteElementCache(element: Element, attr: string, index: number): void;
+            function getElementAsNode<T>(element: Element, index: number): T | undefined;
         }
 
         namespace element {
@@ -67,8 +66,7 @@ declare global {
             export import ELEMENT_INLINE = $element.ELEMENT_INLINE;
             function createElement(parent?: Element | null, tagName?: string, placeholder?: boolean, index?: number): HTMLElement;
             function isPlainText(element: Element, whiteSpace?: boolean): boolean;
-            function isLineBreak(element: Element, excluded?: boolean): boolean;
-            function hasLineBreak(element: Element, lineBreak?: boolean, trim?: boolean): boolean;
+            function isLineBreak(element: Element, index: number): boolean;
             function hasFreeFormText(element: Element, whiteSpace?: boolean): boolean;
         }
 
