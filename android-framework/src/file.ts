@@ -1,4 +1,4 @@
-import { FileAsset, SessionData } from '../../src/base/@types/application';
+import { FileAsset, ViewData } from '../../src/base/@types/application';
 import { ResourceStoredMapAndroid, UserSettingsAndroid } from './@types/application';
 
 import View from './view';
@@ -13,8 +13,6 @@ import STRING_TMPL from './template/resources/string';
 import STRINGARRAY_TMPL from './template/resources/string-array';
 import STYLE_TMPL from './template/resources/style';
 
-import $NodeList = squared.base.NodeList;
-
 type StyleXML = {
     data: ExternalData[];
     filename: string;
@@ -25,6 +23,7 @@ type ItemValue = {
     innerText: string;
 };
 
+const $math = squared.lib.math;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
@@ -70,12 +69,12 @@ function createFileAsset(pathname: string, filename: string, content: string): F
     };
 }
 
-function convertLength(value: string, dpi = 160, font = false) {
+function convertLength(value: string, dpi = 160, font = false, precision = 3) {
     if (dpi !== 160) {
         let result = parseFloat(value);
         if (!isNaN(result)) {
             result /= dpi / 160;
-            value = result !== 0 && result > -1 && result < 1 ? result.toPrecision(3) : Math.round(result).toString();
+            return (result !== 0 && result > -1 && result < 1 ? result.toPrecision(precision)  : $math.truncate(result, precision - 1)) + (font ? 'sp' : 'dp');
         }
     }
     else {
@@ -84,9 +83,9 @@ function convertLength(value: string, dpi = 160, font = false) {
     return '0dp';
 }
 
-function replaceLength(value: string, dpi = 160, format = 'dp', font = false) {
-    if (format === 'dp' || font) {
-        return value.replace(REGEXP_UNIT, (match, ...capture) => capture[0] + convertLength(capture[1], dpi, font) + capture[2]);
+function replaceLength(value: string, dpi = 160, format = 'dp', font = false, precision = 3) {
+    if (format === 'dp') {
+        return value.replace(REGEXP_UNIT, (match, ...capture) => capture[0] + convertLength(capture[1], dpi, font, precision) + capture[2]);
     }
     return value;
 }
@@ -94,11 +93,14 @@ function replaceLength(value: string, dpi = 160, format = 'dp', font = false) {
 const caseInsensitive = (a: string | string[], b: string | string[]) => a.toString().toLowerCase() >= b.toString().toLowerCase() ? 1 : -1;
 
 export default class File<T extends View> extends squared.base.File<T> implements android.base.File<T> {
-    public saveAllToDisk(data: SessionData<$NodeList<T>>) {
+    public saveAllToDisk(data: ViewData) {
         const files: FileAsset[] = [];
-        for (let i = 0; i < data.templates.length; i++) {
-            const view = data.templates[i];
-            files.push(createFileAsset(view.pathname, i === 0 ? this.userSettings.outputMainFileName : `${view.filename}.xml`, view.content));
+        let j = 0;
+        for (const name in data) {
+            for (let i = 0; i < data[name].length; i++) {
+                const view: FileAsset = data[name][i];
+                files.push(createFileAsset(view.pathname, j++ === 0 ? this.userSettings.outputMainFileName : `${view.filename}.xml`, view.content));
+            }
         }
         this.saveToDisk(
             $util.concatMultiArray(
@@ -117,14 +119,17 @@ export default class File<T extends View> extends squared.base.File<T> implement
         );
     }
 
-    public layoutAllToXml(data: SessionData<$NodeList<T>>, saveToDisk = false) {
+    public layoutAllToXml(data: ViewData, saveToDisk = false) {
         const result = {};
         const files: FileAsset[] = [];
-        for (let i = 0; i < data.templates.length; i++) {
-            const view = data.templates[i];
-            result[view.filename] = [view.content];
-            if (saveToDisk) {
-                files.push(createFileAsset(view.pathname, i === 0 ? this.userSettings.outputMainFileName : `${view.filename}.xml`, view.content));
+        let j = 0;
+        for (const name in data) {
+            for (let i = 0; i < data[name].length; i++) {
+                const view: FileAsset = data[name][i];
+                result[view.filename] = [view.content];
+                if (saveToDisk) {
+                    files.push(createFileAsset(view.pathname, j++ === 0 ? this.userSettings.outputMainFileName : `${view.filename}.xml`, view.content));
+                }
             }
         }
         if (saveToDisk) {

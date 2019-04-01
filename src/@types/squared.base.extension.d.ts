@@ -34,6 +34,7 @@ declare global {
             afterResources(): void;
             afterParseDocument(): void;
             beforeCascadeDocument(): void;
+            beforeFinalize(): void;
             afterFinalize(): void;
         }
 

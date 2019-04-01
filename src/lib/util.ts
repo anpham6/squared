@@ -38,6 +38,7 @@ const NUMERALS = [
 ];
 const UNIT_TYPE = 'px|em|pt|rem|ch|pc|vw|vh|vmin|vmax|mm|cm|in';
 const CACHE_CAMELCASE: StringMap = {};
+const CACHE_UNDERSCORE: StringMap = {};
 
 export const enum USER_AGENT {
     CHROME = 2,
@@ -124,6 +125,9 @@ export function capitalize(value: string, upper = true) {
 }
 
 export function convertUnderscore(value: string) {
+    if (CACHE_UNDERSCORE[value]) {
+        return CACHE_UNDERSCORE[value];
+    }
     let result = value[0].toLowerCase();
     let lower = true;
     for (let i = 1; i < value.length; i++) {
@@ -137,6 +141,7 @@ export function convertUnderscore(value: string) {
         }
         lower = !upper;
     }
+    CACHE_UNDERSCORE[value] = result;
     return result;
 }
 
@@ -763,7 +768,12 @@ export function assignEmptyValue(dest: {}, ...attrs: string[]) {
 }
 
 export function sortNumber(values: number[], ascending = true) {
-    return ascending ? values.sort((a, b) => a < b ? -1 : 1) : values.sort((a, b) => a > b ? -1 : 1);
+    if (ascending) {
+        return values.sort((a, b) => a < b ? -1 : 1);
+    }
+    else {
+        return values.sort((a, b) => a > b ? -1 : 1);
+    }
 }
 
 export function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]) {
@@ -787,11 +797,13 @@ export function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]) 
                     return 1;
                 }
             }
-            if (ascending) {
-                return valueA >= valueB ? 1 : -1;
-            }
-            else {
-                return valueA <= valueB ? -1 : 1;
+            if (valueA !== valueB) {
+                if (ascending) {
+                    return valueA > valueB ? 1 : -1;
+                }
+                else {
+                    return valueA < valueB ? -1 : 1;
+                }
             }
         }
         return 0;

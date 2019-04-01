@@ -1,4 +1,4 @@
-import { AppHandler, ResourceAssetMap, ResourceStoredMap, SessionData, UserSettings } from '../base/@types/application';
+import { AppHandler, ResourceAssetMap, ResourceStoredMap, UserSettings, ViewData } from '../base/@types/application';
 
 declare global {
     namespace squared.base {
@@ -8,7 +8,7 @@ declare global {
             fileHandler?: File<T>;
             readonly userSettings: UserSettings;
             readonly stored: ResourceStoredMap;
-            finalize(data: SessionData<NodeList<T>>): void;
+            finalize(data: ViewData): void;
             reset(): void;
             setBoxStyle(): void;
             setFontStyle(): void;

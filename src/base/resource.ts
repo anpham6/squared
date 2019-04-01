@@ -1,4 +1,4 @@
-import { ResourceAssetMap, ResourceStoredMap, SessionData, UserSettings } from './@types/application';
+import { ResourceAssetMap, ResourceStoredMap, UserSettings, ViewData } from './@types/application';
 
 import Application from './application';
 import File from './file';
@@ -366,7 +366,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
 
     public abstract get userSettings(): UserSettings;
 
-    public finalize(data: SessionData<NodeList<T>>) {}
+    public finalize(data: ViewData) {}
 
     public reset() {
         for (const name in Resource.ASSETS) {
@@ -671,7 +671,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
             {
                 const opacity = node.css('opacity');
                 const color = $color.parseColor(node.css('color'), opacity);
-                let fontFamily = node.css('fontFamily');
+                let fontFamily = node.css('fontFamily').trim();
                 let fontSize = node.css('fontSize');
                 let fontWeight = node.css('fontWeight');
                 if ($util.isUserAgent($util.USER_AGENT.EDGE) && !node.has('fontFamily')) {
@@ -739,22 +739,22 @@ export default abstract class Resource<T extends Node> implements squared.base.R
 
     public setValueString() {
         for (const node of this.cache) {
-            if (node.visible) {
+            if (node.visible && !node.svgElement) {
                 const element = <HTMLInputElement> node.element;
                 const renderParent = node.renderParent;
                 if (element && renderParent) {
                     let name = '';
                     let value = '';
                     let inlineTrim = false;
-                    let performTrim = true;
+                    let performTrim = false;
                     switch (element.tagName) {
                         case 'INPUT':
-                            value = element.value.trim();
+                            value = element.value;
                             switch (element.type) {
                                 case 'radio':
                                 case 'checkbox':
                                     if (node.companion && !node.companion.visible) {
-                                        value = node.companion.textContent.trim();
+                                        value = node.companion.textContent;
                                     }
                                     break;
                                 case 'submit':
@@ -808,14 +808,13 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                             }
                             break;
                         case 'TEXTAREA':
-                            value = element.value.trim();
+                            value = element.value;
                             break;
                         case 'BUTTON':
                             value = element.innerText;
                             break;
                         case 'IFRAME':
                             value = element.src;
-                            performTrim = false;
                             break;
                         default:
                             if (node.plainText) {
@@ -823,7 +822,9 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                 value = node.textContent
                                     .replace(/&[A-Za-z]+;/g, match => match.replace('&', '&amp;'))
                                     .replace(/\u00A0/g, '&#160;');
-                                [value, inlineTrim] = replaceWhiteSpace(renderParent, node, element, value);
+                                [value] = replaceWhiteSpace(renderParent, node, element, value);
+                                inlineTrim = true;
+                                performTrim = true;
                             }
                             else if (node.inlineText) {
                                 name = node.textContent.trim();
@@ -839,10 +840,10 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                     value = removeExcluded(node, element, 'textContent');
                                 }
                                 [value, inlineTrim] = replaceWhiteSpace(renderParent, node, element, value);
+                                performTrim = true;
                             }
-                            else if (node.htmlElement && element.innerText.trim() === '' && Resource.isBackgroundVisible(node.data(Resource.KEY_NAME, 'boxStyle'))) {
+                            else if (Resource.isBackgroundVisible(node.data(Resource.KEY_NAME, 'boxStyle')) && element.innerText.trim() === '') {
                                 value = element.innerText;
-                                performTrim = false;
                             }
                             break;
                     }
@@ -855,12 +856,12 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                 value = value.replace($util.REGEXP_COMPILED.LEADINGSPACE, '');
                             }
                             else if (previousSibling.element) {
-                                previousSpaceEnd = $util.REGEXP_COMPILED.TRAILINGSPACE.test((<HTMLElement> previousSibling.element).innerText || previousSibling.textContent);
+                                previousSpaceEnd = $util.REGEXP_COMPILED.TRAILINGSPACE.test((<HTMLElement> previousSibling.element).innerHTML || (<HTMLElement> previousSibling.element).innerText || previousSibling.textContent);
                             }
                             if (inlineTrim) {
                                 const original = value;
                                 value = value.trim();
-                                if (previousSibling && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd && $util.REGEXP_COMPILED.LEADINGSPACE.test(original)) {
+                                if (previousSibling && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd && (node.plainText && !previousSibling.plainText && !previousSibling.lineBreak || $util.REGEXP_COMPILED.LEADINGSPACE.test(original))) {
                                     value = '&#160;' + value;
                                 }
                                 if (nextSibling && !nextSibling.lineBreak && $util.REGEXP_COMPILED.TRAILINGSPACE.test(original)) {

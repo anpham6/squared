@@ -118,6 +118,7 @@ export default abstract class Extension<T extends Node> implements squared.base.
     public afterResources() {}
     public afterParseDocument() {}
     public beforeCascadeDocument() {}
+    public beforeFinalize() {}
     public afterFinalize() {}
 
     get installed() {

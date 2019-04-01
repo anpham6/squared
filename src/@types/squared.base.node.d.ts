@@ -22,7 +22,6 @@ declare global {
             controlId: string;
             tagName: string;
             controlName: string;
-            inlineText: boolean;
             baseline: boolean;
             multiline: boolean;
             overflow: number;
@@ -99,6 +98,7 @@ declare global {
             readonly inlineStatic: boolean;
             readonly inlineVertical: boolean;
             readonly plainText: boolean;
+            readonly inlineText: boolean;
             readonly lineBreak: boolean;
             readonly block: boolean;
             readonly blockStatic: boolean;
@@ -191,6 +191,7 @@ declare global {
             exclude(options: { section?: number, procedure?: number, resource?: number }): void;
             setExclusions(): void;
             setBounds(): void;
+            setInlineText(value: boolean, overwrite?: boolean): void;
             setBoxSpacing(): void;
             extractAttributes(depth: number): string;
             resetBox(region: number, node?: Node, fromParent?: boolean): void;

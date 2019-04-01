@@ -11,8 +11,8 @@ export default abstract class External<T extends Node> extends Extension<T> {
                 const display: string[] = [];
                 let current: HTMLElement | null = <HTMLElement> element;
                 while (current) {
-                    display.push($css.getStyle(current).display as string);
-                    current.style.display = 'block';
+                    display.push($css.getStyle(current).getPropertyValue('display'));
+                    current.style.setProperty('display', 'block');
                     current = current.parentElement;
                 }
                 $session.setElementCache(element, 'squaredExternalDisplay', this.application.processing.sessionId, display);
@@ -34,7 +34,7 @@ export default abstract class External<T extends Node> extends Extension<T> {
                 let current: HTMLElement | null = element;
                 let i = 0;
                 while (current) {
-                    current.style.display = display[i];
+                    current.style.setProperty('display', display[i]);
                     current = current.parentElement;
                     i++;
                 }

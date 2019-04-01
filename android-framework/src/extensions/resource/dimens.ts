@@ -6,8 +6,7 @@ const $util = squared.lib.util;
 
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 
-const REGEXP_WIDGETNAME = /[\s\n]+<[^<]*?(\w+):(\w+)="(-?[\d.]+(?:px|dp|sp))"/;
-const REGEXP_CONTROLNAME = /^[\s\n]+<([\w\-.]+)[\s\n]/;
+const REGEXP_WIDGETNAME = /[\s\n]*<([\w\-.]+)[^<]*?(\w+):(\w+)="(-?[\d.]+(?:px|dp|sp))"/;
 const REGEXP_DEVICEUNIT = /^-?[\d.]+(px|dp|sp)$/;
 
 const NAMESPACE_ATTR = ['android', 'app'];
@@ -63,18 +62,18 @@ export default class ResourceDimens<T extends android.base.View> extends squared
     }
 
     public afterFinalize() {
-        for (const view of this.application.viewData) {
-            let match: RegExpExecArray | null;
-            let content = view.content;
-            while ((match = REGEXP_WIDGETNAME.exec(content)) !== null) {
-                const controlName = REGEXP_CONTROLNAME.exec(match[0]);
-                if (controlName) {
-                    const key = getResourceName(STORED.dimens, `${getDisplayName(controlName[1]).toLowerCase()}_${$util.convertUnderscore(match[2])}`, match[3]);
-                    STORED.dimens.set(key, match[3]);
-                    content = content.replace(match[0], match[0].replace(match[3], `@dimen/${key}`));
+        const data = this.application.viewData;
+        for (const name in data) {
+            for (const view of data[name]) {
+                let content = view.content;
+                let match: RegExpExecArray | null;
+                while ((match = REGEXP_WIDGETNAME.exec(content)) !== null) {
+                    const key = getResourceName(STORED.dimens, `${getDisplayName(match[1]).toLowerCase()}_${$util.convertUnderscore(match[3])}`, match[4]);
+                    STORED.dimens.set(key, match[4]);
+                    content = content.replace(match[0], match[0].replace(match[4], `@dimen/${key}`));
                 }
+                view.content = content;
             }
-            view.content = content;
         }
     }
 }

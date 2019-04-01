@@ -49,9 +49,12 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
                 const map = new Map<number, T[]>();
                 children.sort((a, b) => {
                     if (!$util.withinRange(a.linear[align], b.linear[align])) {
-                        return a.linear[align] >= b.linear[align] ? 1 : -1;
+                        return a.linear[align] < b.linear[align] ? -1 : 1;
                     }
-                    return a.linear[sort] >= b.linear[sort] ? 1 : -1;
+                    else if (!$util.withinRange(a.linear[sort], b.linear[sort])) {
+                        return a.linear[sort] < b.linear[sort] ? -1 : 1;
+                    }
+                    return 0;
                 });
                 for (const item of children) {
                     const point = Math.round(item.linear[align]);

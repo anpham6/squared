@@ -62,6 +62,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     private _excludeSection = 0;
     private _excludeProcedure = 0;
     private _excludeResource = 0;
+    private _inlineText = false;
     private _parent?: T;
     private _renderAs?: T;
     private readonly _element: Element | null = null;
@@ -738,6 +739,27 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             const rangeRect = $dom.getRangeClientRect(<Element> this._element);
             this._bounds = $dom.assignRect(rangeRect);
             this._cached.multiline = rangeRect.multiline > 0;
+        }
+    }
+
+    public setInlineText(value: boolean, overwrite = false) {
+        if (overwrite) {
+            this._inlineText = value;
+        }
+        else {
+            if (this.htmlElement && !this.svgElement) {
+                const element = <HTMLElement> this._element;
+                switch (element.tagName) {
+                    case 'INPUT':
+                    case 'IMG':
+                    case 'SELECT':
+                    case 'TEXTAREA':
+                    case 'HR':
+                        break;
+                    default:
+                        this._inlineText = value;
+                }
+            }
         }
     }
 
@@ -1481,41 +1503,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this._cached.inlineVertical;
     }
 
-    set inlineText(value) {
-        this._cached.inlineText = value;
-    }
     get inlineText() {
-        if (this._cached.inlineText === undefined) {
-            let value = false;
-            if (this.htmlElement && !this.svgElement) {
-                const element = <HTMLElement> this._element;
-                switch (element.tagName) {
-                    case 'INPUT':
-                    case 'IMG':
-                    case 'SELECT':
-                    case 'TEXTAREA':
-                    case 'HR':
-                        break;
-                    default:
-                        if (element.children.length === 0 && !element.textContent) {
-                            value = true;
-                        }
-                        else if (this.beforePseudoChild === undefined && this.afterPseudoChild === undefined) {
-                            value = true;
-                            for (let i = 0; i < element.children.length; i++) {
-                                const node = $session.getElementAsNode<T>(element.children[i], this.sessionId);
-                                if (node && !node.excluded && !node.dataset.target) {
-                                    value = false;
-                                    break;
-                                }
-                            }
-                        }
-                        break;
-                }
-            }
-            this._cached.inlineText = value;
-        }
-        return this._cached.inlineText;
+        return this._inlineText;
     }
 
     get block() {

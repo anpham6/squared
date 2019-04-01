@@ -65,15 +65,15 @@ export default abstract class List<T extends Node> extends Extension<T> {
         let i = 1;
         node.each(item => {
             const mainData = List.createDataAttribute();
-            const listStyleType = item.css('listStyleType');
-            if (item.display === 'list-item' || listStyleType && listStyleType !== 'none' || hasSingleImage(item)) {
+            const value = item.css('listStyleType');
+            if (item.display === 'list-item' || value && value !== 'none' || hasSingleImage(item)) {
                 if (item.has('listStyleImage')) {
                     mainData.imageSrc = item.css('listStyleImage');
                 }
                 else {
-                    mainData.ordinal = $css.convertListStyle(listStyleType, i);
+                    mainData.ordinal = $css.convertListStyle(value, i);
                     if (mainData.ordinal === '') {
-                        switch (listStyleType) {
+                        switch (value) {
                             case 'disc':
                                 mainData.ordinal = '●';
                                 break;

@@ -920,7 +920,7 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                                 if (a.animationElement && b.animationElement && a.delay !== b.delay) {
                                     return a.delay < b.delay ? 1 : -1;
                                 }
-                                return a.group.id <= b.group.id ? 1 : -1;
+                                return a.group.id < b.group.id ? 1 : -1;
                             });
                         }
                         function removeIncomplete(item?: SvgAnimation) {
@@ -1553,7 +1553,12 @@ export default <T extends Constructor<squared.svg.SvgView>>(Base: T) => {
                             }
                             repeatingEndTime = Math.max(repeatingEndTime, maxTime);
                             if (forwardMap[attr]) {
-                                forwardMap[attr].sort((a, b) => a.time >= b.time ? 1 : -1);
+                                forwardMap[attr].sort((a, b) => {
+                                    if (a.time === b.time) {
+                                        return 0;
+                                    }
+                                    return a.time < b.time ? -1 : 1;
+                                });
                             }
                         }
                         if (Object.keys(infiniteMap).length) {

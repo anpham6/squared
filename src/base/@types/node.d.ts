@@ -35,7 +35,6 @@ export interface CachedValue<T> {
     borderLeftWidth?: number;
     contentBoxWidth?: number;
     contentBoxHeight?: number;
-    inlineText?: boolean;
     inline?: boolean;
     inlineStatic?: boolean;
     inlineVertical?: boolean;

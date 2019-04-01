@@ -71,7 +71,7 @@ function setOpacity(element: SVGGraphicsElement, value: string) {
         else if (opacity >= 1) {
             opacity = 1;
         }
-        element.style.opacity = opacity.toString();
+        element.style.setProperty('opacity', opacity.toString());
         element.setAttribute('opacity', opacity.toString());
     }
 }

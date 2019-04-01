@@ -18,12 +18,10 @@ export default abstract class Sprite<T extends Node> extends Extension<T> {
                 url = match ? match[0] : '';
             }
             if (url !== '') {
-                url = $css.resolveURL(url);
-                const image = <ImageAsset> this.application.session.image.get(url);
+                const image = <ImageAsset> this.application.session.image.get($css.resolveURL(url));
                 if (image) {
                     const dimension = node.actualDimension;
-                    const fontSize = node.fontSize;
-                    const position = $css.getBackgroundPosition(`${node.css('backgroundPositionX')} ${node.css('backgroundPositionY')}`, dimension, fontSize);
+                    const position = $css.getBackgroundPosition(`${node.css('backgroundPositionX')} ${node.css('backgroundPositionY')}`, dimension, node.fontSize);
                     if (position.left <= 0 && position.top <= 0 && image.width > dimension.width && image.height > dimension.height) {
                         image.position = { x: position.left, y: position.top };
                         node.data(EXT_NAME.SPRITE, 'mainData', image);

@@ -15,6 +15,9 @@ export default class MaxWidthHeight<T extends android.base.View> extends squared
         if (node.has('maxWidth')) {
             const maxWidth = node.css('maxWidth');
             container.cssApply({ width: maxWidth, maxWidth }, true);
+            if (!node.hasWidth && (node.autoMargin.leftRight || node.autoMargin.left)) {
+                node.android('layout_width', 'wrap_content');
+            }
         }
         if (node.has('maxHeight')) {
             const maxHeight = node.css('maxHeight');

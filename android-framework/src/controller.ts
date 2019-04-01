@@ -1,4 +1,4 @@
-import { ControllerSettings, LayoutType, NodeTagXml, NodeXmlTemplate, SessionData } from '../../src/base/@types/application';
+import { ControllerSettings, LayoutType, NodeTagXml, NodeXmlTemplate, ViewData } from '../../src/base/@types/application';
 import { UserSettingsAndroid } from './@types/application';
 import { ViewAttribute } from './@types/node';
 
@@ -346,12 +346,14 @@ export default class Controller<T extends View> extends squared.base.Controller<
         }
     };
 
-    public finalize(data: SessionData<$NodeList<T>>) {
-        for (const view of data.templates) {
-            view.content = $xml.replaceTab(
-                view.content.replace(/{#0}/, getRootNs(view.content)),
-                this.userSettings.insertSpaces
-            );
+    public finalize(data: ViewData) {
+        for (const name in data) {
+            for (const view of data[name]) {
+                view.content = $xml.replaceTab(
+                    view.content.replace(/{#0}/, getRootNs(view.content)),
+                    this.userSettings.insertSpaces
+                );
+            }
         }
     }
 

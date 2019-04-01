@@ -287,19 +287,18 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
     }
 
     private createPlaceholder(node: T, children: T[], target?: string) {
-        const placeholder = this.application.createNode($dom.createElement(node.actualParent ? node.actualParent.element : null, node.block ? 'div' : 'span'), true, children.length > 0);
+        let siblingIndex = Number.POSITIVE_INFINITY;
+        for (const item of children) {
+            siblingIndex = Math.min(siblingIndex, item.siblingIndex);
+        }
+        const placeholder = this.application.createNode($dom.createElement(node.actualParent ? node.actualParent.element : null, node.block ? 'div' : 'span'), true, node, children);
+        placeholder.siblingIndex = siblingIndex;
         if (target) {
             placeholder.dataset.target = target;
         }
         placeholder.inherit(node, 'base');
         placeholder.exclude({ resource: $enum.NODE_RESOURCE.ALL });
         placeholder.positioned = true;
-        let siblingIndex = Number.POSITIVE_INFINITY;
-        for (const item of children) {
-            siblingIndex = Math.min(siblingIndex, item.siblingIndex);
-            item.parent = placeholder;
-        }
-        placeholder.siblingIndex = siblingIndex;
         return placeholder;
     }
 }

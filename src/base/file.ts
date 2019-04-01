@@ -1,7 +1,6 @@
-import { FileAsset, SessionData, UserSettings } from './@types/application';
+import { FileAsset, UserSettings, ViewData } from './@types/application';
 
 import Node from './node';
-import NodeList from './nodelist';
 import Resource from './resource';
 
 const $util = squared.lib.util;
@@ -17,8 +16,8 @@ export default abstract class File<T extends Node> implements squared.base.File<
         const blob = new Blob([data], { type: mime || 'application/octet-stream' });
         const url = window.URL.createObjectURL(blob);
         const element = document.createElement('a');
-        element.style.display = 'none';
-        element.href = url;
+        element.style.setProperty('display', 'none');
+        element.setAttribute('href', url);
         element.setAttribute('download', filename);
         if (typeof element.download === 'undefined') {
             element.setAttribute('target', '_blank');
@@ -36,7 +35,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
         resource.fileHandler = this;
     }
 
-    public abstract saveAllToDisk(data: SessionData<NodeList<T>>): void;
+    public abstract saveAllToDisk(data: ViewData): void;
     public abstract get userSettings(): UserSettings;
 
     public addAsset(pathname: string, filename: string, content = '', uri: string = '') {

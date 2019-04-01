@@ -131,22 +131,22 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                     if (colgroup) {
                         const style = $css.getStyle(colgroup.children[columnIndex[i]]);
                         if (style.background) {
-                            element.style.background = style.background;
+                            element.style.setProperty('background', style.background);
                         }
                         else if (style.backgroundColor) {
-                            element.style.backgroundColor = style.backgroundColor;
+                            element.style.setProperty('background-color', style.backgroundColor);
                         }
                     }
                     else {
                         const exclude = /rgba\(0, 0, 0, 0\)|transparent/;
                         let value = $css.getInheritedStyle(element, 'background', exclude, 'TABLE');
                         if (value !== '') {
-                            element.style.background = value;
+                            element.style.setProperty('background', value);
                         }
                         else {
                             value = $css.getInheritedStyle(element, 'backgroundColor', exclude, 'TABLE');
                             if (value !== '') {
-                                element.style.backgroundColor = value;
+                                element.style.setProperty('background-color', value);
                             }
                         }
                     }
@@ -245,6 +245,8 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                 }
             }
         }
+        else {
+        }
         const mapPercent = mapWidth.reduce((a, b) => a + ($util.isPercent(b) ? parseFloat(b) : 0), 0);
         mainData.layoutType = (() => {
             if (mapWidth.some(value => $util.isPercent(value)) || mapWidth.every(value => $util.isLength(value) && value !== '0px')) {
@@ -315,7 +317,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                     td.css('verticalAlign', 'middle');
                 }
                 const columnWidth = mapWidth[columnIndex[i]];
-                if (columnWidth !== 'undefined') {
+                if (columnWidth !== undefined) {
                     switch (mainData.layoutType) {
                         case LAYOUT_TABLE.VARIABLE:
                             if (columnWidth === 'auto') {

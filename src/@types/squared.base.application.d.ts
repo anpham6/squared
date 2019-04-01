@@ -1,4 +1,4 @@
-import { AppProcessing, AppSession, FileAsset, NodeTemplate, SessionData, UserSettings } from '../base/@types/application';
+import { AppProcessing, AppSession, FileAsset, NodeTemplate, UserSettings, ViewData } from '../base/@types/application';
 
 declare global {
     namespace squared.base {
@@ -15,8 +15,7 @@ declare global {
             readonly rootElements: Set<Element>;
             readonly processing: AppProcessing<T, NodeList<T>>;
             readonly extensions: Extension<T>[];
-            readonly viewData: FileAsset[];
-            readonly sessionData: SessionData<NodeList<T>>;
+            readonly viewData: ViewData;
             readonly nextId: number;
             readonly length: number;
             registerController(handler: Controller<T>): void;
@@ -32,7 +31,7 @@ declare global {
             addRenderLayout(layout: Layout<T>, outerParent?: T): boolean;
             addRenderTemplate(parent: T, node: T, template: NodeTemplate<T> | undefined, index?: number): boolean;
             addImagePreload(element: HTMLImageElement | undefined): void;
-            createNode(element: Element, append?: boolean, delegate?: boolean): T;
+            createNode(element: Element, append?: boolean, parent?: T, children?: T[]): T;
             resolveTarget(target: string): T | undefined;
             toString(): string;
         }

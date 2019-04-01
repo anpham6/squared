@@ -1,4 +1,4 @@
-import { AppProcessing, AppSession, FileAsset, ImageAsset, LayoutResult, NodeTemplate, SessionData, UserSettings } from './@types/application';
+import { AppProcessing, AppSession, FileAsset, ImageAsset, LayoutResult, NodeTemplate, UserSettings, ViewData } from './@types/application';
 
 import Controller from './controller';
 import Extension from './extension';
@@ -92,8 +92,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         image: new Map<string, ImageAsset>(),
         targetQueue: new Map<T, NodeTemplate<T>>(),
         excluded: new NodeList<T>(),
-        renderPosition: new Map<T, T[]>(),
-        sessionIds: [],
+        active: [],
         extensionMap: new Map<number, Extension<T>[]>()
     };
     public readonly processing: AppProcessing<T, NodeList<T>> = {
@@ -178,7 +177,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         }
         for (const layout of this.session.documentRoot) {
             const node = layout.node;
-            const parent = layout.node.renderParent;
+            const parent = node.renderParent;
             if (parent && parent.renderTemplates) {
                 this.addLayoutFile(
                     layout.layoutName,
@@ -188,9 +187,12 @@ export default class Application<T extends Node> implements squared.base.Applica
                 );
             }
         }
-        const sessionData = this.sessionData;
-        this.resourceHandler.finalize(sessionData);
-        controller.finalize(sessionData);
+        for (const ext of this.extensions) {
+            ext.beforeFinalize();
+        }
+        const viewData = this.viewData;
+        this.resourceHandler.finalize(viewData);
+        controller.finalize(viewData);
         for (const ext of this.extensions) {
             ext.afterFinalize();
         }
@@ -201,12 +203,12 @@ export default class Application<T extends Node> implements squared.base.Applica
 
     public saveAllToDisk() {
         if (this.resourceHandler.fileHandler) {
-            this.resourceHandler.fileHandler.saveAllToDisk(this.sessionData);
+            this.resourceHandler.fileHandler.saveAllToDisk(this.viewData);
         }
     }
 
     public reset() {
-        for (const id of this.session.sessionIds) {
+        for (const id of this.session.active) {
             this.session.cache.each(node => {
                 if (node.element && node.naturalElement && !node.pseudoElement) {
                     $session.deleteElementCache(node.element, 'node', id);
@@ -218,12 +220,11 @@ export default class Application<T extends Node> implements squared.base.Applica
             element.dataset.iteration = '';
         }
         this.session.documentRoot.length = 0;
-        this.session.sessionIds.length = 0;
+        this.session.active.length = 0;
         this.session.targetQueue.clear();
         this.session.image.clear();
         this.session.cache.reset();
         this.session.excluded.reset();
-        this.session.renderPosition.clear();
         this.session.extensionMap.clear();
         this.processing.cache.reset();
         this.controllerHandler.reset();
@@ -241,7 +242,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         this.rootElements.clear();
         this.initialized = false;
         this.processing.sessionId = this.controllerHandler.generateSessionId;
-        this.session.sessionIds.push(this.processing.sessionId);
+        this.session.active.push(this.processing.sessionId);
         this.setStyleMap();
         if (elements.length === 0) {
             elements.push(document.body);
@@ -471,10 +472,18 @@ export default class Application<T extends Node> implements squared.base.Applica
         }
     }
 
-    public createNode(element: Element, append = true, delegate = false) {
+    public createNode(element: Element, append = true, parent?: T, children?: T[]) {
         const node = new NodeConstructor(this.nextId, this.processing.sessionId, element, this.controllerHandler.afterInsertNode) as T;
+        if (parent) {
+            node.depth = parent.depth + 1;
+        }
+        if (children) {
+            for (const item of children) {
+                item.parent = node;
+            }
+        }
         if (append) {
-            this.processing.cache.append(node, delegate);
+            this.processing.cache.append(node, parent !== undefined);
         }
         return node;
     }
@@ -784,6 +793,9 @@ export default class Application<T extends Node> implements squared.base.Applica
                                 }
                             }
                         }
+                        else {
+                            includeText = true;
+                        }
                     }
                 }
                 for (let i = 0; i < children.length; i++) {
@@ -797,6 +809,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                     }
                     child.siblingIndex = i;
                 }
+                node.setInlineText(!includeText);
                 node.actualChildren = children;
             }
         }
@@ -877,7 +890,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                 }
                             }
                             if (valid) {
-                                nodeY.inlineText = false;
+                                nodeY.setInlineText(false, true);
                             }
                         }
                     }
@@ -1662,7 +1675,7 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     protected conditionElement(element: HTMLElement) {
-        if ($dom.isElementVisible(element, true) || element.dataset.use && element.dataset.use.split($util.REGEXP_COMPILED.SEPARATOR).some(value => this.userSettings.builtInExtensions.includes(value.trim()))) {
+        if ($dom.isElementVisible(element, true) || element.dataset.use && element.dataset.use.split($util.REGEXP_COMPILED.SEPARATOR).some(value => !!this.extensionManager.retrieve(value.trim()))) {
             return true;
         }
         else {
@@ -1702,16 +1715,16 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
             const style = $css.getStyle(element);
             if (styleMap.fontFamily === undefined) {
-                styleMap.fontFamily = style.fontFamily as string;
+                styleMap.fontFamily = style.getPropertyValue('font-family');
             }
             if (styleMap.fontSize === undefined) {
-                styleMap.fontSize = style.fontSize as string;
+                styleMap.fontSize = style.getPropertyValue('font-size');
             }
             if (styleMap.fontWeight === undefined) {
-                styleMap.fontWeight = style.fontWeight as string;
+                styleMap.fontWeight = style.getPropertyValue('font-weight');
             }
             if (styleMap.color === undefined) {
-                styleMap.color = style.color as string;
+                styleMap.color = style.getPropertyValue('color');
             }
             if (styleMap.display === undefined) {
                 styleMap.display = 'inline';
@@ -1724,8 +1737,24 @@ export default class Application<T extends Node> implements squared.base.Applica
                 case 'initial':
                 case 'inherit':
                 case 'no-open-quote':
+                    break;
                 case 'no-close-quote':
                 case '""':
+                    let valid = false;
+                    if (styleMap.display === 'block' || styleMap.clear && styleMap.clear !== 'none') {
+                        valid = true;
+                    }
+                    else {
+                        for (const attr in styleMap) {
+                            if (attr.startsWith('padding')) {
+                                valid = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!valid) {
+                        value = '';
+                    }
                     break;
                 case 'open-quote':
                     content = target === 'before' ? '&quot;' : '';
@@ -2098,12 +2127,11 @@ export default class Application<T extends Node> implements squared.base.Applica
         return this._userSettings || {} as UserSettings;
     }
 
-    get viewData() {
-        return (<FileAsset[]> []).concat(this._views, this._includes);
-    }
-
-    get sessionData(): SessionData<NodeList<T>> {
-        return { cache: this.session.cache, templates: this.viewData };
+    get viewData(): ViewData {
+        return {
+            views: this._views,
+            includes: this._includes
+        };
     }
 
     get rendered() {

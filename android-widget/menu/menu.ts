@@ -117,7 +117,7 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
                 element.querySelectorAll('NAV').forEach((item: HTMLElement) => {
                     if ($css.getStyle(element).display === 'none') {
                         $session.setElementCache(item, 'squaredExternalDisplay', this.application.processing.sessionId, 'none');
-                        item.style.display = 'block';
+                        item.style.setProperty('display', 'block');
                     }
                 });
                 this.application.rootElements.add(<HTMLElement> element);
@@ -202,7 +202,8 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
                 parseDataSet(REGEXP_ITEM, element, options);
                 if (!options.android.icon) {
                     const style = $css.getStyle(element);
-                    let src = $Resource.addImageUrl((style.backgroundImage !== 'none' ? style.backgroundImage : style.background) as string, $constA.PREFIX_ANDROID.MENU);
+                    const backgroundImage = style.getPropertyValue('background-image');
+                    let src = $Resource.addImageUrl(backgroundImage !== 'none' ? backgroundImage : style.getPropertyValue('background'), $constA.PREFIX_ANDROID.MENU);
                     if (src !== '') {
                         options.android.icon = `@drawable/${src}`;
                     }
@@ -246,7 +247,7 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
         (<HTMLElement> node.element).querySelectorAll('NAV').forEach((item: HTMLElement) => {
             const display: string = $session.getElementCache(item, 'squaredExternalDisplay', node.sessionId);
             if (display) {
-                item.style.display = display;
+                item.style.setProperty('display', display);
                 $session.deleteElementCache(item, 'squaredExternalDisplay', node.sessionId);
             }
         });

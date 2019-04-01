@@ -85,7 +85,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
             }
             else if (!a.imageElement || !b.imageElement) {
                 if (a.multiline || b.multiline) {
-                    if (a.lineHeight > 0 && b.lineHeight > 0) {
+                    if (a.lineHeight > 0 && b.lineHeight > 0 && a.lineHeight !== b.lineHeight) {
                         return a.lineHeight <= b.lineHeight ? 1 : -1;
                     }
                     else if (a.fontSize === b.fontSize) {
@@ -100,7 +100,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                         else if (!a.htmlElement && b.htmlElement) {
                             return 1;
                         }
-                        return a.siblingIndex >= b.siblingIndex ? 1 : -1;
+                        return a.siblingIndex < b.siblingIndex ? -1 : 1;
                     }
                     return a.fontSize > b.fontSize ? -1 : 1;
                 }
@@ -120,7 +120,10 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                     return a.containerType < b.containerType ? -1 : 1;
                 }
             }
-            return a.actualHeight <= b.actualHeight ? 1 : -1;
+            if (a.actualHeight !== b.actualHeight) {
+                return a.actualHeight > b.actualHeight ? -1 : 1;
+            }
+            return 0;
         });
     }
 
@@ -304,7 +307,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
     }
 
     public static siblingIndex<T extends Node>(a: T, b: T) {
-        return a.siblingIndex >= b.siblingIndex ? 1 : -1;
+        return a.siblingIndex < b.siblingIndex ? -1 : 1;
     }
 
     public afterAppend?: (node: T) => void;

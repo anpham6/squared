@@ -560,10 +560,16 @@ export default (Base: Constructor<squared.base.Node>) => {
                                 }
                                 layoutWidth = 'wrap_content';
                             }
-                            else if (renderParent.width < value && renderParent.has('width', $enum.CSS_STANDARD.LENGTH) && !this.is(CONTAINER_NODE.IMAGE)) {
-                                layoutWidth = 'match_parent';
+                            else if (renderParent.has('width', $enum.CSS_STANDARD.LENGTH)) {
+                                if (renderParent.width < value && !this.is(CONTAINER_NODE.IMAGE)) {
+                                    layoutWidth = 'match_parent';
+                                    value = -1;
+                                }
+                                else if (value + this.contentBoxWidth > renderParent.width && renderParent.innerChild !== this) {
+                                    renderParent.android('layout_width', 'wrap_content');
+                                }
                             }
-                            else {
+                            if (value !== -1) {
                                 layoutWidth = $util.formatPX(value);
                             }
                         }

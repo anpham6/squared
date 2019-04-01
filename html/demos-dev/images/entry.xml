@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"  
+    xmlns:android="http://schemas.android.com/apk/res/android" 
     android:id="@+id/squared_ui"
     android:layout_height="wrap_content"
     android:layout_width="wrap_content"
@@ -79,7 +79,7 @@
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@+id/textview_18"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol91315"
+                    android:text="@string/__symbol29803"
                     style="@style/Plaintext" />
             </RelativeLayout>
             <LinearLayout
@@ -228,7 +228,7 @@
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@+id/textview_21"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol91315"
+                    android:text="@string/__symbol29803"
                     style="@style/Plaintext" />
             </RelativeLayout>
             <LinearLayout
@@ -665,7 +665,7 @@
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@+id/textview_24"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol91315"
+                    android:text="@string/__symbol29803"
                     style="@style/Plaintext" />
             </RelativeLayout>
             <LinearLayout
@@ -736,41 +736,41 @@
                     android:paddingHorizontal="@dimen/select_padding_horizontal"
                     android:paddingVertical="@dimen/select_padding_vertical"
                     style="@style/Select" />
-                <RelativeLayout
-                    android:id="@+id/relativelayout_4"
+                <RadioGroup
+                    android:id="@+id/radiogroup_1"
+                    android:checkedButton="@+id/c2"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/div_layout_margin_start"
-                    android:layout_width="wrap_content">
-                    <RadioGroup
-                        android:id="@+id/radiogroup_1"
-                        android:checkedButton="@+id/c2"
-                        android:layout_alignParentStart="true"
+                    android:layout_width="wrap_content"
+                    android:orientation="horizontal">
+                    <RadioButton
+                        android:id="@+id/c2"
                         android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/radio_layout_margin_end"
+                        android:layout_marginStart="@dimen/radio_layout_margin_start"
+                        android:layout_marginTop="@dimen/radio_layout_margin_top"
                         android:layout_width="wrap_content"
-                        android:orientation="horizontal">
-                        <RadioButton
-                            android:id="@+id/c2"
-                            android:layout_marginStart="@dimen/radio_layout_margin_start"
-                            android:text="@string/birth"
-                            style="@style/Radio.radiogroup_1" />
-                        <RadioButton
-                            android:id="@+id/c3"
-                            android:layout_marginStart="@dimen/radio_layout_margin_start_1"
-                            android:text="@string/death"
-                            style="@style/Radio.radiogroup_1" />
-                    </RadioGroup>
+                        android:text="@string/birth"
+                        style="@style/Radio" />
+                    <RadioButton
+                        android:id="@+id/c3"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/radio_layout_margin_end"
+                        android:layout_marginStart="@dimen/radio_layout_margin_start_1"
+                        android:layout_marginTop="@dimen/radio_layout_margin_top"
+                        android:layout_width="wrap_content"
+                        android:text="@string/death"
+                        style="@style/Radio" />
                     <CheckBox
                         android:id="@+id/c4"
-                        android:layout_alignBottom="@+id/radiogroup_1"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="@dimen/checkbox_layout_margin_end"
                         android:layout_marginStart="@dimen/checkbox_layout_margin_start"
                         android:layout_marginVertical="@dimen/checkbox_layout_margin_vertical"
-                        android:layout_toEndOf="@+id/radiogroup_1"
                         android:layout_width="wrap_content"
                         android:text="@string/none"
                         style="@style/Checkbox" />
-                </RelativeLayout>
+                </RadioGroup>
                 <Button
                     android:id="@+id/button_6"
                     android:background="@drawable/button_button_1"
@@ -794,7 +794,7 @@
     <string name="app_name">android</string>
     <string name="__00_inactive">00 - Inactive</string>
     <string name="__01_active">01 - Active</string>
-    <string name="__symbol91315">):</string>
+    <string name="__symbol29803">):</string>
     <string name="active">Active:</string>
     <string name="add">Add</string>
     <string name="all">All</string>
@@ -1003,7 +1003,7 @@
     <style name="Checkbox">
         <item name="android:fontFamily">arial</item>
         <item name="android:textColor">@color/black</item>
-        <item name="android:textSize">13sp</item>
+        <item name="android:textSize">13.3333sp</item>
     </style>
     <style name="H2">
         <item name="android:fontFamily">tahoma</item>
@@ -1033,13 +1033,7 @@
     <style name="Radio">
         <item name="android:fontFamily">arial</item>
         <item name="android:textColor">@color/black</item>
-        <item name="android:textSize">13sp</item>
-    </style>
-    <style name="Radio.radiogroup_1">
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_marginEnd">@dimen/radio_layout_margin_end</item>
-        <item name="android:layout_marginTop">@dimen/radio_layout_margin_top</item>
-        <item name="android:layout_width">wrap_content</item>
+        <item name="android:textSize">13.3333sp</item>
     </style>
     <style name="Select">
         <item name="android:fontFamily">arial</item>
@@ -1057,7 +1051,7 @@
     <style name="Text">
         <item name="android:fontFamily">arial</item>
         <item name="android:textColor">@color/black</item>
-        <item name="android:textSize">13sp</item>
+        <item name="android:textSize">13.3333sp</item>
     </style>
 </resources>
 <!-- filename: res/values/styles.xml -->
@@ -1110,15 +1104,15 @@
 
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <stroke android:width="1dp" android:color="@color/yellowgreen" />
     <solid android:color="@color/darkblue" />
+    <stroke android:width="1dp" android:color="@color/yellowgreen" />
 </shape>
 <!-- filename: res/drawable/h2_textview_1.xml -->
 
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <stroke android:width="1dp" android:color="@color/lightgray_1" />
     <solid android:color="@color/white" />
+    <stroke android:width="1dp" android:color="@color/lightgray_1" />
 </shape>
 <!-- filename: res/drawable/form_entry.xml -->
 
@@ -1136,7 +1130,7 @@
 
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <stroke android:width="2dp" android:color="@color/gainsboro_1" />
     <solid android:color="@color/gainsboro_1" />
+    <stroke android:width="2dp" android:color="@color/gainsboro_1" />
 </shape>
 <!-- filename: res/drawable/button_button_1.xml -->

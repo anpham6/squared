@@ -348,7 +348,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
 
     public afterResources() {
         const settings = <UserSettingsAndroid> this.application.userSettings;
-        for (const node of this.application.processing.cache.duplicate().sort(a => !a.visible ? -1 : 0)) {
+        for (const node of this.application.processing.cache) {
             const stored: BoxStyle = node.data(Resource.KEY_NAME, 'boxStyle');
             if (stored && node.hasResource($enum.NODE_RESOURCE.BOX_STYLE)) {
                 const backgroundRepeat = stored.backgroundRepeat.split($util.REGEXP_COMPILED.SEPARATOR);
@@ -956,7 +956,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 }
                             }
                             let height: string | number = node.cssInitial('height');
-                            if (!$util.isLength(height) && height !== '100%' && (node.length === 0 || node.some(item => !item.textElement && item.visible))) {
+                            if (!$util.isLength(height) && height !== '100%' && (node.length === 0 || node.some(item => !item.multiline))) {
                                 height = node.bounds.height + (node.is(CONTAINER_NODE.LINE) ? 0 : node.borderTopWidth + node.borderBottomWidth);
                                 if (parentHeight === 0 || (height > 0 && height < parentHeight)) {
                                     node.css('height', $util.formatPX(height), true);

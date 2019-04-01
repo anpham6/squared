@@ -261,73 +261,82 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
             columnEnd.push(node.box.right);
         }
         if (columns.length > 1 && columns[0].length === node.length) {
-            for (const item of node) {
-                item.hide();
-            }
-            node.clear();
             const mainData = { ...Grid.createDataAttribute(), columnCount: columnBalance ? columns[0].length : columns.length };
-            for (let l = 0, count = 0; l < columns.length; l++) {
+            const children: T[][] = [];
+            for (let i = 0, count = 0; i < columns.length; i++) {
                 let spacer = 0;
-                for (let m = 0, start = 0; m < columns[l].length; m++) {
-                    const item = columns[l][m];
+                for (let j = 0, start = 0; j < columns[i].length; j++) {
+                    const item = columns[i][j];
+                    if (children[j] === undefined) {
+                        children[j] = [];
+                    }
                     if (!item['spacer']) {
-                        item.parent = node;
                         const data: GridCellData<T> = Object.assign(Grid.createDataCellAttribute(), item.data(EXT_NAME.GRID, 'cellData'));
                         if (columnBalance) {
-                            data.rowStart = m === 0;
-                            data.rowEnd = m === columns[l].length - 1;
-                            data.cellStart = l === 0 && m === 0;
-                            data.cellEnd = l === columns.length - 1 && data.rowEnd;
-                            data.index = m;
+                            data.rowStart = j === 0;
+                            data.rowEnd = j === columns[i].length - 1;
+                            data.cellStart = i === 0 && j === 0;
+                            data.cellEnd = i === columns.length - 1 && data.rowEnd;
+                            data.index = j;
                         }
                         else {
                             let rowSpan = 1;
                             let columnSpan = 1 + spacer;
-                            for (let n = l + 1; n < columns.length; n++) {
-                                if ((columns[n][m] as any).spacer === 1) {
+                            for (let k = i + 1; k < columns.length; k++) {
+                                if ((columns[k][j] as any).spacer === 1) {
                                     columnSpan++;
-                                    (columns[n][m] as any).spacer = 2;
+                                    (columns[k][j] as any).spacer = 2;
                                 }
                                 else {
                                     break;
                                 }
                             }
                             if (columnSpan === 1) {
-                                for (let n = m + 1; n < columns[l].length; n++) {
-                                    if ((columns[l][n] as any).spacer === 1) {
+                                for (let k = j + 1; k < columns[i].length; k++) {
+                                    if ((columns[i][k] as any).spacer === 1) {
                                         rowSpan++;
-                                        (columns[l][n] as any).spacer = 2;
+                                        (columns[i][k] as any).spacer = 2;
                                     }
                                     else {
                                         break;
                                     }
                                 }
                             }
-                            const index = Math.min(l + (columnSpan - 1), columnEnd.length - 1);
+                            const l = Math.min(i + (columnSpan - 1), columnEnd.length - 1);
                             const actualChildren = item.documentParent.actualChildren;
                             for (const sibling of actualChildren) {
-                                if (sibling.visible && !sibling.rendered && sibling.linear.left >= item.linear.right && sibling.linear.right <= columnEnd[index]) {
+                                if (sibling.visible && !sibling.rendered && sibling.linear.left >= item.linear.right && sibling.linear.right <= columnEnd[l]) {
                                     data.siblings.push(sibling as T);
                                 }
                             }
                             data.rowSpan = rowSpan;
                             data.columnSpan = columnSpan;
                             data.rowStart = start++ === 0;
-                            data.rowEnd = columnSpan + l === columns.length;
-                            data.cellStart = count++ === 0;
-                            data.cellEnd = data.rowEnd && m === columns[l].length - 1;
-                            data.index = l;
+                            data.rowEnd = columnSpan + i === columns.length;
+                            data.cellStart = count === 0;
+                            data.cellEnd = data.rowEnd && j === columns[i].length - 1;
+                            data.index = i;
                             spacer = 0;
                         }
                         item.data(EXT_NAME.GRID, 'cellData', data);
+                        children[j].push(item);
                     }
                     else if (item['spacer'] === 1) {
                         spacer++;
                     }
                 }
             }
-            $util.sortArray(node.children, true, 'documentParent.siblingIndex', 'siblingIndex');
-            node.each((item, index) => item.siblingIndex = index);
+            for (const item of node) {
+                item.hide();
+            }
+            node.clear();
+            let index = 0;
+            for (const group of children) {
+                for (const item of group) {
+                    item.parent = node;
+                    item.siblingIndex = index++;
+                }
+            }
             if (node.tableElement && node.css('borderCollapse') === 'collapse') {
                 node.modifyBox(BOX_STANDARD.PADDING_TOP, null);
                 node.modifyBox(BOX_STANDARD.PADDING_RIGHT, null);

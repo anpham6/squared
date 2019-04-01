@@ -69,8 +69,7 @@ export interface AppSession<T extends squared.base.Node, U> {
     image: Map<string, ImageAsset>;
     excluded: squared.base.NodeList<T>;
     targetQueue: Map<T, NodeTemplate<T>>;
-    renderPosition: Map<T, T[]>;
-    sessionIds: string[];
+    active: string[];
     extensionMap: Map<number, squared.base.Extension<T>[]>;
 }
 
@@ -81,9 +80,9 @@ export interface AppProcessing<T extends squared.base.Node, U> {
     excluded: squared.base.NodeList<T>;
 }
 
-export interface SessionData<T> {
-    cache: T;
-    templates: FileAsset[];
+export interface ViewData {
+    views: FileAsset[];
+    includes: FileAsset[];
 }
 
 export interface ExtensionDependency {

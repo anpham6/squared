@@ -45,16 +45,9 @@ function adjustGrowRatio(parent: View, items: View[], horizontal: boolean) {
     for (const item of items) {
         const dimension = item.bounds[attr];
         if (item.flexbox.grow > 0 || item.flexbox.shrink !== 1) {
-            const basis = $util.parseUnit(item.flexbox.basis, item.fontSize) || (item.has(attr, $enum.CSS_STANDARD.LENGTH) ? item[attr] : 0);
-            const { shrink, grow } = item.flexbox;
-            const data: FlexBasis = {
-                item,
-                basis,
-                dimension,
-                shrink,
-                grow
-            };
+            const basis = item.parseUnit(item.flexbox.basis, horizontal) || item.parseUnit(item.css(attr), horizontal);
             if (basis > 0) {
+                const { shrink, grow } = item.flexbox;
                 let largest = false;
                 if (dimension < basis) {
                     if (isNaN(maxRatio) || shrink < maxRatio) {
@@ -68,12 +61,18 @@ function adjustGrowRatio(parent: View, items: View[], horizontal: boolean) {
                         largest = true;
                     }
                 }
-                if (maxBasis === undefined || largest) {
+                if (largest) {
                     maxBasis = item;
                     maxBasisUnit = basis;
                     maxDimension = dimension;
                 }
-                groupBasis.push(data);
+                groupBasis.push({
+                    item,
+                    basis,
+                    dimension,
+                    shrink,
+                    grow
+                });
             }
             else if (percent) {
                 setPercent(item.flexbox, dimension);

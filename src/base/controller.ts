@@ -1,4 +1,4 @@
-import { ControllerSettings, LayoutResult, LayoutType, NodeTag, NodeTagXml, NodeIncludeTemplate, NodeTemplate, NodeXmlTemplate, SessionData, UserSettings } from './@types/application';
+import { ControllerSettings, LayoutResult, LayoutType, NodeTag, NodeTagXml, NodeIncludeTemplate, NodeTemplate, NodeXmlTemplate, UserSettings, ViewData } from './@types/application';
 
 import Application from './application';
 import Layout from './layout';
@@ -37,7 +37,7 @@ export default abstract class Controller<T extends Node> implements squared.base
     public abstract renderNodeGroup(layout: Layout<T>): NodeTemplate<T> | undefined;
     public abstract renderNodeStatic(controlName: string, options?: ExternalData, width?: string, height?: string, content?: string): string;
     public abstract setConstraints(): void;
-    public abstract finalize(data: SessionData<NodeList<T>>): void;
+    public abstract finalize(data: ViewData): void;
     public abstract createNodeGroup(node: T, children: T[], parent: T): T;
     public abstract get userSettings(): UserSettings;
     public abstract get containerTypeHorizontal(): LayoutType;
@@ -85,7 +85,7 @@ export default abstract class Controller<T extends Node> implements squared.base
                             const color = $color.parseColor(style.getPropertyValue('background-color'));
                             if (color === undefined) {
                                 styleMap.backgroundColor = '#DDDDDD';
-                                if (style.borderStyle === 'none') {
+                                if (style.getPropertyValue('border-style')) {
                                     for (const border of ['borderTop', 'borderRight', 'borderBottom', 'borderLeft']) {
                                         styleMap[`${border}Style`] = 'solid';
                                         styleMap[`${border}Color`] = '#DDDDDD';
@@ -221,13 +221,15 @@ export default abstract class Controller<T extends Node> implements squared.base
                 switch (item.type) {
                     case NODE_TEMPLATE.XML: {
                         const { controlName, attributes } = <NodeXmlTemplate<T>> item;
-                        let template = indent + `<${controlName + (depth === 0 ? '{#0} ' : '') + (this.userSettings.showAttributes ? (attributes ? $xml.pushIndent(attributes, depth + 1) : node.extractAttributes(depth + 1)) : '')}`;
-                        if (node.renderTemplates) {
-                            const renderDepth = depth + 1;
+                        const renderDepth = depth + 1;
+                        const beforeInside = this.getBeforeInsideTemplate(node.id, renderDepth);
+                        const afterInside = this.getAfterInsideTemplate(node.id, renderDepth);
+                        let template = indent + `<${controlName + (depth === 0 ? '{#0} ' : '') + (this.userSettings.showAttributes ? (attributes ? $xml.pushIndent(attributes, renderDepth) : node.extractAttributes(renderDepth)) : '')}`;
+                        if (node.renderTemplates || beforeInside !== '' || afterInside !== '') {
                             template += '>\n' +
-                                        this.getBeforeInsideTemplate(node.id, renderDepth) +
-                                        this.cascadeDocument(this.sortRenderPosition(node, <NodeTemplate<T>[]> node.renderTemplates), renderDepth) +
-                                        this.getAfterInsideTemplate(node.id, renderDepth) +
+                                        beforeInside +
+                                        (node.renderTemplates ? this.cascadeDocument(this.sortRenderPosition(node, <NodeTemplate<T>[]> node.renderTemplates), renderDepth) : '') +
+                                        afterInside +
                                         indent + `</${controlName}>\n`;
                         }
                         else {

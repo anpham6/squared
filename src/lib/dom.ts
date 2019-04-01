@@ -220,16 +220,16 @@ export function createElement(parent?: Element | null, tagName = 'span', placeho
     const element = document.createElement(tagName);
     const style = element.style;
     if (placeholder) {
-        style.position = 'static';
-        style.margin = '0px';
-        style.padding = '0px';
-        style.border = 'none';
-        style.cssFloat = 'none';
-        style.clear = 'none';
-        element.className = '__squared.placeholder';
+        style.setProperty('position', 'static');
+        style.setProperty('margin', '0px');
+        style.setProperty('padding', '0px');
+        style.setProperty('border', 'none');
+        style.setProperty('cssFloat', 'none');
+        style.setProperty('clear', 'none');
+        element.setAttribute('className', '__squared.placeholder');
     }
     else {
-        element.className = '__squared.pseudo';
+        element.setAttribute('className', '__squared.pseudo');
     }
     style.display = 'none';
     if (parent) {
