@@ -33,7 +33,7 @@ declare global {
         class View implements View {
             public static documentBody(): View;
             public static getControlName(containerType: number): string;
-            constructor(id: number, cacheIndex?: number, element?: Element | null, afterInit?: BindGeneric<View, void>);
+            constructor(id: number, sessionId?: string, element?: Element | null, afterInit?: BindGeneric<View, void>);
         }
 
         class ViewGroup<T extends View> extends View {}

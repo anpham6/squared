@@ -948,14 +948,16 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     }
                                 }
                             }
-                            if (!node.has('width', $enum.CSS_STANDARD.LENGTH)) {
-                                const width = node.bounds.width + (node.is(CONTAINER_NODE.LINE) ? 0 : node.borderLeftWidth + node.borderRightWidth);
+                            let width: string | number = node.cssInitial('width');
+                            if (!$util.isLength(width) && width !== '100%') {
+                                width = node.bounds.width + (node.is(CONTAINER_NODE.LINE) ? 0 : node.borderLeftWidth + node.borderRightWidth);
                                 if (parentWidth === 0 || (width > 0 && width < parentWidth)) {
                                     node.css('width', $util.formatPX(width), true);
                                 }
                             }
-                            if (!node.has('height', $enum.CSS_STANDARD.LENGTH)) {
-                                const height = node.bounds.height + (node.is(CONTAINER_NODE.LINE) ? 0 : node.borderTopWidth + node.borderBottomWidth);
+                            let height: string | number = node.cssInitial('height');
+                            if (!$util.isLength(height) && height !== '100%' && (node.length === 0 || node.some(item => !item.textElement && item.visible))) {
+                                height = node.bounds.height + (node.is(CONTAINER_NODE.LINE) ? 0 : node.borderTopWidth + node.borderBottomWidth);
                                 if (parentHeight === 0 || (height > 0 && height < parentHeight)) {
                                     node.css('height', $util.formatPX(height), true);
                                     if (node.marginTop < 0) {

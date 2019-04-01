@@ -11,7 +11,7 @@ declare global {
             readonly containerTypeVertical: LayoutType;
             readonly containerTypeVerticalMargin: LayoutType;
             readonly afterInsertNode: BindGeneric<T, void>;
-            readonly generateCacheIndex: number;
+            readonly generateSessionId: string;
             finalize(data: SessionData<NodeList<T>>): void;
             reset(): void;
             applyDefaultStyles(element: Element): void;

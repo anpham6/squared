@@ -1,5 +1,5 @@
 import * as $css from '../lib/css';
-import * as $element from '../lib/element';
+import * as $dom from '../lib/dom';
 import * as $util from '../lib/util';
 import * as $xml from '../lib/xml';
 
@@ -22,17 +22,14 @@ declare global {
             export import BOX_POSITION = $css.BOX_POSITION;
             export import BOX_MARGIN = $css.BOX_MARGIN;
             export import BOX_PADDING = $css.BOX_PADDING;
+            function getStyle(element: Element | null, target?: string, cache?: boolean): CSSStyleDeclaration;
             function getKeyframeRules(): CSSRuleData;
-            function checkStyleValue(element: Element, attr: string, value: string, style?: CSSStyleDeclaration, fontSize?: number): string;
+            function checkStyleValue(element: Element, attr: string, value: string, fontSize?: number, style?: CSSStyleDeclaration): string;
             function hasComputedStyle(element: Element | null): element is HTMLElement;
             function getDataSet(element: HTMLElement | null, prefix: string): StringMap;
-            function getStyle(element: Element | null, target?: string, index?: number, cache?: boolean): CSSStyleDeclaration;
             function getFontSize(element: Element | null): number;
             function isParentStyle(element: Element | null, attr: string, ...styles: string[]): boolean;
             function getInheritedStyle(element: Element | null, attr: string, exclude?: RegExp, ...tagNames: string[]): string;
-            function getInlineStyle(element: Element, attr: string, index?: number): string;
-            function getAttribute(element: Element, attr: string, index?: number, computed?: boolean): string;
-            function getParentAttribute(element: Element | null, attr: string): string;
             function getNamedItem(element: Element | null, attr: string): string;
             function parseVar(element: HTMLElement | SVGElement, value: string): string | undefined;
             function calculateVar(element: HTMLElement | SVGElement, value: string, attr?: string, dimension?: number): number | undefined;
@@ -43,31 +40,17 @@ declare global {
         }
 
         namespace dom {
+            export import ELEMENT_BLOCK = $dom.ELEMENT_BLOCK;
+            export import ELEMENT_INLINE = $dom.ELEMENT_INLINE;
             function newBoxRect(): BoxRect;
             function newRectDimension(): RectDimension;
             function newBoxModel(): BoxModel;
             function getRangeClientRect(element: Element): TextDimension;
             function assignRect(rect: DOMRect | RectDimension): RectDimension;
             function removeElementsByClassName(className: string): void;
-            function getFirstChildElement(elements: Element | null, index: number, lineBreak?: boolean): Element | null;
-            function getLastChildElement(elements: Element | null, index: number, lineBreak?: boolean): Element | null;
             function getElementsBetweenSiblings(elementStart: Element | null, elementEnd: Element, whiteSpace?: boolean): Element[] | undefined;
-            function getPreviousElementSibling(element: Element | null, index: number): Element | null;
-            function getNextElementSibling(element: Element | null, index: number): Element | null;
             function isElementVisible(element: Element, viewport?: boolean): boolean;
-            function setElementCache(element: Element, attr: string, index: number, data: any): void;
-            function getElementCache(element: Element, attr: string, index: number): any;
-            function deleteElementCache(element: Element, attr: string, index: number): void;
-            function getElementAsNode<T>(element: Element, index: number): T | undefined;
-        }
-
-        namespace element {
-            export import ELEMENT_BLOCK = $element.ELEMENT_BLOCK;
-            export import ELEMENT_INLINE = $element.ELEMENT_INLINE;
             function createElement(parent?: Element | null, tagName?: string, placeholder?: boolean, index?: number): HTMLElement;
-            function isPlainText(element: Element, whiteSpace?: boolean): boolean;
-            function isLineBreak(element: Element, index: number): boolean;
-            function hasFreeFormText(element: Element, whiteSpace?: boolean): boolean;
         }
 
         namespace math {
@@ -80,12 +63,20 @@ declare global {
             function truncate(value: number, precision?: number): string;
             function truncateFraction(value: number): number;
             function truncateString(value: string, precision?: number): string;
-            function trianguleASA(a: number, b: number, clen: number): [number, number];
+            function triangulateASA(a: number, b: number, clen: number): [number, number];
             function offsetAngle(start: Point, end: Point): number;
             function offsetAngleX(angle: number, value: number): number;
             function offsetAngleY(angle: number, value: number): number;
             function clampRange(value: number, min?: number, max?: number): number;
             function nextMultiple(values: number[], minumum?: number, offset?: number[]): number;
+        }
+
+        namespace session {
+            function isLineBreak(element: Element, sessionId: string): boolean;
+            function setElementCache(element: Element, attr: string, sessionId: string, data: any): void;
+            function getElementCache(element: Element, attr: string, sessionId: string): any;
+            function deleteElementCache(element: Element, attr: string, sessionId: string): void;
+            function getElementAsNode<T>(element: Element, sessionId: string): T | undefined;
         }
 
         namespace util {

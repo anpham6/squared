@@ -12,7 +12,7 @@ import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURC
 
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
-const $element = squared.lib.element;
+const $session = squared.lib.session;
 const $util = squared.lib.util;
 
 const REGEXP_CACHED: ObjectMap<RegExp> = {};
@@ -21,7 +21,7 @@ let NodeConstructor!: Constructor<Node>;
 function checkPositionStatic(node: Node, parent?: Node) {
     const previousSiblings = node.previousSiblings();
     const nextSiblings = node.nextSiblings();
-    if (!previousSiblings.some(item => item.multiline || item.excluded && !item.blockStatic) && (nextSiblings.every(item => item.blockStatic || item.lineBreak || item.excluded) || parent && node.element === $dom.getLastChildElement(parent.element, parent.cacheIndex))) {
+    if (!previousSiblings.some(item => item.multiline || item.excluded && !item.blockStatic) && (nextSiblings.every(item => item.blockStatic || item.lineBreak || item.excluded) || parent && node.element === parent.getLastChildElement())) {
         node.cssApply({ display: 'inline-block', verticalAlign: 'top' }, true);
         node.positionStatic = true;
         return true;
@@ -62,6 +62,21 @@ function prioritizeExtensions<T extends Node>(element: HTMLElement, extensions: 
     return extensions;
 }
 
+function isPlainText(value: string) {
+    for (let i = 0; i < value.length; i++) {
+        switch (value.charCodeAt(i)) {
+            case 9:
+            case 10:
+            case 13:
+            case 32:
+                continue;
+            default:
+                return true;
+        }
+    }
+    return false;
+}
+
 export default class Application<T extends Node> implements squared.base.Application<T> {
     public controllerHandler: Controller<T>;
     public resourceHandler: Resource<T>;
@@ -78,14 +93,14 @@ export default class Application<T extends Node> implements squared.base.Applica
         targetQueue: new Map<T, NodeTemplate<T>>(),
         excluded: new NodeList<T>(),
         renderPosition: new Map<T, T[]>(),
-        cacheIndex: [],
+        sessionIds: [],
         extensionMap: new Map<number, Extension<T>[]>()
     };
     public readonly processing: AppProcessing<T, NodeList<T>> = {
         cache: new NodeList<T>(),
         node: undefined,
         excluded: new NodeList<T>(),
-        cacheIndex: 0
+        sessionId: ''
     };
 
     private _userSettings?: UserSettings;
@@ -191,11 +206,11 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     public reset() {
-        for (const index of this.session.cacheIndex) {
+        for (const id of this.session.sessionIds) {
             this.session.cache.each(node => {
                 if (node.element && node.naturalElement && !node.pseudoElement) {
-                    $dom.deleteElementCache(node.element, 'node', index);
-                    $dom.deleteElementCache(node.element, 'styleMap', index);
+                    $session.deleteElementCache(node.element, 'node', id);
+                    $session.deleteElementCache(node.element, 'styleMap', id);
                 }
             });
         }
@@ -203,7 +218,7 @@ export default class Application<T extends Node> implements squared.base.Applica
             element.dataset.iteration = '';
         }
         this.session.documentRoot.length = 0;
-        this.session.cacheIndex.length = 0;
+        this.session.sessionIds.length = 0;
         this.session.targetQueue.clear();
         this.session.image.clear();
         this.session.cache.reset();
@@ -225,8 +240,8 @@ export default class Application<T extends Node> implements squared.base.Applica
         let __THEN: () => void;
         this.rootElements.clear();
         this.initialized = false;
-        this.processing.cacheIndex = this.controllerHandler.generateCacheIndex;
-        this.session.cacheIndex.push(this.processing.cacheIndex);
+        this.processing.sessionId = this.controllerHandler.generateSessionId;
+        this.session.sessionIds.push(this.processing.sessionId);
         this.setStyleMap();
         if (elements.length === 0) {
             elements.push(document.body);
@@ -457,7 +472,7 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     public createNode(element: Element, append = true, delegate = false) {
-        const node = new NodeConstructor(this.nextId, this.processing.cacheIndex, element, this.controllerHandler.afterInsertNode) as T;
+        const node = new NodeConstructor(this.nextId, this.processing.sessionId, element, this.controllerHandler.afterInsertNode) as T;
         if (append) {
             this.processing.cache.append(node, delegate);
         }
@@ -492,7 +507,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         }
         const rootNode = this.cascadeParentNode(documentRoot);
         if (rootNode) {
-            rootNode.parent = new NodeConstructor(0, this.processing.cacheIndex, documentRoot.parentElement || document.body, this.controllerHandler.afterInsertNode);
+            rootNode.parent = new NodeConstructor(0, this.processing.sessionId, documentRoot.parentElement || document.body, this.controllerHandler.afterInsertNode);
             rootNode.siblingIndex = 0;
             rootNode.documentRoot = true;
             rootNode.documentParent = rootNode.parent;
@@ -943,7 +958,11 @@ export default class Application<T extends Node> implements squared.base.Applica
                                                 if (horizontal.length) {
                                                     if (floatActive.size && !previous.autoMargin.horizontal && cleared.get(item) !== 'both' && !previousSiblings.some(node => node.lineBreak && !cleared.has(node))) {
                                                         let floatBottom = Number.NEGATIVE_INFINITY;
-                                                        $util.captureMap(horizontal, node => node.floating, node => floatBottom = Math.max(floatBottom, node.linear.bottom));
+                                                        $util.captureMap(
+                                                            horizontal,
+                                                            node => node.floating,
+                                                            node => floatBottom = Math.max(floatBottom, node.linear.bottom)
+                                                        );
                                                         if (!item.floating || item.linear.top < floatBottom) {
                                                             if (cleared.has(item)) {
                                                                 if (!item.floating && floatActive.size < 2 && floated.size === 2) {
@@ -1610,27 +1629,24 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     protected insertNode(element: Element, parent?: T) {
-        let node: T | undefined;
         if (element.nodeName === '#text') {
-            if ($element.isPlainText(element, true) || $css.isParentStyle(element, 'whiteSpace', 'pre', 'pre-wrap')) {
-                node = this.createNode(element, false);
-                node.cssApply({
-                    position: 'static',
-                    display: 'inline',
-                    verticalAlign: 'baseline',
-                    cssFloat: 'none',
-                    clear: 'none',
-                });
+            if (isPlainText(element.textContent as string) || $css.isParentStyle(element, 'whiteSpace', 'pre', 'pre-wrap')) {
+                this.controllerHandler.applyDefaultStyles(element);
+                const node = this.createNode(element, false);
                 if (parent) {
                     node.inherit(parent, 'textStyle');
                 }
+                return node;
+            }
+            else {
+                return undefined;
             }
         }
         else if (!this.controllerHandler.localSettings.svg.enabled || element.parentElement instanceof HTMLElement) {
             this.controllerHandler.applyDefaultStyles(element);
-            node = this.createNode(element, false);
+            const node = this.createNode(element, false);
             if (!node.pseudoElement) {
-                if (!this.controllerHandler.localSettings.unsupported.excluded.has(element.tagName) && this.conditionElement(element)) {
+                if (!this.controllerHandler.localSettings.unsupported.excluded.has(element.tagName) && this.conditionElement(<HTMLElement> element)) {
                     if (!this.userSettings.exclusionsDisabled) {
                         node.setExclusions();
                     }
@@ -1640,42 +1656,38 @@ export default class Application<T extends Node> implements squared.base.Applica
                     node.excluded = true;
                 }
             }
+            return node;
         }
-        return node;
+        return undefined;
     }
 
-    protected conditionElement(element: Element) {
-        if ($css.hasComputedStyle(element)) {
-            if ($dom.isElementVisible(element, true) || element.dataset.use && element.dataset.use.split($util.REGEXP_COMPILED.SEPARATOR).some(value => this.userSettings.builtInExtensions.includes(value.trim()))) {
-                return true;
-            }
-            else {
-                let current = element.parentElement;
-                let valid = true;
-                while (current) {
-                    if ($css.getStyle(current).display === 'none') {
-                        valid = false;
-                        break;
-                    }
-                    current = current.parentElement;
-                }
-                if (valid) {
-                    for (let i = 0; i < element.children.length; i++) {
-                        if ($dom.isElementVisible(<Element> element.children[i], true)) {
-                            return true;
-                        }
-                    }
-                }
-                return false;
-            }
+    protected conditionElement(element: HTMLElement) {
+        if ($dom.isElementVisible(element, true) || element.dataset.use && element.dataset.use.split($util.REGEXP_COMPILED.SEPARATOR).some(value => this.userSettings.builtInExtensions.includes(value.trim()))) {
+            return true;
         }
         else {
-            return $element.isPlainText(element);
+            let current = element.parentElement;
+            let valid = true;
+            while (current) {
+                if ($css.getStyle(current).display === 'none') {
+                    valid = false;
+                    break;
+                }
+                current = current.parentElement;
+            }
+            if (valid) {
+                for (let i = 0; i < element.children.length; i++) {
+                    if ($dom.isElementVisible(<Element> element.children[i], true)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
     }
 
     private createPseduoElement(element: HTMLElement, target: string) {
-        const styleMap: StringMap = $dom.getElementCache(element, `styleMap::${target}`, this.processing.cacheIndex);
+        const styleMap: StringMap = $session.getElementCache(element, `styleMap::${target}`, this.processing.sessionId);
         if (styleMap && styleMap.content !== undefined) {
             let value: string = styleMap.content;
             if (value === 'inherit') {
@@ -1768,7 +1780,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                     return undefined;
                                 }
                                 const getPseduoIncrement = (parent: Element) => {
-                                    const pseduoStyle: StringMap = $dom.getElementCache(parent, `styleMap::${target}`, this.processing.cacheIndex);
+                                    const pseduoStyle: StringMap = $session.getElementCache(parent, `styleMap::${target}`, this.processing.sessionId);
                                     if (pseduoStyle && pseduoStyle.counterIncrement) {
                                         return getCounterValue(pseduoStyle.counterIncrement);
                                     }
@@ -1872,7 +1884,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                     break;
             }
             if (content || value === '""') {
-                const pseudoElement = $element.createElement(element, tagName, false, target === 'before' ? 0 : -1);
+                const pseudoElement = $dom.createElement(element, tagName, false, target === 'before' ? 0 : -1);
                 if (tagName === 'img') {
                     (<HTMLImageElement> pseudoElement).src = content;
                 }
@@ -1884,7 +1896,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         pseudoElement.style[attr] = styleMap[attr];
                     }
                 }
-                $dom.setElementCache(pseudoElement, 'styleMap', this.processing.cacheIndex, styleMap);
+                $session.setElementCache(pseudoElement, 'styleMap', this.processing.sessionId, styleMap);
                 return pseudoElement;
             }
         }
@@ -2038,7 +2050,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 const fontSize = $util.parseUnit(style.getPropertyValue('font-size'));
                 const styleMap: StringMap = {};
                 for (const attr of fromRule) {
-                    const value = $css.checkStyleValue(element, attr, item.style[attr], target ? undefined : style, fontSize);
+                    const value = $css.checkStyleValue(element, attr, item.style[attr], fontSize, target ? undefined : style);
                     if (value) {
                         styleMap[attr] = value;
                     }
@@ -2057,13 +2069,13 @@ export default class Application<T extends Node> implements squared.base.Applica
                     }
                 }
                 const attrStyle = `styleMap${target ? '::' + target : ''}`;
-                const data = $dom.getElementCache(element, attrStyle, this.processing.cacheIndex);
+                const data = $session.getElementCache(element, attrStyle, this.processing.sessionId);
                 if (data) {
                     Object.assign(data, styleMap);
                 }
                 else {
-                    $dom.setElementCache(element, `style${target ? '::' + target : ''}`, 0, style);
-                    $dom.setElementCache(element, attrStyle, this.processing.cacheIndex, styleMap);
+                    $session.setElementCache(element, `style${target ? '::' + target : ''}`, '0', style);
+                    $session.setElementCache(element, attrStyle, this.processing.sessionId, styleMap);
                 }
             });
         }

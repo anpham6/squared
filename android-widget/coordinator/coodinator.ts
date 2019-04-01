@@ -5,7 +5,7 @@ import { WIDGET_NAME } from '../lib/constant';
 import $Resource = android.base.Resource;
 
 const $enum = squared.base.lib.enumeration;
-const $dom = squared.lib.dom;
+const $session = squared.lib.session;
 const $constA = android.lib.constant;
 const $enumA = android.lib.enumeration;
 const $utilA = android.lib.util;
@@ -16,7 +16,7 @@ export default class Coordinator<T extends android.base.View> extends squared.ba
         $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
         const element = Coordinator.findNestedElement(node.element, WIDGET_NAME.TOOLBAR);
         if (element) {
-            const toolbar = $dom.getElementAsNode<T>(element, node.cacheIndex);
+            const toolbar = $session.getElementAsNode<T>(element, node.sessionId);
             if (toolbar) {
                 const extension = this.application.extensionManager.retrieve(WIDGET_NAME.TOOLBAR);
                 if (extension && 'collapsingToolbar' in $utilA.createViewAttribute(extension.options[toolbar.elementId])) {

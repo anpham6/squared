@@ -3,14 +3,13 @@ import { SvgAspectRatio, SvgBuildOptions, SvgPoint, SvgSynchronizeOptions } from
 import SvgBuild from './svgbuild';
 
 import { INSTANCE_TYPE } from './lib/constant';
-import { SVG, getTargetElement, parseAttributeUrl } from './lib/util';
+import { SVG, getParentAttribute, getTargetElement, parseAttributeUrl } from './lib/util';
 
 type Svg = squared.svg.Svg;
 type SvgGroup = squared.svg.SvgGroup;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
 type SvgView = squared.svg.SvgView;
 
-const $css = squared.lib.css;
 const $util = squared.lib.util;
 
 function getNearestViewBox(instance: SvgContainer | undefined) {
@@ -24,7 +23,7 @@ function getNearestViewBox(instance: SvgContainer | undefined) {
 }
 
 function getFillPattern(element: SVGGraphicsElement, viewport?: Svg): SVGPatternElement | undefined {
-    const value = parseAttributeUrl($css.getParentAttribute(element, 'fill'));
+    const value = parseAttributeUrl(getParentAttribute(element, 'fill'));
     if (value !== '') {
         if (viewport && viewport.definitions.pattern.has(value)) {
             return viewport.definitions.pattern.get(value);

@@ -1,7 +1,6 @@
 import { CONTAINER_ANDROID } from '../lib/constant';
 
 const $enum = squared.base.lib.enumeration;
-const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 export default class <T extends android.base.View> extends squared.base.extensions.Accessibility<T> {
@@ -14,19 +13,17 @@ export default class <T extends android.base.View> extends squared.base.extensio
                 switch (node.controlName) {
                     case CONTAINER_ANDROID.EDIT:
                         if (!node.companion) {
-                            [$dom.getPreviousElementSibling(element, node.cacheIndex), $dom.getNextElementSibling(element, node.cacheIndex)].some((sibling: HTMLLabelElement | null) => {
-                                if (sibling) {
-                                    const label = $dom.getElementAsNode<T>(sibling, node.cacheIndex);
-                                    const labelParent = sibling && sibling.parentElement && sibling.parentElement.tagName === 'LABEL' ? $dom.getElementAsNode<T>(sibling.parentElement, node.cacheIndex) : undefined;
-                                    if (label && label.visible && label.pageFlow) {
-                                        if ($util.hasValue(sibling.htmlFor) && sibling.htmlFor === element.id) {
-                                            label.android('labelFor', node.documentId);
-                                            return true;
-                                        }
-                                        else if (label.textElement && labelParent) {
-                                            labelParent.android('labelFor', node.documentId);
-                                            return true;
-                                        }
+                            [node.previousSibling, node.previousSibling].some((sibling: T) => {
+                                if (sibling && sibling.visible && sibling.pageFlow) {
+                                    const labelElement = <HTMLLabelElement> sibling.element;
+                                    const labelParent = sibling.documentParent.tagName === 'LABEL' ? sibling.documentParent as T : undefined;
+                                    if ($util.hasValue(labelElement.htmlFor) && labelElement.htmlFor === element.id) {
+                                        sibling.android('labelFor', node.documentId);
+                                        return true;
+                                    }
+                                    else if (labelParent && sibling.textElement) {
+                                        labelParent.android('labelFor', node.documentId);
+                                        return true;
                                     }
                                 }
                                 return false;

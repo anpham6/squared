@@ -37,14 +37,14 @@ export default abstract class NodeGroup extends Node {
         }
     }
 
-    public previousSiblings(lineBreak = true, excluded = true, height = false) {
+    public previousSiblings(lineBreak = true, excluded = true, height = false, pageFlow = true) {
         const node = this.item(0);
-        return node ? node.previousSiblings(lineBreak, excluded, height) : [];
+        return node ? node.previousSiblings(lineBreak, excluded, height, pageFlow) : [];
     }
 
-    public nextSiblings(lineBreak = true, excluded = true, height = false) {
+    public nextSiblings(lineBreak = true, excluded = true, height = false, pageFlow = true) {
         const node = this.item();
-        return node ? node.nextSiblings(lineBreak, excluded, height) : [];
+        return node ? node.nextSiblings(lineBreak, excluded, height, pageFlow) : [];
     }
 
     get actualParent() {
@@ -110,7 +110,7 @@ export default abstract class NodeGroup extends Node {
     }
 
     get blockStatic() {
-        return this.some(node => node.blockStatic);
+        return this.layoutVertical && this.some(node => node.blockStatic) || this.documentParent.blockStatic && this.hasAlign(NODE_ALIGNMENT.COLUMN);
     }
 
     get blockDimension() {

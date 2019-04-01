@@ -67,7 +67,7 @@ export function convertRadian(value: number) {
     return value * Math.PI / 180;
 }
 
-export function trianguleASA(a: number, b: number, clen: number) {
+export function triangulateASA(a: number, b: number, clen: number) {
     const c = 180 - a - b;
     return [
         (clen / Math.sin(convertRadian(c))) * Math.sin(convertRadian(a)),

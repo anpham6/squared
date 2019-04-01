@@ -40,7 +40,7 @@ declare global {
             afterPseudoChild?: Node;
             companion?: Node;
             extracted?: Node[];
-            readonly cacheIndex: number;
+            readonly sessionId: string;
             readonly localSettings: {};
             readonly excludeSection: number;
             readonly excludeProcedure: number;
@@ -126,6 +126,8 @@ declare global {
             readonly actualDimension: Dimension;
             readonly firstChild: Node | undefined;
             readonly lastChild: Node | undefined;
+            readonly previousSibling: Node | undefined;
+            readonly nextSibling: Node | undefined;
             readonly documentId: string;
             readonly dir: string;
             readonly nodes: Node[];
@@ -194,8 +196,10 @@ declare global {
             resetBox(region: number, node?: Node, fromParent?: boolean): void;
             inheritBox(region: number, node: Node): void;
             actualRight(dimension?: string): number;
-            previousSiblings(lineBreak?: boolean, excluded?: boolean, height?: boolean): Node[];
-            nextSiblings(lineBreak?: boolean, excluded?: boolean, height?: boolean): Node[];
+            previousSiblings(lineBreak?: boolean, excluded?: boolean, height?: boolean, pageFlow?: boolean): Node[];
+            nextSiblings(lineBreak?: boolean, excluded?: boolean, height?: boolean, pageFlow?: boolean): Node[];
+            getFirstChildElement(lineBreak?: boolean, excluded?: boolean): Element | null;
+            getLastChildElement(lineBreak?: boolean, excluded?: boolean): Element | null;
         }
 
         class Node implements Node {}

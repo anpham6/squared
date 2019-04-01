@@ -18,7 +18,12 @@ export default class RadioGroup<T extends View> extends squared.base.Extension<T
         if (node.length > 1) {
             const inputName = new Set<string>();
             let i = 0;
+            let valid = true;
             for (let item of node) {
+                if (!item.baseline) {
+                    valid = false;
+                    break;
+                }
                 if (item.renderAs) {
                     item = item.renderAs;
                 }
@@ -30,7 +35,7 @@ export default class RadioGroup<T extends View> extends squared.base.Extension<T
                     }
                 }
             }
-            if (inputName.size === 1 && i > 1) {
+            if (valid && inputName.size === 1 && i > 1) {
                 const linearData = $NodeList.linearData(node.children);
                 if (linearData.linearX && !linearData.floated.has('right')) {
                     return true;
@@ -59,18 +64,26 @@ export default class RadioGroup<T extends View> extends squared.base.Extension<T
         }
         else if (parent.controlName !== CONTROL_NAME) {
             const element = <HTMLInputElement> node.element;
-            const children: T[] = [];
             const inputName = getInputName(element);
+            const children: T[] = [];
+            const removeable: T[] = [];
             let replacement: T | undefined;
             for (let item of parent.children as T[]) {
+                let remove: T | undefined;
                 if (item.renderAs) {
                     if (item.renderAs === node) {
                         replacement = item;
+                    }
+                    else {
+                        remove = item;
                     }
                     item = item.renderAs as T;
                 }
                 if (node.containerType === CONTAINER_NODE.RADIO && getInputName(<HTMLInputElement> item.element) === inputName && !item.rendered) {
                     children.push(item);
+                    if (remove) {
+                        removeable.push(remove);
+                    }
                 }
             }
             if (children.length > 1) {
@@ -92,6 +105,9 @@ export default class RadioGroup<T extends View> extends squared.base.Extension<T
                 });
                 container.render(!node.dataset.use && node.dataset.target ? this.application.resolveTarget(node.dataset.target) : parent);
                 container.android('orientation', $NodeList.linearData(children).linearX ? AXIS_ANDROID.HORIZONTAL : AXIS_ANDROID.VERTICAL);
+                for (const item of removeable) {
+                    item.hide();
+                }
                 this.subscribers.add(container);
                 return {
                     renderAs: container,

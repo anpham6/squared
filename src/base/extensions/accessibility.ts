@@ -3,7 +3,6 @@ import Node from '../node';
 
 import { NODE_PROCEDURE } from '../lib/enumeration';
 
-const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 export default abstract class Accessibility<T extends Node> extends Extension<T> {
@@ -19,27 +18,25 @@ export default abstract class Accessibility<T extends Node> extends Extension<T>
                                 break;
                             case 'radio':
                             case 'checkbox':
-                                [$dom.getNextElementSibling(element, node.cacheIndex), $dom.getPreviousElementSibling(element, node.cacheIndex)].some((sibling: HTMLLabelElement) => {
-                                    if (sibling) {
-                                        const label = $dom.getElementAsNode<T>(sibling, node.cacheIndex);
-                                        const labelParent = sibling.parentElement && sibling.parentElement.tagName === 'LABEL' ? $dom.getElementAsNode<T>(sibling.parentElement, node.cacheIndex) : undefined;
-                                        if (label && label.visible && label.pageFlow) {
-                                            if ($util.hasValue(sibling.htmlFor) && sibling.htmlFor === element.id) {
-                                                node.companion = label;
+                                [node.nextSibling, node.previousSibling].some(sibling => {
+                                    if (sibling && sibling.visible && sibling.pageFlow) {
+                                        const labelElement = <HTMLLabelElement> sibling.element;
+                                        const labelParent = sibling.documentParent.tagName === 'LABEL' ? sibling.documentParent : undefined;
+                                        if ($util.hasValue(labelElement.htmlFor) && labelElement.htmlFor === element.id) {
+                                            node.companion = sibling;
+                                        }
+                                        else if (sibling.textElement && labelParent) {
+                                            node.companion = sibling;
+                                            labelParent.renderAs = node;
+                                        }
+                                        else if (sibling.plainText) {
+                                            node.companion = sibling;
+                                        }
+                                        if (node.companion) {
+                                            if (!this.options.showLabel) {
+                                                sibling.hide();
                                             }
-                                            else if (label.textElement && labelParent) {
-                                                node.companion = label;
-                                                labelParent.renderAs = node;
-                                            }
-                                            else if (label.plainText) {
-                                                node.companion = label;
-                                            }
-                                            if (node.companion) {
-                                                if (!this.options.showLabel) {
-                                                    label.hide();
-                                                }
-                                                return true;
-                                            }
+                                            return true;
                                         }
                                     }
                                     return false;

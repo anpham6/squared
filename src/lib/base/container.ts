@@ -146,6 +146,22 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return flatMap(this._children, predicate);
     }
 
+    public cascadeSome(predicate: IteratorPredicate<T, boolean>) {
+        function cascade(container: Container<T>) {
+            for (let i = 0; i < container.children.length; i++) {
+                const item = container.children[i];
+                if (predicate(item, i, container.children)) {
+                    return true;
+                }
+                if (item instanceof Container && item.length && cascade(item)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        return cascade(this);
+    }
+
     public cascade() {
         function cascade(container: Container<T>) {
             const result: T[] = [];

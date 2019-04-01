@@ -9,8 +9,8 @@ import { NODE_RESOURCE } from './lib/enumeration';
 
 const $color = squared.lib.color;
 const $css = squared.lib.css;
-const $element = squared.lib.element;
 const $math = squared.lib.math;
+const $session = squared.lib.session;
 const $util = squared.lib.util;
 
 const REGEXP_LINEBREAK = /\s*<br[^>]*>\s*/g;
@@ -132,18 +132,15 @@ function parseAngle(value: string) {
     return 0;
 }
 
-function replaceWhiteSpace(node: Node, element: Element, value: string): [string, boolean] {
-    if (node.multiline && !node.documentParent.layoutVertical) {
-        value = value.replace(/^\s*?\n/, '');
-    }
+function replaceWhiteSpace(parent: Node, node: Node, element: Element, value: string): [string, boolean] {
     switch (node.css('whiteSpace')) {
         case 'nowrap':
             value = value.replace(/\n/g, ' ');
             break;
         case 'pre':
         case 'pre-wrap':
-            if (!node.documentParent.layoutVertical) {
-                value = value.replace(/^\n/, '');
+            if (!parent.layoutVertical) {
+                value = value.replace(/^\s*?\n/, '');
             }
             value = value
                 .replace(/\n/g, '\\n')
@@ -155,10 +152,10 @@ function replaceWhiteSpace(node: Node, element: Element, value: string): [string
                 .replace(/\s+/g, ' ');
             break;
         default:
-            if (element.previousSibling && $element.isLineBreak(<Element> element.previousSibling, node.cacheIndex)) {
+            if (element.previousSibling && $session.isLineBreak(<Element> element.previousSibling, node.sessionId)) {
                 value = value.replace($util.REGEXP_COMPILED.LEADINGSPACE, '');
             }
-            if (element.nextSibling && $element.isLineBreak(<Element> element.nextSibling, node.cacheIndex)) {
+            if (element.nextSibling && $session.isLineBreak(<Element> element.nextSibling, node.sessionId)) {
                 value = value.replace($util.REGEXP_COMPILED.TRAILINGSPACE, '');
             }
             return [value, false];
@@ -325,12 +322,16 @@ export default abstract class Resource<T extends Node> implements squared.base.R
         return false;
     }
 
+    public static isLineBreak(node: Node) {
+        return node.lineBreak || node.excluded && node.blockStatic;
+    }
+
     public static hasLineBreak(node: Node, lineBreak = false, trim = false) {
         if (node.actualChildren.length) {
             return node.actualChildren.some(item => item.lineBreak);
         }
-        else if (!lineBreak && node.element) {
-            let value = node.element.textContent || '';
+        else if (!lineBreak && node.element && node.element.textContent) {
+            let value = node.element.textContent;
             if (trim) {
                 value = value.trim();
             }
@@ -552,11 +553,11 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                                     }
                                                     let a = Math.abs(oppositeAngle - angle);
                                                     let b = 90 - a;
-                                                    const lenX = $math.trianguleASA(a, b, Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2)));
+                                                    const lenX = $math.triangulateASA(a, b, Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2)));
                                                     x = $math.truncateFraction($math.offsetAngleX(angle, lenX[1]));
                                                     a = 90;
                                                     b = 90 - angle;
-                                                    const lenY = $math.trianguleASA(a, b, x);
+                                                    const lenY = $math.triangulateASA(a, b, x);
                                                     y = $math.truncateFraction($math.offsetAngleY(angle, lenY[0]));
                                                 }
                                                 linear.angleExtent = { x, y };
@@ -738,147 +739,150 @@ export default abstract class Resource<T extends Node> implements squared.base.R
 
     public setValueString() {
         for (const node of this.cache) {
-            const element = <HTMLInputElement> node.element;
-            if (element && node.visible) {
-                let name = '';
-                let value = '';
-                let inlineTrim = false;
-                let performTrim = true;
-                switch (element.tagName) {
-                    case 'INPUT':
-                        value = element.value.trim();
-                        switch (element.type) {
-                            case 'radio':
-                            case 'checkbox':
-                                if (node.companion && !node.companion.visible) {
-                                    value = node.companion.textContent.trim();
-                                }
-                                break;
-                            case 'submit':
-                                if (value === '' && !$util.REGEXP_COMPILED.URL.test(node.css('background'))) {
-                                    value = 'Submit';
-                                }
-                                break;
-                            case 'time':
-                                if (value === '') {
-                                    value = '--:-- --';
-                                }
-                                break;
-                            case 'date':
-                            case 'datetime-local':
-                                if (value === '') {
-                                    switch ((new Intl.DateTimeFormat()).resolvedOptions().locale) {
-                                        case 'en-US':
-                                            value = 'mm/dd/yyyy';
-                                            break;
-                                        default:
-                                            value = 'dd/mm/yyyy';
-                                            break;
+            if (node.visible) {
+                const element = <HTMLInputElement> node.element;
+                const renderParent = node.renderParent;
+                if (element && renderParent) {
+                    let name = '';
+                    let value = '';
+                    let inlineTrim = false;
+                    let performTrim = true;
+                    switch (element.tagName) {
+                        case 'INPUT':
+                            value = element.value.trim();
+                            switch (element.type) {
+                                case 'radio':
+                                case 'checkbox':
+                                    if (node.companion && !node.companion.visible) {
+                                        value = node.companion.textContent.trim();
                                     }
-                                    if (element.type === 'datetime-local') {
-                                        value += ' --:-- --';
+                                    break;
+                                case 'submit':
+                                    if (value === '' && !$util.REGEXP_COMPILED.URL.test(node.css('background'))) {
+                                        value = 'Submit';
                                     }
-                                }
-                                break;
-                            case 'week':
-                                if (value === '') {
-                                    value = 'Week: --, ----';
-                                }
-                                break;
-                            case 'month':
-                                if (value === '') {
-                                    value = '--------- ----';
-                                }
-                                break;
-                            case 'url':
-                            case 'email':
-                            case 'search':
-                            case 'number':
-                            case 'tel':
-                                if (value === '') {
-                                    value = element.placeholder;
-                                }
-                                break;
-                            case 'file':
-                                value = $util.isUserAgent($util.USER_AGENT.FIREFOX) ? 'Browse...' : 'Choose File';
-                                break;
-                        }
-                        break;
-                    case 'TEXTAREA':
-                        value = element.value.trim();
-                        break;
-                    case 'BUTTON':
-                        value = element.innerText;
-                        break;
-                    case 'IFRAME':
-                        value = element.src;
-                        performTrim = false;
-                        break;
-                    default:
-                        if (node.plainText) {
-                            name = node.textContent.trim();
-                            value = node.textContent
-                                .replace(/&[A-Za-z]+;/g, match => match.replace('&', '&amp;'))
-                                .replace(/\u00A0/g, '&#160;');
-                            [value, inlineTrim] = replaceWhiteSpace(node, element, value);
-                        }
-                        else if (node.inlineText) {
-                            name = node.textContent.trim();
-                            if (element.tagName === 'CODE') {
-                                value = removeExcluded(node, element, 'innerHTML');
+                                    break;
+                                case 'time':
+                                    if (value === '') {
+                                        value = '--:-- --';
+                                    }
+                                    break;
+                                case 'date':
+                                case 'datetime-local':
+                                    if (value === '') {
+                                        switch ((new Intl.DateTimeFormat()).resolvedOptions().locale) {
+                                            case 'en-US':
+                                                value = 'mm/dd/yyyy';
+                                                break;
+                                            default:
+                                                value = 'dd/mm/yyyy';
+                                                break;
+                                        }
+                                        if (element.type === 'datetime-local') {
+                                            value += ' --:-- --';
+                                        }
+                                    }
+                                    break;
+                                case 'week':
+                                    if (value === '') {
+                                        value = 'Week: --, ----';
+                                    }
+                                    break;
+                                case 'month':
+                                    if (value === '') {
+                                        value = '--------- ----';
+                                    }
+                                    break;
+                                case 'url':
+                                case 'email':
+                                case 'search':
+                                case 'number':
+                                case 'tel':
+                                    if (value === '') {
+                                        value = element.placeholder;
+                                    }
+                                    break;
+                                case 'file':
+                                    value = $util.isUserAgent($util.USER_AGENT.FIREFOX) ? 'Browse...' : 'Choose File';
+                                    break;
                             }
-                            else if (Resource.hasLineBreak(node, true)) {
-                                value = removeExcluded(node, element, 'innerHTML')
-                                    .replace(REGEXP_LINEBREAK, '\\n')
-                                    .replace($util.REGEXP_COMPILED.TAGNAME, '');
-                            }
-                            else {
-                                value = removeExcluded(node, element, 'textContent');
-                            }
-                            [value, inlineTrim] = replaceWhiteSpace(node, element, value);
-                        }
-                        else if (node.htmlElement && element.innerText.trim() === '' && Resource.isBackgroundVisible(node.data(Resource.KEY_NAME, 'boxStyle'))) {
+                            break;
+                        case 'TEXTAREA':
+                            value = element.value.trim();
+                            break;
+                        case 'BUTTON':
                             value = element.innerText;
+                            break;
+                        case 'IFRAME':
+                            value = element.src;
                             performTrim = false;
-                        }
-                        break;
-                }
-                if (value !== '') {
-                    if (performTrim) {
-                        const previousSibling = node.previousSiblings().pop();
-                        const nextSibling = node.nextSiblings().shift();
-                        let previousSpaceEnd = false;
-                        if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && $util.REGEXP_COMPILED.TRAILINGSPACE.test(previousSibling.textContent)) {
-                            value = value.replace($util.REGEXP_COMPILED.LEADINGSPACE, '');
-                        }
-                        else if (previousSibling.element) {
-                            previousSpaceEnd = $util.REGEXP_COMPILED.TRAILINGSPACE.test((<HTMLElement> previousSibling.element).innerText || previousSibling.textContent);
-                        }
-                        if (inlineTrim) {
-                            const original = value;
-                            value = value.trim();
-                            if (previousSibling && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd && $util.REGEXP_COMPILED.LEADINGSPACE.test(original)) {
-                                value = '&#160;' + value;
+                            break;
+                        default:
+                            if (node.plainText) {
+                                name = node.textContent.trim();
+                                value = node.textContent
+                                    .replace(/&[A-Za-z]+;/g, match => match.replace('&', '&amp;'))
+                                    .replace(/\u00A0/g, '&#160;');
+                                [value, inlineTrim] = replaceWhiteSpace(renderParent, node, element, value);
                             }
-                            if (nextSibling && !nextSibling.lineBreak && $util.REGEXP_COMPILED.TRAILINGSPACE.test(original)) {
-                                value += '&#160;';
+                            else if (node.inlineText) {
+                                name = node.textContent.trim();
+                                if (element.tagName === 'CODE') {
+                                    value = removeExcluded(node, element, 'innerHTML');
+                                }
+                                else if (Resource.hasLineBreak(node, true)) {
+                                    value = removeExcluded(node, element, 'innerHTML')
+                                        .replace(REGEXP_LINEBREAK, '\\n')
+                                        .replace($util.REGEXP_COMPILED.TAGNAME, '');
+                                }
+                                else {
+                                    value = removeExcluded(node, element, 'textContent');
+                                }
+                                [value, inlineTrim] = replaceWhiteSpace(renderParent, node, element, value);
                             }
-                        }
-                        else if (value.trim() !== '') {
-                            value = value.replace($util.REGEXP_COMPILED.LEADINGSPACE, previousSibling && (
-                                previousSibling.block ||
-                                previousSibling.lineBreak ||
-                                previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
-                                node.multiline && Resource.hasLineBreak(node)) ? '' : '&#160;'
-                            );
-                            value = value.replace($util.REGEXP_COMPILED.TRAILINGSPACE, node.display === 'table-cell' || nextSibling && nextSibling.lineBreak || node.blockStatic ? '' : '&#160;');
-                        }
-                        else if (value.length) {
-                            value = '&#160;' + value.substring(1);
-                        }
+                            else if (node.htmlElement && element.innerText.trim() === '' && Resource.isBackgroundVisible(node.data(Resource.KEY_NAME, 'boxStyle'))) {
+                                value = element.innerText;
+                                performTrim = false;
+                            }
+                            break;
                     }
                     if (value !== '') {
-                        node.data(Resource.KEY_NAME, 'valueString', { name, value: applyTextTransform(value, node.css('textTransform')) });
+                        if (performTrim) {
+                            const previousSibling = node.previousSiblings().pop();
+                            const nextSibling = node.nextSiblings().shift();
+                            let previousSpaceEnd = false;
+                            if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && $util.REGEXP_COMPILED.TRAILINGSPACE.test(previousSibling.textContent)) {
+                                value = value.replace($util.REGEXP_COMPILED.LEADINGSPACE, '');
+                            }
+                            else if (previousSibling.element) {
+                                previousSpaceEnd = $util.REGEXP_COMPILED.TRAILINGSPACE.test((<HTMLElement> previousSibling.element).innerText || previousSibling.textContent);
+                            }
+                            if (inlineTrim) {
+                                const original = value;
+                                value = value.trim();
+                                if (previousSibling && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd && $util.REGEXP_COMPILED.LEADINGSPACE.test(original)) {
+                                    value = '&#160;' + value;
+                                }
+                                if (nextSibling && !nextSibling.lineBreak && $util.REGEXP_COMPILED.TRAILINGSPACE.test(original)) {
+                                    value += '&#160;';
+                                }
+                            }
+                            else if (value.trim() !== '') {
+                                value = value.replace($util.REGEXP_COMPILED.LEADINGSPACE, previousSibling && (
+                                    previousSibling.block ||
+                                    previousSibling.lineBreak ||
+                                    previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
+                                    node.multiline && Resource.hasLineBreak(node)) ? '' : '&#160;'
+                                );
+                                value = value.replace($util.REGEXP_COMPILED.TRAILINGSPACE, node.display === 'table-cell' || nextSibling && nextSibling.lineBreak || node.blockStatic ? '' : '&#160;');
+                            }
+                            else if (value.length) {
+                                value = '&#160;' + value.substring(1);
+                            }
+                        }
+                        if (value !== '') {
+                            node.data(Resource.KEY_NAME, 'valueString', { name, value: applyTextTransform(value, node.css('textTransform')) });
+                        }
                     }
                 }
             }

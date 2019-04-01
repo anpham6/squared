@@ -11,7 +11,7 @@ import $Layout = squared.base.Layout;
 
 const $const = squared.base.lib.constant;
 const $enum = squared.base.lib.enumeration;
-const $element = squared.lib.element;
+const $dom = squared.lib.dom;
 const $math = squared.lib.math;
 const $util = squared.lib.util;
 
@@ -44,7 +44,11 @@ function getGridSize(mainData: CssGridData<View>, direction: string, node: View)
             }
             else {
                 let size = 0;
-                $util.captureMap(mainData.rowData[i] as View[][], item => item && item.length > 0, item => size = Math.min(size, item[0].bounds[dimension]));
+                $util.captureMap(
+                    mainData.rowData[i] as View[][],
+                    item => item && item.length > 0,
+                    item => size = Math.min(size, item[0].bounds[dimension])
+                );
                 value += size;
             }
         }
@@ -319,7 +323,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             const alignItems = node.has('alignSelf') ? node.css('alignSelf') : mainData.alignItems;
             const justifyItems = node.has('justifySelf') ? node.css('justifySelf') : mainData.justifyItems;
             if (/(start|end|center|baseline)/.test(alignItems) || /(start|end|center|baseline|left|right)/.test(justifyItems)) {
-                container = this.application.createNode($element.createElement(node.actualParent ? node.actualParent.element : null));
+                container = this.application.createNode($dom.createElement(node.actualParent ? node.actualParent.element : null));
                 container.tagName = node.tagName;
                 container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                 container.inherit(node, 'initial', 'base');

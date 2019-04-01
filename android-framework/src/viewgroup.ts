@@ -8,7 +8,7 @@ export default class ViewGroup<T extends View> extends View$MX(squared.base.Node
         children: T[],
         afterInit?: BindGeneric<T, void>)
     {
-        super(id, node.cacheIndex, undefined, afterInit);
+        super(id, node.sessionId, undefined, afterInit);
         this.tagName = `${node.tagName}_GROUP`;
         this.documentParent = node.documentParent;
         this.retain(children);

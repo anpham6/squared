@@ -1,8 +1,6 @@
 import { parseColor } from './color';
-import { getElementAsNode, getElementCache, setElementCache } from './dom';
+import { getElementCache, setElementCache } from './session';
 import { REGEXP_COMPILED, STRING_PATTERN, USER_AGENT, calculate, capitalize, convertAlpha, convertRoman, convertCamelCase, convertPX, convertLength, convertPercent, isLength, isNumber, isUserAgent, resolvePath } from './util';
-
-type Node = squared.base.Node;
 
 export const BOX_POSITION = ['top', 'right', 'bottom', 'left'];
 export const BOX_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
@@ -63,7 +61,7 @@ export function hasComputedStyle(element: Element | null): element is HTMLElemen
     return false;
 }
 
-export function checkStyleValue(element: Element, attr: string, value: string, style?: CSSStyleDeclaration, fontSize?: number) {
+export function checkStyleValue(element: Element, attr: string, value: string, fontSize?: number, style?: CSSStyleDeclaration) {
     if (value === 'inherit') {
         value = getInheritedStyle(element, attr);
     }
@@ -135,27 +133,21 @@ export function getDataSet(element: HTMLElement | null, prefix: string) {
     return result;
 }
 
-export function getStyle(element: Element | null, target?: string, index?: number, cache = true): CSSStyleDeclaration {
+export function getStyle(element: Element | null, target?: string, cache = true): CSSStyleDeclaration {
     if (element) {
         const attr = 'style' + (target ? '::' + target : '');
         if (cache) {
-            const style = getElementCache(element, attr, 0);
+            const style = getElementCache(element, attr, '0');
             if (style) {
                 return style;
-            }
-            else if (element.nodeName === '#text' && index) {
-                const node = getElementAsNode<Node>(element, index);
-                if (node && node.plainText) {
-                    return node.unsafe('styleMap');
-                }
             }
         }
         if (hasComputedStyle(element)) {
             const style = getComputedStyle(element, target);
-            setElementCache(element, attr, 0, style);
+            setElementCache(element, attr, '0', style);
             return style;
         }
-        return <CSSStyleDeclaration> {};
+        return <CSSStyleDeclaration> { display: 'inline' };
     }
     return <CSSStyleDeclaration> { display: 'none' };
 }
@@ -180,47 +172,11 @@ export function getInheritedStyle(element: Element | null, attr: string, exclude
             if (value === 'inherit' || exclude && exclude.test(value)) {
                 value = '';
             }
-            if (value !== '' || current === document.body) {
+            if (value || current === document.body) {
                 break;
             }
             current = current.parentElement;
         }
-    }
-    return value;
-}
-
-export function getInlineStyle(element: Element, attr: string, index?: number) {
-    let value = hasComputedStyle(element) ? element.style[attr] : '';
-    if (!value && index) {
-        const styleMap: StringMap = getElementCache(element, 'styleMap', index);
-        if (styleMap) {
-            value = styleMap[attr];
-        }
-    }
-    return value || '';
-}
-
-export function getAttribute(element: Element, attr: string, index?: number, computed = false) {
-    if (index) {
-        const node = getElementAsNode<Node>(element, index);
-        const name = convertCamelCase(attr);
-        const value = node && node.cssInitial(name) || getInlineStyle(element, name, index);
-        if (value) {
-            return value;
-        }
-    }
-    return getNamedItem(element, attr) || computed && getStyle(element)[name] as string || '';
-}
-
-export function getParentAttribute(element: Element | null, attr: string) {
-    let current: HTMLElement | Element | null = element;
-    let value = '';
-    while (current) {
-        value = getAttribute(current, attr);
-        if (value !== '' && value !== 'inherit') {
-            break;
-        }
-        current = current.parentElement;
     }
     return value;
 }

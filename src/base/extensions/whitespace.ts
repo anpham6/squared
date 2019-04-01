@@ -35,16 +35,13 @@ function applyMarginCollapse(node: Node, visibleNode: Node, child: Node, directi
                 while (child.marginTop === 0 && child.borderTopWidth === 0 && child.paddingTop === 0) {
                     const firstChild = child.firstChild as Node;
                     if (isBlockElement(firstChild)) {
-                        if (child.has('marginTop', CSS_STANDARD.ZERO)) {
-                            if (HTML5 && firstChild.marginTop !== 0) {
-                                firstChild.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
-                                break;
-                            }
+                        if (HTML5 && firstChild.marginTop !== 0 && child.has('marginTop', CSS_STANDARD.ZERO)) {
+                            firstChild.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
+                            replaced = false;
+                            break;
                         }
-                        else {
-                            child = firstChild;
-                            replaced = true;
-                        }
+                        child = firstChild;
+                        replaced = true;
                     }
                     else {
                         break;
@@ -99,16 +96,13 @@ function applyMarginCollapse(node: Node, visibleNode: Node, child: Node, directi
                 while (child.paddingBottom === 0 && child.borderBottomWidth === 0 && child.marginBottom === 0) {
                     const lastChild = child.lastChild as Node;
                     if (isBlockElement(lastChild)) {
-                        if (child.has('marginBottom', CSS_STANDARD.ZERO)) {
-                            if (HTML5 && lastChild.marginBottom !== 0) {
-                                lastChild.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
-                                break;
-                            }
+                        if (HTML5 && lastChild.marginBottom !== 0 && child.has('marginBottom', CSS_STANDARD.ZERO)) {
+                            lastChild.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
+                            replaced = false;
+                            break;
                         }
-                        else {
-                            child = lastChild;
-                            replaced = true;
-                        }
+                        child = lastChild;
+                        replaced = true;
                     }
                     else {
                         break;
@@ -276,133 +270,116 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
             }
         }
         for (const node of this.application.processing.excluded) {
-            if (!processed.has(node)) {
-                if (node.lineBreak) {
-                    const actualParent = node.actualParent;
-                    const previousSiblings = node.previousSiblings(true, true, true) as T[];
-                    const nextSiblings = node.nextSiblings(true, true, true) as T[];
-                    let valid = false;
-                    if (previousSiblings.length && nextSiblings.length) {
-                        if (nextSiblings[0].lineBreak) {
-                            continue;
+            if (!processed.has(node) && node.lineBreak) {
+                const actualParent = node.actualParent;
+                const previousSiblings = node.previousSiblings(true, true, true) as T[];
+                const nextSiblings = node.nextSiblings(true, true, true) as T[];
+                let valid = false;
+                if (previousSiblings.length && nextSiblings.length) {
+                    if (nextSiblings[0].lineBreak) {
+                        continue;
+                    }
+                    else {
+                        let above = previousSiblings.pop() as T;
+                        let below = nextSiblings.pop() as T;
+                        if (above.inlineStatic && below.inlineStatic) {
+                            if (previousSiblings.length === 0) {
+                                processed.add(node);
+                                continue;
+                            }
+                            else {
+                                const abovePrevious = previousSiblings.pop() as T;
+                                if (abovePrevious.lineBreak) {
+                                    abovePrevious.setBounds();
+                                    if (abovePrevious.bounds.bottom !== 0) {
+                                        above = abovePrevious;
+                                    }
+                                }
+                            }
+                        }
+                        valid = true;
+                        let offset: number;
+                        if (below.lineHeight > 0 && below.element && below.cssTry('lineHeight', '0px')) {
+                            offset = below.element.getBoundingClientRect().top - below.marginTop;
+                            below.cssFinally('lineHeight');
                         }
                         else {
-                            let above = previousSiblings.pop() as T;
-                            const below = nextSiblings.pop() as T;
-                            if (above.inlineStatic && below.inlineStatic) {
-                                if (previousSiblings.length === 0) {
-                                    processed.add(node);
-                                    continue;
-                                }
-                                else {
-                                    const abovePrevious = previousSiblings.pop() as T;
-                                    if (abovePrevious.lineBreak) {
-                                        abovePrevious.setBounds();
-                                        if (abovePrevious.bounds.bottom !== 0) {
-                                            above = abovePrevious;
-                                        }
-                                    }
-                                }
+                            offset = below.linear.top;
+                        }
+                        if (above.lineHeight > 0 && above.element && above.cssTry('lineHeight', '0px')) {
+                            offset -= above.element.getBoundingClientRect().bottom + above.marginBottom;
+                            above.cssFinally('lineHeight');
+                        }
+                        else {
+                            offset -= above.linear.bottom;
+                        }
+                        if (offset !== 0) {
+                            above = getVisibleNode(above) as T;
+                            below = getVisibleNode(below) as T;
+                            const aboveParent = above.visible && above.renderParent;
+                            const belowParent = below.visible && below.renderParent;
+                            if (belowParent && belowParent.groupParent && belowParent.firstChild === below) {
+                                belowParent.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
                             }
-                            valid = true;
-                            let offset: number;
-                            if (below.lineHeight > 0 && below.element && below.cssTry('lineHeight', '0px')) {
-                                offset = below.element.getBoundingClientRect().top - below.marginTop;
-                                below.cssFinally('lineHeight');
+                            else if (aboveParent && aboveParent.groupParent && aboveParent.lastChild === above) {
+                                aboveParent.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offset);
                             }
-                            else {
-                                offset = below.linear.top;
+                            else if (belowParent && belowParent.layoutVertical && below.visible) {
+                                below.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
                             }
-                            if (above.lineHeight > 0 && above.element && above.cssTry('lineHeight', '0px')) {
-                                offset -= above.element.getBoundingClientRect().bottom + above.marginBottom;
-                                above.cssFinally('lineHeight');
+                            else if (aboveParent && aboveParent.layoutVertical && above.visible) {
+                                above.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offset);
                             }
-                            else {
-                                offset -= above.linear.bottom;
-                            }
-                            if (offset !== 0) {
-                                const aboveParent = above.visible && above.renderParent;
-                                const belowParent = below.visible && below.renderParent;
-                                if (belowParent && belowParent.groupParent && belowParent.firstChild === below) {
-                                    belowParent.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
+                            else if (!belowParent && !aboveParent && actualParent && actualParent.visible) {
+                                if (below.lineBreak || below.excluded) {
+                                    actualParent.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);
                                 }
-                                else if (aboveParent && aboveParent.groupParent && aboveParent.lastChild === above) {
-                                    aboveParent.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offset);
-                                }
-                                else if (belowParent && belowParent.layoutVertical && (below.visible || below.renderAs)) {
-                                    (below.renderAs || below).modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
-                                }
-                                else if (aboveParent && aboveParent.layoutVertical && (above.visible || above.renderAs)) {
-                                    (above.renderAs || above).modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offset);
-                                }
-                                else if (!belowParent && !aboveParent && actualParent && actualParent.visible) {
-                                    if (below.lineBreak || below.excluded) {
-                                        actualParent.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);
-                                    }
-                                    else if (above.lineBreak || above.excluded) {
-                                        actualParent.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
-                                    }
-                                    else {
-                                        valid = false;
-                                    }
+                                else if (above.lineBreak || above.excluded) {
+                                    actualParent.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
                                 }
                                 else {
                                     valid = false;
                                 }
                             }
-                        }
-                    }
-                    else if (actualParent && actualParent.visible) {
-                        if (!actualParent.documentRoot && previousSiblings.length) {
-                            const previousStart = previousSiblings[previousSiblings.length - 1];
-                            const offset = actualParent.box.bottom - previousStart.linear[previousStart.lineBreak || previousStart.excluded ? 'top' : 'bottom'];
-                            if (offset !== 0) {
-                                if (previousStart.rendered || actualParent.visibleStyle.background) {
-                                    actualParent.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);
-                                }
-                                else if (!actualParent.hasHeight) {
-                                    setMinHeight(actualParent, offset);
-                                }
+                            else {
+                                valid = false;
                             }
-                        }
-                        else if (nextSiblings.length) {
-                            const nextStart = nextSiblings[nextSiblings.length - 1];
-                            const offset = nextStart.linear[nextStart.lineBreak || nextStart.excluded ? 'bottom' : 'top'] - actualParent.box.top;
-                            if (offset !== 0) {
-                                if (nextStart.rendered || actualParent.visibleStyle.background) {
-                                    actualParent.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
-                                }
-                                else if (!actualParent.hasHeight) {
-                                    setMinHeight(actualParent, offset);
-                                }
-                            }
-                        }
-                        valid = true;
-                    }
-                    if (valid) {
-                        for (const item of previousSiblings) {
-                            processed.add(item);
-                        }
-                        for (const item of nextSiblings) {
-                            processed.add(item);
                         }
                     }
                 }
-                else {
-                    const below = node.nextSiblings(true, true, true).pop();
-                    if (below && below.visible) {
-                        const previousSiblings = node.previousSiblings(false, false) as T[];
-                        let offset = below.linear.top;
-                        if (previousSiblings.length) {
-                            const previous = previousSiblings.pop() as T;
-                            offset -= previous.linear.bottom;
+                else if (actualParent && actualParent.visible) {
+                    if (!actualParent.documentRoot && previousSiblings.length) {
+                        const previousStart = previousSiblings[previousSiblings.length - 1];
+                        const offset = actualParent.box.bottom - previousStart.linear[previousStart.lineBreak || previousStart.excluded ? 'top' : 'bottom'];
+                        if (offset !== 0) {
+                            if (previousStart.rendered || actualParent.visibleStyle.background) {
+                                actualParent.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);
+                            }
+                            else if (!actualParent.hasHeight) {
+                                setMinHeight(actualParent, offset);
+                            }
                         }
-                        else {
-                            offset -= node.linear.top;
+                    }
+                    else if (nextSiblings.length) {
+                        const nextStart = nextSiblings[nextSiblings.length - 1];
+                        const offset = nextStart.linear[nextStart.lineBreak || nextStart.excluded ? 'bottom' : 'top'] - actualParent.box.top;
+                        if (offset !== 0) {
+                            if (nextStart.rendered || actualParent.visibleStyle.background) {
+                                actualParent.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
+                            }
+                            else if (!actualParent.hasHeight) {
+                                setMinHeight(actualParent, offset);
+                            }
                         }
-                        if (offset > 0) {
-                            below.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
-                        }
+                    }
+                    valid = true;
+                }
+                if (valid) {
+                    for (const item of previousSiblings) {
+                        processed.add(item);
+                    }
+                    for (const item of nextSiblings) {
+                        processed.add(item);
                     }
                 }
             }
@@ -412,29 +389,31 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
     public afterConstraints() {
         const modified: number[] = [];
         for (const node of this.application.processing.cache) {
-            const renderParent = node.renderAs ? node.renderAs.renderParent : node.renderParent;
-            if (renderParent && !renderParent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && node.pageFlow && node.styleElement && node.inlineVertical && !node.alignParent('left') && !modified.includes(node.id)) {
-                const previous: T[] = [];
-                let current = node;
-                while (true) {
-                    $util.concatArray(previous, current.previousSiblings());
-                    if (previous.length && !previous.some(item => item.lineBreak || item.excluded && item.blockStatic)) {
-                        const previousSibling = previous[previous.length - 1];
-                        if (previousSibling.inlineVertical) {
-                            const offset = node.linear.left - previousSibling.actualRight();
-                            if (offset > 0) {
-                                const visibleNode = getVisibleNode(node.outerParent || node);
-                                visibleNode.modifyBox(BOX_STANDARD.MARGIN_LEFT, offset);
-                                modified.push(visibleNode.id);
+            if (node.pageFlow && node.styleElement && node.inlineVertical && !node.alignParent('left') && !modified.includes(node.id)) {
+                const renderParent = node.renderAs ? node.renderAs.renderParent : node.renderParent;
+                if (renderParent && !renderParent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
+                    const previous: T[] = [];
+                    let current = node;
+                    while (true) {
+                        $util.concatArray(previous, current.previousSiblings());
+                        if (previous.length && !previous.some(item => item.lineBreak || item.excluded && item.blockStatic)) {
+                            const previousSibling = previous[previous.length - 1];
+                            if (previousSibling.inlineVertical) {
+                                const offset = node.linear.left - previousSibling.actualRight();
+                                if (offset > 0) {
+                                    const visibleNode = getVisibleNode(node.outerParent || node);
+                                    visibleNode.modifyBox(BOX_STANDARD.MARGIN_LEFT, offset);
+                                    modified.push(visibleNode.id);
+                                }
+                            }
+                            else if (previousSibling.floating) {
+                                previous.length = 0;
+                                current = previousSibling;
+                                continue;
                             }
                         }
-                        else if (previousSibling.floating) {
-                            previous.length = 0;
-                            current = previousSibling;
-                            continue;
-                        }
+                        break;
                     }
-                    break;
                 }
             }
         }

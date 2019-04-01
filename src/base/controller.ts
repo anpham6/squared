@@ -9,7 +9,7 @@ import { NODE_TEMPLATE } from './lib/enumeration';
 
 const $color = squared.lib.color;
 const $css = squared.lib.css;
-const $dom = squared.lib.dom;
+const $session = squared.lib.session;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
@@ -53,76 +53,94 @@ export default abstract class Controller<T extends Node> implements squared.base
     }
 
     public applyDefaultStyles(element: Element) {
-        const styleMap: StringMap = $dom.getElementCache(element, 'styleMap', this.application.processing.cacheIndex) || {};
-        if ($util.isUserAgent($util.USER_AGENT.FIREFOX)) {
-            if (styleMap.display === undefined) {
-                switch (element.tagName) {
-                    case 'INPUT':
-                    case 'TEXTAREA':
-                    case 'SELECT':
-                    case 'BUTTON':
-                        styleMap.display = 'inline-block';
-                        break;
+        let styleMap: StringMap;
+        if (element.nodeName === '#text') {
+            styleMap = {
+                position: 'static',
+                display: 'inline',
+                verticalAlign: 'baseline',
+                cssFloat: 'none',
+                clear: 'none'
+            };
+        }
+        else {
+            styleMap = $session.getElementCache(element, 'styleMap', this.application.processing.sessionId) || {};
+            if ($util.isUserAgent($util.USER_AGENT.FIREFOX)) {
+                if (styleMap.display === undefined) {
+                    switch (element.tagName) {
+                        case 'INPUT':
+                        case 'TEXTAREA':
+                        case 'SELECT':
+                        case 'BUTTON':
+                            styleMap.display = 'inline-block';
+                            break;
+                    }
                 }
             }
-        }
-        switch (element.tagName) {
-            case 'INPUT':
-                switch ((<HTMLInputElement> element).type) {
-                    case 'file': {
+            switch (element.tagName) {
+                case 'INPUT':
+                    switch ((<HTMLInputElement> element).type) {
+                        case 'file': {
+                            const style = $css.getStyle(element);
+                            const color = $color.parseColor(style.getPropertyValue('background-color'));
+                            if (color === undefined) {
+                                styleMap.backgroundColor = '#DDDDDD';
+                                if (style.borderStyle === 'none') {
+                                    for (const border of ['borderTop', 'borderRight', 'borderBottom', 'borderLeft']) {
+                                        styleMap[`${border}Style`] = 'solid';
+                                        styleMap[`${border}Color`] = '#DDDDDD';
+                                        styleMap[`${border}Width`] = '2px';
+                                    }
+                                }
+                            }
+                            break;
+                        }
+                    }
+                    break;
+                case 'FORM':
+                    if (styleMap.marginTop === undefined) {
+                        styleMap.marginTop = '0px';
+                    }
+                    break;
+                case 'LI':
+                    if (styleMap.listStyleImage === undefined) {
                         const style = $css.getStyle(element);
-                        const color = $color.parseColor(style.backgroundColor || '');
-                        if (color === undefined) {
-                            styleMap.backgroundColor = '#DDDDDD';
-                            if (style.borderStyle === 'none') {
-                                for (const border of ['borderTop', 'borderRight', 'borderBottom', 'borderLeft']) {
-                                    styleMap[`${border}Style`] = 'solid';
-                                    styleMap[`${border}Color`] = '#DDDDDD';
-                                    styleMap[`${border}Width`] = '2px';
+                        styleMap.listStyleImage = style.getPropertyValue('list-style-image');
+                    }
+                    break;
+                case 'IFRAME':
+                    if (styleMap.display === undefined) {
+                        styleMap.display = 'block';
+                    }
+                case 'IMG':
+                    const setDimension = (attr: string, opposing: string) => {
+                        if (styleMap[attr] === undefined || styleMap[attr] === 'auto') {
+                            const match = new RegExp(`\\s+${attr}="([^"]+)"`).exec(element.outerHTML);
+                            if (match) {
+                                styleMap[attr] = $util.formatPX($util.isPercent(match[1]) ? parseFloat(match[1]) / 100 * (element.parentElement || element).getBoundingClientRect()[attr] : match[1]);
+                            }
+                            else if (element.tagName === 'IFRAME') {
+                                if (attr ===  'width') {
+                                    styleMap.width = '300px';
+                                }
+                                else {
+                                    styleMap.height = '150px';
+                                }
+                            }
+                            else if (!(styleMap.maxWidth && $util.isPercent(styleMap.maxWidth) || styleMap.maxHeight && $util.isPercent(styleMap.maxHeight)) && (styleMap[opposing] === undefined || $util.isLength(styleMap[opposing]))) {
+                                const image = this.application.session.image.get((<HTMLImageElement> element).src);
+                                if (image && image.width > 0 && image.height > 0) {
+                                    styleMap[attr] = $util.formatPX(image[attr] * (styleMap[opposing] && $util.isLength(styleMap[opposing]) ? (parseFloat(styleMap[opposing]) / image[opposing]) : 1));
                                 }
                             }
                         }
-                        break;
-                    }
-                }
-                break;
-            case 'FORM':
-                if (styleMap.marginTop === undefined) {
-                    styleMap.marginTop = '0px';
-                }
-                break;
-            case 'IFRAME':
-                if (styleMap.display === undefined) {
-                    styleMap.display = 'block';
-                }
-            case 'IMG':
-                const setDimension = (attr: string, opposing: string) => {
-                    if (styleMap[attr] === undefined || styleMap[attr] === 'auto') {
-                        const match = new RegExp(`\\s+${attr}="([^"]+)"`).exec(element.outerHTML);
-                        if (match) {
-                            styleMap[attr] = $util.formatPX($util.isPercent(match[1]) ? parseFloat(match[1]) / 100 * (element.parentElement || element).getBoundingClientRect()[attr] : match[1]);
-                        }
-                        else if (element.tagName === 'IFRAME') {
-                            if (attr ===  'width') {
-                                styleMap.width = '300px';
-                            }
-                            else {
-                                styleMap.height = '150px';
-                            }
-                        }
-                        else if (!(styleMap.maxWidth && $util.isPercent(styleMap.maxWidth) || styleMap.maxHeight && $util.isPercent(styleMap.maxHeight)) && (styleMap[opposing] === undefined || $util.isLength(styleMap[opposing]))) {
-                            const image = this.application.session.image.get((<HTMLImageElement> element).src);
-                            if (image && image.width > 0 && image.height > 0) {
-                                styleMap[attr] = $util.formatPX(image[attr] * (styleMap[opposing] && $util.isLength(styleMap[opposing]) ? (parseFloat(styleMap[opposing]) / image[opposing]) : 1));
-                            }
-                        }
-                    }
-                };
-                setDimension('width', 'height');
-                setDimension('height', 'width');
-                break;
+                    };
+                    setDimension('width', 'height');
+                    setDimension('height', 'width');
+                    break;
+            }
         }
-        $dom.setElementCache(element, 'styleMap', this.application.processing.cacheIndex, styleMap);
+        $session.setElementCache(element, 'styleMap', this.application.processing.sessionId, styleMap);
     }
 
     public addBeforeOutsideTemplate(id: number, value: string, index = -1) {
@@ -242,7 +260,7 @@ export default abstract class Controller<T extends Node> implements squared.base
         return '';
     }
 
-    get generateCacheIndex() {
-        return new Date().getTime();
+    get generateSessionId() {
+        return new Date().getTime().toString();
     }
 }

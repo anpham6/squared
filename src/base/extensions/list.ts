@@ -33,13 +33,12 @@ export default abstract class List<T extends Node> extends Extension<T> {
                 for (let i = 0; i < length; i++) {
                     const item = node.children[i];
                     const listStyleType = item.css('listStyleType') !== 'none';
-                    const singleImage = hasSingleImage(item);
                     if (item.display === 'list-item') {
-                        if (listStyleType || singleImage || item.beforePseudoChild) {
+                        if (listStyleType || item.beforePseudoChild || hasSingleImage(item)) {
                             listType++;
                         }
                     }
-                    else if (singleImage && !listStyleType) {
+                    else if (hasSingleImage(item) && !listStyleType && item.marginLeft < 0) {
                         imageType++;
                     }
                     if (item.blockStatic) {
@@ -56,7 +55,7 @@ export default abstract class List<T extends Node> extends Extension<T> {
                         blockAlternate++;
                     }
                 }
-                return (imageType === length || listType > 0) && (blockStatic === length || inlineVertical === length || floating === length && floated.size === 1 || blockAlternate === length);
+                return (imageType > 0 || listType > 0) && (blockStatic === length || inlineVertical === length || floating === length && floated.size === 1 || blockAlternate === length);
             }
         }
         return false;

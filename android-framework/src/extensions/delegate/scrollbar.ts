@@ -4,8 +4,8 @@ import View from '../../view';
 
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
+const $dom = squared.lib.dom;
 const $enum = squared.base.lib.enumeration;
-const $element = squared.lib.element;
 
 const SCROLL_HORIZONTAL = 'HorizontalScrollView';
 const SCROLL_VERTICAL = 'android.support.v4.widget.NestedScrollView';
@@ -44,7 +44,7 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
             node.overflow = overflowType;
         }
         for (let i = 0; i < overflow.length; i++) {
-            const container = this.application.createNode(i === 0 ? <Element> node.element : $element.createElement(node.actualParent ? node.actualParent.element : null, node.block ? 'div' : 'span'));
+            const container = this.application.createNode(i === 0 ? <Element> node.element : $dom.createElement(node.actualParent ? node.actualParent.element : null, node.block ? 'div' : 'span'));
             container.setControlType(overflow[i], CONTAINER_NODE.BLOCK);
             if (i === 0) {
                 container.inherit(node, 'initial', 'base', 'styleMap');

@@ -1,6 +1,83 @@
+import { getStyle } from './css';
 import { spliceArray, withinRange } from './util';
 
-type Node = squared.base.Node;
+export const ELEMENT_BLOCK = [
+    'ADDRESS',
+    'ARTICLE',
+    'ASIDE',
+    'BLOCKQUOTE',
+    'CANVAS',
+    'DD',
+    'DIV',
+    'DL',
+    'DT',
+    'FIELDSET',
+    'FIGCAPTION',
+    'FIGURE',
+    'FOOTER',
+    'FORM',
+    'H1',
+    'H2',
+    'H3',
+    'H4',
+    'H5',
+    'H6',
+    'HEADER',
+    'LI',
+    'MAIN',
+    'NAV',
+    'OL',
+    'OUTPUT',
+    'P',
+    'PRE',
+    'SECTION',
+    'TFOOT',
+    'TH',
+    'THEAD',
+    'TR',
+    'UL',
+    'VIDEO'
+];
+
+export const ELEMENT_INLINE = [
+    'A',
+    'ABBR',
+    'ACRONYM',
+    'B',
+    'BDO',
+    'BIG',
+    'BR',
+    'BUTTON',
+    'CITE',
+    'CODE',
+    'DFN',
+    'EM',
+    'I',
+    'IFRAME',
+    'IMG',
+    'INPUT',
+    'KBD',
+    'LABEL',
+    'MAP',
+    'OBJECT',
+    'Q',
+    'S',
+    'SAMP',
+    'SCRIPT',
+    'SELECT',
+    'SMALL',
+    'SPAN',
+    'STRIKE',
+    'STRONG',
+    'SUB',
+    'SUP',
+    'TEXTAREA',
+    'TIME',
+    'TT',
+    'U',
+    'VAR',
+    'PLAINTEXT'
+];
 
 const withinViewport = (rect: DOMRect | ClientRect) => !(rect.left < 0 && rect.top < 0 && Math.abs(rect.left) >= rect.width && Math.abs(rect.top) >= rect.height);
 
@@ -99,31 +176,14 @@ export function removeElementsByClassName(className: string) {
 
 export function isElementVisible(element: Element, viewport = false) {
     const rect = element.getBoundingClientRect();
-    return rect.width !== 0 && rect.height !== 0 && (!viewport || withinViewport(rect));
-}
-
-export function getFirstChildElement(element: Element | null, index: number, lineBreak = false) {
-    if (element) {
-        for (let i = 0; i < element.childNodes.length; i++) {
-            const node = getElementAsNode<Node>(<Element> element.childNodes[i], index);
-            if (node && node.naturalElement && (!node.excluded || (lineBreak && node.lineBreak))) {
-                return node.element;
-            }
+    if (!viewport || withinViewport(rect)) {
+        if (rect.width !== 0 && rect.height !== 0) {
+            return true;
         }
+        const style = getStyle(element);
+        return style.getPropertyValue('display') === 'block' && (parseInt(style.getPropertyValue('margin-top')) !== 0 || parseInt(style.getPropertyValue('margin-bottom')) !== 0);
     }
-    return null;
-}
-
-export function getLastChildElement(element: Element | null, index: number, lineBreak = false) {
-    if (element) {
-        for (let i = element.childNodes.length - 1; i >= 0; i--) {
-            const node = getElementAsNode<Node>(<Element> element.childNodes[i], index);
-            if (node && node.naturalElement && (!node.excluded || (lineBreak && node.lineBreak))) {
-                return node.element;
-            }
-        }
-    }
-    return null;
+    return false;
 }
 
 export function getElementsBetweenSiblings(elementStart: Element | null, elementEnd: Element, whiteSpace = false) {
@@ -156,47 +216,29 @@ export function getElementsBetweenSiblings(elementStart: Element | null, element
     return undefined;
 }
 
-export function getPreviousElementSibling(element: Element | null, index: number) {
-    if (element) {
-        element = <Element> element.previousSibling;
-        while (element) {
-            const node = getElementAsNode<Node>(element, index);
-            if (node && (!node.excluded || node.lineBreak)) {
-                return node.element;
-            }
-            element = <Element> element.previousSibling;
+export function createElement(parent?: Element | null, tagName = 'span', placeholder = true, index = -1) {
+    const element = document.createElement(tagName);
+    const style = element.style;
+    if (placeholder) {
+        style.position = 'static';
+        style.margin = '0px';
+        style.padding = '0px';
+        style.border = 'none';
+        style.cssFloat = 'none';
+        style.clear = 'none';
+        element.className = '__squared.placeholder';
+    }
+    else {
+        element.className = '__squared.pseudo';
+    }
+    style.display = 'none';
+    if (parent) {
+        if (index >= 0 && index < parent.childNodes.length) {
+            parent.insertBefore(element, parent.childNodes[index]);
+        }
+        else {
+            parent.appendChild(element);
         }
     }
-    return null;
-}
-
-export function getNextElementSibling(element: Element | null, index: number) {
-    if (element) {
-        element = <Element> element.nextSibling;
-        while (element) {
-            const node = getElementAsNode<Node>(element, index);
-            if (node && (!node.excluded || node.lineBreak)) {
-                return node.element;
-            }
-            element = <Element> element.nextSibling;
-        }
-    }
-    return null;
-}
-
-export function setElementCache(element: Element, attr: string, index: number, data: any) {
-    element[`__${attr}::${index}`] = data;
-}
-
-export function getElementCache(element: Element, attr: string, index: number) {
-    return element[`__${attr}::${index}`];
-}
-
-export function deleteElementCache(element: Element, attr: string, index: number) {
-    delete element[`__${attr}::${index}`];
-}
-
-export function getElementAsNode<T>(element: Element, index: number): T | undefined {
-    const node = getElementCache(element, 'node', index);
-    return node && node.naturalElement ? node : undefined;
+    return element;
 }

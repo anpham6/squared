@@ -95,7 +95,7 @@ export const TRANSFORM = {
         };
     },
     parse(element: SVGElement, value?: string): SvgTransform[] | undefined {
-        const transform = value || $css.getInlineStyle(element, 'transform');
+        const transform = value || element.style.getPropertyValue('transform');
         if (transform !== '') {
             const ordered: SvgTransform[] = [];
             for (const name in REGEXP_TRANSFORM) {
@@ -380,7 +380,20 @@ export function getDOMRect(element: SVGElement) {
 }
 
 export function getAttribute(element: Element, attr: string, computed = false) {
-    return $css.getNamedItem(element, attr) || computed && $css.getStyle(element)[name] as string || '';
+    return $css.getNamedItem(element, attr) || computed && $css.getStyle(element).getPropertyValue(attr) || '';
+}
+
+export function getParentAttribute(element: Element | null, attr: string) {
+    let current: HTMLElement | Element | null = element;
+    let value = '';
+    while (current) {
+        value = getAttribute(current, attr, true);
+        if (value !== '' && value !== 'inherit') {
+            break;
+        }
+        current = current.parentElement;
+    }
+    return value;
 }
 
 export function parseAttributeUrl(value: string) {

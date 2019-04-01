@@ -23,6 +23,7 @@ declare global {
             map<U>(predicate: IteratorPredicate<T, U>): U[];
             flatMap<U>(predicate: IteratorPredicate<T, U>): U[];
             cascade(): T[];
+            cascadeSome(predicate: IteratorPredicate<T, boolean>): boolean;
         }
 
         class Container<T> implements Container<T> {

@@ -13,7 +13,7 @@ import $Layout = squared.base.Layout;
 const $const = squared.base.lib.constant;
 const $enum = squared.base.lib.enumeration;
 const $css = squared.lib.css;
-const $element = squared.lib.element;
+const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 const MINWIDTH_INSIDE = 24;
@@ -125,7 +125,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         layout_columnWeight: columnWeight
                     }
                 });
-                const element = $element.createElement(node.actualParent ? node.actualParent.element : null);
+                const element = $dom.createElement(node.actualParent ? node.actualParent.element : null);
                 ordinal = this.application.createNode(element);
                 if (inside) {
                     controller.addBeforeOutsideTemplate(
@@ -166,14 +166,15 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     }
                     else {
                         ordinal.setControlType(CONTAINER_ANDROID.SPACE, CONTAINER_NODE.SPACE);
+                        node.modifyBox($enum.BOX_STANDARD.PADDING_LEFT, null);
                     }
                     ordinal.inherit(node, 'textStyle');
                     ordinal.cssApply({
                         minWidth: $util.formatPX(minWidth),
                         marginTop: node.marginTop !== 0 ? $util.formatPX(node.marginTop) : '',
                         paddingTop: node.paddingTop > 0 ? $util.formatPX(node.paddingTop) : '',
-                        paddingRight: gravity === 'right' ? $util.formatPX(paddingRight) : '',
-                        paddingLeft: gravity === '' && !image ? $util.formatPX(paddingRight) : '',
+                        paddingRight: paddingRight > 0 && gravity === 'right' ? $util.formatPX(paddingRight) : '',
+                        paddingLeft: paddingRight > 0 && gravity === '' && !image ? $util.formatPX(paddingRight) : '',
                         fontSize: mainData.ordinal && !mainData.ordinal.endsWith('.') ? $util.formatPX(ordinal.toInt('fontSize') * 0.75) : ''
                     });
                     ordinal.apply(options);

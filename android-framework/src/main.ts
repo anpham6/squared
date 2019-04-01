@@ -209,7 +209,7 @@ const appBase: AppFramework<T> = {
             [EN.CSS_GRID]: new CssGrid(EN.CSS_GRID, framework),
             [EN.FLEXBOX]: new Flexbox(EN.FLEXBOX, framework),
             [EN.TABLE]: new Table(EN.TABLE, framework, ['TABLE']),
-            [EN.LIST]: new List(EN.LIST, framework, ['UL', 'OL', 'DL']),
+            [EN.LIST]: new List(EN.LIST, framework, ['DIV', 'UL', 'OL', 'DL']),
             [EN.GRID]: new Grid(EN.GRID, framework, ['DIV', 'FORM', 'UL', 'OL', 'DL', 'NAV', 'SECTION', 'ASIDE', 'MAIN', 'HEADER', 'FOOTER', 'P', 'ARTICLE', 'FIELDSET']),
             [EN.RELATIVE]: new Relative(EN.RELATIVE, framework),
             [EN.VERTICAL_ALIGN]: new VerticalAlign(EN.VERTICAL_ALIGN, framework),

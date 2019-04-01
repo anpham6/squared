@@ -8,9 +8,9 @@ type View = android.base.View;
 const $const = squared.base.lib.constant;
 const $enum = squared.base.lib.enumeration;
 const $css = squared.lib.css;
-const $dom = squared.lib.dom;
+const $session = squared.lib.session;
 const $util = squared.lib.util;
-const $element = squared.lib.element;
+const $dom = squared.lib.dom;
 const $constA = android.lib.constant;
 const $enumA = android.lib.enumeration;
 const $utilA = android.lib.util;
@@ -116,7 +116,7 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
             if (valid) {
                 element.querySelectorAll('NAV').forEach((item: HTMLElement) => {
                     if ($css.getStyle(element).display === 'none') {
-                        $dom.setElementCache(item, 'squaredExternalDisplay', this.application.processing.cacheIndex, 'none');
+                        $session.setElementCache(item, 'squaredExternalDisplay', this.application.processing.sessionId, 'none');
                         item.style.display = 'block';
                     }
                 });
@@ -131,7 +131,7 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
     }
 
     public processNode(node: T) {
-        const parentAs = this.application.createNode($element.createElement(), false);
+        const parentAs = this.application.createNode($dom.createElement(), false);
         node.documentRoot = true;
         node.alignmentType |= $enum.NODE_ALIGNMENT.AUTO_LAYOUT;
         node.setControlType(NAVIGATION.MENU, $enumA.CONTAINER_NODE.INLINE);
@@ -244,10 +244,10 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
 
     public postBaseLayout(node: T) {
         (<HTMLElement> node.element).querySelectorAll('NAV').forEach((item: HTMLElement) => {
-            const display: string = $dom.getElementCache(item, 'squaredExternalDisplay', node.cacheIndex);
+            const display: string = $session.getElementCache(item, 'squaredExternalDisplay', node.sessionId);
             if (display) {
                 item.style.display = display;
-                $dom.deleteElementCache(item, 'squaredExternalDisplay', node.cacheIndex);
+                $session.deleteElementCache(item, 'squaredExternalDisplay', node.sessionId);
             }
         });
     }

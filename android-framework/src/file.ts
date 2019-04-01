@@ -71,10 +71,14 @@ function createFileAsset(pathname: string, filename: string, content: string): F
 }
 
 function convertLength(value: string, dpi = 160, font = false) {
-    let result = parseFloat(value);
-    if (!isNaN(result)) {
-        result /= dpi / 160;
-        value = result >= 1 || result === 0 ? Math.round(result).toString() : result.toPrecision(2);
+    if (dpi !== 160) {
+        let result = parseFloat(value);
+        if (!isNaN(result)) {
+            result /= dpi / 160;
+            value = result !== 0 && result > -1 && result < 1 ? result.toPrecision(3) : Math.round(result).toString();
+        }
+    }
+    else {
         return value + (font ? 'sp' : 'dp');
     }
     return '0dp';

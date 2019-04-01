@@ -11,9 +11,9 @@ type ToolbarThemeData = {
 };
 
 const $const = squared.base.lib.constant;
-const $enum = squared.base.lib.enumeration;
 const $dom = squared.lib.dom;
-const $element = squared.lib.element;
+const $enum = squared.base.lib.enumeration;
+const $session = squared.lib.session;
 const $util = squared.lib.util;
 const $constA = android.lib.constant;
 const $enumA = android.lib.enumeration;
@@ -81,7 +81,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
                 }
             }
             if (!item.dataset.target) {
-                const targetNode = $dom.getElementAsNode<T>(item, node.cacheIndex);
+                const targetNode = $session.getElementAsNode<T>(item, node.sessionId);
                 if (targetNode) {
                     switch (item.dataset.targetModule) {
                         case 'appBar':
@@ -287,7 +287,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
     }
 
     private createPlaceholder(node: T, children: T[], target?: string) {
-        const placeholder = this.application.createNode($element.createElement(node.actualParent ? node.actualParent.element : null, node.block ? 'div' : 'span'), true, children.length > 0);
+        const placeholder = this.application.createNode($dom.createElement(node.actualParent ? node.actualParent.element : null, node.block ? 'div' : 'span'), true, children.length > 0);
         if (target) {
             placeholder.dataset.target = target;
         }

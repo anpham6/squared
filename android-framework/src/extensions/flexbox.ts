@@ -34,6 +34,7 @@ const CHAIN_MAP = {
 function adjustGrowRatio(parent: View, items: View[], horizontal: boolean) {
     const attr = horizontal ? 'width' : 'height';
     const groupBasis: FlexBasis[] = [];
+    const percent = parent[`has${$util.capitalize(attr)}`] || !parent.blockStatic;
     function setPercent(flexbox: Flexbox, dimension: number) {
         flexbox.basis = `${dimension / parent.box[attr] * 100}%`;
     }
@@ -74,11 +75,11 @@ function adjustGrowRatio(parent: View, items: View[], horizontal: boolean) {
                 }
                 groupBasis.push(data);
             }
-            else {
+            else if (percent) {
                 setPercent(item.flexbox, dimension);
             }
         }
-        else if (item.flexbox.alignSelf === 'auto' && !item.has(attr, $enum.CSS_STANDARD.LENGTH)) {
+        else if (percent && item.flexbox.alignSelf === 'auto' && !item.has(attr, $enum.CSS_STANDARD.LENGTH)) {
             setPercent(item.flexbox, dimension);
         }
     }
@@ -271,7 +272,11 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     const spreadInside = justifyContent && (mainData.justifyContent === 'space-between' || mainData.justifyContent === 'space-around' && seg.length > 1);
                     let baseline: T | undefined;
                     let maxSize = Number.NEGATIVE_INFINITY;
-                    $util.captureMap(seg, item => !item.flexElement, item => maxSize = Math.max(maxSize, item.bounds[HWL]));
+                    $util.captureMap(
+                        seg,
+                        item => !item.flexElement,
+                        item => maxSize = Math.max(maxSize, item.bounds[HWL])
+                    );
                     function setAlignStretch(chain: T) {
                         const initial: InitialData<T> = chain.unsafe('initial');
                         if (initial.bounds && initial.bounds[HWL] < maxSize) {

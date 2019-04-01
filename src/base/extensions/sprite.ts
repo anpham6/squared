@@ -11,7 +11,7 @@ const $util = squared.lib.util;
 export default abstract class Sprite<T extends Node> extends Extension<T> {
     public condition(node: T) {
         let valid = false;
-        if (node.hasWidth && node.hasHeight && node.length === 0) {
+        if (node.hasWidth && node.hasHeight && node.length === 0 && (this.included(<HTMLElement> node.element) || !node.dataset.use)) {
             let url = node.css('backgroundImage');
             if (url === '' || url === 'none') {
                 const match = $util.REGEXP_COMPILED.URL.exec(node.css('background'));
@@ -32,6 +32,6 @@ export default abstract class Sprite<T extends Node> extends Extension<T> {
                 }
             }
         }
-        return valid && (!node.dataset.use || this.included(<HTMLElement> node.element));
+        return valid;
     }
 }
