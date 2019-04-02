@@ -1,6 +1,7 @@
 import { SvgMatrix, SvgPoint, SvgTransform } from '../@types/object';
 
 const $css = squared.lib.css;
+const $dom = squared.lib.dom;
 const $math = squared.lib.math;
 const $util = squared.lib.util;
 
@@ -262,7 +263,7 @@ export const TRANSFORM = {
         return result;
     },
     rotateOrigin(element: SVGElement, attr = 'transform'): SvgPoint[] {
-        const value = $css.getNamedItem(element, attr);
+        const value = $dom.getNamedItem(element, attr);
         const result: SvgPoint[] = [];
         if (value !== '') {
             const pattern = /rotate\((-?[\d.]+)(?:,? (-?[\d.]+))?(?:,? (-?[\d.]+))?\)/g;
@@ -379,15 +380,15 @@ export function getDOMRect(element: SVGElement) {
     return <DOMRect> result;
 }
 
-export function getAttribute(element: Element, attr: string, computed = false) {
-    return $css.getNamedItem(element, attr) || computed && $css.getStyle(element).getPropertyValue(attr) || '';
+export function getAttribute(element: Element, attr: string, computed = true) {
+    return $dom.getNamedItem(element, attr) || computed && $css.getStyle(element).getPropertyValue(attr) || '';
 }
 
 export function getParentAttribute(element: Element | null, attr: string) {
     let current: HTMLElement | Element | null = element;
     let value = '';
     while (current) {
-        value = getAttribute(current, attr, true);
+        value = getAttribute(current, attr);
         if (value !== '' && value !== 'inherit') {
             break;
         }
@@ -402,7 +403,7 @@ export function parseAttributeUrl(value: string) {
 }
 
 export function getTargetElement(element: SVGElement, rootElement?: SVGElement) {
-    const value = $css.getNamedItem(element, 'href');
+    const value = $dom.getNamedItem(element, 'href');
     if (value.charAt(0) === '#') {
         const id = value.substring(1);
         let parent: SVGElement | HTMLElement | null;

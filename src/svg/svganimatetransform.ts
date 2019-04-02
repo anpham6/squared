@@ -4,7 +4,7 @@ import SvgBuild from './svgbuild';
 import { INSTANCE_TYPE } from './lib/constant';
 import { TRANSFORM } from './lib/util';
 
-const $css = squared.lib.css;
+const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 export default class SvgAnimateTransform extends SvgAnimate implements squared.svg.SvgAnimateTransform {
@@ -104,7 +104,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
     constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimateTransformElement) {
         super(element, animationElement);
         if (animationElement) {
-            const type = $css.getNamedItem(animationElement, 'type');
+            const type = $dom.getNamedItem(animationElement, 'type');
             this.setType(type);
             this.setCalcMode(type);
         }

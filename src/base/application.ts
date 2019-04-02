@@ -773,14 +773,22 @@ export default class Application<T extends Node> implements squared.base.Applica
                         }
                     }
                     else if (childElement === beforeElement) {
-                        node.beforePseudoChild = this.insertNode(<HTMLElement> beforeElement);
-                        children.push(node.beforePseudoChild as T);
-                        includeText = true;
+                        const child = this.insertNode(<HTMLElement> beforeElement);
+                        if (child) {
+                            node.beforePseudoChild = child;
+                            child.setInlineText(true);
+                            children.push(child);
+                            includeText = true;
+                        }
                     }
                     else if (childElement === afterElement) {
-                        node.afterPseudoChild = this.insertNode(<HTMLElement> afterElement);
-                        children.push(node.afterPseudoChild as T);
-                        includeText = true;
+                        const child = this.insertNode(<HTMLElement> afterElement);
+                        if (child) {
+                            node.afterPseudoChild = child;
+                            child.setInlineText(true);
+                            children.push(child);
+                            includeText = true;
+                        }
                     }
                     else if (!localSettings.unsupported.tagName.has(childElement.tagName) || childElement.tagName === 'INPUT' && !localSettings.unsupported.tagName.has(`${childElement.tagName}:${childElement.type}`)) {
                         prioritizeExtensions(childElement, this.extensions).some(item => item.init(childElement));
@@ -1737,8 +1745,8 @@ export default class Application<T extends Node> implements squared.base.Applica
                 case 'initial':
                 case 'inherit':
                 case 'no-open-quote':
-                    break;
                 case 'no-close-quote':
+                    break;
                 case '""':
                     let valid = false;
                     if (styleMap.display === 'block' || styleMap.clear && styleMap.clear !== 'none') {
@@ -1782,7 +1790,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         let match: RegExpExecArray | null;
                         while ((match = REGEXP_CACHED.CSS_CONTENT.exec(value)) !== null) {
                             if (match[1]) {
-                                content += $css.getNamedItem(element, match[1].trim());
+                                content += $dom.getNamedItem(element, match[1].trim());
                             }
                             else if (match[2] || match[5]) {
                                 const counterType = match[2] === 'counter';
@@ -1960,7 +1968,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                         }
                                     }
                                     const pattern = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
-                                    const fontSize = $util.convertInt($css.getStyle(document.body).getPropertyValue('font-size'));
+                                    const fontSize = $util.parseUnit($css.getStyle(document.body).getPropertyValue('font-size'));
                                     let match: RegExpExecArray | null;
                                     let statement = false;
                                     while (!statement && ((match = pattern.exec((<CSSConditionRule> rule).conditionText)) !== null)) {

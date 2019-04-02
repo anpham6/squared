@@ -79,7 +79,7 @@
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@+id/textview_18"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol29803"
+                    android:text="@string/__symbol58899"
                     style="@style/Plaintext" />
             </RelativeLayout>
             <LinearLayout
@@ -228,7 +228,7 @@
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@+id/textview_21"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol29803"
+                    android:text="@string/__symbol58899"
                     style="@style/Plaintext" />
             </RelativeLayout>
             <LinearLayout
@@ -665,7 +665,7 @@
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@+id/textview_24"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol29803"
+                    android:text="@string/__symbol58899"
                     style="@style/Plaintext" />
             </RelativeLayout>
             <LinearLayout
@@ -794,7 +794,7 @@
     <string name="app_name">android</string>
     <string name="__00_inactive">00 - Inactive</string>
     <string name="__01_active">01 - Active</string>
-    <string name="__symbol29803">):</string>
+    <string name="__symbol58899"> ):</string>
     <string name="active">Active:</string>
     <string name="add">Add</string>
     <string name="all">All</string>
@@ -1003,7 +1003,7 @@
     <style name="Checkbox">
         <item name="android:fontFamily">arial</item>
         <item name="android:textColor">@color/black</item>
-        <item name="android:textSize">13.3333sp</item>
+        <item name="android:textSize">13sp</item>
     </style>
     <style name="H2">
         <item name="android:fontFamily">tahoma</item>
@@ -1033,7 +1033,7 @@
     <style name="Radio">
         <item name="android:fontFamily">arial</item>
         <item name="android:textColor">@color/black</item>
-        <item name="android:textSize">13.3333sp</item>
+        <item name="android:textSize">13sp</item>
     </style>
     <style name="Select">
         <item name="android:fontFamily">arial</item>
@@ -1051,7 +1051,7 @@
     <style name="Text">
         <item name="android:fontFamily">arial</item>
         <item name="android:textColor">@color/black</item>
-        <item name="android:textSize">13.3333sp</item>
+        <item name="android:textSize">13sp</item>
     </style>
 </resources>
 <!-- filename: res/values/styles.xml -->

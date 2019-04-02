@@ -401,12 +401,16 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                 for (const attr in boxStyle) {
                     const value = node.css(attr);
                     switch (attr) {
-                        case 'backgroundColor':
-                            if (!(!node.has('backgroundColor') && (value === node.cssAscend('backgroundColor', false, true) || node.documentParent.visible && Resource.isInheritedStyle(node, 'backgroundColor')))) {
-                                const color = $color.parseColor(value, node.css('opacity'));
-                                boxStyle.backgroundColor = color ? color.valueAsRGBA : '';
+                        case 'backgroundColor': {
+                            if (!node.has('backgroundColor') && (value === node.cssAscend('backgroundColor', false, true) || node.documentParent.visible && Resource.isInheritedStyle(node, 'backgroundColor'))) {
+                                continue;
+                            }
+                            const color = $color.parseColor(value, node.css('opacity'));
+                            if (color) {
+                                boxStyle.backgroundColor = color.valueAsRGBA;
                             }
                             break;
+                        }
                         case 'backgroundSize':
                         case 'backgroundRepeat':
                         case 'backgroundPositionX':

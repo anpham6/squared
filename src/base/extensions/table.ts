@@ -7,6 +7,7 @@ import { EXT_NAME } from '../lib/constant';
 import { BOX_STANDARD, CSS_STANDARD } from '../lib/enumeration';
 
 const $css = squared.lib.css;
+const $dom = squared.lib.dom;
 const $math = squared.lib.math;
 const $util = squared.lib.util;
 
@@ -116,13 +117,13 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                     }
                 }
                 if (!td.hasWidth) {
-                    const width = $util.convertInt($css.getNamedItem(element, 'width'));
+                    const width = $util.convertInt($dom.getNamedItem(element, 'width'));
                     if (width > 0) {
                         td.css('width', $util.formatPX(width));
                     }
                 }
                 if (!td.hasHeight) {
-                    const height = $util.convertInt($css.getNamedItem(element, 'height'));
+                    const height = $util.convertInt($dom.getNamedItem(element, 'height'));
                     if (height > 0) {
                         td.css('height', $util.formatPX(height));
                     }

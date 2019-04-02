@@ -1,4 +1,4 @@
-/* android.widget 0.9.1
+/* android.widget 0.9.2
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -37,7 +37,7 @@ this.android.widget.floatingactionbutton = (function () {
                     break;
                 case 'INPUT':
                     if (element.type === 'image') {
-                        src = $Resource.addImage({ mdpi: element.src }, $constA.PREFIX_ANDROID.DIALOG);
+                        src = $Resource.addImage({ mdpi: node.src }, $constA.PREFIX_ANDROID.DIALOG);
                     }
                     else {
                         src = $Resource.addImageUrl(node.css('backgroundImage'), $constA.PREFIX_ANDROID.DIALOG);

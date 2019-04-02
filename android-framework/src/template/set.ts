@@ -3,7 +3,7 @@ const ORDERING = ['ordering'];
 export const OBJECTANIMATOR = {
     'objectAnimator': {
         '^': 'android',
-        '@': ['propertyName', 'interpolator', 'valueType', 'valueFrom', 'valueTo', 'startOffset', 'duration', 'repeatCount'],
+        '@': ['propertyName', 'startOffset', 'duration', 'repeatCount', 'interpolator', 'valueType', 'valueFrom', 'valueTo'],
         '>': {
             'propertyValuesHolder': {
                 '^': 'android',

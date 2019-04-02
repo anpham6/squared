@@ -1,4 +1,4 @@
-/* android.widget 0.9.1
+/* android.widget 0.9.2
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -9,7 +9,7 @@ this.android.widget.drawer = (function () {
     var $Resource = android.base.Resource;
     const $enum = squared.base.lib.enumeration;
     const $const = squared.base.lib.constant;
-    const $dom = squared.lib.dom;
+    const $session = squared.lib.session;
     const $util = squared.lib.util;
     const $constA = android.lib.constant;
     const $enumA = android.lib.enumeration;
@@ -30,7 +30,7 @@ this.android.widget.drawer = (function () {
                         item.dataset.use = (item.dataset.use ? `${item.dataset.use}, ` : '') + $const.EXT_NAME.EXTERNAL;
                     }
                 }
-                this.application.parseElements.add(element);
+                this.application.rootElements.add(element);
                 return true;
             }
             return false;
@@ -86,7 +86,7 @@ this.android.widget.drawer = (function () {
         postProcedure(node) {
             const element = Drawer.findNestedElement(node.element, "android.widget.coordinator" /* COORDINATOR */);
             if (element) {
-                const coordinator = $dom.getElementAsNode(element);
+                const coordinator = $session.getElementAsNode(element, node.sessionId);
                 if (coordinator && coordinator.inlineHeight && coordinator.some(item => item.positioned)) {
                     coordinator.android('layout_height', 'match_parent');
                 }

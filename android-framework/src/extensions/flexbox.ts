@@ -33,11 +33,12 @@ const CHAIN_MAP = {
 
 function adjustGrowRatio(parent: View, items: View[], horizontal: boolean) {
     const attr = horizontal ? 'width' : 'height';
-    const groupBasis: FlexBasis[] = [];
-    const percent = parent[`has${$util.capitalize(attr)}`] || !parent.blockStatic;
+    const attrPartial = $util.capitalize(attr);
+    const percent = parent[`has${attrPartial}`] || parent.has(`max${attrPartial}`);
     function setPercent(flexbox: Flexbox, dimension: number) {
         flexbox.basis = `${dimension / parent.box[attr] * 100}%`;
     }
+    const groupBasis: FlexBasis[] = [];
     let maxBasis!: View;
     let maxBasisUnit = 0;
     let maxDimension = 0;

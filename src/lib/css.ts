@@ -153,7 +153,7 @@ export function getStyle(element: Element | null, target?: string, cache = true)
 }
 
 export function getFontSize(element: Element | null) {
-    return parseInt(getStyle(element).fontSize || '16px');
+    return parseFloat(getStyle(element).getPropertyValue('font-size')) || undefined;
 }
 
 export function isParentStyle(element: Element | null, attr: string, ...styles: string[]) {
@@ -216,16 +216,6 @@ export function calculateVar(element: HTMLElement | SVGElement, value: string, a
         return calculate(result, dimension, getFontSize(element));
     }
     return undefined;
-}
-
-export function getNamedItem(element: Element | null, attr: string) {
-    if (element) {
-        const item = element.attributes.getNamedItem(attr);
-        if (item) {
-            return item.value.trim();
-        }
-    }
-    return '';
 }
 
 export function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number) {

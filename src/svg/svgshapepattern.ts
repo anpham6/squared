@@ -12,7 +12,7 @@ import SvgPattern from './svgpattern';
 import { INSTANCE_TYPE, REGION_UNIT } from './lib/constant';
 import { TRANSFORM } from './lib/util';
 
-const $css = squared.lib.css;
+const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 const getPercent = (value: string) => $util.isPercent(value) ? parseFloat(value) / 100 : parseFloat(value);
@@ -30,8 +30,8 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
         public readonly patternElement: SVGPatternElement)
     {
         super(element);
-        this.patternUnits = $css.getNamedItem(this.patternElement, 'patternUnits') === 'userSpaceOnUse' ? REGION_UNIT.USER_SPACE_ON_USE : REGION_UNIT.OBJECT_BOUNDING_BOX;
-        this.patternContentUnits = $css.getNamedItem(this.patternElement, 'patternContentUnits') === 'objectBoundingBox' ? REGION_UNIT.OBJECT_BOUNDING_BOX : REGION_UNIT.USER_SPACE_ON_USE;
+        this.patternUnits = $dom.getNamedItem(this.patternElement, 'patternUnits') === 'userSpaceOnUse' ? REGION_UNIT.USER_SPACE_ON_USE : REGION_UNIT.OBJECT_BOUNDING_BOX;
+        this.patternContentUnits = $dom.getNamedItem(this.patternElement, 'patternContentUnits') === 'objectBoundingBox' ? REGION_UNIT.OBJECT_BOUNDING_BOX : REGION_UNIT.USER_SPACE_ON_USE;
     }
 
     public build(options?: SvgBuildOptions) {

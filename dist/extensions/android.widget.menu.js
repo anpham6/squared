@@ -1,4 +1,4 @@
-/* android.widget 0.9.1
+/* android.widget 0.9.2
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -10,9 +10,9 @@ this.android.widget.menu = (function () {
     const $const = squared.base.lib.constant;
     const $enum = squared.base.lib.enumeration;
     const $css = squared.lib.css;
-    const $dom = squared.lib.dom;
+    const $session = squared.lib.session;
     const $util = squared.lib.util;
-    const $element = squared.lib.element;
+    const $dom = squared.lib.dom;
     const $constA = android.lib.constant;
     const $enumA = android.lib.enumeration;
     const $utilA = android.lib.util;
@@ -50,9 +50,6 @@ this.android.widget.menu = (function () {
         ITEM: 'item',
         GROUP: 'group'
     };
-    function hasInputType(node, value) {
-        return node.some(item => item.element.type === value);
-    }
     function parseDataSet(validator, element, options) {
         for (const attr in element.dataset) {
             const value = element.dataset[attr];
@@ -77,6 +74,7 @@ this.android.widget.menu = (function () {
         }
         return '';
     }
+    const hasInputType = (node, value) => node.some(item => item.element.type === value);
     class Menu extends squared.base.Extension {
         constructor(name, framework, tagNames, options) {
             super(name, framework, tagNames, options);
@@ -97,7 +95,7 @@ this.android.widget.menu = (function () {
                     if (valid) {
                         let current = element.parentElement;
                         while (current) {
-                            if (current.tagName === 'NAV' && this.application.parseElements.has(current)) {
+                            if (current.tagName === 'NAV' && this.application.rootElements.has(current)) {
                                 valid = false;
                                 break;
                             }
@@ -108,11 +106,11 @@ this.android.widget.menu = (function () {
                 if (valid) {
                     element.querySelectorAll('NAV').forEach((item) => {
                         if ($css.getStyle(element).display === 'none') {
-                            $dom.setElementCache(item, 'squaredExternalDisplay', 'none');
-                            item.style.display = 'block';
+                            $session.setElementCache(item, 'squaredExternalDisplay', this.application.processing.sessionId, 'none');
+                            item.style.setProperty('display', 'block');
                         }
                     });
-                    this.application.parseElements.add(element);
+                    this.application.rootElements.add(element);
                 }
             }
             return false;
@@ -121,7 +119,7 @@ this.android.widget.menu = (function () {
             return this.included(node.element);
         }
         processNode(node) {
-            const parentAs = this.application.createNode($element.createElement(null));
+            const parentAs = this.application.createNode($dom.createElement(), false);
             node.documentRoot = true;
             node.alignmentType |= 4 /* AUTO_LAYOUT */;
             node.setControlType(NAVIGATION.MENU, $enumA.CONTAINER_NODE.INLINE);
@@ -191,7 +189,8 @@ this.android.widget.menu = (function () {
                     parseDataSet(REGEXP_ITEM, element, options);
                     if (!options.android.icon) {
                         const style = $css.getStyle(element);
-                        let src = $Resource.addImageUrl((style.backgroundImage !== 'none' ? style.backgroundImage : style.background), $constA.PREFIX_ANDROID.MENU);
+                        const backgroundImage = style.getPropertyValue('background-image');
+                        let src = $Resource.addImageUrl(backgroundImage !== 'none' ? backgroundImage : style.getPropertyValue('background'), $constA.PREFIX_ANDROID.MENU);
                         if (src !== '') {
                             options.android.icon = `@drawable/${src}`;
                         }
@@ -232,10 +231,10 @@ this.android.widget.menu = (function () {
         }
         postBaseLayout(node) {
             node.element.querySelectorAll('NAV').forEach((item) => {
-                const display = $dom.getElementCache(item, 'squaredExternalDisplay');
+                const display = $session.getElementCache(item, 'squaredExternalDisplay', node.sessionId);
                 if (display) {
-                    item.style.display = display;
-                    $dom.deleteElementCache(item, 'squaredExternalDisplay');
+                    item.style.setProperty('display', display);
+                    $session.deleteElementCache(item, 'squaredExternalDisplay', node.sessionId);
                 }
             });
         }

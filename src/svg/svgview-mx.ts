@@ -16,6 +16,7 @@ interface AttributeData extends NumberValue<string> {
 type AttributeMap = ObjectMap<AttributeData[]>;
 
 const $css = squared.lib.css;
+const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 const STRING_CUBICBEZIER = `cubic-bezier\\((${$util.STRING_PATTERN.ZERO_ONE}), (${$util.STRING_PATTERN.DECIMAL}), (${$util.STRING_PATTERN.ZERO_ONE}), (${$util.STRING_PATTERN.DECIMAL})\\)`;
@@ -58,8 +59,8 @@ function setVisible(element: SVGGraphicsElement, value: boolean) {
 }
 
 function isVisible(element: Element) {
-    const value = getAttribute(element, 'visibility', true);
-    return value !== 'hidden' && value !== 'collapse' && getAttribute(element, 'display', true) !== 'none';
+    const value = getAttribute(element, 'visibility');
+    return value !== 'hidden' && value !== 'collapse' && getAttribute(element, 'display') !== 'none';
 }
 
 function setOpacity(element: SVGGraphicsElement, value: string) {
@@ -107,7 +108,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             for (let i = 0; i < element.children.length; i++) {
                 const item = element.children[i];
                 if (item instanceof SVGAnimationElement) {
-                    const begin = $css.getNamedItem(item, 'begin');
+                    const begin = $dom.getNamedItem(item, 'begin');
                     if (begin !== '' && /^[a-zA-Z]+$/.test(begin)) {
                         continue;
                     }

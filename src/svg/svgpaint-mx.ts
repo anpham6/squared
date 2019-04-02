@@ -42,7 +42,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
 
         public setPaint(d?: string[], precision?: number) {
             this.resetPaint();
-            this.setAttribute('color', true);
+            this.setAttribute('color');
             this.setAttribute('fill');
             this.setAttribute('fill-opacity');
             this.setAttribute('fill-rule');
@@ -55,7 +55,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             this.setAttribute('stroke-dasharray');
             this.setAttribute('stroke-dashoffset');
             this.setAttribute('clip-rule');
-            const clipPath = this.getAttribute('clip-path', false, false);
+            const clipPath = this.getAttribute('clip-path', true, false);
             if (clipPath !== '') {
                 for (const name in REGEXP_CLIPPATH) {
                     const match = REGEXP_CLIPPATH[name].exec(clipPath);
@@ -157,7 +157,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             }
         }
 
-        public setAttribute(attr: string, computed = false) {
+        public setAttribute(attr: string, computed = true) {
             let value = this.getAttribute(attr, computed);
             if ($util.isString(value)) {
                 switch (attr) {
@@ -180,10 +180,10 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 case 'none':
                                 case 'transparent':
                                 case 'rgba(0, 0, 0, 0)':
-                                    this[attr] = '';
+                                    this[attr] = 'none';
                                     break;
                                 case 'currentcolor':
-                                    color = $color.parseColor(this.color || getAttribute(this.element, attr, true));
+                                    color = $color.parseColor(this.color || getAttribute(this.element, attr));
                                     break;
                                 default:
                                     color = $color.parseColor(value);
@@ -199,7 +199,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             }
         }
 
-        public getAttribute(attr: string, computed = false, inherited = true) {
+        public getAttribute(attr: string, computed = true, inherited = true) {
             let value = getAttribute(this.element, attr, computed);
             if (inherited && !$util.isString(value)) {
                 if (this.patternParent) {
@@ -213,7 +213,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                 }
                 let current = this.useParent || this.parent;
                 while (current) {
-                    value = getAttribute(current.element, attr);
+                    value = getAttribute(current.element, attr, computed);
                     if ($util.isString(value)) {
                         break;
                     }

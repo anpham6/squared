@@ -1,4 +1,4 @@
-/* squared.svg 0.9.1
+/* squared.svg 0.9.2
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -8,6 +8,7 @@
 }(this, function (exports) { 'use strict';
 
     const $css = squared.lib.css;
+    const $dom = squared.lib.dom;
     const $math = squared.lib.math;
     const $util = squared.lib.util;
     const STRING_DECIMAL = `(${$util.STRING_PATTERN.DECIMAL})`;
@@ -98,7 +99,7 @@
             };
         },
         parse(element, value) {
-            const transform = value || $css.getInlineStyle(element, 'transform');
+            const transform = value || element.style.getPropertyValue('transform');
             if (transform !== '') {
                 const ordered = [];
                 for (const name in REGEXP_TRANSFORM) {
@@ -171,7 +172,7 @@
             return undefined;
         },
         matrix(element, value) {
-            const match = new RegExp(REGEXP_TRANSFORM.MATRIX).exec(value || $css.getStyle(element, true).transform || '');
+            const match = new RegExp(REGEXP_TRANSFORM.MATRIX).exec(value || $css.getStyle(element).transform || '');
             if (match) {
                 switch (match[1]) {
                     case 'matrix':
@@ -198,7 +199,7 @@
         },
         origin(element, value) {
             if (value === undefined) {
-                value = $css.getAttribute(element, 'transform-origin');
+                value = getAttribute(element, 'transform-origin');
             }
             const result = { x: 0, y: 0 };
             if (value !== '') {
@@ -265,7 +266,7 @@
             return result;
         },
         rotateOrigin(element, attr = 'transform') {
-            const value = $css.getNamedItem(element, attr);
+            const value = $dom.getNamedItem(element, attr);
             const result = [];
             if (value !== '') {
                 const pattern = /rotate\((-?[\d.]+)(?:,? (-?[\d.]+))?(?:,? (-?[\d.]+))?\)/g;
@@ -379,12 +380,27 @@
         result.y = result.top;
         return result;
     }
-    function getAttributeUrl(value) {
+    function getAttribute(element, attr, computed = true) {
+        return $dom.getNamedItem(element, attr) || computed && $css.getStyle(element).getPropertyValue(attr) || '';
+    }
+    function getParentAttribute(element, attr) {
+        let current = element;
+        let value = '';
+        while (current) {
+            value = getAttribute(current, attr);
+            if (value !== '' && value !== 'inherit') {
+                break;
+            }
+            current = current.parentElement;
+        }
+        return value;
+    }
+    function parseAttributeUrl(value) {
         const match = /url\("?(#.+?)"?\)/.exec(value);
         return match ? match[1] : '';
     }
     function getTargetElement(element, rootElement) {
-        const value = $css.getNamedItem(element, 'href');
+        const value = $dom.getNamedItem(element, 'href');
         if (value.charAt(0) === '#') {
             const id = value.substring(1);
             let parent;
@@ -436,13 +452,15 @@
         TRANSFORM: TRANSFORM,
         SVG: SVG,
         getDOMRect: getDOMRect,
-        getAttributeUrl: getAttributeUrl,
+        getAttribute: getAttribute,
+        getParentAttribute: getParentAttribute,
+        parseAttributeUrl: parseAttributeUrl,
         getTargetElement: getTargetElement,
         getNearestViewBox: getNearestViewBox,
         getPathLength: getPathLength
     });
 
-    const $css$1 = squared.lib.css;
+    const $dom$1 = squared.lib.dom;
     const $math$1 = squared.lib.math;
     const $util$1 = squared.lib.util;
     const NAME_GRAPHICS = new Map();
@@ -582,7 +600,7 @@
         static drawRefit(element, parent, precision) {
             let value;
             if (SVG.path(element)) {
-                value = $css$1.getNamedItem(element, 'd');
+                value = $dom$1.getNamedItem(element, 'd');
                 if (parent && parent.requireRefit()) {
                     const commands = SvgBuild.getPathCommands(value);
                     if (commands.length) {
@@ -1118,7 +1136,7 @@
         }
     }
 
-    const $css$2 = squared.lib.css;
+    const $dom$2 = squared.lib.dom;
     function adjustPoints(values, x, y, scaleX, scaleY) {
         for (const pt of values) {
             pt.x += x;
@@ -1145,7 +1163,7 @@
                 else {
                     switch (attr) {
                         case 'd':
-                            this._baseVal[attr] = $css$2.getAttribute(this.element, 'd');
+                            this._baseVal[attr] = $dom$2.getNamedItem(this.element, 'd');
                             return true;
                         case 'points':
                             const points = this.element[attr];
@@ -1239,7 +1257,8 @@
         };
     };
 
-    const $css$3 = squared.lib.css;
+    const $css$1 = squared.lib.css;
+    const $dom$3 = squared.lib.dom;
     const $util$2 = squared.lib.util;
     const REGEXP_TIME = {
         MS: /-?\d+ms$/,
@@ -1267,7 +1286,7 @@
                 this.setAttribute('attributeName');
                 this.setAttribute('to');
                 this.setAttribute('fill', 'freeze');
-                const dur = $css$3.getNamedItem(animationElement, 'dur');
+                const dur = $dom$3.getNamedItem(animationElement, 'dur');
                 if (dur !== '' && dur !== 'indefinite') {
                     this.duration = SvgAnimation.convertClockTime(dur);
                 }
@@ -1318,7 +1337,7 @@
         }
         setAttribute(attr, equality) {
             if (this.animationElement) {
-                const value = $css$3.getNamedItem(this.animationElement, attr);
+                const value = $dom$3.getNamedItem(this.animationElement, attr);
                 if (value !== '') {
                     if (equality !== undefined) {
                         this[attr + $util$2.capitalize(equality)] = value === equality;
@@ -1363,9 +1382,9 @@
             if (value !== 'transform' && !this.baseValue) {
                 const baseElement = this.animationElement && this.animationElement.parentElement || this.element;
                 if (baseElement) {
-                    this.baseValue = $util$2.optionalAsString(baseElement, `${value}.baseVal.valueAsString`) || $css$3.getParentAttribute(baseElement, value);
+                    this.baseValue = $util$2.optionalAsString(baseElement, `${value}.baseVal.valueAsString`) || getParentAttribute(baseElement, value);
                     if ($util$2.isLength(this.baseValue)) {
-                        this.baseValue = $util$2.parseUnit(this.baseValue, $css$3.getFontSize(baseElement)).toString();
+                        this.baseValue = $util$2.parseUnit(this.baseValue, $css$1.getFontSize(baseElement)).toString();
                     }
                 }
             }
@@ -1443,11 +1462,10 @@
     });
 
     const $color = squared.lib.color;
-    const $css$4 = squared.lib.css;
+    const $css$2 = squared.lib.css;
+    const $dom$4 = squared.lib.dom;
     const $util$3 = squared.lib.util;
-    function invertControlPoint(value) {
-        return parseFloat((1 - value).toPrecision(5));
-    }
+    const invertControlPoint = (value) => parseFloat((1 - value).toPrecision(5));
     class SvgAnimate extends SvgAnimation {
         constructor(element, animationElement) {
             super(element, animationElement);
@@ -1462,8 +1480,8 @@
             this._setterType = false;
             this._repeatDuration = -1;
             if (animationElement) {
-                const values = $css$4.getNamedItem(animationElement, 'values');
-                const keyTimes = this.duration !== -1 ? SvgAnimate.toFractionList($css$4.getNamedItem(animationElement, 'keyTimes')) : [];
+                const values = $dom$4.getNamedItem(animationElement, 'values');
+                const keyTimes = this.duration !== -1 ? SvgAnimate.toFractionList($dom$4.getNamedItem(animationElement, 'keyTimes')) : [];
                 if (values !== '') {
                     this.values = $util$3.trimEnd(values, ';').split(/\s*;\s*/);
                     if (this.length > 1 && keyTimes.length === this.length) {
@@ -1477,9 +1495,9 @@
                     }
                 }
                 else {
-                    this.from = $css$4.getNamedItem(animationElement, 'from');
+                    this.from = $dom$4.getNamedItem(animationElement, 'from');
                     if (this.to === '') {
-                        const by = $css$4.getNamedItem(animationElement, 'by');
+                        const by = $dom$4.getNamedItem(animationElement, 'by');
                         if ($util$3.isNumber(by)) {
                             if (this.from === '') {
                                 if (this.baseValue) {
@@ -1497,11 +1515,11 @@
                     }
                     this.convertToValues(keyTimes);
                 }
-                const repeatDur = $css$4.getNamedItem(animationElement, 'repeatDur');
+                const repeatDur = $dom$4.getNamedItem(animationElement, 'repeatDur');
                 if (repeatDur !== '' && repeatDur !== 'indefinite') {
                     this._repeatDuration = SvgAnimation.convertClockTime(repeatDur);
                 }
-                const repeatCount = $css$4.getNamedItem(animationElement, 'repeatCount');
+                const repeatCount = $dom$4.getNamedItem(animationElement, 'repeatCount');
                 this.iterationCount = repeatCount === 'indefinite' ? -1 : parseFloat(repeatCount);
                 if (animationElement.tagName === 'animate') {
                     this.setCalcMode(this.attributeName);
@@ -1621,13 +1639,13 @@
             return result.length > 1 && result[0] === 0 && result.some(percent => percent !== -1) ? result : [];
         }
         setCalcMode(name) {
-            switch ($css$4.getNamedItem(this.animationElement, 'calcMode')) {
+            switch ($dom$4.getNamedItem(this.animationElement, 'calcMode')) {
                 case 'discrete': {
                     if (this.keyTimes.length === 2 && this.keyTimes[0] === 0) {
                         const keyTimes = [];
                         const values = [];
                         for (let i = 0; i < this.keyTimes.length - 1; i++) {
-                            const result = SvgAnimate.convertStepTimingFunction(name, 'step-end', this.keyTimes, this.values, i, $css$4.getFontSize(this.animationElement));
+                            const result = SvgAnimate.convertStepTimingFunction(name, 'step-end', this.keyTimes, this.values, i, $css$2.getFontSize(this.animationElement));
                             if (result) {
                                 $util$3.concatArray(keyTimes, result[0]);
                                 $util$3.concatArray(values, result[1]);
@@ -1642,7 +1660,7 @@
                     break;
                 }
                 case 'spline':
-                    this.keySplines = $util$3.flatMap($css$4.getNamedItem(this.animationElement, 'keySplines').split(';'), value => value.trim());
+                    this.keySplines = $util$3.flatMap($dom$4.getNamedItem(this.animationElement, 'keySplines').split(';'), value => value.trim());
                 case 'linear':
                     if (this.keyTimes[0] !== 0 && this.keyTimes[this.keyTimes.length - 1] !== 1) {
                         const keyTimes = [];
@@ -1705,7 +1723,7 @@
         }
         set delay(value) {
             super.delay = value;
-            const end = $css$4.getNamedItem(this.animationElement, 'end');
+            const end = $dom$4.getNamedItem(this.animationElement, 'end');
             if (end) {
                 const endTime = $util$3.sortNumber($util$3.replaceMap(end.split(';'), time => SvgAnimation.convertClockTime(time)))[0];
                 if (!isNaN(endTime) && (this.iterationCount === -1 || this.duration > 0 && endTime < this.duration * this.iterationCount)) {
@@ -1736,7 +1754,7 @@
         }
         set iterationCount(value) {
             this._iterationCount = isNaN(value) ? 1 : value;
-            this.fillFreeze = this.iterationCount !== -1 && $css$4.getNamedItem(this.animationElement, 'fill') === 'freeze';
+            this.fillFreeze = this.iterationCount !== -1 && $dom$4.getNamedItem(this.animationElement, 'fill') === 'freeze';
             if (this.iterationCount !== 1) {
                 this.setAttribute('accumulate', 'sum');
             }
@@ -1876,7 +1894,7 @@
         }
     }
 
-    const $css$5 = squared.lib.css;
+    const $dom$5 = squared.lib.dom;
     const $util$4 = squared.lib.util;
     class SvgAnimateTransform extends SvgAnimate {
         static toRotateList(values) {
@@ -1968,7 +1986,7 @@
         constructor(element, animationElement) {
             super(element, animationElement);
             if (animationElement) {
-                const type = $css$5.getNamedItem(animationElement, 'type');
+                const type = $dom$5.getNamedItem(animationElement, 'type');
                 this.setType(type);
                 this.setCalcMode(type);
             }
@@ -2457,9 +2475,6 @@
         }
         return fromString && typeof value === 'string' ? '' : value;
     }
-    function convertToString(value) {
-        return Array.isArray(value) ? $util$6.objectMap(value, pt => `${pt.x},${pt.y}`).join(' ') : value.toString();
-    }
     function getForwardValue(items, time) {
         let value;
         if (items) {
@@ -2585,9 +2600,6 @@
             { x, y: y + height }
         ];
     }
-    function getEllipsePoints(values) {
-        return [{ x: values[0], y: values[1], rx: values[2], ry: values[values.length - 1] }];
-    }
     function createKeyTimeMap(map, keyTimes, forwardMap) {
         const result = new Map();
         for (const keyTime of keyTimes) {
@@ -2615,9 +2627,6 @@
                 map.set(endTime, type);
             }
         }
-    }
-    function getItemTime(delay, duration, keyTimes, iteration, index) {
-        return Math.round(delay + (keyTimes[index] + iteration) * duration);
     }
     function getItemValue(item, values, iteration, index, baseValue) {
         if (item.alternate && iteration % 2 !== 0) {
@@ -2872,18 +2881,6 @@
             map.set(time, item.transformOrigin[index]);
         }
     }
-    function isKeyTimeFormat(transforming, keyTimeMode) {
-        return $util$6.hasBit(keyTimeMode, transforming ? 32 /* KEYTIME_TRANSFORM */ : 4 /* KEYTIME_ANIMATE */);
-    }
-    function isFromToFormat(transforming, keyTimeMode) {
-        return $util$6.hasBit(keyTimeMode, transforming ? 16 /* FROMTO_TRANSFORM */ : 2 /* FROMTO_ANIMATE */);
-    }
-    function playableAnimation(item) {
-        return item.playable || item.animationElement && item.duration !== -1;
-    }
-    function cloneKeyTimes(item) {
-        return [item.keyTimes.slice(0), item.values.slice(0), item.keySplines ? item.keySplines.slice(0) : undefined];
-    }
     function checkPartialKeyTimes(keyTimes, values, keySplines, baseValue) {
         if (keyTimes[keyTimes.length - 1] < 1) {
             keyTimes.push(1);
@@ -2893,9 +2890,14 @@
             }
         }
     }
-    function getStartIteration(time, delay, duration) {
-        return Math.floor(Math.max(0, time - delay) / duration);
-    }
+    const getItemTime = (delay, duration, keyTimes, iteration, index) => Math.round(delay + (keyTimes[index] + iteration) * duration);
+    const getEllipsePoints = (values) => [{ x: values[0], y: values[1], rx: values[2], ry: values[values.length - 1] }];
+    const convertToString = (value) => Array.isArray(value) ? $util$6.objectMap(value, pt => `${pt.x},${pt.y}`).join(' ') : value.toString();
+    const isKeyTimeFormat = (transforming, keyTimeMode) => $util$6.hasBit(keyTimeMode, transforming ? 32 /* KEYTIME_TRANSFORM */ : 4 /* KEYTIME_ANIMATE */);
+    const isFromToFormat = (transforming, keyTimeMode) => $util$6.hasBit(keyTimeMode, transforming ? 16 /* FROMTO_TRANSFORM */ : 2 /* FROMTO_ANIMATE */);
+    const playableAnimation = (item) => item.playable || item.animationElement && item.duration !== -1;
+    const cloneKeyTimes = (item) => [item.keyTimes.slice(0), item.values.slice(0), item.keySplines ? item.keySplines.slice(0) : undefined];
+    const getStartIteration = (time, delay, duration) => Math.floor(Math.max(0, time - delay) / duration);
     var SvgSynchronize$MX = (Base) => {
         return class extends Base {
             getAnimateShape(element, animations) {
@@ -3239,7 +3241,7 @@
                                     if (a.animationElement && b.animationElement && a.delay !== b.delay) {
                                         return a.delay < b.delay ? 1 : -1;
                                     }
-                                    return a.group.id <= b.group.id ? 1 : -1;
+                                    return a.group.id < b.group.id ? 1 : -1;
                                 });
                             }
                             function removeIncomplete(item) {
@@ -3863,7 +3865,12 @@
                                 }
                                 repeatingEndTime = Math.max(repeatingEndTime, maxTime);
                                 if (forwardMap[attr]) {
-                                    forwardMap[attr].sort((a, b) => a.time >= b.time ? 1 : -1);
+                                    forwardMap[attr].sort((a, b) => {
+                                        if (a.time === b.time) {
+                                            return 0;
+                                        }
+                                        return a.time < b.time ? -1 : 1;
+                                    });
                                 }
                             }
                             if (Object.keys(infiniteMap).length) {
@@ -4267,7 +4274,7 @@
         };
     };
 
-    const $css$6 = squared.lib.css;
+    const $dom$6 = squared.lib.dom;
     const $util$7 = squared.lib.util;
     class SvgAnimateMotion extends SvgAnimate {
         constructor(element, animationElement) {
@@ -4279,7 +4286,7 @@
             this.rotateAutoReverse = false;
             if (animationElement) {
                 this.setAttribute('path');
-                const rotate = $css$6.getNamedItem(animationElement, 'rotate');
+                const rotate = $dom$6.getNamedItem(animationElement, 'rotate');
                 switch (rotate) {
                     case 'auto':
                         this.rotateAuto = true;
@@ -4292,7 +4299,7 @@
                         break;
                 }
                 if (this.keyTimes.length) {
-                    const keyPoints = $css$6.getNamedItem(animationElement, 'keyPoints');
+                    const keyPoints = $dom$6.getNamedItem(animationElement, 'keyPoints');
                     if (keyPoints !== '') {
                         const points = SvgAnimate.toFractionList(keyPoints);
                         if (points.length === this.keyTimes.length) {
@@ -4317,11 +4324,12 @@
         }
     }
 
-    const $css$7 = squared.lib.css;
+    const $css$3 = squared.lib.css;
+    const $dom$7 = squared.lib.dom;
     const $util$8 = squared.lib.util;
     const STRING_CUBICBEZIER = `cubic-bezier\\((${$util$8.STRING_PATTERN.ZERO_ONE}), (${$util$8.STRING_PATTERN.DECIMAL}), (${$util$8.STRING_PATTERN.ZERO_ONE}), (${$util$8.STRING_PATTERN.DECIMAL})\\)`;
     const REGEXP_TIMINGFUNCTION = new RegExp(`(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+, (?:start|end)\\)|${STRING_CUBICBEZIER}),?\\s*`, 'g');
-    const KEYFRAME_NAME = $css$7.getKeyframeRules();
+    const KEYFRAME_NAME = $css$3.getKeyframeRules();
     const ANIMATION_DEFAULT = {
         'animation-delay': '0s',
         'animation-duration': '0s',
@@ -4336,7 +4344,7 @@
         element.setAttribute(attr, value);
     }
     function parseAttribute(element, attr) {
-        const value = $css$7.getAttribute(element, attr);
+        const value = getAttribute(element, attr);
         if (attr === 'animation-timing-function') {
             const result = [];
             let match;
@@ -4349,16 +4357,13 @@
             return value.split($util$8.REGEXP_COMPILED.SEPARATOR);
         }
     }
-    function sortAttribute(value) {
-        return value.sort((a, b) => a.index >= b.index ? 1 : -1);
-    }
     function setVisible(element, value) {
         setAttribute(element, 'display', value ? 'block' : 'none');
         setAttribute(element, 'visibility', value ? 'visible' : 'hidden');
     }
     function isVisible(element) {
-        const value = $css$7.getAttribute(element, 'visibility', true);
-        return value !== 'hidden' && value !== 'collapse' && $css$7.getAttribute(element, 'display', true) !== 'none';
+        const value = getAttribute(element, 'visibility');
+        return value !== 'hidden' && value !== 'collapse' && getAttribute(element, 'display') !== 'none';
     }
     function setOpacity(element, value) {
         if ($util$8.isNumber(value)) {
@@ -4369,10 +4374,11 @@
             else if (opacity >= 1) {
                 opacity = 1;
             }
-            element.style.opacity = opacity.toString();
+            element.style.setProperty('opacity', opacity.toString());
             element.setAttribute('opacity', opacity.toString());
         }
     }
+    const sortAttribute = (value) => value.sort((a, b) => a.index >= b.index ? 1 : -1);
     var SvgView$MX = (Base) => {
         return class extends Base {
             getTransforms(companion) {
@@ -4394,7 +4400,7 @@
                 for (let i = 0; i < element.children.length; i++) {
                     const item = element.children[i];
                     if (item instanceof SVGAnimationElement) {
-                        const begin = $css$7.getNamedItem(item, 'begin');
+                        const begin = $dom$7.getNamedItem(item, 'begin');
                         if (begin !== '' && /^[a-zA-Z]+$/.test(begin)) {
                             continue;
                         }
@@ -4476,10 +4482,10 @@
                                     }
                                     let value = keyframes[percent][name];
                                     if ($util$8.isCalc(value)) {
-                                        value = $css$7.calculateVar(element, value, name);
+                                        value = $css$3.calculateVar(element, value, name);
                                     }
                                     else if ($util$8.isCustomProperty(value)) {
-                                        value = $css$7.parseVar(element, value);
+                                        value = $css$3.parseVar(element, value);
                                     }
                                     if (value !== undefined) {
                                         map[name].push({
@@ -4630,7 +4636,7 @@
                                             }
                                             else if (keySplines[j].startsWith('step')) {
                                                 if (values[j] !== '') {
-                                                    const steps = SvgAnimate.convertStepTimingFunction(name, keySplines[j], keyTimes, values, j, $css$7.getFontSize(element));
+                                                    const steps = SvgAnimate.convertStepTimingFunction(name, keySplines[j], keyTimes, values, j, $css$3.getFontSize(element));
                                                     if (steps) {
                                                         const offset = keyTimes[j + 1] === 1 ? 1 : 0;
                                                         for (let k = 0; k < steps[0].length - offset; k++) {
@@ -4714,7 +4720,7 @@
                 setOpacity(this.element, value);
             }
             get opacity() {
-                return $css$7.getAttribute(this.element, 'opacity') || '1';
+                return getAttribute(this.element, 'opacity') || '1';
             }
         };
     };
@@ -4826,7 +4832,6 @@
         };
     };
 
-    const $css$8 = squared.lib.css;
     const $util$a = squared.lib.util;
     function getNearestViewBox$1(instance) {
         while (instance) {
@@ -4838,7 +4843,7 @@
         return undefined;
     }
     function getFillPattern(element, viewport) {
-        const value = getAttributeUrl($css$8.getParentAttribute(element, 'fill'));
+        const value = parseAttributeUrl(getParentAttribute(element, 'fill'));
         if (value !== '') {
             if (viewport && viewport.definitions.pattern.has(value)) {
                 return viewport.definitions.pattern.get(value);
@@ -5056,17 +5061,17 @@
     }
 
     const $color$1 = squared.lib.color;
-    const $css$9 = squared.lib.css;
+    const $dom$8 = squared.lib.dom;
     const $util$b = squared.lib.util;
     function getColorStop(element) {
         const result = [];
         const stops = element.getElementsByTagName('stop');
         for (let i = 0; i < stops.length; i++) {
-            const color = $color$1.parseColor($css$9.getAttribute(stops[i], 'stop-color'), $css$9.getAttribute(stops[i], 'stop-opacity'));
+            const color = $color$1.parseColor($dom$8.getNamedItem(stops[i], 'stop-color'), $dom$8.getNamedItem(stops[i], 'stop-opacity'));
             if (color) {
                 result.push({
                     color,
-                    offset: parseFloat($css$9.getAttribute(stops[i], 'offset')) / 100
+                    offset: parseFloat($dom$8.getNamedItem(stops[i], 'offset')) / 100
                 });
             }
         }
@@ -5160,7 +5165,7 @@
     }
 
     const $color$2 = squared.lib.color;
-    const $css$a = squared.lib.css;
+    const $css$4 = squared.lib.css;
     const $util$c = squared.lib.util;
     const REGEXP_CLIPPATH = {
         url: $util$c.REGEXP_COMPILED.URL,
@@ -5173,7 +5178,7 @@
         return class extends Base {
             setPaint(d, precision) {
                 this.resetPaint();
-                this.setAttribute('color', true);
+                this.setAttribute('color');
                 this.setAttribute('fill');
                 this.setAttribute('fill-opacity');
                 this.setAttribute('fill-rule');
@@ -5186,7 +5191,7 @@
                 this.setAttribute('stroke-dasharray');
                 this.setAttribute('stroke-dashoffset');
                 this.setAttribute('clip-rule');
-                const clipPath = this.getAttribute('clip-path', false, false);
+                const clipPath = this.getAttribute('clip-path', true, false);
                 if (clipPath !== '') {
                     for (const name in REGEXP_CLIPPATH) {
                         const match = REGEXP_CLIPPATH[name].exec(clipPath);
@@ -5196,7 +5201,7 @@
                                 return;
                             }
                             else if (d && d.length) {
-                                const fontSize = $css$a.getFontSize(this.element);
+                                const fontSize = $css$4.getFontSize(this.element);
                                 const boxRect = SvgBuild.parseBoxRect(d);
                                 const width = boxRect.right - boxRect.left;
                                 const height = boxRect.bottom - boxRect.top;
@@ -5287,7 +5292,7 @@
                     }
                 }
             }
-            setAttribute(attr, computed = false) {
+            setAttribute(attr, computed = true) {
                 let value = this.getAttribute(attr, computed);
                 if ($util$c.isString(value)) {
                     switch (attr) {
@@ -5300,7 +5305,7 @@
                             break;
                         case 'fill':
                         case 'stroke':
-                            const url = getAttributeUrl(value);
+                            const url = parseAttributeUrl(value);
                             if (url !== '') {
                                 this[`${attr}Pattern`] = url;
                             }
@@ -5310,10 +5315,10 @@
                                     case 'none':
                                     case 'transparent':
                                     case 'rgba(0, 0, 0, 0)':
-                                        this[attr] = '';
+                                        this[attr] = 'none';
                                         break;
                                     case 'currentcolor':
-                                        color = $color$2.parseColor(this.color || $css$a.getAttribute(this.element, attr, true));
+                                        color = $color$2.parseColor(this.color || getAttribute(this.element, attr));
                                         break;
                                     default:
                                         color = $color$2.parseColor(value);
@@ -5328,8 +5333,8 @@
                     this[$util$c.convertCamelCase(attr)] = value;
                 }
             }
-            getAttribute(attr, computed = false, inherited = true) {
-                let value = $css$a.getAttribute(this.element, attr, computed);
+            getAttribute(attr, computed = true, inherited = true) {
+                let value = getAttribute(this.element, attr, computed);
                 if (inherited && !$util$c.isString(value)) {
                     if (this.patternParent) {
                         switch (attr) {
@@ -5342,7 +5347,7 @@
                     }
                     let current = this.useParent || this.parent;
                     while (current) {
-                        value = $css$a.getAttribute(current.element, attr);
+                        value = getAttribute(current.element, attr, computed);
                         if ($util$c.isString(value)) {
                             break;
                         }
@@ -5353,7 +5358,7 @@
             }
             convertLength(value) {
                 if ($util$c.isLength(value)) {
-                    return $util$c.convertLength(value, 0, $css$a.getFontSize(this.element)).toString();
+                    return $util$c.convertLength(value, 0, $css$4.getFontSize(this.element)).toString();
                 }
                 else if ($util$c.isPercent(value)) {
                     return $util$c.convertLength(value, this.element.getBoundingClientRect().width).toString();
@@ -5539,6 +5544,7 @@
         }
     }
 
+    const $dom$9 = squared.lib.dom;
     const $math$3 = squared.lib.math;
     const $util$e = squared.lib.util;
     function updatePathLocation(path, attr, x, y) {
@@ -6517,7 +6523,7 @@
             return this._transforms;
         }
         get pathLength() {
-            return $util$e.convertFloat(this.getAttribute('pathLength'));
+            return $util$e.convertFloat($dom$9.getNamedItem(this.element, 'pathLength'));
         }
         get totalLength() {
             return this.element.getTotalLength();
@@ -6586,19 +6592,17 @@
         }
     }
 
-    const $css$b = squared.lib.css;
+    const $dom$a = squared.lib.dom;
     const $util$f = squared.lib.util;
-    function getPercent(value) {
-        return $util$f.isPercent(value) ? parseFloat(value) / 100 : parseFloat(value);
-    }
+    const getPercent = (value) => $util$f.isPercent(value) ? parseFloat(value) / 100 : parseFloat(value);
     class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer))) {
         constructor(element, patternElement) {
             super(element);
             this.element = element;
             this.patternElement = patternElement;
             this.__get_transforms = false;
-            this.patternUnits = $css$b.getNamedItem(this.patternElement, 'patternUnits') === 'userSpaceOnUse' ? 1 /* USER_SPACE_ON_USE */ : 2 /* OBJECT_BOUNDING_BOX */;
-            this.patternContentUnits = $css$b.getNamedItem(this.patternElement, 'patternContentUnits') === 'objectBoundingBox' ? 2 /* OBJECT_BOUNDING_BOX */ : 1 /* USER_SPACE_ON_USE */;
+            this.patternUnits = $dom$a.getNamedItem(this.patternElement, 'patternUnits') === 'userSpaceOnUse' ? 1 /* USER_SPACE_ON_USE */ : 2 /* OBJECT_BOUNDING_BOX */;
+            this.patternContentUnits = $dom$a.getNamedItem(this.patternElement, 'patternContentUnits') === 'objectBoundingBox' ? 2 /* OBJECT_BOUNDING_BOX */ : 1 /* USER_SPACE_ON_USE */;
         }
         build(options) {
             const element = options && options.element || this.element;

@@ -21,6 +21,7 @@ interface DashGroup {
     duration: number;
 }
 
+const $dom = squared.lib.dom;
 const $math = squared.lib.math;
 const $util = squared.lib.util;
 
@@ -1015,7 +1016,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     }
 
     get pathLength() {
-        return $util.convertFloat(this.getAttribute('pathLength'));
+        return $util.convertFloat($dom.getNamedItem(this.element, 'pathLength'));
     }
 
     get totalLength() {

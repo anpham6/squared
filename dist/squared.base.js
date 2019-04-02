@@ -1,4 +1,4 @@
-/* squared.base 0.9.1
+/* squared.base 0.9.2
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -86,7 +86,7 @@
                 }
                 else if (!a.imageElement || !b.imageElement) {
                     if (a.multiline || b.multiline) {
-                        if (a.lineHeight > 0 && b.lineHeight > 0) {
+                        if (a.lineHeight > 0 && b.lineHeight > 0 && a.lineHeight !== b.lineHeight) {
                             return a.lineHeight <= b.lineHeight ? 1 : -1;
                         }
                         else if (a.fontSize === b.fontSize) {
@@ -101,7 +101,7 @@
                             else if (!a.htmlElement && b.htmlElement) {
                                 return 1;
                             }
-                            return a.siblingIndex >= b.siblingIndex ? 1 : -1;
+                            return a.siblingIndex < b.siblingIndex ? -1 : 1;
                         }
                         return a.fontSize > b.fontSize ? -1 : 1;
                     }
@@ -121,7 +121,10 @@
                         return a.containerType < b.containerType ? -1 : 1;
                     }
                 }
-                return a.actualHeight <= b.actualHeight ? 1 : -1;
+                if (a.actualHeight !== b.actualHeight) {
+                    return a.actualHeight > b.actualHeight ? -1 : 1;
+                }
+                return 0;
             });
         }
         static linearData(list, clearOnly = false) {
@@ -302,7 +305,7 @@
             return result;
         }
         static siblingIndex(a, b) {
-            return a.siblingIndex >= b.siblingIndex ? 1 : -1;
+            return a.siblingIndex < b.siblingIndex ? -1 : 1;
         }
         append(node, delegate = true) {
             super.append(node);
@@ -438,17 +441,16 @@
 
     const $color = squared.lib.color;
     const $css = squared.lib.css;
-    const $element = squared.lib.element;
     const $math = squared.lib.math;
+    const $session = squared.lib.session;
     const $util$2 = squared.lib.util;
+    const REGEXP_LINEBREAK = /\s*<br[^>]*>\s*/g;
     const STRING_COLORSTOP = `(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[a-zA-Z\\d]{3,}|[a-z]+)\\s*(${$util$2.STRING_PATTERN.LENGTH_PERCENTAGE}|${$util$2.STRING_PATTERN.ANGLE}|(?:${$util$2.STRING_PATTERN.CALC}(?=,)|${$util$2.STRING_PATTERN.CALC}))?,?\\s*`;
     const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\("?.+?"?\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|circle|ellipse|closest-side|closest-corner|farthest-side|farthest-corner)?(?:\\s*at [\\w %]+)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
-    const REGEXP_TAGNAME = /(<([^>]+)>)/ig;
-    const REGEXP_LINEBREAK = /\s*<br[^>]*>\s*/g;
     function removeExcluded(node, element, attr) {
         let value = element[attr];
         for (const item of node.actualChildren) {
-            if ((item.excluded || item.dataset.target) && $util$2.isString(item[attr])) {
+            if ((item.excluded || item.pseudoElement || item.dataset.target) && $util$2.isString(item[attr])) {
                 value = value.replace(item[attr], '');
             }
         }
@@ -557,22 +559,15 @@
         }
         return 0;
     }
-    function getGradientPosition(value) {
-        return value ? /(.+?)?\s*at (.+?)$/.exec(value) : null;
-    }
-    function replaceWhiteSpace(node, element, value) {
-        const renderParent = node.renderParent;
-        if (node.multiline && renderParent && !renderParent.layoutVertical) {
-            value = value.replace(/^\s*\n/, '');
-        }
+    function replaceWhiteSpace(parent, node, element, value) {
         switch (node.css('whiteSpace')) {
             case 'nowrap':
                 value = value.replace(/\n/g, ' ');
                 break;
             case 'pre':
             case 'pre-wrap':
-                if (renderParent && !renderParent.layoutVertical) {
-                    value = value.replace(/^\n/, '');
+                if (!parent.layoutVertical) {
+                    value = value.replace(/^\s*?\n/, '');
                 }
                 value = value
                     .replace(/\n/g, '\\n')
@@ -584,10 +579,10 @@
                     .replace(/\s+/g, ' ');
                 break;
             default:
-                if (element.previousSibling && $element.isLineBreak(element.previousSibling)) {
+                if (element.previousSibling && $session.isLineBreak(element.previousSibling, node.sessionId)) {
                     value = value.replace($util$2.REGEXP_COMPILED.LEADINGSPACE, '');
                 }
-                if (element.nextSibling && $element.isLineBreak(element.nextSibling)) {
+                if (element.nextSibling && $session.isLineBreak(element.nextSibling, node.sessionId)) {
                     value = value.replace($util$2.REGEXP_COMPILED.TRAILINGSPACE, '');
                 }
                 return [value, false];
@@ -612,6 +607,7 @@
         }
         return value;
     }
+    const getGradientPosition = (value) => value ? /(.+?)?\s*at (.+?)$/.exec(value) : null;
     class Resource {
         constructor(application, cache) {
             this.application = application;
@@ -721,6 +717,36 @@
             }
             return width > 0 && height > 0 ? { width: Math.round(width), height: Math.round(height) } : undefined;
         }
+        static isInheritedStyle(node, attr) {
+            if (node.styleElement) {
+                const actualParent = node.actualParent;
+                if (actualParent && !node.cssInitial(attr)) {
+                    return node.style[attr] === actualParent.style[attr];
+                }
+            }
+            return false;
+        }
+        static isLineBreak(node) {
+            return node.lineBreak || node.excluded && node.blockStatic;
+        }
+        static hasLineBreak(node, lineBreak = false, trim = false) {
+            if (node.actualChildren.length) {
+                return node.actualChildren.some(item => item.lineBreak);
+            }
+            else if (!lineBreak && node.element && node.element.textContent) {
+                let value = node.element.textContent;
+                if (trim) {
+                    value = value.trim();
+                }
+                if (/\n/.test(value)) {
+                    if (node.plainText && $css.isParentStyle(node.element, 'whiteSpace', 'pre', 'pre-wrap')) {
+                        return true;
+                    }
+                    return node.css('whiteSpace').substring(0, 3) === 'pre';
+                }
+            }
+            return false;
+        }
         static getStoredName(asset, value) {
             if (Resource.STORED[asset]) {
                 for (const [name, data] of Resource.STORED[asset].entries()) {
@@ -752,24 +778,28 @@
                         backgroundRepeat: '',
                         backgroundPositionX: '',
                         backgroundPositionY: '',
-                        backgroundImage: undefined
+                        backgroundImage: undefined,
+                        borderRadius: undefined
                     };
-                    if (node.css('border') !== '0px none rgb(0, 0, 0)') {
+                    if (!node.css('border').startsWith('0px none')) {
                         boxStyle.borderTop = undefined;
                         boxStyle.borderRight = undefined;
                         boxStyle.borderBottom = undefined;
                         boxStyle.borderLeft = undefined;
-                        boxStyle.borderRadius = undefined;
                     }
                     for (const attr in boxStyle) {
                         const value = node.css(attr);
                         switch (attr) {
-                            case 'backgroundColor':
-                                if (!(!node.has('backgroundColor') && (value === node.cssAscend('backgroundColor', false, true) || node.documentParent.visible && $css.isInheritedStyle(node.element, 'backgroundColor')))) {
-                                    const color = $color.parseColor(value, node.css('opacity'));
-                                    boxStyle.backgroundColor = color ? color.valueAsRGBA : '';
+                            case 'backgroundColor': {
+                                if (!node.has('backgroundColor') && (value === node.cssAscend('backgroundColor', false, true) || node.documentParent.visible && Resource.isInheritedStyle(node, 'backgroundColor'))) {
+                                    continue;
+                                }
+                                const color = $color.parseColor(value, node.css('opacity'));
+                                if (color) {
+                                    boxStyle.backgroundColor = color.valueAsRGBA;
                                 }
                                 break;
+                            }
                             case 'backgroundSize':
                             case 'backgroundRepeat':
                             case 'backgroundPositionX':
@@ -916,11 +946,11 @@
                                                         }
                                                         let a = Math.abs(oppositeAngle - angle);
                                                         let b = 90 - a;
-                                                        const lenX = $math.trianguleASA(a, b, Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2)));
+                                                        const lenX = $math.triangulateASA(a, b, Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2)));
                                                         x = $math.truncateFraction($math.offsetAngleX(angle, lenX[1]));
                                                         a = 90;
                                                         b = 90 - angle;
-                                                        const lenY = $math.trianguleASA(a, b, x);
+                                                        const lenY = $math.triangulateASA(a, b, x);
                                                         y = $math.truncateFraction($math.offsetAngleY(angle, lenY[0]));
                                                     }
                                                     linear.angleExtent = { x, y };
@@ -991,7 +1021,7 @@
                                         borderRadius = [A, B || A, C, D || C, E, F || E, G, H || G];
                                     }
                                     if (borderRadius.every(radius => radius === borderRadius[0])) {
-                                        if (borderRadius[0] === '0px') {
+                                        if (borderRadius[0] === '0px' || borderRadius[0] === '') {
                                             continue;
                                         }
                                         borderRadius.length = 1;
@@ -1032,7 +1062,7 @@
                     node.inlineText && !node.preserveWhiteSpace && node.element.innerHTML.trim() === '' && !Resource.isBackgroundVisible(node.data(Resource.KEY_NAME, 'boxStyle')))) {
                     const opacity = node.css('opacity');
                     const color = $color.parseColor(node.css('color'), opacity);
-                    let fontFamily = node.css('fontFamily');
+                    let fontFamily = node.css('fontFamily').trim();
                     let fontSize = node.css('fontSize');
                     let fontWeight = node.css('fontWeight');
                     if ($util$2.isUserAgent(16 /* EDGE */) && !node.has('fontFamily')) {
@@ -1099,145 +1129,149 @@
         }
         setValueString() {
             for (const node of this.cache) {
-                const element = node.element;
-                if (element && node.visible) {
-                    let name = '';
-                    let value = '';
-                    let inlineTrim = false;
-                    let performTrim = true;
-                    switch (element.tagName) {
-                        case 'INPUT':
-                            value = element.value.trim();
-                            switch (element.type) {
-                                case 'radio':
-                                case 'checkbox':
-                                    if (node.companion && !node.companion.visible) {
-                                        value = node.companion.textContent.trim();
-                                    }
-                                    break;
-                                case 'submit':
-                                    if (value === '' && !$util$2.REGEXP_COMPILED.URL.test(node.css('background'))) {
-                                        value = 'Submit';
-                                    }
-                                    break;
-                                case 'time':
-                                    if (value === '') {
-                                        value = '--:-- --';
-                                    }
-                                    break;
-                                case 'date':
-                                case 'datetime-local':
-                                    if (value === '') {
-                                        switch ((new Intl.DateTimeFormat()).resolvedOptions().locale) {
-                                            case 'en-US':
-                                                value = 'mm/dd/yyyy';
-                                                break;
-                                            default:
-                                                value = 'dd/mm/yyyy';
-                                                break;
+                if (node.visible && !node.svgElement) {
+                    const element = node.element;
+                    const renderParent = node.renderParent;
+                    if (element && renderParent) {
+                        let name = '';
+                        let value = '';
+                        let inlineTrim = false;
+                        let performTrim = false;
+                        switch (element.tagName) {
+                            case 'INPUT':
+                                value = element.value;
+                                switch (element.type) {
+                                    case 'radio':
+                                    case 'checkbox':
+                                        if (node.companion && !node.companion.visible) {
+                                            value = node.companion.textContent;
                                         }
-                                        if (element.type === 'datetime-local') {
-                                            value += ' --:-- --';
+                                        break;
+                                    case 'submit':
+                                        if (value === '' && !$util$2.REGEXP_COMPILED.URL.test(node.css('background'))) {
+                                            value = 'Submit';
                                         }
-                                    }
-                                    break;
-                                case 'week':
-                                    if (value === '') {
-                                        value = 'Week: --, ----';
-                                    }
-                                    break;
-                                case 'month':
-                                    if (value === '') {
-                                        value = '--------- ----';
-                                    }
-                                    break;
-                                case 'url':
-                                case 'email':
-                                case 'search':
-                                case 'number':
-                                case 'tel':
-                                    if (value === '') {
-                                        value = element.placeholder;
-                                    }
-                                    break;
-                                case 'file':
-                                    value = $util$2.isUserAgent(8 /* FIREFOX */) ? 'Browse...' : 'Choose File';
-                                    break;
-                            }
-                            break;
-                        case 'TEXTAREA':
-                            value = element.value.trim();
-                            break;
-                        case 'BUTTON':
-                            value = element.innerText;
-                            break;
-                        case 'IFRAME':
-                            value = element.src;
-                            performTrim = false;
-                            break;
-                        default:
-                            if (node.plainText) {
-                                name = node.textContent.trim();
-                                value = node.textContent
-                                    .replace(/&[A-Za-z]+;/g, match => match.replace('&', '&amp;'))
-                                    .replace(/\u00A0/g, '&#160;');
-                                [value, inlineTrim] = replaceWhiteSpace(node, element, value);
-                            }
-                            else if (node.inlineText) {
-                                name = node.textContent.trim();
-                                if (element.tagName === 'CODE') {
-                                    value = removeExcluded(node, element, 'innerHTML');
+                                        break;
+                                    case 'time':
+                                        if (value === '') {
+                                            value = '--:-- --';
+                                        }
+                                        break;
+                                    case 'date':
+                                    case 'datetime-local':
+                                        if (value === '') {
+                                            switch ((new Intl.DateTimeFormat()).resolvedOptions().locale) {
+                                                case 'en-US':
+                                                    value = 'mm/dd/yyyy';
+                                                    break;
+                                                default:
+                                                    value = 'dd/mm/yyyy';
+                                                    break;
+                                            }
+                                            if (element.type === 'datetime-local') {
+                                                value += ' --:-- --';
+                                            }
+                                        }
+                                        break;
+                                    case 'week':
+                                        if (value === '') {
+                                            value = 'Week: --, ----';
+                                        }
+                                        break;
+                                    case 'month':
+                                        if (value === '') {
+                                            value = '--------- ----';
+                                        }
+                                        break;
+                                    case 'url':
+                                    case 'email':
+                                    case 'search':
+                                    case 'number':
+                                    case 'tel':
+                                        if (value === '') {
+                                            value = element.placeholder;
+                                        }
+                                        break;
+                                    case 'file':
+                                        value = $util$2.isUserAgent(8 /* FIREFOX */) ? 'Browse...' : 'Choose File';
+                                        break;
                                 }
-                                else if ($element.hasLineBreak(element, true)) {
-                                    value = removeExcluded(node, element, 'innerHTML')
-                                        .replace(REGEXP_LINEBREAK, '\\n')
-                                        .replace(REGEXP_TAGNAME, '');
-                                }
-                                else {
-                                    value = removeExcluded(node, element, 'textContent');
-                                }
-                                [value, inlineTrim] = replaceWhiteSpace(node, element, value);
-                            }
-                            else if (node.htmlElement && element.innerText.trim() === '' && Resource.isBackgroundVisible(node.data(Resource.KEY_NAME, 'boxStyle'))) {
+                                break;
+                            case 'TEXTAREA':
+                                value = element.value;
+                                break;
+                            case 'BUTTON':
                                 value = element.innerText;
-                                performTrim = false;
-                            }
-                            break;
-                    }
-                    if (value !== '') {
-                        if (performTrim) {
-                            const previousSibling = node.previousSiblings().pop();
-                            const nextSibling = node.nextSiblings().shift();
-                            let previousSpaceEnd = false;
-                            if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && $util$2.REGEXP_COMPILED.TRAILINGSPACE.test(previousSibling.textContent)) {
-                                value = value.replace($util$2.REGEXP_COMPILED.LEADINGSPACE, '');
-                            }
-                            else if (previousSibling.element) {
-                                previousSpaceEnd = $util$2.REGEXP_COMPILED.TRAILINGSPACE.test(previousSibling.element.innerText || previousSibling.textContent);
-                            }
-                            if (inlineTrim) {
-                                const original = value;
-                                value = value.trim();
-                                if (previousSibling && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd && $util$2.REGEXP_COMPILED.LEADINGSPACE.test(original)) {
-                                    value = '&#160;' + value;
+                                break;
+                            case 'IFRAME':
+                                value = element.src;
+                                break;
+                            default:
+                                if (node.plainText) {
+                                    name = node.textContent.trim();
+                                    value = node.textContent
+                                        .replace(/&[A-Za-z]+;/g, match => match.replace('&', '&amp;'))
+                                        .replace(/\u00A0/g, '&#160;');
+                                    [value] = replaceWhiteSpace(renderParent, node, element, value);
+                                    inlineTrim = true;
+                                    performTrim = true;
                                 }
-                                if (nextSibling && !nextSibling.lineBreak && $util$2.REGEXP_COMPILED.TRAILINGSPACE.test(original)) {
-                                    value += '&#160;';
+                                else if (node.inlineText) {
+                                    name = node.textContent.trim();
+                                    if (element.tagName === 'CODE') {
+                                        value = removeExcluded(node, element, 'innerHTML');
+                                    }
+                                    else if (Resource.hasLineBreak(node, true)) {
+                                        value = removeExcluded(node, element, 'innerHTML')
+                                            .replace(REGEXP_LINEBREAK, '\\n')
+                                            .replace($util$2.REGEXP_COMPILED.TAGNAME, '');
+                                    }
+                                    else {
+                                        value = removeExcluded(node, element, 'textContent');
+                                    }
+                                    [value, inlineTrim] = replaceWhiteSpace(renderParent, node, element, value);
+                                    performTrim = true;
                                 }
-                            }
-                            else if (value.trim() !== '') {
-                                value = value.replace($util$2.REGEXP_COMPILED.LEADINGSPACE, previousSibling && (previousSibling.block ||
-                                    previousSibling.lineBreak ||
-                                    previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
-                                    node.multiline && $element.hasLineBreak(element)) ? '' : '&#160;');
-                                value = value.replace($util$2.REGEXP_COMPILED.TRAILINGSPACE, node.display === 'table-cell' || nextSibling && nextSibling.lineBreak || node.blockStatic ? '' : '&#160;');
-                            }
-                            else if (value.length) {
-                                value = '&#160;' + value.substring(1);
-                            }
+                                else if (Resource.isBackgroundVisible(node.data(Resource.KEY_NAME, 'boxStyle')) && element.innerText.trim() === '') {
+                                    value = element.innerText;
+                                }
+                                break;
                         }
                         if (value !== '') {
-                            node.data(Resource.KEY_NAME, 'valueString', { name, value: applyTextTransform(value, node.css('textTransform')) });
+                            if (performTrim) {
+                                const previousSibling = node.previousSiblings().pop();
+                                const nextSibling = node.nextSiblings().shift();
+                                let previousSpaceEnd = false;
+                                if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && $util$2.REGEXP_COMPILED.TRAILINGSPACE.test(previousSibling.textContent)) {
+                                    value = value.replace($util$2.REGEXP_COMPILED.LEADINGSPACE, '');
+                                }
+                                else if (previousSibling.element) {
+                                    previousSpaceEnd = $util$2.REGEXP_COMPILED.TRAILINGSPACE.test(previousSibling.element.innerHTML || previousSibling.element.innerText || previousSibling.textContent);
+                                }
+                                if (inlineTrim) {
+                                    const original = value;
+                                    value = value.trim();
+                                    if (previousSibling && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd && (node.plainText && !previousSibling.plainText && !previousSibling.lineBreak || $util$2.REGEXP_COMPILED.LEADINGSPACE.test(original))) {
+                                        value = '&#160;' + value;
+                                    }
+                                    if (nextSibling && !nextSibling.lineBreak && $util$2.REGEXP_COMPILED.TRAILINGSPACE.test(original)) {
+                                        value += '&#160;';
+                                    }
+                                }
+                                else if (value.trim() !== '') {
+                                    value = value.replace($util$2.REGEXP_COMPILED.LEADINGSPACE, previousSibling && (previousSibling.block ||
+                                        previousSibling.lineBreak ||
+                                        previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
+                                        node.multiline && Resource.hasLineBreak(node)) ? '' : '&#160;');
+                                    value = value.replace($util$2.REGEXP_COMPILED.TRAILINGSPACE, node.display === 'table-cell' || nextSibling && nextSibling.lineBreak || node.blockStatic ? '' : '&#160;');
+                                }
+                                else if (value.length) {
+                                    value = '&#160;' + value.substring(1);
+                                }
+                            }
+                            if (value !== '') {
+                                node.data(Resource.KEY_NAME, 'valueString', { name, value: applyTextTransform(value, node.css('textTransform')) });
+                            }
                         }
                     }
                 }
@@ -1262,8 +1296,20 @@
 
     const $css$1 = squared.lib.css;
     const $dom = squared.lib.dom;
-    const $element$1 = squared.lib.element;
+    const $session$1 = squared.lib.session;
     const $util$3 = squared.lib.util;
+    const REGEXP_CACHED = {};
+    let NodeConstructor;
+    function checkPositionStatic(node, parent) {
+        const previousSiblings = node.previousSiblings();
+        const nextSiblings = node.nextSiblings();
+        if (!previousSiblings.some(item => item.multiline || item.excluded && !item.blockStatic) && (nextSiblings.every(item => item.blockStatic || item.lineBreak || item.excluded) || parent && node.element === parent.getLastChildElement())) {
+            node.cssApply({ display: 'inline-block', verticalAlign: 'top' }, true);
+            node.positionStatic = true;
+            return true;
+        }
+        return false;
+    }
     function prioritizeExtensions(element, extensions, documentRoot = null) {
         const tagged = [];
         let current = element;
@@ -1296,61 +1342,49 @@
         }
         return extensions;
     }
-    function checkPositionStatic(node, parent) {
-        const previousSiblings = node.previousSiblings();
-        const nextSiblings = node.nextSiblings();
-        if (!previousSiblings.some(item => item.multiline || item.excluded && !item.blockStatic) && (nextSiblings.every(item => item.blockStatic || item.lineBreak || item.excluded) || parent && node.element === $dom.getLastChildElement(parent.element))) {
-            node.cssApply({
-                display: 'inline-block',
-                verticalAlign: 'top'
-            }, true);
-            node.positionStatic = true;
-            return true;
+    function isPlainText(value) {
+        for (let i = 0; i < value.length; i++) {
+            switch (value.charCodeAt(i)) {
+                case 9:
+                case 10:
+                case 13:
+                case 32:
+                    continue;
+                default:
+                    return true;
+            }
         }
         return false;
     }
-    function compareRange(operation, value, range) {
-        switch (operation) {
-            case '<=':
-                return value <= range;
-            case '<':
-                return value < range;
-            case '>=':
-                return value >= range;
-            case '>':
-                return value > range;
-            default:
-                return value === range;
-        }
-    }
     class Application {
-        constructor(framework, nodeConstructor, controllerConstructor, resourceConstructor, extensionManagerHandler) {
+        constructor(framework, nodeConstructor, ControllerConstructor, ResourceConstructor, ExtensionManagerConstructor) {
             this.framework = framework;
-            this.nodeConstructor = nodeConstructor;
             this.initialized = false;
             this.closed = false;
             this.builtInExtensions = {};
-            this.extensions = new Set();
-            this.parseElements = new Set();
+            this.extensions = [];
+            this.rootElements = new Set();
             this.session = {
                 cache: new NodeList(),
                 documentRoot: [],
                 image: new Map(),
                 targetQueue: new Map(),
                 excluded: new NodeList(),
-                renderPosition: new Map(),
+                active: [],
                 extensionMap: new Map()
             };
             this.processing = {
                 cache: new NodeList(),
                 node: undefined,
-                excluded: new NodeList()
+                excluded: new NodeList(),
+                sessionId: ''
             };
             this._views = [];
             this._includes = [];
-            this.controllerHandler = new controllerConstructor(this, this.processing.cache);
-            this.resourceHandler = new resourceConstructor(this, this.processing.cache);
-            this.extensionManager = new extensionManagerHandler(this, this.processing.cache);
+            NodeConstructor = nodeConstructor;
+            this.controllerHandler = new ControllerConstructor(this, this.processing.cache);
+            this.resourceHandler = new ResourceConstructor(this, this.processing.cache);
+            this.extensionManager = new ExtensionManagerConstructor(this, this.processing.cache);
         }
         registerController(handler) {
             handler.application = this;
@@ -1408,36 +1442,47 @@
             }
             for (const layout of this.session.documentRoot) {
                 const node = layout.node;
-                const parent = layout.node.renderParent;
+                const parent = node.renderParent;
                 if (parent && parent.renderTemplates) {
-                    this.addLayoutFile(layout.layoutName, controller.localSettings.baseTemplate + controller.cascadeDocument(parent.renderTemplates, 0), node.dataset.pathname, !!node.renderExtension && node.renderExtension.some(item => item.documentBase));
+                    this.addLayoutFile(layout.layoutName, controller.localSettings.layout.baseTemplate + controller.cascadeDocument(parent.renderTemplates, 0), node.dataset.pathname, !!node.renderExtension && node.renderExtension.some(item => item.documentBase));
                 }
             }
-            const sessionData = this.sessionData;
-            this.resourceHandler.finalize(sessionData);
-            controller.finalize(sessionData);
+            for (const ext of this.extensions) {
+                ext.beforeFinalize();
+            }
+            const viewData = this.viewData;
+            this.resourceHandler.finalize(viewData);
+            controller.finalize(viewData);
             for (const ext of this.extensions) {
                 ext.afterFinalize();
             }
-            $dom.removeElementsByClassName('__css.placeholder');
+            $dom.removeElementsByClassName('__squared.placeholder');
+            $dom.removeElementsByClassName('__squared.pseudo');
             this.closed = true;
         }
         saveAllToDisk() {
             if (this.resourceHandler.fileHandler) {
-                this.resourceHandler.fileHandler.saveAllToDisk(this.sessionData);
+                this.resourceHandler.fileHandler.saveAllToDisk(this.viewData);
             }
         }
         reset() {
-            this.session.cache.each(node => node.element && $dom.deleteElementCache(node.element, 'node', 'style', 'styleMap'));
-            for (const element of this.parseElements) {
+            for (const id of this.session.active) {
+                this.session.cache.each(node => {
+                    if (node.element && node.naturalElement && !node.pseudoElement) {
+                        $session$1.deleteElementCache(node.element, 'node', id);
+                        $session$1.deleteElementCache(node.element, 'styleMap', id);
+                    }
+                });
+            }
+            for (const element of this.rootElements) {
                 element.dataset.iteration = '';
             }
             this.session.documentRoot.length = 0;
+            this.session.active.length = 0;
             this.session.targetQueue.clear();
             this.session.image.clear();
             this.session.cache.reset();
             this.session.excluded.reset();
-            this.session.renderPosition.clear();
             this.session.extensionMap.clear();
             this.processing.cache.reset();
             this.controllerHandler.reset();
@@ -1451,8 +1496,10 @@
         }
         parseDocument(...elements) {
             let __THEN;
-            this.parseElements.clear();
+            this.rootElements.clear();
             this.initialized = false;
+            this.processing.sessionId = this.controllerHandler.generateSessionId;
+            this.session.active.push(this.processing.sessionId);
             this.setStyleMap();
             if (elements.length === 0) {
                 elements.push(document.body);
@@ -1460,10 +1507,10 @@
             for (const value of elements) {
                 const element = typeof value === 'string' ? document.getElementById(value) : value;
                 if ($css$1.hasComputedStyle(element)) {
-                    this.parseElements.add(element);
+                    this.rootElements.add(element);
                 }
             }
-            const documentRoot = this.parseElements.values().next().value;
+            const documentRoot = this.rootElements.values().next().value;
             const fileExtension = new RegExp(`\.${this.controllerHandler.localSettings.layout.fileExtension}$`);
             const preloadImages = [];
             const parseResume = () => {
@@ -1477,11 +1524,11 @@
                 for (const ext of this.extensions) {
                     ext.beforeParseDocument();
                 }
-                for (const element of this.parseElements) {
+                for (const element of this.rootElements) {
                     const iteration = (element.dataset.iteration ? $util$3.convertInt(element.dataset.iteration) : -1) + 1;
                     element.dataset.iteration = iteration.toString();
                     if (this.createCache(element)) {
-                        const filename = element.dataset.filename && element.dataset.filename.replace(fileExtension, '') || element.id || `document_${this.size}`;
+                        const filename = element.dataset.filename && element.dataset.filename.replace(fileExtension, '') || element.id || `document_${this.length}`;
                         element.dataset.layoutName = $util$3.convertWord(iteration > 1 ? `${filename}_${iteration}` : filename, true);
                         this.setBaseLayout(element.dataset.layoutName);
                         this.setConstraints();
@@ -1500,7 +1547,7 @@
             };
             const images = [];
             if (this.userSettings.preloadImages) {
-                for (const element of this.parseElements) {
+                for (const element of this.rootElements) {
                     element.querySelectorAll('input[type=image]').forEach((image) => {
                         const uri = image.src;
                         if (uri !== '') {
@@ -1536,7 +1583,7 @@
                         }
                     }
                 }
-                for (const element of this.parseElements) {
+                for (const element of this.rootElements) {
                     element.querySelectorAll('IMG').forEach((image) => {
                         if (image.tagName === 'IMG') {
                             if (image.complete) {
@@ -1674,8 +1721,20 @@
                 }
             }
         }
-        createNode(element) {
-            return new this.nodeConstructor(this.nextId, element, this.controllerHandler.afterInsertNode);
+        createNode(element, append = true, parent, children) {
+            const node = new NodeConstructor(this.nextId, this.processing.sessionId, element, this.controllerHandler.afterInsertNode);
+            if (parent) {
+                node.depth = parent.depth + 1;
+            }
+            if (children) {
+                for (const item of children) {
+                    item.parent = node;
+                }
+            }
+            if (append) {
+                this.processing.cache.append(node, parent !== undefined);
+            }
+            return node;
         }
         resolveTarget(target) {
             for (const parent of this.processing.cache) {
@@ -1694,67 +1753,16 @@
             return this._views.length ? this._views[0].content : '';
         }
         createCache(documentRoot) {
-            const localSettings = this.controllerHandler.localSettings;
             this.processing.cache.afterAppend = undefined;
             this.processing.cache.clear();
             this.processing.excluded.clear();
             this.processing.node = undefined;
-            const extensions = Array.from(this.extensions);
-            for (const ext of extensions) {
+            for (const ext of this.extensions) {
                 ext.beforeInit(documentRoot);
             }
-            const cascadeDOM = (element, depth) => {
-                const node = this.insertNode(element);
-                if (node) {
-                    node.depth = depth;
-                    if (depth === 0) {
-                        this.processing.cache.append(node);
-                    }
-                    if (node.tagName !== 'SELECT') {
-                        const children = [];
-                        let includeText = false;
-                        for (let i = 0; i < element.childNodes.length; i++) {
-                            const childElement = element.childNodes[i];
-                            if (childElement.nodeName.charAt(0) === '#') {
-                                if (childElement.nodeName === '#text') {
-                                    const child = this.insertNode(childElement, node);
-                                    if (child) {
-                                        children.push(child);
-                                    }
-                                }
-                            }
-                            else if (!localSettings.unsupported.tagName.has(childElement.tagName) || childElement.tagName === 'INPUT' && !localSettings.unsupported.tagName.has(`${childElement.tagName}:${childElement.type}`)) {
-                                prioritizeExtensions(childElement, extensions).some(item => item.init(childElement));
-                                if (!this.parseElements.has(childElement)) {
-                                    const child = cascadeDOM(childElement, depth + 1);
-                                    if (child) {
-                                        children.push(child);
-                                        if (!child.excluded) {
-                                            includeText = true;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        for (let i = 0; i < children.length; i++) {
-                            const child = children[i];
-                            if (child.excluded) {
-                                this.processing.excluded.append(child);
-                            }
-                            else if (includeText || child.tagName !== 'PLAINTEXT') {
-                                child.parent = node;
-                                this.processing.cache.append(child);
-                            }
-                            child.siblingIndex = i;
-                        }
-                        node.actualChildren = children;
-                    }
-                }
-                return node;
-            };
-            const rootNode = cascadeDOM(documentRoot, 0);
+            const rootNode = this.cascadeParentNode(documentRoot);
             if (rootNode) {
-                rootNode.parent = new this.nodeConstructor(0, documentRoot.parentElement || document.body, this.controllerHandler.afterInsertNode);
+                rootNode.parent = new NodeConstructor(0, this.processing.sessionId, documentRoot.parentElement || document.body, this.controllerHandler.afterInsertNode);
                 rootNode.siblingIndex = 0;
                 rootNode.documentRoot = true;
                 rootNode.documentParent = rootNode.parent;
@@ -1763,183 +1771,299 @@
             else {
                 return false;
             }
-            if (this.processing.cache.length) {
-                const preAlignment = {};
-                const direction = new Set();
-                for (const node of this.processing.cache) {
-                    if (node.styleElement) {
-                        const element = node.element;
-                        if (element.tagName !== 'BUTTON' && element.type !== 'button') {
-                            const textAlign = node.css('textAlign');
-                            switch (textAlign) {
-                                case 'center':
-                                case 'right':
-                                case 'end':
-                                    preAlignment[node.id] = { textAlign };
-                                    element.style.textAlign = 'left';
-                                    break;
-                            }
-                        }
-                        if (node.positionRelative && !node.positionStatic) {
-                            if (preAlignment[node.id] === undefined) {
-                                preAlignment[node.id] = {};
-                            }
-                            for (const attr of $css$1.BOX_POSITION) {
-                                if (node.has(attr)) {
-                                    preAlignment[node.id][attr] = node.css(attr);
-                                    element.style[attr] = 'auto';
-                                }
-                            }
-                        }
-                        if (element.dir === 'rtl') {
-                            element.dir = 'ltr';
-                            direction.add(element);
+            const preAlignment = {};
+            const direction = new Set();
+            function saveAlignment(element, id, attr, value, restoreValue) {
+                if (preAlignment[id] === undefined) {
+                    preAlignment[id] = {};
+                }
+                preAlignment[id][attr] = restoreValue;
+                element.style[attr] = value;
+            }
+            for (const node of this.processing.cache) {
+                if (node.styleElement) {
+                    const element = node.element;
+                    if (node.length) {
+                        const textAlign = node.cssInitial('textAlign');
+                        switch (textAlign) {
+                            case 'center':
+                            case 'right':
+                            case 'end':
+                                saveAlignment(element, node.id, 'textAlign', 'left', textAlign);
+                                break;
                         }
                     }
+                    if (node.positionRelative && !node.positionStatic) {
+                        if (preAlignment[node.id] === undefined) {
+                            preAlignment[node.id] = {};
+                        }
+                        for (const attr of $css$1.BOX_POSITION) {
+                            if (node.has(attr)) {
+                                saveAlignment(element, node.id, attr, 'auto', node.css(attr));
+                            }
+                        }
+                    }
+                    if (node.parent && node.parent.flexElement) {
+                        if (preAlignment[node.id] === undefined) {
+                            preAlignment[node.id] = {};
+                        }
+                        switch (node.flexbox.alignSelf) {
+                            case 'flex-end':
+                            case 'center':
+                            case 'inherit':
+                            case 'unset':
+                                saveAlignment(element, node.id, 'alignSelf', 'normal', node.flexbox.alignSelf);
+                                break;
+                        }
+                    }
+                    if (element.dir === 'rtl') {
+                        element.dir = 'ltr';
+                        direction.add(element);
+                    }
                 }
-                rootNode.parent.setBounds();
-                for (const node of this.processing.cache) {
+            }
+            const pseudoElement = new Set();
+            rootNode.parent.setBounds();
+            for (const node of this.processing.cache) {
+                if (!node.pseudoElement) {
                     node.setBounds();
                 }
-                for (const node of this.processing.excluded) {
-                    if (!node.lineBreak) {
-                        node.setBounds();
+                else {
+                    pseudoElement.add(node.parent);
+                }
+            }
+            for (const node of pseudoElement) {
+                [node.beforePseudoChild, node.afterPseudoChild].forEach((item, index) => {
+                    if (item) {
+                        const element = node.element;
+                        const id = element.id;
+                        let styleElement;
+                        if (item.pageFlow) {
+                            element.id = 'id_' + Math.round(Math.random() * new Date().getTime());
+                            styleElement = $css$1.insertStyleSheetRule(`#${element.id}::${index === 0 ? 'before' : 'after'} { display: none !important; }`);
+                        }
+                        if (item.cssTry('display', item.display)) {
+                            item.setBounds();
+                            item.cssFinally('display');
+                        }
+                        if (styleElement) {
+                            document.head.removeChild(styleElement);
+                        }
+                        element.id = id;
+                    }
+                });
+            }
+            for (const node of this.processing.excluded) {
+                if (!node.lineBreak) {
+                    node.setBounds();
+                }
+            }
+            for (const node of this.processing.cache) {
+                if (node.styleElement) {
+                    const element = node.element;
+                    const reset = preAlignment[node.id];
+                    if (reset) {
+                        for (const attr in reset) {
+                            element.style[attr] = reset[attr];
+                        }
+                    }
+                    if (direction.has(element)) {
+                        element.dir = 'rtl';
                     }
                 }
-                for (const node of this.processing.cache) {
-                    if (node.styleElement) {
-                        const element = node.element;
-                        const reset = preAlignment[node.id];
-                        if (reset) {
-                            for (const attr in reset) {
-                                element.style[attr] = reset[attr];
+                if (!node.documentRoot) {
+                    let parent = node.actualParent;
+                    switch (node.position) {
+                        case 'fixed':
+                            if (!node.positionAuto) {
+                                parent = rootNode;
+                                break;
                             }
-                        }
-                        if (direction.has(element)) {
-                            element.dir = 'rtl';
-                        }
-                    }
-                    if (!node.documentRoot) {
-                        let parent = node.actualParent;
-                        switch (node.position) {
-                            case 'fixed':
-                                if (!node.positionAuto) {
-                                    parent = rootNode;
-                                    break;
-                                }
-                            case 'absolute':
-                                if (node.positionAuto && checkPositionStatic(node, parent)) {
-                                    break;
-                                }
-                                else if (this.userSettings.supportNegativeLeftTop) {
-                                    const absoluteParent = node.absoluteParent;
-                                    let documentParent;
-                                    let outside = false;
-                                    while (parent && (parent !== rootNode || parent.id !== 0)) {
-                                        if (documentParent === undefined) {
-                                            if (absoluteParent === parent) {
-                                                documentParent = parent;
-                                                if (parent.css('overflow') === 'hidden') {
-                                                    break;
+                        case 'absolute':
+                            if (node.positionAuto && checkPositionStatic(node, parent)) {
+                                break;
+                            }
+                            else if (this.userSettings.supportNegativeLeftTop) {
+                                const absoluteParent = node.absoluteParent;
+                                let documentParent;
+                                let outside = false;
+                                while (parent && (parent !== rootNode || parent.id !== 0)) {
+                                    if (documentParent === undefined) {
+                                        if (absoluteParent === parent) {
+                                            documentParent = parent;
+                                            if (parent.css('overflow') === 'hidden') {
+                                                break;
+                                            }
+                                            else {
+                                                if ((!node.has('right') || node.right < 0) && (!node.has('bottom') || node.bottom < 0) && (node.left < 0 && node.outsideX(parent.box) ||
+                                                    !node.has('left') && node.right < 0 && node.outsideX(parent.box) ||
+                                                    node.top < 0 && node.outsideY(parent.box) ||
+                                                    !node.has('top') && node.bottom < 0 && node.outsideX(parent.box))) {
+                                                    outside = true;
                                                 }
                                                 else {
-                                                    if ((!node.has('right') || node.right < 0) && (!node.has('bottom') || node.bottom < 0) && (node.left < 0 && node.outsideX(parent.box) ||
-                                                        !node.has('left') && node.right < 0 && node.outsideX(parent.box) ||
-                                                        node.top < 0 && node.outsideY(parent.box) ||
-                                                        !node.has('top') && node.bottom < 0 && node.outsideX(parent.box))) {
-                                                        outside = true;
-                                                    }
-                                                    else {
-                                                        break;
-                                                    }
+                                                    break;
                                                 }
                                             }
                                         }
-                                        else if (outside && (parent.documentRoot || parent.css('overflow') === 'hidden' || node.withinX(parent.box) && node.withinY(parent.box))) {
-                                            documentParent = parent;
-                                            break;
-                                        }
-                                        parent = parent.actualParent;
                                     }
-                                    if (documentParent) {
-                                        parent = documentParent;
-                                    }
-                                }
-                                else {
-                                    parent = node.absoluteParent;
-                                }
-                                break;
-                        }
-                        if (!node.pageFlow && (parent === undefined || parent.id === 0)) {
-                            parent = rootNode;
-                        }
-                        if (parent) {
-                            if (parent !== node.parent) {
-                                node.parent = parent;
-                                node.siblingIndex = Number.POSITIVE_INFINITY;
-                            }
-                            node.documentParent = parent;
-                        }
-                    }
-                    if (node.length) {
-                        const layers = [];
-                        node.each((item) => {
-                            if (item.siblingIndex === Number.POSITIVE_INFINITY) {
-                                for (const adjacent of node.children) {
-                                    let valid = adjacent.actualChildren.includes(item);
-                                    if (!valid) {
-                                        const nested = adjacent.cascade();
-                                        valid = item.ascend().some(child => nested.includes(child));
-                                    }
-                                    if (valid) {
-                                        const index = adjacent.siblingIndex + (item.zIndex >= 0 || adjacent !== item.actualParent ? 1 : -1);
-                                        if (layers[index] === undefined) {
-                                            layers[index] = [];
-                                        }
-                                        layers[index].push(item);
+                                    else if (outside && (parent.documentRoot || parent.css('overflow') === 'hidden' || node.withinX(parent.box) && node.withinY(parent.box))) {
+                                        documentParent = parent;
                                         break;
                                     }
+                                    parent = parent.actualParent;
+                                }
+                                if (documentParent) {
+                                    parent = documentParent;
                                 }
                             }
-                        });
-                        for (let j = 0; j < layers.length; j++) {
-                            const order = layers[j];
-                            if (order) {
-                                order.sort((a, b) => {
-                                    if (a.zIndex === b.zIndex) {
-                                        return a.id < b.id ? -1 : 1;
+                            else {
+                                parent = node.absoluteParent;
+                            }
+                            break;
+                    }
+                    if (!node.pageFlow && (parent === undefined || parent.id === 0)) {
+                        parent = rootNode;
+                    }
+                    if (parent) {
+                        if (parent !== node.parent) {
+                            node.parent = parent;
+                            node.siblingIndex = Number.POSITIVE_INFINITY;
+                        }
+                        node.documentParent = parent;
+                    }
+                }
+                if (node.length) {
+                    const layers = [];
+                    node.each((item) => {
+                        if (item.siblingIndex === Number.POSITIVE_INFINITY) {
+                            for (const adjacent of node.children) {
+                                let valid = adjacent.actualChildren.includes(item);
+                                if (!valid) {
+                                    const nested = adjacent.cascade();
+                                    valid = item.ascend().some(child => nested.includes(child));
+                                }
+                                if (valid) {
+                                    const index = adjacent.siblingIndex + (item.zIndex >= 0 || adjacent !== item.actualParent ? 1 : -1);
+                                    if (layers[index] === undefined) {
+                                        layers[index] = [];
                                     }
-                                    return a.zIndex < b.zIndex ? -1 : 1;
-                                });
-                                node.each((item) => {
-                                    if (item.siblingIndex >= j && item.siblingIndex !== Number.POSITIVE_INFINITY) {
-                                        item.siblingIndex += order.length;
-                                    }
-                                });
-                                for (let k = 0; k < order.length; k++) {
-                                    order[k].siblingIndex = j + k;
+                                    layers[index].push(item);
+                                    break;
                                 }
                             }
                         }
-                        node.sort(NodeList.siblingIndex);
+                    });
+                    for (let j = 0; j < layers.length; j++) {
+                        const order = layers[j];
+                        if (order) {
+                            order.sort((a, b) => {
+                                if (a.zIndex === b.zIndex) {
+                                    return a.id < b.id ? -1 : 1;
+                                }
+                                return a.zIndex < b.zIndex ? -1 : 1;
+                            });
+                            node.each((item) => {
+                                if (item.siblingIndex >= j && item.siblingIndex !== Number.POSITIVE_INFINITY) {
+                                    item.siblingIndex += order.length;
+                                }
+                            });
+                            for (let k = 0; k < order.length; k++) {
+                                order[k].siblingIndex = j + k;
+                            }
+                        }
                     }
-                    node.saveAsInitial();
+                    node.sort(NodeList.siblingIndex);
                 }
-                this.processing.cache.sort((a, b) => {
-                    if (a.depth !== b.depth) {
-                        return a.depth < b.depth ? -1 : 1;
-                    }
-                    else if (a.documentParent !== b.documentParent) {
-                        return a.documentParent.siblingIndex < b.documentParent.siblingIndex ? -1 : 1;
-                    }
-                    return a.siblingIndex < b.siblingIndex ? -1 : 1;
-                });
-                for (const ext of extensions) {
-                    ext.afterInit(documentRoot);
-                }
-                return true;
+                node.saveAsInitial();
             }
-            return false;
+            this.processing.cache.sort((a, b) => {
+                if (a.depth !== b.depth) {
+                    return a.depth < b.depth ? -1 : 1;
+                }
+                else if (a.documentParent !== b.documentParent) {
+                    return a.documentParent.siblingIndex < b.documentParent.siblingIndex ? -1 : 1;
+                }
+                return a.siblingIndex < b.siblingIndex ? -1 : 1;
+            });
+            for (const ext of this.extensions) {
+                ext.afterInit(documentRoot);
+            }
+            return true;
+        }
+        cascadeParentNode(element, depth = 0) {
+            const node = this.insertNode(element);
+            if (node) {
+                const localSettings = this.controllerHandler.localSettings;
+                node.depth = depth;
+                if (depth === 0) {
+                    this.processing.cache.append(node);
+                }
+                if (node.tagName !== 'SELECT') {
+                    const beforeElement = this.createPseduoElement(element, 'before');
+                    const afterElement = this.createPseduoElement(element, 'after');
+                    const children = [];
+                    let includeText = false;
+                    for (let i = 0; i < element.childNodes.length; i++) {
+                        const childElement = element.childNodes[i];
+                        if (childElement.nodeName.charAt(0) === '#') {
+                            if (childElement.nodeName === '#text') {
+                                const child = this.insertNode(childElement, node);
+                                if (child) {
+                                    children.push(child);
+                                }
+                            }
+                        }
+                        else if (childElement === beforeElement) {
+                            const child = this.insertNode(beforeElement);
+                            if (child) {
+                                node.beforePseudoChild = child;
+                                child.setInlineText(true);
+                                children.push(child);
+                                includeText = true;
+                            }
+                        }
+                        else if (childElement === afterElement) {
+                            const child = this.insertNode(afterElement);
+                            if (child) {
+                                node.afterPseudoChild = child;
+                                child.setInlineText(true);
+                                children.push(child);
+                                includeText = true;
+                            }
+                        }
+                        else if (!localSettings.unsupported.tagName.has(childElement.tagName) || childElement.tagName === 'INPUT' && !localSettings.unsupported.tagName.has(`${childElement.tagName}:${childElement.type}`)) {
+                            prioritizeExtensions(childElement, this.extensions).some(item => item.init(childElement));
+                            if (!this.rootElements.has(childElement)) {
+                                const child = this.cascadeParentNode(childElement, depth + 1);
+                                if (child) {
+                                    children.push(child);
+                                    if (!child.excluded) {
+                                        includeText = true;
+                                    }
+                                }
+                            }
+                            else {
+                                includeText = true;
+                            }
+                        }
+                    }
+                    for (let i = 0; i < children.length; i++) {
+                        const child = children[i];
+                        if (child.excluded) {
+                            this.processing.excluded.append(child);
+                        }
+                        else if (includeText || !child.plainText) {
+                            child.parent = node;
+                            this.processing.cache.append(child);
+                        }
+                        child.siblingIndex = i;
+                    }
+                    node.setInlineText(!includeText);
+                    node.actualChildren = children;
+                }
+            }
+            return node;
         }
         setBaseLayout(layoutName) {
             const controller = this.controllerHandler;
@@ -2003,19 +2127,19 @@
                         }
                         else if (nodeY.htmlElement) {
                             const element = nodeY.element;
-                            if (this.parseElements.has(element) && !nodeY.documentRoot && !nodeY.documentBody) {
+                            if (this.rootElements.has(element) && !nodeY.documentRoot && !nodeY.documentBody) {
                                 continue;
                             }
                             else if (nodeY.length === 0 && element.children.length) {
                                 let valid = true;
                                 for (let i = 0; i < element.children.length; i++) {
-                                    if (!this.parseElements.has(element.children[i])) {
+                                    if (!this.rootElements.has(element.children[i])) {
                                         valid = false;
                                         break;
                                     }
                                 }
                                 if (valid) {
-                                    nodeY.inlineText = false;
+                                    nodeY.setInlineText(false, true);
                                 }
                             }
                         }
@@ -2719,68 +2843,291 @@
             return layout;
         }
         insertNode(element, parent) {
-            let node;
             if (element.nodeName === '#text') {
-                if ($element$1.isPlainText(element, true) || $css$1.isParentStyle(element, 'whiteSpace', 'pre', 'pre-wrap')) {
-                    node = this.createNode(element);
+                if (isPlainText(element.textContent) || $css$1.isParentStyle(element, 'whiteSpace', 'pre', 'pre-wrap')) {
+                    this.controllerHandler.applyDefaultStyles(element);
+                    const node = this.createNode(element, false);
                     if (parent) {
                         node.inherit(parent, 'textStyle');
                     }
-                    node.cssApply({
-                        position: 'static',
-                        display: 'inline',
-                        verticalAlign: 'baseline',
-                        cssFloat: 'none',
-                        clear: 'none',
-                    });
+                    return node;
+                }
+                else {
+                    return undefined;
                 }
             }
             else if (!this.controllerHandler.localSettings.svg.enabled || element.parentElement instanceof HTMLElement) {
                 this.controllerHandler.applyDefaultStyles(element);
-                node = this.createNode(element);
-                if (!this.controllerHandler.localSettings.unsupported.excluded.has(element.tagName) && this.conditionElement(element)) {
-                    if (!this.userSettings.exclusionsDisabled) {
-                        node.setExclusions();
+                const node = this.createNode(element, false);
+                if (!node.pseudoElement) {
+                    if (!this.controllerHandler.localSettings.unsupported.excluded.has(element.tagName) && this.conditionElement(element)) {
+                        if (!this.userSettings.exclusionsDisabled) {
+                            node.setExclusions();
+                        }
+                    }
+                    else {
+                        node.visible = false;
+                        node.excluded = true;
                     }
                 }
-                else {
-                    node.visible = false;
-                    node.excluded = true;
-                }
+                return node;
             }
-            return node;
+            return undefined;
         }
         conditionElement(element) {
-            if ($css$1.hasComputedStyle(element)) {
-                if ($dom.isElementVisible(element, true) || element.dataset.use) {
-                    return true;
+            if ($dom.isElementVisible(element, true) || element.dataset.use && element.dataset.use.split($util$3.REGEXP_COMPILED.SEPARATOR).some(value => !!this.extensionManager.retrieve(value.trim()))) {
+                return true;
+            }
+            else {
+                let current = element.parentElement;
+                let valid = true;
+                while (current) {
+                    if ($css$1.getStyle(current).display === 'none') {
+                        valid = false;
+                        break;
+                    }
+                    current = current.parentElement;
                 }
-                else {
+                if (valid) {
+                    for (let i = 0; i < element.children.length; i++) {
+                        if ($dom.isElementVisible(element.children[i], true)) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+        }
+        createPseduoElement(element, target) {
+            const styleMap = $session$1.getElementCache(element, `styleMap::${target}`, this.processing.sessionId);
+            if (styleMap && styleMap.content !== undefined) {
+                let value = styleMap.content;
+                if (value === 'inherit') {
                     let current = element.parentElement;
-                    let valid = true;
                     while (current) {
-                        if ($css$1.getStyle(current).display === 'none') {
-                            valid = false;
+                        value = $css$1.getStyle(current, target).getPropertyValue('content');
+                        if (value !== 'inherit') {
                             break;
                         }
                         current = current.parentElement;
                     }
-                    if (valid) {
-                        for (let i = 0; i < element.children.length; i++) {
-                            if ($dom.isElementVisible(element.children[i], true)) {
-                                return true;
+                }
+                const style = $css$1.getStyle(element);
+                if (styleMap.fontFamily === undefined) {
+                    styleMap.fontFamily = style.getPropertyValue('font-family');
+                }
+                if (styleMap.fontSize === undefined) {
+                    styleMap.fontSize = style.getPropertyValue('font-size');
+                }
+                if (styleMap.fontWeight === undefined) {
+                    styleMap.fontWeight = style.getPropertyValue('font-weight');
+                }
+                if (styleMap.color === undefined) {
+                    styleMap.color = style.getPropertyValue('color');
+                }
+                if (styleMap.display === undefined) {
+                    styleMap.display = 'inline';
+                }
+                let tagName = styleMap.display && styleMap.display.startsWith('inline') ? 'span' : 'div';
+                let content = '';
+                switch (value) {
+                    case 'normal':
+                    case 'none':
+                    case 'initial':
+                    case 'inherit':
+                    case 'no-open-quote':
+                    case 'no-close-quote':
+                        break;
+                    case '""':
+                        let valid = false;
+                        if (styleMap.display === 'block' || styleMap.clear && styleMap.clear !== 'none') {
+                            valid = true;
+                        }
+                        else {
+                            for (const attr in styleMap) {
+                                if (attr.startsWith('padding')) {
+                                    valid = true;
+                                    break;
+                                }
                             }
                         }
+                        if (!valid) {
+                            value = '';
+                        }
+                        break;
+                    case 'open-quote':
+                        content = target === 'before' ? '&quot;' : '';
+                        tagName = 'span';
+                        break;
+                    case 'close-quote':
+                        content = target === 'after' ? '&quot;' : '';
+                        tagName = 'span';
+                        break;
+                    default:
+                        if (value.startsWith('url(')) {
+                            content = $css$1.resolveURL(value);
+                            const format = $util$3.fromLastIndexOf(content, '.').toLowerCase();
+                            if (this.controllerHandler.localSettings.supported.imageFormat.includes(format)) {
+                                tagName = 'img';
+                            }
+                            else {
+                                content = '';
+                            }
+                        }
+                        else {
+                            if (REGEXP_CACHED.CSS_CONTENT === undefined) {
+                                REGEXP_CACHED.CSS_CONTENT = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:, ([a-z\-]+))?\)|(counters)\(([^,]+), "([^"]*)"(?:, ([a-z\-]+))?\)|"([^"]+)")\s*/g;
+                            }
+                            let match;
+                            while ((match = REGEXP_CACHED.CSS_CONTENT.exec(value)) !== null) {
+                                if (match[1]) {
+                                    content += $dom.getNamedItem(element, match[1].trim());
+                                }
+                                else if (match[2] || match[5]) {
+                                    const counterType = match[2] === 'counter';
+                                    let counterName;
+                                    let styleName;
+                                    if (counterType) {
+                                        counterName = match[3];
+                                        styleName = match[4] || 'decimal';
+                                    }
+                                    else {
+                                        counterName = match[6];
+                                        styleName = match[8] || 'decimal';
+                                    }
+                                    function getCounterValue(name) {
+                                        if (name !== 'none') {
+                                            const pattern = /\s*([^\-\d][^\-\d]?[^ ]*) (-?\d+)\s*/g;
+                                            let counterMatch;
+                                            while ((counterMatch = pattern.exec(name)) !== null) {
+                                                if (counterMatch[1] === counterName) {
+                                                    return parseInt(counterMatch[2]);
+                                                }
+                                            }
+                                        }
+                                        return undefined;
+                                    }
+                                    const getPseduoIncrement = (parent) => {
+                                        const pseduoStyle = $session$1.getElementCache(parent, `styleMap::${target}`, this.processing.sessionId);
+                                        if (pseduoStyle && pseduoStyle.counterIncrement) {
+                                            return getCounterValue(pseduoStyle.counterIncrement);
+                                        }
+                                        return undefined;
+                                    };
+                                    const initalValue = (getPseduoIncrement(element) || 0) + (getCounterValue(style.getPropertyValue('counter-reset')) || 0);
+                                    let current = element;
+                                    let counter = initalValue;
+                                    let ascending = false;
+                                    let lastResetElement;
+                                    const subcounter = [];
+                                    function incrementCounter(increment, pseudo = false) {
+                                        if (subcounter.length === 0) {
+                                            counter += increment;
+                                        }
+                                        else if (ascending || pseudo) {
+                                            subcounter[subcounter.length - 1] += increment;
+                                        }
+                                    }
+                                    function cascadeSibling(sibling) {
+                                        if (getCounterValue($css$1.getStyle(sibling).getPropertyValue('counter-reset')) === undefined) {
+                                            for (let i = 0; i < sibling.children.length; i++) {
+                                                const child = sibling.children[i];
+                                                if (child.className !== '__squared.pseudo') {
+                                                    let increment = getPseduoIncrement(child);
+                                                    if (increment) {
+                                                        incrementCounter(increment, true);
+                                                    }
+                                                    const childStyle = $css$1.getStyle(child);
+                                                    increment = getCounterValue(childStyle.getPropertyValue('counter-increment'));
+                                                    if (increment) {
+                                                        incrementCounter(increment);
+                                                    }
+                                                    increment = getCounterValue(childStyle.getPropertyValue('counter-reset'));
+                                                    if (increment !== undefined) {
+                                                        return;
+                                                    }
+                                                    cascadeSibling(child);
+                                                }
+                                            }
+                                        }
+                                    }
+                                    do {
+                                        ascending = false;
+                                        if (current.previousElementSibling) {
+                                            current = current.previousElementSibling;
+                                            cascadeSibling(current);
+                                        }
+                                        else if (current.parentElement) {
+                                            current = current.parentElement;
+                                            ascending = true;
+                                        }
+                                        else {
+                                            break;
+                                        }
+                                        if (current.className !== '__squared.pseudo') {
+                                            const pesudoIncrement = getPseduoIncrement(current);
+                                            if (pesudoIncrement) {
+                                                incrementCounter(pesudoIncrement, true);
+                                            }
+                                            const currentStyle = $css$1.getStyle(current);
+                                            const counterIncrement = getCounterValue(currentStyle.getPropertyValue('counter-increment')) || 0;
+                                            if (counterIncrement) {
+                                                incrementCounter(counterIncrement);
+                                            }
+                                            const counterReset = getCounterValue(currentStyle.getPropertyValue('counter-reset'));
+                                            if (counterReset !== undefined) {
+                                                if (lastResetElement === undefined) {
+                                                    counter += counterReset;
+                                                }
+                                                lastResetElement = current;
+                                                if (counterType) {
+                                                    break;
+                                                }
+                                                else if (ascending) {
+                                                    subcounter.push((pesudoIncrement || 0) + counterReset);
+                                                }
+                                            }
+                                        }
+                                    } while (true);
+                                    if (lastResetElement) {
+                                        if (!counterType && subcounter.length > 1) {
+                                            subcounter.reverse();
+                                            subcounter.splice(1, 1);
+                                            for (const leading of subcounter) {
+                                                content += $css$1.convertListStyle(styleName, leading, true) + match[7];
+                                            }
+                                        }
+                                    }
+                                    else {
+                                        counter = initalValue;
+                                    }
+                                    content += $css$1.convertListStyle(styleName, counter, true);
+                                }
+                                else if (match[9]) {
+                                    content += match[9];
+                                }
+                            }
+                        }
+                        break;
+                }
+                if (content || value === '""') {
+                    const pseudoElement = $dom.createElement(element, tagName, false, target === 'before' ? 0 : -1);
+                    if (tagName === 'img') {
+                        pseudoElement.src = content;
                     }
-                    return false;
+                    else {
+                        pseudoElement.innerText = content;
+                    }
+                    for (const attr in styleMap) {
+                        if (attr !== 'display') {
+                            pseudoElement.style[attr] = styleMap[attr];
+                        }
+                    }
+                    $session$1.setElementCache(pseudoElement, 'styleMap', this.processing.sessionId, styleMap);
+                    return pseudoElement;
                 }
             }
-            else {
-                return $element$1.isPlainText(element);
-            }
-        }
-        createLayoutControl(parent, node) {
-            return new Layout(parent, node, node.containerType, node.alignmentType, node.children);
+            return undefined;
         }
         setStyleMap() {
             violation: {
@@ -2795,27 +3142,42 @@
                                         this.applyStyleRule(rule);
                                         break;
                                     case CSSRule.MEDIA_RULE:
-                                        const patternA = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
-                                        let matchA;
+                                        function compareRange(operation, value, range) {
+                                            switch (operation) {
+                                                case '<=':
+                                                    return value <= range;
+                                                case '<':
+                                                    return value < range;
+                                                case '>=':
+                                                    return value >= range;
+                                                case '>':
+                                                    return value > range;
+                                                default:
+                                                    return value === range;
+                                            }
+                                        }
+                                        const pattern = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
+                                        const fontSize = $util$3.parseUnit($css$1.getStyle(document.body).getPropertyValue('font-size'));
+                                        let match;
                                         let statement = false;
-                                        while (!statement && ((matchA = patternA.exec(rule.conditionText)) !== null)) {
-                                            const negate = matchA[1] === 'not';
-                                            const patternB = /\(([a-z\-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
-                                            let matchB;
+                                        while (!statement && ((match = pattern.exec(rule.conditionText)) !== null)) {
+                                            const negate = match[1] === 'not';
+                                            const patternCondition = /\(([a-z\-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
+                                            let condition;
                                             let valid = false;
-                                            while (!statement && (matchB = patternB.exec(matchA[2])) !== null) {
-                                                const attr = matchB[1];
+                                            while (!statement && (condition = patternCondition.exec(match[2])) !== null) {
+                                                const attr = condition[1];
                                                 let operation;
-                                                if (matchB[1].startsWith('min')) {
+                                                if (condition[1].startsWith('min')) {
                                                     operation = '>=';
                                                 }
-                                                else if (matchB[1].startsWith('max')) {
+                                                else if (condition[1].startsWith('max')) {
                                                     operation = '<=';
                                                 }
                                                 else {
-                                                    operation = matchA[2];
+                                                    operation = match[2];
                                                 }
-                                                const value = matchB[3];
+                                                const value = condition[3];
                                                 switch (attr) {
                                                     case 'aspect-ratio':
                                                     case 'min-aspect-ratio':
@@ -2829,7 +3191,7 @@
                                                     case 'height':
                                                     case 'min-height':
                                                     case 'max-height':
-                                                        valid = compareRange(operation, attr.indexOf('width') !== -1 ? window.innerWidth : window.innerHeight, $util$3.parseUnit(value, $util$3.convertInt($css$1.getStyle(document.body).fontSize)));
+                                                        valid = compareRange(operation, attr.indexOf('width') !== -1 ? window.innerWidth : window.innerHeight, $util$3.parseUnit(value, fontSize));
                                                         break;
                                                     case 'orientation':
                                                         valid = value === 'portrait' && window.innerWidth <= window.innerHeight || value === 'landscape' && window.innerWidth > window.innerHeight;
@@ -2906,33 +3268,45 @@
             for (const attr of Array.from(item.style)) {
                 fromRule.push($util$3.convertCamelCase(attr));
             }
-            document.querySelectorAll(item.selectorText).forEach((element) => {
-                const style = $css$1.getStyle(element);
-                const fontSize = $util$3.parseUnit(style.fontSize);
-                const styleMap = {};
-                for (const attr of fromRule) {
-                    const value = $css$1.checkStyleValue(element, attr, item.style[attr], style, fontSize);
-                    if (value) {
-                        styleMap[attr] = value;
-                    }
-                }
-                if (this.userSettings.preloadImages && styleMap.backgroundImage && styleMap.backgroundImage !== 'initial') {
-                    for (const value of styleMap.backgroundImage.split($util$3.REGEXP_COMPILED.SEPARATOR)) {
-                        const uri = $css$1.resolveURL(value.trim());
-                        if (uri !== '' && !this.session.image.has(uri)) {
-                            this.session.image.set(uri, { width: 0, height: 0, uri });
+            for (const grouping of item.selectorText.split(/\s*,\s*/)) {
+                const [selectorText, target] = grouping.split('::');
+                document.querySelectorAll(selectorText || '*').forEach((element) => {
+                    const style = $css$1.getStyle(element, target);
+                    const fontSize = $util$3.parseUnit(style.getPropertyValue('font-size'));
+                    const styleMap = {};
+                    for (const attr of fromRule) {
+                        const value = $css$1.checkStyleValue(element, attr, item.style[attr], fontSize, target ? undefined : style);
+                        if (value) {
+                            styleMap[attr] = value;
                         }
                     }
-                }
-                const data = $dom.getElementCache(element, 'styleMap');
-                if (data) {
-                    Object.assign(data, styleMap);
-                }
-                else {
-                    $dom.setElementCache(element, 'style', style);
-                    $dom.setElementCache(element, 'styleMap', styleMap);
-                }
-            });
+                    const backgroundImage = styleMap.backgroundImage && styleMap.backgroundImage !== 'initial';
+                    if (this.userSettings.preloadImages && (backgroundImage || styleMap.content && styleMap.content.startsWith('url('))) {
+                        const images = backgroundImage ? styleMap.backgroundImage.split($util$3.REGEXP_COMPILED.SEPARATOR) : [];
+                        if (styleMap.content) {
+                            images.push(styleMap.content);
+                        }
+                        for (const value of images) {
+                            const uri = $css$1.resolveURL(value.trim());
+                            if (uri !== '' && !this.session.image.has(uri)) {
+                                this.session.image.set(uri, { width: 0, height: 0, uri });
+                            }
+                        }
+                    }
+                    const attrStyle = `styleMap${target ? '::' + target : ''}`;
+                    const data = $session$1.getElementCache(element, attrStyle, this.processing.sessionId);
+                    if (data) {
+                        Object.assign(data, styleMap);
+                    }
+                    else {
+                        $session$1.setElementCache(element, `style${target ? '::' + target : ''}`, '0', style);
+                        $session$1.setElementCache(element, attrStyle, this.processing.sessionId, styleMap);
+                    }
+                });
+            }
+        }
+        createLayoutControl(parent, node) {
+            return new Layout(parent, node, node.containerType, node.alignmentType, node.children);
         }
         set userSettings(value) {
             this._userSettings = value;
@@ -2941,10 +3315,10 @@
             return this._userSettings || {};
         }
         get viewData() {
-            return [].concat(this._views, this._includes);
-        }
-        get sessionData() {
-            return { cache: this.session.cache, templates: this.viewData };
+            return {
+                views: this._views,
+                includes: this._includes
+            };
         }
         get rendered() {
             return this.session.cache.filter(node => node.visible && node.rendered);
@@ -2952,14 +3326,14 @@
         get nextId() {
             return this.processing.cache.nextId;
         }
-        get size() {
+        get length() {
             return this.session.documentRoot.length;
         }
     }
 
     const $color$1 = squared.lib.color;
     const $css$2 = squared.lib.css;
-    const $dom$1 = squared.lib.dom;
+    const $session$2 = squared.lib.session;
     const $util$4 = squared.lib.util;
     const $xml = squared.lib.xml;
     class Controller {
@@ -2978,76 +3352,94 @@
             this._afterOutside = {};
         }
         applyDefaultStyles(element) {
-            const styleMap = $dom$1.getElementCache(element, 'styleMap') || {};
-            if ($util$4.isUserAgent(8 /* FIREFOX */)) {
-                if (styleMap.display === undefined) {
-                    switch (element.tagName) {
-                        case 'INPUT':
-                        case 'TEXTAREA':
-                        case 'SELECT':
-                        case 'BUTTON':
-                            styleMap.display = 'inline-block';
-                            break;
+            let styleMap;
+            if (element.nodeName === '#text') {
+                styleMap = {
+                    position: 'static',
+                    display: 'inline',
+                    verticalAlign: 'baseline',
+                    cssFloat: 'none',
+                    clear: 'none'
+                };
+            }
+            else {
+                styleMap = $session$2.getElementCache(element, 'styleMap', this.application.processing.sessionId) || {};
+                if ($util$4.isUserAgent(8 /* FIREFOX */)) {
+                    if (styleMap.display === undefined) {
+                        switch (element.tagName) {
+                            case 'INPUT':
+                            case 'TEXTAREA':
+                            case 'SELECT':
+                            case 'BUTTON':
+                                styleMap.display = 'inline-block';
+                                break;
+                        }
                     }
                 }
-            }
-            switch (element.tagName) {
-                case 'INPUT':
-                    switch (element.type) {
-                        case 'file': {
+                switch (element.tagName) {
+                    case 'INPUT':
+                        switch (element.type) {
+                            case 'file': {
+                                const style = $css$2.getStyle(element);
+                                const color = $color$1.parseColor(style.getPropertyValue('background-color'));
+                                if (color === undefined) {
+                                    styleMap.backgroundColor = '#DDDDDD';
+                                    if (style.getPropertyValue('border-style')) {
+                                        for (const border of ['borderTop', 'borderRight', 'borderBottom', 'borderLeft']) {
+                                            styleMap[`${border}Style`] = 'solid';
+                                            styleMap[`${border}Color`] = '#DDDDDD';
+                                            styleMap[`${border}Width`] = '2px';
+                                        }
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                        break;
+                    case 'FORM':
+                        if (styleMap.marginTop === undefined) {
+                            styleMap.marginTop = '0px';
+                        }
+                        break;
+                    case 'LI':
+                        if (styleMap.listStyleImage === undefined) {
                             const style = $css$2.getStyle(element);
-                            const color = $color$1.parseColor(style.backgroundColor || '');
-                            if (color === undefined) {
-                                styleMap.backgroundColor = '#DDDDDD';
-                                if (style.borderStyle === 'none') {
-                                    for (const border of ['borderTop', 'borderRight', 'borderBottom', 'borderLeft']) {
-                                        styleMap[`${border}Style`] = 'solid';
-                                        styleMap[`${border}Color`] = '#DDDDDD';
-                                        styleMap[`${border}Width`] = '2px';
+                            styleMap.listStyleImage = style.getPropertyValue('list-style-image');
+                        }
+                        break;
+                    case 'IFRAME':
+                        if (styleMap.display === undefined) {
+                            styleMap.display = 'block';
+                        }
+                    case 'IMG':
+                        const setDimension = (attr, opposing) => {
+                            if (styleMap[attr] === undefined || styleMap[attr] === 'auto') {
+                                const match = new RegExp(`\\s+${attr}="([^"]+)"`).exec(element.outerHTML);
+                                if (match) {
+                                    styleMap[attr] = $util$4.formatPX($util$4.isPercent(match[1]) ? parseFloat(match[1]) / 100 * (element.parentElement || element).getBoundingClientRect()[attr] : match[1]);
+                                }
+                                else if (element.tagName === 'IFRAME') {
+                                    if (attr === 'width') {
+                                        styleMap.width = '300px';
+                                    }
+                                    else {
+                                        styleMap.height = '150px';
+                                    }
+                                }
+                                else if (!(styleMap.maxWidth && $util$4.isPercent(styleMap.maxWidth) || styleMap.maxHeight && $util$4.isPercent(styleMap.maxHeight)) && (styleMap[opposing] === undefined || $util$4.isLength(styleMap[opposing]))) {
+                                    const image = this.application.session.image.get(element.src);
+                                    if (image && image.width > 0 && image.height > 0) {
+                                        styleMap[attr] = $util$4.formatPX(image[attr] * (styleMap[opposing] && $util$4.isLength(styleMap[opposing]) ? (parseFloat(styleMap[opposing]) / image[opposing]) : 1));
                                     }
                                 }
                             }
-                            break;
-                        }
-                    }
-                    break;
-                case 'FORM':
-                    if (styleMap.marginTop === undefined) {
-                        styleMap.marginTop = '0px';
-                    }
-                    break;
-                case 'IFRAME':
-                    if (styleMap.display === undefined) {
-                        styleMap.display = 'block';
-                    }
-                case 'IMG':
-                    const setDimension = (attr, opposing) => {
-                        if (styleMap[attr] === undefined || styleMap[attr] === 'auto') {
-                            const match = new RegExp(`\\s+${attr}="([^"]+)"`).exec(element.outerHTML);
-                            if (match) {
-                                styleMap[attr] = $util$4.formatPX($util$4.isPercent(match[1]) ? parseFloat(match[1]) / 100 * (element.parentElement || element).getBoundingClientRect()[attr] : match[1]);
-                            }
-                            else if (element.tagName === 'IFRAME') {
-                                if (attr === 'width') {
-                                    styleMap.width = '300px';
-                                }
-                                else {
-                                    styleMap.height = '150px';
-                                }
-                            }
-                            else if (styleMap[opposing] === undefined || styleMap[opposing] !== 'auto' && !$util$4.isPercent(styleMap[opposing])) {
-                                const image = this.application.session.image.get(element.src);
-                                if (image && image.width > 0 && image.height > 0) {
-                                    styleMap[attr] = $util$4.formatPX(image[attr] * (styleMap[opposing] && $util$4.isLength(styleMap[opposing]) ? (parseFloat(styleMap[opposing]) / image[opposing]) : 1));
-                                }
-                            }
-                        }
-                    };
-                    setDimension('width', 'height');
-                    setDimension('height', 'width');
-                    break;
+                        };
+                        setDimension('width', 'height');
+                        setDimension('height', 'width');
+                        break;
+                }
             }
-            $dom$1.setElementCache(element, 'styleMap', styleMap);
+            $session$2.setElementCache(element, 'styleMap', this.application.processing.sessionId, styleMap);
         }
         addBeforeOutsideTemplate(id, value, index = -1) {
             if (this._beforeOutside[id] === undefined) {
@@ -3118,13 +3510,15 @@
                     switch (item.type) {
                         case 1 /* XML */: {
                             const { controlName, attributes } = item;
-                            let template = indent + `<${controlName + (depth === 0 ? '{#0} ' : '') + (this.userSettings.showAttributes ? (attributes ? $xml.pushIndent(attributes, depth + 1) : node.extractAttributes(depth + 1)) : '')}`;
-                            if (node.renderTemplates) {
-                                const renderDepth = depth + 1;
+                            const renderDepth = depth + 1;
+                            const beforeInside = this.getBeforeInsideTemplate(node.id, renderDepth);
+                            const afterInside = this.getAfterInsideTemplate(node.id, renderDepth);
+                            let template = indent + `<${controlName + (depth === 0 ? '{#0} ' : '') + (this.userSettings.showAttributes ? (attributes ? $xml.pushIndent(attributes, renderDepth) : node.extractAttributes(renderDepth)) : '')}`;
+                            if (node.renderTemplates || beforeInside !== '' || afterInside !== '') {
                                 template += '>\n' +
-                                    this.getBeforeInsideTemplate(node.id, renderDepth) +
-                                    this.cascadeDocument(this.sortRenderPosition(node, node.renderTemplates), renderDepth) +
-                                    this.getAfterInsideTemplate(node.id, renderDepth) +
+                                    beforeInside +
+                                    (node.renderTemplates ? this.cascadeDocument(this.sortRenderPosition(node, node.renderTemplates), renderDepth) : '') +
+                                    afterInside +
                                     indent + `</${controlName}>\n`;
                             }
                             else {
@@ -3154,6 +3548,9 @@
                     return '<' + controlName + (attributes || '') + (content ? '>\n' + content + '</' + controlName + '>\n' : ' />\n');
             }
             return '';
+        }
+        get generateSessionId() {
+            return new Date().getTime().toString();
         }
     }
 
@@ -3252,9 +3649,10 @@
         afterResources() { }
         afterParseDocument() { }
         beforeCascadeDocument() { }
+        beforeFinalize() { }
         afterFinalize() { }
         get installed() {
-            return this.application.extensions ? this.application.extensions.has(this) : false;
+            return !!this.application && this.application.extensions.includes(this);
         }
     }
 
@@ -3275,14 +3673,22 @@
             else {
                 if ((ext.framework === 0 || $util$6.hasBit(ext.framework, this.application.framework)) && ext.dependencies.every(item => !!this.retrieve(item.name))) {
                     ext.application = this.application;
-                    this.application.extensions.add(ext);
+                    if (!this.application.extensions.includes(ext)) {
+                        this.application.extensions.push(ext);
+                    }
                     return true;
                 }
             }
             return false;
         }
         exclude(ext) {
-            return this.application.extensions.delete(ext);
+            for (let i = 0; i < this.application.extensions.length; i++) {
+                if (this.application.extensions[i] === ext) {
+                    this.application.extensions.splice(i, 1);
+                    return true;
+                }
+            }
+            return false;
         }
         retrieve(name) {
             for (const ext of this.application.extensions) {
@@ -3332,8 +3738,8 @@
             const blob = new Blob([data], { type: mime || 'application/octet-stream' });
             const url = window.URL.createObjectURL(blob);
             const element = document.createElement('a');
-            element.style.display = 'none';
-            element.href = url;
+            element.style.setProperty('display', 'none');
+            element.setAttribute('href', url);
             element.setAttribute('download', filename);
             if (typeof element.download === 'undefined') {
                 element.setAttribute('target', '_blank');
@@ -3435,15 +3841,16 @@
     });
 
     const $css$4 = squared.lib.css;
-    const $dom$2 = squared.lib.dom;
-    const $element$2 = squared.lib.element;
+    const $dom$1 = squared.lib.dom;
+    const $session$3 = squared.lib.session;
     const $util$8 = squared.lib.util;
     const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'cssFloat', 'clear', 'zIndex'];
     const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
     class Node extends squared.lib.base.Container {
-        constructor(id, element) {
+        constructor(id, sessionId = '0', element) {
             super();
             this.id = id;
+            this.sessionId = sessionId;
             this.alignmentType = 0;
             this.depth = -1;
             this.siblingIndex = Number.POSITIVE_INFINITY;
@@ -3455,7 +3862,6 @@
             this.positioned = false;
             this.controlId = '';
             this._cached = {};
-            this._styleMap = {};
             this._initial = {
                 iteration: -1,
                 children: [],
@@ -3465,6 +3871,7 @@
             this._excludeSection = 0;
             this._excludeProcedure = 0;
             this._excludeResource = 0;
+            this._inlineText = false;
             this._element = null;
             if (element) {
                 this._element = element;
@@ -3472,37 +3879,40 @@
             }
             else {
                 this.style = {};
+                this._styleMap = {};
             }
         }
         init() {
             const element = this._element;
             if (element) {
-                $dom$2.setElementCache(element, 'node', this);
-                this.style = $dom$2.getElementCache(element, 'style') || $css$4.getStyle(element, false);
-            }
-            if (this.styleElement) {
-                const styleMap = $dom$2.getElementCache(element, 'styleMap') || {};
-                const fontSize = parseInt(this.style.fontSize) || undefined;
-                for (let attr of Array.from(element.style)) {
-                    attr = $util$8.convertCamelCase(attr);
-                    const value = $css$4.checkStyleValue(element, attr, element.style[attr], this.style, fontSize);
-                    if (value) {
-                        styleMap[attr] = value;
+                if (this.sessionId !== '0') {
+                    $session$3.setElementCache(element, 'node', this.sessionId, this);
+                }
+                this._styleMap = Object.assign({}, $session$3.getElementCache(element, 'styleMap', this.sessionId));
+                if (this.styleElement && !this.pseudoElement && this.sessionId !== '0') {
+                    const fontSize = parseFloat(element.style.getPropertyValue('font-size'));
+                    for (let attr of Array.from(element.style)) {
+                        let value = element.style.getPropertyValue(attr);
+                        attr = $util$8.convertCamelCase(attr);
+                        value = $css$4.checkStyleValue(element, attr, value, fontSize);
+                        if (value) {
+                            this._styleMap[attr] = value;
+                        }
                     }
                 }
-                this._styleMap = Object.assign({}, styleMap);
+                this.style = $session$3.getElementCache(element, 'style', '0') || $css$4.getStyle(element, undefined, false);
             }
         }
-        saveAsInitial() {
-            if (this._initial.iteration === -1) {
+        saveAsInitial(overwrite = false) {
+            if (this._initial.iteration === -1 || overwrite) {
                 this._initial.children = this.duplicate();
                 this._initial.styleMap = Object.assign({}, this._styleMap);
                 this._initial.documentParent = this._documentParent;
             }
             if (this._bounds) {
-                this._initial.bounds = $dom$2.assignRect(this._bounds);
-                this._initial.linear = $dom$2.assignRect(this.linear);
-                this._initial.box = $dom$2.assignRect(this.box);
+                this._initial.bounds = $dom$1.assignRect(this._bounds);
+                this._initial.linear = $dom$1.assignRect(this.linear);
+                this._initial.box = $dom$1.assignRect(this.box);
             }
             this._initial.iteration++;
         }
@@ -3603,10 +4013,12 @@
                             this._cached = {};
                             return;
                         case 'width':
+                            this._cached.actualWidth = undefined;
                         case 'minWidth':
                             this._cached.hasWidth = undefined;
                             break;
                         case 'height':
+                            this._cached.actualHeight = undefined;
                         case 'minHeight':
                             this._cached.hasHeight = undefined;
                             break;
@@ -3674,9 +4086,9 @@
                         break;
                     case 'base':
                         this._documentParent = node.documentParent;
-                        this._bounds = $dom$2.assignRect(node.bounds);
-                        this._linear = $dom$2.assignRect(node.linear);
-                        this._box = $dom$2.assignRect(node.box);
+                        this._bounds = $dom$1.assignRect(node.bounds);
+                        this._linear = $dom$1.assignRect(node.linear);
+                        this._box = $dom$1.assignRect(node.box);
                         const actualParent = node.actualParent;
                         if (actualParent) {
                             this.css('direction', actualParent.dir);
@@ -3738,7 +4150,7 @@
                     if (previous.blockStatic ||
                         this.blockStatic && (!previous.inlineFlow || !!cleared && cleared.has(previous)) ||
                         cleared && cleared.get(previous) === 'both' && (!$util$8.isArray(siblings) || siblings[0] !== previous) ||
-                        !previous.floating && (this.blockStatic || !this.floating && !this.inlineFlow || siblings && this.display === 'inline-block' && this.linear.top >= Math.floor(siblings[siblings.length - 1].linear.bottom)) ||
+                        !previous.floating && (this.blockStatic || !this.floating && !this.inlineFlow || $util$8.isArray(siblings) && this.display === 'inline-block' && this.linear.top >= Math.floor(siblings[siblings.length - 1].linear.bottom)) ||
                         previous.bounds.width > (actualParent.has('width', 2 /* LENGTH */) ? actualParent.width : actualParent.box.width) && (!previous.textElement || previous.textElement && previous.css('whiteSpace') === 'nowrap') ||
                         previous.lineBreak ||
                         previous.autoMargin.leftRight ||
@@ -3787,7 +4199,7 @@
                     this.unsetCache(attr);
                 }
             }
-            return this._styleMap[attr] || this.style && this.style[attr] || '';
+            return this._styleMap[attr] || this.style[attr] || '';
         }
         cssApply(values, cache = false) {
             Object.assign(this._styleMap, values);
@@ -3803,7 +4215,7 @@
                 computed = true;
             }
             let value = modified ? this._styleMap[attr] : this._initial.styleMap[attr];
-            if (computed && !$util$8.hasValue(value)) {
+            if (computed && !value) {
                 value = this.style[attr];
             }
             return value || '';
@@ -3880,10 +4292,13 @@
         cssTry(attr, value) {
             if (this.styleElement) {
                 const element = this._element;
-                const current = this.css(attr);
+                let current = this.css(attr);
+                if (value === current) {
+                    current = element.style[attr];
+                }
                 element.style[attr] = value;
                 if (element.style[attr] === value) {
-                    $dom$2.setElementCache(element, attr, current);
+                    $session$3.setElementCache(element, attr, this.sessionId, current);
                     return true;
                 }
             }
@@ -3892,10 +4307,10 @@
         cssFinally(attr) {
             if (this.styleElement) {
                 const element = this._element;
-                const value = $dom$2.getElementCache(element, attr);
+                const value = $session$3.getElementCache(element, attr, this.sessionId);
                 if (value) {
                     element.style[attr] = value;
-                    $dom$2.deleteElementCache(element, attr);
+                    $session$3.deleteElementCache(element, attr, this.sessionId);
                     return true;
                 }
             }
@@ -4038,7 +4453,7 @@
         }
         setBounds() {
             if (this.styleElement) {
-                this._bounds = $dom$2.assignRect(this._element.getBoundingClientRect());
+                this._bounds = $dom$1.assignRect(this._element.getBoundingClientRect());
                 if (this.documentBody) {
                     let marginTop = this.marginTop;
                     if (marginTop > 0) {
@@ -4051,9 +4466,29 @@
                 }
             }
             else if (this.plainText) {
-                const rangeRect = $dom$2.getRangeClientRect(this._element);
-                this._bounds = $dom$2.assignRect(rangeRect);
+                const rangeRect = $dom$1.getRangeClientRect(this._element);
+                this._bounds = $dom$1.assignRect(rangeRect);
                 this._cached.multiline = rangeRect.multiline > 0;
+            }
+        }
+        setInlineText(value, overwrite = false) {
+            if (overwrite) {
+                this._inlineText = value;
+            }
+            else {
+                if (this.htmlElement && !this.svgElement) {
+                    const element = this._element;
+                    switch (element.tagName) {
+                        case 'INPUT':
+                        case 'IMG':
+                        case 'SELECT':
+                        case 'TEXTAREA':
+                        case 'HR':
+                            break;
+                        default:
+                            this._inlineText = value;
+                    }
+                }
             }
         }
         appendTry(node, replacement, append = true) {
@@ -4137,7 +4572,7 @@
                 applyReset($css$4.BOX_PADDING, 4);
             }
         }
-        previousSiblings(lineBreak = true, excluded = true, height = false) {
+        previousSiblings(lineBreak = true, excluded = true, height = false, pageFlow = true) {
             const result = [];
             let element = null;
             if (this._element) {
@@ -4148,14 +4583,17 @@
                 element = children.length && children[0].element ? children[0].element.previousSibling : null;
             }
             while (element) {
-                const node = $dom$2.getElementAsNode(element);
-                if (node) {
+                const node = $session$3.getElementAsNode(element, this.sessionId);
+                if (node && node.naturalElement && !node.pseudoElement) {
                     if (lineBreak && node.lineBreak || excluded && node.excluded) {
                         result.push(node);
                     }
                     else if (!node.excluded && node.pageFlow) {
+                        if (!pageFlow) {
+                            break;
+                        }
                         result.push(node);
-                        if (!height || (node.visible || node.rendered) && !node.floating) {
+                        if (!height || !node.floating && (node.visible || node.rendered)) {
                             break;
                         }
                     }
@@ -4164,7 +4602,7 @@
             }
             return result;
         }
-        nextSiblings(lineBreak = true, excluded = true, visible = false) {
+        nextSiblings(lineBreak = true, excluded = true, height = false, pageFlow = true) {
             const result = [];
             let element = null;
             if (this._element) {
@@ -4178,26 +4616,46 @@
                 }
             }
             while (element) {
-                const node = $dom$2.getElementAsNode(element);
-                if (node) {
-                    if (node.naturalElement) {
-                        if (lineBreak && node.lineBreak || excluded && node.excluded) {
-                            result.push(node);
-                        }
-                        else if (!node.excluded && node.pageFlow) {
-                            result.push(node);
-                            if (!visible || (node.visible || node.rendered) && !node.floating) {
-                                break;
-                            }
-                        }
+                const node = $session$3.getElementAsNode(element, this.sessionId);
+                if (node && node.naturalElement && !node.pseudoElement) {
+                    if (lineBreak && node.lineBreak || excluded && node.excluded) {
+                        result.push(node);
                     }
-                    else {
-                        break;
+                    else if (!node.excluded && node.pageFlow) {
+                        if (!pageFlow) {
+                            break;
+                        }
+                        result.push(node);
+                        if (!height || !node.floating && (node.visible || node.rendered)) {
+                            break;
+                        }
                     }
                 }
                 element = element.nextSibling;
             }
             return result;
+        }
+        getFirstChildElement(lineBreak = false, excluded = false) {
+            if (this.htmlElement) {
+                for (const node of this.actualChildren) {
+                    if (!node.pseudoElement && (!node.excluded || lineBreak && node.lineBreak || excluded && node.excluded)) {
+                        return node.element;
+                    }
+                }
+            }
+            return null;
+        }
+        getLastChildElement(lineBreak = false, excluded = false) {
+            if (this.htmlElement) {
+                const children = this.actualChildren;
+                for (let i = children.length - 1; i >= 0; i--) {
+                    const node = children[i];
+                    if (!node.pseudoElement && (!node.excluded || lineBreak && node.lineBreak || excluded && node.excluded)) {
+                        return node.element;
+                    }
+                }
+            }
+            return null;
         }
         actualRight(dimension = 'linear') {
             const node = this.companion && !this.companion.visible && this.companion[dimension].right > this[dimension].right ? this.companion : this;
@@ -4219,9 +4677,15 @@
                     }
                 }
                 if (this._initial[dimension] === undefined) {
-                    this._initial[dimension] = $dom$2.assignRect(bounds);
+                    this._initial[dimension] = $dom$1.assignRect(bounds);
                 }
             }
+        }
+        getDimension(value, horizontal = true) {
+            if ($util$8.isLength(value) || $util$8.isPercent(value)) {
+                return this.parseUnit(value, horizontal);
+            }
+            return 0;
         }
         convertPosition(attr) {
             let value = 0;
@@ -4310,9 +4774,15 @@
         }
         get naturalElement() {
             if (this._cached.naturalElement === undefined) {
-                this._cached.naturalElement = this._element !== null && this._element.className !== '__css.placeholder';
+                this._cached.naturalElement = this._element !== null && this._element.className !== '__squared.placeholder';
             }
             return this._cached.naturalElement;
+        }
+        get pseudoElement() {
+            if (this._cached.pseudoElement === undefined) {
+                this._cached.pseudoElement = this._element !== null && this._element.className === '__squared.pseudo';
+            }
+            return this._cached.pseudoElement;
         }
         get imageElement() {
             return this.tagName === 'IMG';
@@ -4345,7 +4815,7 @@
             return this._element === document.body;
         }
         get bounds() {
-            return this._bounds || $dom$2.newRectDimension();
+            return this._bounds || $dom$1.newRectDimension();
         }
         get linear() {
             if (this._linear === undefined && this._bounds) {
@@ -4361,11 +4831,11 @@
                     };
                 }
                 else {
-                    this._linear = $dom$2.assignRect(this._bounds);
+                    this._linear = $dom$1.assignRect(this._bounds);
                 }
                 this.setDimensions('linear');
             }
-            return this._linear || $dom$2.newRectDimension();
+            return this._linear || $dom$1.newRectDimension();
         }
         get box() {
             if (this._box === undefined && this._bounds) {
@@ -4381,11 +4851,11 @@
                     };
                 }
                 else {
-                    this._box = $dom$2.assignRect(this._bounds);
+                    this._box = $dom$1.assignRect(this._bounds);
                 }
                 this.setDimensions('box');
             }
-            return this._box || $dom$2.newRectDimension();
+            return this._box || $dom$1.newRectDimension();
         }
         set renderAs(value) {
             if (!this.rendered && value && !value.rendered) {
@@ -4413,49 +4883,44 @@
             }
             return this._cached.extensions;
         }
+        set flexbox(value) {
+            this._cached.flexbox = value;
+        }
         get flexbox() {
             if (this._cached.flexbox === undefined) {
                 const actualParent = this.actualParent;
+                const getFlexValue = (attr, initialValue, parent) => {
+                    const value = (parent || this).css(attr);
+                    if ($util$8.isNumber(value)) {
+                        return parseFloat(value);
+                    }
+                    else if (value === 'inherit' && actualParent && parent === undefined) {
+                        return getFlexValue(attr, initialValue, actualParent);
+                    }
+                    return initialValue;
+                };
+                const alignSelf = this.css('alignSelf');
+                const justifySelf = this.css('justifySelf');
                 this._cached.flexbox = {
-                    wrap: this.css('flexWrap'),
-                    direction: this.css('flexDirection'),
-                    alignSelf: !this.has('alignSelf') && actualParent && actualParent.has('alignItems') ? actualParent.css('alignItems') : this.css('alignSelf'),
-                    justifyContent: this.css('justifyContent'),
+                    alignSelf: alignSelf === 'auto' && actualParent && actualParent.has('alignItems') ? actualParent.css('alignItems') : alignSelf,
+                    justifySelf: justifySelf === 'auto' && actualParent && actualParent.has('justifyItems') ? actualParent.css('justifyItems') : justifySelf,
                     basis: this.css('flexBasis'),
-                    order: this.toInt('order'),
-                    grow: this.toInt('flexGrow'),
-                    shrink: this.toInt('flexShrink')
+                    grow: getFlexValue('flexGrow', 0),
+                    shrink: getFlexValue('flexShrink', 1),
+                    order: this.toInt('order')
                 };
             }
             return this._cached.flexbox;
         }
         get width() {
             if (this._cached.width === undefined) {
-                let width = 0;
-                for (const value of [this._styleMap.width, this._styleMap.minWidth]) {
-                    if ($util$8.isLength(value) || $util$8.isPercent(value)) {
-                        width = this.parseUnit(value);
-                        if (width > 0) {
-                            break;
-                        }
-                    }
-                }
-                this._cached.width = width;
+                this._cached.width = this.getDimension(this._styleMap.width) || this.getDimension(this._styleMap.minWidth);
             }
             return this._cached.width;
         }
         get height() {
             if (this._cached.height === undefined) {
-                let height = 0;
-                for (const value of [this._styleMap.height, this._styleMap.minHeight]) {
-                    if ($util$8.isLength(value) || this.hasHeight && $util$8.isPercent(value)) {
-                        height = this.parseUnit(value, false);
-                        if (height > 0) {
-                            break;
-                        }
-                    }
-                }
-                this._cached.height = height;
+                this._cached.height = this.getDimension(this._styleMap.height, false) || this.getDimension(this._styleMap.minHeight, false);
             }
             return this._cached.height;
         }
@@ -4527,7 +4992,7 @@
                         this._cached.positionStatic = this.toInt('top') === 0 && this.toInt('right') === 0 && this.toInt('bottom') === 0 && this.toInt('left') === 0;
                         break;
                     case 'inherit':
-                        const position = this._element ? $css$4.getParentAttribute(this._element.parentElement, 'position') : '';
+                        const position = this._element ? $css$4.getInheritedStyle(this._element.parentElement, 'position') : '';
                         this._cached.positionStatic = position !== '' && !(position === 'absolute' || position === 'fixed');
                         break;
                     default:
@@ -4593,7 +5058,7 @@
         }
         get marginBottom() {
             if (this._cached.marginBottom === undefined) {
-                this._cached.marginBottom = this.inlineStatic && !this.baselineActive ? 0 : this.convertBox('margin', 'Bottom');
+                this._cached.marginBottom = this.inlineStatic && !this.baselineActive || this.bounds.height === 0 && this.every(node => !node.pageFlow || node.floating && node.css('clear') === 'none') && this.css('overflow') !== 'hidden' ? 0 : this.convertBox('margin', 'Bottom');
             }
             return this._cached.marginBottom;
         }
@@ -4672,15 +5137,21 @@
             return this._cached.paddingLeft;
         }
         get contentBoxWidth() {
-            return this.tableElement && this.css('borderCollapse') === 'collapse' ? 0 : this.borderLeftWidth + this.paddingLeft + this.paddingRight + this.borderRightWidth;
+            if (this._cached.contentBoxWidth === undefined) {
+                this._cached.contentBoxWidth = this.tableElement && this.css('borderCollapse') === 'collapse' ? 0 : this.borderLeftWidth + this.paddingLeft + this.paddingRight + this.borderRightWidth;
+            }
+            return this._cached.contentBoxWidth;
         }
         get contentBoxHeight() {
-            return this.tableElement && this.css('borderCollapse') === 'collapse' ? 0 : this.borderTopWidth + this.paddingTop + this.paddingBottom + this.borderBottomWidth;
+            if (this._cached.contentBoxHeight === undefined) {
+                this._cached.contentBoxHeight = this.tableElement && this.css('borderCollapse') === 'collapse' ? 0 : this.borderTopWidth + this.paddingTop + this.paddingBottom + this.borderBottomWidth;
+            }
+            return this._cached.contentBoxHeight;
         }
         get inline() {
             if (this._cached.inline === undefined) {
                 const value = this.display;
-                this._cached.inline = value === 'inline' || (value === 'initial' || value === 'unset') && $element$2.ELEMENT_INLINE.includes(this.tagName);
+                this._cached.inline = value === 'inline' || (value === 'initial' || value === 'unset') && $dom$1.ELEMENT_INLINE.includes(this.tagName);
             }
             return this._cached.inline;
         }
@@ -4697,47 +5168,13 @@
             }
             return this._cached.inlineVertical;
         }
-        set inlineText(value) {
-            this._cached.inlineText = value;
-        }
         get inlineText() {
-            if (this._cached.inlineText === undefined) {
-                let value = false;
-                if (this.htmlElement && !this.svgElement) {
-                    const element = this._element;
-                    switch (element.tagName) {
-                        case 'INPUT':
-                        case 'BUTTON':
-                        case 'IMG':
-                        case 'SELECT':
-                        case 'TEXTAREA':
-                        case 'HR':
-                            break;
-                        default:
-                            if ($element$2.hasFreeFormText(element)) {
-                                value = true;
-                                for (let i = 0; i < element.children.length; i++) {
-                                    const node = $dom$2.getElementAsNode(element.children[i]);
-                                    if (!(node === undefined || node.excluded || node.dataset.target)) {
-                                        value = false;
-                                        break;
-                                    }
-                                }
-                            }
-                            else if (element.children.length === 0 && !element.textContent) {
-                                value = true;
-                            }
-                            break;
-                    }
-                }
-                this._cached.inlineText = value;
-            }
-            return this._cached.inlineText;
+            return this._inlineText;
         }
         get block() {
             if (this._cached.block === undefined) {
                 const value = this.display;
-                this._cached.block = value === 'block' || value === 'list-item' || value === 'initial' && $element$2.ELEMENT_BLOCK.includes(this.tagName);
+                this._cached.block = value === 'block' || value === 'list-item' || value === 'initial' && $dom$1.ELEMENT_BLOCK.includes(this.tagName);
             }
             return this._cached.block;
         }
@@ -4836,17 +5273,18 @@
         }
         get textContent() {
             if (this._cached.textContent === undefined) {
-                const element = this._element;
-                let value = '';
-                if (this.htmlElement) {
-                    value = element.textContent || element.innerText;
-                }
-                else if (this.plainText) {
-                    value = element.textContent || '';
-                }
-                this._cached.textContent = value;
+                this._cached.textContent = (this.htmlElement || this.plainText) && this._element.textContent || '';
             }
             return this._cached.textContent;
+        }
+        get src() {
+            const element = this._element;
+            if (element) {
+                if (this.imageElement || element.type === 'image') {
+                    return element.src;
+                }
+            }
+            return '';
         }
         set overflow(value) {
             if (value === 0 || value === 16 /* VERTICAL */ || value === 8 /* HORIZONTAL */ || value === (8 /* HORIZONTAL */ | 16 /* VERTICAL */)) {
@@ -4895,7 +5333,7 @@
         }
         get multiline() {
             if (this._cached.multiline === undefined) {
-                this._cached.multiline = this.plainText || this.inlineText && (this.inlineFlow || this.length === 0) ? $dom$2.getRangeClientRect(this._element).multiline > 0 : false;
+                this._cached.multiline = this.plainText || this.inlineText && (this.inlineFlow || this.length === 0) ? $dom$1.getRangeClientRect(this._element).multiline > 0 : false;
             }
             return this._cached.multiline;
         }
@@ -4963,7 +5401,7 @@
             return current;
         }
         get actualParent() {
-            return this._element && this._element.parentElement ? $dom$2.getElementAsNode(this._element.parentElement) : undefined;
+            return this._element && this._element.parentElement ? $session$3.getElementAsNode(this._element.parentElement, this.sessionId) : undefined;
         }
         set actualChildren(value) {
             this._cached.actualChildren = value;
@@ -4973,7 +5411,7 @@
                 if (this.htmlElement && this.naturalElement) {
                     const actualChildren = [];
                     this._element.childNodes.forEach((element) => {
-                        const node = $dom$2.getElementAsNode(element);
+                        const node = $session$3.getElementAsNode(element, this.sessionId);
                         if (node && node.naturalElement) {
                             actualChildren.push(node);
                         }
@@ -4987,13 +5425,21 @@
             return this._cached.actualChildren;
         }
         get actualWidth() {
-            return this.has('width', 2 /* LENGTH */) && this.display !== 'table-cell' ? this.toFloat('width') : this.bounds.width;
+            if (this._cached.actualWidth === undefined) {
+                this._cached.actualWidth = this.has('width', 2 /* LENGTH */) && this.display !== 'table-cell' ? this.toFloat('width') : this.bounds.width;
+            }
+            return this._cached.actualWidth;
         }
         get actualHeight() {
-            if (this.has('height', 2 /* LENGTH */) && this.display !== 'table-cell') {
-                return this.toFloat('height');
+            if (this._cached.actualHeight === undefined) {
+                if (this.has('height', 2 /* LENGTH */) && this.display !== 'table-cell') {
+                    this._cached.actualHeight = this.toFloat('height');
+                }
+                else {
+                    this._cached.actualHeight = this.plainText ? this.bounds.bottom - this.bounds.top : this.bounds.height;
+                }
             }
-            return this.plainText ? this.bounds.bottom - this.bounds.top : this.bounds.height;
+            return this._cached.actualHeight;
         }
         get actualDimension() {
             return { width: this.actualWidth, height: this.actualHeight };
@@ -5013,6 +5459,32 @@
             }
             else if (this.length) {
                 return this.nodes[this.nodes.length - 1];
+            }
+            return undefined;
+        }
+        get previousSibling() {
+            if (this.naturalElement && !this.pseudoElement) {
+                let element = this._element.previousSibling;
+                while (element) {
+                    const node = $session$3.getElementAsNode(element, this.sessionId);
+                    if (node && node.naturalElement && !node.pseudoElement && (!node.excluded || node.lineBreak)) {
+                        return node;
+                    }
+                    element = element.previousSibling;
+                }
+            }
+            return undefined;
+        }
+        get nextSibling() {
+            if (this.naturalElement && !this.pseudoElement) {
+                let element = this._element.nextSibling;
+                while (element) {
+                    const node = $session$3.getElementAsNode(element, this.sessionId);
+                    if (node && node.naturalElement && !node.pseudoElement && (!node.excluded || node.lineBreak)) {
+                        return node;
+                    }
+                    element = element.nextSibling;
+                }
             }
             return undefined;
         }
@@ -5076,13 +5548,13 @@
                 this._bounds = Object.assign({}, bounds, { width: bounds.right - bounds.left, height: bounds.bottom - bounds.top });
             }
         }
-        previousSiblings(lineBreak = true, excluded = true, height = false) {
+        previousSiblings(lineBreak = true, excluded = true, height = false, pageFlow = true) {
             const node = this.item(0);
-            return node ? node.previousSiblings(lineBreak, excluded, height) : [];
+            return node ? node.previousSiblings(lineBreak, excluded, height, pageFlow) : [];
         }
-        nextSiblings(lineBreak = true, excluded = true, height = false) {
+        nextSiblings(lineBreak = true, excluded = true, height = false, pageFlow = true) {
             const node = this.item();
-            return node ? node.nextSiblings(lineBreak, excluded, height) : [];
+            return node ? node.nextSiblings(lineBreak, excluded, height, pageFlow) : [];
         }
         get actualParent() {
             return NodeList.actualParent(this._initial.children);
@@ -5138,7 +5610,7 @@
             return this.some(node => node.block);
         }
         get blockStatic() {
-            return this.some(node => node.blockStatic);
+            return this.layoutVertical && this.some(node => node.blockStatic) || this.documentParent.blockStatic && this.hasAlign(256 /* COLUMN */);
         }
         get blockDimension() {
             return this.some(node => node.blockDimension);
@@ -5168,7 +5640,6 @@
         }
     }
 
-    const $dom$3 = squared.lib.dom;
     const $util$9 = squared.lib.util;
     class Accessibility extends Extension {
         afterInit() {
@@ -5183,27 +5654,25 @@
                                     break;
                                 case 'radio':
                                 case 'checkbox':
-                                    [$dom$3.getNextElementSibling(element), $dom$3.getPreviousElementSibling(element)].some((sibling) => {
-                                        if (sibling) {
-                                            const label = $dom$3.getElementAsNode(sibling);
-                                            const labelParent = sibling.parentElement && sibling.parentElement.tagName === 'LABEL' ? $dom$3.getElementAsNode(sibling.parentElement) : undefined;
-                                            if (label && label.visible && label.pageFlow) {
-                                                if ($util$9.hasValue(sibling.htmlFor) && sibling.htmlFor === element.id) {
-                                                    node.companion = label;
+                                    [node.nextSibling, node.previousSibling].some(sibling => {
+                                        if (sibling && sibling.visible && sibling.pageFlow) {
+                                            const labelElement = sibling.element;
+                                            const labelParent = sibling.documentParent.tagName === 'LABEL' ? sibling.documentParent : undefined;
+                                            if ($util$9.hasValue(labelElement.htmlFor) && labelElement.htmlFor === element.id) {
+                                                node.companion = sibling;
+                                            }
+                                            else if (sibling.textElement && labelParent) {
+                                                node.companion = sibling;
+                                                labelParent.renderAs = node;
+                                            }
+                                            else if (sibling.plainText) {
+                                                node.companion = sibling;
+                                            }
+                                            if (node.companion) {
+                                                if (!this.options.showLabel) {
+                                                    sibling.hide();
                                                 }
-                                                else if (label.textElement && labelParent) {
-                                                    node.companion = label;
-                                                    labelParent.renderAs = node;
-                                                }
-                                                else if (label.plainText) {
-                                                    node.companion = label;
-                                                }
-                                                if (node.companion) {
-                                                    if (!this.options.showLabel) {
-                                                        label.hide();
-                                                    }
-                                                    return true;
-                                                }
+                                                return true;
                                             }
                                         }
                                         return false;
@@ -5265,9 +5734,6 @@
         }
         return result;
     }
-    function convertLength(node, value) {
-        return $util$a.isLength(value) ? node.convertPX(value) : value;
-    }
     function getColumnTotal(rows) {
         let value = 0;
         for (const row of rows) {
@@ -5277,6 +5743,7 @@
         }
         return value;
     }
+    const convertLength = (node, value) => $util$a.isLength(value) ? node.convertPX(value) : value;
     class CssGrid extends Extension {
         static createDataAttribute() {
             return {
@@ -5298,6 +5765,7 @@
                 gap: 0,
                 unit: [],
                 unitMin: [],
+                unitTotal: [],
                 repeat: [],
                 auto: [],
                 autoFill: false,
@@ -5786,28 +6254,37 @@
                     }
                 }
             });
-            if (horizontal) {
-                mainData.rowData = rowData;
-            }
-            else {
-                for (let i = 0; i < rowData.length; i++) {
-                    for (let j = 0; j < rowData[i].length; j++) {
-                        if (mainData.rowData[j] === undefined) {
-                            mainData.rowData[j] = [];
+            if (rowData.length) {
+                if (horizontal) {
+                    mainData.rowData = rowData;
+                }
+                else {
+                    for (let i = 0; i < rowData.length; i++) {
+                        for (let j = 0; j < rowData[i].length; j++) {
+                            if (mainData.rowData[j] === undefined) {
+                                mainData.rowData[j] = [];
+                            }
+                            mainData.rowData[j][i] = rowData[i][j];
                         }
-                        mainData.rowData[j][i] = rowData[i][j];
                     }
                 }
-            }
-            if (mainData.rowData.length) {
+                const unitTotal = mainData[horizontal ? 'row' : 'column'].unitTotal;
                 for (const row of mainData.rowData) {
                     mainData.column.count = Math.max(row.length, mainData.column.count);
-                    for (const column of row) {
+                    for (let i = 0; i < row.length; i++) {
+                        const column = row[i];
+                        if (unitTotal[i] === undefined) {
+                            unitTotal[i] = 0;
+                        }
                         if (column) {
-                            for (const item of column) {
+                            let maxDimension = 0;
+                            for (let j = 0; j < column.length; j++) {
+                                const item = column[j];
                                 item.positioned = true;
                                 mainData.children.add(item);
+                                maxDimension = Math.max(maxDimension, horizontal ? item.bounds.height : item.bounds.width);
                             }
+                            unitTotal[i] += maxDimension;
                         }
                     }
                 }
@@ -5847,15 +6324,17 @@
     const $util$b = squared.lib.util;
     class Flexbox extends Extension {
         static createDataAttribute(node, children) {
-            const flex = node.flexbox;
+            const wrap = node.css('flexWrap');
+            const direction = node.css('flexDirection');
             return {
-                wrap: flex.wrap.startsWith('wrap'),
-                wrapReverse: flex.wrap === 'wrap-reverse',
-                directionReverse: flex.direction.endsWith('reverse'),
-                justifyContent: flex.justifyContent,
-                rowDirection: flex.direction.startsWith('row'),
+                wrap: wrap.startsWith('wrap'),
+                wrapReverse: wrap === 'wrap-reverse',
+                directionReverse: direction.endsWith('reverse'),
+                alignContent: node.css('alignContent'),
+                justifyContent: node.css('justifyContent'),
+                rowDirection: direction.startsWith('row'),
                 rowCount: 0,
-                columnDirection: flex.direction.startsWith('column'),
+                columnDirection: direction.startsWith('column'),
                 columnCount: 0,
                 children
             };
@@ -5867,24 +6346,25 @@
             const controller = this.application.controllerHandler;
             const children = node.filter(item => item.pageFlow);
             const mainData = Flexbox.createDataAttribute(node, children);
-            if (node.cssTry('display', 'block')) {
-                for (const item of children) {
-                    if (item.element) {
-                        const bounds = item.element.getBoundingClientRect();
-                        const initial = item.unsafe('initial');
-                        Object.assign(initial.bounds, { width: bounds.width, height: bounds.height });
-                    }
+            for (const item of children) {
+                if (item.element && item.cssTry('alignSelf', 'start')) {
+                    const bounds = item.element.getBoundingClientRect();
+                    const initial = item.unsafe('initial');
+                    Object.assign(initial.bounds, { width: bounds.width, height: bounds.height });
+                    item.cssFinally('alignSelf');
                 }
-                node.cssFinally('display');
             }
             if (mainData.wrap) {
                 function setDirection(align, sort, size) {
                     const map = new Map();
                     children.sort((a, b) => {
                         if (!$util$b.withinRange(a.linear[align], b.linear[align])) {
-                            return a.linear[align] >= b.linear[align] ? 1 : -1;
+                            return a.linear[align] < b.linear[align] ? -1 : 1;
                         }
-                        return a.linear[sort] >= b.linear[sort] ? 1 : -1;
+                        else if (!$util$b.withinRange(a.linear[sort], b.linear[sort])) {
+                            return a.linear[sort] < b.linear[sort] ? -1 : 1;
+                        }
+                        return 0;
                     });
                     for (const item of children) {
                         const point = Math.round(item.linear[align]);
@@ -5946,41 +6426,40 @@
     }
 
     const $css$5 = squared.lib.css;
-    const $dom$4 = squared.lib.dom;
+    const $session$4 = squared.lib.session;
     class External extends Extension {
         beforeInit(element, internal = false) {
             if (internal || this.included(element)) {
-                if (!$dom$4.getElementCache(element, 'squaredExternalDisplay')) {
+                if (!$session$4.getElementCache(element, 'squaredExternalDisplay', this.application.processing.sessionId)) {
                     const display = [];
                     let current = element;
                     while (current) {
-                        display.push($css$5.getStyle(current).display);
-                        current.style.display = 'block';
+                        display.push($css$5.getStyle(current).getPropertyValue('display'));
+                        current.style.setProperty('display', 'block');
                         current = current.parentElement;
                     }
-                    $dom$4.setElementCache(element, 'squaredExternalDisplay', display);
+                    $session$4.setElementCache(element, 'squaredExternalDisplay', this.application.processing.sessionId, display);
                 }
             }
         }
         init(element) {
             if (this.included(element)) {
-                this.application.parseElements.add(element);
+                this.application.rootElements.add(element);
             }
             return false;
         }
         afterInit(element, internal = false) {
             if (internal || this.included(element)) {
-                const data = $dom$4.getElementCache(element, 'squaredExternalDisplay');
-                if (data) {
-                    const display = data;
+                const display = $session$4.getElementCache(element, 'squaredExternalDisplay', this.application.processing.sessionId);
+                if (Array.isArray(display)) {
                     let current = element;
                     let i = 0;
                     while (current) {
-                        current.style.display = display[i];
+                        current.style.setProperty('display', display[i]);
                         current = current.parentElement;
                         i++;
                     }
-                    $dom$4.deleteElementCache(element, 'squaredExternalDisplay');
+                    $session$4.deleteElementCache(element, 'squaredExternalDisplay', this.application.processing.sessionId);
                 }
             }
         }
@@ -6033,7 +6512,7 @@
                     let multipleLength = 0;
                     let listItemCount = 0;
                     for (const item of node) {
-                        if (item.pageFlow && !item.visibleStyle.background && item.blockStatic) {
+                        if (item.pageFlow && !item.visibleStyle.background && item.blockStatic && !item.autoMargin.leftRight && !item.autoMargin.left) {
                             if (item.length > 1) {
                                 multipleLength++;
                             }
@@ -6235,73 +6714,82 @@
                 columnEnd.push(node.box.right);
             }
             if (columns.length > 1 && columns[0].length === node.length) {
-                for (const item of node) {
-                    item.hide();
-                }
-                node.clear();
                 const mainData = Object.assign({}, Grid.createDataAttribute(), { columnCount: columnBalance ? columns[0].length : columns.length });
-                for (let l = 0, count = 0; l < columns.length; l++) {
+                const children = [];
+                for (let i = 0, count = 0; i < columns.length; i++) {
                     let spacer = 0;
-                    for (let m = 0, start = 0; m < columns[l].length; m++) {
-                        const item = columns[l][m];
+                    for (let j = 0, start = 0; j < columns[i].length; j++) {
+                        const item = columns[i][j];
+                        if (children[j] === undefined) {
+                            children[j] = [];
+                        }
                         if (!item['spacer']) {
-                            item.parent = node;
                             const data = Object.assign(Grid.createDataCellAttribute(), item.data(EXT_NAME.GRID, 'cellData'));
                             if (columnBalance) {
-                                data.rowStart = m === 0;
-                                data.rowEnd = m === columns[l].length - 1;
-                                data.cellStart = l === 0 && m === 0;
-                                data.cellEnd = l === columns.length - 1 && data.rowEnd;
-                                data.index = m;
+                                data.rowStart = j === 0;
+                                data.rowEnd = j === columns[i].length - 1;
+                                data.cellStart = i === 0 && j === 0;
+                                data.cellEnd = i === columns.length - 1 && data.rowEnd;
+                                data.index = j;
                             }
                             else {
                                 let rowSpan = 1;
                                 let columnSpan = 1 + spacer;
-                                for (let n = l + 1; n < columns.length; n++) {
-                                    if (columns[n][m].spacer === 1) {
+                                for (let k = i + 1; k < columns.length; k++) {
+                                    if (columns[k][j].spacer === 1) {
                                         columnSpan++;
-                                        columns[n][m].spacer = 2;
+                                        columns[k][j].spacer = 2;
                                     }
                                     else {
                                         break;
                                     }
                                 }
                                 if (columnSpan === 1) {
-                                    for (let n = m + 1; n < columns[l].length; n++) {
-                                        if (columns[l][n].spacer === 1) {
+                                    for (let k = j + 1; k < columns[i].length; k++) {
+                                        if (columns[i][k].spacer === 1) {
                                             rowSpan++;
-                                            columns[l][n].spacer = 2;
+                                            columns[i][k].spacer = 2;
                                         }
                                         else {
                                             break;
                                         }
                                     }
                                 }
-                                const index = Math.min(l + (columnSpan - 1), columnEnd.length - 1);
+                                const l = Math.min(i + (columnSpan - 1), columnEnd.length - 1);
                                 const actualChildren = item.documentParent.actualChildren;
                                 for (const sibling of actualChildren) {
-                                    if (sibling.visible && !sibling.rendered && sibling.linear.left >= item.linear.right && sibling.linear.right <= columnEnd[index]) {
+                                    if (sibling.visible && !sibling.rendered && sibling.linear.left >= item.linear.right && sibling.linear.right <= columnEnd[l]) {
                                         data.siblings.push(sibling);
                                     }
                                 }
                                 data.rowSpan = rowSpan;
                                 data.columnSpan = columnSpan;
                                 data.rowStart = start++ === 0;
-                                data.rowEnd = columnSpan + l === columns.length;
-                                data.cellStart = count++ === 0;
-                                data.cellEnd = data.rowEnd && m === columns[l].length - 1;
-                                data.index = l;
+                                data.rowEnd = columnSpan + i === columns.length;
+                                data.cellStart = count === 0;
+                                data.cellEnd = data.rowEnd && j === columns[i].length - 1;
+                                data.index = i;
                                 spacer = 0;
                             }
                             item.data(EXT_NAME.GRID, 'cellData', data);
+                            children[j].push(item);
                         }
                         else if (item['spacer'] === 1) {
                             spacer++;
                         }
                     }
                 }
-                $util$c.sortArray(node.children, true, 'documentParent.siblingIndex', 'siblingIndex');
-                node.each((item, index) => item.siblingIndex = index);
+                for (const item of node) {
+                    item.hide();
+                }
+                node.clear();
+                let index = 0;
+                for (const group of children) {
+                    for (const item of group) {
+                        item.parent = node;
+                        item.siblingIndex = index++;
+                    }
+                }
                 if (node.tableElement && node.css('borderCollapse') === 'collapse') {
                     node.modifyBox(32 /* PADDING_TOP */, null);
                     node.modifyBox(64 /* PADDING_RIGHT */, null);
@@ -6314,10 +6802,8 @@
         }
     }
 
-    const $util$d = squared.lib.util;
-    function hasSingleImage(node) {
-        return node.visibleStyle.backgroundImage && !node.visibleStyle.backgroundRepeat;
-    }
+    const $css$6 = squared.lib.css;
+    const hasSingleImage = (node) => node.visibleStyle.backgroundImage && !node.visibleStyle.backgroundRepeat;
     class List extends Extension {
         static createDataAttribute() {
             return {
@@ -6327,96 +6813,85 @@
             };
         }
         condition(node) {
-            const length = node.length;
-            if (length && super.condition(node)) {
-                const floated = new Set();
-                let blockStatic = 0;
-                let inlineVertical = 0;
-                let floating = 0;
-                let blockAlternate = 0;
-                let imageType = 0;
-                let listType = 0;
-                for (let i = 0; i < length; i++) {
-                    const item = node.children[i];
-                    const listStyleType = item.css('listStyleType') !== 'none';
-                    const singleImage = hasSingleImage(item);
-                    if (item.tagName !== 'LI' && !listStyleType && singleImage) {
-                        imageType++;
+            if (super.condition(node)) {
+                const length = node.length;
+                if (length) {
+                    const floated = new Set();
+                    let blockStatic = 0;
+                    let inlineVertical = 0;
+                    let floating = 0;
+                    let blockAlternate = 0;
+                    let imageType = 0;
+                    let listType = 0;
+                    for (let i = 0; i < length; i++) {
+                        const item = node.children[i];
+                        const listStyleType = item.css('listStyleType') !== 'none';
+                        if (item.display === 'list-item') {
+                            if (listStyleType || item.beforePseudoChild || hasSingleImage(item)) {
+                                listType++;
+                            }
+                        }
+                        else if (hasSingleImage(item) && !listStyleType && item.marginLeft < 0) {
+                            imageType++;
+                        }
+                        if (item.blockStatic) {
+                            blockStatic++;
+                        }
+                        if (item.inlineVertical) {
+                            inlineVertical++;
+                        }
+                        if (item.floating) {
+                            floated.add(item.float);
+                            floating++;
+                        }
+                        else if (i === 0 || i === length - 1 || item.blockStatic || node.children[i - 1].blockStatic && node.children[i + 1].blockStatic) {
+                            blockAlternate++;
+                        }
                     }
-                    if (item.display === 'list-item' && (listStyleType || singleImage)) {
-                        listType++;
-                    }
-                    if (item.blockStatic) {
-                        blockStatic++;
-                    }
-                    if (item.inlineVertical) {
-                        inlineVertical++;
-                    }
-                    if (item.floating) {
-                        floated.add(item.float);
-                        floating++;
-                    }
-                    else if (i === 0 || i === length - 1 || item.blockStatic || node.children[i - 1].blockStatic && node.children[i + 1].blockStatic) {
-                        blockAlternate++;
-                    }
+                    return (imageType > 0 || listType > 0) && (blockStatic === length || inlineVertical === length || floating === length && floated.size === 1 || blockAlternate === length);
                 }
-                return (imageType === length || listType > 0) && (blockStatic === length || inlineVertical === length || floating === length && floated.size === 1 || blockAlternate === length);
             }
             return false;
         }
         processNode(node) {
-            let i = 0;
+            let i = 1;
             node.each(item => {
                 const mainData = List.createDataAttribute();
-                if (item.display === 'list-item' || item.has('listStyleType') || hasSingleImage(item)) {
-                    let src = item.css('listStyleImage');
-                    if (src !== '' && src !== 'none') {
-                        mainData.imageSrc = src;
+                const value = item.css('listStyleType');
+                if (item.display === 'list-item' || value && value !== 'none' || hasSingleImage(item)) {
+                    if (item.has('listStyleImage')) {
+                        mainData.imageSrc = item.css('listStyleImage');
                     }
                     else {
-                        switch (item.css('listStyleType')) {
-                            case 'disc':
-                                mainData.ordinal = '●';
-                                break;
-                            case 'square':
-                                mainData.ordinal = '■';
-                                break;
-                            case 'decimal':
-                                mainData.ordinal = `${(i + 1).toString()}.`;
-                                break;
-                            case 'decimal-leading-zero':
-                                mainData.ordinal = `${(i < 9 ? '0' : '') + (i + 1).toString()}.`;
-                                break;
-                            case 'lower-alpha':
-                            case 'lower-latin':
-                                mainData.ordinal = `${$util$d.convertAlpha(i).toLowerCase()}.`;
-                                break;
-                            case 'upper-alpha':
-                            case 'upper-latin':
-                                mainData.ordinal = `${$util$d.convertAlpha(i)}.`;
-                                break;
-                            case 'lower-roman':
-                                mainData.ordinal = `${$util$d.convertRoman(i + 1).toLowerCase()}.`;
-                                break;
-                            case 'upper-roman':
-                                mainData.ordinal = `${$util$d.convertRoman(i + 1)}.`;
-                                break;
-                            case 'none':
-                                src = '';
-                                let position = '';
-                                if (!item.visibleStyle.backgroundRepeat) {
-                                    src = item.css('backgroundImage');
-                                    position = item.css('backgroundPosition');
-                                }
-                                if (src !== '' && src !== 'none') {
-                                    mainData.imageSrc = src;
-                                    mainData.imagePosition = position;
-                                    item.exclude({ resource: NODE_RESOURCE.IMAGE_SOURCE });
-                                }
-                                break;
-                            default:
-                                mainData.ordinal = '○';
-                                break;
+                        mainData.ordinal = $css$6.convertListStyle(value, i);
+                        if (mainData.ordinal === '') {
+                            switch (value) {
+                                case 'disc':
+                                    mainData.ordinal = '●';
+                                    break;
+                                case 'square':
+                                    mainData.ordinal = '■';
+                                    break;
+                                case 'none':
+                                    let src = '';
+                                    let position = '';
+                                    if (!item.visibleStyle.backgroundRepeat) {
+                                        src = item.css('backgroundImage');
+                                        position = item.css('backgroundPosition');
+                                    }
+                                    if (src && src !== 'none') {
+                                        mainData.imageSrc = src;
+                                        mainData.imagePosition = position;
+                                        item.exclude({ resource: NODE_RESOURCE.IMAGE_SOURCE });
+                                    }
+                                    break;
+                                default:
+                                    mainData.ordinal = '○';
+                                    break;
+                            }
+                        }
+                        else {
+                            mainData.ordinal += '.';
                         }
                     }
                     i++;
@@ -6431,10 +6906,10 @@
         }
     }
 
-    const $util$e = squared.lib.util;
+    const $util$d = squared.lib.util;
     class Relative extends Extension {
         condition(node) {
-            return node.positionRelative && !node.positionStatic || $util$e.convertInt(node.cssInitial('verticalAlign')) !== 0;
+            return node.positionRelative && !node.positionStatic || $util$d.convertInt(node.cssInitial('verticalAlign')) !== 0;
         }
         processNode() {
             return { include: true };
@@ -6442,7 +6917,7 @@
         postProcedure(node) {
             const renderParent = node.renderParent;
             if (renderParent) {
-                const verticalAlign = $util$e.convertFloat(node.verticalAlign);
+                const verticalAlign = $util$d.convertFloat(node.verticalAlign);
                 let target = node;
                 if (renderParent.support.container.positionRelative && node.length === 0 && (node.top !== 0 || node.bottom !== 0 || verticalAlign !== 0)) {
                     target = node.clone(this.application.nextId, true, true);
@@ -6489,24 +6964,22 @@
         }
     }
 
-    const $css$6 = squared.lib.css;
-    const $util$f = squared.lib.util;
+    const $css$7 = squared.lib.css;
+    const $util$e = squared.lib.util;
     class Sprite extends Extension {
         condition(node) {
             let valid = false;
-            if (node.hasWidth && node.hasHeight && node.length === 0) {
+            if (node.hasWidth && node.hasHeight && node.length === 0 && (this.included(node.element) || !node.dataset.use)) {
                 let url = node.css('backgroundImage');
                 if (url === '' || url === 'none') {
-                    const match = $util$f.REGEXP_COMPILED.URL.exec(node.css('background'));
+                    const match = $util$e.REGEXP_COMPILED.URL.exec(node.css('background'));
                     url = match ? match[0] : '';
                 }
                 if (url !== '') {
-                    url = $css$6.resolveURL(url);
-                    const image = this.application.session.image.get(url);
+                    const image = this.application.session.image.get($css$7.resolveURL(url));
                     if (image) {
                         const dimension = node.actualDimension;
-                        const fontSize = node.fontSize;
-                        const position = $css$6.getBackgroundPosition(`${node.css('backgroundPositionX')} ${node.css('backgroundPositionY')}`, dimension, fontSize);
+                        const position = $css$7.getBackgroundPosition(`${node.css('backgroundPositionX')} ${node.css('backgroundPositionY')}`, dimension, node.fontSize);
                         if (position.left <= 0 && position.top <= 0 && image.width > dimension.width && image.height > dimension.height) {
                             image.position = { x: position.left, y: position.top };
                             node.data(EXT_NAME.SPRITE, 'mainData', image);
@@ -6515,18 +6988,18 @@
                     }
                 }
             }
-            return valid && (!node.dataset.use || this.included(node.element));
+            return valid;
         }
     }
 
-    const $css$7 = squared.lib.css;
+    const $css$8 = squared.lib.css;
     class Substitute extends Extension {
         constructor(name, framework, tagNames, options) {
             super(name, framework, tagNames, options);
             this.require(EXT_NAME.EXTERNAL, true);
         }
         processNode(node, parent) {
-            const data = $css$7.getDataSet(node.element, this.name);
+            const data = $css$8.getDataSet(node.element, this.name);
             if (data.tagChild) {
                 node.each(item => {
                     if (item.styleElement) {
@@ -6550,9 +7023,10 @@
         }
     }
 
-    const $css$8 = squared.lib.css;
+    const $css$9 = squared.lib.css;
+    const $dom$2 = squared.lib.dom;
     const $math$1 = squared.lib.math;
-    const $util$g = squared.lib.util;
+    const $util$f = squared.lib.util;
     class Table extends Extension {
         static createDataAttribute() {
             return {
@@ -6570,7 +7044,7 @@
                 td.data(EXT_NAME.TABLE, 'expand', true);
             }
             function setBoundsWidth(td) {
-                td.css('width', $util$g.formatPX(td.bounds.width), true);
+                td.css('width', $util$f.formatPX(td.bounds.width), true);
             }
             function inheritStyles(section) {
                 if (section.length) {
@@ -6580,7 +7054,7 @@
                             item.unsetCache('visibleStyle');
                         }
                     }
-                    $util$g.concatArray(table, section[0].children);
+                    $util$f.concatArray(table, section[0].children);
                     for (const item of section) {
                         item.hide();
                     }
@@ -6604,13 +7078,13 @@
             });
             inheritStyles(thead);
             for (const section of tbody) {
-                $util$g.concatArray(table, section.children);
+                $util$f.concatArray(table, section.children);
                 section.hide();
             }
             inheritStyles(tfoot);
             const layoutFixed = node.css('tableLayout') === 'fixed';
             const borderCollapse = node.css('borderCollapse') === 'collapse';
-            const [horizontal, vertical] = borderCollapse ? [0, 0] : $util$g.replaceMap(node.css('borderSpacing').split(' '), value => parseInt(value));
+            const [horizontal, vertical] = borderCollapse ? [0, 0] : $util$f.replaceMap(node.css('borderSpacing').split(' '), value => parseInt(value));
             if (horizontal > 0) {
                 node.modifyBox(256 /* PADDING_LEFT */, horizontal);
                 node.modifyBox(64 /* PADDING_RIGHT */, horizontal);
@@ -6627,8 +7101,8 @@
                 node.modifyBox(32 /* PADDING_TOP */, null);
                 node.modifyBox(128 /* PADDING_BOTTOM */, null);
             }
-            const spacingWidth = $util$g.formatPX(horizontal > 1 ? Math.round(horizontal / 2) : horizontal);
-            const spacingHeight = $util$g.formatPX(vertical > 1 ? Math.round(vertical / 2) : vertical);
+            const spacingWidth = $util$f.formatPX(horizontal > 1 ? Math.round(horizontal / 2) : horizontal);
+            const spacingHeight = $util$f.formatPX(vertical > 1 ? Math.round(vertical / 2) : vertical);
             const colgroup = node.element && node.element.querySelector('COLGROUP');
             const rowWidth = [];
             const mapBounds = [];
@@ -6651,37 +7125,37 @@
                         }
                     }
                     if (!td.hasWidth) {
-                        const width = $util$g.convertInt($css$8.getNamedItem(element, 'width'));
+                        const width = $util$f.convertInt($dom$2.getNamedItem(element, 'width'));
                         if (width > 0) {
-                            td.css('width', $util$g.formatPX(width));
+                            td.css('width', $util$f.formatPX(width));
                         }
                     }
                     if (!td.hasHeight) {
-                        const height = $util$g.convertInt($css$8.getNamedItem(element, 'height'));
+                        const height = $util$f.convertInt($dom$2.getNamedItem(element, 'height'));
                         if (height > 0) {
-                            td.css('height', $util$g.formatPX(height));
+                            td.css('height', $util$f.formatPX(height));
                         }
                     }
                     if (!td.visibleStyle.backgroundImage && !td.visibleStyle.backgroundColor) {
                         if (colgroup) {
-                            const style = $css$8.getStyle(colgroup.children[columnIndex[i]]);
+                            const style = $css$9.getStyle(colgroup.children[columnIndex[i]]);
                             if (style.background) {
-                                element.style.background = style.background;
+                                element.style.setProperty('background', style.background);
                             }
                             else if (style.backgroundColor) {
-                                element.style.backgroundColor = style.backgroundColor;
+                                element.style.setProperty('background-color', style.backgroundColor);
                             }
                         }
                         else {
                             const exclude = /rgba\(0, 0, 0, 0\)|transparent/;
-                            let value = $css$8.getInheritedStyle(element, 'background', exclude, 'TABLE');
+                            let value = $css$9.getInheritedStyle(element, 'background', exclude, 'TABLE');
                             if (value !== '') {
-                                element.style.background = value;
+                                element.style.setProperty('background', value);
                             }
                             else {
-                                value = $css$8.getInheritedStyle(element, 'backgroundColor', exclude, 'TABLE');
+                                value = $css$9.getInheritedStyle(element, 'backgroundColor', exclude, 'TABLE');
                                 if (value !== '') {
-                                    element.style.backgroundColor = value;
+                                    element.style.setProperty('background-color', value);
                                 }
                             }
                         }
@@ -6713,11 +7187,11 @@
                             }
                         }
                         else {
-                            const length = $util$g.isLength(mapWidth[m]);
-                            const percent = $util$g.isPercent(columnWidth);
+                            const length = $util$f.isLength(mapWidth[m]);
+                            const percent = $util$f.isPercent(columnWidth);
                             if (reevaluate || td.bounds.width < mapBounds[m] || td.bounds.width === mapBounds[m] && (length && percent ||
-                                percent && $util$g.isPercent(mapWidth[m]) && $util$g.convertFloat(columnWidth) > $util$g.convertFloat(mapWidth[m]) ||
-                                length && $util$g.isLength(columnWidth) && $util$g.convertFloat(columnWidth) > $util$g.convertFloat(mapWidth[m]))) {
+                                percent && $util$f.isPercent(mapWidth[m]) && $util$f.convertFloat(columnWidth) > $util$f.convertFloat(mapWidth[m]) ||
+                                length && $util$f.isLength(columnWidth) && $util$f.convertFloat(columnWidth) > $util$f.convertFloat(mapWidth[m]))) {
                                 mapWidth[m] = columnWidth;
                             }
                             if (reevaluate || element.colSpan === 1) {
@@ -6741,32 +7215,32 @@
                 });
                 columnCount = Math.max(columnCount, columnIndex[i]);
             }
-            if (node.has('width', 2 /* LENGTH */) && mapWidth.some(value => $util$g.isPercent(value))) {
-                $util$g.replaceMap(mapWidth, (value, index) => {
+            if (node.has('width', 2 /* LENGTH */) && mapWidth.some(value => $util$f.isPercent(value))) {
+                $util$f.replaceMap(mapWidth, (value, index) => {
                     if (value === 'auto' && mapBounds[index] > 0) {
-                        return $util$g.formatPX(mapBounds[index]);
+                        return $util$f.formatPX(mapBounds[index]);
                     }
                     return value;
                 });
             }
-            if (mapWidth.every(value => $util$g.isPercent(value)) && mapWidth.reduce((a, b) => a + parseFloat(b), 0) > 1) {
+            if (mapWidth.every(value => $util$f.isPercent(value)) && mapWidth.reduce((a, b) => a + parseFloat(b), 0) > 1) {
                 let percentTotal = 100;
-                $util$g.replaceMap(mapWidth, value => {
+                $util$f.replaceMap(mapWidth, value => {
                     const percent = parseFloat(value);
                     if (percentTotal <= 0) {
                         value = '0px';
                     }
                     else if (percentTotal - percent < 0) {
-                        value = $util$g.formatPercent(percentTotal);
+                        value = $util$f.formatPercent(percentTotal);
                     }
                     percentTotal -= percent;
                     return value;
                 });
             }
-            else if (mapWidth.every(value => $util$g.isLength(value))) {
+            else if (mapWidth.every(value => $util$f.isLength(value))) {
                 const width = mapWidth.reduce((a, b) => a + parseInt(b), 0);
                 if (width < node.width) {
-                    $util$g.replaceMap(mapWidth, value => value !== '0px' ? `${(parseInt(value) / width) * 100}%` : value);
+                    $util$f.replaceMap(mapWidth, value => value !== '0px' ? `${(parseInt(value) / width) * 100}%` : value);
                 }
                 else if (width > node.width) {
                     node.css('width', 'auto', true);
@@ -6777,9 +7251,11 @@
                     }
                 }
             }
-            const mapPercent = mapWidth.reduce((a, b) => a + ($util$g.isPercent(b) ? parseFloat(b) : 0), 0);
+            else {
+            }
+            const mapPercent = mapWidth.reduce((a, b) => a + ($util$f.isPercent(b) ? parseFloat(b) : 0), 0);
             mainData.layoutType = (() => {
-                if (mapWidth.some(value => $util$g.isPercent(value)) || mapWidth.every(value => $util$g.isLength(value) && value !== '0px')) {
+                if (mapWidth.some(value => $util$f.isPercent(value)) || mapWidth.every(value => $util$f.isLength(value) && value !== '0px')) {
                     return 3 /* VARIABLE */;
                 }
                 if (mapWidth.every(value => value === mapWidth[0])) {
@@ -6793,7 +7269,7 @@
                         return 2 /* FIXED */;
                     }
                 }
-                if (mapWidth.every(value => value === 'auto' || ($util$g.isLength(value) && value !== '0px'))) {
+                if (mapWidth.every(value => value === 'auto' || ($util$f.isLength(value) && value !== '0px'))) {
                     return 1 /* STRETCH */;
                 }
                 return 0 /* NONE */;
@@ -6804,10 +7280,10 @@
             const caption = node.find(item => item.tagName === 'CAPTION');
             node.clear();
             if (caption) {
-                if (!caption.hasWidth && !$util$g.isUserAgent(16 /* EDGE */)) {
+                if (!caption.hasWidth && !$util$f.isUserAgent(16 /* EDGE */)) {
                     if (caption.textElement) {
                         if (!caption.has('maxWidth')) {
-                            caption.css('maxWidth', $util$g.formatPX(caption.bounds.width));
+                            caption.css('maxWidth', $util$f.formatPX(caption.bounds.width));
                         }
                     }
                     else if (caption.bounds.width > $math$1.maxArray(rowWidth)) {
@@ -6847,7 +7323,7 @@
                         td.css('verticalAlign', 'middle');
                     }
                     const columnWidth = mapWidth[columnIndex[i]];
-                    if (columnWidth !== 'undefined') {
+                    if (columnWidth !== undefined) {
                         switch (mainData.layoutType) {
                             case 3 /* VARIABLE */:
                                 if (columnWidth === 'auto') {
@@ -6860,11 +7336,11 @@
                                         setAutoWidth(td);
                                     }
                                 }
-                                else if ($util$g.isPercent(columnWidth)) {
+                                else if ($util$f.isPercent(columnWidth)) {
                                     td.data(EXT_NAME.TABLE, 'percent', columnWidth);
                                     td.data(EXT_NAME.TABLE, 'expand', true);
                                 }
-                                else if ($util$g.isLength(columnWidth) && parseInt(columnWidth) > 0) {
+                                else if ($util$f.isLength(columnWidth) && parseInt(columnWidth) > 0) {
                                     if (td.bounds.width >= parseInt(columnWidth)) {
                                         setBoundsWidth(td);
                                         td.data(EXT_NAME.TABLE, 'expand', false);
@@ -7031,7 +7507,7 @@
         }
     }
 
-    const $util$h = squared.lib.util;
+    const $util$g = squared.lib.util;
     class VerticalAlign extends Extension {
         condition(node) {
             let valid = false;
@@ -7039,7 +7515,7 @@
             for (const item of node) {
                 if (item.inlineVertical) {
                     inlineVertical++;
-                    if ($util$h.convertInt(item.verticalAlign) !== 0) {
+                    if ($util$g.convertInt(item.verticalAlign) !== 0) {
                         valid = true;
                     }
                 }
@@ -7066,7 +7542,7 @@
                         if (aboveBaseline.includes(item)) {
                             reset = true;
                         }
-                        else if (item.inlineVertical && !item.baseline && $util$h.isLength(item.verticalAlign)) {
+                        else if (item.inlineVertical && !item.baseline && $util$g.isLength(item.verticalAlign)) {
                             item.modifyBox(2 /* MARGIN_TOP */, item.linear.top - aboveBaseline[0].linear.top);
                             belowBaseline.push(item);
                             reset = true;
@@ -7081,7 +7557,7 @@
                 }
             }
             else {
-                $util$h.spliceArray(aboveBaseline, item => !($util$h.isLength(item.verticalAlign) && $util$h.convertInt(item.verticalAlign) > 0));
+                $util$g.spliceArray(aboveBaseline, item => !($util$g.isLength(item.verticalAlign) && $util$g.convertInt(item.verticalAlign) > 0));
             }
             if (aboveBaseline.length) {
                 node.data(EXT_NAME.VERTICAL_ALIGN, 'mainData', {
@@ -7100,7 +7576,7 @@
                 }
                 else {
                     [].concat(mainData.belowBaseline, mainData.aboveBaseline).some(item => {
-                        const verticalAlign = $util$h.convertInt(item.cssInitial('verticalAlign'));
+                        const verticalAlign = $util$g.convertInt(item.cssInitial('verticalAlign'));
                         if (verticalAlign > 0) {
                             item.modifyBox(8 /* MARGIN_BOTTOM */, verticalAlign);
                             return true;
@@ -7112,11 +7588,11 @@
         }
     }
 
-    const $util$i = squared.lib.util;
+    const $util$h = squared.lib.util;
     const HTML5 = document.doctype ? document.doctype.name === 'html' : false;
     function setMinHeight(node, offset) {
         const minHeight = node.has('minHeight', 2 /* LENGTH */) ? node.toFloat('minHeight') : 0;
-        node.css('minHeight', $util$i.formatPX(Math.max(offset, minHeight)));
+        node.css('minHeight', $util$h.formatPX(Math.max(offset, minHeight)));
     }
     function isBlockElement(node) {
         return node ? node.blockStatic && !node.lineBreak && !node.positioned : false;
@@ -7135,18 +7611,19 @@
             if (direction) {
                 if (node.borderTopWidth === 0 && node.paddingTop === 0) {
                     let replaced = false;
-                    if (child.marginTop === 0 && child.borderTopWidth === 0 && child.paddingTop === 0) {
+                    while (child.marginTop === 0 && child.borderTopWidth === 0 && child.paddingTop === 0) {
                         const firstChild = child.firstChild;
                         if (isBlockElement(firstChild)) {
-                            if (child.has('marginTop', 64 /* ZERO */)) {
-                                if (HTML5 && firstChild.marginTop !== 0) {
-                                    firstChild.modifyBox(2 /* MARGIN_TOP */, null);
-                                }
+                            if (HTML5 && firstChild.marginTop !== 0 && child.has('marginTop', 64 /* ZERO */)) {
+                                firstChild.modifyBox(2 /* MARGIN_TOP */, null);
+                                replaced = false;
+                                break;
                             }
-                            else {
-                                child = firstChild;
-                                replaced = true;
-                            }
+                            child = firstChild;
+                            replaced = true;
+                        }
+                        else {
+                            break;
                         }
                     }
                     if (!HTML5 && node.marginTop === 0 && node.has('marginTop', 64 /* ZERO */)) {
@@ -7195,18 +7672,19 @@
             else {
                 if (node.paddingBottom === 0 && node.borderBottomWidth === 0) {
                     let replaced = false;
-                    if (child.paddingBottom === 0 && child.borderBottomWidth === 0 && child.marginBottom === 0) {
+                    while (child.paddingBottom === 0 && child.borderBottomWidth === 0 && child.marginBottom === 0) {
                         const lastChild = child.lastChild;
                         if (isBlockElement(lastChild)) {
-                            if (child.has('marginBottom', 64 /* ZERO */)) {
-                                if (HTML5 && lastChild.marginBottom !== 0) {
-                                    lastChild.modifyBox(8 /* MARGIN_BOTTOM */, null);
-                                }
+                            if (HTML5 && lastChild.marginBottom !== 0 && child.has('marginBottom', 64 /* ZERO */)) {
+                                lastChild.modifyBox(8 /* MARGIN_BOTTOM */, null);
+                                replaced = false;
+                                break;
                             }
-                            else {
-                                child = lastChild;
-                                replaced = true;
-                            }
+                            child = lastChild;
+                            replaced = true;
+                        }
+                        else {
+                            break;
                         }
                     }
                     if (!HTML5 && node.marginBottom === 0 && node.has('marginBottom', 64 /* ZERO */)) {
@@ -7277,82 +7755,84 @@
                             const previousSiblings = current.previousSiblings(true, true, true);
                             if (previousSiblings.length) {
                                 const previous = previousSiblings.find(item => !item.floating);
-                                const currentVisible = getVisibleNode(current);
-                                if (isBlockElement(previous)) {
-                                    const previousVisible = getVisibleNode(previous);
-                                    let marginBottom = $util$i.convertFloat(previous.cssInitial('marginBottom', false, true));
-                                    let marginTop = $util$i.convertFloat(current.cssInitial('marginTop', false, true));
-                                    if (previous.excluded && !current.excluded) {
-                                        const offset = Math.min(marginBottom, $util$i.convertFloat(previous.cssInitial('marginTop', false, true)));
-                                        if (offset < 0) {
-                                            const top = Math.abs(offset) >= marginTop ? null : offset;
-                                            currentVisible.modifyBox(2 /* MARGIN_TOP */, top);
-                                            if (currentVisible.companion) {
-                                                currentVisible.companion.modifyBox(2 /* MARGIN_TOP */, top);
-                                            }
-                                            processed.add(previous);
-                                        }
-                                    }
-                                    else if (!previous.excluded && current.excluded) {
-                                        const offset = Math.min(marginTop, $util$i.convertFloat(current.cssInitial('marginBottom', false, true)));
-                                        if (offset < 0) {
-                                            previousVisible.modifyBox(8 /* MARGIN_BOTTOM */, Math.abs(offset) >= marginBottom ? null : offset);
-                                            processed.add(current);
-                                        }
-                                    }
-                                    else {
-                                        if (previous.paddingBottom === 0 && previous.borderBottomWidth === 0) {
-                                            const bottomChild = previous.lastChild;
-                                            if (isBlockElement(bottomChild) && bottomChild.elementId === '') {
-                                                const childMarginBottom = $util$i.convertFloat(bottomChild.cssInitial('marginBottom', false, true));
-                                                if (childMarginBottom > marginBottom) {
-                                                    marginBottom = childMarginBottom;
-                                                    previous.css('marginBottom', $util$i.formatPX(marginBottom), true);
-                                                }
-                                                if (previous.visible) {
-                                                    bottomChild.modifyBox(8 /* MARGIN_BOTTOM */, null);
-                                                    if (bottomChild.companion) {
-                                                        bottomChild.companion.modifyBox(8 /* MARGIN_BOTTOM */, null);
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        if (current.borderTopWidth === 0 && current.paddingTop === 0) {
-                                            const topChild = current.firstChild;
-                                            if (isBlockElement(topChild) && topChild.elementId === '') {
-                                                const childMarginTop = $util$i.convertFloat(topChild.cssInitial('marginTop', false, true));
-                                                if (childMarginTop > marginTop) {
-                                                    marginTop = childMarginTop;
-                                                    current.css('marginTop', $util$i.formatPX(marginTop), true);
-                                                }
-                                                if (current.visible) {
-                                                    topChild.modifyBox(2 /* MARGIN_TOP */, null);
-                                                    if (topChild.companion) {
-                                                        topChild.companion.modifyBox(2 /* MARGIN_TOP */, null);
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        if (marginBottom > 0 && marginTop > 0) {
-                                            if (marginTop <= marginBottom) {
-                                                currentVisible.modifyBox(2 /* MARGIN_TOP */, null);
+                                if (previous) {
+                                    const currentVisible = getVisibleNode(current);
+                                    if (isBlockElement(previous)) {
+                                        const previousVisible = getVisibleNode(previous);
+                                        let marginBottom = $util$h.convertFloat(previous.cssInitial('marginBottom', false, true));
+                                        let marginTop = $util$h.convertFloat(current.cssInitial('marginTop', false, true));
+                                        if (previous.excluded && !current.excluded) {
+                                            const offset = Math.min(marginBottom, $util$h.convertFloat(previous.cssInitial('marginTop', false, true)));
+                                            if (offset < 0) {
+                                                const top = Math.abs(offset) >= marginTop ? null : offset;
+                                                currentVisible.modifyBox(2 /* MARGIN_TOP */, top);
                                                 if (currentVisible.companion) {
-                                                    currentVisible.companion.modifyBox(2 /* MARGIN_TOP */, null);
+                                                    currentVisible.companion.modifyBox(2 /* MARGIN_TOP */, top);
+                                                }
+                                                processed.add(previous);
+                                            }
+                                        }
+                                        else if (!previous.excluded && current.excluded) {
+                                            const offset = Math.min(marginTop, $util$h.convertFloat(current.cssInitial('marginBottom', false, true)));
+                                            if (offset < 0) {
+                                                previousVisible.modifyBox(8 /* MARGIN_BOTTOM */, Math.abs(offset) >= marginBottom ? null : offset);
+                                                processed.add(current);
+                                            }
+                                        }
+                                        else {
+                                            if (previous.paddingBottom === 0 && previous.borderBottomWidth === 0) {
+                                                const bottomChild = previous.lastChild;
+                                                if (isBlockElement(bottomChild) && bottomChild.elementId === '') {
+                                                    const childMarginBottom = $util$h.convertFloat(bottomChild.cssInitial('marginBottom', false, true));
+                                                    if (childMarginBottom > marginBottom) {
+                                                        marginBottom = childMarginBottom;
+                                                        previous.css('marginBottom', $util$h.formatPX(marginBottom), true);
+                                                    }
+                                                    if (previous.visible) {
+                                                        bottomChild.modifyBox(8 /* MARGIN_BOTTOM */, null);
+                                                        if (bottomChild.companion) {
+                                                            bottomChild.companion.modifyBox(8 /* MARGIN_BOTTOM */, null);
+                                                        }
+                                                    }
                                                 }
                                             }
-                                            else {
-                                                previousVisible.modifyBox(8 /* MARGIN_BOTTOM */, null);
-                                                if (previousVisible.companion) {
-                                                    previousVisible.companion.modifyBox(8 /* MARGIN_BOTTOM */, null);
+                                            if (current.borderTopWidth === 0 && current.paddingTop === 0) {
+                                                const topChild = current.firstChild;
+                                                if (isBlockElement(topChild) && topChild.elementId === '') {
+                                                    const childMarginTop = $util$h.convertFloat(topChild.cssInitial('marginTop', false, true));
+                                                    if (childMarginTop > marginTop) {
+                                                        marginTop = childMarginTop;
+                                                        current.css('marginTop', $util$h.formatPX(marginTop), true);
+                                                    }
+                                                    if (current.visible) {
+                                                        topChild.modifyBox(2 /* MARGIN_TOP */, null);
+                                                        if (topChild.companion) {
+                                                            topChild.companion.modifyBox(2 /* MARGIN_TOP */, null);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            if (marginBottom > 0 && marginTop > 0) {
+                                                if (marginTop <= marginBottom) {
+                                                    currentVisible.modifyBox(2 /* MARGIN_TOP */, null);
+                                                    if (currentVisible.companion) {
+                                                        currentVisible.companion.modifyBox(2 /* MARGIN_TOP */, null);
+                                                    }
+                                                }
+                                                else {
+                                                    previousVisible.modifyBox(8 /* MARGIN_BOTTOM */, null);
+                                                    if (previousVisible.companion) {
+                                                        previousVisible.companion.modifyBox(8 /* MARGIN_BOTTOM */, null);
+                                                    }
                                                 }
                                             }
                                         }
                                     }
-                                }
-                                else if (previous && previous.tagName === 'IMG') {
-                                    const offset = current.linear.top - previous.linear.bottom;
-                                    if (offset > 0 && !current.ascend(true).some(item => item.has('height'))) {
-                                        currentVisible.modifyBox(2 /* MARGIN_TOP */, offset);
+                                    else if (previous.tagName === 'IMG') {
+                                        const offset = current.linear.top - previous.linear.bottom;
+                                        if (offset > 0 && !current.ascend(true).some(item => item.has('height'))) {
+                                            currentVisible.modifyBox(2 /* MARGIN_TOP */, offset);
+                                        }
                                     }
                                 }
                             }
@@ -7368,133 +7848,116 @@
                 }
             }
             for (const node of this.application.processing.excluded) {
-                if (!processed.has(node)) {
-                    if (node.lineBreak) {
-                        const actualParent = node.actualParent;
-                        const previousSiblings = node.previousSiblings(true, true, true);
-                        const nextSiblings = node.nextSiblings(true, true, true);
-                        let valid = false;
-                        if (previousSiblings.length && nextSiblings.length) {
-                            if (nextSiblings[0].lineBreak) {
-                                continue;
+                if (!processed.has(node) && node.lineBreak) {
+                    const actualParent = node.actualParent;
+                    const previousSiblings = node.previousSiblings(true, true, true);
+                    const nextSiblings = node.nextSiblings(true, true, true);
+                    let valid = false;
+                    if (previousSiblings.length && nextSiblings.length) {
+                        if (nextSiblings[0].lineBreak) {
+                            continue;
+                        }
+                        else {
+                            let above = previousSiblings.pop();
+                            let below = nextSiblings.pop();
+                            if (above.inlineStatic && below.inlineStatic) {
+                                if (previousSiblings.length === 0) {
+                                    processed.add(node);
+                                    continue;
+                                }
+                                else {
+                                    const abovePrevious = previousSiblings.pop();
+                                    if (abovePrevious.lineBreak) {
+                                        abovePrevious.setBounds();
+                                        if (abovePrevious.bounds.bottom !== 0) {
+                                            above = abovePrevious;
+                                        }
+                                    }
+                                }
+                            }
+                            valid = true;
+                            let offset;
+                            if (below.lineHeight > 0 && below.element && below.cssTry('lineHeight', '0px')) {
+                                offset = below.element.getBoundingClientRect().top - below.marginTop;
+                                below.cssFinally('lineHeight');
                             }
                             else {
-                                let above = previousSiblings.pop();
-                                const below = nextSiblings.pop();
-                                if (above.inlineStatic && below.inlineStatic) {
-                                    if (previousSiblings.length === 0) {
-                                        processed.add(node);
-                                        continue;
-                                    }
-                                    else {
-                                        const abovePrevious = previousSiblings.pop();
-                                        if (abovePrevious.lineBreak) {
-                                            abovePrevious.setBounds();
-                                            if (abovePrevious.bounds.bottom !== 0) {
-                                                above = abovePrevious;
-                                            }
-                                        }
-                                    }
+                                offset = below.linear.top;
+                            }
+                            if (above.lineHeight > 0 && above.element && above.cssTry('lineHeight', '0px')) {
+                                offset -= above.element.getBoundingClientRect().bottom + above.marginBottom;
+                                above.cssFinally('lineHeight');
+                            }
+                            else {
+                                offset -= above.linear.bottom;
+                            }
+                            if (offset !== 0) {
+                                above = getVisibleNode(above);
+                                below = getVisibleNode(below);
+                                const aboveParent = above.visible && above.renderParent;
+                                const belowParent = below.visible && below.renderParent;
+                                if (belowParent && belowParent.groupParent && belowParent.firstChild === below) {
+                                    belowParent.modifyBox(2 /* MARGIN_TOP */, offset);
                                 }
-                                valid = true;
-                                let offset;
-                                if (below.lineHeight > 0 && below.element && below.cssTry('lineHeight', '0px')) {
-                                    offset = below.element.getBoundingClientRect().top - below.marginTop;
-                                    below.cssFinally('lineHeight');
+                                else if (aboveParent && aboveParent.groupParent && aboveParent.lastChild === above) {
+                                    aboveParent.modifyBox(8 /* MARGIN_BOTTOM */, offset);
                                 }
-                                else {
-                                    offset = below.linear.top;
+                                else if (belowParent && belowParent.layoutVertical && below.visible) {
+                                    below.modifyBox(2 /* MARGIN_TOP */, offset);
                                 }
-                                if (above.lineHeight > 0 && above.element && above.cssTry('lineHeight', '0px')) {
-                                    offset -= above.element.getBoundingClientRect().bottom + above.marginBottom;
-                                    above.cssFinally('lineHeight');
+                                else if (aboveParent && aboveParent.layoutVertical && above.visible) {
+                                    above.modifyBox(8 /* MARGIN_BOTTOM */, offset);
                                 }
-                                else {
-                                    offset -= above.linear.bottom;
-                                }
-                                if (offset !== 0) {
-                                    const aboveParent = above.visible && above.renderParent;
-                                    const belowParent = below.visible && below.renderParent;
-                                    if (belowParent && belowParent.groupParent && belowParent.firstChild === below) {
-                                        belowParent.modifyBox(2 /* MARGIN_TOP */, offset);
+                                else if (!belowParent && !aboveParent && actualParent && actualParent.visible) {
+                                    if (below.lineBreak || below.excluded) {
+                                        actualParent.modifyBox(128 /* PADDING_BOTTOM */, offset);
                                     }
-                                    else if (aboveParent && aboveParent.groupParent && aboveParent.lastChild === above) {
-                                        aboveParent.modifyBox(8 /* MARGIN_BOTTOM */, offset);
-                                    }
-                                    else if (belowParent && belowParent.layoutVertical && (below.visible || below.renderAs)) {
-                                        (below.renderAs || below).modifyBox(2 /* MARGIN_TOP */, offset);
-                                    }
-                                    else if (aboveParent && aboveParent.layoutVertical && (above.visible || above.renderAs)) {
-                                        (above.renderAs || above).modifyBox(8 /* MARGIN_BOTTOM */, offset);
-                                    }
-                                    else if (!belowParent && !aboveParent && actualParent && actualParent.visible) {
-                                        if (below.lineBreak || below.excluded) {
-                                            actualParent.modifyBox(128 /* PADDING_BOTTOM */, offset);
-                                        }
-                                        else if (above.lineBreak || above.excluded) {
-                                            actualParent.modifyBox(32 /* PADDING_TOP */, offset);
-                                        }
-                                        else {
-                                            valid = false;
-                                        }
+                                    else if (above.lineBreak || above.excluded) {
+                                        actualParent.modifyBox(32 /* PADDING_TOP */, offset);
                                     }
                                     else {
                                         valid = false;
                                     }
                                 }
-                            }
-                        }
-                        else if (actualParent && actualParent.visible) {
-                            if (!actualParent.documentRoot && previousSiblings.length) {
-                                const previousStart = previousSiblings[previousSiblings.length - 1];
-                                const offset = actualParent.box.bottom - previousStart.linear[previousStart.lineBreak || previousStart.excluded ? 'top' : 'bottom'];
-                                if (offset !== 0) {
-                                    if (previousStart.rendered || actualParent.visibleStyle.background) {
-                                        actualParent.modifyBox(128 /* PADDING_BOTTOM */, offset);
-                                    }
-                                    else if (!actualParent.hasHeight) {
-                                        setMinHeight(actualParent, offset);
-                                    }
+                                else {
+                                    valid = false;
                                 }
-                            }
-                            else if (nextSiblings.length) {
-                                const nextStart = nextSiblings[nextSiblings.length - 1];
-                                const offset = nextStart.linear[nextStart.lineBreak || nextStart.excluded ? 'bottom' : 'top'] - actualParent.box.top;
-                                if (offset !== 0) {
-                                    if (nextStart.rendered || actualParent.visibleStyle.background) {
-                                        actualParent.modifyBox(32 /* PADDING_TOP */, offset);
-                                    }
-                                    else if (!actualParent.hasHeight) {
-                                        setMinHeight(actualParent, offset);
-                                    }
-                                }
-                            }
-                            valid = true;
-                        }
-                        if (valid) {
-                            for (const item of previousSiblings) {
-                                processed.add(item);
-                            }
-                            for (const item of nextSiblings) {
-                                processed.add(item);
                             }
                         }
                     }
-                    else {
-                        const below = node.nextSiblings(true, true, true).pop();
-                        if (below && below.visible) {
-                            const previousSiblings = node.previousSiblings(false, false);
-                            let offset = below.linear.top;
-                            if (previousSiblings.length) {
-                                const previous = previousSiblings.pop();
-                                offset -= previous.linear.bottom;
+                    else if (actualParent && actualParent.visible) {
+                        if (!actualParent.documentRoot && previousSiblings.length) {
+                            const previousStart = previousSiblings[previousSiblings.length - 1];
+                            const offset = actualParent.box.bottom - previousStart.linear[previousStart.lineBreak || previousStart.excluded ? 'top' : 'bottom'];
+                            if (offset !== 0) {
+                                if (previousStart.rendered || actualParent.visibleStyle.background) {
+                                    actualParent.modifyBox(128 /* PADDING_BOTTOM */, offset);
+                                }
+                                else if (!actualParent.hasHeight) {
+                                    setMinHeight(actualParent, offset);
+                                }
                             }
-                            else {
-                                offset -= node.linear.top;
+                        }
+                        else if (nextSiblings.length) {
+                            const nextStart = nextSiblings[nextSiblings.length - 1];
+                            const offset = nextStart.linear[nextStart.lineBreak || nextStart.excluded ? 'bottom' : 'top'] - actualParent.box.top;
+                            if (offset !== 0) {
+                                if (nextStart.rendered || actualParent.visibleStyle.background) {
+                                    actualParent.modifyBox(32 /* PADDING_TOP */, offset);
+                                }
+                                else if (!actualParent.hasHeight) {
+                                    setMinHeight(actualParent, offset);
+                                }
                             }
-                            if (offset > 0) {
-                                below.modifyBox(2 /* MARGIN_TOP */, offset);
-                            }
+                        }
+                        valid = true;
+                    }
+                    if (valid) {
+                        for (const item of previousSiblings) {
+                            processed.add(item);
+                        }
+                        for (const item of nextSiblings) {
+                            processed.add(item);
                         }
                     }
                 }
@@ -7503,29 +7966,31 @@
         afterConstraints() {
             const modified = [];
             for (const node of this.application.processing.cache) {
-                const renderParent = node.renderAs ? node.renderAs.renderParent : node.renderParent;
-                if (renderParent && !renderParent.hasAlign(4 /* AUTO_LAYOUT */) && node.pageFlow && node.styleElement && node.inlineVertical && !node.alignParent('left') && !modified.includes(node.id)) {
-                    const previous = [];
-                    let current = node;
-                    while (true) {
-                        $util$i.concatArray(previous, current.previousSiblings());
-                        if (previous.length && !previous.some(item => item.lineBreak || item.excluded && item.blockStatic)) {
-                            const previousSibling = previous[previous.length - 1];
-                            if (previousSibling.inlineVertical) {
-                                const offset = node.linear.left - previousSibling.actualRight();
-                                if (offset > 0) {
-                                    const visibleNode = getVisibleNode(node.outerParent || node);
-                                    visibleNode.modifyBox(16 /* MARGIN_LEFT */, offset);
-                                    modified.push(visibleNode.id);
+                if (node.pageFlow && node.styleElement && node.inlineVertical && !node.alignParent('left') && !modified.includes(node.id)) {
+                    const renderParent = node.renderAs ? node.renderAs.renderParent : node.renderParent;
+                    if (renderParent && !renderParent.hasAlign(4 /* AUTO_LAYOUT */)) {
+                        const previous = [];
+                        let current = node;
+                        while (true) {
+                            $util$h.concatArray(previous, current.previousSiblings());
+                            if (previous.length && !previous.some(item => item.lineBreak || item.excluded && item.blockStatic)) {
+                                const previousSibling = previous[previous.length - 1];
+                                if (previousSibling.inlineVertical) {
+                                    const offset = node.linear.left - previousSibling.actualRight();
+                                    if (offset > 0) {
+                                        const visibleNode = getVisibleNode(node.outerParent || node);
+                                        visibleNode.modifyBox(16 /* MARGIN_LEFT */, offset);
+                                        modified.push(visibleNode.id);
+                                    }
+                                }
+                                else if (previousSibling.floating) {
+                                    previous.length = 0;
+                                    current = previousSibling;
+                                    continue;
                                 }
                             }
-                            else if (previousSibling.floating) {
-                                previous.length = 0;
-                                current = previousSibling;
-                                continue;
-                            }
+                            break;
                         }
-                        break;
                     }
                 }
             }

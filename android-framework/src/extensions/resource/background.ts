@@ -716,7 +716,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 imageData.height = $util.formatPX(height);
                                 const src = Resource.insertStoredAsset(
                                     'drawables',
-                                    `${node.tagName.toLowerCase()}_${node.controlId}_gradient_${i}`,
+                                    `${node.tagName.toLowerCase()}_${node.controlId}_gradient_${i + 1}`,
                                     $xml.applyTemplate('vector', VECTOR_TMPL, [{
                                         'xmlns:android': XMLNS_ANDROID.android,
                                         'xmlns:aapt': XMLNS_ANDROID.aapt,

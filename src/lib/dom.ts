@@ -226,12 +226,12 @@ export function createElement(parent?: Element | null, tagName = 'span', placeho
         style.setProperty('border', 'none');
         style.setProperty('cssFloat', 'none');
         style.setProperty('clear', 'none');
-        element.setAttribute('className', '__squared.placeholder');
+        element.className = 'squared.placeholder';
     }
     else {
-        element.setAttribute('className', '__squared.pseudo');
+        element.className = '__squared.pseudo';
     }
-    style.display = 'none';
+    style.setProperty('display', 'none');
     if (parent) {
         if (index >= 0 && index < parent.childNodes.length) {
             parent.insertBefore(element, parent.childNodes[index]);
@@ -241,4 +241,14 @@ export function createElement(parent?: Element | null, tagName = 'span', placeho
         }
     }
     return element;
+}
+
+export function getNamedItem(element: Element | null, attr: string) {
+    if (element) {
+        const item = element.attributes.getNamedItem(attr);
+        if (item) {
+            return item.value.trim();
+        }
+    }
+    return '';
 }

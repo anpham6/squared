@@ -1,4 +1,4 @@
-/* android.widget 0.9.1
+/* android.widget 0.9.2
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -8,7 +8,7 @@ this.android.widget.coordinator = (function () {
 
     var $Resource = android.base.Resource;
     const $enum = squared.base.lib.enumeration;
-    const $dom = squared.lib.dom;
+    const $session = squared.lib.session;
     const $constA = android.lib.constant;
     const $enumA = android.lib.enumeration;
     const $utilA = android.lib.util;
@@ -18,7 +18,7 @@ this.android.widget.coordinator = (function () {
             $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
             const element = Coordinator.findNestedElement(node.element, "android.widget.toolbar" /* TOOLBAR */);
             if (element) {
-                const toolbar = $dom.getElementAsNode(element);
+                const toolbar = $session.getElementAsNode(element, node.sessionId);
                 if (toolbar) {
                     const extension = this.application.extensionManager.retrieve("android.widget.toolbar" /* TOOLBAR */);
                     if (extension && 'collapsingToolbar' in $utilA.createViewAttribute(extension.options[toolbar.elementId])) {

@@ -70,15 +70,15 @@ function createFileAsset(pathname: string, filename: string, content: string): F
 }
 
 function convertLength(value: string, dpi = 160, font = false, precision = 3) {
-    if (dpi !== 160) {
-        let result = parseFloat(value);
-        if (!isNaN(result)) {
+    let result = parseFloat(value);
+    if (!isNaN(result)) {
+        if (dpi !== 160) {
             result /= dpi / 160;
             return (result !== 0 && result > -1 && result < 1 ? result.toPrecision(precision)  : $math.truncate(result, precision - 1)) + (font ? 'sp' : 'dp');
         }
-    }
-    else {
-        return value + (font ? 'sp' : 'dp');
+        else {
+            return Math.round(result) + (font ? 'sp' : 'dp');
+        }
     }
     return '0dp';
 }

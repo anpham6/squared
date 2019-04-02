@@ -27,10 +27,9 @@ declare global {
             function checkStyleValue(element: Element, attr: string, value: string, fontSize?: number, style?: CSSStyleDeclaration): string;
             function hasComputedStyle(element: Element | null): element is HTMLElement;
             function getDataSet(element: HTMLElement | null, prefix: string): StringMap;
-            function getFontSize(element: Element | null): number;
+            function getFontSize(element: Element | null): number | undefined;
             function isParentStyle(element: Element | null, attr: string, ...styles: string[]): boolean;
             function getInheritedStyle(element: Element | null, attr: string, exclude?: RegExp, ...tagNames: string[]): string;
-            function getNamedItem(element: Element | null, attr: string): string;
             function parseVar(element: HTMLElement | SVGElement, value: string): string | undefined;
             function calculateVar(element: HTMLElement | SVGElement, value: string, attr?: string, dimension?: number): number | undefined;
             function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number): RectPosition;
@@ -50,6 +49,7 @@ declare global {
             function removeElementsByClassName(className: string): void;
             function getElementsBetweenSiblings(elementStart: Element | null, elementEnd: Element, whiteSpace?: boolean): Element[] | undefined;
             function isElementVisible(element: Element, viewport?: boolean): boolean;
+            function getNamedItem(element: Element | null, attr: string): string;
             function createElement(parent?: Element | null, tagName?: string, placeholder?: boolean, index?: number): HTMLElement;
         }
 

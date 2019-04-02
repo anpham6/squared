@@ -406,7 +406,7 @@ export function parseUnit(value: string, fontSize?: number) {
                     result *= fontSize || 16;
                     break;
                 case 'rem':
-                    result *= convertFloat(getComputedStyle(document.body).getPropertyValue('font-size')) || 16;
+                    result *= parseFloat(getComputedStyle(document.body).getPropertyValue('font-size'));
                     break;
                 case 'pc':
                     result *= 12;

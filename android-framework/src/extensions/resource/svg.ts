@@ -1506,8 +1506,9 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
             }
         }
         const opacity = getOuterOpacity(target);
+        const useTarget = $SvgBuild.asUse(target);
         for (let attr in path) {
-            let value = path[attr];
+            let value = useTarget ? target[attr] || path[attr] : path[attr];
             if ($util.isString(value)) {
                 switch (attr) {
                     case 'value':
@@ -1516,7 +1517,7 @@ export default class ResourceSvg<T extends View> extends squared.base.Extension<
                     case 'fill':
                     case 'stroke':
                         attr += 'Color';
-                        if (attr === 'stroke' || result['aapt:attr'] === undefined) {
+                        if (value !== 'none' && (attr === 'stroke' || result['aapt:attr'] === undefined)) {
                             const colorName = Resource.addColor(value);
                             if (colorName !== '') {
                                 value = `@color/${colorName}`;

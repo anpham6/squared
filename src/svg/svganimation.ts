@@ -4,6 +4,7 @@ import { FILL_MODE, INSTANCE_TYPE } from './lib/constant';
 import { getParentAttribute } from './lib/util';
 
 const $css = squared.lib.css;
+const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 const REGEXP_TIME = {
@@ -85,7 +86,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
             this.setAttribute('attributeName');
             this.setAttribute('to');
             this.setAttribute('fill', 'freeze');
-            const dur = $css.getNamedItem(animationElement, 'dur');
+            const dur = $dom.getNamedItem(animationElement, 'dur');
             if (dur !== '' && dur !== 'indefinite') {
                 this.duration = SvgAnimation.convertClockTime(dur);
             }
@@ -94,7 +95,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
 
     public setAttribute(attr: string, equality?: string) {
         if (this.animationElement) {
-            const value = $css.getNamedItem(this.animationElement, attr);
+            const value = $dom.getNamedItem(this.animationElement, attr);
             if (value !== '') {
                 if (equality !== undefined) {
                     this[attr + $util.capitalize(equality)] = value === equality;

@@ -106,20 +106,19 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             if (this.sessionId !== '0') {
                 $session.setElementCache(element, 'node', this.sessionId, this);
             }
-            this.style = $session.getElementCache(element, 'style', '0') || $css.getStyle(element, undefined, false);
-            const styleMap = $session.getElementCache(element, 'styleMap', this.sessionId) || {};
-            if (this.styleElement && this.sessionId !== '0' && !this.pseudoElement) {
-                const fontSize = parseInt(element.style.getPropertyValue('font-size')) || undefined;
+            this._styleMap = { ...$session.getElementCache(element, 'styleMap', this.sessionId) };
+            if (this.styleElement && !this.pseudoElement && this.sessionId !== '0') {
+                const fontSize = parseFloat(element.style.getPropertyValue('font-size'));
                 for (let attr of Array.from(element.style)) {
                     let value = element.style.getPropertyValue(attr);
                     attr = $util.convertCamelCase(attr);
                     value = $css.checkStyleValue(element, attr, value, fontSize);
                     if (value) {
-                        styleMap[attr] = value;
+                        this._styleMap[attr] = value;
                     }
                 }
             }
-            this._styleMap = { ...styleMap };
+            this.style = $session.getElementCache(element, 'style', '0') || $css.getStyle(element, undefined, false);
         }
     }
 

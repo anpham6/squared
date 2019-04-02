@@ -1,4 +1,4 @@
-/* android.widget 0.9.1
+/* android.widget 0.9.2
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -8,9 +8,9 @@ this.android.widget.toolbar = (function () {
 
     var $Resource = android.base.Resource;
     const $const = squared.base.lib.constant;
-    const $enum = squared.base.lib.enumeration;
     const $dom = squared.lib.dom;
-    const $element = squared.lib.element;
+    const $enum = squared.base.lib.enumeration;
+    const $session = squared.lib.session;
     const $util = squared.lib.util;
     const $constA = android.lib.constant;
     const $enumA = android.lib.enumeration;
@@ -32,7 +32,7 @@ this.android.widget.toolbar = (function () {
                 if (element.dataset.target) {
                     const target = document.getElementById(element.dataset.target);
                     if (target && element.parentElement !== target && !$util.includes(target.dataset.use, "android.widget.coordinator" /* COORDINATOR */)) {
-                        this.application.parseElements.add(element);
+                        this.application.rootElements.add(element);
                     }
                 }
             }
@@ -70,7 +70,7 @@ this.android.widget.toolbar = (function () {
                     }
                 }
                 if (!item.dataset.target) {
-                    const targetNode = $dom.getElementAsNode(item);
+                    const targetNode = $session.getElementAsNode(item, node.sessionId);
                     if (targetNode) {
                         switch (item.dataset.targetModule) {
                             case 'appBar':
@@ -135,7 +135,6 @@ this.android.widget.toolbar = (function () {
                 appBarNode.parent = parent;
                 appBarNode.controlId = $utilA.stripId(appBarOptions.android.id);
                 appBarNode.setControlType($constA.SUPPORT_ANDROID.APPBAR, $enumA.CONTAINER_NODE.BLOCK);
-                application.processing.cache.append(appBarNode, appBarChildren.length > 0);
                 if (hasCollapsingToolbar) {
                     $util.assignEmptyValue(collapsingToolbarOptions, 'android', 'id', `${node.documentId}_collapsingtoolbar`);
                     $util.assignEmptyValue(collapsingToolbarOptions, 'android', 'fitsSystemWindows', 'true');
@@ -145,11 +144,10 @@ this.android.widget.toolbar = (function () {
                     $util.assignEmptyValue(collapsingToolbarOptions, 'app', 'layout_scrollFlags', 'scroll|exitUntilCollapsed');
                     $util.assignEmptyValue(collapsingToolbarOptions, 'app', 'toolbarId', node.documentId);
                     collapsingToolbarNode = this.createPlaceholder(node, collapsingToolbarChildren, target);
-                    collapsingToolbarNode.parent = appBarNode;
                     if (collapsingToolbarNode) {
+                        collapsingToolbarNode.parent = appBarNode;
                         collapsingToolbarNode.each(item => item.dataset.target = collapsingToolbarNode.controlId);
                         collapsingToolbarNode.setControlType($constA.SUPPORT_ANDROID.COLLAPSING_TOOLBAR, $enumA.CONTAINER_NODE.BLOCK);
-                        application.processing.cache.append(collapsingToolbarNode, collapsingToolbarChildren.length > 0);
                     }
                 }
             }
@@ -263,19 +261,18 @@ this.android.widget.toolbar = (function () {
             }
         }
         createPlaceholder(node, children, target) {
-            const placeholder = this.application.createNode($element.createElement(node.actualParent ? node.actualParent.element : null, node.block));
+            let siblingIndex = Number.POSITIVE_INFINITY;
+            for (const item of children) {
+                siblingIndex = Math.min(siblingIndex, item.siblingIndex);
+            }
+            const placeholder = this.application.createNode($dom.createElement(node.actualParent ? node.actualParent.element : null, node.block ? 'div' : 'span'), true, node, children);
+            placeholder.siblingIndex = siblingIndex;
             if (target) {
                 placeholder.dataset.target = target;
             }
             placeholder.inherit(node, 'base');
             placeholder.exclude({ resource: $enum.NODE_RESOURCE.ALL });
             placeholder.positioned = true;
-            let siblingIndex = Number.POSITIVE_INFINITY;
-            for (const item of children) {
-                siblingIndex = Math.min(siblingIndex, item.siblingIndex);
-                item.parent = placeholder;
-            }
-            placeholder.siblingIndex = siblingIndex;
             return placeholder;
         }
     }
