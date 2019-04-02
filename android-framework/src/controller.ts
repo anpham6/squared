@@ -268,18 +268,19 @@ export default class Controller<T extends View> extends squared.base.Controller<
             dimensionB = 'width';
         }
         const dimensionAA = $util.capitalize(dimensionA);
-        const basis = node.flexbox.basis;
+        const flexbox = node.flexbox;
+        const basis = flexbox.basis;
         function setFlexGrow(value?: string) {
             node.android(`layout_${dimensionA}`, '0px');
-            if (node.flexbox.grow > 0) {
-                node.app(`layout_constraint${horizontal ? 'Horizontal' : 'Vertical'}_weight`, node.flexbox.grow.toPrecision(node.localSettings.floatPrecision));
+            if (flexbox.grow > 0) {
+                node.app(`layout_constraint${horizontal ? 'Horizontal' : 'Vertical'}_weight`, $math.truncate(flexbox.grow, node.localSettings.floatPrecision));
             }
             if (value) {
-                if (node.flexbox.grow === 0) {
+                if (flexbox.grow === 0) {
                     node.app(`layout_constraint${dimensionAA}_max`, value);
                 }
-                if (node.flexbox.shrink < 1) {
-                    node.app(`layout_constraint${dimensionAA}_min`, $util.formatPX((1 - node.flexbox.shrink) * parseFloat(value)));
+                if (flexbox.shrink < 1) {
+                    node.app(`layout_constraint${dimensionAA}_min`, $util.formatPX((1 - flexbox.shrink) * parseFloat(value)));
                 }
             }
         }
@@ -287,10 +288,10 @@ export default class Controller<T extends View> extends squared.base.Controller<
             setFlexGrow(node.convertPX(basis));
         }
         else if ($util.isPercent(basis) && basis !== '0%') {
-            node.app(`layout_constraint${dimensionAA}_percent`, (parseFloat(basis) / 100).toPrecision(node.localSettings.floatPrecision));
             node.android(`layout_${dimensionA}`, '0px');
+            node.app(`layout_constraint${dimensionAA}_percent`, (parseFloat(basis) / 100).toPrecision(node.localSettings.floatPrecision));
         }
-        else if (node.flexbox.grow > 0) {
+        else if (flexbox.grow > 0) {
             setFlexGrow();
         }
         else {
@@ -301,7 +302,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 constraintPercentHeight(node);
             }
         }
-        if (node.flexbox.shrink > 1) {
+        if (flexbox.shrink > 1) {
             node.app(`layout_constrained${horizontal ? 'Width' : 'Height'}`, 'true');
         }
         const sizeB = node.has(dimensionB) ? node.css(dimensionB) : '';
@@ -1084,7 +1085,11 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     }
                     maxWidth = Math.min(maxWidth, image.width);
                     maxHeight = Math.min(maxHeight, image.height);
-                    if (!node.has('width')) {
+                    if (node.has('width')) {
+                        node.android('layout_width', 'wrap_content');
+                        node.android('adjustViewBounds', 'true');
+                    }
+                    else {
                         if (image.width >= parent.box.width && node.css('maxWidth') === '100%') {
                             node.android('layout_width', 'match_parent');
                         }
@@ -1096,7 +1101,11 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         }
                         maxWidth = 0;
                     }
-                    if (!node.has('height')) {
+                    if (node.has('height')) {
+                        node.android('layout_height', 'wrap_content');
+                        node.android('adjustViewBounds', 'true');
+                    }
+                    else {
                         if (image.height >= parent.box.height && node.css('maxHeight') === '100%') {
                             node.android('layout_height', 'match_parent');
                         }

@@ -94,12 +94,14 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
         }
         else {
             if (children.some(item => item.flexbox.order !== 0)) {
-                if (mainData.directionReverse) {
-                    node.sort((a, b) => a.flexbox.order <= b.flexbox.order ? 1 : -1);
-                }
-                else {
-                    node.sort((a, b) => a.flexbox.order >= b.flexbox.order ? 1 : -1);
-                }
+                const c = mainData.directionReverse ? -1 : 1;
+                const d = mainData.directionReverse ? 1 : -1;
+                children.sort((a, b) => {
+                    if (a.flexbox.order === b.flexbox.order) {
+                        return 0;
+                    }
+                    return a.flexbox.order > b.flexbox.order ? c : d;
+                });
             }
             if (mainData.rowDirection) {
                 mainData.rowCount = 1;

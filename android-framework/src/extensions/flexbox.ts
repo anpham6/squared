@@ -34,19 +34,20 @@ const CHAIN_MAP = {
 function adjustGrowRatio(parent: View, items: View[], horizontal: boolean) {
     const attr = horizontal ? 'width' : 'height';
     const attrPartial = $util.capitalize(attr);
-    const percent = parent[`has${attrPartial}`] || parent.has(`max${attrPartial}`);
-    function setPercent(flexbox: Flexbox, dimension: number) {
-        flexbox.basis = `${dimension / parent.box[attr] * 100}%`;
-    }
+    const percent = parent[`has${attrPartial}`] || $util.withinRange(parent.toFloat(`max${attrPartial}`), parent.box.width);
     const groupBasis: FlexBasis[] = [];
+    const setPercent = (flexbox: Flexbox, dimension: number) => flexbox.basis = `${dimension / parent.box[attr] * 100}%`;
+    const pending: View[] = [];
     let maxBasis!: View;
     let maxBasisUnit = 0;
     let maxDimension = 0;
     let maxRatio = NaN;
+    let rowWidth = 0;
     for (const item of items) {
         const dimension = item.bounds[attr];
+        rowWidth += item.linear[attr];
         if (item.flexbox.grow > 0 || item.flexbox.shrink !== 1) {
-            const basis = item.parseUnit(item.flexbox.basis, horizontal) || item.parseUnit(item.css(attr), horizontal);
+            const basis = item.flexbox.basis === 'auto' ? item.parseUnit(item.css(attr), horizontal) : item.parseUnit(item.flexbox.basis, horizontal);
             if (basis > 0) {
                 const { shrink, grow } = item.flexbox;
                 let largest = false;
@@ -79,8 +80,8 @@ function adjustGrowRatio(parent: View, items: View[], horizontal: boolean) {
                 setPercent(item.flexbox, dimension);
             }
         }
-        else if (percent && item.flexbox.alignSelf === 'auto' && !item.has(attr, $enum.CSS_STANDARD.LENGTH)) {
-            setPercent(item.flexbox, dimension);
+        else if (item.flexbox.alignSelf === 'auto' && !item.has(attr, $enum.CSS_STANDARD.LENGTH)) {
+            pending.push(item);
         }
     }
     for (const data of groupBasis) {
@@ -88,8 +89,13 @@ function adjustGrowRatio(parent: View, items: View[], horizontal: boolean) {
         if (item === maxBasis || data.basis === maxBasisUnit && (maxRatio === data.shrink || maxRatio === data.grow)) {
             item.flexbox.grow = 1;
         }
-        else if (data.basis > 0) {
+        else {
             item.flexbox.grow = ((data.dimension / data.basis) / (maxDimension / maxBasisUnit)) * data.basis / maxBasisUnit;
+        }
+    }
+    if (percent && $util.withinRange(rowWidth, parent.box.width)) {
+        for (const item of pending) {
+            setPercent(item.flexbox, item.bounds[attr]);
         }
     }
 }
@@ -179,8 +185,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
         if (mainData) {
             const chainHorizontal: T[][] = [];
             const chainVertical: T[][] = [];
-            const basicHorizontal: T[] = [];
-            const basicVertical: T[] = [];
+            const segmented: T[] = [];
             if (mainData.wrap) {
                 let previous: T[] | undefined;
                 node.each((item: T) => {
@@ -193,7 +198,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 item.app('layout_constraintVertical_weight', '1');
                             }
                             chainHorizontal.push(pageFlow);
-                            basicVertical.push(item);
+                            segmented.push(item);
                         }
                         else {
                             item.android('layout_height', 'match_parent');
@@ -211,7 +216,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 }
                                 item.constraint.horizontal = true;
                             }
-                            basicHorizontal.push(item);
+                            segmented.push(item);
                             previous = pageFlow;
                         }
                     }
@@ -221,34 +226,28 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         node.mergeGravity('gravity', 'right');
                     }
                 }
+                else if (mainData.rowDirection) {
+                    chainVertical.push(segmented);
+                }
                 else {
-                    if (basicVertical.length) {
-                        chainVertical.push(basicVertical);
-                    }
-                    if (basicHorizontal.length) {
-                        chainHorizontal.push(basicHorizontal);
-                    }
+                    chainHorizontal.push(segmented);
                 }
             }
             else {
                 if (mainData.rowDirection) {
                     if (mainData.directionReverse) {
-                        chainHorizontal[0] = mainData.children.reverse();
+                        mainData.children.reverse();
                     }
-                    else {
-                        chainHorizontal[0] = mainData.children;
-                    }
+                    chainHorizontal[0] = mainData.children;
                 }
                 else {
                     if (!node.hasHeight) {
                         node.android('layout_height', 'match_parent');
                     }
                     if (mainData.directionReverse) {
-                        chainVertical[0] = mainData.children.reverse();
+                        mainData.children.reverse();
                     }
-                    else {
-                        chainVertical[0] = mainData.children;
-                    }
+                    chainVertical[0] = mainData.children;
                 }
             }
             [chainHorizontal, chainVertical].forEach((partition, index) => {
@@ -309,8 +308,6 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         else {
                             const innerChild = chain.innerChild as T;
                             if (innerChild && (horizontal && innerChild.autoMargin.horizontal || !horizontal && innerChild.autoMargin.vertical)) {
-                                chain.app(`layout_constraint${HV}_weight`, '1');
-                                chain.android(`layout_${WH.toLowerCase()}`, '0px');
                                 const autoMargin = innerChild.autoMargin;
                                 let gravity: string | undefined;
                                 if (horizontal) {
@@ -364,12 +361,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                             chain.anchorParent(CHAIN_MAP.horizontalVertical[inverse].toLowerCase());
                                         case 'space-between':
                                             if (seg.length === 2 && spreadInside) {
-                                                if (j === 0) {
-                                                    chain.anchorDelete(CHAIN_MAP.rightLeftBottomTop[index]);
-                                                }
-                                                else {
-                                                    chain.anchorDelete(CHAIN_MAP.leftRightTopBottom[index]);
-                                                }
+                                                chain.anchorDelete(j === 0 ? CHAIN_MAP.rightLeftBottomTop[index] : CHAIN_MAP.leftRightTopBottom[index]);
                                             }
                                             if (i === 0) {
                                                 chain.anchor(mainData.wrapReverse ? BR : TL, 'parent');

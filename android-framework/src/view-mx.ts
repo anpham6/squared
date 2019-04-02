@@ -1071,8 +1071,8 @@ export default (Base: Constructor<squared.base.Node>) => {
                                         node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.floor(offset / 2));
                                         node.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, Math.ceil(offset / 2));
                                     }
-                                    else {
-                                        if (!node.has('height') && lineHeight > node.toInt('minHeight')) {
+                                    else if (node.length === 0) {
+                                        if (!node.has('height') && lineHeight > node.toFloat('minHeight')) {
                                             node.android('minHeight', $util.formatPX(lineHeight));
                                         }
                                         if (node.textElement && !node.has('verticalAlign')) {
@@ -1106,7 +1106,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                             }
                             else {
                                 this.renderEach((node: T) => {
-                                    if (!(node.has('lineHeight') || this.textElement && node.multiline || node.inputElement)) {
+                                    if (!(node.has('lineHeight') || node.inputElement || node.imageElement || node.textElement && node.multiline)) {
                                         setMarginOffset(node);
                                     }
                                 });

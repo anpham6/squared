@@ -519,10 +519,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 return 0;
             }
             if (ascending) {
-                return valueA >= valueB ? 1 : -1;
+                return valueA < valueB ? -1 : 1;
             }
             else {
-                return valueA <= valueB ? 1 : -1;
+                return valueA > valueB ? -1 : 1;
             }
         });
         return children;
