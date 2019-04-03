@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>The dangers of text-align: justify</title>
+  <style>
+    body {
+      font-family: Georgia, Times, 'Times New Roman', serif;
+      line-height: 1.5;
+      margin: 0;
+      padding: 3em 1em;
+    }
+    article {
+      max-width: 38em;
+      margin: 0 auto;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      font-family: Avenir Next, Avenir, SegoeUI, arial, sans-serif;
+      line-height: 1.25em;
+      margin-top: 24px; /* fallback for IE<9 */
+      margin-top: 1.5rem; /* 24px */
+      margin-bottom: .25em;
+      font-weight: 500;
+    }
+    h1 {
+      font-size: 2.315em; /* 37px */
+      font-weight: 800;
+      border-bottom: 1px solid #C8BC9D;
+      text-align: center;
+      margin-bottom: .5em;
+      text-transform: uppercase;
+    }
+    h2 {
+      font-weight: 600;
+      font-size: 1.75em; /* 28px */
+    }
+    h3 {
+      font-size: 1.333em; /* 20px */
+    }
+    p {
+      margin: 0;
+      text-align: justify;
+    }
+    abbr {
+      text-transform: lowercase;
+      font-variant: small-caps;
+      letter-spacing: 0.05em;
+      font-size: 1.0625em;
+    }
+    p + p {
+      margin-top: 0;
+      text-indent: 1.25em;
+    }
+    .source {
+      margin-top: 1.5em;
+      font-style: italic;
+      text-indent: none;
+    }
+  </style>
+  <script src="/node_modules/systemjs/dist/system.js"></script>
+  <script src="../../squared.js"></script>
+</head>
+<body>
+  <article>
+    <p>The Moon is thought to have formed approximately 4.5 billion years ago, not long after Earth. There are several hypotheses for its origin; the most widely accepted explanation is that the Moon formed from the debris left over after a giant impact between Earth and a Mars-sized body called Theia.</p>
+  </article>
+  
+</body>
+</html>

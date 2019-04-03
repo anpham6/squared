@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Media Object, clearing with empty element and clear class</title>
+
+  <style type="text/css" media="screen">
+    .media-block {
+      background-color: gray;
+      border: solid 1px black;
+    }
+    .media-fig {
+      float: left;
+      width: 30%;
+    }
+    .media-body {
+      float: right;
+      width: 65%;
+    }
+    .clear {
+      clear: both;
+    }
+  </style>
+ <script src="/node_modules/systemjs/dist/system.js"></script>
+ <script src="../../squared.js"></script>
+</head>
+<body>
+  <div class="media-block">
+    <img class="media-fig" src="img/pic.png" alt="The pic" />
+    <div class="media-body">
+      <h3>Title of this</h3>
+      <p>Brief description of this</p>
+    </div>
+    <div class="clear"></div>
+  </div>
+</body>
+</html>

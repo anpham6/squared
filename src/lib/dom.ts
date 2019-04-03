@@ -226,7 +226,7 @@ export function createElement(parent?: Element | null, tagName = 'span', placeho
         style.setProperty('border', 'none');
         style.setProperty('cssFloat', 'none');
         style.setProperty('clear', 'none');
-        element.className = 'squared.placeholder';
+        element.className = '__squared.placeholder';
     }
     else {
         element.className = '__squared.pseudo';

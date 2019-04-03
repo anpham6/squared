@@ -55,10 +55,7 @@ export function getKeyframeRules(): CSSRuleData {
 }
 
 export function hasComputedStyle(element: Element | null): element is HTMLElement {
-    if (element) {
-        return typeof element['style'] === 'object' && element['style'] !== null && element['style']['display'] !== null;
-    }
-    return false;
+    return !!element && typeof element['style'] === 'object' && element['style'] !== null && element['style']['display'] !== null;
 }
 
 export function checkStyleValue(element: Element, attr: string, value: string, fontSize?: number, style?: CSSStyleDeclaration) {
@@ -67,7 +64,7 @@ export function checkStyleValue(element: Element, attr: string, value: string, f
     }
     if (value && value !== 'initial') {
         const computed = style ? style[attr] : '';
-        if (value !== computed) {
+        if (value !== computed && value !== 'auto') {
             if (computed !== '') {
                 switch (attr) {
                     case 'backgroundColor':
@@ -80,7 +77,7 @@ export function checkStyleValue(element: Element, attr: string, value: string, f
                     case 'fontWeight':
                         return computed;
                 }
-                if (REGEXP_COMPILED.CUSTOMPROPERTY.test(value)) {
+                if (isNumber(value) || REGEXP_COMPILED.CUSTOMPROPERTY.test(value)) {
                     return computed;
                 }
             }
@@ -95,6 +92,7 @@ export function checkStyleValue(element: Element, attr: string, value: string, f
                 case 'verticalAlign':
                 case 'textIndent':
                 case 'letterSpacing':
+                case 'columnWidth':
                 case 'columnGap':
                 case 'top':
                 case 'right':
@@ -107,12 +105,8 @@ export function checkStyleValue(element: Element, attr: string, value: string, f
                 case 'paddingTop':
                 case 'paddingRight':
                 case 'paddingBottom':
-                case 'paddingLeft': {
-                    if (isNumber(value)) {
-                        return computed;
-                    }
-                    return isLength(value) ? convertPX(value, fontSize) : value;
-                }
+                case 'paddingLeft':
+                    return !value.endsWith('px') ? convertPX(value, fontSize) : value;
             }
         }
         return value;

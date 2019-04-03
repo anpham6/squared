@@ -70,11 +70,6 @@ export interface ListData {
     imagePosition: string;
 }
 
-export interface VerticalAlignData<T> {
-    aboveBaseline: T[];
-    belowBaseline: T[];
-}
-
 export interface TableData {
     layoutType: number;
     expand: boolean;

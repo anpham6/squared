@@ -291,7 +291,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         for (const item of children) {
             siblingIndex = Math.min(siblingIndex, item.siblingIndex);
         }
-        const placeholder = this.application.createNode($dom.createElement(node.actualParent ? node.actualParent.element : null, node.block ? 'div' : 'span'), true, node, children);
+        const placeholder = this.application.createNode($dom.createElement(node.actualParent && node.actualParent.element, node.block ? 'div' : 'span'), true, node, children);
         placeholder.siblingIndex = siblingIndex;
         if (target) {
             placeholder.dataset.target = target;

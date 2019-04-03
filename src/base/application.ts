@@ -1264,99 +1264,70 @@ export default class Application<T extends Node> implements squared.base.Applica
                             break;
                     }
                 }
-                if (current === '') {
-                    if (node.float === 'right') {
-                        rightAbove.push(node);
-                        if (node.floating) {
-                            pendingFloat |= 4;
-                        }
+                if (node.autoMargin.horizontal) {
+                    if (node.autoMargin.leftRight) {
+                        inlineBelow.push(node);
                     }
-                    else if (node.float === 'left') {
-                        leftAbove.push(node);
-                        if (node.floating) {
-                            pendingFloat |= 2;
-                        }
-                    }
-                    else if (node.autoMargin.horizontal) {
-                        if (node.autoMargin.left) {
-                            if (rightAbove.length) {
-                                rightBelow.push(node);
-                            }
-                            else {
-                                rightAbove.push(node);
-                            }
-                        }
-                        else if (node.autoMargin.right) {
-                            if (leftAbove.length) {
-                                leftBelow.push(node);
-                            }
-                            else {
-                                leftAbove.push(node);
-                            }
-                        }
-                        else {
-                            if (inlineAbove.length) {
-                                if (leftAbove.length === 0) {
-                                    leftAbove.push(node);
-                                }
-                                else {
-                                    rightAbove.push(node);
-                                }
-                            }
-                            else {
-                                inlineAbove.push(node);
-                            }
-                        }
+                    else if (node.autoMargin.left) {
+                        rightBelow.push(node);
                     }
                     else {
-                        inlineAbove.push(node);
+                        leftBelow.push(node);
                     }
                 }
                 else {
-                    if (node.float === 'right') {
-                        if (rightBelow.length === 0) {
-                            pendingFloat |= 4;
-                        }
-                        if (current !== 'right' && rightAbove.length) {
+                    if (current === '') {
+                        if (node.float === 'right') {
                             rightAbove.push(node);
+                            if (node.floating) {
+                                pendingFloat |= 4;
+                            }
                         }
-                        else {
-                            rightBelow.push(node);
-                        }
-                    }
-                    else if (node.float === 'left') {
-                        if (leftBelow.length === 0) {
-                            pendingFloat |= 2;
-                        }
-                        if (current !== 'left' && leftAbove.length) {
+                        else if (node.float === 'left') {
                             leftAbove.push(node);
+                            if (node.floating) {
+                                pendingFloat |= 2;
+                            }
                         }
                         else {
-                            leftBelow.push(node);
-                        }
-                    }
-                    else if (node.autoMargin.horizontal) {
-                        if (node.autoMargin.left && rightBelow.length) {
-                            rightBelow.push(node);
-                        }
-                        else if (node.autoMargin.right && leftBelow.length) {
-                            leftBelow.push(node);
-                        }
-                        else {
-                            inlineBelow.push(node);
+                            inlineAbove.push(node);
                         }
                     }
                     else {
-                        switch (current) {
-                            case 'left':
-                                leftBelow.push(node);
-                                break;
-                            case 'right':
+                        if (node.float === 'right') {
+                            if (rightBelow.length === 0) {
+                                pendingFloat |= 4;
+                            }
+                            if (current !== 'right' && rightAbove.length) {
+                                rightAbove.push(node);
+                            }
+                            else {
                                 rightBelow.push(node);
-                                break;
-                            default:
-                                inlineBelow.push(node);
-                                break;
+                            }
+                        }
+                        else if (node.float === 'left') {
+                            if (leftBelow.length === 0) {
+                                pendingFloat |= 2;
+                            }
+                            if (current !== 'left' && leftAbove.length) {
+                                leftAbove.push(node);
+                            }
+                            else {
+                                leftBelow.push(node);
+                            }
+                        }
+                        else {
+                            switch (current) {
+                                case 'left':
+                                    leftBelow.push(node);
+                                    break;
+                                case 'right':
+                                    rightBelow.push(node);
+                                    break;
+                                default:
+                                    inlineBelow.push(node);
+                                    break;
+                            }
                         }
                     }
                 }
@@ -1598,31 +1569,27 @@ export default class Application<T extends Node> implements squared.base.Applica
                         );
                         const children: T[] = [];
                         let subgroup: T | undefined;
-                        if (floating.length) {
-                            if (floating.length > 1) {
-                                subgroup = controller.createNodeGroup(floating[0], floating, basegroup);
-                                layoutGroup.add(NODE_ALIGNMENT.FLOAT);
-                                if (pageFlow.length === 0 && floating.every(item => item.float === 'right')) {
-                                    layoutGroup.add(NODE_ALIGNMENT.RIGHT);
-                                }
+                        if (floating.length > 1) {
+                            subgroup = controller.createNodeGroup(floating[0], floating, basegroup);
+                            layoutGroup.add(NODE_ALIGNMENT.FLOAT);
+                            if (pageFlow.length === 0 && floating.every(item => item.float === 'right')) {
+                                layoutGroup.add(NODE_ALIGNMENT.RIGHT);
                             }
-                            else {
-                                subgroup = floating[0];
-                                subgroup.parent = basegroup;
-                            }
+                        }
+                        else if (floating.length) {
+                            subgroup = floating[0];
+                            subgroup.parent = basegroup;
                         }
                         if (subgroup) {
                             children.push(subgroup);
                             subgroup = undefined;
                         }
-                        if (pageFlow.length) {
-                            if (pageFlow.length > 1) {
-                                subgroup = controller.createNodeGroup(pageFlow[0], pageFlow, basegroup);
-                            }
-                            else {
-                                subgroup = pageFlow[0];
-                                subgroup.parent = basegroup;
-                            }
+                        if (pageFlow.length > 1) {
+                            subgroup = controller.createNodeGroup(pageFlow[0], pageFlow, basegroup);
+                        }
+                        else if (pageFlow.length) {
+                            subgroup = pageFlow[0];
+                            subgroup.parent = basegroup;
                         }
                         if (subgroup) {
                             children.push(subgroup);
@@ -1725,7 +1692,10 @@ export default class Application<T extends Node> implements squared.base.Applica
             if (styleMap.fontFamily === undefined) {
                 styleMap.fontFamily = style.getPropertyValue('font-family');
             }
-            if (styleMap.fontSize === undefined) {
+            if (styleMap.fontSize) {
+                styleMap.fontSize = $util.convertPX(styleMap.fontSize, $util.parseUnit(style.getPropertyValue('font-size')));
+            }
+            else {
                 styleMap.fontSize = style.getPropertyValue('font-size');
             }
             if (styleMap.fontWeight === undefined) {
@@ -1737,7 +1707,7 @@ export default class Application<T extends Node> implements squared.base.Applica
             if (styleMap.display === undefined) {
                 styleMap.display = 'inline';
             }
-            let tagName = styleMap.display && styleMap.display.startsWith('inline') ? 'span' : 'div';
+            let tagName = styleMap.display.startsWith('inline') ? 'span' : 'div';
             let content = '';
             switch (value) {
                 case 'normal':
@@ -1824,11 +1794,11 @@ export default class Application<T extends Node> implements squared.base.Applica
                                     return undefined;
                                 };
                                 const initalValue = (getPseduoIncrement(element) || 0) + (getCounterValue(style.getPropertyValue('counter-reset')) || 0);
+                                const subcounter: number[] = [];
                                 let current: Element | null = element;
                                 let counter = initalValue;
                                 let ascending = false;
                                 let lastResetElement: Element | undefined;
-                                const subcounter: number[] = [];
                                 function incrementCounter(increment: number, pseudo = false) {
                                     if (subcounter.length === 0) {
                                         counter += increment;

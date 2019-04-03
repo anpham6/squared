@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Vertical align values</title>
+
+  <style>
+    body {
+      font-family: Georgia, Times, 'Times New Roman', serif;
+      line-height: 1.5;
+      margin: 0;
+      padding: 3em 1em;
+    }
+    article {
+      max-width: 38em;
+      margin: 0 auto;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      font-family: Avenir Next, Avenir, SegoeUI, arial, sans-serif;
+      line-height: 1.25em;
+      margin-top: 24px; /* fallback for IE<9 */
+      margin-top: 1.5rem; /* 24px */
+      margin-bottom: .25em;
+      font-weight: 500;
+    }
+    h1 {
+      font-size: 2.315em; /* 37px */
+      font-weight: 800;
+      border-bottom: 1px solid #C8BC9D;
+      text-align: center;
+      margin-bottom: .5em;
+    }
+    h2 {
+      font-weight: 600;
+      font-size: 1.75em; /* 28px */
+    }
+    h3 {
+      font-size: 1.333em; /* 20px */
+    }
+    p {
+      margin: 0;
+      color: #777;
+    }
+    abbr {
+      text-transform: lowercase;
+      font-variant: small-caps;
+      letter-spacing: 0.05em;
+      font-size: 1.0625em;
+    }
+    p + p {
+      margin-top: 0;
+      text-indent: 1.25em;
+    }
+    .source {
+      margin-top: 1.5em;
+      text-align: right;
+      font-style: italic;
+    }
+    span {
+      color: #000;
+    }
+    .sub {
+      vertical-align: sub;
+    }
+    .super {
+      vertical-align: super;
+    }
+    .text-top,
+    .text-bottom {
+      font-size: .75em;
+    }
+    .text-top {
+      vertical-align: text-top;
+    }
+    .text-bottom {
+      vertical-align: text-bottom;
+    }
+    .top {
+      vertical-align: top;
+    }
+    .bottom {
+      vertical-align: bottom;
+    }
+    .middle {
+      vertical-align: middle;
+    }
+    .top-em {
+      vertical-align: 2em;
+    }
+    .bottom-perc {
+      vertical-align: -100%;
+    }
+  </style>
+  <script src="/node_modules/systemjs/dist/system.js"></script>
+  <script src="../../squared.js"></script>
+</head>
+<body>
+  <article>
+    <p>The Moon’s gravitational influence produces the ocean tides, body tides, and the slight lengthening of the day. The Moon’s current orbital distance is about thirty times the diameter of Earth, causing it to have an apparent size in the sky almost the same as that of the Sun, with the result that the Moon covers the Sun nearly precisely in total solar eclipse. <span class="super">super</span> <span class="sub">sub</span> <span class="text-top">text-top</span> <span class="text-bottom">text-bottom</span> <span class="top">top</span> <span class="bottom">bottom</span> <span class="middle">middle</span> <span class="top-em">2em</span> <span class="bottom-perc">-100%</span>This matching of apparent visual size will not continue in the far future. The Moon’s linear distance from Earth is currently increasing at a rate of 3.82 ± 0.07 centimetres per year, but this rate is not constant.</p>
+  </article>
+</body>
+</html>

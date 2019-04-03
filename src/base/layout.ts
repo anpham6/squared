@@ -42,7 +42,7 @@ export default class Layout<T extends Node> extends squared.lib.base.Container<T
         else {
             this.delete(NODE_ALIGNMENT.FLOAT);
         }
-        if (this.every(item => item.rightAligned)) {
+        if (this.every(item => item.rightAligned || item.naturalElement && item.css('clear') !== 'none')) {
             this.add(NODE_ALIGNMENT.RIGHT);
         }
         else {

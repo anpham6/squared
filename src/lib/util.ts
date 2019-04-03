@@ -50,7 +50,7 @@ export const enum USER_AGENT {
 export const STRING_PATTERN: UtilRegExpString = <any> {
     URL: 'url\\("?(.+?)"?\\)',
     DECIMAL: '-?\\d+(?:\\.\\d+)?',
-    PERCENT: '\\d+(?:\\.\\d+)?%',
+    PERCENT: '-?\\d+(?:\\.\\d+)?%',
     CALC: 'calc(\\(.+\\))',
     VAR: 'var\\((--[A-Za-z0-9\\-]+)(?!,\\s*var\\()(?:,\\s*([a-z\\-]+\\([^)]+\\)|[^)]+))?\\)',
     ZERO_ONE: '0(?:\\.\\d+)?|1(?:\\.0+)?'

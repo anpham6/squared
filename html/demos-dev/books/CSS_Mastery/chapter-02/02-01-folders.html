@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simple menu styling</title>
+
+  <style>
+    /* some basic font styles */
+    body {
+      font-family: 'Avenir Next', SegoeUI, Arial, sans-serif;
+    }
+    
+    /* Reset rules: not strictly part of the example, so not in the book. */
+    ul {
+      list-style: none;
+      padding-left: 1em;
+    }
+    /** 
+    * Set background image properties and some padding to allow space for img.
+    * We'll come back to the details of these properties later on in the book.
+    */
+    #nav > li {
+      background: url(img/folder.png) no-repeat left top;
+      padding-left: 20px;
+    }
+
+  </style>
+ <script src="/node_modules/systemjs/dist/system.js"></script>
+ <script src="../../squared.js"></script>
+</head>
+<body>
+  <ul id="nav">
+    <li><a href="/home/">Home</a></li>
+    <li><a href="/services/">Services</a>
+      <ul>
+        <li><a href="/services/design/">Design</a></li>
+        <li><a href="/services/development/">Development</a></li>
+        <li><a href="/services/consultancy/">Consultancy</a></li>
+      </ul>
+    </li>
+    <li><a href="/contact/">Contact Us</a></li>
+  </ul>
+
+</body>
+</html>

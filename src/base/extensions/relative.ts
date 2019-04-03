@@ -8,7 +8,7 @@ const $util = squared.lib.util;
 
 export default abstract class Relative<T extends Node> extends Extension<T> {
     public condition(node: T) {
-        return node.positionRelative && !node.positionStatic || $util.convertInt(node.cssInitial('verticalAlign')) !== 0;
+        return node.positionRelative && !node.positionStatic || $util.convertFloat(node.cssInitial('verticalAlign')) !== 0;
     }
 
     public processNode() {
@@ -19,7 +19,7 @@ export default abstract class Relative<T extends Node> extends Extension<T> {
         const renderParent = node.renderParent as T;
         if (renderParent) {
             const verticalAlign = $util.convertFloat(node.verticalAlign);
-            let target = node;
+            let target: T;
             if (renderParent.support.container.positionRelative && node.length === 0 && (node.top !== 0 || node.bottom !== 0 || verticalAlign !== 0)) {
                 target = node.clone(this.application.nextId, true, true) as T;
                 node.hide(true);
@@ -45,6 +45,35 @@ export default abstract class Relative<T extends Node> extends Extension<T> {
                         }
                     });
                 }
+                if (node.baselineActive && !node.baselineAltered) {
+                    for (const children of (renderParent.horizontalRows || [renderParent.renderChildren])) {
+                        if (children.includes(node)) {
+                            const unaligned = $util.filterArray(children, item => item.positionRelative && item.length > 0 && $util.convertFloat(node.verticalAlign) !== 0);
+                            if (unaligned.length) {
+                                unaligned.sort((a, b) => {
+                                    if ($util.withinRange(a.linear.top, b.linear.top)) {
+                                        return 0;
+                                    }
+                                    return a.linear.top < b.linear.top ? -1 : 1;
+                                });
+                                for (let i = 0; i < unaligned.length; i++) {
+                                    const item = unaligned[i];
+                                    if (i === 0) {
+                                        node.modifyBox(BOX_STANDARD.MARGIN_TOP, $util.convertFloat(item.verticalAlign));
+                                    }
+                                    else {
+                                        item.modifyBox(BOX_STANDARD.MARGIN_TOP, item.linear.top - unaligned[0].linear.top);
+                                    }
+                                    item.css('verticalAlign', '0px', true);
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+            else {
+                target = node;
             }
             if (node.top !== 0) {
                 target.modifyBox(BOX_STANDARD.MARGIN_TOP, node.top);

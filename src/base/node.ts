@@ -25,6 +25,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public excluded = false;
     public rendered = false;
     public baselineActive = false;
+    public baselineAltered = false;
     public positioned = false;
     public controlId = '';
     public style!: CSSStyleDeclaration;
@@ -35,6 +36,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public innerChild?: T;
     public companion?: T;
     public extracted?: T[];
+    public horizontalRows?: T[][];
     public beforePseudoChild?: T;
     public afterPseudoChild?: T;
 
@@ -1100,7 +1102,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get inputElement() {
-        return this._element !== null && this._element.tagName === 'INPUT';
+        return this._element !== null && this._element.tagName === 'INPUT' || this.tagName === 'BUTTON';
     }
 
     get groupParent() {
@@ -1544,9 +1546,16 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this._cached.inlineFlow;
     }
 
+    get centerAligned() {
+        if (this._cached.centerAligned === undefined) {
+            this._cached.centerAligned = this.autoMargin.leftRight || this.textElement && this.blockStatic && this.cssInitial('textAlign') === 'center';
+        }
+        return this._cached.centerAligned;
+    }
+
     get rightAligned() {
         if (this._cached.rightAligned === undefined) {
-            this._cached.rightAligned = this.float === 'right' || this.autoMargin.left || !this.pageFlow && this.has('right');
+            this._cached.rightAligned = this.float === 'right' || this.autoMargin.left || !this.pageFlow && this.has('right') || this.textElement && this.blockStatic && this.cssInitial('textAlign') === 'right';
         }
         return this._cached.rightAligned || this.hasAlign(NODE_ALIGNMENT.RIGHT);
     }
@@ -1677,7 +1686,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get verticalAlign() {
-        return this.css('verticalAlign');
+        if (this._cached.verticalAlign === undefined) {
+            let value = this.css('verticalAlign');
+            if ($util.isPercent(value)) {
+                value = $util.formatPX(parseInt(value) / 100 * this.bounds.height);
+            }
+            this._cached.verticalAlign = value;
+        }
+        return this._cached.verticalAlign;
     }
 
     set multiline(value) {

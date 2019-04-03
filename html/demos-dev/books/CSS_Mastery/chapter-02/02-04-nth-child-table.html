@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Explaining nth-expression</title>
+  <style>
+    /**
+    * Styling for the editable code itself.
+    * The "monospace, monospace" is a hack to get around a peculiar
+    * browser default, that makes preformatted text like code
+    * smaller than the surrounding text.
+    */
+    #nth-child {
+      font-family: monospace, monospace;
+      display: block;
+      white-space: pre;
+    }
+
+    /* --- the rest here is not part of the example per se, just some table styling --- */
+    body {
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    }
+    head {
+      display: block;
+    }
+    table {
+      width: 600px;
+      table-layout: fixed;
+    }
+    th, td {
+      text-align: left;
+      line-height: 1.4;
+    }
+    caption {
+      font-style: italic;
+      line-height: 1.8;
+    }
+    thead th {
+      font-weight: bold;
+      border-bottom: 1px solid;
+    }
+    tr td:first-child,
+    tr th:first-child {
+      width: 7em;
+      text-align: center;
+    }
+    head title {
+      /* display: block; */
+      font-size: 2rem;
+      padding: 8px;
+    }
+
+  </style>
+ <script src="/node_modules/systemjs/dist/system.js"></script>
+ <script src="../../squared.js"></script>
+</head>
+<body>
+  <style id="nth-child" contenteditable>
+    /**
+    * the code that's used for stripes in the table. Try changing values!
+    * (hint: it’s interactive when viewing the demo, using some 
+    * HTML5 + CSS trickery!)
+    */
+    tbody tr:nth-child(3n+4) {
+      background-color: #ddd;
+    }
+  </style>
+  <table>
+    <caption>Evaluate what happens when n is a number, starting with 0...</caption>
+    <thead>
+      <tr>
+        <th scope="col">Row &#8470;.</th>
+        <th>Result</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>Not matched</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>Not matched</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>Not matched</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>3 &times; 0 = 0. Add 4 and get a match for row &#8470; 4!</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>Not matched</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td>Not matched</td>
+      </tr>
+      <tr>
+        <td>7</td>
+        <td>3 &times; 1 = 3. Add 4 and get a match for row &#8470; 7!</td>
+      </tr>
+      <tr>
+        <td>8</td>
+        <td>Not matched</td>
+      </tr>
+      <tr>
+        <td>9</td>
+        <td>Not matched</td>
+      </tr>
+      <tr>
+        <td>10</td>
+        <td>3 &times; 2 = 6. Add 4 and get a match for row &#8470; 10!</td>
+      </tr>
+    </tbody>
+  </table>
+</body>
+</html>

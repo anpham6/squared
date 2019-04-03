@@ -51,16 +51,15 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
         const mainData: ListData = node.data($const.EXT_NAME.LIST, 'mainData');
         if (mainData) {
             const controller = <android.base.Controller<T>> this.application.controllerHandler;
-            const parentLeft = parent.paddingLeft + parent.marginLeft;
             let paddingLeft = node.marginLeft;
             let columnCount = 0;
             node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, null);
             if (parent.is(CONTAINER_NODE.GRID)) {
                 columnCount = $util.convertInt(parent.android('columnCount'));
-                paddingLeft += parentLeft;
+                paddingLeft += parent.paddingLeft;
             }
             else if (parent.item(0) === node) {
-                paddingLeft += parentLeft;
+                paddingLeft += parent.paddingLeft;
             }
             let ordinal = !mainData.ordinal ? node.find(item => item.float === 'left' && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) as T : undefined;
             if (ordinal) {
@@ -96,36 +95,38 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             else {
                 const columnWeight = columnCount > 0 ? '0' : '';
                 const inside = node.css('listStylePosition') === 'inside';
-                let gravity = '';
-                let image: string | undefined;
+                let gravity = 'right';
+                let minWidth = 0;
                 let top = NaN;
                 let left = NaN;
+                let image: string | undefined;
                 if (mainData.imageSrc !== '') {
                     if (mainData.imagePosition) {
                         const position = $css.getBackgroundPosition(mainData.imagePosition, node.actualDimension, node.fontSize);
                         top = position.top;
                         left = position.left;
-                    }
-                    else {
-                        gravity = 'right';
+                        paddingLeft += node.paddingLeft;
+                        gravity = 'left';
+                        node.modifyBox($enum.BOX_STANDARD.PADDING_LEFT, null);
                     }
                     image = Resource.addImageUrl(mainData.imageSrc);
                 }
-                else if (parentLeft > 0 || node.marginLeft > 0) {
-                    gravity = 'right';
+                let paddingRight: number;
+                if (gravity === 'left') {
+                    paddingRight = node.paddingLeft;
                 }
-                if (gravity === '') {
-                    paddingLeft += node.paddingLeft;
-                    node.modifyBox($enum.BOX_STANDARD.PADDING_LEFT, null);
+                else if (!image) {
+                    paddingRight = Math.max(paddingLeft * 0.15, 4);
                 }
-                const paddingRight = Math.max((paddingLeft * 0.15) / (image ? 2 : 1), 4);
-                let minWidth = paddingLeft;
+                else {
+                    paddingRight = 0;
+                }
                 const options = createViewAttribute({
                     android: {
                         layout_columnWeight: columnWeight
                     }
                 });
-                const element = $dom.createElement(node.actualParent ? node.actualParent.element : null);
+                const element = $dom.createElement(node.actualParent && node.actualParent.element);
                 ordinal = this.application.createNode(element);
                 if (inside) {
                     controller.addBeforeOutsideTemplate(
@@ -175,7 +176,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         marginTop: node.marginTop !== 0 ? $util.formatPX(node.marginTop) : '',
                         paddingTop: node.paddingTop > 0 ? $util.formatPX(node.paddingTop) : '',
                         paddingRight: paddingRight > 0 && gravity === 'right' ? $util.formatPX(paddingRight) : '',
-                        paddingLeft: paddingRight > 0 && gravity === '' && !image ? $util.formatPX(paddingRight) : '',
+                        paddingLeft: paddingRight > 0 && gravity === 'left' && (!image || mainData.imagePosition) ? $util.formatPX(paddingRight) : '',
                         fontSize: mainData.ordinal && !mainData.ordinal.endsWith('.') ? $util.formatPX(ordinal.toInt('fontSize') * 0.75) : ''
                     });
                     ordinal.apply(options);

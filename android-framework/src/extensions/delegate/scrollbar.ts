@@ -44,7 +44,7 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
             node.overflow = overflowType;
         }
         for (let i = 0; i < overflow.length; i++) {
-            const container = this.application.createNode(i === 0 ? <Element> node.element : $dom.createElement(node.actualParent ? node.actualParent.element : null, node.block ? 'div' : 'span'));
+            const container = this.application.createNode(i === 0 ? <Element> node.element : $dom.createElement(node.actualParent && node.actualParent.element, node.block ? 'div' : 'span'));
             container.setControlType(overflow[i], CONTAINER_NODE.BLOCK);
             if (i === 0) {
                 container.inherit(node, 'initial', 'base', 'styleMap');

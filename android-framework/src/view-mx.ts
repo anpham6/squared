@@ -1080,7 +1080,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                                         }
                                     }
                                 }
-                                else {
+                                else if (this.length === 0) {
                                     let offset = (lineHeight - ((node === this || !node.textElement ? height : node.fontSize) + node.paddingTop + node.paddingBottom)) / 2;
                                     if (offset > 0) {
                                         node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.floor(offset) - (node.inlineVertical && !node.baseline ? $util.convertFloat(node.verticalAlign) : 0));
@@ -1106,7 +1106,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                             }
                             else {
                                 this.renderEach((node: T) => {
-                                    if (!(node.has('lineHeight') || node.inputElement || node.imageElement || node.textElement && node.multiline)) {
+                                    if (!(node.has('lineHeight') || node.inputElement || node.imageElement || node.textElement && node.multiline || node.baselineAltered)) {
                                         setMarginOffset(node);
                                     }
                                 });

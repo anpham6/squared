@@ -15,6 +15,7 @@ declare global {
             documentRoot: boolean;
             positionStatic: boolean;
             baselineActive: boolean;
+            baselineAltered: boolean;
             positioned: boolean;
             visible: boolean;
             excluded: boolean;
@@ -39,6 +40,7 @@ declare global {
             afterPseudoChild?: Node;
             companion?: Node;
             extracted?: Node[];
+            horizontalRows?: Node[][];
             readonly sessionId: string;
             readonly localSettings: {};
             readonly excludeSection: number;
@@ -64,6 +66,7 @@ declare global {
             readonly documentBody: boolean;
             readonly dataset: DOMStringMap;
             readonly extensions: string[];
+            readonly centerAligned: boolean;
             readonly rightAligned: boolean;
             readonly bottomAligned: boolean;
             readonly width: number;
