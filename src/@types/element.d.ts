@@ -12,6 +12,7 @@ interface RectPosition extends BoxRect {
     leftAsPercent: number;
     horizontal: string;
     vertical: string;
+    orientation: string[];
 }
 
 interface RectDimension extends BoxRect, Dimension {
@@ -74,12 +75,12 @@ interface BoxBorder {
 }
 
 interface BoxStyle extends Optional<BoxBorder> {
-
     backgroundColor: string;
     backgroundSize: string;
     backgroundRepeat: string;
     backgroundPositionX: string;
     backgroundPositionY: string;
+    backgroundClip?: BoxRect;
     border?: BorderAttribute;
     borderRadius?: string[];
     backgroundImage?: (string | Gradient)[];

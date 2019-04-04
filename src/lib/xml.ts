@@ -52,7 +52,7 @@ export function replaceTab(value: string, spaces = 4, preserve = false) {
     if (spaces > 0) {
         if (preserve) {
             return joinMap(value.split('\n'), line => {
-                const match = line.match(REGEXP_INDENT);
+                const match = REGEXP_INDENT.exec(line);
                 if (match) {
                     return ' '.repeat(spaces * match[1].length) + match[2];
                 }

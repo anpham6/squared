@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Box shadow on profile photo</title>
+
+  <style>
+    body {
+      padding: 2em;
+      margin: 0;
+      font-family: "Helvetica Neue", Arial, sans-serif;
+      background-color: #ddd;
+    }
+    .profile-photo {
+      width: 160px;
+      min-height: 200px;
+      display: inline-block;
+      margin-right: 2em;
+      padding: .5em;
+      -webkit-border-radius: .5em;
+              border-radius: .5em;
+      -webkit-box-shadow: .25em .25em .5em rgba(0, 0, 0, 0.3);
+              box-shadow: .25em .25em .5em rgba(0, 0, 0, 0.3);
+      background-color: #fff;
+    }
+    .profile-larger-shadow {
+      box-shadow: 1em 1em .5em .5em rgba(0, 0, 0, 0.3);
+    }
+    .profile-smaller-shadow {
+      box-shadow: 1em 1em .5em -.5em rgba(0, 0, 0, 0.3);
+    }
+    .profile-photo img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+    .username {
+      font-size: 20px;
+      color: #666;
+      margin: .35em 0 0;
+    }
+  </style>
+  <script src="/node_modules/systemjs/dist/system.js"></script>
+  <script src="../../squared.js"></script>
+</head>
+<body>
+  <div class="profile-photo">
+    <img src="img/profile.jpg" alt="Charles the Cat">
+    <h1 class="username">@CharlesTheCat</h1>
+  </div>
+
+  <div class="profile-photo profile-larger-shadow">
+    <img src="img/profile.jpg" alt="Charles the Cat">
+    <h1 class="username">@CharlesTheCat</h1>
+  </div>
+
+  <div class="profile-photo profile-smaller-shadow">
+    <img src="img/profile.jpg" alt="Charles the Cat">
+    <h1 class="username">@CharlesTheCat</h1>
+  </div>
+</body>
+</html>

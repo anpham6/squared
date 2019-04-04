@@ -388,31 +388,71 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
 
     public afterConstraints() {
         const modified: number[] = [];
-        for (const node of this.application.processing.cache) {
-            if (node.pageFlow && node.styleElement && node.inlineVertical && !node.alignParent('left') && !modified.includes(node.id)) {
+        for (let node of this.application.processing.cache) {
+            if (node.pageFlow && node.styleElement && node.inlineVertical && !modified.includes(node.id)) {
                 const renderParent = node.renderAs ? node.renderAs.renderParent : node.renderParent;
                 if (renderParent && !renderParent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
-                    const previous: T[] = [];
-                    let current = node;
-                    while (true) {
-                        $util.concatArray(previous, current.previousSiblings());
-                        if (previous.length && !previous.some(item => item.lineBreak || item.excluded && item.blockStatic)) {
-                            const previousSibling = previous[previous.length - 1];
-                            if (previousSibling.inlineVertical) {
-                                const offset = node.linear.left - previousSibling.actualRight();
-                                if (offset > 0) {
-                                    const visibleNode = getVisibleNode(node.outerParent || node);
-                                    visibleNode.modifyBox(BOX_STANDARD.MARGIN_LEFT, offset);
-                                    modified.push(visibleNode.id);
+                    function setSpacingOffset(region: number, value: number) {
+                        const offset = (region === BOX_STANDARD.MARGIN_LEFT ? node.linear.left : node.linear.top) - value;
+                        if (offset > 0) {
+                            node = getVisibleNode(node.outerParent || node) as T;
+                            node.modifyBox(region, offset);
+                            modified.push(node.id);
+                        }
+                    }
+                    if (renderParent.layoutVertical) {
+                        const renderChildren = renderParent.renderChildren;
+                        for (let i = 0; i < renderChildren.length; i++) {
+                            if (node === renderChildren[i]) {
+                                if (i > 0) {
+                                    setSpacingOffset(BOX_STANDARD.MARGIN_TOP, renderChildren[i - 1].linear.bottom);
                                 }
-                            }
-                            else if (previousSibling.floating) {
-                                previous.length = 0;
-                                current = previousSibling;
-                                continue;
+                                break;
                             }
                         }
-                        break;
+                    }
+                    else if (!node.alignParent('left')) {
+                        let current = node;
+                        while (true) {
+                            const previous = current.previousSiblings() as T[];
+                            if (previous.length && !previous.some(item => item.lineBreak || item.excluded && item.blockStatic)) {
+                                const previousSibling = previous.pop() as T;
+                                if (previousSibling.inlineVertical) {
+                                    setSpacingOffset(BOX_STANDARD.MARGIN_LEFT, previousSibling.actualRight());
+                                }
+                                else if (previousSibling.floating) {
+                                    current = previousSibling;
+                                    continue;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                    else if (renderParent.horizontalRows && node.blockDimension && !node.floating) {
+                        found: {
+                            let maxBottom = 0;
+                            for (let i = 0; i < renderParent.horizontalRows.length; i++) {
+                                const row = renderParent.horizontalRows[i];
+                                for (let j = 0; j < row.length; j++) {
+                                    if (node === row[j]) {
+                                        if (i > 0) {
+                                            setSpacingOffset(BOX_STANDARD.MARGIN_TOP, maxBottom);
+                                        }
+                                        break found;
+                                    }
+                                }
+                                let valid = false;
+                                for (const item of row) {
+                                    if (item.blockDimension && !item.floating && item.linear.bottom > maxBottom) {
+                                        maxBottom = item.linear.bottom;
+                                        valid = true;
+                                    }
+                                }
+                                if (!valid) {
+                                    break;
+                                }
+                            }
+                        }
                     }
                 }
             }

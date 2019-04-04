@@ -7,6 +7,8 @@ import { createStyleAttribute } from '../../lib/util';
 
 const $util = squared.lib.util;
 
+const REGEXP_ATTRIBUTE = /(\w+):(\w+)="([^"]+)"/;
+
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 
 export default class ResourceStyles<T extends View> extends squared.base.Extension<T> {
@@ -23,22 +25,21 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                     let valid = true;
                     for (let i = 0; i < renderChildren.length; i++) {
                         let found = false;
-                        renderChildren[i].combine('_', 'android').some(value => {
+                        for (const value of renderChildren[i].combine('_', 'android')) {
                             if (value.startsWith('style=')) {
                                 if (i === 0) {
                                     style = value;
                                 }
                                 else if (style === '' || value !== style) {
                                     valid = false;
-                                    return true;
+                                    break;
                                 }
                                 found = true;
                             }
                             else {
                                 attrMap.set(value, (attrMap.get(value) || 0) + 1);
                             }
-                            return false;
-                        });
+                        }
                         if (!valid || (style !== '' && !found)) {
                             valid = false;
                             break;
@@ -56,7 +57,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                             }
                             const common: string[] = [];
                             for (const attr of attrMap.keys()) {
-                                const match = attr.match(/(\w+):(\w+)="([^"]+)"/);
+                                const match = REGEXP_ATTRIBUTE.exec(attr);
                                 if (match) {
                                     for (const item of renderChildren) {
                                         item.delete(match[1], match[2]);

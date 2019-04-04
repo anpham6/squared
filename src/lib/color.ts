@@ -2136,7 +2136,7 @@ export function parseColor(value: string, opacity = '1', transparency = false) {
             rgba = parseRGBA(value);
         }
         else if (value.startsWith('rgb')) {
-            const match = value.match(REGEXP_RGBA);
+            const match = REGEXP_RGBA.exec(value);
             if (match) {
                 rgba = {
                     r: parseInt(match[1]),

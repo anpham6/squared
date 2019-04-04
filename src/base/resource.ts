@@ -15,7 +15,7 @@ const $util = squared.lib.util;
 
 const REGEXP_LINEBREAK = /\s*<br[^>]*>\s*/g;
 const STRING_COLORSTOP = `(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[a-zA-Z\\d]{3,}|[a-z]+)\\s*(${$util.STRING_PATTERN.LENGTH_PERCENTAGE}|${$util.STRING_PATTERN.ANGLE}|(?:${$util.STRING_PATTERN.CALC}(?=,)|${$util.STRING_PATTERN.CALC}))?,?\\s*`;
-const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\("?.+?"?\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|circle|ellipse|closest-side|closest-corner|farthest-side|farthest-corner)?(?:\\s*at [\\w %]+)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
+const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\("?.+?"?\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*at [\\w %]+)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
 
 function removeExcluded(node: Node, element: Element, attr: string) {
     let value: string = element[attr];
@@ -390,7 +390,8 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                     backgroundPositionX: '',
                     backgroundPositionY: '',
                     backgroundImage: undefined,
-                    borderRadius: undefined
+                    borderRadius: undefined,
+                    backgroundClip: undefined
                 };
                 if (!node.css('border').startsWith('0px none')) {
                     boxStyle.borderTop = undefined;
@@ -451,7 +452,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                                     repeating: repeating === 'repeating',
                                                     horizontal: node.actualWidth <= node.actualHeight,
                                                     dimension,
-                                                    shape: position && position[1] === 'circle' ? 'circle' : 'ellipse'
+                                                    shape: position && position[1].startsWith('circle') ? 'circle' : 'ellipse'
                                                 };
                                                 radial.center = $css.getBackgroundPosition(position && position[2] || 'center', dimension, node.fontSize);
                                                 radial.closestCorner = Number.POSITIVE_INFINITY;
@@ -476,7 +477,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                                     }
                                                 }
                                                 radial.radius = radial.farthestCorner;
-                                                const extent = position && position[1];
+                                                const extent = position && position[1] ? position[1].split(' ').pop() : '';
                                                 switch (extent) {
                                                     case 'closest-corner':
                                                     case 'closest-side':
@@ -539,9 +540,9 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                                 linear.colorStops = parseColorStops(node, linear, colorStop, opacity);
                                                 const width = dimension.width;
                                                 const height = dimension.height;
-                                                let x = $math.offsetAngleX(angle, width);
-                                                let y = $math.offsetAngleY(angle, height);
-                                                if (!$math.isEqual(Math.abs(x), Math.abs(y))) {
+                                                let x = $math.truncateFraction($math.offsetAngleX(angle, width));
+                                                let y = $math.truncateFraction($math.offsetAngleY(angle, height));
+                                                if (x !== width && y !== height && !$math.isEqual(Math.abs(x), Math.abs(y))) {
                                                     let oppositeAngle: number;
                                                     if (angle <= 90) {
                                                         oppositeAngle = $math.offsetAngle({ x: 0, y: height }, { x: width, y: 0 });
@@ -576,6 +577,26 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                 if (i > 0) {
                                     boxStyle.backgroundImage = images;
                                 }
+                            }
+                            break;
+                        case 'backgroundClip':
+                            switch (value) {
+                                case 'content-box':
+                                    boxStyle.backgroundClip = {
+                                        top: node.borderTopWidth + node.paddingTop,
+                                        right: node.borderRightWidth + node.paddingRight,
+                                        bottom: node.borderBottomWidth + node.paddingBottom,
+                                        left: node.borderLeftWidth + node.paddingLeft
+                                    };
+                                    break;
+                                case 'padding-box':
+                                    boxStyle.backgroundClip = {
+                                        top: node.borderTopWidth,
+                                        right: node.borderRightWidth,
+                                        bottom: node.borderBottomWidth,
+                                        left: node.borderLeftWidth
+                                    };
+                                    break;
                             }
                             break;
                         case 'borderTop':
@@ -617,7 +638,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                             }
                             break;
                         }
-                        case 'borderRadius': {
+                        case 'borderRadius':
                             if (value !== 'none') {
                                 const horizontal = node.actualWidth >= node.actualHeight;
                                 const [A, B] = node.css('borderTopLeftRadius').split(' ');
@@ -643,7 +664,6 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                 boxStyle.borderRadius = borderRadius;
                             }
                             break;
-                        }
                     }
                 }
                 if (boxStyle.borderTop && boxStyle.borderRight && boxStyle.borderBottom && boxStyle.borderLeft) {

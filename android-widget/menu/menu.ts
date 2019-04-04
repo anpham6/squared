@@ -55,7 +55,7 @@ function parseDataSet(validator: ObjectMap<RegExp>, element: HTMLElement, option
     for (const attr in element.dataset) {
         const value = element.dataset[attr];
         if (value && validator[attr]) {
-            const match = value.match(validator[attr]);
+            const match = validator[attr].exec(value);
             if (match) {
                 options[NAMESPACE_APP.includes(attr) ? 'app' : 'android'][attr] = Array.from(new Set(match)).join('|');
             }

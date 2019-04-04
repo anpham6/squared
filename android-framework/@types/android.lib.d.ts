@@ -37,7 +37,7 @@ declare global {
             function createViewAttribute(options?: ExternalData): ViewAttribute;
             function createStyleAttribute(options?: ExternalData): Required<StyleAttribute>;
             function localizeString(value: string, rtl: boolean, api: number): string;
-            function getXmlNs(...values: string[]): string;
+            function getXmlNs(value: string): string;
             function getRootNs(value: string): string;
         }
     }

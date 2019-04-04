@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Multiple backgrounds on a single element</title>
+  <style>
+    .multi-bg {
+      width: 300px;
+      height: 200px;
+      background-image: url(img/spades.png),
+                        url(img/hearts.png),
+                        url(img/diamonds.png),
+                        url(img/clubs.png);
+      background-position: left top, right top, left bottom, right bottom;
+      background-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
+      background-color: pink;
+    }
+  </style>
+  <script src="/node_modules/systemjs/dist/system.js"></script>
+  <script src="../../squared.js"></script>
+</head>
+<body>
+  <div class="multi-bg">
+
+  </div>
+</body>
+</html>

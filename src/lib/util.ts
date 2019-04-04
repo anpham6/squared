@@ -395,7 +395,7 @@ export function calculate(value: string, dimension = 0, fontSize?: number) {
 
 export function parseUnit(value: string, fontSize?: number) {
     if (value) {
-        const match = value.match(REGEXP_COMPILED.LENGTH);
+        const match = REGEXP_COMPILED.LENGTH.exec(value);
         if (match) {
             let result = parseFloat(match[1]);
             switch (match[2]) {

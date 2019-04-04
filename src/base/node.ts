@@ -146,55 +146,55 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this.containerType === containerType && alignmentType.some(value => this.hasAlign(value));
     }
 
-    public unsafe(obj: string): any {
-        const name = `_${obj}`;
-        return this[name] || undefined;
+    public unsafe(name: string): any {
+        return this[`_${name}`] || undefined;
     }
 
-    public attr(obj: string, attr: string, value = '', overwrite = true): string {
-        const name = `__${obj}`;
+    public attr(name: string, attr: string, value = '', overwrite = true): string {
+        let obj = this[`__${name}`];
         if ($util.hasValue(value)) {
-            if (this[name] === undefined) {
-                this._namespaces.add(obj);
-                this[name] = {};
+            if (obj === undefined) {
+                this._namespaces.add(name);
+                obj = {};
+                this[`__${name}`] = obj;
             }
-            if (!overwrite && this[name][attr] !== undefined) {
+            if (!overwrite && obj[attr]) {
                 return '';
             }
-            this[name][attr] = value.toString();
+            obj[attr] = value.toString();
+            return obj[attr];
         }
-        return this[name][attr] || '';
+        return obj && obj[attr] || '';
     }
 
-    public namespace(obj: string): StringMap {
-        const name = `__${obj}`;
-        return this[name] || {};
+    public namespace(name: string): StringMap {
+        return this[`__${name}`] || {};
     }
 
-    public delete(obj: string, ...attrs: string[]) {
-        const name = `__${obj}`;
-        if (this[name]) {
+    public delete(name: string, ...attrs: string[]) {
+        const obj = this[`__${name}`];
+        if (obj) {
             for (const attr of attrs) {
                 if (attr.indexOf('*') !== -1) {
-                    for (const [key] of $util.searchObject(this[name], attr)) {
-                        delete this[name][key];
+                    for (const [key] of $util.searchObject(obj, attr)) {
+                        delete obj[key];
                     }
                 }
                 else {
-                    delete this[name][attr];
+                    delete obj[attr];
                 }
             }
         }
     }
 
     public apply(options: {}) {
-        for (const obj in options) {
-            const namespace = options[obj];
-            if (typeof namespace === 'object') {
-                for (const attr in namespace) {
-                    this.attr(obj, attr, namespace[attr]);
+        for (const name in options) {
+            const obj = options[name];
+            if (typeof obj === 'object') {
+                for (const attr in obj) {
+                    this.attr(name, attr, obj[attr]);
                 }
-                delete options[obj];
+                delete options[name];
             }
         }
     }
@@ -222,21 +222,21 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         this.visible = false;
     }
 
-    public data(obj: string, attr: string, value?: any, overwrite = true) {
+    public data(name: string, attr: string, value?: any, overwrite = true) {
         if ($util.hasValue(value)) {
-            if (this._data[obj] === undefined) {
-                this._data[obj] = {};
+            if (this._data[name] === undefined) {
+                this._data[name] = {};
             }
-            if (typeof this._data[obj] === 'object') {
-                if (overwrite || this._data[obj][attr] === undefined) {
-                    this._data[obj][attr] = value;
+            if (typeof this._data[name] === 'object') {
+                if (overwrite || this._data[name][attr] === undefined) {
+                    this._data[name][attr] = value;
                 }
             }
         }
         else if (value === null) {
-            delete this._data[obj];
+            delete this._data[name];
         }
-        return this._data[obj] === undefined || this._data[obj][attr] === undefined ? undefined : this._data[obj][attr];
+        return this._data[name] === undefined || this._data[name][attr] === undefined ? undefined : this._data[name][attr];
     }
 
     public unsetCache(...attrs: string[]) {
@@ -434,12 +434,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public outsideX(rect: RectDimension, dimension = 'linear') {
         const self: RectDimension = this[dimension];
-        return Math.ceil(self.left) < Math.floor(rect.left) || Math.ceil(self.left) >= Math.floor(rect.right);
+        return Math.ceil(self.left) < Math.floor(rect.left) || Math.ceil(self.right) > Math.floor(rect.right);
     }
 
     public outsideY(rect: RectDimension, dimension = 'linear') {
         const self: RectDimension = this[dimension];
-        return Math.ceil(self.top) < Math.floor(rect.top) || Math.ceil(self.top) >= Math.floor(rect.bottom);
+        return Math.ceil(self.top) < Math.floor(rect.top) || Math.ceil(self.bottom) > Math.floor(rect.bottom);
     }
 
     public css(attr: string, value = '', cache = false): string {
@@ -588,9 +588,32 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public parseUnit(value: string, horizontal = true, parent = true) {
         if ($util.isPercent(value)) {
-            const container = parent && this.absoluteParent || this;
             const attr = horizontal ? 'width' : 'height';
-            return parseFloat(value) / 100 * (container.has(attr, CSS_STANDARD.LENGTH) ? container.toFloat(attr) : container[parent ? 'box' : 'bounds'][attr]);
+            let result = parseFloat(value) / 100;
+            if (parent) {
+                const absoluteParent = this.absoluteParent;
+                if (absoluteParent) {
+                    result *= (absoluteParent.has(attr, CSS_STANDARD.LENGTH) ? absoluteParent.toFloat(attr) : absoluteParent.box[attr]);
+                    if (horizontal) {
+                        if (this.marginLeft > 0) {
+                            result -= this.marginLeft;
+                        }
+                        if (this.marginRight > 0) {
+                            result -= this.marginRight;
+                        }
+                    }
+                    else {
+                        if (this.marginTop > 0) {
+                            result -= this.marginTop;
+                        }
+                        if (this.marginBottom > 0) {
+                            result -= this.marginBottom;
+                        }
+                    }
+                    return result;
+                }
+            }
+            return result * (this.has(attr, CSS_STANDARD.LENGTH) ? this.toFloat(attr) : this.bounds[attr]);
         }
         return $util.parseUnit(value, this.fontSize);
     }
@@ -1722,9 +1745,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 borderWidth,
                 backgroundImage,
                 backgroundColor,
-                backgroundRepeat: backgroundRepeat !== 'no-repeat',
-                backgroundRepeatX: backgroundRepeat === 'repeat' || backgroundRepeat === 'repeat-x' || backgroundRepeat.startsWith('repeat '),
-                backgroundRepeatY: backgroundRepeat === 'repeat' || backgroundRepeat === 'repeat-y' || backgroundRepeat.endsWith(' repeat')
+                backgroundRepeat: backgroundRepeat !== 'no-repeat'
             };
         }
         return this._cached.visibleStyle;

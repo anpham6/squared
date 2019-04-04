@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Background clip example</title>
+
+  <style>
+    body {
+      padding: 2em;
+      margin: 0;
+      font-family: "Helvetica Neue", Arial, sans-serif;
+      background-color: #fff;
+    }
+    /* this default box is the same as background-clip: border-box; */
+    .profile-box {
+      display: inline-block;
+      width: 400px;
+      height: 200px;
+      background-position: 50% 50%;
+      background-repeat: no-repeat;
+      background-image: url(img/cat.jpg);
+      border: 10px solid rgba(220, 220, 160, 0.5);
+      padding: 10px 5px 5px 10px;
+    }
+    .padding-box-clipped {
+      background-clip: padding-box;
+    }
+    .content-box-clipped {
+      background-clip: content-box;
+    }
+  </style>
+  <script src="/node_modules/systemjs/dist/system.js"></script>
+  <script src="../../squared.js"></script>
+</head>
+<body>
+  <div class="profile-box"></div>
+  <div class="profile-box padding-box-clipped"></div>
+  <div class="profile-box content-box-clipped"></div>
+</body>
+</html>

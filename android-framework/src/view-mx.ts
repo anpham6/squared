@@ -186,7 +186,7 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         public formatted(value: string, overwrite = true) {
-            const match = value.match(REGEXP_FORMATTED);
+            const match = REGEXP_FORMATTED.exec(value);
             if (match) {
                 this.attr(match[1] || '_', match[2], match[3], overwrite);
             }
@@ -547,7 +547,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                                 this.android('layout_columnWeight', (parseInt(width) / 100).toPrecision(this.localSettings.floatPrecision), false);
                             }
                             else if (width === '100%') {
-                                layoutWidth = 'match_parent';
+                                layoutWidth = this.has('maxWidth') ? this.convertPX(this.css('maxWidth')) : 'match_parent';
                             }
                             else {
                                 value = this.parseUnit(width);
@@ -601,9 +601,9 @@ export default (Base: Constructor<squared.base.Node>) => {
                         }
                         else if ($util.isPercent(height)) {
                             if (height === '100%') {
-                                layoutHeight = 'match_parent';
+                                layoutHeight = this.has('maxHeight') ? this.convertPX(this.css('maxHeight')) : 'match_parent';
                             }
-                            else if (this.documentParent.has('height')) {
+                            else {
                                 value = Math.ceil(this.bounds.height) - this.contentBoxHeight;
                             }
                         }
@@ -953,43 +953,44 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         private autoSizeBoxModel() {
-            if (this.hasProcedure($enum.NODE_PROCEDURE.AUTOFIT)) {
-                const renderParent = this.renderParent as T;
-                let layoutWidth = $util.convertInt(this.android('layout_width'));
-                let layoutHeight = $util.convertInt(this.android('layout_height'));
-                if (this.is(CONTAINER_NODE.BUTTON) && layoutHeight === 0) {
+            const renderParent = this.renderParent as T;
+            if (renderParent && this.hasProcedure($enum.NODE_PROCEDURE.AUTOFIT)) {
+                const layoutWidth = this.android('layout_width');
+                const layoutHeight = this.android('layout_height');
+                const heightLength = $util.isLength(layoutHeight);
+                if (this.is(CONTAINER_NODE.BUTTON) && !heightLength) {
                     if (!this.has('minHeight')) {
                         this.android('layout_height', $util.formatPX(this.bounds.height + (this.css('borderStyle') === 'outset' ? $util.convertInt(this.css('borderWidth')) : 0)));
                     }
                 }
                 else if (this.is(CONTAINER_NODE.LINE)) {
-                    if (this.tagName !== 'HR' && layoutHeight > 0 && this.toInt('height', true) > 0) {
-                        this.android('layout_height', $util.formatPX(layoutHeight + this.borderTopWidth + this.borderBottomWidth));
+                    if (this.tagName !== 'HR' && heightLength && this.toInt('height', true) > 0) {
+                        this.android('layout_height', $util.formatPX(parseInt(layoutHeight) + this.borderTopWidth + this.borderBottomWidth));
                     }
                 }
-                else if (renderParent) {
+                else {
                     let borderWidth = false;
                     if (this.tableElement) {
                         borderWidth = this.css('boxSizing') === 'content-box' || $util.isUserAgent($util.USER_AGENT.FIREFOX | $util.USER_AGENT.EDGE);
                     }
-                    else if (this.styleElement && this.hasResource($enum.NODE_RESOURCE.BOX_SPACING)) {
-                        if (this.css('boxSizing') !== 'border-box' && !renderParent.tableElement) {
-                            if (layoutWidth > 0 && this.toInt('width', !this.imageElement) > 0 && this.contentBoxWidth > 0) {
-                                this.android('layout_width', $util.formatPX(layoutWidth + this.contentBoxWidth));
+                    else if (this.styleElement && this.css('boxSizing') !== 'border-box' && this.hasResource($enum.NODE_RESOURCE.BOX_SPACING)) {
+                        if (!renderParent.tableElement) {
+                            if ($util.isLength(layoutWidth) && this.toInt('width', !this.imageElement) > 0 && this.contentBoxWidth > 0) {
+                                this.android('layout_width', $util.formatPX(parseInt(layoutWidth) + this.contentBoxWidth));
                             }
                             else if (this.imageElement && this.singleChild) {
-                                layoutWidth = $util.convertInt(renderParent.android('layout_width'));
-                                if (layoutWidth > 0) {
-                                    renderParent.android('layout_width', $util.formatPX(layoutWidth + this.marginLeft + this.contentBoxWidth));
+                                const width = $util.convertInt(renderParent.android('layout_width'));
+                                if (width > 0) {
+                                    renderParent.android('layout_width', $util.formatPX(width + this.marginLeft + this.contentBoxWidth));
                                 }
                             }
-                            if (layoutHeight > 0 && this.toInt('height', !this.imageElement) > 0 && this.contentBoxHeight > 0) {
-                                this.android('layout_height', $util.formatPX(layoutHeight + this.contentBoxHeight));
+                            if (heightLength && this.toInt('height', !this.imageElement) > 0 && this.contentBoxHeight > 0) {
+                                this.android('layout_height', $util.formatPX(parseInt(layoutHeight) + this.contentBoxHeight));
                             }
                             else if (this.imageElement && this.singleChild) {
-                                layoutHeight = $util.convertInt(renderParent.android('layout_height'));
-                                if (layoutHeight > 0) {
-                                    renderParent.android('layout_height', $util.formatPX(layoutHeight + this.marginTop + this.contentBoxHeight));
+                                const height = $util.convertInt(renderParent.android('layout_height'));
+                                if (height > 0) {
+                                    renderParent.android('layout_height', $util.formatPX(height + this.marginTop + this.contentBoxHeight));
                                 }
                             }
                         }

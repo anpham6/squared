@@ -1,4 +1,3 @@
-import { ImageAsset } from '../../../../src/base/@types/application';
 import { UserSettingsAndroid } from '../../@types/application';
 import { ResourceBackgroundOptions } from '../../@types/extension';
 import { GradientColorStop, GradientTemplate } from '../../@types/resource';
@@ -24,6 +23,7 @@ interface BackgroundImageData extends PositionAttribute {
     drawable?: string;
     width?: string;
     height?: string;
+    gravity?: string;
     bitmap: BitmapData[] | false;
     rotate: StringMap[] | false;
     gradient: GradientTemplate | false;
@@ -307,15 +307,31 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIP
     return result;
 }
 
-function getPercentOffset(direction: string, position: RectPosition, bounds: RectDimension, dimension: Dimension) {
-    if (direction === 'left') {
-        if ($util.isPercent(position.horizontal)) {
-            return parseFloat(position.horizontal) / 100 * (bounds.width - dimension.width);
+function getPercentOffset(direction: string, position: RectPosition, backgroundSize: string, bounds: RectDimension, dimension?: Dimension): number {
+    if (dimension) {
+        const orientation = position.orientation;
+        const sign = backgroundSize === 'cover' || backgroundSize === 'contain' ? -1 : 1;
+        if (direction === 'left' || direction === 'right') {
+            if (backgroundSize !== 'cover') {
+                const value = orientation.length === 4 ? orientation[1] : orientation[0];
+                if ($util.isPercent(value)) {
+                    return sign * (direction === 'left' ? position.leftAsPercent : position.rightAsPercent) * (bounds.width - dimension.width);
+                }
+            }
+            else {
+                return 0;
+            }
         }
-    }
-    else {
-        if ($util.isPercent(position.horizontal)) {
-            return parseFloat(position.horizontal) / 100 * (bounds.height - dimension.height);
+        else {
+            if (backgroundSize !== 'contain') {
+                const value = orientation.length === 4 ? orientation[3] : orientation[1];
+                if ($util.isPercent(value)) {
+                    return sign * (direction === 'top' ? position.topAsPercent : position.bottomAsPercent) * (bounds.height - dimension.height);
+                }
+            }
+            else {
+                return 0;
+            }
         }
     }
     return position[direction];
@@ -457,161 +473,151 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     let resourceName = '';
                     for (let i = imageLength - 1; i >= 0; i--) {
                         const value = backgroundImage[i];
+                        const position = backgroundPosition[i];
                         const imageData: BackgroundImageData = {
                             bitmap: false,
                             rotate: false,
                             gradient: false
                         };
-                        const imageSingle = node.of(CONTAINER_NODE.IMAGE, $enum.NODE_ALIGNMENT.SINGLE) && imageLength === 1;
-                        const position = backgroundPosition[i];
+                        let dimension = imageDimensions[i];
+                        if (dimension && (dimension.width === 0 || dimension.height === 0)) {
+                            dimension = undefined;
+                        }
+                        let top = 0;
+                        let right = 0;
+                        let bottom = 0;
+                        let left = 0;
                         if (typeof value === 'string') {
-                            const dimension = <Undefined<ImageAsset>> imageDimensions[i];
+                            function resetPosition(directionA: string, directionB: string, overwrite = false) {
+                                if (position.orientation.length === 2 || overwrite) {
+                                    position[directionA] = 0;
+                                }
+                                position[directionB] = 0;
+                            }
                             const src = `@drawable/${value}`;
-                            function resetHorizontal() {
-                                if (!imageSingle) {
-                                    position.left = 0;
-                                    position.right = 0;
+                            let gravityX = '';
+                            let gravityY = '';
+                            if (backgroundRepeat[i] !== 'repeat') {
+                                if (backgroundRepeat[i] !== 'repeat-x') {
+                                    switch (position.horizontal) {
+                                        case '0%':
+                                        case 'left':
+                                            resetPosition('left', 'right');
+                                            gravityX = node.localizeString('left');
+                                            break;
+                                        case '50%':
+                                        case 'center':
+                                            resetPosition('left', 'right', true);
+                                            gravityX = 'center_horizontal';
+                                            break;
+                                        case '100%':
+                                        case 'right':
+                                            resetPosition('right', 'left');
+                                            gravityX = node.localizeString('right');
+                                            break;
+                                        default:
+                                            if (position.right !== 0) {
+                                                gravityX += node.localizeString('right');
+                                            }
+                                            else {
+                                                gravityX += node.localizeString('left');
+                                            }
+                                            break;
+                                    }
+                                }
+                                if (backgroundRepeat[i] !== 'repeat-y') {
+                                    switch (position.vertical) {
+                                        case '0%':
+                                        case 'top':
+                                            resetPosition('top', 'bottom');
+                                            gravityY += 'top';
+                                            break;
+                                        case '50%':
+                                        case 'center':
+                                            resetPosition('top', 'bottom', true);
+                                            gravityY += 'center_vertical';
+                                            break;
+                                        case '100%':
+                                        case 'bottom':
+                                            resetPosition('bottom', 'top');
+                                            gravityY += 'bottom';
+                                            break;
+                                        default:
+                                            if (position.bottom !== 0) {
+                                                gravityY += 'bottom';
+                                            }
+                                            else {
+                                                gravityY += 'top';
+                                            }
+                                            break;
+                                    }
                                 }
                             }
-                            function resetVertical() {
-                                if (!imageSingle) {
-                                    position.top = 0;
-                                    position.bottom = 0;
-                                }
-                            }
-                            let width = '';
-                            let height = '';
-                            let gravity = '';
+                            let width = 0;
+                            let height = 0;
                             let tileMode = '';
                             let tileModeX = '';
                             let tileModeY = '';
-                            if ((position.horizontal === 'center' || position.horizontal === '50%') && (position.vertical === 'center' || position.vertical === '50%')) {
-                                resetHorizontal();
-                                resetVertical();
-                                gravity = 'center';
-                            }
-                            else {
-                                switch (position.horizontal) {
-                                    case '0%':
-                                    case 'left':
-                                        resetHorizontal();
-                                        gravity = node.localizeString('left');
-                                        break;
-                                    case '50%':
-                                    case 'center':
-                                        resetHorizontal();
-                                        gravity = 'center_horizontal';
-                                        break;
-                                    case '100%':
-                                    case 'right':
-                                        resetHorizontal();
-                                        gravity = node.localizeString('right');
-                                        break;
-                                    default:
-                                        if (position.right !== 0) {
-                                            gravity += node.localizeString('right');
-                                        }
-                                        else {
-                                            gravity += node.localizeString('left');
-                                        }
-                                        break;
-                                }
-                                gravity += '|';
-                                switch (position.vertical) {
-                                    case '0%':
-                                    case 'top':
-                                        resetVertical();
-                                        gravity += 'top';
-                                        break;
-                                    case '50%':
-                                    case 'center':
-                                        resetVertical();
-                                        gravity += 'center_vertical';
-                                        break;
-                                    case '100%':
-                                    case 'bottom':
-                                        resetVertical();
-                                        gravity += 'bottom';
-                                        break;
-                                    default:
-                                        if (position.bottom !== 0) {
-                                            gravity += 'bottom';
-                                        }
-                                        else {
-                                            gravity += 'top';
-                                        }
-                                        break;
-                                }
-                            }
+                            let gravity: string | undefined;
                             switch (backgroundRepeat[i]) {
                                 case 'repeat':
-                                    if (!dimension || dimension.width < node.actualWidth || dimension.height < node.actualHeight) {
-                                        tileMode = 'repeat';
-                                    }
+                                    tileMode = 'repeat';
                                     break;
                                 case 'repeat-x':
-                                    if (!dimension || dimension.width < node.actualWidth) {
-                                        tileModeX = 'repeat';
-                                    }
+                                    tileModeX = 'repeat';
                                     break;
                                 case 'repeat-y':
-                                    if (!dimension || dimension.height < node.actualHeight) {
-                                        tileModeY = 'repeat';
-                                    }
+                                    tileModeY = 'repeat';
                                     break;
                                 default:
                                     tileMode = 'disabled';
-                                    if (dimension && (node.inputElement || node.imageElement)) {
-                                        width = $util.formatPX(dimension.width);
-                                        height = $util.formatPX(dimension.height);
-                                    }
                                     break;
                             }
-                            if (gravity !== '' && node.renderChildren.length === 0 && dimension && dimension.width > 0 && dimension.height > 0) {
-                                if (tileModeY === 'repeat') {
+                            if (node.renderChildren.length === 0 && dimension) {
+                                if (gravityX !== '' && tileModeY === 'repeat') {
                                     const tileWidth = node.hasWidth ? node.width + node.paddingLeft + node.paddingRight : node.bounds.width - (node.borderLeftWidth + node.borderRightWidth);
                                     if (dimension.width < tileWidth) {
                                         const layoutWidth = $util.convertInt(node.android('layout_width'));
-                                        if (gravity.indexOf('left') !== -1 || gravity.indexOf('start') !== -1) {
+                                        if (/(left|start)/.test(gravityX)) {
                                             position.right = tileWidth - dimension.width;
                                             if (!node.hasWidth && tileWidth > layoutWidth) {
                                                 node.android('layout_width', $util.formatPX(node.actualWidth));
                                             }
                                         }
-                                        else if (gravity.indexOf('right') !== -1 || gravity.indexOf('end') !== -1) {
+                                        else if (/(right|end)/.test(gravityX)) {
                                             position.left = tileWidth - dimension.width;
                                             if (!node.hasWidth && tileWidth > layoutWidth) {
                                                 node.android('layout_width', $util.formatPX(node.actualWidth));
                                             }
                                         }
-                                        else if (gravity === 'center' || gravity.indexOf('center_horizontal') !== -1) {
+                                        else if (gravityX === 'center_horizontal') {
                                             position.left = Math.floor((tileWidth - dimension.width) / 2);
-                                            width = $util.formatPX(dimension.width);
+                                            width = dimension.width;
                                             if (!node.hasWidth && tileWidth > layoutWidth) {
                                                 node.android('layout_width', $util.formatPX(node.actualWidth));
                                             }
                                         }
                                     }
                                 }
-                                if (tileModeX === 'repeat') {
+                                if (gravityY !== '' && tileModeX === 'repeat') {
                                     const tileHeight = node.hasHeight ? node.height + node.paddingTop + node.paddingBottom : node.bounds.height - (node.borderTopWidth + node.borderBottomWidth);
                                     if (dimension.height < tileHeight) {
                                         const layoutHeight = $util.convertInt(node.android('layout_height'));
-                                        if (gravity.indexOf('top') !== -1) {
+                                        if (gravityY === 'top') {
                                             position.bottom = tileHeight - dimension.height;
                                             if (!node.hasHeight && tileHeight > layoutHeight) {
                                                 node.android('layout_height', $util.formatPX(node.actualHeight));
                                             }
                                         }
-                                        else if (gravity.indexOf('bottom') !== -1) {
+                                        else if (gravityY === 'bottom') {
                                             position.top = tileHeight - dimension.height;
                                             if (!node.hasHeight && tileHeight > layoutHeight) {
                                                 node.android('layout_height', $util.formatPX(node.actualHeight));
                                             }
                                         }
-                                        else if (gravity === 'center' || gravity.indexOf('center_vertical') !== -1) {
+                                        else if (gravityY === 'center_vertical') {
                                             position.top = Math.floor((tileHeight - dimension.height) / 2);
-                                            height = $util.formatPX(dimension.height);
+                                            height = dimension.height;
                                             if (!node.hasHeight && tileHeight > layoutHeight) {
                                                 node.android('layout_height', $util.formatPX(node.actualHeight));
                                             }
@@ -619,96 +625,148 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     }
                                 }
                             }
-                            if (imageSingle) {
-                                let scaleType: string | undefined;
-                                if (/^(left|start)/.test(gravity)) {
-                                    scaleType = 'fitStart';
-                                }
-                                else if (/^(right|end)/.test(gravity)) {
-                                    scaleType = 'fitEnd';
-                                }
-                                else if (gravity === 'center' || gravity.startsWith('center_horizontal')) {
-                                    scaleType = 'center';
-                                }
-                                if (scaleType) {
-                                    node.android('scaleType', scaleType);
-                                }
-                                if (position.left > 0) {
-                                    node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, position.left);
-                                }
-                                if (position.top > 0) {
-                                    node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, position.top);
-                                }
-                                node.android('src', src);
-                                if (!hasBorder) {
-                                    return;
-                                }
-                            }
-                            else {
-                                if (!(backgroundSize[i] === 'auto' || backgroundSize[i] === 'auto auto' || backgroundSize[i] === 'initial')) {
-                                    switch (backgroundSize[i]) {
-                                        case 'cover':
-                                        case 'contain':
-                                        case '100% 100%':
-                                            width = '';
-                                            height = '';
-                                            tileMode = '';
-                                            tileModeX = '';
-                                            tileModeY = '';
-                                            gravity = '';
-                                            break;
-                                        default:
-                                            const dimensions = backgroundSize[i].split(' ');
-                                            if (dimensions[0] === '100%') {
-                                                tileModeX = '';
+                            switch (backgroundSize[i]) {
+                                case 'auto':
+                                case 'auto auto':
+                                case 'initial':
+                                case 'contain':
+                                    break;
+                                case 'cover':
+                                    gravity = 'center|clip_horizontal|clip_vertical';
+                                    tileMode = '';
+                                    tileModeX = '';
+                                    tileModeY = '';
+                                    break;
+                                case '100%':
+                                    gravityX = 'fill_horizontal';
+                                    break;
+                                case '100% 100%':
+                                    gravityX = 'fill_horizontal';
+                                    gravityY = 'fill_vertical';
+                                    break;
+                                default:
+                                    backgroundSize[i].split(' ').forEach((size, index) => {
+                                        if (size !== 'auto') {
+                                            if (index === 0) {
+                                                width = node.parseUnit(size, true, false) - node.contentBoxWidth;
                                             }
-                                            else if (dimensions[1] === '100%') {
-                                                tileModeY = '';
-                                            }
-                                            for (let j = 0; j < dimensions.length; j++) {
-                                                const size = dimensions[j];
-                                                if (size !== 'auto' && size !== '100%') {
-                                                    if (j === 0) {
-                                                        width = node.convertPX(size, true, false);
-                                                    }
-                                                    else {
-                                                        height = node.convertPX(size, false, false);
-                                                    }
+                                            else {
+                                                if (size === '100%') {
+                                                    gravityY = 'fill_vertical';
+                                                }
+                                                else {
+                                                    height = node.parseUnit(size, false, false) - node.contentBoxHeight;
                                                 }
                                             }
-                                            break;
+                                        }
+                                    });
+                                    break;
+                            }
+                            if (dimension) {
+                                const backgroundClip = stored.backgroundClip;
+                                switch (backgroundSize[i]) {
+                                    case 'cover':
+                                        if (dimension.width < node.bounds.width || dimension.height < node.bounds.height) {
+                                            const ratio = Math.max(node.bounds.width / dimension.width, node.bounds.height / dimension.height);
+                                            width = dimension.width * ratio;
+                                            height = dimension.height * ratio;
+                                        }
+                                        else {
+                                            width = 0;
+                                            height = 0;
+                                            gravityX = 'fill_horizontal';
+                                            gravityY = 'fill_vertical';
+                                        }
+                                        break;
+                                    case 'contain':
+                                        if (dimension.width !== node.bounds.width && dimension.height !== node.bounds.height) {
+                                            const ratio = Math.min(node.bounds.width / dimension.width, node.bounds.height / dimension.height);
+                                            width = dimension.width * ratio;
+                                            height = dimension.height * ratio;
+                                        }
+                                        else {
+                                            width = 0;
+                                            height = 0;
+                                            gravityX = 'fill_horizontal';
+                                            gravityY = 'fill_vertical';
+                                        }
+                                        break;
+                                    default:
+                                        if (width === 0 && (height > 0 || gravityY === 'fill_vertical') && gravityX !== 'fill_horizontal' && tileMode !== 'repeat' && tileModeX !== 'repeat') {
+                                            width = dimension.width * (height === 0 ? node.bounds.height : height) / dimension.height;
+                                        }
+                                        if (height === 0 && (width > 0 || gravityX === 'fill_horizontal') && gravityY !== 'fill_vertical' && tileMode !== 'repeat' && tileModeY !== 'repeat') {
+                                            height = dimension.height * (width === 0 ? node.bounds.width : width) / dimension.width;
+                                        }
+                                        break;
+                                }
+                                if (backgroundClip) {
+                                    if (width === 0) {
+                                        width = node.bounds.width;
+                                    }
+                                    else {
+                                        width += node.contentBoxWidth;
+                                    }
+                                    if (height === 0) {
+                                        height = node.bounds.height;
+                                    }
+                                    else {
+                                        height += node.contentBoxHeight;
+                                    }
+                                    width -= backgroundClip.left + backgroundClip.right;
+                                    height -= backgroundClip.top + backgroundClip.bottom;
+                                    if (backgroundClip.left > backgroundClip.right) {
+                                        left = backgroundClip.left - backgroundClip.right;
+                                    }
+                                    else if (backgroundClip.left < backgroundClip.right) {
+                                        right = backgroundClip.right - backgroundClip.left;
+                                    }
+                                    if (backgroundClip.top > backgroundClip.bottom) {
+                                        top = backgroundClip.top - backgroundClip.bottom;
+                                    }
+                                    else if (backgroundClip.top < backgroundClip.bottom) {
+                                        bottom = backgroundClip.bottom - backgroundClip.top;
                                     }
                                 }
-                                imageData.width = width;
-                                imageData.height = height;
-                                if (gravity !== '' || tileMode !== '' || tileModeX !== '' || tileModeY !== '') {
-                                    imageData.bitmap = [{
-                                        src,
-                                        gravity,
-                                        tileMode,
-                                        tileModeX,
-                                        tileModeY,
-                                    }];
+                                if (width > 0) {
+                                    imageData.width = $util.formatPX(width);
+                                }
+                                if (height > 0) {
+                                    imageData.height = $util.formatPX(height);
+                                }
+                            }
+                            if (gravity === undefined) {
+                                if (gravityX === 'center_horizontal' && gravityY === 'center_vertical') {
+                                    gravity = 'center';
+                                }
+                                else if (gravityX === 'fill_horizontal' && gravityY === 'fill_vertical') {
+                                    gravity = 'fill';
                                 }
                                 else {
-                                    imageData.drawable = src;
+                                    gravity = '';
+                                    if (gravityX !== '') {
+                                        gravity += gravityX;
+                                    }
+                                    if (gravityY !== '') {
+                                        gravity += (gravity !== '' ? '|' : '') + gravityY;
+                                    }
                                 }
                             }
-                            if (position.top !== 0) {
-                                imageData.top = $util.formatPX(position.top);
+                            if (tileMode === 'repeat' || tileModeX === 'repeat' || tileModeY === 'repeat') {
+                                imageData.bitmap = [{
+                                    src,
+                                    gravity,
+                                    tileMode,
+                                    tileModeX,
+                                    tileModeY
+                                }];
                             }
-                            if (position.right !== 0) {
-                                imageData.right = $util.formatPX(position.right);
-                            }
-                            if (position.bottom !== 0) {
-                                imageData.bottom = $util.formatPX(position.bottom);
-                            }
-                            if (position.left !== 0) {
-                                imageData.left = $util.formatPX(position.left);
+                            else {
+                                imageData.drawable = src;
+                                imageData.gravity = gravity;
                             }
                         }
-                        else {
-                            const dimension = <Dimension> imageDimensions[i];
+                        else if (dimension) {
                             if (value.item) {
                                 const width = Math.round(dimension.width);
                                 const height = Math.round(dimension.height);
@@ -740,14 +798,36 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             else {
                                 imageData.gradient = value;
                             }
-                            if (position.top !== 0) {
-                                imageData.top = $util.formatPX(getPercentOffset('top', position, node.bounds, dimension));
-                            }
-                            if (position.left !== 0) {
-                                imageData.left = $util.formatPX(getPercentOffset('left', position, node.bounds, dimension));
-                            }
                         }
                         if (imageData.drawable || imageData.bitmap || imageData.gradient) {
+                            if (position.bottom !== 0) {
+                                imageData.bottom = $util.formatPX(getPercentOffset('bottom', position, backgroundSize[i], node.bounds, dimension) + bottom);
+                                bottom = 0;
+                            }
+                            else if (position.top !== 0) {
+                                imageData.top = $util.formatPX(getPercentOffset('top', position, backgroundSize[i], node.bounds, dimension) + top);
+                                top = 0;
+                            }
+                            if (position.right !== 0) {
+                                imageData.right = $util.formatPX(getPercentOffset('right', position, backgroundSize[i], node.bounds, dimension) + right);
+                                right = 0;
+                            }
+                            else if (position.left !== 0) {
+                                imageData.left = $util.formatPX(getPercentOffset('left', position, backgroundSize[i], node.bounds, dimension) + left);
+                                left = 0;
+                            }
+                            if (top > 0) {
+                                imageData.top = $util.formatPX(top);
+                            }
+                            if (right > 0) {
+                                imageData.right = $util.formatPX(right);
+                            }
+                            if (bottom > 0) {
+                                imageData.bottom = $util.formatPX(bottom);
+                            }
+                            if (left > 0) {
+                                imageData.left = $util.formatPX(left);
+                            }
                             images.push(imageData);
                         }
                     }
@@ -817,10 +897,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     else {
                         layerListData = createLayerList();
                         const visibleAll = borderVisible[1] && borderVisible[2];
-                        function getHideWidth(value: number) {
-                            return value + (visibleAll ? 0 : value === 1 ? 1 : 2);
-                        }
-                        if (borderStyle && borderData && !(borderData.style === 'groove' || borderData.style === 'ridge')) {
+                        const getHideWidth = (value: number) => value + (visibleAll ? 0 : value === 1 ? 1 : 2);
+                        if (borderStyle && borderData && borderData.style !== 'groove' && borderData.style !== 'ridge') {
                             const width = parseInt(borderData.width);
                             if (borderData.style === 'double' && width > 2) {
                                 insertDoubleBorder.apply(null, [
@@ -852,7 +930,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             }
                         }
                         else {
-                            const index: number = layerListData[0].item.length;
+                            const index = layerListData[0].item.length;
                             for (let i = 0; i < borders.length; i++) {
                                 const item = borders[i];
                                 if (item) {
@@ -874,9 +952,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         const baseWidth = getHideWidth(outsetWidth);
                                         const visible = !visibleAll && item.width === '1px';
                                         let hideWidth = `-${$util.formatPX(baseWidth)}`;
-                                        let hideTopWidth = `-${$util.formatPX(baseWidth + (visibleAll ? 1 : 0))}`;
                                         layerListData[0].item.push({
-                                            top:  i === 0 ? '' : hideTopWidth,
+                                            top:  i === 0 ? '' : `-${$util.formatPX(baseWidth + (visibleAll ? 1 : 0))}`,
                                             right: i === 1 ? (visible ? item.width : '') : hideWidth,
                                             bottom: i === 2 ? (visible ? item.width : '') : hideWidth,
                                             left: i === 3 ? '' : hideWidth,
@@ -888,9 +965,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         });
                                         if (hasInset) {
                                             hideWidth = `-${$util.formatPX(getHideWidth(width))}`;
-                                            hideTopWidth = `-${$util.formatPX(width + (visibleAll ? 1 : 0))}`;
                                             layerListData[0].item.splice(index, 0, {
-                                                top:  i === 0 ? '' : hideTopWidth,
+                                                top:  i === 0 ? '' : `-${$util.formatPX(width + (visibleAll ? 1 : 0))}`,
                                                 right: i === 1 ? (visible ? item.width : '') : hideWidth,
                                                 bottom: i === 2 ? (visible ? item.width : '') : hideWidth,
                                                 left: i === 3 ? '' : hideWidth,
@@ -920,52 +996,55 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             $xml.applyTemplate('layer-list', LAYERLIST_TMPL, layerListData)
                         );
                     }
-                    if (backgroundImage.length) {
-                        node.data('RESOURCE', 'backgroundImage', true);
-                        if (this.options.autoSizeBackgroundImage && !node.documentRoot && !node.imageElement && !node.svgElement && node.renderParent && !node.renderParent.tableElement && node.hasProcedure($enum.NODE_PROCEDURE.AUTOFIT)) {
-                            let parentWidth = 0;
-                            let parentHeight = 0;
-                            if (node.tagName !== 'IMAGE') {
-                                for (const image of imageDimensions) {
-                                    if (image) {
-                                        parentWidth = Math.max(parentWidth, image.width);
-                                        parentHeight = Math.max(parentHeight, image.height);
-                                    }
-                                }
-                                if (parentWidth === 0) {
-                                    let current = node;
-                                    while (current && !current.documentBody) {
-                                        if (current.hasWidth) {
-                                            parentWidth = current.actualWidth;
-                                        }
-                                        if (current.hasHeight) {
-                                            parentHeight = current.actualHeight;
-                                        }
-                                        if (!current.pageFlow || (parentWidth > 0 && parentHeight > 0)) {
-                                            break;
-                                        }
-                                        current = current.documentParent as T;
-                                    }
+                    if (this.options.autoSizeBackgroundImage && backgroundImage.length && !node.documentRoot && !node.imageElement && !node.svgElement && node.renderParent && !node.renderParent.tableElement && node.hasProcedure($enum.NODE_PROCEDURE.AUTOFIT)) {
+                        let parentWidth = 0;
+                        let parentHeight = 0;
+                        if (node.tagName !== 'IMAGE') {
+                            for (const image of imageDimensions) {
+                                if (image) {
+                                    parentWidth = Math.max(parentWidth, image.width);
+                                    parentHeight = Math.max(parentHeight, image.height);
                                 }
                             }
-                            let width: string | number = node.cssInitial('width');
-                            if (!$util.isLength(width) && width !== '100%') {
-                                width = node.bounds.width + (node.is(CONTAINER_NODE.LINE) ? 0 : node.borderLeftWidth + node.borderRightWidth);
-                                if (parentWidth === 0 || (width > 0 && width < parentWidth)) {
-                                    node.css('width', $util.formatPX(width), true);
+                            if (parentWidth === 0) {
+                                let current = node;
+                                while (current && !current.documentBody) {
+                                    if (current.hasWidth) {
+                                        parentWidth = current.actualWidth;
+                                    }
+                                    if (current.hasHeight) {
+                                        parentHeight = current.actualHeight;
+                                    }
+                                    if (!current.pageFlow || parentWidth > 0 && parentHeight > 0) {
+                                        break;
+                                    }
+                                    current = current.documentParent as T;
                                 }
                             }
-                            let height: string | number = node.cssInitial('height');
-                            if (!$util.isLength(height) && height !== '100%' && (node.length === 0 || node.some(item => !item.multiline))) {
-                                height = node.bounds.height + (node.is(CONTAINER_NODE.LINE) ? 0 : node.borderTopWidth + node.borderBottomWidth);
-                                if (parentHeight === 0 || (height > 0 && height < parentHeight)) {
-                                    node.css('height', $util.formatPX(height), true);
-                                    if (node.marginTop < 0) {
-                                        node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, null);
-                                    }
-                                    if (node.marginBottom < 0) {
-                                        node.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, null);
-                                    }
+                        }
+                        const width = node.cssInitial('width');
+                        const height = node.cssInitial('height');
+                        if (!$util.isLength(width) && width !== '100%') {
+                            let backgroundWidth = node.bounds.width;
+                            if (!node.is(CONTAINER_NODE.LINE)) {
+                                backgroundWidth -= $util.isPercent(width) ? node.contentBoxWidth : node.borderLeftWidth + node.borderRightWidth;
+                            }
+                            if (backgroundWidth > 0 && (parentWidth === 0 || backgroundWidth < parentWidth)) {
+                                node.css('width', $util.formatPX(backgroundWidth), true);
+                            }
+                        }
+                        if (!$util.isLength(height) && height !== '100%' && (node.length === 0 || node.some(item => !item.multiline))) {
+                            let backgroundHeight = node.bounds.height;
+                            if (!node.is(CONTAINER_NODE.LINE)) {
+                                backgroundHeight -= $util.isPercent(height) ? node.contentBoxHeight : node.borderTopWidth + node.borderBottomWidth;
+                            }
+                            if (backgroundHeight > 0 && (parentHeight === 0 || backgroundHeight < parentHeight)) {
+                                node.css('height', $util.formatPX(backgroundHeight), true);
+                                if (node.marginTop < 0) {
+                                    node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, null);
+                                }
+                                if (node.marginBottom < 0) {
+                                    node.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, null);
                                 }
                             }
                         }

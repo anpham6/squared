@@ -4,8 +4,6 @@ import { ViewAttribute } from '../@types/node';
 import { XMLNS_ANDROID } from './constant';
 import { BUILD_ANDROID } from './enumeration';
 
-const $util = squared.lib.util;
-
 export function stripId(value: string) {
     return value ? value.replace(/^@\+?id\//, '') : '';
 }
@@ -78,8 +76,8 @@ export function localizeString(value: string, rtl: boolean, api: number) {
     return value;
 }
 
-export function getXmlNs(...values: string[]) {
-    return $util.joinMap(values, namespace => XMLNS_ANDROID[namespace] ? `xmlns:${namespace}="${XMLNS_ANDROID[namespace]}"` : '', ' ').trim();
+export function getXmlNs(value: string) {
+    return XMLNS_ANDROID[value] ? `xmlns:${value}="${XMLNS_ANDROID[value]}"` : '';
 }
 
 export function getRootNs(value: string) {

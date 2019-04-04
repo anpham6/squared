@@ -60,6 +60,7 @@ declare global {
             function isEqual(valueA: number, valueB: number, precision?: number): number;
             function moreEqual(valueA: number, valueB: number, precision?: number): number;
             function lessEqual(valueA: number, valueB: number, precision?: number): number;
+            function convertDecimalNotation(value: number): string;
             function truncate(value: number, precision?: number): string;
             function truncateFraction(value: number): number;
             function truncateString(value: string, precision?: number): string;

@@ -653,7 +653,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                                     node.left < 0 && node.outsideX(parent.box) ||
                                                     !node.has('left') && node.right < 0 && node.outsideX(parent.box) ||
                                                     node.top < 0 && node.outsideY(parent.box) ||
-                                                    !node.has('top') && node.bottom < 0 && node.outsideX(parent.box)
+                                                    !node.has('top') && node.bottom < 0 && node.outsideY(parent.box)
                                                 ))
                                             {
                                                 outside = true;

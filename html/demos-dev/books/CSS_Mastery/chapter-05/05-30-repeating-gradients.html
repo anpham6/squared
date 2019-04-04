@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Repeating gradients</title>
+  <style>
+    div {
+      display: inline-block;
+      margin-right: 1em;
+      max-width: 300px;
+      width: 100%;
+      height: 300px;
+    }
+    .linear-repeat {
+      background-image: -webkit-repeating-linear-gradient(#cfdfee, #2c56a1 20px);
+      background-image: -moz-repeating-linear-gradient(#cfdfee, #2c56a1 20px);
+      background-image: -o-repeating-linear-gradient(#cfdfee, #2c56a1 20px);
+      background-image: repeating-linear-gradient(#cfdfee, #2c56a1 20px);
+    }
+    .radial-repeat {
+      background-image: -webkit-repeating-radial-gradient(#cfdfee, #2c56a1 20px);
+      background-image: -moz-repeating-radial-gradient(#cfdfee, #2c56a1 20px);
+      background-image: -o-repeating-radial-gradient(#cfdfee, #2c56a1 20px);
+      background-image: repeating-radial-gradient(#cfdfee, #2c56a1 20px);
+    }
+  </style>
+  <script src="/node_modules/systemjs/dist/system.js"></script>
+  <script src="../../squared.js"></script>
+</head>
+<body>
+  <div class="linear-repeat"></div>
+
+  <div class="radial-repeat"></div>
+</body>
+</html>

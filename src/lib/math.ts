@@ -1,3 +1,6 @@
+const REGEXP_TRUNCATE = /^(-?\d+)\.(\d*?)(0{5,}|9{5,})\d*$/;
+const REGEXP_DECIMALNOTATION = /^(-?\d+\.\d+)e(-?\d+)$/;
+
 export function minArray(list: number[]): number {
     if (list.length) {
         return Math.min.apply(null, list);
@@ -40,9 +43,23 @@ export function truncate(value: number, precision = 3) {
     }
 }
 
+export function convertDecimalNotation(value: number) {
+    const match = REGEXP_DECIMALNOTATION.exec(value.toString());
+    if (match) {
+        const multiplier = parseInt(match[2]);
+        if (multiplier > 0) {
+            return value.toFixed(multiplier + 1);
+        }
+        else {
+            return value.toFixed(Math.abs(multiplier));
+        }
+    }
+    return value.toString();
+}
+
 export function truncateFraction(value: number) {
     if (value !== Math.floor(value)) {
-        const match = /^(\d+)\.(\d*?)(0{5,}|9{5,})\d*$/.exec(value.toString());
+        const match = REGEXP_TRUNCATE.exec(convertDecimalNotation(value));
         if (match) {
             return match[2] === '' ? Math.round(value) : parseFloat(value.toPrecision((match[1] !== '0' ? match[1].length : 0) + match[2].length));
         }

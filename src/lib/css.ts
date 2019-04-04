@@ -213,6 +213,7 @@ export function calculateVar(element: HTMLElement | SVGElement, value: string, a
 }
 
 export function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number) {
+    const orientation = value === 'center' ? ['center', 'center'] : value.split(' ');
     const result: RectPosition = {
         top: 0,
         left: 0,
@@ -223,9 +224,9 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
         rightAsPercent: 0,
         bottomAsPercent: 0,
         horizontal: 'left',
-        vertical: 'top'
+        vertical: 'top',
+        orientation
     };
-    const orientation = value === 'center' ? ['center', 'center'] : value.split(' ');
     if (orientation.length === 2) {
         for (let i = 0; i < orientation.length; i++) {
             const position = orientation[i];
@@ -343,7 +344,7 @@ export function convertListStyle(name: string, value: number, valueAsDefault = f
 }
 
 export function resolveURL(value: string) {
-    const match = value.match(REGEXP_COMPILED.URL);
+    const match = REGEXP_COMPILED.URL.exec(value);
     return match ? resolvePath(match[1]) : '';
 }
 

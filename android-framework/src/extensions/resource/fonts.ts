@@ -390,7 +390,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         for (const value of parentStyle) {
             let parent = '';
             for (const name of value.split('.')) {
-                const match = name.match(REGEXP_TAGNAME);
+                const match = REGEXP_TAGNAME.exec(name);
                 if (match) {
                     const data = resource[match[1].toUpperCase()][$util.convertInt(match[2])];
                     if (data) {

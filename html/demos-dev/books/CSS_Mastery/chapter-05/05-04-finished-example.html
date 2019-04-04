@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Finished example</title>
+
+  <style>
+    body {
+      padding: 0;
+      margin: 0;
+      font-family: "Helvetica Neue", Arial, sans-serif;
+    }
+    .profile-box {
+      position: relative;
+      height: 600px;
+      background-image: url(img/cat.jpg);
+      background-size: cover;
+      background-position: 50% 30%;
+      box-shadow: inset 0 -.5em .5em rgba(0, 0, 0, 0.3);
+      border-bottom: 1px solid #666;
+    }
+
+    .profile-photo {
+      width: 160px;
+      min-height: 200px;
+      position: absolute;
+      bottom: -60px;
+      left: 5%;
+      padding: .5em;
+      -webkit-border-radius: .5em;
+      border-radius: .5em;
+      background-color: #fff;
+      box-shadow: .25em .25em .5em rgba(0, 0, 0, 0.3);
+    }
+    .profile-photo img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+    .username {
+      font-size: 20px;
+      color: #666;
+      margin: .35em 0 0;
+    }
+  </style>
+  <script src="/node_modules/systemjs/dist/system.js"></script>
+  <script src="../../squared.js"></script>
+</head>
+<body>
+  <header class="profile-box" role="banner">
+    <div class="profile-photo">
+      <img src="img/profile.jpg" alt="Charles the Cat">
+      <h1 class="username">@CharlesTheCat</h1>
+    </div>
+  </header>
+</body>
+</html>

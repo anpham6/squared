@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Multiple backgrounds on a single element, using shorthand declarations</title>
+  <style>
+    .multi-bg-shorthand {
+      width: 300px;
+      height: 200px;
+      background: url(img/spades.png) left top no-repeat,
+                  url(img/hearts.png) right top no-repeat,
+                  url(img/diamonds.png) left bottom no-repeat,
+                  url(img/clubs.png) right bottom no-repeat,
+                  pink;
+    }
+
+  </style>
+  <script src="/node_modules/systemjs/dist/system.js"></script>
+  <script src="../../squared.js"></script>
+</head>
+<body>
+  <div class="multi-bg-shorthand">
+
+  </div>
+</body>
+</html>
