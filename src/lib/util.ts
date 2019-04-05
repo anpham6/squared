@@ -740,7 +740,7 @@ export function assignEmptyProperty(dest: {}, source: {}) {
 export function assignEmptyValue(dest: {}, ...attrs: string[]) {
     if (attrs.length > 1) {
         let current = dest;
-        for (let i = 0 ; ; i++) {
+        for (let i = 0; ; i++) {
             const name = attrs[i];
             if (i === attrs.length - 2) {
                 if (!hasValue(current[name])) {

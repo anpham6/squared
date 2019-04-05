@@ -11,7 +11,7 @@ declare global {
             checkRelativeHorizontal(data: squared.base.Layout<T>): boolean;
             addGuideline(node: T, parent: T, orientation?: string, percent?: boolean, opposite?: boolean): void;
             renderSpace(width: string, height?: string, columnSpan?: number, rowSpan?: number, options?: ViewAttribute): string;
-            createNodeWrapper(node: T, parent?: T, controlName?: string, containerType?: number): T;
+            createNodeWrapper(node: T, parent?: T, children?: T[], controlName?: string, containerType?: number): T;
         }
 
         class Controller<T extends View> implements Controller<T> {

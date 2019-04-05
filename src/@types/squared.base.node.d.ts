@@ -122,8 +122,8 @@ declare global {
             readonly layoutHorizontal: boolean;
             readonly layoutVertical: boolean;
             readonly support: Support;
-            readonly absoluteParent: Node | undefined;
-            readonly actualParent: Node | undefined;
+            readonly absoluteParent: Node | null;
+            readonly actualParent: Node | null;
             readonly actualWidth: number;
             readonly actualHeight: number;
             readonly actualDimension: Dimension;
@@ -164,7 +164,7 @@ declare global {
             ascend(generated?: boolean, levels?: number): Node[];
             cascade(element?: boolean): Node[];
             inherit(node: Node, ...modules: string[]): void;
-            alignedVertically(previousSiblings: Node[], siblings?: Node[], cleared?: Map<Node, string>, checkFloat?: boolean): boolean;
+            alignedVertically(previousSiblings: Node[], siblings?: Node[], cleared?: Map<Node, string>, horizontal?: boolean): boolean;
             intersectX(rect: RectDimension, dimension?: string): boolean;
             intersectY(rect: RectDimension, dimension?: string): boolean;
             withinX(rect: RectDimension, dimension?: string): boolean;
@@ -200,8 +200,8 @@ declare global {
             resetBox(region: number, node?: Node, fromParent?: boolean): void;
             inheritBox(region: number, node: Node): void;
             actualRight(dimension?: string): number;
-            previousSiblings(lineBreak?: boolean, excluded?: boolean, height?: boolean, pageFlow?: boolean): Node[];
-            nextSiblings(lineBreak?: boolean, excluded?: boolean, height?: boolean, pageFlow?: boolean): Node[];
+            previousSiblings(floating?: boolean, pageFlow?: boolean, lineBreak?: boolean, excluded?: boolean): Node[];
+            nextSiblings(floating?: boolean, pageFlow?: boolean, lineBreak?: boolean, excluded?: boolean): Node[];
             getFirstChildElement(lineBreak?: boolean, excluded?: boolean): Element | null;
             getLastChildElement(lineBreak?: boolean, excluded?: boolean): Element | null;
         }

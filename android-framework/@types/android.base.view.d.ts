@@ -11,6 +11,7 @@ declare global {
             readonly layoutLinear: boolean;
             readonly layoutRelative: boolean;
             readonly layoutConstraint: boolean;
+            readonly actualAnchor: View;
             readonly inlineWidth: boolean;
             readonly inlineHeight: boolean;
             readonly blockWidth: boolean;
@@ -33,7 +34,7 @@ declare global {
         class View implements View {
             public static documentBody(): View;
             public static getControlName(containerType: number): string;
-            constructor(id: number, sessionId?: string, element?: Element | null, afterInit?: BindGeneric<View, void>);
+            constructor(id: number, sessionId?: string, element?: Element, afterInit?: BindGeneric<View, void>);
         }
 
         class ViewGroup<T extends View> extends View {}

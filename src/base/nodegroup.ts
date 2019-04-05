@@ -37,14 +37,14 @@ export default abstract class NodeGroup extends Node {
         }
     }
 
-    public previousSiblings(lineBreak = true, excluded = true, height = false, pageFlow = true) {
+    public previousSiblings(floating = true, pageFlow = true, lineBreak = true, excluded = true) {
         const node = this.item(0);
-        return node ? node.previousSiblings(lineBreak, excluded, height, pageFlow) : [];
+        return node ? node.previousSiblings(floating, pageFlow, lineBreak, excluded) : [];
     }
 
-    public nextSiblings(lineBreak = true, excluded = true, height = false, pageFlow = true) {
+    public nextSiblings(floating = true, pageFlow = true, lineBreak = true, excluded = true) {
         const node = this.item();
-        return node ? node.nextSiblings(lineBreak, excluded, height, pageFlow) : [];
+        return node ? node.nextSiblings(floating, pageFlow, lineBreak, excluded) : [];
     }
 
     get actualParent() {

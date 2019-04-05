@@ -27,127 +27,75 @@ function resetMargin(node: Node, value: number) {
     }
 }
 
-function applyMarginCollapse(node: Node, visibleNode: Node, child: Node, direction: boolean) {
+function applyMarginCollapse(node: Node, child: Node, direction: boolean) {
     if (isBlockElement(child)) {
+        let margin: string;
+        let borderWidth: string;
+        let padding: string;
+        let boxMargin: number;
         if (direction) {
-            if (node.borderTopWidth === 0 && node.paddingTop === 0) {
-                let replaced = false;
-                while (child.marginTop === 0 && child.borderTopWidth === 0 && child.paddingTop === 0) {
-                    const firstChild = child.firstChild as Node;
-                    if (isBlockElement(firstChild)) {
-                        if (HTML5 && firstChild.marginTop !== 0 && child.has('marginTop', CSS_STANDARD.ZERO)) {
-                            firstChild.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
-                            replaced = false;
-                            break;
-                        }
-                        child = firstChild;
-                        replaced = true;
-                    }
-                    else {
-                        break;
-                    }
-                }
-                if (!HTML5 && node.marginTop === 0 && node.has('marginTop', CSS_STANDARD.ZERO)) {
-                    resetMargin(child, BOX_STANDARD.MARGIN_TOP);
-                }
-                else if (HTML5 && node.marginTop < child.marginTop) {
-                    if (node.elementId === '')  {
-                        visibleNode.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
-                    }
-                    if (!replaced && !node.documentBody) {
-                        if (child.marginTop > node.marginTop) {
-                            if (node.elementId !== '')  {
-                                visibleNode.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
-                            }
-                            visibleNode.modifyBox(BOX_STANDARD.MARGIN_TOP, child.marginTop);
-                        }
-                        resetMargin(child, BOX_STANDARD.MARGIN_TOP);
-                    }
-                }
-                else if (node.naturalElement && node.marginTop > 0) {
-                    let valid = false;
-                    if (node.visible && child.visible) {
-                        child.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
-                        valid = true;
-                    }
-                    else {
-                        let replacement: Node | undefined;
-                        if (child.outerParent) {
-                            replacement = child.outerParent;
-                        }
-                        else if (child.innerChild) {
-                            replacement = child.innerChild;
-                        }
-                        if (replacement) {
-                            replacement.modifyBox(BOX_STANDARD.MARGIN_TOP, -child.marginTop, false);
-                            child = replacement;
-                            valid = true;
-                        }
-                    }
-                    if (valid && child.companion) {
-                        child.companion.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
-                    }
-                }
-            }
+            margin = 'marginTop';
+            borderWidth = 'borderTopWidth';
+            padding = 'paddingTop';
+            boxMargin = BOX_STANDARD.MARGIN_TOP;
         }
         else {
-            if (node.paddingBottom === 0 && node.borderBottomWidth === 0) {
-                let replaced = false;
-                while (child.paddingBottom === 0 && child.borderBottomWidth === 0 && child.marginBottom === 0) {
-                    const lastChild = child.lastChild as Node;
-                    if (isBlockElement(lastChild)) {
-                        if (HTML5 && lastChild.marginBottom !== 0 && child.has('marginBottom', CSS_STANDARD.ZERO)) {
-                            lastChild.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
-                            replaced = false;
-                            break;
-                        }
-                        child = lastChild;
-                        replaced = true;
-                    }
-                    else {
+            padding = 'paddingBottom';
+            borderWidth = 'borderBottomWidth';
+            margin = 'marginBottom';
+            boxMargin = BOX_STANDARD.MARGIN_BOTTOM;
+        }
+        if (node[borderWidth] === 0 && node[padding] === 0) {
+            let replaced = false;
+            while (child[margin] === 0 && child[borderWidth] === 0 && child[padding] === 0) {
+                const firstChild = child.firstChild as Node;
+                if (isBlockElement(firstChild)) {
+                    if (HTML5 && firstChild[margin] !== 0 && child.has(margin, CSS_STANDARD.ZERO)) {
+                        firstChild.modifyBox(boxMargin, null);
+                        replaced = false;
                         break;
                     }
+                    child = firstChild;
+                    replaced = true;
                 }
-                if (!HTML5 && node.marginBottom === 0 && node.has('marginBottom', CSS_STANDARD.ZERO)) {
-                    resetMargin(child, BOX_STANDARD.MARGIN_BOTTOM);
+                else {
+                    break;
                 }
-                else if (HTML5 && node.marginBottom < child.marginBottom) {
-                    if (node.elementId === '')  {
-                        visibleNode.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
-                    }
-                    if (!replaced && !node.documentBody) {
-                        if (child.marginBottom > node.marginBottom) {
-                            if (node.elementId !== '')  {
-                                visibleNode.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
-                            }
-                            visibleNode.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, child.marginBottom);
+            }
+            if (HTML5 && node[margin] < child[margin]) {
+                const visibleNode = getVisibleNode(node);
+                if (node.elementId === '')  {
+                    visibleNode.modifyBox(boxMargin, null);
+                }
+                if (!replaced && !node.documentBody) {
+                    if (child[margin] > node[margin]) {
+                        if (node.elementId !== '')  {
+                            visibleNode.modifyBox(boxMargin, null);
                         }
-                        resetMargin(child, BOX_STANDARD.MARGIN_BOTTOM);
+                        visibleNode.modifyBox(boxMargin, child[margin]);
                     }
+                    resetMargin(child, boxMargin);
                 }
-                else if (node.naturalElement && node.marginBottom > 0) {
-                    let valid = false;
-                    if (node.visible && child.visible) {
-                        child.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
-                        valid = true;
+            }
+            else if (!HTML5 && node.cssInitial(margin) === '0px') {
+                resetMargin(child, boxMargin);
+            }
+            else if (node.naturalElement && node[margin] > 0) {
+                if (node.visible && child.visible) {
+                    child.modifyBox(boxMargin, null);
+                }
+                else {
+                    const replacement = child.outerParent || child.innerChild;
+                    if (replacement) {
+                        replacement.modifyBox(boxMargin, -child[margin], false);
+                        child = replacement;
                     }
                     else {
-                        let replacement: Node | undefined;
-                        if (child.outerParent) {
-                            replacement = child.outerParent;
-                        }
-                        else if (child.innerChild) {
-                            replacement = child.innerChild;
-                        }
-                        if (replacement) {
-                            replacement.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, -child.marginBottom, false);
-                            child = replacement;
-                            valid = true;
-                        }
+                        return;
                     }
-                    if (valid && child.companion) {
-                        child.companion.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
-                    }
+                }
+                if (child.companion) {
+                    child.companion.modifyBox(boxMargin, null);
                 }
             }
         }
@@ -158,7 +106,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
     public afterBaseLayout() {
         const processed = new Set<T>();
         for (const node of this.application.processing.cache) {
-            if (node.naturalElement) {
+            if (node.naturalElement && !node.gridElement && !node.flexElement) {
                 const children = node.actualChildren;
                 let firstChild: T | undefined;
                 let lastChild: T | undefined;
@@ -174,7 +122,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                         continue;
                     }
                     if (isBlockElement(current)) {
-                        const previousSiblings = current.previousSiblings(true, true, true);
+                        const previousSiblings = current.previousSiblings(false);
                         if (previousSiblings.length) {
                             const previous = previousSiblings.find(item => !item.floating) as T;
                             if (previous) {
@@ -260,20 +208,19 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                         }
                     }
                 }
-                const visibleNode = getVisibleNode(node);
                 if (firstChild) {
-                    applyMarginCollapse(node, visibleNode, firstChild, true);
+                    applyMarginCollapse(node, firstChild, true);
                 }
                 if (lastChild) {
-                    applyMarginCollapse(node, visibleNode, lastChild, false);
+                    applyMarginCollapse(node, lastChild, false);
                 }
             }
         }
         for (const node of this.application.processing.excluded) {
             if (!processed.has(node) && node.lineBreak) {
                 const actualParent = node.actualParent;
-                const previousSiblings = node.previousSiblings(true, true, true) as T[];
-                const nextSiblings = node.nextSiblings(true, true, true) as T[];
+                const previousSiblings = node.previousSiblings(false) as T[];
+                const nextSiblings = node.nextSiblings(false) as T[];
                 let valid = false;
                 if (previousSiblings.length && nextSiblings.length) {
                     if (nextSiblings[0].lineBreak) {

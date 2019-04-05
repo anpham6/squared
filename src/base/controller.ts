@@ -59,7 +59,7 @@ export default abstract class Controller<T extends Node> implements squared.base
                 position: 'static',
                 display: 'inline',
                 verticalAlign: 'baseline',
-                cssFloat: 'none',
+                float: 'none',
                 clear: 'none'
             };
         }

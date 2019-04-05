@@ -129,26 +129,27 @@ export function getRangeClientRect(element: Element) {
     let multiline = 0;
     if (domRect.length) {
         bounds = assignRect(domRect[0]);
-        const top = new Set([bounds.top]);
-        const bottom = new Set([bounds.bottom]);
-        let minTop = bounds.top;
-        let maxBottom = bounds.bottom;
         for (let i = 1 ; i < domRect.length; i++) {
             const rect = domRect[i];
-            top.add(Math.round(rect.top));
-            bottom.add(Math.round(rect.bottom));
-            minTop = Math.min(minTop, rect.top);
-            maxBottom = Math.min(maxBottom, rect.bottom);
-            bounds.width += rect.width;
-            bounds.right = Math.max(rect.right, bounds.right);
-            bounds.height = Math.max(rect.height, bounds.height);
-        }
-        if (top.size > 1 && bottom.size > 1) {
-            bounds.top = minTop;
-            bounds.bottom = maxBottom;
-            if (domRect[domRect.length - 1].top >= domRect[0].bottom && element.textContent && (element.textContent.trim() !== '' || /^\s*\n/.test(element.textContent))) {
-                multiline = domRect.length - 1;
+            if (rect.left < bounds.left) {
+                bounds.left = rect.left;
             }
+            if (rect.right > bounds.right) {
+                bounds.right = rect.right;
+            }
+            if (rect.top < bounds.top) {
+                bounds.top = rect.top;
+            }
+            if (rect.bottom > bounds.bottom) {
+                bounds.bottom = rect.bottom;
+            }
+            if (rect.height > bounds.height) {
+                bounds.height = rect.height;
+            }
+            bounds.width += rect.width;
+        }
+        if (domRect.length > 1 && domRect[domRect.length - 1].top >= domRect[0].bottom && element.textContent && (element.textContent.trim() !== '' || /^\s*\n/.test(element.textContent))) {
+            multiline = domRect.length - 1;
         }
     }
     (<TextDimension> bounds).multiline = multiline;
@@ -224,7 +225,7 @@ export function createElement(parent?: Element | null, tagName = 'span', placeho
         style.setProperty('margin', '0px');
         style.setProperty('padding', '0px');
         style.setProperty('border', 'none');
-        style.setProperty('cssFloat', 'none');
+        style.setProperty('float', 'none');
         style.setProperty('clear', 'none');
         element.className = '__squared.placeholder';
     }

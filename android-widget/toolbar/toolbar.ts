@@ -67,13 +67,13 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         for (let i = 0; i < element.children.length; i++) {
             const item = <HTMLElement> element.children[i];
             if (item.tagName === 'IMG') {
-                if ($util.hasValue(item.dataset.navigationIcon)) {
+                if (item.dataset.navigationIcon) {
                     const src = $Resource.addImageSrc(<HTMLImageElement> item, $constA.PREFIX_ANDROID.MENU);
                     if (src !== '') {
                         $util.assignEmptyValue(toolbarOptions, 'app', 'navigationIcon', `@drawable/${src}`);
                     }
                 }
-                if ($util.hasValue(item.dataset.collapseIcon)) {
+                if (item.dataset.collapseIcon) {
                     const src = $Resource.addImageSrc(<HTMLImageElement> item, $constA.PREFIX_ANDROID.MENU);
                     if (src !== '') {
                         $util.assignEmptyValue(toolbarOptions, 'app', 'collapseIcon', `@drawable/${src}`);

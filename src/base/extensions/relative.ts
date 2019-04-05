@@ -8,7 +8,7 @@ const $util = squared.lib.util;
 
 export default abstract class Relative<T extends Node> extends Extension<T> {
     public condition(node: T) {
-        return node.positionRelative && !node.positionStatic || $util.convertFloat(node.cssInitial('verticalAlign')) !== 0;
+        return node.positionRelative && !node.positionStatic || node.toFloat('verticalAlign', true) !== 0;
     }
 
     public processNode() {

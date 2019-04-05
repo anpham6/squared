@@ -15,10 +15,12 @@ const $dom = squared.lib.dom;
 const $session = squared.lib.session;
 const $util = squared.lib.util;
 
-const REGEXP_CACHED: ObjectMap<RegExp> = {};
+const REGEXP_CACHED: ObjectMap<RegExp> = {
+    PSEUDO_CONTENT: /^(padding|border)/
+};
 let NodeConstructor!: Constructor<Node>;
 
-function checkPositionStatic(node: Node, parent?: Node) {
+function checkPositionStatic(node: Node, parent: Node | null) {
     const previousSiblings = node.previousSiblings();
     const nextSiblings = node.nextSiblings();
     if (!previousSiblings.some(item => item.multiline || item.excluded && !item.blockStatic) && (nextSiblings.every(item => item.blockStatic || item.lineBreak || item.excluded) || parent && node.element === parent.getLastChildElement())) {
@@ -483,7 +485,7 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
         }
         if (append) {
-            this.processing.cache.append(node, parent !== undefined);
+            this.processing.cache.append(node, children !== undefined);
         }
         return node;
     }
@@ -639,7 +641,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         }
                         else if (this.userSettings.supportNegativeLeftTop) {
                             const absoluteParent = node.absoluteParent;
-                            let documentParent: T | undefined;
+                            let documentParent: UndefNull<T>;
                             let outside = false;
                             while (parent && (parent !== rootNode || parent.id !== 0)) {
                                 if (documentParent === undefined) {
@@ -649,12 +651,10 @@ export default class Application<T extends Node> implements squared.base.Applica
                                             break;
                                         }
                                         else {
-                                            if ((!node.has('right') || node.right < 0) && (!node.has('bottom') || node.bottom < 0) && (
-                                                    node.left < 0 && node.outsideX(parent.box) ||
-                                                    !node.has('left') && node.right < 0 && node.outsideX(parent.box) ||
-                                                    node.top < 0 && node.outsideY(parent.box) ||
-                                                    !node.has('top') && node.bottom < 0 && node.outsideY(parent.box)
-                                                ))
+                                            if ((node.left !== 0 || node.marginLeft < 0) && node.outsideX(parent.box) ||
+                                                !node.has('left') && node.right !== 0 && node.outsideX(parent.box) ||
+                                                (node.top !== 0 || node.marginTop < 0) && node.outsideY(parent.box) ||
+                                                !node.has('top') && node.bottom !== 0 && node.outsideY(parent.box))
                                             {
                                                 outside = true;
                                             }
@@ -664,9 +664,17 @@ export default class Application<T extends Node> implements squared.base.Applica
                                         }
                                     }
                                 }
-                                else if (outside && (parent.documentRoot || parent.css('overflow') === 'hidden' || node.withinX(parent.box) && node.withinY(parent.box))) {
-                                    documentParent = parent as T;
-                                    break;
+                                else if (outside) {
+                                    if (parent.flexElement || parent.gridElement) {
+                                        if (documentParent === undefined) {
+                                            documentParent = node.parent as T;
+                                        }
+                                        break;
+                                    }
+                                    else if (parent.documentRoot || parent.css('overflow') === 'hidden' || node.withinX(parent.box) && node.withinY(parent.box)) {
+                                        documentParent = parent as T;
+                                        break;
+                                    }
                                 }
                                 parent = parent.actualParent as T;
                             }
@@ -679,7 +687,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         }
                         break;
                 }
-                if (!node.pageFlow && (parent === undefined || parent.id === 0)) {
+                if (!node.pageFlow && (!parent || parent.id === 0)) {
                     parent = rootNode;
                 }
                 if (parent) {
@@ -690,6 +698,8 @@ export default class Application<T extends Node> implements squared.base.Applica
                     node.documentParent = parent;
                 }
             }
+        }
+        for (const node of this.processing.cache) {
             if (node.length) {
                 const layers: Array<T[]> = [];
                 node.each((item: T) => {
@@ -705,32 +715,35 @@ export default class Application<T extends Node> implements squared.base.Applica
                                 if (layers[index] === undefined) {
                                     layers[index] = [];
                                 }
+                                item.css('zIndex', adjacent.zIndex.toString());
                                 layers[index].push(item);
                                 break;
                             }
                         }
                     }
                 });
-                for (let j = 0; j < layers.length; j++) {
-                    const order = layers[j];
-                    if (order) {
-                        order.sort((a, b) => {
-                            if (a.zIndex === b.zIndex) {
-                                return a.id < b.id ? -1 : 1;
+                if (layers.length) {
+                    for (let j = 0; j < layers.length; j++) {
+                        const order = layers[j];
+                        if (order) {
+                            order.sort((a, b) => {
+                                if (a.zIndex === b.zIndex) {
+                                    return a.id < b.id ? -1 : 1;
+                                }
+                                return a.zIndex < b.zIndex ? -1 : 1;
+                            });
+                            node.each((item: T) => {
+                                if (item.siblingIndex >= j && item.siblingIndex !== Number.POSITIVE_INFINITY) {
+                                    item.siblingIndex += order.length;
+                                }
+                            });
+                            for (let k = 0 ; k < order.length; k++) {
+                                order[k].siblingIndex = j + k;
                             }
-                            return a.zIndex < b.zIndex ? -1 : 1;
-                        });
-                        node.each((item: T) => {
-                            if (item.siblingIndex >= j && item.siblingIndex !== Number.POSITIVE_INFINITY) {
-                                item.siblingIndex += order.length;
-                            }
-                        });
-                        for (let k = 0 ; k < order.length; k++) {
-                            order[k].siblingIndex = j + k;
                         }
                     }
+                    node.sort(NodeList.siblingIndex);
                 }
-                node.sort(NodeList.siblingIndex);
             }
             node.saveAsInitial();
         }
@@ -958,7 +971,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                     const previous = previousSiblings[previousSiblings.length - 1];
                                     const next = item.nextSiblings().shift();
                                     if (m === 0 && next) {
-                                        if (item.blockStatic || next.alignedVertically([item], [item], cleared)) {
+                                        if (item.blockStatic || next.blockStatic && item.floating || next.alignedVertically([item], [item], cleared)) {
                                             vertical.push(item);
                                         }
                                         else {
@@ -967,15 +980,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                     }
                                     else if (previous) {
                                         if (hasFloat) {
-                                            const siblings: T[] = [];
-                                            if (horizontal.length) {
-                                                $util.concatArray(siblings, horizontal);
-                                            }
-                                            else if (vertical.length) {
-                                                $util.concatArray(siblings, vertical);
-                                            }
-                                            siblings.push(item);
-                                            if (item.alignedVertically(previousSiblings, siblings, cleared, false)) {
+                                            if (item.alignedVertically(previousSiblings, horizontal.length ? horizontal : vertical, cleared, horizontal.length > 0)) {
                                                 if (horizontal.length) {
                                                     if (floatActive.size && !previous.autoMargin.horizontal && cleared.get(item) !== 'both' && !previousSiblings.some(node => node.lineBreak && !cleared.has(node))) {
                                                         let floatBottom = Number.NEGATIVE_INFINITY;
@@ -994,7 +999,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                                                 }
                                                                 break domNested;
                                                             }
-                                                            else if (floated.size === 1 && (!item.floating || floatActive.has(item.float))) {
+                                                            else if (floated.size === 1 && (!item.floating && !item.blockStatic || floatActive.has(item.float))) {
                                                                 horizontal.push(item);
                                                                 if (item.linear.bottom > floatBottom) {
                                                                     break domNested;
@@ -1181,6 +1186,42 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     protected processFloatHorizontal(layout: Layout<T>) {
+        function adjustPadding(segStatic: T[], segFloat: T[], direction: string) {
+            let boundsA = Number.POSITIVE_INFINITY;
+            let boundsB = Number.NEGATIVE_INFINITY;
+            let margin: string;
+            let opposing: string;
+            let padding: number;
+            if (direction === 'right') {
+                margin = 'marginRight';
+                opposing = 'left';
+                padding = BOX_STANDARD.PADDING_RIGHT;
+            }
+            else {
+                margin = 'marginLeft';
+                opposing = 'right';
+                padding = BOX_STANDARD.PADDING_LEFT;
+            }
+            for (const child of segFloat) {
+                boundsA = Math.min(boundsA, child.linear[opposing] + (child[margin] < 0 ? child[margin] : 0));
+            }
+            for (const child of segStatic) {
+                if (!child.hasWidth) {
+                    boundsB = Math.max(boundsB, child.bounds[direction]);
+                }
+            }
+            const offset = boundsB - boundsA;
+            for (const child of segStatic) {
+                if (!child.hasWidth) {
+                    if (offset > 0) {
+                        child.modifyBox(padding, boundsB - boundsA);
+                    }
+                    else if (child.textElement) {
+                        child.css('maxWidth', $util.formatPX(child.actualWidth));
+                    }
+                }
+            }
+        }
         const controller = this.controllerHandler;
         let layerIndex: Array<T[] | T[][]> | undefined;
         const itemCount = layout.itemCount;
@@ -1209,12 +1250,14 @@ export default class Application<T extends Node> implements squared.base.Applica
                     const horizontal = controller.containerTypeHorizontal;
                     layout.setType(horizontal.containerType, horizontal.alignmentType);
                     layerIndex = [left, inline];
+                    adjustPadding(inline, left, 'left');
                 }
                 else {
                     $util.concatMultiArray(subgroup, inline, right);
                     const verticalMargin = controller.containerTypeVerticalMargin;
                     layout.setType(verticalMargin.containerType, verticalMargin.alignmentType);
                     layerIndex = [inline, right];
+                    adjustPadding(inline, right, 'right');
                 }
                 layout.retain(subgroup);
             }
@@ -1441,33 +1484,12 @@ export default class Application<T extends Node> implements squared.base.Applica
                     controller.processLayoutHorizontal(layoutGroup);
                 }
                 this.addRenderLayout(layoutGroup);
-                if (seg === inlineAbove && seg.some(subitem => subitem.blockStatic && !subitem.hasWidth)) {
-                    const targeted = target.of(vertical.containerType, vertical.alignmentType) ? target.children : [target];
+                if (seg === inlineAbove && seg.some(child => child.blockStatic && !child.hasWidth)) {
                     if (leftAbove.length) {
-                        let boundsRight = Number.NEGATIVE_INFINITY;
-                        let boundsLeft = Number.POSITIVE_INFINITY;
-                        for (const child of leftAbove) {
-                            boundsRight = Math.max(boundsRight, child.linear.right);
-                        }
-                        for (const child of seg) {
-                            boundsLeft = Math.min(boundsLeft, child.bounds.left);
-                        }
-                        for (const child of targeted) {
-                            child.modifyBox(BOX_STANDARD.PADDING_LEFT, boundsRight - boundsLeft);
-                        }
+                        adjustPadding(seg, leftAbove, 'left');
                     }
                     if (rightAbove.length) {
-                        let boundsLeft = Number.POSITIVE_INFINITY;
-                        let boundsRight = Number.NEGATIVE_INFINITY;
-                        for (const child of rightAbove) {
-                            boundsLeft = Math.min(boundsLeft, child.bounds.left);
-                        }
-                        for (const child of seg) {
-                            boundsRight = Math.max(boundsRight, child.bounds.right);
-                        }
-                        for (const child of targeted) {
-                            child.modifyBox(BOX_STANDARD.PADDING_RIGHT, boundsRight - boundsLeft);
-                        }
+                        adjustPadding(seg, rightAbove, 'right');
                     }
                 }
             }
@@ -1724,7 +1746,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                     }
                     else {
                         for (const attr in styleMap) {
-                            if (attr.startsWith('padding')) {
+                            if (REGEXP_CACHED.PSEUDO_CONTENT.exec(attr)) {
                                 valid = true;
                                 break;
                             }
@@ -1895,7 +1917,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 if (tagName === 'img') {
                     (<HTMLImageElement> pseudoElement).src = content;
                 }
-                else {
+                else if (value !== '""') {
                     pseudoElement.innerText = content;
                 }
                 for (const attr in styleMap) {

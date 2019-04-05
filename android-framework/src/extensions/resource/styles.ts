@@ -21,8 +21,8 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                 const renderChildren = node.renderChildren;
                 if (renderChildren.length > 1) {
                     const attrMap = new Map<string, number>();
-                    let style = '';
                     let valid = true;
+                    let style = '';
                     for (let i = 0; i < renderChildren.length; i++) {
                         let found = false;
                         for (const value of renderChildren[i].combine('_', 'android')) {
@@ -40,7 +40,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                                 attrMap.set(value, (attrMap.get(value) || 0) + 1);
                             }
                         }
-                        if (!valid || (style !== '' && !found)) {
+                        if (!valid || !found && style !== '') {
                             valid = false;
                             break;
                         }
@@ -73,12 +73,12 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                                     break;
                                 }
                             }
-                            if (!(style !== '' && name.startsWith(`${style}.`))) {
+                            if (style === '' || !name.startsWith(`${style}.`)) {
                                 if (style !== '') {
                                     name = style + '.' + node.controlId;
                                 }
                                 else {
-                                    name = $util.capitalize(node.controlId);
+                                    name = node.controlId;
                                 }
                                 styles[name] = common;
                             }

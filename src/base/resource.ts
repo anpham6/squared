@@ -604,7 +604,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         case 'borderBottom':
                         case 'borderLeft': {
                             const style = node.css(`${attr}Style`) || 'none';
-                            let width = node.css(`${attr}Width`) || '0px';
+                            let width = node.convertPX(node.css(`${attr}Width`), (attr === 'borderLeft' || attr === 'borderRight'), false) || '0px';
                             switch (width) {
                                 case 'thin':
                                     width = '1px';

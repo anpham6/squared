@@ -632,7 +632,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 case 'contain':
                                     break;
                                 case 'cover':
-                                    gravity = 'center|clip_horizontal|clip_vertical';
+                                    gravity = 'center';
                                     tileMode = '';
                                     tileModeX = '';
                                     tileModeY = '';
@@ -664,10 +664,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             }
                             if (dimension) {
                                 const backgroundClip = stored.backgroundClip;
+                                const bounds = node.bounds;
                                 switch (backgroundSize[i]) {
                                     case 'cover':
-                                        if (dimension.width < node.bounds.width || dimension.height < node.bounds.height) {
-                                            const ratio = Math.max(node.bounds.width / dimension.width, node.bounds.height / dimension.height);
+                                        if (dimension.width < bounds.width || dimension.height < bounds.height) {
+                                            const ratio = Math.max(bounds.width / dimension.width, bounds.height / dimension.height);
                                             width = dimension.width * ratio;
                                             height = dimension.height * ratio;
                                         }
@@ -679,8 +680,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         }
                                         break;
                                     case 'contain':
-                                        if (dimension.width !== node.bounds.width && dimension.height !== node.bounds.height) {
-                                            const ratio = Math.min(node.bounds.width / dimension.width, node.bounds.height / dimension.height);
+                                        if (dimension.width !== bounds.width && dimension.height !== bounds.height) {
+                                            const ratio = Math.min(bounds.width / dimension.width, bounds.height / dimension.height);
                                             width = dimension.width * ratio;
                                             height = dimension.height * ratio;
                                         }
@@ -693,22 +694,22 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         break;
                                     default:
                                         if (width === 0 && (height > 0 || gravityY === 'fill_vertical') && gravityX !== 'fill_horizontal' && tileMode !== 'repeat' && tileModeX !== 'repeat') {
-                                            width = dimension.width * (height === 0 ? node.bounds.height : height) / dimension.height;
+                                            width = dimension.width * (height === 0 ? bounds.height : height) / dimension.height;
                                         }
                                         if (height === 0 && (width > 0 || gravityX === 'fill_horizontal') && gravityY !== 'fill_vertical' && tileMode !== 'repeat' && tileModeY !== 'repeat') {
-                                            height = dimension.height * (width === 0 ? node.bounds.width : width) / dimension.width;
+                                            height = dimension.height * (width === 0 ? bounds.width : width) / dimension.width;
                                         }
                                         break;
                                 }
                                 if (backgroundClip) {
                                     if (width === 0) {
-                                        width = node.bounds.width;
+                                        width = bounds.width;
                                     }
                                     else {
                                         width += node.contentBoxWidth;
                                     }
                                     if (height === 0) {
-                                        height = node.bounds.height;
+                                        height = bounds.height;
                                     }
                                     else {
                                         height += node.contentBoxHeight;
@@ -996,30 +997,28 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             $xml.applyTemplate('layer-list', LAYERLIST_TMPL, layerListData)
                         );
                     }
-                    if (this.options.autoSizeBackgroundImage && backgroundImage.length && !node.documentRoot && !node.imageElement && !node.svgElement && node.renderParent && !node.renderParent.tableElement && node.hasProcedure($enum.NODE_PROCEDURE.AUTOFIT)) {
+                    if (this.options.autoSizeBackgroundImage && backgroundImage.length && !node.documentRoot && !node.is(CONTAINER_NODE.IMAGE) && node.renderParent && !node.renderParent.tableElement && node.hasProcedure($enum.NODE_PROCEDURE.AUTOFIT)) {
                         let parentWidth = 0;
                         let parentHeight = 0;
-                        if (node.tagName !== 'IMAGE') {
-                            for (const image of imageDimensions) {
-                                if (image) {
-                                    parentWidth = Math.max(parentWidth, image.width);
-                                    parentHeight = Math.max(parentHeight, image.height);
-                                }
+                        for (const image of imageDimensions) {
+                            if (image) {
+                                parentWidth = Math.max(parentWidth, image.width);
+                                parentHeight = Math.max(parentHeight, image.height);
                             }
-                            if (parentWidth === 0) {
-                                let current = node;
-                                while (current && !current.documentBody) {
-                                    if (current.hasWidth) {
-                                        parentWidth = current.actualWidth;
-                                    }
-                                    if (current.hasHeight) {
-                                        parentHeight = current.actualHeight;
-                                    }
-                                    if (!current.pageFlow || parentWidth > 0 && parentHeight > 0) {
-                                        break;
-                                    }
-                                    current = current.documentParent as T;
+                        }
+                        if (parentWidth === 0) {
+                            let current = node;
+                            while (current && !current.documentBody) {
+                                if (current.hasWidth) {
+                                    parentWidth = current.actualWidth;
                                 }
+                                if (current.hasHeight) {
+                                    parentHeight = current.actualHeight;
+                                }
+                                if (!current.pageFlow || parentWidth > 0 && parentHeight > 0) {
+                                    break;
+                                }
+                                current = current.documentParent as T;
                             }
                         }
                         const width = node.cssInitial('width');

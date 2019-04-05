@@ -2104,15 +2104,12 @@ export function findColorShade(value: string) {
         }
         else if (result.length > 1) {
             const total = hsl.l + hsl.s;
-            const combined: number[] = [];
-            for (const color of result) {
-                combined.push(Math.abs(total - (color.hsl.l + color.hsl.s)));
-            }
             let nearest = Number.POSITIVE_INFINITY;
             let index = -1;
-            for (let i = 0; i < combined.length; i++) {
-                if (combined[i] < nearest) {
-                    nearest = combined[i];
+            for (let i = 0; i < result.length; i++) {
+                const offset = Math.abs(total - (result[i].hsl.l + result[i].hsl.s));
+                if (offset < nearest) {
+                    nearest = offset;
                     index = i;
                 }
             }

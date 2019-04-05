@@ -40,7 +40,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
         };
     }
 
-    public static actualParent<T extends Node>(list: T[]): T | undefined {
+    public static actualParent<T extends Node>(list: T[]): T | null {
         for (const node of list) {
             if (node.naturalElement) {
                 if (node.actualParent) {
@@ -54,7 +54,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                 }
             }
         }
-        return undefined;
+        return null;
     }
 
     public static baseline<T extends Node>(list: T[], text = false) {
@@ -76,7 +76,9 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
         let boundsHeight = 0;
         for (const item of list) {
             lineHeight = Math.max(lineHeight, item.lineHeight);
-            boundsHeight = Math.max(boundsHeight, item.actualHeight);
+            if (!item.layoutVertical && !item.multiline) {
+                boundsHeight = Math.max(boundsHeight, item.actualHeight);
+            }
         }
         $util.spliceArray(list, item => lineHeight > boundsHeight ? item.lineHeight !== lineHeight : !$util.withinRange(item.actualHeight, boundsHeight));
         return list.sort((a, b) => {

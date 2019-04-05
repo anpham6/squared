@@ -1,6 +1,6 @@
 import { parseColor } from './color';
 import { getElementCache, setElementCache } from './session';
-import { REGEXP_COMPILED, STRING_PATTERN, USER_AGENT, calculate, capitalize, convertAlpha, convertRoman, convertCamelCase, convertPX, convertLength, convertPercent, isLength, isNumber, isUserAgent, resolvePath } from './util';
+import { REGEXP_COMPILED, STRING_PATTERN, USER_AGENT, calculate, capitalize, convertAlpha, convertRoman, convertCamelCase, convertPX, convertLength, convertPercent, isCustomProperty, isLength, isNumber, isUserAgent, resolvePath } from './util';
 
 export const BOX_POSITION = ['top', 'right', 'bottom', 'left'];
 export const BOX_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
@@ -67,46 +67,25 @@ export function checkStyleValue(element: Element, attr: string, value: string, f
         if (value !== computed && value !== 'auto') {
             if (computed !== '') {
                 switch (attr) {
+                    case 'fontSize':
+                    case 'fontWeight':
+                    case 'color':
                     case 'backgroundColor':
                     case 'borderTopColor':
                     case 'borderRightColor':
                     case 'borderBottomColor':
                     case 'borderLeftColor':
-                    case 'color':
-                    case 'fontSize':
-                    case 'fontWeight':
+                        setElementCache(element, attr, '0', value);
                         return computed;
                 }
-                if (isNumber(value) || REGEXP_COMPILED.CUSTOMPROPERTY.test(value)) {
+                if (isNumber(value) || isCustomProperty(value)) {
+                    setElementCache(element, attr, '0', value);
                     return computed;
                 }
             }
-            switch (attr) {
-                case 'width':
-                case 'height':
-                case 'minWidth':
-                case 'maxWidth':
-                case 'minHeight':
-                case 'maxHeight':
-                case 'lineHeight':
-                case 'verticalAlign':
-                case 'textIndent':
-                case 'letterSpacing':
-                case 'columnWidth':
-                case 'columnGap':
-                case 'top':
-                case 'right':
-                case 'bottom':
-                case 'left':
-                case 'marginTop':
-                case 'marginRight':
-                case 'marginBottom':
-                case 'marginLeft':
-                case 'paddingTop':
-                case 'paddingRight':
-                case 'paddingBottom':
-                case 'paddingLeft':
-                    return !value.endsWith('px') ? convertPX(value, fontSize) : value;
+            if (isLength(value)) {
+                setElementCache(element, attr, '0', value);
+                return convertPX(value, fontSize);
             }
         }
         return value;

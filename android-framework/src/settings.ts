@@ -2,8 +2,8 @@ import { UserSettingsAndroid } from './@types/application';
 
 const settings: UserSettingsAndroid = {
     builtInExtensions: [
-        'android.delegate.fixed',
         'android.delegate.max-width-height',
+        'android.delegate.fixed',
         'android.delegate.percent',
         'android.delegate.radiogroup',
         'android.delegate.scrollbar',

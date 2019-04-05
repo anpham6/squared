@@ -59,6 +59,8 @@ export interface CachedValue<T> {
     tagName?: string;
     textContent?: string;
     float?: string;
+    actualParent?: T | null;
+    absoluteParent?: T | null;
     actualChildren?: T[];
     actualWidth?: number;
     actualHeight?: number;

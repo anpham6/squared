@@ -13,7 +13,7 @@ const $dom = squared.lib.dom;
 const $session = squared.lib.session;
 const $util = squared.lib.util;
 
-const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'cssFloat', 'clear', 'zIndex'];
+const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex'];
 const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
 
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
@@ -152,7 +152,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public attr(name: string, attr: string, value = '', overwrite = true): string {
         let obj = this[`__${name}`];
-        if ($util.hasValue(value)) {
+        if (value) {
             if (obj === undefined) {
                 this._namespaces.add(name);
                 obj = {};
@@ -164,7 +164,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             obj[attr] = value.toString();
             return obj[attr];
         }
-        return obj && obj[attr] || '';
+        else {
+            return obj && obj[attr] || '';
+        }
     }
 
     public namespace(name: string): StringMap {
@@ -224,13 +226,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public data(name: string, attr: string, value?: any, overwrite = true) {
         if ($util.hasValue(value)) {
-            if (this._data[name] === undefined) {
+            if (typeof this._data[name] !== 'object') {
                 this._data[name] = {};
             }
-            if (typeof this._data[name] === 'object') {
-                if (overwrite || this._data[name][attr] === undefined) {
-                    this._data[name][attr] = value;
-                }
+            if (overwrite || this._data[name][attr] === undefined) {
+                this._data[name][attr] = value;
             }
         }
         else if (value === null) {
@@ -294,7 +294,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public ascend(generated = false, levels = -1) {
         const result: T[] = [];
         const attr = generated ? (this.renderParent ? 'renderParent' : 'parent') : 'actualParent';
-        let current: T | undefined = this[attr];
+        let current: UndefNull<T> = this[attr];
         let i = -1;
         while (current && current.id !== 0 && !result.includes(current)) {
             result.push(current);
@@ -370,9 +370,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
     }
 
-    public alignedVertically(previousSiblings: T[], siblings?: T[], cleared?: Map<T, string>, checkFloat = true) {
+    public alignedVertically(previousSiblings: T[], siblings?: T[], cleared?: Map<T, string>, horizontal?: boolean) {
         const actualParent = this.actualParent;
-        if (this.lineBreak || actualParent === undefined) {
+        if (this.lineBreak || !actualParent) {
             return true;
         }
         else if (this.pageFlow && previousSiblings.length) {
@@ -380,18 +380,50 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 if (cleared && cleared.has(this)) {
                     return true;
                 }
-                else if (checkFloat && this.floating && (this.linear.top >= Math.floor(siblings[siblings.length - 1].linear.bottom) || this.float === 'left' && siblings.find(node => node.siblingIndex < this.siblingIndex && $util.withinRange(this.linear.left, node.linear.left)) !== undefined || this.float === 'right' && siblings.find(node => node.siblingIndex < this.siblingIndex && $util.withinRange(this.linear.right, node.linear.right)) !== undefined)) {
-                    return true;
+                else if (horizontal === undefined) {
+                    if (this.floating && (this.linear.top >= Math.floor(siblings[siblings.length - 1].linear.bottom) || this.float === 'left' && siblings.find(node => node.siblingIndex < this.siblingIndex && $util.withinRange(this.linear.left, node.linear.left)) !== undefined || this.float === 'right' && siblings.find(node => node.siblingIndex < this.siblingIndex && $util.withinRange(this.linear.right, node.linear.right)) !== undefined)) {
+                        return true;
+                    }
+                }
+                else if (!this.floating) {
+                    const floated = siblings.find(item => item.floating);
+                    if (floated) {
+                        if (horizontal) {
+                            let top = this.linear.top;
+                            if (this.textElement && !this.plainText) {
+                                const rect = $dom.getRangeClientRect(<Element> this._element);
+                                if (rect.top > top) {
+                                    top = rect.top;
+                                }
+                            }
+                            if (top >= floated.linear.bottom) {
+                                return true;
+                            }
+                        }
+                        else {
+                            let bottom = this.linear.bottom;
+                            if (this.textElement && !this.plainText) {
+                                const rect = $dom.getRangeClientRect(<Element> this._element);
+                                if (rect.bottom > bottom) {
+                                    bottom = rect.bottom;
+                                }
+                            }
+                            if (bottom > floated.linear.bottom) {
+                                return false;
+                            }
+                        }
+                    }
                 }
             }
             for (const previous of previousSiblings) {
-                if (previous.blockStatic ||
-                    this.blockStatic && (!previous.inlineFlow || !!cleared && cleared.has(previous)) ||
+                if (!this.floating && previous.blockStatic ||
+                    this.blockStatic && (!previous.inlineFlow || cleared && cleared.has(previous)) ||
                     cleared && cleared.get(previous) === 'both' && (!$util.isArray(siblings) || siblings[0] !== previous) ||
                     !previous.floating && (this.blockStatic || !this.floating && !this.inlineFlow || $util.isArray(siblings) && this.display === 'inline-block' && this.linear.top >= Math.floor(siblings[siblings.length - 1].linear.bottom)) ||
                     previous.bounds.width > (actualParent.has('width', CSS_STANDARD.LENGTH) ? actualParent.width : actualParent.box.width) && (!previous.textElement || previous.textElement && previous.css('whiteSpace') === 'nowrap') ||
                     previous.lineBreak ||
                     previous.autoMargin.leftRight ||
+                    horizontal === false && previous.floating && this.blockStatic ||
                     previous.float === 'left' && this.autoMargin.right ||
                     previous.float === 'right' && this.autoMargin.left)
                 {
@@ -434,12 +466,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public outsideX(rect: RectDimension, dimension = 'linear') {
         const self: RectDimension = this[dimension];
-        return Math.ceil(self.left) < Math.floor(rect.left) || Math.ceil(self.right) > Math.floor(rect.right);
+        return Math.ceil(self.left) < Math.floor(rect.left) || Math.floor(self.right) > Math.ceil(rect.right);
     }
 
     public outsideY(rect: RectDimension, dimension = 'linear') {
         const self: RectDimension = this[dimension];
-        return Math.ceil(self.top) < Math.floor(rect.top) || Math.ceil(self.bottom) > Math.floor(rect.bottom);
+        return Math.ceil(self.top) < Math.floor(rect.top) || Math.floor(self.bottom) > Math.ceil(rect.bottom);
     }
 
     public css(attr: string, value = '', cache = false): string {
@@ -622,9 +654,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return `${Math.round(this.parseUnit(value, horizontal, parent))}px`;
     }
 
-    public has(attr: string, checkType: number = 0, options?: ObjectMap<string | string[]>): boolean {
+    public has(attr: string, checkType: number = 0, options?: ObjectMap<string | string[] | boolean>): boolean {
         const value = (options && options.map === 'initial' ? this._initial.styleMap : this._styleMap)[attr];
-        if ($util.hasValue(value)) {
+        if (value) {
             switch (value) {
                 case '0px':
                     if ($util.hasBit(checkType, CSS_STANDARD.ZERO)) {
@@ -659,18 +691,23 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 case 'rgba(0, 0, 0, 0)':
                     return false;
                 default:
-                    if (options && options.not) {
-                        if (Array.isArray(options.not)) {
-                            for (const exclude of options.not) {
-                                if (value === exclude) {
+                    if (options) {
+                        if (options.not) {
+                            if (Array.isArray(options.not)) {
+                                for (const exclude of options.not) {
+                                    if (value === exclude) {
+                                        return false;
+                                    }
+                                }
+                            }
+                            else {
+                                if (value === options.not) {
                                     return false;
                                 }
                             }
                         }
-                        else {
-                            if (value === options.not) {
-                                return false;
-                            }
+                        if (options.all) {
+                            return true;
                         }
                     }
                     if ($util.hasBit(checkType, CSS_STANDARD.LENGTH) && $util.isLength(value)) {
@@ -770,19 +807,18 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (overwrite) {
             this._inlineText = value;
         }
-        else {
-            if (this.htmlElement && !this.svgElement) {
-                const element = <HTMLElement> this._element;
-                switch (element.tagName) {
-                    case 'INPUT':
-                    case 'IMG':
-                    case 'SELECT':
-                    case 'TEXTAREA':
-                    case 'HR':
-                        break;
-                    default:
-                        this._inlineText = value;
-                }
+        else if (this.htmlElement && !this.svgElement) {
+            const element = <HTMLElement> this._element;
+            switch (element.tagName) {
+                case 'INPUT':
+                case 'IMG':
+                case 'SELECT':
+                case 'TEXTAREA':
+                case 'HR':
+                case 'SVG':
+                    break;
+                default:
+                    this._inlineText = value;
             }
         }
     }
@@ -873,7 +909,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
     }
 
-    public previousSiblings(lineBreak = true, excluded = true, height = false, pageFlow = true) {
+    public previousSiblings(floating = true, pageFlow = true, lineBreak = true, excluded = true) {
         const result: T[] = [];
         let element: Element | null = null;
         if (this._element) {
@@ -894,7 +930,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         break;
                     }
                     result.push(node);
-                    if (!height || !node.floating && (node.visible || node.rendered)) {
+                    if (floating || !node.floating && (node.visible || node.rendered)) {
                         break;
                     }
                 }
@@ -904,7 +940,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return result;
     }
 
-    public nextSiblings(lineBreak = true, excluded = true, height = false, pageFlow = true) {
+    public nextSiblings(floating = true, pageFlow = true, lineBreak = true, excluded = true) {
         const result: T[] = [];
         let element: Element | null = null;
         if (this._element) {
@@ -928,7 +964,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         break;
                     }
                     result.push(node);
-                    if (!height || !node.floating && (node.visible || node.rendered)) {
+                    if (floating || !node.floating && (node.visible || node.rendered)) {
                         break;
                     }
                 }
@@ -998,7 +1034,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     private convertPosition(attr: string) {
         let value = 0;
         if (!this.positionStatic) {
-            const unit = this.cssInitial(attr);
+            const unit = this.cssInitial(attr, true);
             if ($util.isLength(unit) || $util.isPercent(unit)) {
                 value = $util.convertFloat(this.convertLength(attr, unit, attr === 'left' || attr === 'right'));
             }
@@ -1241,7 +1277,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             const alignSelf = this.css('alignSelf');
             const justifySelf = this.css('justifySelf');
             this._cached.flexbox = {
-                alignSelf: alignSelf === 'auto' && actualParent && actualParent.has('alignItems') ? actualParent.css('alignItems') : alignSelf,
+                alignSelf: alignSelf === 'auto' && actualParent && actualParent.has('alignItems', CSS_STANDARD.BASELINE, { all: true }) ? actualParent.css('alignItems') : alignSelf,
                 justifySelf: justifySelf === 'auto' && actualParent && actualParent.has('justifyItems') ? actualParent.css('justifyItems') : justifySelf,
                 basis: this.css('flexBasis'),
                 grow: getFlexValue('flexGrow', 0),
@@ -1307,8 +1343,19 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get lineHeight() {
         if (this._cached.lineHeight === undefined) {
-            const lineHeight = $util.convertFloat(this.cssAscend('lineHeight', true));
-            this._cached.lineHeight = this.has('lineHeight') || lineHeight > this.actualHeight || this.block && this.actualChildren.some(node => node.textElement) ? lineHeight : 0;
+            let hasOwnStyle = this.has('lineHeight');
+            let lineHeight = hasOwnStyle ? this.toFloat('lineHeight') : $util.convertFloat(this.cssAscend('lineHeight', true));
+            if (!hasOwnStyle) {
+                const fontSize = $session.getElementCache(<Element> (this.styleElement ? this._element : this.documentParent.element), 'fontSize', '0');
+                if (fontSize && fontSize.endsWith('em')) {
+                    const emSize = parseFloat(fontSize);
+                    if (emSize < 1) {
+                        lineHeight *= emSize;
+                        hasOwnStyle = true;
+                    }
+                }
+            }
+            this._cached.lineHeight = hasOwnStyle || lineHeight > this.actualHeight || this.block && this.actualChildren.some(node => node.textElement) ? lineHeight : 0;
         }
         return this._cached.lineHeight;
     }
@@ -1628,7 +1675,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get floating() {
         if (this._cached.floating === undefined) {
             if (this.pageFlow) {
-                const value = this.css('cssFloat');
+                const value = this.css('float');
                 this._cached.floating = value === 'left' || value === 'right';
             }
             else {
@@ -1640,7 +1687,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get float() {
         if (this._cached.float === undefined) {
-            this._cached.float = this.floating ? this.css('cssFloat') : 'none';
+            this._cached.float = this.floating ? this.css('float') : 'none';
         }
         return this._cached.float;
     }
@@ -1783,21 +1830,27 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get absoluteParent() {
-        let current = this.actualParent;
-        if (!this.pageFlow) {
-            while (current && current.id !== 0) {
-                const position = current.cssInitial('position', false, true);
-                if (current.documentBody || position !== 'static' && position !== 'initial' && position !== 'unset') {
-                    return current;
+        if (this._cached.absoluteParent === undefined) {
+            let current = this.actualParent;
+            if (!this.pageFlow) {
+                while (current && current.id !== 0) {
+                    const position = current.cssInitial('position', false, true);
+                    if (current.documentBody || position !== 'static' && position !== 'initial' && position !== 'unset') {
+                        break;
+                    }
+                    current = current.actualParent;
                 }
-                current = current.actualParent;
             }
+            this._cached.absoluteParent = current || null;
         }
-        return current;
+        return this._cached.absoluteParent;
     }
 
     get actualParent() {
-        return this._element && this._element.parentElement ? $session.getElementAsNode<T>(this._element.parentElement, this.sessionId) : undefined;
+        if (this._cached.actualParent === undefined) {
+            this._cached.actualParent = this._element && this._element.parentElement ? $session.getElementAsNode<T>(this._element.parentElement, this.sessionId) || null : null;
+        }
+        return this._cached.actualParent;
     }
 
     set actualChildren(value) {
@@ -1817,7 +1870,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 this._cached.actualChildren = actualChildren;
             }
             else {
-                this._cached.actualChildren = this.groupParent ? this._initial.children : this.children;
+                this._cached.actualChildren = this._initial.children;
             }
         }
         return this._cached.actualChildren;
@@ -1825,7 +1878,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get actualWidth() {
         if (this._cached.actualWidth === undefined) {
-            this._cached.actualWidth = this.has('width', CSS_STANDARD.LENGTH) && this.display !== 'table-cell' ? this.toFloat('width') : this.bounds.width;
+            if (this.plainText) {
+                this._cached.actualWidth = this.bounds.right - this.bounds.left;
+            }
+            else {
+                this._cached.actualWidth = this.has('width', CSS_STANDARD.LENGTH) && this.display !== 'table-cell' ? this.toFloat('width') : this.bounds.width;
+            }
         }
         return this._cached.actualWidth;
     }
@@ -1898,10 +1956,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (this._cached.dir === undefined) {
             this._cached.dir = this.css('direction');
             switch (this._cached.dir) {
+                case '':
                 case 'unset':
                 case 'inherit':
                     let parent = this.actualParent;
-                    while (parent && parent.id !== 0) {
+                    while (parent) {
                         const value = parent.dir;
                         if (value !== '') {
                             this._cached.dir = value;
