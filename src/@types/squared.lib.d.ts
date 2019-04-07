@@ -130,7 +130,7 @@ declare global {
             function trimStart(value: string, char: string): string;
             function trimEnd(value: string, char: string): string;
             function firstIndexOf(value: string, ...terms: string[]): number;
-            function fromLastIndexOf(value: string, char?: string): string;
+            function fromLastIndexOf(value: string, ...char: string[]): string;
             function searchObject(obj: StringMap, value: string | StringMap): any[][];
             function hasValue<T>(value: T): value is T;
             function compareRange(operation: string, range: number, value: number): boolean;

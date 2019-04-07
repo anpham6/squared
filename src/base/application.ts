@@ -440,20 +440,22 @@ export default class Application<T extends Node> implements squared.base.Applica
 
     public addRenderTemplate(parent: T, node: T, template: NodeTemplate<T> | undefined, index = -1) {
         if (template) {
-            if (node.renderParent === undefined) {
-                this.session.targetQueue.set(node, template);
-            }
-            else {
-                if (parent.renderTemplates === undefined) {
-                    parent.renderTemplates = [];
-                }
-                if (index >= 0 && index < parent.renderChildren.length) {
-                    parent.renderChildren.splice(index, 0, node);
-                    parent.renderTemplates.splice(index, 0, template);
+            if (!node.renderExclude) {
+                if (node.renderParent === undefined) {
+                    this.session.targetQueue.set(node, template);
                 }
                 else {
-                    parent.renderChildren.push(node);
-                    parent.renderTemplates.push(template);
+                    if (parent.renderTemplates === undefined) {
+                        parent.renderTemplates = [];
+                    }
+                    if (index >= 0 && index < parent.renderChildren.length) {
+                        parent.renderChildren.splice(index, 0, node);
+                        parent.renderTemplates.splice(index, 0, template);
+                    }
+                    else {
+                        parent.renderChildren.push(node);
+                        parent.renderTemplates.push(template);
+                    }
                 }
             }
             return true;
@@ -2100,6 +2102,14 @@ export default class Application<T extends Node> implements squared.base.Applica
                 const attrStyle = `styleMap${target ? '::' + target : ''}`;
                 const data = $session.getElementCache(element, attrStyle, this.processing.sessionId);
                 if (data) {
+                    for (const attr in styleMap) {
+                        if (data[attr]) {
+                            data[attr] = style[attr];
+                        }
+                        else {
+                            data[attr] = styleMap[attr];
+                        }
+                    }
                     Object.assign(data, styleMap);
                 }
                 else {

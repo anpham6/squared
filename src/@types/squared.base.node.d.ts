@@ -1,5 +1,5 @@
 import { NodeTemplate } from '../base/@types/application';
-import { AutoMargin, Support, VisibleStyle } from '../base/@types/node';
+import { AutoMargin, InitialData, Support, VisibleStyle } from '../base/@types/node';
 
 import Container = squared.lib.base.Container;
 
@@ -29,6 +29,7 @@ declare global {
             flexbox: Flexbox;
             documentParent: Node;
             actualChildren: Node[];
+            renderExclude: boolean;
             renderAs?: Node;
             parent?: Node;
             renderParent?: Node;
@@ -47,6 +48,7 @@ declare global {
             readonly excludeProcedure: number;
             readonly excludeResource: number;
             readonly renderChildren: Node[];
+            readonly initial: InitialData<Node>;
             readonly box: RectDimension;
             readonly bounds: RectDimension;
             readonly linear: RectDimension;
@@ -62,6 +64,7 @@ declare global {
             readonly textElement: boolean;
             readonly tableElement: boolean;
             readonly inputElement: boolean;
+            readonly pseudoElement: boolean;
             readonly groupParent: boolean;
             readonly documentBody: boolean;
             readonly dataset: DOMStringMap;

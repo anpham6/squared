@@ -40,11 +40,11 @@ export default class FloatingActionButton<T extends android.base.View> extends s
                     src = $Resource.addImage({ mdpi: node.src }, $constA.PREFIX_ANDROID.DIALOG);
                 }
                 else {
-                    src = $Resource.addImageUrl(node.css('backgroundImage'), $constA.PREFIX_ANDROID.DIALOG);
+                    src = $Resource.addImageURL(node.css('backgroundImage'), $constA.PREFIX_ANDROID.DIALOG);
                 }
                 break;
             case 'BUTTON':
-                src = $Resource.addImageUrl(node.css('backgroundImage'), $constA.PREFIX_ANDROID.DIALOG);
+                src = $Resource.addImageURL(node.css('backgroundImage'), $constA.PREFIX_ANDROID.DIALOG);
                 break;
         }
         if (src !== '') {

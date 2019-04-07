@@ -35,10 +35,11 @@ function getRowData(mainData: CssGridData<View>, direction: string) {
 
 function getGridSize(mainData: CssGridData<View>, direction: string, node: View) {
     const dimension = direction === 'column' ? 'width' : 'height';
+    const data = mainData[direction];
     let value = 0;
-    if (mainData[direction].unit.length) {
-        for (let i = 0; i < mainData[direction].unit.length; i++) {
-            const unit = mainData[direction].unit[i];
+    if (data.unit.length) {
+        for (let i = 0; i < data.unit.length; i++) {
+            const unit = data.unit[i];
             if (unit.endsWith('px')) {
                 value += parseInt(unit);
             }
@@ -54,107 +55,109 @@ function getGridSize(mainData: CssGridData<View>, direction: string, node: View)
         }
     }
     else {
-        value = $math.maxArray(mainData[direction].unitTotal);
+        value = $math.maxArray(data.unitTotal);
         if (value <= 0) {
             return 0;
         }
     }
-    value += (mainData[direction].count - 1) * mainData[direction].gap;
-    return node[dimension] - node[`contentBox${$util.capitalize(dimension)}`] - value;
+    value += (data.count - 1) * data.gap;
+    return (node.has(dimension, $enum.CSS_STANDARD.LENGTH) ? node[dimension] : node.bounds[dimension] - node[`contentBox${$util.capitalize(dimension)}`]) - value;
 }
 
 function setContentSpacing(mainData: CssGridData<View>, node: View, alignment: string, direction: string) {
-    const MARGIN_START = direction === 'column' ? $enum.BOX_STANDARD.MARGIN_LEFT : $enum.BOX_STANDARD.MARGIN_TOP;
-    const MARGIN_END = direction === 'column' ? $enum.BOX_STANDARD.MARGIN_RIGHT : $enum.BOX_STANDARD.MARGIN_BOTTOM;
-    const PADDING_START = direction === 'column' ? $enum.BOX_STANDARD.PADDING_LEFT : $enum.BOX_STANDARD.PADDING_TOP;
     const data = <CssGridDirectionData> mainData[direction];
     if (alignment.startsWith('space')) {
-        const rowData = getRowData(mainData, direction);
-        const dimension = direction === 'column' ? 'width' : 'height';
-        const itemCount = mainData[direction].count;
         const sizeTotal = getGridSize(mainData, direction, node);
-        const opposing = mainData[direction].unitTotal.length > 0;
-        const adjusted = new Set<View>();
-        switch (alignment) {
-            case 'space-around': {
-                const marginSize = Math.floor(sizeTotal / (itemCount * 2));
-                if (marginSize > 0) {
+        if (sizeTotal > 0) {
+            let MARGIN_START: number;
+            let MARGIN_END: number;
+            let dimension: string;
+            if (direction === 'column') {
+                MARGIN_START = $enum.BOX_STANDARD.MARGIN_LEFT;
+                MARGIN_END = $enum.BOX_STANDARD.MARGIN_RIGHT;
+                dimension = 'width';
+            }
+            else {
+                MARGIN_START = $enum.BOX_STANDARD.MARGIN_TOP;
+                MARGIN_END = $enum.BOX_STANDARD.MARGIN_BOTTOM;
+                dimension = 'height';
+            }
+            const rowData = getRowData(mainData, direction);
+            const itemCount = mainData[direction].count;
+            const adjusted = new Set<View>();
+            function getMarginSize(value: number) {
+                const marginSize = Math.floor(sizeTotal / value);
+                return [marginSize, sizeTotal - (marginSize * value)];
+            }
+            switch (alignment) {
+                case 'space-around': {
+                    const [marginSize, marginExcess] = getMarginSize(itemCount * 2);
                     for (let i = 0; i < itemCount; i++) {
                         for (const item of new Set<View>($util.flatArray(rowData[i]))) {
                             if (item) {
+                                const marginStart = (i > 0 && i <= marginExcess ? 1 : 0) + marginSize;
                                 if (!adjusted.has(item)) {
-                                    item.modifyBox(MARGIN_START, marginSize);
-                                    if (i < itemCount - 1 || itemCount === 1 || opposing) {
-                                        item.modifyBox(MARGIN_END, marginSize);
-                                    }
+                                    item.modifyBox(MARGIN_START, marginStart);
+                                    item.modifyBox(MARGIN_END, marginSize);
                                     adjusted.add(item);
                                 }
                                 else {
-                                    item.cssPX(dimension, marginSize * 2);
+                                    item.cssPX(dimension, sizeTotal / itemCount);
                                 }
                             }
                         }
                     }
+                    data.normal = false;
+                    break;
                 }
-                data.normal = false;
-                break;
-            }
-            case 'space-between': {
-                if (itemCount > 1) {
-                    const marginSize = Math.floor(sizeTotal / ((itemCount - 1) * 2));
-                    if (marginSize > 0) {
-                        const rowLast = $util.flatArray(rowData[itemCount - 1]);
-                        for (let i = 0; i < itemCount; i++) {
+                case 'space-between': {
+                    if (itemCount > 1) {
+                        const [marginSize, marginExcess] = getMarginSize(itemCount - 1);
+                        for (let i = 0; i < itemCount - 1; i++) {
                             for (const item of new Set<View>($util.flatArray(rowData[i]))) {
                                 if (item) {
+                                    const marginEnd = (i < marginExcess ? 1 : 0) + marginSize;
                                     if (!adjusted.has(item)) {
-                                        if (i > 0) {
-                                            item.modifyBox(MARGIN_START, marginSize);
-                                        }
-                                        if (i < itemCount - 1 && !rowLast.some(cell => cell === item) || opposing) {
-                                            item.modifyBox(MARGIN_END, marginSize);
-                                        }
+                                        item.modifyBox(MARGIN_END, marginEnd);
                                         adjusted.add(item);
                                     }
                                     else {
-                                        item.cssPX(dimension, marginSize * 2);
+                                        item.cssPX(dimension, marginEnd);
                                     }
                                 }
                             }
                         }
                     }
+                    data.normal = false;
+                    break;
                 }
-                data.normal = false;
-                break;
-            }
-            case 'space-evenly': {
-                const marginSize = Math.floor(sizeTotal / (itemCount + 1));
-                if (marginSize > 0) {
-                    const rowLast = $util.flatArray(rowData[itemCount - 1]);
+                case 'space-evenly': {
+                    const [marginSize, marginExcess] = getMarginSize(itemCount + 1);
                     for (let i = 0; i < itemCount; i++) {
-                        const marginMiddle = itemCount > 1 && !opposing ? Math.floor(marginSize / 2) : marginSize;
                         for (const item of new Set<View>($util.flatArray(rowData[i]))) {
                             if (item) {
+                                const marginEnd = (i < marginExcess ? 1 : 0) + marginSize;
                                 if (!adjusted.has(item)) {
-                                    item.modifyBox(MARGIN_START, i === 0 || opposing ? marginSize : marginMiddle);
-                                    if (!opposing && i < itemCount - 1 && !rowLast.some(cell => cell === item) || itemCount === 1 || opposing && i > 0) {
-                                        item.modifyBox(MARGIN_END, marginMiddle);
+                                    if (i === 0) {
+                                        item.modifyBox(MARGIN_START, marginSize);
                                     }
+                                    item.modifyBox(MARGIN_END, marginEnd);
                                     adjusted.add(item);
                                 }
                                 else {
-                                    item.cssPX(dimension, marginSize);
+                                    item.cssPX(dimension, marginEnd);
                                 }
                             }
                         }
                     }
+                    data.normal = false;
+                    break;
                 }
-                data.normal = false;
-                break;
             }
         }
     }
     else {
+        const PADDING_START = direction === 'column' ? $enum.BOX_STANDARD.PADDING_LEFT : $enum.BOX_STANDARD.PADDING_TOP;
         const sizeTotal = getGridSize(mainData, direction, node);
         if (sizeTotal > 0) {
             switch (alignment) {
@@ -201,8 +204,8 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
     public processChild(node: T, parent: T) {
         const mainData: CssGridData<T> = parent.data($const.EXT_NAME.CSS_GRID, 'mainData');
         const cellData: CssGridCellData = node.data($const.EXT_NAME.CSS_GRID, 'cellData');
+        let renderAs: T | undefined;
         let outputAs: NodeXmlTemplate<T> | undefined;
-        let container: T | undefined;
         if (mainData && cellData) {
             function applyLayout(item: T, direction: string, dimension: string) {
                 const data: CssGridDirectionData = mainData[direction];
@@ -215,7 +218,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 let fitContent = false;
                 let minUnitSize = 0;
                 let sizeWeight = 0;
-                if (data.unit.every(value => value === 'auto')) {
+                if (data.unit.length && data.unit.every(value => value === 'auto')) {
                     if (dimension === 'width') {
                         data.unit = new Array(data.unit.length).fill('1fr');
                     }
@@ -234,46 +237,53 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                 j++;
                             }
                         }
+                        else if (dimension === 'height' && mainData.row.count > 1 && cellData[cellSpan] === 1) {
+                            unit = '1fr';
+                        }
                         else {
                             continue;
                         }
                     }
-                    if ($util.hasValue(unit)) {
-                        if (unit === 'auto' || unit === 'min-content' || unit === 'max-content') {
-                            if (cellTotal < data.unit.length && (!parent.has(dimension) || data.unit.some(value => $util.isLength(value)) || unit === 'min-content')) {
-                                size = node.bounds[dimension];
-                                minSize = 0;
-                                sizeWeight = 0;
-                            }
-                            else {
-                                size = 0;
-                                minSize = 0;
-                                sizeWeight = 0.01;
-                            }
-                            break;
+                    if (unit === 'auto' || unit === 'min-content' || unit === 'max-content') {
+                        if (cellTotal < data.unit.length && (!parent.has(dimension) || data.unit.some(value => $util.isLength(value)) || unit === 'min-content')) {
+                            size = node.bounds[dimension];
+                            minSize = 0;
+                            sizeWeight = 0;
                         }
-                        else if ($util.isPercent(unit)) {
-                            sizeWeight += parseFloat(unit) / 100;
-                            minSize = size;
+                        else {
                             size = 0;
+                            minSize = 0;
+                            sizeWeight = 0.01;
                         }
-                        else if (unit.endsWith('fr')) {
+                        break;
+                    }
+                    else if ($util.isPercent(unit)) {
+                        sizeWeight += parseFloat(unit) / 100;
+                        minSize = size;
+                        size = 0;
+                    }
+                    else if (unit.endsWith('fr')) {
+                        if (dimension === 'width' || node.hasHeight) {
                             sizeWeight += parseFloat(unit);
                             minSize = size;
-                            size = 0;
                         }
-                        else if (unit.endsWith('px')) {
-                            const gap = parseFloat(unit);
-                            if (minSize === 0) {
-                                size += gap;
-                            }
-                            else {
-                                minSize += gap;
-                            }
+                        else {
+                            sizeWeight = 0;
+                            minSize = node.bounds[dimension];
                         }
-                        if (unitMin === '0px' && node.textElement) {
-                            fitContent = true;
+                        size = 0;
+                    }
+                    else if (unit.endsWith('px')) {
+                        const gap = parseFloat(unit);
+                        if (minSize === 0) {
+                            size += gap;
                         }
+                        else {
+                            minSize += gap;
+                        }
+                    }
+                    if (unitMin === '0px' && node.textElement) {
+                        fitContent = true;
                     }
                 }
                 if (cellData[cellSpan] > 1) {
@@ -305,9 +315,11 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     item.css(minDimension, $util.formatPX(minSize), true);
                 }
                 if (sizeWeight > 0) {
-                    item.android(`layout_${dimension}`, '0px');
-                    item.android(`layout_${direction}Weight`, sizeWeight.toString());
-                    item.mergeGravity('layout_gravity', direction === 'column' ? 'fill_horizontal' : 'fill_vertical');
+                    item.android(`layout_${direction}Weight`, $math.truncate(sizeWeight, node.localSettings.floatPrecision));
+                    if (!item.has(dimension, $enum.CSS_STANDARD.LENGTH | $enum.CSS_STANDARD.PERCENT)) {
+                        item.android(`layout_${dimension}`, '0px');
+                        item.mergeGravity('layout_gravity', direction === 'column' ? 'fill_horizontal' : 'fill_vertical');
+                    }
                 }
                 else if (size > 0) {
                     const maxDimension = `max${$util.capitalize(dimension)}`;
@@ -323,20 +335,20 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             const alignItems = node.has('alignSelf') ? node.css('alignSelf') : mainData.alignItems;
             const justifyItems = node.has('justifySelf') ? node.css('justifySelf') : mainData.justifyItems;
             if (/(start|end|center|baseline)/.test(alignItems) || /(start|end|center|baseline|left|right)/.test(justifyItems)) {
-                container = this.application.createNode($dom.createElement(node.actualParent && node.actualParent.element));
-                container.tagName = node.tagName;
-                container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
-                container.inherit(node, 'initial', 'base');
-                container.resetBox($enum.BOX_STANDARD.MARGIN | $enum.BOX_STANDARD.PADDING);
-                container.exclude({
+                renderAs = this.application.createNode($dom.createElement(node.actualParent && node.actualParent.element));
+                renderAs.tagName = node.tagName;
+                renderAs.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
+                renderAs.inherit(node, 'initial', 'base');
+                renderAs.resetBox($enum.BOX_STANDARD.MARGIN | $enum.BOX_STANDARD.PADDING);
+                renderAs.exclude({
                     procedure: $enum.NODE_PROCEDURE.AUTOFIT | $enum.NODE_PROCEDURE.CUSTOMIZATION,
                     resource: $enum.NODE_RESOURCE.BOX_STYLE | $enum.NODE_RESOURCE.ASSET
                 });
-                parent.appendTry(node, container);
-                container.render(parent);
-                node.inheritBox($enum.BOX_STANDARD.MARGIN, container);
-                applyLayout(container, 'column', 'width');
-                applyLayout(container, 'row', 'height');
+                parent.appendTry(node, renderAs);
+                renderAs.render(parent);
+                node.inheritBox($enum.BOX_STANDARD.MARGIN, renderAs);
+                applyLayout(renderAs, 'column', 'width');
+                applyLayout(renderAs, 'row', 'height');
                 let inlineWidth = false;
                 if (justifyItems.endsWith('start') || justifyItems.endsWith('left') || justifyItems.endsWith('baseline')) {
                     node.mergeGravity('layout_gravity', 'left');
@@ -365,18 +377,18 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 else if (!node.hasHeight) {
                     node.android('layout_height', 'match_parent', false);
                 }
-                node.parent = container;
+                node.parent = renderAs;
                 outputAs = this.application.renderNode(
                     new $Layout(
                         parent,
-                        container,
+                        renderAs,
                         CONTAINER_NODE.FRAME,
                         $enum.NODE_ALIGNMENT.SINGLE,
-                        container.children as T[]
+                        renderAs.children as T[]
                     )
                 );
             }
-            const target = container || node;
+            const target = renderAs || node;
             applyLayout(target, 'column', 'width');
             applyLayout(target, 'row', 'height');
             if (!target.has('height')) {
@@ -393,8 +405,8 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             }
         }
         return {
-            parent: container,
-            renderAs: container,
+            parent: renderAs,
+            renderAs,
             outputAs
         };
     }

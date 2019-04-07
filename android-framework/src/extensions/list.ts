@@ -109,7 +109,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         gravity = 'left';
                         node.modifyBox($enum.BOX_STANDARD.PADDING_LEFT, null);
                     }
-                    image = Resource.addImageUrl(mainData.imageSrc);
+                    image = Resource.addImageURL(mainData.imageSrc);
                 }
                 let paddingRight: number;
                 if (gravity === 'left') {

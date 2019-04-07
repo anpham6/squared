@@ -88,7 +88,7 @@ export default abstract class File<T extends Node> implements squared.base.File<
                     if (result.zipname) {
                         fetch(`/api/downloadtobrowser?filename=${encodeURIComponent(result.zipname)}`)
                             .then((responseBlob: Response) => responseBlob.blob())
-                            .then((blob: Blob) => File.downloadToDisk(blob, $util.fromLastIndexOf(result.zipname)));
+                            .then((blob: Blob) => File.downloadToDisk(blob, $util.fromLastIndexOf(result.zipname, '/')));
                     }
                     else if (result.system) {
                         alert(`${result.application}\n\n${result.system}`);

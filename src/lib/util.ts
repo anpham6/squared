@@ -683,8 +683,18 @@ export function firstIndexOf(value: string, ...terms: string[]) {
     return -1;
 }
 
-export function fromLastIndexOf(value: string, char = '/') {
-    return value.substring(value.lastIndexOf(char) + 1);
+export function fromLastIndexOf(value: string, ...char: string[]) {
+    let result = value;
+    for (const ch of char) {
+        const index = result.lastIndexOf(ch);
+        if (index !== -1) {
+            result = result.substring(result.lastIndexOf(ch) + 1);
+        }
+        else {
+            return value;
+        }
+    }
+    return result;
 }
 
 export function searchObject(obj: StringMap, value: string | StringMap) {

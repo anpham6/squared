@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Finished column layout sketch</title>
+
+  <!-- the base styles and "housekeeping" styles are in here: -->
+  <link rel="stylesheet" href="css/grid-base.css">
+ <style>
+  /* our grid styles: */
+  .row:after {
+    content: '';
+    display: block;
+    clear: both;
+  }
+  .row-quartet > * {
+    width: 25%;
+  }
+  .row-trio > * {
+    width: 33.3333%;
+  }
+  .col {
+    float: left;
+    -moz-box-sizing: border-box;
+         box-sizing: border-box;
+    min-height: 100px;
+    border: 1px solid #666;
+  }
+  .subcategory-featured {
+    width: 50%;
+  }
+  .subcategory-content {
+    width: 80%;
+  }
+  .subcategory-header {
+    width: 20%;
+  }
+</style>
+  <script src="/node_modules/systemjs/dist/system.js"></script>
+  <script src="../../squared.js"></script>
+</head>
+<body>
+  <header class="masthead">
+    <div class="wrapper">
+      <h1>Important News</h1>
+      
+    </div>
+  </header>
+
+  <nav role="navigation" class="navbar">
+    <div class="wrapper">
+      <ul class="navlist">
+        <li><a href="#">Home</a></li>
+        <li><a href="#">World</a></li>
+        <li><a href="#">Local</a></li>
+        <li><a href="#">Sports</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="wrapper">
+    <section class="subcategory">
+      <div class="row">
+        <header class="col subcategory-header">
+          <h2>Sub-section 1</h2>
+        </header>
+        <div class="col subcategory-content">
+          <div class="row row-quartet">
+            <div class="col subcategory-featured">
+              <h3>Story</h3>
+            </div>
+            <div class="col">
+              <h3>Story</h3>
+            </div>
+            <div class="col">
+              <h3>Story</h3>
+            </div>
+          </div>
+          <div class="row row-quartet">
+            <div class="col">
+              <h3>Story</h3>
+            </div>
+            <div class="col">
+              <h3>Story</h3>
+            </div>
+            <div class="col">
+              <h3>Story</h3>
+            </div>
+            <div class="col">
+              <h3>Story</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="subcategory">
+      <div class="row">
+        <header class="col subcategory-header">
+          <h2>Sub-section 1</h2>
+        </header>
+
+        <div class="col subcategory-content">
+          <div class="row row-trio">
+            <div class="col">
+              <h3>Story</h3>
+            </div>
+            <div class="col">
+              <h3>Story</h3>
+            </div>
+            <div class="col">
+              <h3>Story</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>    
+</body>
+</html>

@@ -387,7 +387,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             let remove = true;
                             if (typeof value === 'string') {
                                 if (value !== 'initial') {
-                                    backgroundImage[j] = Resource.addImageUrl(value);
+                                    backgroundImage[j] = Resource.addImageURL(value);
                                     if (backgroundImage[j] !== '') {
                                         imageDimensions[j] = Resource.ASSETS.images.get($css.resolveURL(value));
                                         remove = false;

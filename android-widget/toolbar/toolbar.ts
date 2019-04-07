@@ -104,7 +104,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
         else {
             $util.assignEmptyValue(toolbarOptions, 'app', 'popupTheme', '@style/ThemeOverlay.AppCompat.Light');
             if (backgroundImage) {
-                $util.assignEmptyValue(hasAppBar ? appBarOptions : toolbarOptions, 'android', 'background', `@drawable/${$Resource.addImageUrl(node.css('backgroundImage'))}`);
+                $util.assignEmptyValue(hasAppBar ? appBarOptions : toolbarOptions, 'android', 'background', `@drawable/${$Resource.addImageURL(node.css('backgroundImage'))}`);
                 node.exclude({ resource: $enum.NODE_RESOURCE.IMAGE_SOURCE });
             }
             else {
@@ -199,7 +199,7 @@ export default class Toolbar<T extends android.base.View> extends squared.base.E
             node.render(target ? application.resolveTarget(target) : parent);
         }
         if (backgroundImage && hasCollapsingToolbar) {
-            const src = $Resource.addImageUrl(node.css('backgroundImage'));
+            const src = $Resource.addImageURL(node.css('backgroundImage'));
             if (src !== '') {
                 const backgroundImageOptions = $utilA.createViewAttribute(options.backgroundImage);
                 let scaleType = 'center';

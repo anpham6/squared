@@ -50,6 +50,7 @@ export interface CachedValue<T> {
     centerAligned?: boolean;
     rightAligned?: boolean;
     bottomAligned?: boolean;
+    renderExclude?: boolean;
     preserveWhiteSpace?: boolean;
     width?: number;
     height?: number;

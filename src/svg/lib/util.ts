@@ -397,7 +397,7 @@ export function getParentAttribute(element: Element | null, attr: string) {
     return value;
 }
 
-export function parseAttributeUrl(value: string) {
+export function parseAttributeURL(value: string) {
     const match = /url\("?(#.+?)"?\)/.exec(value);
     return match ? match[1] : '';
 }

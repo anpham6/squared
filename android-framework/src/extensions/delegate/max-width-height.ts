@@ -58,13 +58,8 @@ export default class MaxWidthHeight<T extends android.base.View> extends squared
         container.inherit(node, 'styleMap');
         if (node.has('maxWidth')) {
             container.css('width', $util.formatPX(node.parseUnit(node.css('maxWidth')) + node.contentBoxWidth + (node.marginLeft > 0 ? node.marginLeft : 0) + (node.marginRight > 0 ? node.marginRight : 0)));
-            if (!node.hasWidth) {
-                if (node.documentParent.flexElement) {
-                    node.android('layout_width', 'match_parent');
-                }
-                else if (!node.has('columnCount') && !node.has('columnWidth') && (node.autoMargin.leftRight || node.autoMargin.left)) {
-                    node.android('layout_width', 'wrap_content');
-                }
+            if (!node.hasWidth && !node.has('columnCount') && !node.has('columnWidth') && (node.autoMargin.leftRight || node.autoMargin.left)) {
+                node.android('layout_width', 'wrap_content');
             }
             node.autoMargin.left = false;
             node.autoMargin.right = false;

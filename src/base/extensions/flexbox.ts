@@ -1,5 +1,4 @@
 import { FlexboxData } from '../@types/extension';
-import { InitialData } from '../@types/node';
 
 import Extension from '../extension';
 import Node from '../node';
@@ -34,13 +33,26 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
 
     public processNode(node: T) {
         const controller = this.application.controllerHandler;
-        const children = node.filter(item => item.pageFlow) as T[];
+        const children = node.filter(item => {
+            if (item.pageFlow && item.pseudoElement && item.css('content') === '""' && item.contentBoxWidth === 0) {
+                item.hide();
+                return false;
+            }
+            return item.pageFlow;
+        }) as T[];
         const mainData = Flexbox.createDataAttribute(node, children);
         for (const item of children) {
-            if (item.element && item.cssTry('alignSelf', 'start')) {
-                const bounds = item.element.getBoundingClientRect();
-                const initial: InitialData<T> = item.unsafe('initial');
-                Object.assign(initial.bounds, { width: bounds.width, height: bounds.height });
+            const bounds = item.initial.bounds;
+            if (bounds && item.cssTry('alignSelf', 'start')) {
+                if (item.cssTry('flexGrow', '0')) {
+                    if (item.cssTry('flexShrink', '1')) {
+                        const rect = (<Element> item.element).getBoundingClientRect();
+                        bounds.width = rect.width;
+                        bounds.height = rect.height;
+                        item.cssFinally('flexShrink');
+                    }
+                    item.cssFinally('flexGrow');
+                }
                 item.cssFinally('alignSelf');
             }
         }

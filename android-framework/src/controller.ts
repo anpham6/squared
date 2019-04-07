@@ -183,7 +183,7 @@ function constraintPercentValue(node: View, dimension: string, value: string, re
             actualAnchor.android(`layout_${dimension.toLowerCase()}`, node.convertPX(value, dimension === 'Width'));
         }
         else if (value !== '100%') {
-            const percent = parseInt(value) / 100 + (node.actualParent ? node.contentBoxWidth / node.actualParent.box.width : 0);
+            const percent = parseFloat(value) / 100;
             actualAnchor.app(`layout_constraint${dimension}_percent`, $math.truncate(percent, node.localSettings.floatPrecision));
             actualAnchor.android(`layout_${dimension.toLowerCase()}`, '0px');
         }
@@ -394,6 +394,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     this.userSettings.collapseUnattributedElements &&
                     node.element &&
                     node.positionStatic &&
+                    node.documentParent === node.actualParent &&
                     !node.groupParent &&
                     !node.elementId &&
                     !node.marginTop &&
@@ -425,7 +426,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     child.outerParent = node;
                     renderAs = child;
                 }
-                else if (parent.layoutConstraint && parent.flexElement && node.flexbox.alignSelf === 'baseline' && child.textElement) {
+                else if (node.autoMargin.horizontal || parent.layoutConstraint && parent.flexElement && node.flexbox.alignSelf === 'baseline' && child.textElement) {
                     layout.setType(CONTAINER_NODE.LINEAR, $enum.NODE_ALIGNMENT.HORIZONTAL);
                 }
                 else {
@@ -490,7 +491,8 @@ export default class Controller<T extends View> extends squared.base.Controller<
             else if (node.blockStatic && (style.borderWidth || style.backgroundImage || style.paddingVertical)) {
                 layout.setType(CONTAINER_NODE.LINE);
             }
-            else if (this.userSettings.collapseUnattributedElements &&
+            else if (
+                this.userSettings.collapseUnattributedElements &&
                 node.naturalElement &&
                 !node.documentRoot &&
                 !node.elementId &&
@@ -620,7 +622,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 return true;
             }
         }
-        else if (layout.every(node => node.inlineFlow && node.has('width', $enum.CSS_STANDARD.PERCENT))) {
+        else if (layout.every(node => node.inlineFlow && node.has('width', $enum.CSS_STANDARD.PERCENT) || node.renderExclude)) {
             return true;
         }
         return false;
@@ -790,6 +792,11 @@ export default class Controller<T extends View> extends squared.base.Controller<
             case CONTAINER_NODE.CONSTRAINT:
                 valid = true;
                 break;
+            default:
+                if (layout.length === 0) {
+                    return this.renderNode(layout);
+                }
+                break;
         }
         if (valid) {
             node.alignmentType |= alignmentType;
@@ -827,15 +834,19 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             if (!parent.layoutConstraint) {
                                 if (widthPercent) {
                                     width *= parent.box.width / 100;
-                                    node.css('width', $util.formatPX(width));
+                                    if (width < 100) {
+                                        node.css('width', $util.formatPX(width));
+                                    }
                                     if (height === 0 && image) {
                                         height = image.height * (width / image.width);
                                         node.css('height', $util.formatPX(height));
                                     }
                                 }
-                                if (heightPercent) {
+                                if (heightPercent && height < 100) {
                                     height *= parent.box.height / 100;
-                                    node.css('height', $util.formatPX(height));
+                                    if (height < 100) {
+                                        node.css('height', $util.formatPX(height));
+                                    }
                                     if (width === 0 && image) {
                                         width = image.width * (height / image.height);
                                         node.css('width', $util.formatPX(width));

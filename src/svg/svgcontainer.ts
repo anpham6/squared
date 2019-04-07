@@ -3,7 +3,7 @@ import { SvgAspectRatio, SvgBuildOptions, SvgPoint, SvgSynchronizeOptions } from
 import SvgBuild from './svgbuild';
 
 import { INSTANCE_TYPE } from './lib/constant';
-import { SVG, getParentAttribute, getTargetElement, parseAttributeUrl } from './lib/util';
+import { SVG, getParentAttribute, getTargetElement, parseAttributeURL } from './lib/util';
 
 type Svg = squared.svg.Svg;
 type SvgGroup = squared.svg.SvgGroup;
@@ -23,7 +23,7 @@ function getNearestViewBox(instance: SvgContainer | undefined) {
 }
 
 function getFillPattern(element: SVGGraphicsElement, viewport?: Svg): SVGPatternElement | undefined {
-    const value = parseAttributeUrl(getParentAttribute(element, 'fill'));
+    const value = parseAttributeURL(getParentAttribute(element, 'fill'));
     if (value !== '') {
         if (viewport && viewport.definitions.pattern.has(value)) {
             return viewport.definitions.pattern.get(value);

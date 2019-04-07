@@ -16,6 +16,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
 
     public beforeCascadeDocument() {
         const styles: ObjectMap<string[]> = {};
+        const styleCache: StringMap = {};
         for (const node of this.application.session.cache) {
             if (node.visible && node.controlId) {
                 const renderChildren = node.renderChildren;
@@ -66,21 +67,18 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                                 }
                             }
                             common.sort();
+                            const commonString = common.join(';');
                             let name = '';
-                            for (const index in styles) {
-                                if (styles[index].join(';') === common.join(';')) {
+                            for (const index in styleCache) {
+                                if (styleCache[index] === commonString) {
                                     name = index;
                                     break;
                                 }
                             }
                             if (style === '' || !name.startsWith(`${style}.`)) {
-                                if (style !== '') {
-                                    name = style + '.' + node.controlId;
-                                }
-                                else {
-                                    name = node.controlId;
-                                }
+                                name = (style !== '' ? style + '.' : '') + $util.capitalize(node.controlId);
                                 styles[name] = common;
+                                styleCache[name] = commonString;
                             }
                             for (const item of renderChildren) {
                                 item.attr('_', 'style', `@style/${name}`);

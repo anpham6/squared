@@ -6,7 +6,7 @@ import Node from '../node';
 import { EXT_NAME } from '../lib/constant';
 import { BOX_STANDARD } from '../lib/enumeration';
 
-type GridPosition = {
+type GridLayout = {
     placement: number[],
     rowSpan: number,
     columnSpan: number
@@ -109,7 +109,8 @@ export default class CssGrid<T extends Node> extends Extension<T> {
     }
 
     public processNode(node: T) {
-        const mainData = { ...CssGrid.createDataAttribute(),
+        const mainData = {
+            ...CssGrid.createDataAttribute(),
             alignItems: node.css('alignItems'),
             alignContent: node.css('alignContent'),
             justifyItems: node.css('justifyItems'),
@@ -120,7 +121,7 @@ export default class CssGrid<T extends Node> extends Extension<T> {
         const dense = gridAutoFlow.indexOf('dense') !== -1;
         const rowData: (T[] | undefined)[][] = [];
         const cellsPerRow: number[] = [];
-        const gridPosition: GridPosition[] = [];
+        const layout: GridLayout[] = [];
         let rowInvalid: ObjectIndex<boolean> = {};
         mainData.row.gap = node.parseUnit(node.css('rowGap'), false, false);
         mainData.column.gap = node.parseUnit(node.css('columnGap'), true, false);
@@ -147,15 +148,15 @@ export default class CssGrid<T extends Node> extends Extension<T> {
         }
         [node.cssInitial('gridTemplateRows', true), node.cssInitial('gridTemplateColumns', true), node.css('gridAutoRows'), node.css('gridAutoColumns')].forEach((value, index) => {
             if (value && value !== 'none' && value !== 'auto') {
-                const patternA = new RegExp(REGEXP_GRID.NAMED, 'g');
-                let matchA: RegExpMatchArray | null;
+                const pattern = new RegExp(REGEXP_GRID.NAMED, 'g');
+                let match: RegExpMatchArray | null;
                 let i = 1;
-                while ((matchA = patternA.exec(value)) !== null) {
+                while ((match = pattern.exec(value)) !== null) {
                     if (index < 2) {
                         const data = mainData[index === 0 ? 'row' : 'column'];
-                        if (matchA[1].startsWith('repeat')) {
+                        if (match[1].startsWith('repeat')) {
                             let iterations = 1;
-                            switch (matchA[2]) {
+                            switch (match[2]) {
                                 case 'auto-fit':
                                     data.autoFit = true;
                                     break;
@@ -163,29 +164,29 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                                     data.autoFill = true;
                                     break;
                                 default:
-                                    iterations = $util.convertInt(matchA[3]);
+                                    iterations = $util.convertInt(match[3]);
                                     break;
                             }
                             if (iterations > 0) {
                                 const repeating: RepeatItem[] = [];
-                                const patternB = new RegExp(REGEXP_GRID.REPEAT, 'g');
-                                let matchB: RegExpMatchArray | null;
-                                while ((matchB = patternB.exec(matchA[3])) !== null) {
-                                    let matchC: RegExpMatchArray | null;
-                                    if ((matchC = new RegExp(STRING_NAMED).exec(matchB[1])) !== null) {
-                                        if (data.name[matchC[1]] === undefined) {
-                                            data.name[matchC[1]] = [];
+                                const repeatPattern = new RegExp(REGEXP_GRID.REPEAT, 'g');
+                                let repeatMatch: RegExpMatchArray | null;
+                                while ((repeatMatch = repeatPattern.exec(match[3])) !== null) {
+                                    let namedMatch: RegExpMatchArray | null;
+                                    if ((namedMatch = new RegExp(STRING_NAMED).exec(repeatMatch[1])) !== null) {
+                                        if (data.name[namedMatch[1]] === undefined) {
+                                            data.name[namedMatch[1]] = [];
                                         }
-                                        repeating.push({ name: matchC[1] });
+                                        repeating.push({ name: namedMatch[1] });
                                     }
-                                    else if ((matchC = new RegExp(STRING_MINMAX).exec(matchB[1])) !== null) {
-                                        repeating.push({ unit: convertLength(node, matchC[2]), unitMin: convertLength(node, matchC[1]) });
+                                    else if ((namedMatch = new RegExp(STRING_MINMAX).exec(repeatMatch[1])) !== null) {
+                                        repeating.push({ unit: convertLength(node, namedMatch[2]), unitMin: convertLength(node, namedMatch[1]) });
                                     }
-                                    else if ((matchC = new RegExp(STRING_FIT_CONTENT).exec(matchB[1])) !== null) {
-                                        repeating.push({ unit: convertLength(node, matchC[1]), unitMin: '0px' });
+                                    else if ((namedMatch = new RegExp(STRING_FIT_CONTENT).exec(repeatMatch[1])) !== null) {
+                                        repeating.push({ unit: convertLength(node, namedMatch[1]), unitMin: '0px' });
                                     }
-                                    else if ((matchC = new RegExp(STRING_UNIT).exec(matchB[1])) !== null) {
-                                        repeating.push({ unit: convertLength(node, matchC[0]) });
+                                    else if ((namedMatch = new RegExp(STRING_UNIT).exec(repeatMatch[1])) !== null) {
+                                        repeating.push({ unit: convertLength(node, namedMatch[0]) });
                                     }
                                 }
                                 if (repeating.length) {
@@ -205,33 +206,33 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                                 }
                             }
                         }
-                        else if (matchA[1].charAt(0) === '[') {
-                            if (data.name[matchA[4]] === undefined) {
-                                data.name[matchA[4]] = [];
+                        else if (match[1].charAt(0) === '[') {
+                            if (data.name[match[4]] === undefined) {
+                                data.name[match[4]] = [];
                             }
-                            data.name[matchA[4]].push(i);
+                            data.name[match[4]].push(i);
                         }
-                        else if (matchA[1].startsWith('minmax')) {
-                            data.unit.push(convertLength(node, matchA[6]));
-                            data.unitMin.push(convertLength(node, matchA[5]));
+                        else if (match[1].startsWith('minmax')) {
+                            data.unit.push(convertLength(node, match[6]));
+                            data.unitMin.push(convertLength(node, match[5]));
                             data.repeat.push(false);
                             i++;
                         }
-                        else if (matchA[1].startsWith('fit-content')) {
-                            data.unit.push(convertLength(node, matchA[7]));
+                        else if (match[1].startsWith('fit-content')) {
+                            data.unit.push(convertLength(node, match[7]));
                             data.unitMin.push('0px');
                             data.repeat.push(false);
                             i++;
                         }
-                        else if (REGEXP_GRID.UNIT.test(matchA[1])) {
-                            data.unit.push(convertLength(node, matchA[1]));
+                        else if (REGEXP_GRID.UNIT.test(match[1])) {
+                            data.unit.push(convertLength(node, match[1]));
                             data.unitMin.push('');
                             data.repeat.push(false);
                             i++;
                         }
                     }
                     else {
-                        mainData[index === 2 ? 'row' : 'column'].auto.push(node.convertPX(matchA[1]));
+                        mainData[index === 2 ? 'row' : 'column'].auto.push(node.convertPX(match[1]));
                     }
                 }
             }
@@ -295,8 +296,8 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                     let valid = false;
                     do {
                         const available = new Array(columnMax - 1).fill(1);
-                        for (const position of gridPosition) {
-                            const placement = position.placement;
+                        for (const cell of layout) {
+                            const placement = cell.placement;
                             if (placement[indexA] > row) {
                                 for (let i = placement[indexB]; i < placement[indexC]; i++) {
                                     available[i - 1] = 0;
@@ -325,7 +326,7 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                     }
                     while (!valid);
                 }
-                gridPosition[index] = <GridPosition> {
+                layout[index] = <GridLayout> {
                     placement: horizontal ? [row, column, row + rowSpan, column + columnSpan] : [column, row, column + columnSpan, row + rowSpan],
                     rowSpan,
                     columnSpan
@@ -336,10 +337,11 @@ export default class CssGrid<T extends Node> extends Extension<T> {
         }
         else {
             node.css('gridTemplateAreas').split(/"[\s\n]+"/).forEach((template, i) => {
+                const templateAreas = mainData.templateAreas;
                 $util.trimString(template.trim(), '"').split(' ').forEach((area, j) => {
                     if (area !== '.') {
-                        if (mainData.templateAreas[area] === undefined) {
-                            mainData.templateAreas[area] = {
+                        if (templateAreas[area] === undefined) {
+                            templateAreas[area] = {
                                 rowStart: i,
                                 rowSpan: 1,
                                 columnStart: j,
@@ -347,8 +349,8 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                             };
                         }
                         else {
-                            mainData.templateAreas[area].rowSpan = (i - mainData.templateAreas[area].rowStart) + 1;
-                            mainData.templateAreas[area].columnSpan++;
+                            templateAreas[area].rowSpan = (i - templateAreas[area].rowStart) + 1;
+                            templateAreas[area].columnSpan = (j - templateAreas[area].columnStart) + 1;
                         }
                     }
                 });
@@ -364,8 +366,8 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                 let rowSpan = 1;
                 let columnSpan = 1;
                 for (let i = 0; i < positions.length; i++) {
-                    const value = positions[i];
-                    let template = mainData.templateAreas[value];
+                    const name = positions[i];
+                    let template = mainData.templateAreas[name];
                     if (template) {
                         switch (i) {
                             case 0:
@@ -383,7 +385,7 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                         }
                     }
                     else {
-                        const match = /^([\w\-]+)-(start|end)$/.exec(value);
+                        const match = /^([\w\-]+)-(start|end)$/.exec(name);
                         if (match) {
                             template = mainData.templateAreas[match[1]];
                             if (template) {
@@ -467,13 +469,13 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                                     }
                                 }
                             }
-                            const nameIndex = parseInt(alias[0]);
                             if (data.name[alias[1]]) {
-                                const nameLength = data.name[alias[1]].length;
-                                if (nameIndex <= nameLength) {
+                                const nameIndex = parseInt(alias[0]);
+                                const length = data.name[alias[1]].length;
+                                if (nameIndex <= length) {
                                     placement[i] = data.name[alias[1]][nameIndex - 1] + (alias[1] === positions[i - 2] ? 1 : 0);
                                 }
-                                else if (data.autoFill && nameIndex > nameLength) {
+                                else if (data.autoFill && nameIndex > length) {
                                     placement[i] = nameIndex + (alias[1] === positions[i - 2] ? 1 : 0);
                                 }
                             }
@@ -483,7 +485,7 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                         }
                     }
                 }
-                gridPosition[index] = <GridPosition> {
+                layout[index] = <GridLayout> {
                     placement,
                     rowSpan,
                     columnSpan
@@ -493,8 +495,7 @@ export default class CssGrid<T extends Node> extends Extension<T> {
         {
             const data = mainData[horizontal ? 'column' : 'row'];
             data.count = Math.max(1, data.unit.length);
-            for (let i = 0; i < gridPosition.length; i++) {
-                const item = gridPosition[i];
+            for (const item of layout) {
                 if (item) {
                     data.count = Math.max(data.count, horizontal ? item.columnSpan : item.rowSpan, item.placement[horizontal ? 1 : 0] || 0, (item.placement[horizontal ? 3 : 2] || 0) - 1);
                 }
@@ -508,17 +509,73 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                 data.unit = repeatUnit(data, data.unit);
                 data.unitMin = repeatUnit(data, data.unitMin);
             }
+            let percent = 1;
+            let fr = 0;
+            for (const unit of data.unit) {
+                if ($util.isPercent(unit)) {
+                    percent -= parseFloat(unit) / 100;
+                }
+                else if (unit.endsWith('fr')) {
+                    fr += parseFloat(unit);
+                }
+            }
+            if (percent > 0 && fr > 0) {
+                for (let i = 0; i < data.unit.length; i++) {
+                    if (data.unit[i].endsWith('fr')) {
+                        data.unit[i] = percent * (parseFloat(data.unit[i]) / fr) + 'fr';
+                    }
+                }
+            }
+            const rowEnd = mainData.row.unit.length + 1;
+            const columnEnd = mainData.column.unit.length + 1;
+            for (const cell of layout) {
+                const placement = cell.placement;
+                if (placement[2] < 0) {
+                    if (rowEnd > 1) {
+                        placement[2] += rowEnd + 1;
+                    }
+                    else {
+                        placement[2] = undefined as any;
+                    }
+                }
+                if (placement[3] < 0) {
+                    if (columnEnd > 1) {
+                        placement[3] += columnEnd + 1;
+                    }
+                    else {
+                        placement[3] = undefined as any;
+                    }
+                }
+            }
         }
         node.each((item: T, index) => {
-            const position = gridPosition[index];
-            const placement = position.placement;
-            const ROW_SPAN = horizontal ? position.rowSpan : position.columnSpan;
-            const COLUMN_SPAN = horizontal ? position.columnSpan : position.rowSpan;
-            const COLUMN_COUNT = horizontal ? mainData.column.count : mainData.row.count;
-            const rowA = horizontal ? 0 : 1;
-            const colA = horizontal ? 1 : 0;
-            const rowB = horizontal ? 2 : 3;
-            const colB = horizontal ? 3 : 2;
+            const cell = layout[index];
+            const placement = cell.placement;
+            let ROW_SPAN: number;
+            let COLUMN_SPAN: number;
+            let COLUMN_COUNT: number;
+            let rowA: number;
+            let colA: number;
+            let rowB: number;
+            let colB: number;
+            if (horizontal) {
+                ROW_SPAN = cell.rowSpan;
+                COLUMN_SPAN = cell.columnSpan;
+                COLUMN_COUNT = mainData.column.count;
+                rowA = 0;
+                colA = 1;
+                rowB = 2;
+                colB = 3;
+            }
+            else {
+                ROW_SPAN = cell.columnSpan;
+                COLUMN_SPAN = cell.rowSpan;
+                COLUMN_COUNT = mainData.row.count;
+                rowA = 1;
+                colA = 0;
+                rowB = 3;
+                colB = 2;
+            }
             while (!placement[0] || !placement[1]) {
                 const PLACEMENT = placement.slice(0);
                 if (!PLACEMENT[rowA]) {
@@ -554,7 +611,9 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                         PLACEMENT[rowB] = PLACEMENT[rowA] + ROW_SPAN;
                     }
                     const available: [number, number][][] = [];
-                    for (let i = PLACEMENT[rowA] - 1; i < PLACEMENT[rowB] - 1; i++) {
+                    const l = PLACEMENT[rowA] - 1;
+                    const m = PLACEMENT[rowB] - 1;
+                    for (let i = l; i < m; i++) {
                         if (rowData[i] === undefined) {
                             available.push([[0, -1]] as [number, number][]);
                         }
@@ -587,26 +646,31 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                             break;
                         }
                     }
-                    if (COLUMN_SPAN === available.length) {
-                        if (available.length > 1) {
-                            gapNested: {
-                                for (const outside of available[0]) {
-                                    for (let i = outside[0]; i < outside[1]; i++) {
-                                        for (let j = 1; j < available.length; j++) {
-                                            for (let k = 0; k < available[j].length; k++) {
-                                                const inside = available[j][k];
-                                                if (i >= inside[0] && (inside[1] === -1 || i + COLUMN_SPAN <= inside[1])) {
-                                                    PLACEMENT[colA] = i + 1;
-                                                    break gapNested;
+                    if (available.length) {
+                        if (available[0][0][1] === -1) {
+                            PLACEMENT[colA] = l + 1;
+                        }
+                        else if (available.length === m - l) {
+                            if (available.length > 1) {
+                                found: {
+                                    for (const outside of available[0]) {
+                                        for (let i = outside[0]; i < outside[1]; i++) {
+                                            for (let j = 1; j < available.length; j++) {
+                                                for (let k = 0; k < available[j].length; k++) {
+                                                    const inside = available[j][k];
+                                                    if (i >= inside[0] && (inside[1] === -1 || i + COLUMN_SPAN <= inside[1])) {
+                                                        PLACEMENT[colA] = i + 1;
+                                                        break found;
+                                                    }
                                                 }
                                             }
                                         }
                                     }
                                 }
                             }
-                        }
-                        else {
-                            PLACEMENT[colA] = available[0][0][0] + 1;
+                            else {
+                                PLACEMENT[colA] = available[0][0][0] + 1;
+                            }
                         }
                     }
                 }
@@ -664,8 +728,10 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                         for (let j = 0; j < column.length; j++) {
                             const item = column[j];
                             item.positioned = true;
+                            if (!mainData.children.has(item)) {
+                                maxDimension = Math.max(maxDimension, horizontal ? item.bounds.height : item.bounds.width);
+                            }
                             mainData.children.add(item);
-                            maxDimension = Math.max(maxDimension, horizontal ? item.bounds.height : item.bounds.width);
                         }
                         unitTotal[i] += maxDimension;
                     }

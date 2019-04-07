@@ -203,7 +203,7 @@ export default class Menu<T extends View> extends squared.base.Extension<T> {
                 if (!options.android.icon) {
                     const style = $css.getStyle(element);
                     const backgroundImage = style.getPropertyValue('background-image');
-                    let src = $Resource.addImageUrl(backgroundImage !== 'none' ? backgroundImage : style.getPropertyValue('background'), $constA.PREFIX_ANDROID.MENU);
+                    let src = $Resource.addImageURL(backgroundImage !== 'none' ? backgroundImage : style.getPropertyValue('background'), $constA.PREFIX_ANDROID.MENU);
                     if (src !== '') {
                         options.android.icon = `@drawable/${src}`;
                     }

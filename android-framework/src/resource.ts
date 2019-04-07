@@ -71,6 +71,13 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
         return options;
     }
 
+    public static formatName(value: string) {
+        if (/^\d/.test(value)) {
+            value = '__' + value;
+        }
+        return value.replace(/[^\w+]/g, '_');
+    }
+
     public static addTheme(...values: StyleAttribute[]) {
         for (const theme of values) {
             const path = theme.output && $util.isString(theme.output.path) ? theme.output.path.trim() : DIRECTORY_THEME;
@@ -162,7 +169,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                         if (!$util.hasValue(match[2])) {
                             match[2] = '1';
                         }
-                        const src = filepath + $util.fromLastIndexOf(match[1]);
+                        const src = filepath + $util.fromLastIndexOf(match[1], '/');
                         const size = parseFloat(match[2]);
                         if (size <= 0.75) {
                             images.ldpi = src;
@@ -194,16 +201,16 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
 
     public static addImage(images: StringMap, prefix = '') {
         if (images.mdpi) {
-            const src = $util.fromLastIndexOf(images.mdpi);
+            const src = $util.fromLastIndexOf(images.mdpi, '/');
             const format = $util.fromLastIndexOf(src, '.').toLowerCase();
             if (IMAGE_FORMAT.includes(format)) {
-                return Resource.insertStoredAsset('images', prefix + src.substring(0, src.length - format.length - 1).replace(/[^\w+]/g, '_'), images);
+                return Resource.insertStoredAsset('images', Resource.formatName(prefix + src.substring(0, src.length - format.length - 1)), images);
             }
         }
         return '';
     }
 
-    public static addImageUrl(value: string, prefix = '') {
+    public static addImageURL(value: string, prefix = '') {
         value = $css.resolveURL(value) || $util.resolvePath(value);
         return value !== '' ? this.addImage({ mdpi: value }, prefix) : '';
     }

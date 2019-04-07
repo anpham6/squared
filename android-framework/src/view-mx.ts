@@ -543,7 +543,12 @@ export default (Base: Constructor<squared.base.Node>) => {
                                 this.android('layout_columnWeight', (parseInt(width) / 100).toPrecision(this.localSettings.floatPrecision), false);
                             }
                             else if (width === '100%') {
-                                layoutWidth = this.has('maxWidth') ? this.convertPX(this.css('maxWidth')) : 'match_parent';
+                                if (renderParent.inlineWidth) {
+                                    value = this.bounds.width;
+                                }
+                                else {
+                                    layoutWidth = this.has('maxWidth') ? this.convertPX(this.css('maxWidth')) : 'match_parent';
+                                }
                             }
                             else {
                                 value = this.parseUnit(width);
@@ -573,7 +578,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                     else if (this.imageElement && this.has('height', $enum.CSS_STANDARD.PERCENT)) {
                         layoutWidth = $util.formatPX(this.bounds.width);
                     }
-                    if (!layoutWidth && this.blockStatic && !this.inputElement && !renderParent.is(CONTAINER_NODE.GRID) && !this.documentParent.flexElement) {
+                    if (!layoutWidth && (this.blockStatic && !this.inputElement && !renderParent.is(CONTAINER_NODE.GRID) && (!this.documentParent.flexElement || this.flexElement) || renderParent.android('layout_width') === '0px')) {
                         layoutWidth = 'match_parent';
                     }
                     this.android('layout_width', layoutWidth || 'wrap_content');
@@ -619,6 +624,9 @@ export default (Base: Constructor<squared.base.Node>) => {
                     }
                     else if (this.imageElement && this.has('width', $enum.CSS_STANDARD.PERCENT)) {
                         layoutHeight = $util.formatPX(this.bounds.height);
+                    }
+                    if (renderParent.android('layout_height') === '0px') {
+                        layoutHeight = 'match_parent';
                     }
                     this.android('layout_height', layoutHeight || 'wrap_content');
                 }

@@ -159,7 +159,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                         }
                     case 'TD':
                         if (!td.cssInitial('verticalAlign')) {
-                            td.css('verticalAlign', 'middle');
+                            td.css('verticalAlign', 'middle', true);
                         }
                         break;
                 }

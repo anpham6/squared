@@ -1180,6 +1180,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this._element === document.body;
     }
 
+    get initial() {
+        return this._initial;
+    }
+
     get bounds() {
         return this._bounds || $dom.newRectDimension();
     }
@@ -1774,6 +1778,16 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             this._cached.multiline = this.plainText || this.inlineText && (this.inlineFlow || this.length === 0) ? $dom.getRangeClientRect(<Element> this._element).multiline > 0 : false;
         }
         return this._cached.multiline;
+    }
+
+    set renderExclude(value) {
+        this._cached.renderExclude = value;
+    }
+    get renderExclude() {
+        if (this._cached.renderExclude === undefined) {
+            this._cached.renderExclude = this.pseudoElement && this.css('content') === '""' && this.contentBoxWidth === 0 && this.contentBoxHeight === 0;
+        }
+        return this._cached.renderExclude;
     }
 
     get visibleStyle() {
