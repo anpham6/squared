@@ -11,7 +11,7 @@ export default class MaxWidthHeight<T extends android.base.View> extends squared
         return !node.textElement && !node.imageElement && !node.svgElement && (
             node.has('maxWidth') && !parent.has('columnCount') && !parent.has('columnWidth') ||
             node.has('maxHeight') ||
-            this.application.userSettings.supportNegativeLeftTop && node.some(item => !item.pageFlow && item.actualParent === node && (item.left < 0 || item.right < 0))
+            this.application.userSettings.supportNegativeLeftTop && node.some(item => !item.pageFlow && !item.imageElement && item.actualParent === node && (item.left < 0 || item.right < 0))
         );
     }
 
@@ -61,15 +61,21 @@ export default class MaxWidthHeight<T extends android.base.View> extends squared
             if (!node.hasWidth && !node.has('columnCount') && !node.has('columnWidth') && (node.autoMargin.leftRight || node.autoMargin.left)) {
                 node.android('layout_width', 'wrap_content');
             }
-            node.autoMargin.left = false;
-            node.autoMargin.right = false;
-            node.autoMargin.leftRight = false;
+            if (parent.flexElement || parent.gridElement) {
+                node.autoMargin.horizontal = false;
+                node.autoMargin.left = false;
+                node.autoMargin.right = false;
+                node.autoMargin.leftRight = false;
+            }
         }
         if (node.has('maxHeight')) {
             container.css('height', $util.formatPX(node.parseUnit(node.css('maxHeight') + node.contentBoxHeight + (node.marginTop > 0 ? node.marginTop : 0) + (node.marginBottom > 0 ? node.marginBottom : 0))));
-            node.autoMargin.top = false;
-            node.autoMargin.bottom = false;
-            node.autoMargin.topBottom = false;
+            if (parent.flexElement || parent.gridElement) {
+                node.autoMargin.vertical = false;
+                node.autoMargin.top = false;
+                node.autoMargin.bottom = false;
+                node.autoMargin.topBottom = false;
+            }
         }
         if (!isNaN(left)) {
             const offset = node.linear.left - left;

@@ -134,34 +134,38 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         public attr(obj: string, attr: string, value = '', overwrite = true) {
-            const result = {};
+            const result: ObjectMap<string | boolean> = {};
             if (!this.supported(obj, attr, result)) {
                 return '';
             }
             if (Object.keys(result).length) {
-                if ($util.isString(result['obj'])) {
-                    obj = result['obj'];
+                if ($util.isString(result.obj)) {
+                    obj = result.obj;
                 }
-                if ($util.isString(result['attr'])) {
-                    attr = result['attr'];
+                if ($util.isString(result.attr)) {
+                    attr = result.attr;
                 }
-                if ($util.isString(result['value'])) {
-                    value = result['value'];
+                if ($util.isString(result.value)) {
+                    value = result.value;
                 }
-                if (typeof result['overwrite'] === 'boolean') {
-                    overwrite = result['overwrite'];
+                if (typeof result.overwrite === 'boolean') {
+                    overwrite = result.overwrite;
                 }
             }
             return super.attr(obj, attr, value, overwrite);
         }
 
         public android(attr: string, value = '', overwrite = true) {
-            this.attr('android', attr, value, overwrite);
+            if (value) {
+                this.attr('android', attr, value, overwrite);
+            }
             return this.__android[attr] || '';
         }
 
         public app(attr: string, value = '', overwrite = true) {
-            this.attr('app', attr, value, overwrite);
+            if (value) {
+                this.attr('app', attr, value, overwrite);
+            }
             return this.__app[attr] || '';
         }
 
@@ -964,14 +968,13 @@ export default (Base: Constructor<squared.base.Node>) => {
             if (renderParent && this.hasProcedure($enum.NODE_PROCEDURE.AUTOFIT)) {
                 const layoutWidth = this.android('layout_width');
                 const layoutHeight = this.android('layout_height');
-                const heightLength = $util.isLength(layoutHeight);
-                if (this.is(CONTAINER_NODE.BUTTON) && !heightLength) {
+                if (this.is(CONTAINER_NODE.BUTTON) && this.inlineWidth) {
                     if (!this.has('minHeight')) {
                         this.android('layout_height', $util.formatPX(this.bounds.height + (this.css('borderStyle') === 'outset' ? this.toInt('borderWidth') : 0)));
                     }
                 }
                 else if (this.is(CONTAINER_NODE.LINE)) {
-                    if (this.tagName !== 'HR' && heightLength && this.toInt('height', true) > 0) {
+                    if (this.tagName !== 'HR' && $util.isLength(layoutHeight) && this.toFloat('height', true) > 0) {
                         this.android('layout_height', $util.formatPX(parseInt(layoutHeight) + this.borderTopWidth + this.borderBottomWidth));
                     }
                 }
@@ -981,7 +984,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                     }
                     if (this.inlineHeight) {
                         if (renderParent.layoutConstraint && this.bounds.height >= this.documentParent.bounds.height && this.alignParent('top')) {
-                            this.android('layout_height', '0dp');
+                            this.android('layout_height', '0px');
                             this.anchor('bottom', 'parent');
                         }
                         else {
@@ -996,22 +999,26 @@ export default (Base: Constructor<squared.base.Node>) => {
                     }
                     else if (this.styleElement && this.css('boxSizing') !== 'border-box' && this.hasResource($enum.NODE_RESOURCE.BOX_SPACING)) {
                         if (!renderParent.tableElement) {
-                            if ($util.isLength(layoutWidth) && this.toInt('width', !this.imageElement) > 0 && this.contentBoxWidth > 0) {
-                                this.android('layout_width', $util.formatPX(parseInt(layoutWidth) + this.contentBoxWidth));
-                            }
-                            else if (this.imageElement && this.singleChild) {
-                                const width = $util.convertInt(renderParent.android('layout_width'));
-                                if (width > 0) {
-                                    renderParent.android('layout_width', $util.formatPX(width + this.marginLeft + this.contentBoxWidth));
+                            if (layoutWidth !== '0px') {
+                                if ($util.isLength(layoutWidth) && this.toFloat('width', !this.imageElement) > 0 && this.contentBoxWidth > 0) {
+                                    this.android('layout_width', $util.formatPX(parseInt(layoutWidth) + this.contentBoxWidth));
+                                }
+                                else if (this.imageElement && this.singleChild) {
+                                    const width = $util.convertInt(renderParent.android('layout_width'));
+                                    if (width > 0) {
+                                        renderParent.android('layout_width', $util.formatPX(width + this.marginLeft + this.contentBoxWidth));
+                                    }
                                 }
                             }
-                            if (heightLength && this.toInt('height', !this.imageElement) > 0 && this.contentBoxHeight > 0) {
-                                this.android('layout_height', $util.formatPX(parseInt(layoutHeight) + this.contentBoxHeight));
-                            }
-                            else if (this.imageElement && this.singleChild) {
-                                const height = $util.convertInt(renderParent.android('layout_height'));
-                                if (height > 0) {
-                                    renderParent.android('layout_height', $util.formatPX(height + this.marginTop + this.contentBoxHeight));
+                            if (layoutHeight !== '0px') {
+                                if ($util.isLength(layoutHeight) && this.toFloat('height', !this.imageElement) > 0 && this.contentBoxHeight > 0) {
+                                    this.android('layout_height', $util.formatPX(parseInt(layoutHeight) + this.contentBoxHeight));
+                                }
+                                else if (this.imageElement && this.singleChild) {
+                                    const height = $util.convertInt(renderParent.android('layout_height'));
+                                    if (height > 0) {
+                                        renderParent.android('layout_height', $util.formatPX(height + this.marginTop + this.contentBoxHeight));
+                                    }
                                 }
                             }
                         }

@@ -230,7 +230,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     const unitMin = data.unitMin[cellData[cellStart] + i];
                     minUnitSize += parent.parseUnit(unitMin);
                     let unit = data.unit[cellData[cellStart] + i];
-                    if (!$util.hasValue(unit)) {
+                    if (!unit) {
                         if (data.auto[j]) {
                             unit = data.auto[j];
                             if (data.auto[j + 1]) {

@@ -233,6 +233,31 @@ export default class Controller<T extends View> extends squared.base.Controller<
             if (node.constraint.vertical) {
                 vertical.push(node);
             }
+            if (node.alignParent('top')) {
+                let current = node;
+                while (true) {
+                    const bottomTop = current.alignSibling('bottomTop');
+                    if (bottomTop !== '') {
+                        const next = nodes.find(item => item.documentId === bottomTop);
+                        if (next && next.alignSibling('topBottom') === current.documentId) {
+                            if (next.alignParent('bottom')) {
+                                node.app('layout_constraintVertical_chainStyle', 'packed', false);
+                                node.app('layout_constraintVertical_bias', '0', false);
+                                break;
+                            }
+                            else {
+                                current = next;
+                            }
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                    else {
+                        break;
+                    }
+                }
+            }
         }
         let i = -1;
         while (++i < nodes.length) {
@@ -340,11 +365,11 @@ export default class Controller<T extends View> extends squared.base.Controller<
             enabled: false
         },
         supported: {
-            imageFormat: ['bmp', 'cur', 'gif', 'ico', 'jpg', 'png']
+            imageFormat: ['jpg', 'png', 'gif', 'bmp', 'webp', 'ico', 'cur']
         },
         unsupported: {
             excluded: new Set(['BR']),
-            tagName: new Set(['OPTION', 'INPUT:hidden', 'MAP', 'AREA'])
+            tagName: new Set(['OPTION', 'INPUT:hidden', 'MAP', 'AREA', 'SOURCE'])
         },
         precision: {
             standardFloat: 3
@@ -396,6 +421,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     node.positionStatic &&
                     node.documentParent === node.actualParent &&
                     !node.groupParent &&
+                    !node.blockStatic &&
                     !node.elementId &&
                     !node.marginTop &&
                     !node.marginBottom &&
@@ -426,7 +452,10 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     child.outerParent = node;
                     renderAs = child;
                 }
-                else if (node.autoMargin.horizontal || parent.layoutConstraint && parent.flexElement && node.flexbox.alignSelf === 'baseline' && child.textElement) {
+                else if (node.autoMargin.horizontal) {
+                    layout.setType(CONTAINER_NODE.LINEAR, $enum.NODE_ALIGNMENT.VERTICAL);
+                }
+                else if (parent.layoutConstraint && parent.flexElement && node.flexbox.alignSelf === 'baseline' && child.textElement) {
                     layout.setType(CONTAINER_NODE.LINEAR, $enum.NODE_ALIGNMENT.HORIZONTAL);
                 }
                 else {
@@ -1888,6 +1917,9 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         if (item.has('width', $enum.CSS_STANDARD.PERCENT)) {
                             percent = item.toFloat('width') / 100;
                         }
+                        else if (perRowCount === 1) {
+                            percent = (1 / columnMin) - percentGap;
+                        }
                         else {
                             percent = (1 / columns[j].length) - percentGap;
                         }
@@ -2045,7 +2077,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             nodes.push(previousEnd);
                         }
                     }
-                    if (floating && (cleared.size === 0 || nodes && !nodes.some(item => cleared.has(item)))) {
+                    if (floating && chain.floating && (cleared.size === 0 && previous && previous.floating || nodes && !nodes.some(item => cleared.has(item)))) {
                         if (previousRow.length) {
                             chain.anchor('topBottom', aboveEnd.documentId);
                             if (aboveEnd.alignSibling('bottomTop') === '') {
@@ -2056,10 +2088,16 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                 if (aboveBefore.linear.bottom > aboveEnd.linear.bottom) {
                                     const offset = reverse ? Math.ceil(aboveBefore.linear[anchorEnd]) - Math.floor(parent.box[anchorEnd]) : Math.ceil(parent.box[anchorEnd]) - Math.floor(aboveBefore.linear[anchorEnd]);
                                     if (offset >= chain.linear.width) {
-                                        chain.anchor(chainStart, aboveBefore.documentId);
+                                        const adjacent = previousSiblings[k + 1];
+                                        chain.anchor(anchorStart, adjacent.documentId, true);
+                                        if (reverse) {
+                                            chain.modifyBox($enum.BOX_STANDARD.MARGIN_RIGHT, -adjacent.marginRight, false);
+                                        }
+                                        else {
+                                            chain.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, -adjacent.marginLeft, false);
+                                        }
                                         chain.anchorDelete(chainEnd);
                                         if (chain === rowStart) {
-                                            chain.anchorDelete(anchorStart);
                                             chain.delete('app', 'layout_constraintHorizontal_chainStyle', 'layout_constraintHorizontal_bias');
                                         }
                                         else if (chain === rowEnd) {

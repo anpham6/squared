@@ -47,7 +47,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                     return node.actualParent as T;
                 }
             }
-            else if (node.length) {
+            else if (node.groupParent) {
                 const parent = NodeList.actualParent(node.children);
                 if (parent) {
                     return parent as T;

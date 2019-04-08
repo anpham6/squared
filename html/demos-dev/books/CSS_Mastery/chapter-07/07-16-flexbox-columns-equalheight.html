@@ -5,11 +5,6 @@
   <title>Using flexbox to create equal-height columns</title>
   <!-- the base styles and "housekeeping" styles are in here: -->
   <link rel="stylesheet" href="css/grid-base.css">
-<!-- Modernizr script to detect flexbox support, 
-     which also includes HTML5 shiv,
-     to help older browsers understand styling
-     on newer HTML5 elements: -->
-     <script src="js/modernizr.min.js"></script>
      <style>
 
       /* grid styling */
@@ -48,18 +43,18 @@
             -ms-flex-wrap: wrap;
                 flex-wrap: wrap;
       }
+      .col {
+        float: left;
+        -moz-box-sizing: border-box;
+             box-sizing: border-box;
+        padding: 0 .6875em 1.375em;
+      }
       .row-wrapping > .col {
         float: none;
         vertical-align: top;
         display: inline-block;
         font-size: 16px;
         font-size: 1rem;
-      }
-      .col {
-        float: left;
-        -moz-box-sizing: border-box;
-             box-sizing: border-box;
-        padding: 0 .6875em 1.375em;
       }
       .flexbox .col,
       .flexboxtweener .col {
@@ -139,21 +134,21 @@
             <div class="row row-quartet">
               <div class="col subcategory-featured">
                 <article class="story">
-                  <img src="images/600x300.png" alt="Dummy image">
+                  <img src="img/600x300.png" alt="Dummy image">
                   <h3><a href="#">Cras suscipit nec leo id.</a></h3>
                   <p>Autem repudiandae aliquid tempora quos reprehenderit architecto, sequi repellat.</p>
                 </article>
               </div>
               <div class="col">
                 <article class="story">
-                  <img src="images/600x300.png" alt="Dummy image">
+                  <img src="img/600x300.png" alt="Dummy image">
                   <h3><a href="#">Perferendis, ipsam!</a></h3>
                   <p>Neque magnam vero obcaecati facere nobis sint dolore accusamus vitae consequuntur ad necessitatibus, laborum molestiae.</p>
                 </article>
               </div>
               <div class="col">
                 <article class="story">
-                  <img src="images/600x300.png" alt="Dummy image">
+                  <img src="img/600x300.png" alt="Dummy image">
                   <h3><a href="#">Curabitur mattis purus nec velit.</a></h3>
                   <p>Neque magnam vero obcaecati facere nobis sint dolore accusamus vitae consequuntur ad necessitatibus, laborum molestiae.</p>
                 </article>
@@ -214,7 +209,7 @@
             <div class="row row-trio">
               <div class="col">
                 <article class="story">
-                  <img src="images/600x300.png" alt="Dummy image">
+                  <img src="img/600x300.png" alt="Dummy image">
                   <h3><a href="#">Ut sit amet mi massa</a></h3>
                   <p>Neque magnam vero obcaecati facere nobis sint dolore accusamus vitae consequuntur ad necessitatibus, laborum molestiae.</p>
                 </article>
@@ -231,7 +226,7 @@
               </div>
               <div class="col">
                 <article class="story">
-                  <img src="images/600x300.png" alt="Dummy image">
+                  <img src="img/600x300.png" alt="Dummy image">
                   <h3><a href="#">Animi, explicabo, ipsum</a></h3>
                   <p>Neque magnam vero obcaecati facere nobis sint dolore accusamus vitae consequuntur ad necessitatibus, laborum molestiae.</p>
                 </article>

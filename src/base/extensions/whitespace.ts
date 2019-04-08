@@ -48,14 +48,14 @@ function applyMarginCollapse(node: Node, child: Node, direction: boolean) {
         if (node[borderWidth] === 0 && node[padding] === 0) {
             let replaced = false;
             while (child[margin] === 0 && child[borderWidth] === 0 && child[padding] === 0) {
-                const firstChild = child.firstChild as Node;
-                if (isBlockElement(firstChild)) {
-                    if (HTML5 && firstChild[margin] !== 0 && child.has(margin, CSS_STANDARD.ZERO)) {
-                        firstChild.modifyBox(boxMargin, null);
+                const endChild = (direction ? child.firstChild : child.lastChild) as Node;
+                if (isBlockElement(endChild)) {
+                    if (HTML5 && endChild[margin] !== 0 && child.has(margin, CSS_STANDARD.ZERO)) {
+                        endChild.modifyBox(boxMargin, null);
                         replaced = false;
                         break;
                     }
-                    child = firstChild;
+                    child = endChild;
                     replaced = true;
                 }
                 else {
