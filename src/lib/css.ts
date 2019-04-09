@@ -6,56 +6,87 @@ export const BOX_POSITION = ['top', 'right', 'bottom', 'left'];
 export const BOX_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
 export const BOX_PADDING = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'];
 
-export function getKeyframeRules(): CSSRuleData {
-    const keyFrameRule = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
-    const result = new Map<string, ObjectMap<StringMap>>();
-    violation: {
-        for (let i = 0; i < document.styleSheets.length; i++) {
-            const styleSheet = <CSSStyleSheet> document.styleSheets[i];
-            if (styleSheet.cssRules) {
-                for (let j = 0; j < styleSheet.cssRules.length; j++) {
-                    try {
-                        const item = <CSSKeyframesRule> styleSheet.cssRules[j];
-                        if (item.type === 7) {
-                            const map: ObjectMap<StringMap> = {};
-                            for (let k = 0; k < item.cssRules.length; k++) {
-                                const match = keyFrameRule.exec(item.cssRules[k].cssText);
-                                if (match) {
-                                    for (let percent of (item.cssRules[k]['keyText'] || match[1].trim()).split(REGEXP_COMPILED.SEPARATOR)) {
-                                        percent = percent.trim();
-                                        switch (percent) {
-                                            case 'from':
-                                                percent = '0%';
-                                                break;
-                                            case 'to':
-                                                percent = '100%';
-                                                break;
-                                        }
-                                        map[percent] = {};
-                                        for (const property of match[2].split(';')) {
-                                            const [name, value] = property.split(':');
-                                            if (value) {
-                                                map[percent][name.trim()] = value.trim();
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            result.set(item.name, map);
-                        }
-                    }
-                    catch {
-                        break violation;
-                    }
-                }
+export function getStyle(element: Element | null, target?: string, cache = true): CSSStyleDeclaration {
+    if (element) {
+        const attr = 'style' + (target ? '::' + target : '');
+        if (cache) {
+            const style = getElementCache(element, attr, '0');
+            if (style) {
+                return style;
             }
         }
+        if (hasComputedStyle(element)) {
+            const style = getComputedStyle(element, target);
+            setElementCache(element, attr, '0', style);
+            return style;
+        }
+        return <CSSStyleDeclaration> { display: 'inline' };
     }
-    return result;
+    return <CSSStyleDeclaration> { display: 'none' };
 }
 
 export function hasComputedStyle(element: Element | null): element is HTMLElement {
     return !!element && typeof element['style'] === 'object' && element['style'] !== null && element['style']['display'] !== null;
+}
+
+export function getSpecificity(value: string) {
+    const pattern = new RegExp(STRING_PATTERN.SELECTOR, 'g');
+    let result = 0;
+    let match: RegExpExecArray | null;
+    while ((match = pattern.exec(value.trim())) !== null) {
+        if (match[0]) {
+            if (match[1]) {
+                let check = true;
+                switch (match[1].charAt(0)) {
+                    case '*':
+                    case '>':
+                    case '+':
+                    case '~':
+                        continue;
+                    case ':':
+                    case '[':
+                        check = false;
+                        break;
+                    case '#':
+                        result += 100;
+                        break;
+                    case '.':
+                        result += 10;
+                        match[1] = match[1].substring(1);
+                        break;
+                    default:
+                        if (match[1].indexOf('#') > 0) {
+                            result += 100;
+                        }
+                        result += 1;
+                        break;
+                }
+                if (check) {
+                    result += (match[1].split('.').length - 1) * 10;
+                }
+            }
+            if (match[2]) {
+                if (match[2].startsWith('::')) {
+                    result += 1;
+                }
+                else if (match[2].startsWith(':not(')) {
+                    if (match[3]) {
+                        result += getSpecificity(match[3]);
+                    }
+                }
+                else if (match[2].startsWith(':') && !match[2].startsWith(':global') && !match[2].startsWith(':local')) {
+                    result += 10;
+                }
+            }
+            if (match[4]) {
+                result += 10;
+            }
+        }
+        else {
+            break;
+        }
+    }
+    return result;
 }
 
 export function checkStyleValue(element: Element, attr: string, value: string, fontSize?: number, style?: CSSStyleDeclaration) {
@@ -106,23 +137,52 @@ export function getDataSet(element: HTMLElement | null, prefix: string) {
     return result;
 }
 
-export function getStyle(element: Element | null, target?: string, cache = true): CSSStyleDeclaration {
-    if (element) {
-        const attr = 'style' + (target ? '::' + target : '');
-        if (cache) {
-            const style = getElementCache(element, attr, '0');
-            if (style) {
-                return style;
+export function getKeyframeRules(): CSSRuleData {
+    const keyFrameRule = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
+    const result = new Map<string, ObjectMap<StringMap>>();
+    violation: {
+        for (let i = 0; i < document.styleSheets.length; i++) {
+            const styleSheet = <CSSStyleSheet> document.styleSheets[i];
+            if (styleSheet.cssRules) {
+                for (let j = 0; j < styleSheet.cssRules.length; j++) {
+                    try {
+                        const item = <CSSKeyframesRule> styleSheet.cssRules[j];
+                        if (item.type === 7) {
+                            const map: ObjectMap<StringMap> = {};
+                            for (let k = 0; k < item.cssRules.length; k++) {
+                                const match = keyFrameRule.exec(item.cssRules[k].cssText);
+                                if (match) {
+                                    for (let percent of (item.cssRules[k]['keyText'] || match[1].trim()).split(REGEXP_COMPILED.SEPARATOR)) {
+                                        percent = percent.trim();
+                                        switch (percent) {
+                                            case 'from':
+                                                percent = '0%';
+                                                break;
+                                            case 'to':
+                                                percent = '100%';
+                                                break;
+                                        }
+                                        map[percent] = {};
+                                        for (const property of match[2].split(';')) {
+                                            const [name, value] = property.split(':');
+                                            if (value) {
+                                                map[percent][name.trim()] = value.trim();
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            result.set(item.name, map);
+                        }
+                    }
+                    catch {
+                        break violation;
+                    }
+                }
             }
         }
-        if (hasComputedStyle(element)) {
-            const style = getComputedStyle(element, target);
-            setElementCache(element, attr, '0', style);
-            return style;
-        }
-        return <CSSStyleDeclaration> { display: 'inline' };
     }
-    return <CSSStyleDeclaration> { display: 'none' };
+    return result;
 }
 
 export function getFontSize(element: Element | null) {

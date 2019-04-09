@@ -7,6 +7,7 @@ interface UtilRegExpString {
     CALC: string;
     VAR: string;
     ZERO_ONE: string;
+    SELECTOR: string;
     URL: string;
 }
 
@@ -18,9 +19,9 @@ interface UtilRegExpPattern {
     CALC: RegExp;
     URL: RegExp;
     PROTOCOL: RegExp;
-    SEPARATOR: RegExp;
     ATTRIBUTE: RegExp;
     TAGNAME: RegExp;
+    SEPARATOR: RegExp;
     CUSTOMPROPERTY: RegExp;
     LEADINGSPACE: RegExp;
     TRAILINGSPACE: RegExp;
@@ -53,7 +54,8 @@ export const STRING_PATTERN: UtilRegExpString = <any> {
     PERCENT: '-?\\d+(?:\\.\\d+)?%',
     CALC: 'calc(\\(.+\\))',
     VAR: 'var\\((--[A-Za-z0-9\\-]+)(?!,\\s*var\\()(?:,\\s*([a-z\\-]+\\([^)]+\\)|[^)]+))?\\)',
-    ZERO_ONE: '0(?:\\.\\d+)?|1(?:\\.0+)?'
+    ZERO_ONE: '0(?:\\.\\d+)?|1(?:\\.0+)?',
+    SELECTOR: '\\s*([^\\s:\\[]+)?(:[\\w\\-]+(?:\\(([^)]+)\\))?|::[\\w\\-]+|\\[([\\w\\-]+)(?:[~^$*|]?="(.+)")?\\])?\\s*'
 };
 
 STRING_PATTERN.LENGTH = `(${STRING_PATTERN.DECIMAL})(${UNIT_TYPE})?`;

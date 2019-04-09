@@ -23,9 +23,10 @@ declare global {
             export import BOX_MARGIN = $css.BOX_MARGIN;
             export import BOX_PADDING = $css.BOX_PADDING;
             function getStyle(element: Element | null, target?: string, cache?: boolean): CSSStyleDeclaration;
-            function getKeyframeRules(): CSSRuleData;
-            function checkStyleValue(element: Element, attr: string, value: string, fontSize?: number, style?: CSSStyleDeclaration): string;
             function hasComputedStyle(element: Element | null): element is HTMLElement;
+            function checkStyleValue(element: Element, attr: string, value: string, fontSize?: number, style?: CSSStyleDeclaration): string;
+            function getSpecificity(value: string): number;
+            function getKeyframeRules(): CSSRuleData;
             function getDataSet(element: HTMLElement | null, prefix: string): StringMap;
             function getFontSize(element: Element | null): number | undefined;
             function isParentStyle(element: Element | null, attr: string, ...styles: string[]): boolean;

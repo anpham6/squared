@@ -2085,9 +2085,10 @@ export default class Application<T extends Node> implements squared.base.Applica
         for (const attr of Array.from(item.style)) {
             fromRule.push($util.convertCamelCase(attr));
         }
-        for (const grouping of item.selectorText.split(/\s*,\s*/)) {
-            const [selectorText, target] = grouping.split('::');
-            document.querySelectorAll(selectorText || '*').forEach((element: HTMLElement) => {
+        for (const selectorText of item.selectorText.split($util.REGEXP_COMPILED.SEPARATOR)) {
+            const specificity = $css.getSpecificity(selectorText);
+            const [selector, target] = selectorText.split('::');
+            document.querySelectorAll(selector || '*').forEach((element: HTMLElement) => {
                 const style = $css.getStyle(element, target);
                 const fontSize = $util.parseUnit(style.getPropertyValue('font-size'));
                 const styleMap: StringMap = {};
@@ -2111,15 +2112,24 @@ export default class Application<T extends Node> implements squared.base.Applica
                     }
                 }
                 const attrStyle = `styleMap${target ? '::' + target : ''}`;
-                const data = $session.getElementCache(element, attrStyle, this.processing.sessionId);
-                if (data) {
+                const attrSpecificity = `styleSpecificity${target ? '::' + target : ''}`;
+                const styleData = $session.getElementCache(element, attrStyle, this.processing.sessionId);
+                if (styleData) {
+                    const specificityData: ObjectMap<number> = $session.getElementCache(element, attrSpecificity, this.processing.sessionId) || {};
                     for (const attr in styleMap) {
-                        data[attr] = styleMap[attr];
+                        if (styleData[attr] === undefined || specificityData[attr] <= specificity || specificityData[attr] === undefined) {
+                            styleData[attr] = styleMap[attr];
+                        }
                     }
                 }
                 else {
+                    const specificityMap: ObjectMap<number> = {};
+                    for (const attr in styleMap) {
+                        specificityMap[attr] = specificity;
+                    }
                     $session.setElementCache(element, `style${target ? '::' + target : ''}`, '0', style);
                     $session.setElementCache(element, attrStyle, this.processing.sessionId, styleMap);
+                    $session.setElementCache(element, attrSpecificity, this.processing.sessionId, specificityMap);
                 }
             });
         }
