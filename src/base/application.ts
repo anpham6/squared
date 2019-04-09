@@ -20,17 +20,6 @@ const REGEXP_CACHED: ObjectMap<RegExp> = {
 };
 let NodeConstructor!: Constructor<Node>;
 
-function checkPositionStatic(node: Node, parent: Node | null) {
-    const previousSiblings = node.previousSiblings();
-    const nextSiblings = node.nextSiblings();
-    if (!previousSiblings.some(item => item.multiline || item.excluded && !item.blockStatic) && (nextSiblings.every(item => item.blockStatic || item.lineBreak || item.excluded) || parent && node.element === parent.getLastChildElement())) {
-        node.cssApply({ display: 'inline-block', verticalAlign: 'top' }, true);
-        node.positionStatic = true;
-        return true;
-    }
-    return false;
-}
-
 function prioritizeExtensions<T extends Node>(element: HTMLElement, extensions: Extension<T>[], documentRoot: HTMLElement | null = null) {
     const tagged: string[] = [];
     let current: HTMLElement | null = element;
@@ -638,8 +627,13 @@ export default class Application<T extends Node> implements squared.base.Applica
                             break;
                         }
                     case 'absolute':
-                        if (node.positionAuto && checkPositionStatic(node, parent)) {
-                            break;
+                        if (node.positionAuto) {
+                            const previousSiblings = node.previousSiblings();
+                            const nextSiblings = node.nextSiblings();
+                            if (!previousSiblings.some(item => item.multiline || item.excluded && !item.blockStatic) && (nextSiblings.every(item => item.blockStatic || item.lineBreak || item.excluded) || parent && node.element === parent.getLastChildElement())) {
+                                node.cssApply({ display: 'inline-block', verticalAlign: 'top' }, true);
+                                node.positionStatic = true;
+                            }
                         }
                         else if (this.userSettings.supportNegativeLeftTop) {
                             const absoluteParent = node.absoluteParent;

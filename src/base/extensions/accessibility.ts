@@ -1,9 +1,15 @@
+import { AccessibilityOptions } from '../@types/extension';
+
 import Extension from '../extension';
 import Node from '../node';
 
 import { NODE_PROCEDURE } from '../lib/enumeration';
 
 export default abstract class Accessibility<T extends Node> extends Extension<T> {
+    public readonly options: AccessibilityOptions = {
+        showLabel: true
+    };
+
     public afterInit() {
         for (const node of this.application.processing.cache) {
             if (node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
@@ -15,7 +21,7 @@ export default abstract class Accessibility<T extends Node> extends Extension<T>
                     case 'CHECKBOX':
                         const element = <HTMLInputElement> node.element;
                         [node.nextSibling, node.previousSibling].some(sibling => {
-                            if (sibling && sibling.visible && sibling.pageFlow) {
+                            if (sibling && sibling.visible && sibling.pageFlow && !sibling.visibleStyle.backgroundImage) {
                                 const labelElement = <HTMLLabelElement> sibling.element;
                                 const labelParent = sibling.documentParent.tagName === 'LABEL' ? sibling.documentParent : undefined;
                                 if (element.id && element.id === labelElement.htmlFor) {

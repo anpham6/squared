@@ -74,8 +74,16 @@ export function getSpecificity(value: string) {
                         result += getSpecificity(match[3]);
                     }
                 }
-                else if (match[2].startsWith(':') && !match[2].startsWith(':global') && !match[2].startsWith(':local')) {
-                    result += 10;
+                else if (match[2].startsWith(':')) {
+                    switch (match[2]) {
+                        case ':root':
+                        case ':global':
+                        case ':local':
+                            break;
+                        default:
+                            result += 10;
+                            break;
+                    }
                 }
             }
             if (match[4]) {

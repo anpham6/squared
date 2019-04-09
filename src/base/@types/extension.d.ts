@@ -1,3 +1,7 @@
+export interface AccessibilityOptions {
+    showLabel: boolean;
+}
+
 export interface GridOptions {
     columnBalanceEqual: boolean;
 }

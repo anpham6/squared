@@ -100,7 +100,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
         const mapBounds: number[] = [];
         const tableFilled: T[][] = [];
         const mapWidth: string[] = [];
-        let rowCount = table.length;
+        const rowCount = table.length;
         let columnIndex: number[] = new Array(rowCount).fill(0);
         let columnCount = 0;
         let multiline = false;
@@ -153,10 +153,37 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                     }
                 }
                 switch (td.tagName) {
-                    case 'TH':
+                    case 'TH': {
+                        function setBorderStyle(attr: string) {
+                            const value = $css.getInheritedStyle(element, attr, /none|\s0px|rgba\(0, 0, 0, 0\)|transparent/, 'TABLE');
+                            if (value !== '') {
+                                const match = /^(\d+[a-z]+) ([a-z]+) (.+)$/.exec(value);
+                                if (match) {
+                                    td.css(`${attr}Style`, match[2]);
+                                    td.css(`${attr}Color`, match[3]);
+                                    td.css(`${attr}Width`, match[1], true);
+                                    if (!td.has('border')) {
+                                        td.css('border', 'inherit');
+                                    }
+                                }
+                            }
+                        }
                         if (!td.cssInitial('textAlign')) {
                             td.css('textAlign', td.css('textAlign'));
                         }
+                        if (td.borderTopWidth === 0) {
+                            setBorderStyle('borderTop');
+                        }
+                        if (td.borderRightWidth === 0) {
+                            setBorderStyle('borderRight');
+                        }
+                        if (td.borderBottomWidth === 0) {
+                            setBorderStyle('borderBottom');
+                        }
+                        if (td.borderLeftWidth === 0) {
+                            setBorderStyle('borderLeft');
+                        }
+                    }
                     case 'TD':
                         if (!td.cssInitial('verticalAlign')) {
                             td.css('verticalAlign', 'middle', true);
@@ -288,7 +315,6 @@ export default abstract class Table<T extends Node> extends Extension<T> {
             if (!caption.cssInitial('textAlign')) {
                 caption.css('textAlign', 'center');
             }
-            rowCount++;
             caption.data(EXT_NAME.TABLE, 'colSpan', columnCount);
             caption.parent = node;
         }

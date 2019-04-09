@@ -43,7 +43,7 @@ function setColumnHorizontal<T extends View>(seg: T[]) {
     rowStart.app('layout_constraintHorizontal_chainStyle', 'spread_inside');
 }
 
-function setColumnVertical<T extends View>(partition: T[][], above?: T) {
+function setColumnVertical<T extends View>(partition: T[][], lastRow: boolean, above?: T) {
     const rowStart = partition[0][0];
     for (let i = 0; i < partition.length; i++) {
         const seg = partition[i];
@@ -72,10 +72,23 @@ function setColumnVertical<T extends View>(partition: T[][], above?: T) {
             if (j > 0) {
                 item.anchor('left', seg[0].documentId);
             }
+            if (j === seg.length - 1) {
+                if (lastRow && $util.withinRange(item.linear.bottom, item.documentParent.box.bottom)) {
+                    item.anchor('bottom', 'parent');
+                }
+                else if (i > 0) {
+                    const adjacent = partition[i - 1][j];
+                    if ($util.withinRange(item.bounds.top, adjacent.bounds.top)) {
+                        item.anchor('top', adjacent.documentId);
+                        item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, -adjacent.marginTop);
+                    }
+                }
+            }
             Controller.setConstraintDimension(item);
             item.anchored = true;
         }
         seg[0].app('layout_constraintVertical_chainStyle', 'packed');
+        seg[0].app('layout_constraintVertical_bias', '0');
     }
 }
 
@@ -1870,7 +1883,20 @@ export default class Controller<T extends View> extends squared.base.Controller<
         if (items.length === 0) {
             rows.pop();
         }
-        const columnCount = Math.max(1, Math.min(node.toInt('columnCount') || Number.POSITIVE_INFINITY, Math.floor(node.actualWidth / node.toFloat('columnWidth')) || Number.POSITIVE_INFINITY));
+        const columnWidth = node.toFloat('columnWidth');
+        const columnGap = $util.convertInt(node.css('columnGap')) || 16;
+        let columnIteration = 0;
+        if (columnWidth > 0) {
+            let actualWidth = node.actualWidth;
+            do {
+                actualWidth -= columnWidth;
+                if (columnIteration > 0) {
+                    actualWidth -= columnGap;
+                }
+            }
+            while (actualWidth > 0 && ++columnIteration);
+        }
+        const columnCount = Math.max(1, Math.min(node.toInt('columnCount') || Number.POSITIVE_INFINITY, columnIteration || Number.POSITIVE_INFINITY));
         let previous: T | undefined;
         for (let i = 0; i < rows.length; i++) {
             const row = rows[i];
@@ -1906,24 +1932,14 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         totalGap += $math.maxArray($util.objectMap<T, number>(column.children as T[], child => child.marginLeft + child.marginRight));
                     }
                 }
-                const columnGap = $util.convertInt(node.css('columnGap')) || 16;
                 const percentGap = Math.max(((totalGap + (columnGap * (columnMin - 1))) / node.box.width) / columnMin, 0.01);
                 const horizontal: T[] = [];
                 for (let j = 0; j < columns.length; j++) {
                     const columnStart = columns[j][0];
                     horizontal.push(columnStart);
                     for (const item of columns[j]) {
-                        let percent = 0;
-                        if (item.has('width', $enum.CSS_STANDARD.PERCENT)) {
-                            percent = item.toFloat('width') / 100;
-                        }
-                        else if (perRowCount === 1) {
-                            percent = (1 / columnMin) - percentGap;
-                        }
-                        else {
-                            percent = (1 / columns[j].length) - percentGap;
-                        }
-                        if (percent > 0) {
+                        if (item.css('columnSpan') !== 'all') {
+                            const percent = (1 / columnMin) - percentGap;
                             item.android('layout_width', '0px');
                             item.app('layout_constraintWidth_percent', $math.truncate(percent, this.localSettings.precision.standardFloat));
                         }
@@ -1947,7 +1963,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     }
                 }
                 setColumnHorizontal(horizontal);
-                setColumnVertical(columns, previous);
+                setColumnVertical(columns, i === rows.length - 1, previous);
                 let maxHeight = 0;
                 for (let j = 0; j < columns.length; j++) {
                     const height = columns[j].reduce((a, b) => a + b.linear.height, 0);

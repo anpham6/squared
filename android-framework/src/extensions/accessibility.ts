@@ -1,8 +1,14 @@
+import { AccessibilityOptions } from '../../../src/base/@types/extension';
+
 import { CONTAINER_ANDROID } from '../lib/constant';
 
 const $enum = squared.base.lib.enumeration;
 
 export default class <T extends android.base.View> extends squared.base.extensions.Accessibility<T> {
+    public readonly options: AccessibilityOptions = {
+        showLabel: false
+    };
+
     public readonly eventOnly = true;
 
     public afterBaseLayout() {

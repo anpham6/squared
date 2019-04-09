@@ -1086,18 +1086,20 @@ export default (Base: Constructor<squared.base.Node>) => {
                                     if (offset > 0) {
                                         node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.floor(offset / 2));
                                         node.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, Math.ceil(offset / 2));
+                                        return true;
                                     }
-                                    else if (node.length === 0 || !node.layoutHorizontal && node.hasAlign($enum.NODE_ALIGNMENT.MULTILINE) || node.layoutFrame) {
+                                    else if (node.length === 0 || !(node.layoutHorizontal && node.hasAlign($enum.NODE_ALIGNMENT.MULTILINE)) || node.layoutFrame) {
                                         lineHeight += this.contentBoxHeight;
                                         if (!node.has('height') && lineHeight > node.toFloat('minHeight')) {
                                             node.android('minHeight', $util.formatPX(lineHeight));
                                         }
-                                        if (node.textElement && !node.has('verticalAlign')) {
+                                        if (!node.has('verticalAlign')) {
                                             node.mergeGravity('gravity', 'center_vertical');
                                         }
+                                        return true;
                                     }
                                 }
-                                else if (this.length === 0) {
+                                else if (node.length === 0) {
                                     let offset = (lineHeight - ((this === node || !node.textElement ? height : node.fontSize) + node.paddingTop + node.paddingBottom)) / 2;
                                     if (offset > 0) {
                                         node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.floor(offset) - (node.inlineVertical && !node.baseline ? $util.convertFloat(node.verticalAlign) : 0));
@@ -1107,11 +1109,13 @@ export default (Base: Constructor<squared.base.Node>) => {
                                             }
                                             node.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, Math.ceil(offset));
                                         }
+                                        return true;
                                     }
                                 }
                             }
+                            return false;
                         };
-                        if (this.length) {
+                        if (!((this.length === 0 || this.layoutHorizontal && !this.hasAlign($enum.NODE_ALIGNMENT.MULTILINE)) && setMarginOffset(this))) {
                             const baseline = $util.filterArray(this.renderChildren, node => node.baselineActive);
                             if (baseline.length) {
                                 for (let i = 0; i < baseline.length; i++) {
@@ -1129,7 +1133,6 @@ export default (Base: Constructor<squared.base.Node>) => {
                                 });
                             }
                         }
-                        setMarginOffset(this);
                     }
                 }
             }

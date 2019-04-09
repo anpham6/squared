@@ -1896,7 +1896,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 this._cached.actualWidth = this.bounds.right - this.bounds.left;
             }
             else {
-                this._cached.actualWidth = this.has('width', CSS_STANDARD.LENGTH) && this.display !== 'table-cell' ? this.toFloat('width') : this.bounds.width;
+                this._cached.actualWidth = this.has('width', CSS_STANDARD.LENGTH) && this.display !== 'table-cell' ? this.toFloat('width') : this.bounds.width - this.contentBoxWidth;
             }
         }
         return this._cached.actualWidth;
@@ -1908,7 +1908,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 this._cached.actualHeight = this.toFloat('height');
             }
             else {
-                this._cached.actualHeight = this.plainText ? this.bounds.bottom - this.bounds.top : this.bounds.height;
+                this._cached.actualHeight = this.plainText ? this.bounds.bottom - this.bounds.top : this.bounds.height - this.contentBoxHeight;
             }
         }
         return this._cached.actualHeight;
