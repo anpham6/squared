@@ -13,6 +13,8 @@ const $session = squared.lib.session;
 const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
+const withinViewport = (rect: DOMRect | ClientRect) => !(rect.left < 0 && rect.top < 0 && Math.abs(rect.left) >= rect.width && Math.abs(rect.top) >= rect.height);
+
 export default abstract class Controller<T extends Node> implements squared.base.Controller<T> {
     public abstract readonly localSettings: ControllerSettings;
 
@@ -117,7 +119,7 @@ export default abstract class Controller<T extends Node> implements squared.base
                         if (styleMap[attr] === undefined || styleMap[attr] === 'auto') {
                             const match = new RegExp(`\\s+${attr}="([^"]+)"`).exec(element.outerHTML);
                             if (match) {
-                                styleMap[attr] = $util.formatPX($util.isPercent(match[1]) ? parseFloat(match[1]) / 100 * (element.parentElement || element).getBoundingClientRect()[attr] : match[1]);
+                                styleMap[attr] = $util.formatPX($util.isPercent(match[1]) ? parseFloat(match[1]) / 100 * $session.getClientRect(element.parentElement || element, this.application.processing.sessionId)[attr] : match[1]);
                             }
                             else if (element.tagName === 'IFRAME') {
                                 if (attr ===  'width') {
@@ -209,6 +211,18 @@ export default abstract class Controller<T extends Node> implements squared.base
 
     public hasAppendProcessing(id: number) {
         return this._beforeOutside[id] !== undefined || this._beforeInside[id] !== undefined || this._afterInside[id] !== undefined || this._afterOutside[id] !== undefined;
+    }
+
+    public includeElement(element: Element) {
+        const rect = $session.getClientRect(element, this.application.processing.sessionId);
+        if (withinViewport(rect)) {
+            if (rect.width !== 0 && rect.height !== 0) {
+                return true;
+            }
+            const style = $css.getStyle(element);
+            return style.getPropertyValue('display') === 'block' && (parseInt(style.getPropertyValue('margin-top')) !== 0 || parseInt(style.getPropertyValue('margin-bottom')) !== 0) || style.getPropertyValue('clear') !== 'none';
+        }
+        return false;
     }
 
     public cascadeDocument(templates: NodeTemplate<T>[], depth: number) {

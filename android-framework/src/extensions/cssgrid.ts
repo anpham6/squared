@@ -34,7 +34,8 @@ function getRowData(mainData: CssGridData<View>, direction: string) {
 }
 
 function getGridSize(mainData: CssGridData<View>, direction: string, node: View) {
-    const dimension = direction === 'column' ? 'width' : 'height';
+    const horizontal = direction === 'column';
+    const dimension = horizontal ? 'width' : 'height';
     const data = mainData[direction];
     let value = 0;
     if (data.unit.length) {
@@ -61,7 +62,7 @@ function getGridSize(mainData: CssGridData<View>, direction: string, node: View)
         }
     }
     value += (data.count - 1) * data.gap;
-    return (node.has(dimension, $enum.CSS_STANDARD.LENGTH) ? node[dimension] : node.bounds[dimension] - node[`contentBox${$util.capitalize(dimension)}`]) - value;
+    return (horizontal ? node.actualWidth : node.actualHeight) - value;
 }
 
 function setContentSpacing(mainData: CssGridData<View>, node: View, alignment: string, direction: string) {
@@ -113,16 +114,33 @@ function setContentSpacing(mainData: CssGridData<View>, node: View, alignment: s
                 case 'space-between': {
                     if (itemCount > 1) {
                         const [marginSize, marginExcess] = getMarginSize(itemCount - 1);
-                        for (let i = 0; i < itemCount - 1; i++) {
+                        for (let i = 0; i < itemCount; i++) {
                             for (const item of new Set<View>($util.flatArray(rowData[i]))) {
                                 if (item) {
                                     const marginEnd = (i < marginExcess ? 1 : 0) + marginSize;
-                                    if (!adjusted.has(item)) {
-                                        item.modifyBox(MARGIN_END, marginEnd);
-                                        adjusted.add(item);
+                                    if (i < itemCount - 1) {
+                                        if (!adjusted.has(item)) {
+                                            item.modifyBox(MARGIN_END, marginEnd);
+                                            adjusted.add(item);
+                                        }
+                                        else {
+                                            item.cssPX(dimension, marginEnd);
+                                        }
                                     }
                                     else {
-                                        item.cssPX(dimension, marginEnd);
+                                        let span = 0;
+                                        if (direction === 'column') {
+                                            span = $util.convertInt(item.android('layout_columnSpan'));
+                                        }
+                                        else {
+                                            span = $util.convertInt(item.android('layout_rowSpan'));
+                                        }
+                                        if (span > 1) {
+                                            item.cssPX(dimension, marginEnd);
+                                            if (adjusted.has(item)) {
+                                                item.modifyBox(MARGIN_END, -marginEnd);
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -228,7 +246,9 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 }
                 for (let i = 0, j = 0; i < cellData[cellSpan]; i++) {
                     const unitMin = data.unitMin[cellData[cellStart] + i];
-                    minUnitSize += parent.parseUnit(unitMin);
+                    if (unitMin !== '') {
+                        minUnitSize += parent.parseUnit(unitMin);
+                    }
                     let unit = data.unit[cellData[cellStart] + i];
                     if (!unit) {
                         if (data.auto[j]) {
@@ -236,9 +256,6 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                             if (data.auto[j + 1]) {
                                 j++;
                             }
-                        }
-                        else if (dimension === 'height' && mainData.row.count > 1 && cellData[cellSpan] === 1) {
-                            unit = '1fr';
                         }
                         else {
                             continue;
@@ -332,9 +349,9 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     }
                 }
             }
-            const alignItems = node.has('alignSelf') ? node.css('alignSelf') : mainData.alignItems;
-            const justifyItems = node.has('justifySelf') ? node.css('justifySelf') : mainData.justifyItems;
-            if (/(start|end|center|baseline)/.test(alignItems) || /(start|end|center|baseline|left|right)/.test(justifyItems)) {
+            const alignSelf = node.flexbox.alignSelf;
+            const justifySelf = node.flexbox.justifySelf;
+            if (/(start|end|center|baseline)/.test(alignSelf) || /(start|end|center|baseline|left|right)/.test(justifySelf)) {
                 renderAs = this.application.createNode($dom.createElement(node.actualParent && node.actualParent.element));
                 renderAs.tagName = node.tagName;
                 renderAs.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
@@ -350,28 +367,28 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 applyLayout(renderAs, 'column', 'width');
                 applyLayout(renderAs, 'row', 'height');
                 let inlineWidth = false;
-                if (justifyItems.endsWith('start') || justifyItems.endsWith('left') || justifyItems.endsWith('baseline')) {
+                if (justifySelf.endsWith('start') || justifySelf.endsWith('left') || justifySelf.endsWith('baseline')) {
                     node.mergeGravity('layout_gravity', 'left');
                     inlineWidth = true;
                 }
-                else if (justifyItems.endsWith('end') || justifyItems.endsWith('right')) {
+                else if (justifySelf.endsWith('end') || justifySelf.endsWith('right')) {
                     node.mergeGravity('layout_gravity', 'right');
                     inlineWidth = true;
                 }
-                else if (justifyItems.endsWith('center')) {
+                else if (justifySelf.endsWith('center')) {
                     node.mergeGravity('layout_gravity', 'center_horizontal');
                     inlineWidth = true;
                 }
                 if (!node.hasWidth) {
                     node.android('layout_width', inlineWidth ? 'wrap_content' : 'match_parent', false);
                 }
-                if (alignItems.endsWith('start') || alignItems.endsWith('baseline')) {
+                if (alignSelf.endsWith('start') || alignSelf.endsWith('baseline')) {
                     node.mergeGravity('layout_gravity', 'top');
                 }
-                else if (alignItems.endsWith('end')) {
+                else if (alignSelf.endsWith('end')) {
                     node.mergeGravity('layout_gravity', 'bottom');
                 }
-                else if (alignItems.endsWith('center')) {
+                else if (alignSelf.endsWith('center')) {
                     node.mergeGravity('layout_gravity', 'center_vertical');
                 }
                 else if (!node.hasHeight) {

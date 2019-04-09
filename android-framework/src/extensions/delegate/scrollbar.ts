@@ -4,8 +4,9 @@ import View from '../../view';
 
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
-const $dom = squared.lib.dom;
 const $enum = squared.base.lib.enumeration;
+const $dom = squared.lib.dom;
+const $util = squared.lib.util;
 
 const SCROLL_HORIZONTAL = 'HorizontalScrollView';
 const SCROLL_VERTICAL = 'android.support.v4.widget.NestedScrollView';
@@ -63,9 +64,8 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
             const previous = scrollView[i - 1];
             switch (item.controlName) {
                 case SCROLL_VERTICAL: {
-                    const value = node.css('height');
                     node.android('layout_width', 'wrap_content');
-                    item.android('layout_height', node.convertPX(value, false));
+                    item.android('layout_height', $util.formatPX(node.actualHeight));
                     item.cssApply({
                         overflow: 'scroll visible',
                         overflowX: 'visible',
@@ -74,8 +74,7 @@ export default class ScrollBar<T extends View> extends squared.base.Extension<T>
                     break;
                 }
                 case SCROLL_HORIZONTAL: {
-                    const value = node.css('width');
-                    item.android('layout_width', node.convertPX(value));
+                    item.android('layout_width', $util.formatPX(node.actualWidth));
                     node.android('layout_height', 'wrap_content');
                     item.cssApply({
                         overflow: 'visible scroll',

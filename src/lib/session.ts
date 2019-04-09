@@ -1,5 +1,17 @@
 type Node = squared.base.Node;
 
+export function getClientRect(element: Element, sessionId: string, cache = true) {
+    if (cache) {
+        const rect: ClientRect = getElementCache(element, 'boundingClientRect', sessionId);
+        if (rect) {
+            return rect;
+        }
+    }
+    const bounds = element.getBoundingClientRect();
+    setElementCache(element, 'boundingClientRect', sessionId, bounds);
+    return bounds;
+}
+
 export function isLineBreak(element: Element, sessionId: string) {
     if (element.tagName === 'BR') {
         return true;

@@ -514,10 +514,10 @@ export default (Base: Constructor<squared.base.Node>) => {
                     return;
                 }
                 if (this.documentBody) {
-                    if (!this.hasWidth && this.renderChildren.some(node => node.alignParent('right')) || this.visibleStyle.backgroundColor || this.borderRightWidth > 0) {
+                    if (!this.hasWidth && this.renderChildren.some(node => node.alignParent('right'))) {
                         this.android('layout_width', 'match_parent', false);
                     }
-                    if (!this.hasHeight && this.renderChildren.some(node => node.alignParent('bottom')) || this.visibleStyle.backgroundColor || this.borderBottomWidth > 0) {
+                    if (!this.hasHeight && this.renderChildren.some(node => node.alignParent('bottom'))) {
                         this.android('layout_height', 'match_parent', false);
                     }
                 }
@@ -527,10 +527,10 @@ export default (Base: Constructor<squared.base.Node>) => {
                         const width = this.css('width');
                         let value = -1;
                         if ($util.isLength(width)) {
-                            value = this.parseUnit(width);
+                            value = this.actualWidth;
                             if (this.positionStatic && !this.layoutFrame && !this.is(CONTAINER_NODE.IMAGE) && this.documentParent.css('overflow') !== 'hidden') {
                                 const widthParent = $util.convertInt(renderParent.android('layout_width'));
-                                if (widthParent > 0 && value >= widthParent) {
+                                if (widthParent > 0 && this.width >= widthParent) {
                                     if (this.singleChild) {
                                         renderParent.android('layout_width', 'wrap_content');
                                     }
@@ -555,7 +555,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                                 }
                             }
                             else {
-                                value = this.parseUnit(width);
+                                value = this.actualWidth;
                             }
                         }
                         if (value !== -1) {
@@ -582,7 +582,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                     else if (this.imageElement && this.has('height', $enum.CSS_STANDARD.PERCENT)) {
                         layoutWidth = $util.formatPX(this.bounds.width);
                     }
-                    if (!layoutWidth && (this.blockStatic && !this.inputElement && !renderParent.is(CONTAINER_NODE.GRID) && (!this.documentParent.flexElement || this.flexElement) || renderParent.android('layout_width') === '0px')) {
+                    if (!layoutWidth && (this.blockStatic && !this.inputElement && !renderParent.is(CONTAINER_NODE.GRID) && (!this.documentParent.flexElement || renderParent.android('layout_width') === '0px' || this.flexElement || this.gridElement))) {
                         layoutWidth = 'match_parent';
                     }
                     this.android('layout_width', layoutWidth || 'wrap_content');
@@ -593,10 +593,10 @@ export default (Base: Constructor<squared.base.Node>) => {
                         const height = this.css('height');
                         let value = -1;
                         if ($util.isLength(height)) {
-                            value = this.parseUnit(height, false);
+                            value = this.actualHeight;
                             if (this.positionStatic && !this.layoutFrame && this.documentParent.css('overflow') !== 'hidden') {
                                 const heightParent = $util.convertInt(renderParent.android('layout_height'));
-                                if (heightParent > 0 && value >= heightParent) {
+                                if (heightParent > 0 && this.height >= heightParent) {
                                     if (this.singleChild) {
                                         renderParent.android('layout_height', 'wrap_content');
                                     }
@@ -628,9 +628,6 @@ export default (Base: Constructor<squared.base.Node>) => {
                     }
                     else if (this.imageElement && this.has('width', $enum.CSS_STANDARD.PERCENT)) {
                         layoutHeight = $util.formatPX(this.bounds.height);
-                    }
-                    if (renderParent.android('layout_height') === '0px') {
-                        layoutHeight = 'match_parent';
                     }
                     this.android('layout_height', layoutHeight || 'wrap_content');
                 }
@@ -978,18 +975,14 @@ export default (Base: Constructor<squared.base.Node>) => {
                         this.android('layout_height', $util.formatPX(parseInt(layoutHeight) + this.borderTopWidth + this.borderBottomWidth));
                     }
                 }
-                else if (this.textElement && this.inlineText && this.textContent === '') {
-                    if (this.inlineWidth) {
-                        this.android('layout_width', $util.formatPX(this.bounds.width));
+                else if (this.textElement && this.inlineText && this.textContent === '' && this.inlineWidth && this.inlineHeight) {
+                    this.android('layout_width', $util.formatPX(this.bounds.width));
+                    if (renderParent.layoutConstraint && this.bounds.height >= this.documentParent.bounds.height && this.alignParent('top')) {
+                        this.android('layout_height', '0px');
+                        this.anchor('bottom', 'parent');
                     }
-                    if (this.inlineHeight) {
-                        if (renderParent.layoutConstraint && this.bounds.height >= this.documentParent.bounds.height && this.alignParent('top')) {
-                            this.android('layout_height', '0px');
-                            this.anchor('bottom', 'parent');
-                        }
-                        else {
-                            this.android('layout_height', $util.formatPX(this.bounds.height));
-                        }
+                    else {
+                        this.android('layout_height', $util.formatPX(this.bounds.height));
                     }
                 }
                 else {
@@ -997,7 +990,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                     if (this.tableElement) {
                         borderWidth = this.css('boxSizing') === 'content-box' || $util.isUserAgent($util.USER_AGENT.FIREFOX | $util.USER_AGENT.EDGE);
                     }
-                    else if (this.styleElement && this.css('boxSizing') !== 'border-box' && this.hasResource($enum.NODE_RESOURCE.BOX_SPACING)) {
+                    else if (this.styleElement && this.hasResource($enum.NODE_RESOURCE.BOX_SPACING)) {
                         if (!renderParent.tableElement) {
                             if (layoutWidth !== '0px') {
                                 if ($util.isLength(layoutWidth) && this.toFloat('width', !this.imageElement) > 0 && this.contentBoxWidth > 0) {
@@ -1061,53 +1054,61 @@ export default (Base: Constructor<squared.base.Node>) => {
         private setLineHeight() {
             let lineHeight = this.lineHeight;
             if (lineHeight > 0) {
-                if (this.textElement && this.multiline) {
-                    if (this.localSettings.targetAPI >= BUILD_ANDROID.PIE) {
-                        this.android('lineHeight', $util.formatPX(lineHeight));
+                const hasOwnStyle = this.has('lineHeight');
+                const setMultiline = (node: T, overwrite: boolean) => {
+                    if (node.localSettings.targetAPI >= BUILD_ANDROID.PIE) {
+                        node.android('lineHeight', $util.formatPX(lineHeight), overwrite);
                     }
                     else {
-                        const spacing = lineHeight - this.fontSize;
+                        const spacing = lineHeight - node.fontSize;
                         if (spacing > 0) {
-                            this.android('lineSpacingExtra', $util.formatPX(spacing));
+                            node.android('lineSpacingExtra', $util.formatPX(spacing), overwrite);
                         }
                     }
+                };
+                if (this.multiline) {
+                    setMultiline(this, hasOwnStyle);
                 }
                 else {
-                    const hasLineHeight = this.has('lineHeight');
-                    if (this.length || hasLineHeight) {
-                        const setMarginOffset = (node: T, bottom = true) => {
+                    if (this.length || hasOwnStyle) {
+                        const setMarginOffset = (node: T, top = true, bottom = true) => {
                             let height = node.actualHeight;
                             if (height === 0) {
                                 height = node.height;
                             }
                             if (height > 0) {
-                                if (hasLineHeight && this === node) {
-                                    const offset = lineHeight - (node.hasHeight ? node.height : height);
-                                    if (offset > 0) {
-                                        node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.floor(offset / 2));
-                                        node.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, Math.ceil(offset / 2));
+                                if (hasOwnStyle && this === node) {
+                                    const offset = lineHeight - (node.hasHeight ? node.height : height) - node.contentBoxHeight;
+                                    if (Math.floor(offset) > 0) {
+                                        node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.ceil(offset / 2));
+                                        node.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, Math.floor(offset / 2));
                                         return true;
                                     }
-                                    else if (node.length === 0 || !(node.layoutHorizontal && node.hasAlign($enum.NODE_ALIGNMENT.MULTILINE)) || node.layoutFrame) {
+                                    else if (node.length === 0 || node.layoutHorizontal && !node.hasAlign($enum.NODE_ALIGNMENT.MULTILINE) || node.layoutFrame && node.renderChildren.length === 1 && node.renderChildren[0].length === 0) {
                                         lineHeight += this.contentBoxHeight;
                                         if (!node.has('height') && lineHeight > node.toFloat('minHeight')) {
                                             node.android('minHeight', $util.formatPX(lineHeight));
                                         }
-                                        if (!node.has('verticalAlign')) {
+                                        if (!node.blockHeight && !node.has('verticalAlign') && node.textElement) {
                                             node.mergeGravity('gravity', 'center_vertical');
                                         }
                                         return true;
                                     }
                                 }
+                                else if (node.multiline) {
+                                    setMultiline(node, false);
+                                }
                                 else if (node.length === 0) {
                                     let offset = (lineHeight - ((this === node || !node.textElement ? height : node.fontSize) + node.paddingTop + node.paddingBottom)) / 2;
                                     if (offset > 0) {
-                                        node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.floor(offset) - (node.inlineVertical && !node.baseline ? $util.convertFloat(node.verticalAlign) : 0));
+                                        if (top) {
+                                            node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, Math.ceil(offset) - (node.inlineVertical && !node.baseline ? $util.convertFloat(node.verticalAlign) : 0));
+                                        }
                                         if (bottom && lineHeight > node.height) {
                                             if (node.height > 0) {
                                                 offset = lineHeight - node.height;
                                             }
-                                            node.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, Math.ceil(offset));
+                                            node.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, Math.floor(offset));
                                         }
                                         return true;
                                     }
@@ -1115,22 +1116,31 @@ export default (Base: Constructor<squared.base.Node>) => {
                             }
                             return false;
                         };
-                        if (!((this.length === 0 || this.layoutHorizontal && !this.hasAlign($enum.NODE_ALIGNMENT.MULTILINE)) && setMarginOffset(this))) {
-                            const baseline = $util.filterArray(this.renderChildren, node => node.baselineActive);
-                            if (baseline.length) {
-                                for (let i = 0; i < baseline.length; i++) {
-                                    const node = baseline[i];
-                                    if (!node.has('lineHeight')) {
-                                        setMarginOffset(node, i > 0);
+                        if (this.length === 0) {
+                            setMarginOffset(this);
+                        }
+                        else if (this.renderChildren.length) {
+                            const horizontalRows = this.horizontalRows || [this.renderChildren];
+                            const length = horizontalRows.length;
+                            let previousMultiline = false;
+                            for (let i = 0; i < length; i++) {
+                                const row = horizontalRows[i] as T[];
+                                const nextMultiline = horizontalRows[i + 1] !== undefined && horizontalRows[i + 1][0].multiline;
+                                const baseline = row.find(node => node.baselineActive);
+                                const top = !previousMultiline && (i > 0 || length === 1);
+                                const bottom = !nextMultiline && (i < length - 1 || length === 1);
+                                if (baseline && !baseline.has('lineHeight')) {
+                                    setMarginOffset(baseline, top, bottom);
+                                }
+                                else {
+                                    for (let j = 0; j < row.length; j++) {
+                                        const node = row[j];
+                                        if (!(node.length > 0 || node.has('lineHeight') || node === baseline || node.inputElement || node.imageElement || node.baselineAltered)) {
+                                            setMarginOffset(node, top, bottom);
+                                        }
                                     }
                                 }
-                            }
-                            else {
-                                this.renderEach((node: T) => {
-                                    if (!(node.has('lineHeight') || node.inputElement || node.imageElement || node.textElement && node.multiline || node.baselineAltered)) {
-                                        setMarginOffset(node);
-                                    }
-                                });
+                                previousMultiline = row.length === 1 && row[0].multiline;
                             }
                         }
                     }
@@ -1186,7 +1196,11 @@ export default (Base: Constructor<squared.base.Node>) => {
         }
 
         get actualAnchor(): T {
-            return this.outerParent && !(this.outerParent as T).layoutConstraint ? this.outerParent as T : this;
+            const renderParent = this.renderParent as T;
+            if (renderParent && (renderParent.layoutConstraint || renderParent.layoutRelative)) {
+                return this;
+            }
+            return this.outerParent && this.outerParent.visible ? this.outerParent as T : this;
         }
 
         get support() {

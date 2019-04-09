@@ -24,7 +24,7 @@ declare global {
             export import BOX_PADDING = $css.BOX_PADDING;
             function getStyle(element: Element | null, target?: string, cache?: boolean): CSSStyleDeclaration;
             function hasComputedStyle(element: Element | null): element is HTMLElement;
-            function checkStyleValue(element: Element, attr: string, value: string, fontSize?: number, style?: CSSStyleDeclaration): string;
+            function checkStyleValue(element: Element, attr: string, value: string, specificity?: number, fontSize?: number, style?: CSSStyleDeclaration): string;
             function getSpecificity(value: string): number;
             function getKeyframeRules(): CSSRuleData;
             function getDataSet(element: HTMLElement | null, prefix: string): StringMap;
@@ -41,7 +41,6 @@ declare global {
 
         namespace dom {
             export import ELEMENT_BLOCK = $dom.ELEMENT_BLOCK;
-            export import ELEMENT_INLINE = $dom.ELEMENT_INLINE;
             function newBoxRect(): BoxRect;
             function newRectDimension(): RectDimension;
             function newBoxModel(): BoxModel;
@@ -49,7 +48,6 @@ declare global {
             function assignRect(rect: DOMRect | RectDimension): RectDimension;
             function removeElementsByClassName(className: string): void;
             function getElementsBetweenSiblings(elementStart: Element | null, elementEnd: Element, whiteSpace?: boolean): Element[] | undefined;
-            function isElementVisible(element: Element, viewport?: boolean): boolean;
             function getNamedItem(element: Element | null, attr: string): string;
             function createElement(parent?: Element | null, tagName?: string, placeholder?: boolean, index?: number): HTMLElement;
         }
@@ -74,6 +72,7 @@ declare global {
         }
 
         namespace session {
+            function getClientRect(element: Element, sessionId: string, cache?: boolean): ClientRect;
             function isLineBreak(element: Element, sessionId: string): boolean;
             function setElementCache(element: Element, attr: string, sessionId: string, data: any): void;
             function getElementCache(element: Element, attr: string, sessionId: string): any;

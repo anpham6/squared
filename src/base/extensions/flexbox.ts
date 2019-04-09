@@ -41,20 +41,29 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
             return item.pageFlow;
         }) as T[];
         const mainData = Flexbox.createDataAttribute(node, children);
-        for (const item of children) {
-            const bounds = item.initial.bounds;
-            if (bounds && item.cssTry('alignSelf', 'start')) {
-                if (item.cssTry('flexGrow', '0')) {
-                    if (item.cssTry('flexShrink', '1')) {
-                        const rect = (<Element> item.element).getBoundingClientRect();
-                        bounds.width = rect.width;
-                        bounds.height = rect.height;
-                        item.cssFinally('flexShrink');
+        if (node.cssTry('alignItems', 'start')) {
+            if (node.cssTry('justifyItems', 'start')) {
+                for (const item of children) {
+                    const bounds = item.initial.bounds;
+                    if (bounds && item.cssTry('alignSelf', 'start')) {
+                        if (item.cssTry('justifySelf', 'start')) {
+                            if (item.cssTry('flexGrow', '0')) {
+                                if (item.cssTry('flexShrink', '1')) {
+                                    const rect = (<Element> item.element).getBoundingClientRect();
+                                    bounds.width = rect.width;
+                                    bounds.height = rect.height;
+                                    item.cssFinally('flexShrink');
+                                }
+                                item.cssFinally('flexGrow');
+                            }
+                            item.cssFinally('justifySelf');
+                        }
+                        item.cssFinally('alignSelf');
                     }
-                    item.cssFinally('flexGrow');
                 }
-                item.cssFinally('alignSelf');
+                node.cssFinally('justifyItems');
             }
+            node.cssFinally('alignItems');
         }
         if (mainData.wrap) {
             function setDirection(align: string, sort: string, size: string) {

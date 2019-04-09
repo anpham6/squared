@@ -26,7 +26,7 @@ export function getStyle(element: Element | null, target?: string, cache = true)
 }
 
 export function hasComputedStyle(element: Element | null): element is HTMLElement {
-    return !!element && typeof element['style'] === 'object' && element['style'] !== null && element['style']['display'] !== null;
+    return !!element && typeof element['style'] === 'object' && element['style']['display'] !== null;
 }
 
 export function getSpecificity(value: string) {
@@ -66,15 +66,12 @@ export function getSpecificity(value: string) {
                 }
             }
             if (match[2]) {
-                if (match[2].startsWith('::')) {
-                    result += 1;
-                }
-                else if (match[2].startsWith(':not(')) {
+                if (match[2].startsWith(':not(')) {
                     if (match[3]) {
                         result += getSpecificity(match[3]);
                     }
                 }
-                else if (match[2].startsWith(':')) {
+                else {
                     switch (match[2]) {
                         case ':root':
                         case ':global':
@@ -87,6 +84,9 @@ export function getSpecificity(value: string) {
                 }
             }
             if (match[4]) {
+                result += 1;
+            }
+            if (match[5]) {
                 result += 10;
             }
         }
@@ -97,11 +97,11 @@ export function getSpecificity(value: string) {
     return result;
 }
 
-export function checkStyleValue(element: Element, attr: string, value: string, fontSize?: number, style?: CSSStyleDeclaration) {
-    if (value === 'inherit') {
-        value = getInheritedStyle(element, attr);
-    }
+export function checkStyleValue(element: Element, attr: string, value: string, specificity = 0, fontSize?: number, style?: CSSStyleDeclaration) {
     if (value && value !== 'initial') {
+        if (value === 'inherit') {
+            value = getInheritedStyle(element, attr);
+        }
         const computed = style ? style[attr] : '';
         if (value !== computed && value !== 'auto') {
             if (computed !== '') {
@@ -114,16 +114,19 @@ export function checkStyleValue(element: Element, attr: string, value: string, f
                     case 'borderRightColor':
                     case 'borderBottomColor':
                     case 'borderLeftColor':
-                        setElementCache(element, attr, '0', value);
+                        setElementCache(element, attr, specificity.toString(), value);
                         return computed;
                 }
                 if (isNumber(value) || isCustomProperty(value)) {
-                    setElementCache(element, attr, '0', value);
+                    setElementCache(element, attr, specificity.toString(), value);
                     return computed;
                 }
             }
-            if (isLength(value)) {
-                setElementCache(element, attr, '0', value);
+            if (isNumber(value)) {
+                setElementCache(element, attr, specificity.toString(), value);
+            }
+            else if (isLength(value)) {
+                setElementCache(element, attr, specificity.toString(), value);
                 return convertPX(value, fontSize);
             }
         }

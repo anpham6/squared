@@ -51,7 +51,7 @@ export default class Drawer<T extends android.base.View> extends squared.base.Ex
             const navigationViewOptions = $utilA.createViewAttribute(this.options.navigationView);
             $util.assignEmptyValue(navigationViewOptions, 'android', 'layout_gravity', node.localizeString('left'));
             const navView = node.item() as T;
-            navView.android('layout_gravity', navigationViewOptions.android.layout_gravity);
+            navView.mergeGravity('layout_gravity', navigationViewOptions.android.layout_gravity);
             navView.android('layout_height', 'match_parent');
             navView.positioned = true;
         }

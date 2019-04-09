@@ -1,4 +1,3 @@
-import { getStyle } from './css';
 import { spliceArray, withinRange } from './util';
 
 export const ELEMENT_BLOCK = [
@@ -6,8 +5,9 @@ export const ELEMENT_BLOCK = [
     'ARTICLE',
     'ASIDE',
     'BLOCKQUOTE',
-    'CANVAS',
     'DD',
+    'DETAILS',
+    'DIALOG',
     'DIV',
     'DL',
     'DT',
@@ -23,63 +23,18 @@ export const ELEMENT_BLOCK = [
     'H5',
     'H6',
     'HEADER',
+    'HGROUP',
+    'HR',
     'LI',
     'MAIN',
     'NAV',
     'OL',
-    'OUTPUT',
     'P',
     'PRE',
     'SECTION',
-    'TFOOT',
-    'TH',
-    'THEAD',
-    'TR',
-    'UL',
-    'VIDEO'
+    'TABLE',
+    'UL'
 ];
-
-export const ELEMENT_INLINE = [
-    'A',
-    'ABBR',
-    'ACRONYM',
-    'B',
-    'BDO',
-    'BIG',
-    'BR',
-    'BUTTON',
-    'CITE',
-    'CODE',
-    'DFN',
-    'EM',
-    'I',
-    'IFRAME',
-    'IMG',
-    'INPUT',
-    'KBD',
-    'LABEL',
-    'MAP',
-    'OBJECT',
-    'Q',
-    'S',
-    'SAMP',
-    'SCRIPT',
-    'SELECT',
-    'SMALL',
-    'SPAN',
-    'STRIKE',
-    'STRONG',
-    'SUB',
-    'SUP',
-    'TEXTAREA',
-    'TIME',
-    'TT',
-    'U',
-    'VAR',
-    'PLAINTEXT'
-];
-
-const withinViewport = (rect: DOMRect | ClientRect) => !(rect.left < 0 && rect.top < 0 && Math.abs(rect.left) >= rect.width && Math.abs(rect.top) >= rect.height);
 
 export function newBoxRect(): BoxRect {
     return {
@@ -173,18 +128,6 @@ export function removeElementsByClassName(className: string) {
             element.parentElement.removeChild(element);
         }
     }
-}
-
-export function isElementVisible(element: Element, viewport = false) {
-    const rect = element.getBoundingClientRect();
-    if (!viewport || withinViewport(rect)) {
-        if (rect.width !== 0 && rect.height !== 0) {
-            return true;
-        }
-        const style = getStyle(element);
-        return style.getPropertyValue('display') === 'block' && (parseInt(style.getPropertyValue('margin-top')) !== 0 || parseInt(style.getPropertyValue('margin-bottom')) !== 0);
-    }
-    return false;
 }
 
 export function getElementsBetweenSiblings(elementStart: Element | null, elementEnd: Element, whiteSpace = false) {

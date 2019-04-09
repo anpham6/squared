@@ -116,7 +116,8 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     paddingRight = node.paddingLeft;
                 }
                 else if (!image) {
-                    paddingRight = Math.max(paddingLeft * 0.15, 4);
+                    paddingRight = Math.max(paddingLeft * 0.25, 4);
+                    minWidth = paddingLeft;
                 }
                 else {
                     paddingRight = 0;

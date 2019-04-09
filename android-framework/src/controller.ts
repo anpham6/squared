@@ -76,9 +76,9 @@ function setColumnVertical<T extends View>(partition: T[][], lastRow: boolean, a
                 if (lastRow && $util.withinRange(item.linear.bottom, item.documentParent.box.bottom)) {
                     item.anchor('bottom', 'parent');
                 }
-                else if (i > 0) {
+                else if (i > 0 && !item.multiline) {
                     const adjacent = partition[i - 1][j];
-                    if ($util.withinRange(item.bounds.top, adjacent.bounds.top)) {
+                    if (adjacent && !adjacent.multiline && $util.withinRange(item.bounds.top, adjacent.bounds.top)) {
                         item.anchor('top', adjacent.documentId);
                         item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, -adjacent.marginTop);
                     }
@@ -206,7 +206,7 @@ function constraintPercentValue(node: View, dimension: string, value: string, re
 function constraintPercentWidth(node: View, requirePX = false) {
     let value = node.cssInitial('width');
     if (!$util.isPercent(value)) {
-        value = node.has('width') ? node.css('width') : '';
+        value = node.css('width');
     }
     constraintPercentValue(node, 'Width', value, requirePX);
 }
@@ -323,6 +323,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         const flexbox = node.flexbox;
         const basis = flexbox.basis;
         const actualAnchor = node.actualAnchor;
+        const dimensionA = $util.capitalize(dimension);
         function setFlexGrow(value?: string) {
             actualAnchor.android(`layout_${dimension}`, '0px');
             if (flexbox.grow > 0) {
@@ -330,10 +331,10 @@ export default class Controller<T extends View> extends squared.base.Controller<
             }
             if (value) {
                 if (flexbox.grow === 0) {
-                    actualAnchor.app(`layout_constraint${$util.capitalize(dimension)}_max`, value);
+                    actualAnchor.app(`layout_constraint${dimensionA}_max`, value);
                 }
                 if (flexbox.shrink < 1) {
-                    actualAnchor.app(`layout_constraint${$util.capitalize(dimension)}_min`, $util.formatPX((1 - flexbox.shrink) * parseFloat(value)));
+                    actualAnchor.app(`layout_constraint${dimensionA}_min`, $util.formatPX((1 - flexbox.shrink) * parseFloat(value)));
                 }
             }
         }
@@ -342,7 +343,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         }
         else if ($util.isPercent(basis) && basis !== '0%') {
             actualAnchor.android(`layout_${dimension}`, '0px');
-            actualAnchor.app(`layout_constraint${$util.capitalize(dimension)}_percent`, (parseFloat(basis) / 100).toPrecision(node.localSettings.floatPrecision));
+            actualAnchor.app(`layout_constraint${dimensionA}_percent`, (parseFloat(basis) / 100).toPrecision(node.localSettings.floatPrecision));
         }
         else if (flexbox.grow > 0) {
             setFlexGrow();
@@ -359,10 +360,10 @@ export default class Controller<T extends View> extends squared.base.Controller<
             actualAnchor.app(`layout_constrained${horizontal ? 'Width' : 'Height'}`, 'true');
         }
         if (horizontal) {
-            constraintPercentHeight(node, !node.ascend(true).some(item => item.has('height')));
+            constraintPercentHeight(node, true);
         }
         else {
-            constraintPercentWidth(node, !node.ascend(true).some(item => item.has('width')));
+            constraintPercentWidth(node, true);
         }
         constraintMinMax(node, 'Width');
         constraintMinMax(node, 'Height');
@@ -797,10 +798,10 @@ export default class Controller<T extends View> extends squared.base.Controller<
                                 }
                             }
                             if (!item.hasWidth && item.alignParent('left') && item.alignParent('right')) {
-                                item.android('layout_width', 'match_parent');
+                                item.android('layout_width', item.textElement && item.multiline ? '0dp' : 'match_parent');
                             }
                             if (!item.hasHeight && item.alignParent('top') && item.alignParent('bottom')) {
-                                item.android('layout_height', 'match_parent');
+                                item.android('layout_height', item.textElement && item.multiline ? '0dp' : 'match_parent');
                             }
                         }
                     }
@@ -1250,6 +1251,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         GUIDELINE_AXIS.forEach(value => {
             if (!node.constraint[value] && (orientation === '' || value === orientation)) {
                 const horizontal = value === AXIS_ANDROID.HORIZONTAL;
+                const box = documentParent.box;
                 let LT: string;
                 let RB: string;
                 let LTRB: string;
@@ -1266,11 +1268,11 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     LTRB = !opposite ? 'topBottom' : 'bottomTop';
                     RBLT = !opposite ? 'bottomTop' : 'topBottom';
                 }
-                if ($util.withinRange(node.linear[LT], documentParent.box[LT])) {
+                if ($util.withinRange(node.linear[LT], box[LT])) {
                     node.anchor(LT, 'parent', true);
                     return;
                 }
-                const dimension = node.positionStatic ? 'bounds' : 'linear';
+                const bounds = node.positionStatic ? node.bounds : node.linear;
                 let beginPercent = 'layout_constraintGuide_';
                 let usePercent = false;
                 let location: number;
@@ -1328,13 +1330,13 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         }
                     }
                     if (percent) {
-                        const position = Math.abs(node[dimension][LT] - documentParent.box[LT]) / documentParent.box[horizontal ? 'width' : 'height'];
+                        const position = Math.abs(bounds[LT] - box[LT]) / box[horizontal ? 'width' : 'height'];
                         location = parseFloat($math.truncate(opposite ? 1 - position : position, this.localSettings.precision.standardFloat));
                         usePercent = true;
                         beginPercent += 'percent';
                     }
                     else {
-                        location = node[dimension][LT] - documentParent.box[!opposite ? LT : RB];
+                        location = bounds[LT] - box[!opposite ? LT : RB];
                         if (!node.pageFlow && node.parent === documentParent.outerParent) {
                             location += documentParent[!opposite ? (horizontal ? 'paddingLeft' : 'paddingTop') : (horizontal ? 'paddingRight' : 'paddingBottom')];
                         }
@@ -1361,7 +1363,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 if (location <= 0) {
                     node.anchor(LT, 'parent', true);
                 }
-                else if (horizontal && documentParent.hasWidth && !node.has('right') && location + node[dimension].width >= documentParent.box.right || !horizontal && documentParent.hasHeight && !node.has('bottom') && location + node[dimension].height >= documentParent.box.bottom) {
+                else if (horizontal && documentParent.hasWidth && !node.has('right') && location + bounds.width >= box.right || !horizontal && documentParent.hasHeight && !node.has('bottom') && location + bounds.height >= box.bottom) {
                     node.anchor(RB, 'parent', true);
                 }
                 else {
@@ -1913,7 +1915,12 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 previous = row[0];
             }
             else {
-                const columnMin = Math.min(row.length, columnCount);
+                let columnMin = Math.min(row.length, columnCount);
+                if (row.length > columnCount) {
+                    while (row.length / columnMin < 2) {
+                        columnMin--;
+                    }
+                }
                 const perRowCount = Math.ceil(row.length / columnMin);
                 const columns: T[][] = [];
                 let totalGap = 0;
@@ -1937,8 +1944,8 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 for (let j = 0; j < columns.length; j++) {
                     const columnStart = columns[j][0];
                     horizontal.push(columnStart);
-                    for (const item of columns[j]) {
-                        if (item.css('columnSpan') !== 'all') {
+                    if (columnMin > 1) {
+                        for (const item of columns[j]) {
                             const percent = (1 / columnMin) - percentGap;
                             item.android('layout_width', '0px');
                             item.app('layout_constraintWidth_percent', $math.truncate(percent, this.localSettings.precision.standardFloat));
@@ -2057,6 +2064,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     }
                 }
             }
+            const segCleared: T[] = [];
             for (let j = 0; j < seg.length; j++) {
                 const chain = seg[j];
                 const previous = seg[j - 1];
@@ -2077,23 +2085,26 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     const previousRow = horizontal[i - 1];
                     const aboveEnd = previousRow[previousRow.length - 1];
                     const previousEnd = reverse ? rowEnd : rowStart;
-                    let nodes: T[] | undefined;
-                    if (!cleared.has(chain)) {
-                        nodes = [];
-                        if (aboveEnd) {
-                            nodes.push(aboveEnd);
-                            if (chain.element) {
-                                const elements = $dom.getElementsBetweenSiblings(aboveEnd.element, chain.element);
-                                if (elements) {
-                                    $util.concatArray(nodes, $util.flatMap(elements, element => $session.getElementAsNode<T>(element, node.sessionId) as T));
+                    function checkNewRow() {
+                        if (segCleared.length) {
+                            const nodes = [];
+                            if (aboveEnd) {
+                                nodes.push(aboveEnd);
+                                if (chain.element) {
+                                    const elements = $dom.getElementsBetweenSiblings(aboveEnd.element, chain.element);
+                                    if (elements) {
+                                        $util.concatArray(nodes, $util.flatMap(elements, element => $session.getElementAsNode<T>(element, node.sessionId) as T));
+                                    }
                                 }
                             }
+                            else {
+                                nodes.push(previousEnd);
+                            }
+                            return !nodes.some(item => segCleared.includes(item));
                         }
-                        else {
-                            nodes.push(previousEnd);
-                        }
+                        return false;
                     }
-                    if (floating && chain.floating && (cleared.size === 0 && previous && previous.floating || nodes && !nodes.some(item => cleared.has(item)))) {
+                    if (floating && chain.floating && (segCleared.length === 0 && previous && previous.floating || checkNewRow())) {
                         if (previousRow.length) {
                             chain.anchor('topBottom', aboveEnd.documentId);
                             if (aboveEnd.alignSibling('bottomTop') === '') {
@@ -2137,6 +2148,9 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     }
                 }
                 previousSiblings.push(chain);
+                if (cleared.has(chain)) {
+                    segCleared.push(chain);
+                }
             }
         }
         Controller.evaluateAnchors(children);

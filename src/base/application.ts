@@ -541,26 +541,10 @@ export default class Application<T extends Node> implements squared.base.Applica
                     }
                 }
                 if (node.positionRelative && !node.positionStatic) {
-                    if (preAlignment[node.id] === undefined) {
-                        preAlignment[node.id] = {};
-                    }
                     for (const attr of $css.BOX_POSITION) {
                         if (node.has(attr)) {
                             saveAlignment(element, node.id, attr, 'auto', node.css(attr));
                         }
-                    }
-                }
-                if (node.parent && node.parent.flexElement) {
-                    if (preAlignment[node.id] === undefined) {
-                        preAlignment[node.id] = {};
-                    }
-                    switch (node.flexbox.alignSelf) {
-                        case 'flex-end':
-                        case 'center':
-                        case 'inherit':
-                        case 'unset':
-                            saveAlignment(element, node.id, 'alignSelf', 'normal', node.flexbox.alignSelf);
-                            break;
                     }
                 }
                 if (element.dir === 'rtl') {
@@ -573,7 +557,7 @@ export default class Application<T extends Node> implements squared.base.Applica
         rootNode.parent.setBounds();
         for (const node of this.processing.cache) {
             if (!node.pseudoElement) {
-                node.setBounds();
+                node.setBounds(preAlignment[node.id] === undefined && direction.size === 0);
             }
             else {
                 pseudoElement.add(node.parent as T);
@@ -590,7 +574,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         styleElement = $css.insertStyleSheetRule(`#${element.id}::${index === 0 ? 'before' : 'after'} { display: none !important; }`);
                     }
                     if (item.cssTry('display', item.display)) {
-                        item.setBounds();
+                        item.setBounds(false);
                         item.cssFinally('display');
                     }
                     if (styleElement) {
@@ -963,18 +947,21 @@ export default class Application<T extends Node> implements squared.base.Applica
                                             floatActive.add(item.float);
                                         }
                                     }
-                                    const previousSiblings = item.previousSiblings() as T[];
-                                    const previous = previousSiblings[previousSiblings.length - 1];
-                                    const next = item.nextSiblings().shift();
-                                    if (m === 0 && next) {
-                                        if (item.blockStatic || next.blockStatic && item.floating || next.alignedVertically([item], [item], cleared)) {
-                                            vertical.push(item);
-                                        }
-                                        else {
-                                            horizontal.push(item);
+                                    if (m === 0) {
+                                        const next = item.nextSiblings().shift();
+                                        if (next) {
+                                            if (item.blockStatic || next.blockStatic && item.floating || next.alignedVertically([item], [item], cleared)) {
+                                                vertical.push(item);
+                                            }
+                                            else {
+                                                horizontal.push(item);
+                                            }
+                                            continue;
                                         }
                                     }
-                                    else if (previous) {
+                                    const previousSiblings = item.previousSiblings() as T[];
+                                    const previous = previousSiblings[previousSiblings.length - 1];
+                                    if (previous) {
                                         if (hasFloat) {
                                             if (item.alignedVertically(previousSiblings, horizontal.length ? horizontal : vertical, cleared, horizontal.length > 0)) {
                                                 if (horizontal.length) {
@@ -1644,9 +1631,6 @@ export default class Application<T extends Node> implements squared.base.Applica
                 }
                 return node;
             }
-            else {
-                return undefined;
-            }
         }
         else if (!this.controllerHandler.localSettings.svg.enabled || element.parentElement instanceof HTMLElement) {
             this.controllerHandler.applyDefaultStyles(element);
@@ -1668,7 +1652,7 @@ export default class Application<T extends Node> implements squared.base.Applica
     }
 
     protected conditionElement(element: HTMLElement) {
-        if ($dom.isElementVisible(element, true) || element.dataset.use && element.dataset.use.split($util.REGEXP_COMPILED.SEPARATOR).some(value => !!this.extensionManager.retrieve(value.trim()))) {
+        if (this.controllerHandler.includeElement(element) || element.dataset.use && element.dataset.use.split($util.REGEXP_COMPILED.SEPARATOR).some(value => !!this.extensionManager.retrieve(value.trim()))) {
             return true;
         }
         else {
@@ -1683,7 +1667,7 @@ export default class Application<T extends Node> implements squared.base.Applica
             }
             if (valid) {
                 for (let i = 0; i < element.children.length; i++) {
-                    if ($dom.isElementVisible(<Element> element.children[i], true)) {
+                    if (this.controllerHandler.includeElement(<Element> element.children[i])) {
                         return true;
                     }
                 }
@@ -1711,7 +1695,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 styleMap.fontFamily = style.getPropertyValue('font-family');
             }
             if (styleMap.fontSize) {
-                styleMap.fontSize = $util.convertPX(styleMap.fontSize, $util.parseUnit(style.getPropertyValue('font-size')));
+                styleMap.fontSize = $util.convertPX(styleMap.fontSize, $util.parseUnit($css.getStyle(document.body).getPropertyValue('font-size')));
             }
             else {
                 styleMap.fontSize = style.getPropertyValue('font-size');
@@ -1921,6 +1905,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         pseudoElement.style[attr] = styleMap[attr];
                     }
                 }
+                $session.setElementCache(pseudoElement, 'pseudoType', this.processing.sessionId, target);
                 $session.setElementCache(pseudoElement, 'styleMap', this.processing.sessionId, styleMap);
                 return pseudoElement;
             }
@@ -2087,7 +2072,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 const fontSize = $util.parseUnit(style.getPropertyValue('font-size'));
                 const styleMap: StringMap = {};
                 for (const attr of fromRule) {
-                    const value = $css.checkStyleValue(element, attr, item.style[attr], fontSize, target ? undefined : style);
+                    const value = $css.checkStyleValue(element, attr, item.style[attr], specificity, fontSize, style);
                     if (value) {
                         styleMap[attr] = value;
                     }

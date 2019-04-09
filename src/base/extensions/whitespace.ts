@@ -3,6 +3,7 @@ import Node from '../node';
 
 import { BOX_STANDARD, CSS_STANDARD, NODE_ALIGNMENT } from '../lib/enumeration';
 
+const $session = squared.lib.session;
 const $util = squared.lib.util;
 
 const HTML5 = document.doctype ? document.doctype.name === 'html' : false;
@@ -247,14 +248,14 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                         valid = true;
                         let offset: number;
                         if (below.lineHeight > 0 && below.element && below.cssTry('lineHeight', '0px')) {
-                            offset = below.element.getBoundingClientRect().top - below.marginTop;
+                            offset = $session.getClientRect(below.element, below.sessionId).top - below.marginTop;
                             below.cssFinally('lineHeight');
                         }
                         else {
                             offset = below.linear.top;
                         }
                         if (above.lineHeight > 0 && above.element && above.cssTry('lineHeight', '0px')) {
-                            offset -= above.element.getBoundingClientRect().bottom + above.marginBottom;
+                            offset -= $session.getClientRect(above.element, above.sessionId).bottom + above.marginBottom;
                             above.cssFinally('lineHeight');
                         }
                         else {

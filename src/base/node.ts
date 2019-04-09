@@ -114,7 +114,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 for (let attr of Array.from(element.style)) {
                     let value = element.style.getPropertyValue(attr);
                     attr = $util.convertCamelCase(attr);
-                    value = $css.checkStyleValue(element, attr, value, fontSize);
+                    value = $css.checkStyleValue(element, attr, value, 1000, fontSize);
                     if (value) {
                         this._styleMap[attr] = value;
                     }
@@ -579,6 +579,18 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return '';
     }
 
+    public cssSpecificity(attr: string) {
+        if (this.styleElement) {
+            const element = <Element> this._element;
+            const target = this.pseudoElement ? $session.getElementCache(element, 'pseudoType', this.sessionId) : '';
+            const data: ObjectMap<number> = $session.getElementCache(element, `styleSpecificity${target ? '::' + target : ''}`, this.sessionId);
+            if (data) {
+                return data[attr] || 0;
+            }
+        }
+        return 0;
+    }
+
     public cssTry(attr: string, value: string) {
         if (this.styleElement) {
             const element = <HTMLElement> this._element;
@@ -782,9 +794,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
     }
 
-    public setBounds() {
+    public setBounds(cache = true) {
         if (this.styleElement) {
-            this._bounds = $dom.assignRect((<HTMLElement> this._element).getBoundingClientRect());
+            this._bounds = $dom.assignRect($session.getClientRect(<Element> this._element, this.sessionId, cache));
             if (this.documentBody) {
                 let marginTop = this.marginTop;
                 if (marginTop > 0) {
@@ -808,7 +820,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             this._inlineText = value;
         }
         else if (this.htmlElement && !this.svgElement) {
-            const element = <HTMLElement> this._element;
+            const element = <Element> this._element;
             switch (element.tagName) {
                 case 'INPUT':
                 case 'IMG':
@@ -921,7 +933,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
         while (element) {
             const node = $session.getElementAsNode<T>(element, this.sessionId);
-            if (node && node.naturalElement && !node.pseudoElement) {
+            if (node && node.naturalElement) {
                 if (lineBreak && node.lineBreak || excluded && node.excluded) {
                     result.push(node);
                 }
@@ -955,7 +967,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
         while (element) {
             const node = $session.getElementAsNode<T>(element, this.sessionId);
-            if (node && node.naturalElement && !node.pseudoElement) {
+            if (node && node.naturalElement) {
                 if (lineBreak && node.lineBreak || excluded && node.excluded) {
                     result.push(node);
                 }
@@ -1347,19 +1359,30 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get lineHeight() {
         if (this._cached.lineHeight === undefined) {
-            let hasOwnStyle = this.has('lineHeight');
-            let lineHeight = hasOwnStyle ? this.toFloat('lineHeight') : $util.convertFloat(this.cssAscend('lineHeight', true));
-            if (!hasOwnStyle) {
-                const fontSize = $session.getElementCache(<Element> (this.styleElement ? this._element : this.documentParent.element), 'fontSize', '0');
-                if (fontSize && fontSize.endsWith('em')) {
-                    const emSize = parseFloat(fontSize);
-                    if (emSize < 1) {
-                        lineHeight *= emSize;
-                        hasOwnStyle = true;
+            if (!this.imageElement) {
+                let hasOwnStyle = this.has('lineHeight');
+                let lineHeight: number;
+                if (hasOwnStyle) {
+                    lineHeight = this.toFloat('lineHeight');
+                }
+                else {
+                    lineHeight = $util.convertFloat(this.cssAscend('lineHeight', true));
+                    const element = <Element> (this.styleElement ? this._element : this.documentParent.element);
+                    const fontSize: string | undefined = $session.getElementCache(element, 'fontSize', this.cssSpecificity('fontSize').toString());
+                    if (fontSize && fontSize.endsWith('em')) {
+                        const emSize = parseFloat(fontSize);
+                        if (emSize < 1) {
+                            lineHeight *= emSize;
+                            this.css('lineHeight', $util.formatPX(lineHeight));
+                            hasOwnStyle = true;
+                        }
                     }
                 }
+                this._cached.lineHeight = hasOwnStyle || lineHeight > this.actualHeight || this.multiline || this.block && this.actualChildren.some(node => node.textElement) ? lineHeight : 0;
             }
-            this._cached.lineHeight = hasOwnStyle || lineHeight > this.actualHeight || this.block && this.actualChildren.some(node => node.textElement) ? lineHeight : 0;
+            else {
+                this._cached.lineHeight = 0;
+            }
         }
         return this._cached.lineHeight;
     }
@@ -1558,7 +1581,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get inline() {
         if (this._cached.inline === undefined) {
             const value = this.display;
-            this._cached.inline = value === 'inline' || (value === 'initial' || value === 'unset') && $dom.ELEMENT_INLINE.includes(this.tagName);
+            this._cached.inline = value === 'inline' || (value === 'initial' || value === 'unset') && !$dom.ELEMENT_BLOCK.includes(this.tagName);
         }
         return this._cached.inline;
     }
@@ -1896,7 +1919,16 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 this._cached.actualWidth = this.bounds.right - this.bounds.left;
             }
             else {
-                this._cached.actualWidth = this.has('width', CSS_STANDARD.LENGTH) && this.display !== 'table-cell' ? this.toFloat('width') : this.bounds.width - this.contentBoxWidth;
+                let width = this.parseUnit(this.css('width'));
+                if (width > 0) {
+                    if (this.css('boxSizing') === 'border-box') {
+                        width -= this.contentBoxWidth;
+                    }
+                    this._cached.actualWidth = width;
+                }
+                else {
+                    this._cached.actualWidth = this.bounds.width - this.contentBoxWidth;
+                }
             }
         }
         return this._cached.actualWidth;
@@ -1904,11 +1936,20 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get actualHeight() {
         if (this._cached.actualHeight === undefined) {
-            if (this.has('height', CSS_STANDARD.LENGTH) && this.display !== 'table-cell') {
-                this._cached.actualHeight = this.toFloat('height');
+            if (this.plainText) {
+                this._cached.actualHeight = this.bounds.bottom - this.bounds.top;
             }
             else {
-                this._cached.actualHeight = this.plainText ? this.bounds.bottom - this.bounds.top : this.bounds.height - this.contentBoxHeight;
+                let height = this.parseUnit(this.css('height'), true);
+                if (height > 0) {
+                    if (this.css('boxSizing') === 'border-box') {
+                        height -= this.contentBoxHeight;
+                    }
+                    this._cached.actualHeight = height;
+                }
+                else {
+                    this._cached.actualHeight = this.bounds.height - this.contentBoxHeight;
+                }
             }
         }
         return this._cached.actualHeight;

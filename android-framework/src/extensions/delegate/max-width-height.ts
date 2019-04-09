@@ -56,21 +56,20 @@ export default class MaxWidthHeight<T extends android.base.View> extends squared
             display: 'block'
         });
         container.inherit(node, 'styleMap');
-        if (node.has('maxWidth')) {
-            container.css('width', $util.formatPX(node.parseUnit(node.css('maxWidth')) + node.contentBoxWidth + (node.marginLeft > 0 ? node.marginLeft : 0) + (node.marginRight > 0 ? node.marginRight : 0)));
-            if (!node.hasWidth && !node.has('columnCount') && !node.has('columnWidth') && (node.autoMargin.leftRight || node.autoMargin.left)) {
-                node.android('layout_width', 'wrap_content');
-            }
-            if (parent.flexElement || parent.gridElement) {
+        const maxWidth = node.css('maxWidth');
+        if ($util.isLength(maxWidth, true)) {
+            container.css('width', $util.formatPX(node.parseUnit(maxWidth) + ($util.isPercent(maxWidth) ? 0 : node.contentBoxWidth + (node.marginLeft > 0 ? node.marginLeft : 0) + (node.marginRight > 0 ? node.marginRight : 0))));
+            if (container.documentRoot || parent.flexElement || parent.gridElement) {
                 node.autoMargin.horizontal = false;
                 node.autoMargin.left = false;
                 node.autoMargin.right = false;
                 node.autoMargin.leftRight = false;
             }
         }
-        if (node.has('maxHeight')) {
-            container.css('height', $util.formatPX(node.parseUnit(node.css('maxHeight') + node.contentBoxHeight + (node.marginTop > 0 ? node.marginTop : 0) + (node.marginBottom > 0 ? node.marginBottom : 0))));
-            if (parent.flexElement || parent.gridElement) {
+        const maxHeight = node.css('maxHeight');
+        if ($util.isLength(maxHeight, true)) {
+            container.css('height', $util.formatPX(node.parseUnit(maxHeight) + ($util.isPercent(maxHeight) ? 0 : node.contentBoxHeight + (node.marginTop > 0 ? node.marginTop : 0) + (node.marginBottom > 0 ? node.marginBottom : 0))));
+            if (container.documentRoot || parent.flexElement || parent.gridElement) {
                 node.autoMargin.vertical = false;
                 node.autoMargin.top = false;
                 node.autoMargin.bottom = false;

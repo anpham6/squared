@@ -58,7 +58,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
     }
 
     public static baseline<T extends Node>(list: T[], text = false) {
-        let baseline = $util.filterArray(list, item => !item.baselineAltered);
+        let baseline = $util.filterArray(list, item => item.baseline && !item.baselineAltered);
         if (baseline.length === 0) {
             return baseline;
         }
@@ -89,15 +89,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                 return -1;
             }
             else if (!a.imageElement || !b.imageElement) {
-                if (a.multiline || b.multiline) {
-                    if (a.lineHeight > 0 && b.lineHeight > 0 && a.lineHeight !== b.lineHeight) {
-                        return a.lineHeight <= b.lineHeight ? 1 : -1;
-                    }
-                    else if (a.fontSize === b.fontSize) {
-                        return a.htmlElement || !b.htmlElement ? -1 : 1;
-                    }
-                }
-                else if (a.textElement && b.textElement) {
+                if (a.textElement && b.textElement) {
                     if (a.fontSize === b.fontSize) {
                         if (a.htmlElement && !b.htmlElement) {
                             return -1;
@@ -125,8 +117,10 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                     return a.containerType < b.containerType ? -1 : 1;
                 }
             }
-            if (a.actualHeight !== b.actualHeight) {
-                return a.actualHeight > b.actualHeight ? -1 : 1;
+            const heightA = Math.max(a.actualHeight, a.lineHeight);
+            const heightB = Math.max(b.actualHeight, b.lineHeight);
+            if (heightA !== heightB) {
+                return heightA > heightB ? -1 : 1;
             }
             return 0;
         });

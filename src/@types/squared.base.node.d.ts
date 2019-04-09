@@ -182,6 +182,7 @@ declare global {
             cssAscend(attr: string, startChild?: boolean, visible?: boolean): string;
             cssSort(attr: string, ascending?: boolean, duplicate?: boolean): Node[];
             cssPX(attr: string, value: number, negative?: boolean, cache?: boolean): string;
+            cssSpecificity(attr: string): number;
             cssTry(attr: string, value: string): boolean;
             cssFinally(attr: string): boolean;
             appendTry(node: Node, replacement: Node, append?: boolean): boolean;
@@ -196,7 +197,7 @@ declare global {
             hasSection(value: number): boolean;
             exclude(options: { section?: number, procedure?: number, resource?: number }): void;
             setExclusions(): void;
-            setBounds(): void;
+            setBounds(cache?: boolean): void;
             setInlineText(value: boolean, overwrite?: boolean): void;
             setBoxSpacing(): void;
             extractAttributes(depth: number): string;
