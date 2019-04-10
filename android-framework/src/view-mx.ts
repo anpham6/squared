@@ -1070,7 +1070,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                     setMultiline(this, hasOwnStyle);
                 }
                 else {
-                    if (this.length || hasOwnStyle) {
+                    if (this.renderChildren.length || hasOwnStyle) {
                         const setMarginOffset = (node: T, top = true, bottom = true) => {
                             let height = node.actualHeight;
                             if (height === 0) {
@@ -1084,12 +1084,12 @@ export default (Base: Constructor<squared.base.Node>) => {
                                         node.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, Math.floor(offset / 2));
                                         return true;
                                     }
-                                    else if (node.length === 0 || node.layoutHorizontal && !node.hasAlign($enum.NODE_ALIGNMENT.MULTILINE) || node.layoutFrame && node.renderChildren.length === 1 && node.renderChildren[0].length === 0) {
+                                    else if (node.renderChildren.length === 0 || node.layoutHorizontal && !node.hasAlign($enum.NODE_ALIGNMENT.MULTILINE) || node.hasAlign($enum.NODE_ALIGNMENT.SINGLE)) {
                                         lineHeight += this.contentBoxHeight;
                                         if (!node.has('height') && lineHeight > node.toFloat('minHeight')) {
                                             node.android('minHeight', $util.formatPX(lineHeight));
                                         }
-                                        if (!node.blockHeight && !node.has('verticalAlign') && node.textElement) {
+                                        if (node.textElement && !node.blockHeight && !node.has('verticalAlign')) {
                                             node.mergeGravity('gravity', 'center_vertical');
                                         }
                                         return true;
@@ -1098,7 +1098,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                                 else if (node.multiline) {
                                     setMultiline(node, false);
                                 }
-                                else if (node.length === 0) {
+                                else if (node.renderChildren.length === 0) {
                                     let offset = (lineHeight - ((this === node || !node.textElement ? height : node.fontSize) + node.paddingTop + node.paddingBottom)) / 2;
                                     if (offset > 0) {
                                         if (top) {

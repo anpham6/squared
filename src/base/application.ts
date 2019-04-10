@@ -926,7 +926,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                             l++;
                             m++;
                         }
-                        domNested: {
+                        traverse: {
                             const floated = new Set<string>();
                             const floatActive = new Set<string>();
                             for ( ; l < axisY.length; l++, m++) {
@@ -950,7 +950,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                     if (m === 0) {
                                         const next = item.nextSiblings().shift();
                                         if (next) {
-                                            if (item.blockStatic || next.blockStatic && item.floating || next.alignedVertically([item], [item], cleared)) {
+                                            if (item.blockStatic || next.alignedVertically([item], [item], cleared)) {
                                                 vertical.push(item);
                                             }
                                             else {
@@ -966,13 +966,16 @@ export default class Application<T extends Node> implements squared.base.Applica
                                             if (item.alignedVertically(previousSiblings, horizontal.length ? horizontal : vertical, cleared, horizontal.length > 0)) {
                                                 if (horizontal.length) {
                                                     if (floatActive.size && !previous.autoMargin.horizontal && cleared.get(item) !== 'both' && !previousSiblings.some(node => node.lineBreak && !cleared.has(node))) {
-                                                        let floatBottom = Number.NEGATIVE_INFINITY;
-                                                        $util.captureMap(
-                                                            horizontal,
-                                                            node => node.floating,
-                                                            node => floatBottom = Math.max(floatBottom, node.linear.bottom)
-                                                        );
-                                                        if (!item.floating || item.linear.top < floatBottom) {
+                                                        function getFloatBottom() {
+                                                            let floatBottom = Number.NEGATIVE_INFINITY;
+                                                            $util.captureMap(
+                                                                horizontal,
+                                                                node => node.floating,
+                                                                node => floatBottom = Math.max(floatBottom, node.linear.bottom)
+                                                            );
+                                                            return floatBottom;
+                                                        }
+                                                        if (!item.floating || item.linear.top < getFloatBottom()) {
                                                             if (cleared.has(item)) {
                                                                 if (!item.floating && floatActive.size < 2 && floated.size === 2) {
                                                                     item.alignmentType |= NODE_ALIGNMENT.EXTENDABLE;
@@ -980,12 +983,12 @@ export default class Application<T extends Node> implements squared.base.Applica
                                                                     horizontal.push(item);
                                                                     continue;
                                                                 }
-                                                                break domNested;
+                                                                break traverse;
                                                             }
-                                                            else if (floated.size === 1 && (!item.floating && !item.blockStatic || floatActive.has(item.float))) {
+                                                            else if (floated.size === 1 && (!item.floating || floatActive.has(item.float))) {
                                                                 horizontal.push(item);
-                                                                if (item.linear.bottom > floatBottom) {
-                                                                    break domNested;
+                                                                if (item.linear.bottom > getFloatBottom()) {
+                                                                    break traverse;
                                                                 }
                                                                 else {
                                                                     continue;
@@ -993,12 +996,12 @@ export default class Application<T extends Node> implements squared.base.Applica
                                                             }
                                                         }
                                                     }
-                                                    break domNested;
+                                                    break traverse;
                                                 }
                                                 checkVertical(item);
                                             }
                                             else if (!checkHorizontal(item)) {
-                                                break domNested;
+                                                break traverse;
                                             }
                                         }
                                         else {
@@ -1006,12 +1009,12 @@ export default class Application<T extends Node> implements squared.base.Applica
                                                 checkVertical(item);
                                             }
                                             else if (!checkHorizontal(item)) {
-                                                break domNested;
+                                                break traverse;
                                             }
                                         }
                                     }
                                     else {
-                                        break domNested;
+                                        break traverse;
                                     }
                                 }
                             }
@@ -1172,26 +1175,26 @@ export default class Application<T extends Node> implements squared.base.Applica
         function adjustPadding(segStatic: T[], segFloat: T[], direction: string) {
             let boundsA = Number.POSITIVE_INFINITY;
             let boundsB = Number.NEGATIVE_INFINITY;
-            let margin: string;
-            let opposing: string;
             let padding: number;
             if (direction === 'right') {
-                margin = 'marginRight';
-                opposing = 'left';
+                for (const child of segFloat) {
+                    boundsA = Math.min(boundsA, child.linear.left + (child.marginRight < 0 ? child.marginRight : 0));
+                }
+                for (const child of segStatic) {
+                    if (!child.hasWidth) {
+                        boundsB = Math.max(boundsB, child.bounds.right);
+                    }
+                }
                 padding = BOX_STANDARD.PADDING_RIGHT;
             }
             else {
-                margin = 'marginLeft';
-                opposing = 'right';
-                padding = BOX_STANDARD.PADDING_LEFT;
-            }
-            for (const child of segFloat) {
-                boundsA = Math.min(boundsA, child.linear[opposing] + (child[margin] < 0 ? child[margin] : 0));
-            }
-            for (const child of segStatic) {
-                if (!child.hasWidth) {
-                    boundsB = Math.max(boundsB, child.bounds[direction]);
+                for (const child of segFloat) {
+                    boundsB = Math.max(boundsB, child.linear.right + (child.marginLeft < 0 ? child.marginLeft : 0));
                 }
+                for (const child of segStatic) {
+                    boundsA = Math.min(boundsA, child.bounds.left);
+                }
+                padding = BOX_STANDARD.PADDING_LEFT;
             }
             const offset = boundsB - boundsA;
             for (const child of segStatic) {
@@ -1292,13 +1295,18 @@ export default class Application<T extends Node> implements squared.base.Applica
                 }
                 if (node.autoMargin.horizontal) {
                     if (node.autoMargin.leftRight) {
-                        inlineBelow.push(node);
+                        if (rightBelow.length) {
+                            rightAbove.push(node);
+                        }
+                        else {
+                            leftAbove.push(node);
+                        }
                     }
                     else if (node.autoMargin.left) {
-                        rightBelow.push(node);
+                        rightAbove.push(node);
                     }
                     else {
-                        leftBelow.push(node);
+                        leftAbove.push(node);
                     }
                 }
                 else {
@@ -1456,6 +1464,9 @@ export default class Application<T extends Node> implements squared.base.Applica
                     seg.length < itemCount ? NODE_ALIGNMENT.SEGMENTED : 0,
                     seg
                 );
+                if (seg.some(child => child.autoMargin.horizontal)) {
+                    layoutGroup.add(NODE_ALIGNMENT.BLOCK);
+                }
                 if (seg.length === 1 || layoutGroup.linearY) {
                     layoutGroup.setType(vertical.containerType, vertical.alignmentType);
                     if (seg.length === 1) {
@@ -2098,17 +2109,18 @@ export default class Application<T extends Node> implements squared.base.Applica
                     for (const attr in styleMap) {
                         if (styleData[attr] === undefined || specificityData[attr] <= specificity || specificityData[attr] === undefined) {
                             styleData[attr] = styleMap[attr];
+                            specificityData[attr] = specificity;
                         }
                     }
                 }
                 else {
-                    const specificityMap: ObjectMap<number> = {};
+                    const specificityData: ObjectMap<number> = {};
                     for (const attr in styleMap) {
-                        specificityMap[attr] = specificity;
+                        specificityData[attr] = specificity;
                     }
                     $session.setElementCache(element, `style${target ? '::' + target : ''}`, '0', style);
                     $session.setElementCache(element, attrStyle, this.processing.sessionId, styleMap);
-                    $session.setElementCache(element, attrSpecificity, this.processing.sessionId, specificityMap);
+                    $session.setElementCache(element, attrSpecificity, this.processing.sessionId, specificityData);
                 }
             });
         }

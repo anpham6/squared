@@ -110,7 +110,7 @@ export default abstract class NodeGroup extends Node {
     }
 
     get blockStatic() {
-        return this.layoutVertical && this.some(node => node.blockStatic) || this.documentParent.blockStatic && this.hasAlign(NODE_ALIGNMENT.COLUMN);
+        return this.hasAlign(NODE_ALIGNMENT.BLOCK) || this.layoutVertical && this.some(node => node.blockStatic) || this.documentParent.blockStatic && this.hasAlign(NODE_ALIGNMENT.COLUMN);
     }
 
     get blockDimension() {

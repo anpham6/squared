@@ -417,15 +417,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             }
             for (const previous of previousSiblings) {
                 if (!this.floating && previous.blockStatic ||
-                    this.blockStatic && (!previous.inlineFlow || cleared && cleared.has(previous)) ||
-                    cleared && cleared.get(previous) === 'both' && (!$util.isArray(siblings) || siblings[0] !== previous) ||
+                    this.blockStatic && (!previous.inlineFlow || horizontal === false && previous.floating || cleared && cleared.has(previous)) ||
                     !previous.floating && (this.blockStatic || !this.floating && !this.inlineFlow || $util.isArray(siblings) && this.display === 'inline-block' && this.linear.top >= Math.floor(siblings[siblings.length - 1].linear.bottom)) ||
                     previous.bounds.width > (actualParent.has('width', CSS_STANDARD.LENGTH) ? actualParent.width : actualParent.box.width) && (!previous.textElement || previous.textElement && previous.css('whiteSpace') === 'nowrap') ||
                     previous.lineBreak ||
                     previous.autoMargin.leftRight ||
-                    horizontal === false && previous.floating && this.blockStatic ||
                     previous.float === 'left' && this.autoMargin.right ||
-                    previous.float === 'right' && this.autoMargin.left)
+                    previous.float === 'right' && this.autoMargin.left ||
+                    cleared && cleared.get(previous) === 'both' && (!$util.isArray(siblings) || siblings[0] !== previous))
                 {
                     return true;
                 }
@@ -861,14 +860,20 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (offset !== 0) {
             const attr = CSS_SPACING.get(region);
             if (attr) {
-                if (offset === null || !negative && this._boxAdjustment[attr] === 0 && offset < 0) {
+                if (offset === null) {
                     this._boxReset[attr] = 1;
+                }
+                else if (!negative) {
+                    if (this[attr] + this._boxAdjustment[attr] + offset <= 0) {
+                        this._boxReset[attr] = 1;
+                        this._boxAdjustment[attr] = 0;
+                    }
+                    else {
+                        this._boxAdjustment[attr] += offset;
+                    }
                 }
                 else {
                     this._boxAdjustment[attr] += offset;
-                    if (!negative && this._boxAdjustment[attr] < 0) {
-                        this._boxAdjustment[attr] = 0;
-                    }
                 }
             }
         }

@@ -38,15 +38,12 @@ export default class Layout<T extends Node> extends squared.lib.base.Container<T
         this._linearY = linearData.linearY;
         if (linearData.floated.size) {
             this.add(NODE_ALIGNMENT.FLOAT);
+            if (this.some(node => node.blockStatic)) {
+                this.add(NODE_ALIGNMENT.BLOCK);
+            }
         }
-        else {
-            this.delete(NODE_ALIGNMENT.FLOAT);
-        }
-        if (this.every(item => item.rightAligned || item.naturalElement && item.css('clear') !== 'none')) {
+        if (this.every(item => item.rightAligned)) {
             this.add(NODE_ALIGNMENT.RIGHT);
-        }
-        else {
-            this.delete(NODE_ALIGNMENT.RIGHT);
         }
         this.itemCount = this.children.length;
     }

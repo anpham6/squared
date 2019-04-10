@@ -59,13 +59,13 @@
     "@babel/plugin-transform-for-of": "^7.4.3",
     "@babel/preset-env": "^7.4.3",
     "rimraf": "^2.6.3",
-    "rollup": "^1.9.0",
+    "rollup": "^1.9.3",
     "rollup-plugin-babel": "^4.3.2",
     "rollup-plugin-terser": "^4.0.4",
     "systemjs": "^0.21.6",
     "systemjs-plugin-babel": "0.0.25",
     "terser": "^3.17.0",
     "tslint": "^5.15.0",
-    "typescript": "^3.4.2"
+    "typescript": "^3.4.3"
   }
 }
