@@ -901,8 +901,8 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                 );
                                 value = value.replace($util.REGEXP_COMPILED.TRAILINGSPACE, node.display === 'table-cell' || nextSibling && nextSibling.lineBreak || node.blockStatic ? '' : '&#160;');
                             }
-                            else if (value.length) {
-                                value = '&#160;' + value.substring(1);
+                            else {
+                                continue;
                             }
                         }
                         if (value !== '') {

@@ -115,12 +115,13 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 if (gravity === 'left') {
                     paddingRight = node.paddingLeft;
                 }
-                else if (!image) {
-                    paddingRight = Math.max(paddingLeft * 0.25, 4);
+                else if (isNaN(left)) {
+                    paddingRight = Math.max(paddingLeft / (image ? 8 : 4), 4);
                     minWidth = paddingLeft;
                 }
                 else {
                     paddingRight = 0;
+                    minWidth = Math.max(0, minWidth - left);
                 }
                 const options = createViewAttribute({
                     android: {
@@ -155,12 +156,10 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     if (image) {
                         Object.assign(options.android, {
                             src: `@drawable/${image}`,
-                            scaleType: !inside && gravity === 'right' ? 'fitEnd' : 'fitStart'
+                            scaleType: !inside && gravity === 'right' ? 'fitEnd' : 'fitStart',
+                            baselineAlignBottom: 'true'
                         });
                         ordinal.setControlType(CONTAINER_ANDROID.IMAGE, CONTAINER_NODE.IMAGE);
-                        if (left) {
-                            minWidth = Math.max(0, minWidth - left);
-                        }
                     }
                     else if (mainData.ordinal) {
                         element.innerHTML = mainData.ordinal;

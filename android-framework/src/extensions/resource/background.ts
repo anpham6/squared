@@ -51,77 +51,86 @@ const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
 function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = false): ShapeSolidData {
-    const result = getColorAttribute(Resource.addColor(border.color));
-    const borderWidth = parseInt(border.width);
     const style = border.style;
-    const groove = style === 'groove';
-    if (borderWidth > 1 && (groove || style === 'ridge')) {
-        const color = $color.parseColor(border.color);
-        if (color) {
-            const reduced = $color.reduceColor(color.valueAsRGBA, groove || color.value === '#000000' ? 0.5 : -0.5);
-            if (reduced) {
-                const colorName = Resource.addColor(reduced);
-                if (colorName !== '') {
-                    if (direction === 0 || direction === 2) {
-                        halfSize = !halfSize;
+    const width = parseInt(border.width);
+    switch (style) {
+        case 'inset':
+        case 'outset':
+        case 'groove':
+        case 'ridge': {
+            const color = $color.parseColor(border.color);
+            if (color) {
+                if (style === 'outset' || style === 'ridge') {
+                    halfSize = !halfSize;
+                }
+                if (halfSize) {
+                    switch (direction) {
+                        case 0:
+                        case 3:
+                            direction = 1;
+                            break;
+                        case 1:
+                        case 2:
+                            direction = 0;
+                            break;
                     }
-                    if (color.value === '#000000' && (groove && (direction === 1 || direction === 3) || !groove && (direction === 0 || direction === 2))) {
-                        halfSize = !halfSize;
-                    }
-                    if (halfSize) {
-                        switch (direction) {
-                            case 0:
-                            case 3:
-                                return getColorAttribute(colorName);
-                            case 1:
-                            case 2:
-                                return result;
-                        }
-                    }
-                    else {
-                        switch (direction) {
-                            case 0:
-                            case 3:
-                                return result;
-                            case 1:
-                            case 2:
-                                return getColorAttribute(colorName);
+                }
+                let percent = 1;
+                switch (direction) {
+                    case 0:
+                    case 3:
+                        percent = 0.8;
+                        break;
+                    case 1:
+                    case 2:
+                        percent = 0.5;
+                        break;
+                }
+                if (percent !== 1) {
+                    const reduced = $color.reduceColor(color.valueAsRGBA, percent);
+                    if (reduced) {
+                        const colorName = Resource.addColor(reduced);
+                        if (colorName !== '') {
+                            return getColorAttribute(colorName);
                         }
                     }
                 }
             }
+            break;
         }
     }
-    else {
-        let multiplier = 0;
-        switch (style) {
-            case 'dotted':
-                multiplier = 1;
-                break;
-            case 'dashed':
-                multiplier = 2;
-                break;
-        }
-        if (multiplier > 0) {
-            result.dashWidth = `${borderWidth * multiplier}px`;
-            result.dashGap = `${borderWidth}px`;
-        }
+    const result = getColorAttribute(Resource.addColor(border.color));
+    switch (style) {
+        case 'dotted':
+        case 'dashed':
+            result.dashWidth = `${width * (style === 'dashed' ? 2 : 1)}px`;
+            result.dashGap = `${width}px`;
+            break;
     }
     return result;
 }
 
 function getShapeStroke(border: BorderAttribute, direction = -1, hasInset = false, isInset = false): ExternalData | undefined {
     if (border) {
-        if (!hasInset || isInset) {
+        const style = border.style;
+        if (isBorderAlternating(style)) {
+            if (isInset) {
+                return {
+                    width: $util.formatPX(Math.ceil(parseFloat(border.width) / 2) * 2),
+                    ...getBorderStyle(border, direction)
+                };
+            }
+            else {
+                return {
+                    width: hasInset ? $util.formatPX(Math.ceil(parseFloat(border.width) / 2)) : border.width,
+                    ...getBorderStyle(border, direction, true)
+                };
+            }
+        }
+        else {
             return {
                 width: border.width,
-                ...getBorderStyle(border, isInset ? direction : -1)
-            };
-        }
-        else if (hasInset) {
-            return {
-                width: $util.formatPX(Math.ceil(parseFloat(border.width) / 2)),
-                ...getBorderStyle(border, direction, true)
+                ...getBorderStyle(border)
             };
         }
     }
@@ -338,6 +347,8 @@ function getPercentOffset(direction: string, position: RectPosition, backgroundS
 }
 
 const getColorAttribute = (value: string): ShapeSolidData => ({ color: `@color/${value}`, dashWidth: '', dashGap: '' });
+
+const isBorderAlternating = (style: string) => style === 'groove' || style === 'ridge' || style === 'inset' || style === 'outset';
 
 export function convertColorStops(list: ColorStop[], precision?: number) {
     const result: GradientColorStop[] = [];
@@ -648,14 +659,14 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     backgroundSize[i].split(' ').forEach((size, index) => {
                                         if (size !== 'auto') {
                                             if (index === 0) {
-                                                width = node.parseUnit(size, true, false) - node.contentBoxWidth;
+                                                width = node.parseUnit(size, true, false);
                                             }
                                             else {
                                                 if (size === '100%') {
                                                     gravityY = 'fill_vertical';
                                                 }
                                                 else {
-                                                    height = node.parseUnit(size, false, false) - node.contentBoxHeight;
+                                                    height = node.parseUnit(size, false, false);
                                                 }
                                             }
                                         }
@@ -871,7 +882,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                         return layerList;
                     }
-                    if (borderData === undefined || border && !(border.style === 'double' && parseInt(border.width) > 2 || (border.style === 'groove' || border.style === 'ridge') && parseInt(border.width) > 1)) {
+                    if (borderData === undefined || border && !(isBorderAlternating(border.style) || border.style === 'double' && parseInt(border.width) > 2)) {
                         const stroke = border ? getShapeStroke(border) : false;
                         if (images.length) {
                             layerListData = createLayerList();
@@ -899,7 +910,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         layerListData = createLayerList();
                         const visibleAll = borderVisible[1] && borderVisible[2];
                         const getHideWidth = (value: number) => value + (visibleAll ? 0 : value === 1 ? 1 : 2);
-                        if (borderStyle && borderData && borderData.style !== 'groove' && borderData.style !== 'ridge') {
+                        if (borderStyle && borderData && !isBorderAlternating(borderData.style)) {
                             const width = parseInt(borderData.width);
                             if (borderData.style === 'double' && width > 2) {
                                 insertDoubleBorder.apply(null, [
@@ -948,14 +959,15 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         ]);
                                     }
                                     else {
-                                        const hasInset = width > 1 && (item.style === 'groove' || item.style === 'ridge');
+                                        const hasInset = item.style === 'groove' || item.style === 'ridge';
                                         const outsetWidth = hasInset ? Math.ceil(width / 2) : width;
                                         const baseWidth = getHideWidth(outsetWidth);
                                         const visible = !visibleAll && item.width === '1px';
-                                        let hideWidth = `-${$util.formatPX(baseWidth)}`;
+                                        let hideWidth = `-${baseWidth}px`;
+                                        let outerWidth = `-${baseWidth + (visibleAll ? 1 : 0)}px`;
                                         layerListData[0].item.push({
-                                            top:  i === 0 ? '' : `-${$util.formatPX(baseWidth + (visibleAll ? 1 : 0))}`,
-                                            right: i === 1 ? (visible ? item.width : '') : hideWidth,
+                                            top:  i === 0 ? '' : outerWidth,
+                                            right: i === 1 ? (visible ? item.width : '') : outerWidth,
                                             bottom: i === 2 ? (visible ? item.width : '') : hideWidth,
                                             left: i === 3 ? '' : hideWidth,
                                             shape: {
@@ -966,14 +978,15 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         });
                                         if (hasInset) {
                                             hideWidth = `-${$util.formatPX(getHideWidth(width))}`;
+                                            outerWidth = `-${width + (visibleAll ? 1 : 0)}px`;
                                             layerListData[0].item.splice(index, 0, {
-                                                top:  i === 0 ? '' : `-${$util.formatPX(width + (visibleAll ? 1 : 0))}`,
-                                                right: i === 1 ? (visible ? item.width : '') : hideWidth,
+                                                top:  i === 0 ? '' : outerWidth,
+                                                right: i === 1 ? (visible ? item.width : '') : outerWidth,
                                                 bottom: i === 2 ? (visible ? item.width : '') : hideWidth,
                                                 left: i === 3 ? '' : hideWidth,
                                                 shape: {
                                                     'android:shape': 'rectangle',
-                                                    stroke: getShapeStroke(item, i, true, true)
+                                                    stroke: getShapeStroke(item, i, hasInset, true)
                                                 }
                                             });
                                         }

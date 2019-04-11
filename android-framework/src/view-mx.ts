@@ -975,25 +975,10 @@ export default (Base: Constructor<squared.base.Node>) => {
         private autoSizeBoxModel() {
             const renderParent = this.renderParent as T;
             if (renderParent && this.hasProcedure($enum.NODE_PROCEDURE.AUTOFIT)) {
-                if (this.is(CONTAINER_NODE.BUTTON) && this.inlineWidth) {
-                    if (!this.has('minHeight')) {
-                        this.android('layout_height', $util.formatPX(this.bounds.height + (this.css('borderStyle') === 'outset' ? this.toInt('borderWidth') : 0)));
-                    }
-                }
-                else if (this.is(CONTAINER_NODE.LINE)) {
+                if (this.is(CONTAINER_NODE.LINE)) {
                     const height = this.android('layout_height');
                     if (this.tagName !== 'HR' && height.endsWith('px') && this.toFloat('height', true) > 0) {
                         this.android('layout_height', $util.formatPX(parseInt(height) + this.borderTopWidth + this.borderBottomWidth));
-                    }
-                }
-                else if (this.textElement && this.inlineText && this.textContent === '' && this.inlineWidth && this.inlineHeight) {
-                    this.android('layout_width', $util.formatPX(this.bounds.width));
-                    if (renderParent.layoutConstraint && this.bounds.height >= this.documentParent.bounds.height && this.alignParent('top')) {
-                        this.android('layout_height', '0px');
-                        this.anchor('bottom', 'parent');
-                    }
-                    else {
-                        this.android('layout_height', $util.formatPX(this.bounds.height));
                     }
                 }
                 else {
@@ -1002,14 +987,37 @@ export default (Base: Constructor<squared.base.Node>) => {
                         borderWidth = this.css('boxSizing') === 'content-box' || $util.isUserAgent($util.USER_AGENT.FIREFOX | $util.USER_AGENT.EDGE);
                     }
                     else if (this.styleElement) {
-                        if (this.imageElement && this.singleChild) {
-                            const width = $util.convertInt(renderParent.android('layout_width'));
-                            if (width > 0) {
-                                renderParent.android('layout_width', $util.formatPX(width + this.marginLeft + this.contentBoxWidth));
+                        if (this.textElement) {
+                            if (this.inlineText && (this.textContent === '' || !this.preserveWhiteSpace && this.textContent.trim() === '')) {
+                                if (this.inlineWidth) {
+                                    this.android('layout_width', $util.formatPX(this.bounds.width));
+                                }
+                                if (this.inlineHeight) {
+                                    if (renderParent.layoutConstraint && this.bounds.height >= this.documentParent.bounds.height && this.alignParent('top')) {
+                                        this.android('layout_height', '0px');
+                                        this.anchor('bottom', 'parent');
+                                    }
+                                    else {
+                                        this.android('layout_height', $util.formatPX(this.bounds.height));
+                                    }
+                                }
                             }
-                            const height = $util.convertInt(renderParent.android('layout_height'));
-                            if (height > 0) {
-                                renderParent.android('layout_height', $util.formatPX(height + this.marginTop + this.contentBoxHeight));
+                        }
+                        else if (this.imageElement) {
+                            if (this.singleChild) {
+                                const width = $util.convertInt(renderParent.android('layout_width'));
+                                if (width > 0) {
+                                    renderParent.android('layout_width', $util.formatPX(width + this.marginLeft + this.contentBoxWidth));
+                                }
+                                const height = $util.convertInt(renderParent.android('layout_height'));
+                                if (height > 0) {
+                                    renderParent.android('layout_height', $util.formatPX(height + this.marginTop + this.contentBoxHeight));
+                                }
+                            }
+                        }
+                        else if (this.is(CONTAINER_NODE.BUTTON)) {
+                            if (this.inlineHeight && !this.has('minHeight')) {
+                                this.android('layout_height', $util.formatPX(this.bounds.height));
                             }
                         }
                         borderWidth = true;

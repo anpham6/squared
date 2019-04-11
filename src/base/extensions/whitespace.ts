@@ -349,13 +349,15 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                         }
                     }
                     if (renderParent.layoutVertical) {
-                        const renderChildren = renderParent.renderChildren;
-                        for (let i = 0; i < renderChildren.length; i++) {
-                            if (node === renderChildren[i]) {
-                                if (i > 0) {
-                                    setSpacingOffset(BOX_STANDARD.MARGIN_TOP, renderChildren[i - 1].linear.bottom);
+                        if (node.blockDimension) {
+                            const renderChildren = renderParent.renderChildren;
+                            for (let i = 0; i < renderChildren.length; i++) {
+                                if (node === renderChildren[i]) {
+                                    if (i > 0) {
+                                        setSpacingOffset(BOX_STANDARD.MARGIN_TOP, renderChildren[i - 1].linear.bottom);
+                                    }
+                                    break;
                                 }
-                                break;
                             }
                         }
                     }

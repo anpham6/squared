@@ -678,7 +678,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     public checkRelativeHorizontal(layout: $Layout<T>) {
-        if (layout.floated.size === 2 || layout.every(node => node.float === 'right' && node.baseline && !node.positionRelative)) {
+        if (layout.floated.size === 2 || layout.every(node => (node.imageElement || node.float === 'right') && node.baseline && !node.positionRelative)) {
             return false;
         }
         return layout.some(node => node.positionRelative || node.textElement || node.imageElement || !node.baseline);
@@ -1483,7 +1483,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             (item: T) => item.float === 'left' && !children.includes(item),
                             item => floatStart = Math.max(floatStart, item.linear.right)
                         );
-                        if (floatStart !== Number.NEGATIVE_INFINITY && children.some(item => item.linear.left === floatStart)) {
+                        if (floatStart !== Number.NEGATIVE_INFINITY && children.some(item => $util.withinRange(item.linear.left, floatStart))) {
                             return node.box.right - floatStart;
                         }
                     }
@@ -1491,7 +1491,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 return node.box.width - (node.valueBox($enum.BOX_STANDARD.PADDING_LEFT)[1] + node.valueBox($enum.BOX_STANDARD.PADDING_RIGHT)[1]);
             })();
             const maxBoxWidth = Math.min(boxWidth, this.userSettings.maxWordWrapWidth);
-            const alignmentSingle = node.hasAlign($enum.NODE_ALIGNMENT.SEGMENTED) || !node.groupParent && node.inline && node.linear.right <= node.documentParent.box.right;
+            const alignmentSingle = !node.groupParent && node.inline && node.linear.right <= node.documentParent.box.right;
             const checkLineWrap = node.css('whiteSpace') !== 'nowrap';
             const cleared = $NodeList.linearData(children, true).cleared;
             const textIndent = node.toInt('textIndent');
@@ -1980,10 +1980,8 @@ export default class Controller<T extends View> extends squared.base.Controller<
             node.alignmentType |= $enum.NODE_ALIGNMENT.MULTILINE;
             node.horizontalRows = horizontal;
         }
-        if (floating) {
-            if (children.some(item => item.has('width', $enum.CSS_STANDARD.PERCENT))) {
-                node.android('layout_width', 'match_parent');
-            }
+        if (floating && !node.hasWidth && children.some(item => item.has('width', $enum.CSS_STANDARD.PERCENT))) {
+            node.android('layout_width', 'match_parent');
         }
         for (const item of children) {
             if (!floating) {

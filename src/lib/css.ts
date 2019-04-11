@@ -1,6 +1,6 @@
 import { parseColor } from './color';
 import { getElementCache, setElementCache } from './session';
-import { REGEXP_COMPILED, STRING_PATTERN, USER_AGENT, calculate, capitalize, convertAlpha, convertRoman, convertCamelCase, convertPX, convertLength, convertPercent, isCustomProperty, isLength, isNumber, isPercent, isUserAgent, resolvePath } from './util';
+import { REGEXP_COMPILED, STRING_PATTERN, USER_AGENT, calculate, capitalize, convertAlpha, convertInt, convertRoman, convertCamelCase, convertPX, convertLength, convertPercent, getDeviceDPI, isCustomProperty, isLength, isNumber, isPercent, isUserAgent, parseUnit, replaceMap, resolvePath } from './util';
 
 export const BOX_POSITION = ['top', 'right', 'bottom', 'left'];
 export const BOX_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
@@ -116,6 +116,10 @@ export function checkStyleValue(element: Element, attr: string, value: string, s
                     case 'borderRightColor':
                     case 'borderBottomColor':
                     case 'borderLeftColor':
+                    case 'borderTopWidth':
+                    case 'borderRightWidth':
+                    case 'borderBottomWidth':
+                    case 'borderLeftWidth':
                         valid = true;
                         break;
                     default:
@@ -168,7 +172,7 @@ export function getDataSet(element: HTMLElement | null, prefix: string) {
 }
 
 export function getKeyframeRules(): CSSRuleData {
-    const keyFrameRule = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
+    const pattern = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
     const result = new Map<string, ObjectMap<StringMap>>();
     violation: {
         for (let i = 0; i < document.styleSheets.length; i++) {
@@ -180,7 +184,7 @@ export function getKeyframeRules(): CSSRuleData {
                         if (item.type === 7) {
                             const map: ObjectMap<StringMap> = {};
                             for (let k = 0; k < item.cssRules.length; k++) {
-                                const match = keyFrameRule.exec(item.cssRules[k].cssText);
+                                const match = pattern.exec(item.cssRules[k].cssText);
                                 if (match) {
                                     for (let percent of (item.cssRules[k]['keyText'] || match[1].trim()).split(REGEXP_COMPILED.SEPARATOR)) {
                                         percent = percent.trim();
@@ -213,6 +217,116 @@ export function getKeyframeRules(): CSSRuleData {
         }
     }
     return result;
+}
+
+export function validMediaRule(value: string) {
+    switch (value) {
+        case 'only all':
+        case 'only screen':
+            return true;
+        default: {
+            function compareRange(operation: string, unit: number, range: number) {
+                switch (operation) {
+                    case '<=':
+                        return unit <= range;
+                    case '<':
+                        return unit < range;
+                    case '>=':
+                        return unit >= range;
+                    case '>':
+                        return unit > range;
+                    default:
+                        return unit === range;
+                }
+            }
+            const pattern = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
+            const fontSize = parseUnit(getStyle(document.body).getPropertyValue('font-size'));
+            let match: RegExpExecArray | null;
+            while ((match = pattern.exec(value)) !== null) {
+                const negate = match[1] === 'not';
+                const patternCondition = /\(([a-z\-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
+                let condition: RegExpExecArray | null;
+                let valid = false;
+                while ((condition = patternCondition.exec(match[2])) !== null) {
+                    const attr = condition[1];
+                    let operation: string;
+                    if (condition[1].startsWith('min')) {
+                        operation = '>=';
+                    }
+                    else if (condition[1].startsWith('max')) {
+                        operation = '<=';
+                    }
+                    else {
+                        operation = match[2];
+                    }
+                    const rule = condition[3];
+                    switch (attr) {
+                        case 'aspect-ratio':
+                        case 'min-aspect-ratio':
+                        case 'max-aspect-ratio':
+                            const [width, height] = replaceMap<string, number>(rule.split('/'), ratio => parseInt(ratio));
+                            valid = compareRange(operation, window.innerWidth / window.innerHeight, width / height);
+                            break;
+                        case 'width':
+                        case 'min-width':
+                        case 'max-width':
+                        case 'height':
+                        case 'min-height':
+                        case 'max-height':
+                            valid = compareRange(operation, attr.indexOf('width') !== -1 ? window.innerWidth : window.innerHeight, parseUnit(rule, fontSize));
+                            break;
+                        case 'orientation':
+                            valid = rule === 'portrait' && window.innerWidth <= window.innerHeight || rule === 'landscape' && window.innerWidth > window.innerHeight;
+                            break;
+                        case 'resolution':
+                        case 'min-resolution':
+                        case 'max-resolution':
+                            let resolution = parseFloat(rule);
+                            if (rule.endsWith('dpcm')) {
+                                resolution *= 2.54;
+                            }
+                            else if (rule.endsWith('dppx') || rule.endsWith('x')) {
+                                resolution *= 96;
+                            }
+                            valid = compareRange(operation, getDeviceDPI(), resolution);
+                            break;
+                        case 'grid':
+                            valid = rule === '0';
+                            break;
+                        case 'color':
+                            valid = rule === undefined || convertInt(rule) > 0;
+                            break;
+                        case 'min-color':
+                            valid = convertInt(rule) <= screen.colorDepth / 3;
+                            break;
+                        case 'max-color':
+                            valid = convertInt(rule) >= screen.colorDepth / 3;
+                            break;
+                        case 'color-index':
+                        case 'min-color-index':
+                        case 'monochrome':
+                        case 'min-monochrome':
+                            valid = rule === '0';
+                            break;
+                        case 'max-color-index':
+                        case 'max-monochrome':
+                            valid = convertInt(rule) >= 0;
+                            break;
+                        default:
+                            valid = false;
+                            break;
+                    }
+                    if (!valid) {
+                        break;
+                    }
+                }
+                if (!negate && valid || negate && !valid) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
 }
 
 export function getFontSize(element: Element | null) {

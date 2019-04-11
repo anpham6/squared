@@ -18,6 +18,9 @@ const enum LAYOUT_TABLE {
     VARIABLE = 3
 }
 
+const REGEXP_BACKGROUND = /rgba\(0, 0, 0, 0\)|transparent/;
+const REGEXP_BORDER = /none|\s0px|rgba\(0, 0, 0, 0\)|transparent/;
+
 export default abstract class Table<T extends Node> extends Extension<T> {
     public static createDataAttribute(): TableData {
         return {
@@ -139,13 +142,12 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                         }
                     }
                     else {
-                        const exclude = /rgba\(0, 0, 0, 0\)|transparent/;
-                        let value = $css.getInheritedStyle(element, 'background', exclude, 'TABLE');
+                        let value = $css.getInheritedStyle(element, 'background', REGEXP_BACKGROUND, 'TABLE');
                         if (value !== '') {
                             element.style.setProperty('background', value);
                         }
                         else {
-                            value = $css.getInheritedStyle(element, 'backgroundColor', exclude, 'TABLE');
+                            value = $css.getInheritedStyle(element, 'backgroundColor', REGEXP_BACKGROUND, 'TABLE');
                             if (value !== '') {
                                 element.style.setProperty('background-color', value);
                             }
@@ -155,7 +157,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                 switch (td.tagName) {
                     case 'TH': {
                         function setBorderStyle(attr: string) {
-                            const value = $css.getInheritedStyle(element, attr, /none|\s0px|rgba\(0, 0, 0, 0\)|transparent/, 'TABLE');
+                            const value = $css.getInheritedStyle(element, attr, REGEXP_BORDER, 'TABLE');
                             if (value !== '') {
                                 const match = /^(\d+[a-z]+) ([a-z]+) (.+)$/.exec(value);
                                 if (match) {

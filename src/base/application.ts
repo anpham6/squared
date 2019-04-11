@@ -1174,7 +1174,7 @@ export default class Application<T extends Node> implements squared.base.Applica
     protected processFloatHorizontal(layout: Layout<T>) {
         const controller = this.controllerHandler;
         const itemCount = layout.itemCount;
-        if (layout.cleared.size === 0 && !layout.some(node => node.autoMargin.horizontal)) {
+        if (layout.cleared.size === 0 && !layout.some(node => node.autoMargin.horizontal || node.multiline)) {
             const inline: T[] = [];
             const left: T[] = [];
             const right: T[] = [];
@@ -1436,13 +1436,13 @@ export default class Application<T extends Node> implements squared.base.Applica
                     controller.processLayoutHorizontal(layoutGroup);
                 }
                 this.addRenderLayout(layoutGroup);
-                if (seg === inlineAbove && seg.some(child => child.blockStatic)) {
+                if (seg === inlineAbove) {
                     if (leftAbove.length) {
                         let position = Number.NEGATIVE_INFINITY;
                         for (const child of leftAbove) {
                             position = Math.max(position, child.linear.right + (child.marginLeft < 0 ? child.marginLeft : 0));
                         }
-                        const offset = position - target.linear.left;
+                        const offset = position - basegroup.box.left;
                         if (offset > 0) {
                             target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset);
                         }
@@ -1452,7 +1452,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         for (const child of rightAbove) {
                             position = Math.min(position, child.linear.left + (child.marginRight < 0 ? child.marginRight : 0));
                         }
-                        const offset = target.linear.right - position;
+                        const offset = basegroup.box.right - position;
                         if (offset > 0) {
                             target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset);
                         }
@@ -1909,117 +1909,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                 this.applyStyleRule(<CSSStyleRule> rule);
                                 break;
                             case CSSRule.MEDIA_RULE:
-                                const conditionText = (<CSSConditionRule> rule).conditionText;
-                                let statement = false;
-                                switch (conditionText) {
-                                    case 'only all':
-                                    case 'only screen':
-                                        statement = true;
-                                        break;
-                                    default: {
-                                        function compareRange(operation: string, value: number, range: number) {
-                                            switch (operation) {
-                                                case '<=':
-                                                    return value <= range;
-                                                case '<':
-                                                    return value < range;
-                                                case '>=':
-                                                    return value >= range;
-                                                case '>':
-                                                    return value > range;
-                                                default:
-                                                    return value === range;
-                                            }
-                                        }
-                                        const pattern = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
-                                        const fontSize = $util.parseUnit($css.getStyle(document.body).getPropertyValue('font-size'));
-                                        let match: RegExpExecArray | null;
-                                        while (!statement && ((match = pattern.exec(conditionText)) !== null)) {
-                                            const negate = match[1] === 'not';
-                                            const patternCondition = /\(([a-z\-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
-                                            let condition: RegExpExecArray | null;
-                                            let valid = false;
-                                            while (!statement && (condition = patternCondition.exec(match[2])) !== null) {
-                                                const attr = condition[1];
-                                                let operation: string;
-                                                if (condition[1].startsWith('min')) {
-                                                    operation = '>=';
-                                                }
-                                                else if (condition[1].startsWith('max')) {
-                                                    operation = '<=';
-                                                }
-                                                else {
-                                                    operation = match[2];
-                                                }
-                                                const value = condition[3];
-                                                switch (attr) {
-                                                    case 'aspect-ratio':
-                                                    case 'min-aspect-ratio':
-                                                    case 'max-aspect-ratio':
-                                                        const [width, height] = $util.replaceMap<string, number>(value.split('/'), ratio => parseInt(ratio));
-                                                        valid = compareRange(operation, window.innerWidth / window.innerHeight, width / height);
-                                                        break;
-                                                    case 'width':
-                                                    case 'min-width':
-                                                    case 'max-width':
-                                                    case 'height':
-                                                    case 'min-height':
-                                                    case 'max-height':
-                                                        valid = compareRange(operation, attr.indexOf('width') !== -1 ? window.innerWidth : window.innerHeight, $util.parseUnit(value, fontSize));
-                                                        break;
-                                                    case 'orientation':
-                                                        valid = value === 'portrait' && window.innerWidth <= window.innerHeight || value === 'landscape' && window.innerWidth > window.innerHeight;
-                                                        break;
-                                                    case 'resolution':
-                                                    case 'min-resolution':
-                                                    case 'max-resolution':
-                                                        let resolution = parseFloat(value);
-                                                        if (value.endsWith('dpcm')) {
-                                                            resolution *= 2.54;
-                                                        }
-                                                        else if (value.endsWith('dppx') || value.endsWith('x')) {
-                                                            resolution *= 96;
-                                                        }
-                                                        valid = compareRange(operation, $util.getDeviceDPI(), resolution);
-                                                        break;
-                                                    case 'grid':
-                                                        valid = value === '0';
-                                                        break;
-                                                    case 'color':
-                                                        valid = value === undefined || $util.convertInt(value) > 0;
-                                                        break;
-                                                    case 'min-color':
-                                                        valid = $util.convertInt(value) <= screen.colorDepth / 3;
-                                                        break;
-                                                    case 'max-color':
-                                                        valid = $util.convertInt(value) >= screen.colorDepth / 3;
-                                                        break;
-                                                    case 'color-index':
-                                                    case 'min-color-index':
-                                                    case 'monochrome':
-                                                    case 'min-monochrome':
-                                                        valid = value === '0';
-                                                        break;
-                                                    case 'max-color-index':
-                                                    case 'max-monochrome':
-                                                        valid = $util.convertInt(value) >= 0;
-                                                        break;
-                                                    default:
-                                                        valid = false;
-                                                        break;
-                                                }
-                                                if (!valid) {
-                                                    break;
-                                                }
-                                            }
-                                            if (!negate && valid || negate && !valid) {
-                                                statement = true;
-                                            }
-                                            break;
-                                        }
-                                    }
-                                }
-                                if (statement) {
+                                if ($css.validMediaRule((<CSSConditionRule> rule).conditionText)) {
                                     const items = (<CSSMediaRule> rule).cssRules;
                                     for (let k = 0; k < items.length; k++) {
                                         this.applyStyleRule(<CSSStyleRule> items[k]);
