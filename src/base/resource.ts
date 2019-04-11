@@ -452,7 +452,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                                     repeating: repeating === 'repeating',
                                                     horizontal: node.actualWidth <= node.actualHeight,
                                                     dimension,
-                                                    shape: position && position[1].startsWith('circle') ? 'circle' : 'ellipse'
+                                                    shape: position && position[1] && position[1].startsWith('circle') ? 'circle' : 'ellipse'
                                                 };
                                                 radial.center = $css.getBackgroundPosition(position && position[2] || 'center', dimension, node.fontSize);
                                                 radial.closestCorner = Number.POSITIVE_INFINITY;

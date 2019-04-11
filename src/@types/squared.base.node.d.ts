@@ -64,6 +64,7 @@ declare global {
             readonly textElement: boolean;
             readonly tableElement: boolean;
             readonly inputElement: boolean;
+            readonly layoutElement: boolean;
             readonly pseudoElement: boolean;
             readonly groupParent: boolean;
             readonly documentBody: boolean;

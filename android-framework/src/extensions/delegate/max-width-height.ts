@@ -57,19 +57,21 @@ export default class MaxWidthHeight<T extends android.base.View> extends squared
         });
         container.inherit(node, 'styleMap');
         const maxWidth = node.css('maxWidth');
+        const maxHeight = node.css('maxHeight');
         if ($util.isLength(maxWidth, true)) {
-            container.css('width', $util.formatPX(node.parseUnit(maxWidth) + ($util.isPercent(maxWidth) ? 0 : node.contentBoxWidth + (node.marginLeft > 0 ? node.marginLeft : 0) + (node.marginRight > 0 ? node.marginRight : 0))));
-            if (container.documentRoot || parent.flexElement || parent.gridElement) {
+            const width = $util.formatPX(node.parseUnit(maxWidth) + ($util.isPercent(maxWidth) ? 0 : node.contentBoxWidth + (node.marginLeft > 0 ? node.marginLeft : 0) + (node.marginRight > 0 ? node.marginRight : 0)));
+            container.cssApply({ width, maxWidth: width }, true);
+            if (container.documentRoot || parent.layoutElement) {
                 node.autoMargin.horizontal = false;
                 node.autoMargin.left = false;
                 node.autoMargin.right = false;
                 node.autoMargin.leftRight = false;
             }
         }
-        const maxHeight = node.css('maxHeight');
         if ($util.isLength(maxHeight, true)) {
-            container.css('height', $util.formatPX(node.parseUnit(maxHeight) + ($util.isPercent(maxHeight) ? 0 : node.contentBoxHeight + (node.marginTop > 0 ? node.marginTop : 0) + (node.marginBottom > 0 ? node.marginBottom : 0))));
-            if (container.documentRoot || parent.flexElement || parent.gridElement) {
+            const height = $util.formatPX(node.parseUnit(maxHeight) + ($util.isPercent(maxHeight) ? 0 : node.contentBoxHeight + (node.marginTop > 0 ? node.marginTop : 0) + (node.marginBottom > 0 ? node.marginBottom : 0)));
+            container.cssApply({ height, maxHeight: height }, true);
+            if (container.documentRoot || parent.layoutElement) {
                 node.autoMargin.vertical = false;
                 node.autoMargin.top = false;
                 node.autoMargin.bottom = false;

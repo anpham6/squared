@@ -26,7 +26,7 @@ declare global {
             parseDocument(...elements: (string | HTMLElement)[]): FunctionMap<void>;
             renderNode(layout: Layout<T>): NodeTemplate<T> | undefined;
             renderLayout(layout: Layout<T>, outerParent: T): NodeTemplate<T> | undefined;
-            addLayoutFile(filename: string, content: string, pathname: string, documentBase?: boolean): void;
+            addLayoutFile(filename: string, content: string, pathname: string, leading?: boolean): void;
             addIncludeFile(id: number, filename: string, content: string): void;
             addRenderLayout(layout: Layout<T>, outerParent?: T): boolean;
             addRenderTemplate(parent: T, node: T, template: NodeTemplate<T> | undefined, index?: number): boolean;

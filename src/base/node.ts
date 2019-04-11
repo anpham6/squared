@@ -108,19 +108,19 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             if (this.sessionId !== '0') {
                 $session.setElementCache(element, 'node', this.sessionId, this);
             }
+            this.style = $session.getElementCache(element, 'style', '0') || $css.getStyle(element, undefined, false);
             this._styleMap = { ...$session.getElementCache(element, 'styleMap', this.sessionId) };
             if (this.styleElement && !this.pseudoElement && this.sessionId !== '0') {
-                const fontSize = parseFloat(element.style.getPropertyValue('font-size'));
+                const fontSize = parseFloat(this.style.getPropertyValue('font-size'));
                 for (let attr of Array.from(element.style)) {
                     let value = element.style.getPropertyValue(attr);
                     attr = $util.convertCamelCase(attr);
-                    value = $css.checkStyleValue(element, attr, value, 1000, fontSize);
+                    value = $css.checkStyleValue(element, attr, value, this.style, 1000, fontSize);
                     if (value) {
                         this._styleMap[attr] = value;
                     }
                 }
             }
-            this.style = $session.getElementCache(element, 'style', '0') || $css.getStyle(element, undefined, false);
         }
     }
 
@@ -150,7 +150,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this[`_${name}`] || undefined;
     }
 
-    public attr(name: string, attr: string, value = '', overwrite = true): string {
+    public attr(name: string, attr: string, value?: string, overwrite = true): string {
         let obj = this[`__${name}`];
         if (value) {
             if (obj === undefined) {
@@ -808,9 +808,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             }
         }
         else if (this.plainText) {
-            const rangeRect = $dom.getRangeClientRect(<Element> this._element);
-            this._bounds = $dom.assignRect(rangeRect);
-            this._cached.multiline = rangeRect.multiline > 0;
+            const rect = $dom.getRangeClientRect(<Element> this._element);
+            this._bounds = $dom.assignRect(rect);
+            this._cached.multiline = rect.multiline > 0;
         }
     }
 
@@ -1179,6 +1179,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get inputElement() {
         return this._element !== null && this._element.tagName === 'INPUT' || this.tagName === 'BUTTON';
+    }
+
+    get layoutElement() {
+        return this.flexElement || this.gridElement;
     }
 
     get groupParent() {
@@ -1924,15 +1928,24 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 this._cached.actualWidth = this.bounds.right - this.bounds.left;
             }
             else {
-                let width = this.parseUnit(this.css('width'));
-                if (width > 0) {
-                    if (this.css('boxSizing') === 'border-box') {
-                        width -= this.contentBoxWidth;
+                if (this.display !== 'table-cell') {
+                    let width = this.parseUnit(this.css('width'));
+                    if (width > 0) {
+                        const maxWidth = this.parseUnit(this.css('maxWidth'));
+                        if (maxWidth > 0) {
+                            width = Math.min(width, maxWidth);
+                        }
+                        if (this.css('boxSizing') === 'content-box' && !this.documentParent.layoutElement) {
+                            width += this.contentBoxWidth;
+                        }
+                        this._cached.actualWidth = width;
                     }
-                    this._cached.actualWidth = width;
                 }
-                else {
-                    this._cached.actualWidth = this.bounds.width - this.contentBoxWidth;
+                if (this._cached.actualWidth === undefined) {
+                    this._cached.actualWidth = this.bounds.width;
+                    if (this.css('boxSizing') === 'border-box') {
+                        this._cached.actualWidth -= this.contentBoxWidth;
+                    }
                 }
             }
         }
@@ -1945,15 +1958,24 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 this._cached.actualHeight = this.bounds.bottom - this.bounds.top;
             }
             else {
-                let height = this.parseUnit(this.css('height'), true);
-                if (height > 0) {
-                    if (this.css('boxSizing') === 'border-box') {
-                        height -= this.contentBoxHeight;
+                if (this.display !== 'table-cell') {
+                    let height = this.parseUnit(this.css('height'), true);
+                    if (height > 0) {
+                        const maxHeight = this.parseUnit(this.css('maxHeight'));
+                        if (maxHeight > 0) {
+                            height = Math.min(height, maxHeight);
+                        }
+                        if (this.css('boxSizing') === 'content-box' && !this.documentParent.layoutElement) {
+                            height += this.contentBoxHeight;
+                        }
+                        this._cached.actualHeight = height;
                     }
-                    this._cached.actualHeight = height;
                 }
-                else {
-                    this._cached.actualHeight = this.bounds.height - this.contentBoxHeight;
+                if (this._cached.actualHeight === undefined) {
+                    this._cached.actualHeight = this.bounds.height;
+                    if (this.css('boxSizing') === 'border-box') {
+                        this._cached.actualHeight -= this.contentBoxHeight;
+                    }
                 }
             }
         }

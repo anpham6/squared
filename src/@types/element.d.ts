@@ -50,7 +50,6 @@ interface Flexbox {
     grow: number;
     shrink: number;
     order: number;
-    dimensionActive?: boolean;
 }
 
 interface BorderAttribute {

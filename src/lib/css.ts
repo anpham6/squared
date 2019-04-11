@@ -1,6 +1,6 @@
 import { parseColor } from './color';
 import { getElementCache, setElementCache } from './session';
-import { REGEXP_COMPILED, STRING_PATTERN, USER_AGENT, calculate, capitalize, convertAlpha, convertRoman, convertCamelCase, convertPX, convertLength, convertPercent, isCustomProperty, isLength, isNumber, isUserAgent, resolvePath } from './util';
+import { REGEXP_COMPILED, STRING_PATTERN, USER_AGENT, calculate, capitalize, convertAlpha, convertRoman, convertCamelCase, convertPX, convertLength, convertPercent, isCustomProperty, isLength, isNumber, isPercent, isUserAgent, resolvePath } from './util';
 
 export const BOX_POSITION = ['top', 'right', 'bottom', 'left'];
 export const BOX_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
@@ -97,14 +97,16 @@ export function getSpecificity(value: string) {
     return result;
 }
 
-export function checkStyleValue(element: Element, attr: string, value: string, specificity = 0, fontSize?: number, style?: CSSStyleDeclaration) {
+export function checkStyleValue(element: Element, attr: string, value: string, style: CSSStyleDeclaration, specificity = 0, fontSize?: number) {
     if (value && value !== 'initial') {
         if (value === 'inherit') {
             value = getInheritedStyle(element, attr);
         }
-        const computed = style ? style[attr] : '';
+        const computed = style[attr];
         if (value !== computed && value !== 'auto') {
-            if (computed !== '') {
+            const numeric = isNumber(value);
+            if (computed) {
+                let valid = false;
                 switch (attr) {
                     case 'fontSize':
                     case 'fontWeight':
@@ -114,15 +116,32 @@ export function checkStyleValue(element: Element, attr: string, value: string, s
                     case 'borderRightColor':
                     case 'borderBottomColor':
                     case 'borderLeftColor':
-                        setElementCache(element, attr, specificity.toString(), value);
-                        return computed;
+                        valid = true;
+                        break;
+                    default:
+                        if (isPercent(value)) {
+                            switch (attr) {
+                                case 'width':
+                                case 'minWidth':
+                                case 'maxWidth':
+                                case 'height':
+                                case 'minHeight':
+                                case 'maxHeight':
+                                case 'columnWidth':
+                                    break;
+                                default:
+                                    valid = true;
+                                    break;
+                            }
+                        }
+                        break;
                 }
-                if (isNumber(value) || isCustomProperty(value)) {
+                if (valid || numeric || isCustomProperty(value)) {
                     setElementCache(element, attr, specificity.toString(), value);
                     return computed;
                 }
             }
-            if (isNumber(value)) {
+            if (numeric) {
                 setElementCache(element, attr, specificity.toString(), value);
             }
             else if (isLength(value)) {

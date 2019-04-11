@@ -416,109 +416,105 @@ export default class Controller<T extends View> extends squared.base.Controller<
         else if (layout.some(item => !item.pageFlow)) {
             layout.setType(CONTAINER_NODE.CONSTRAINT, $enum.NODE_ALIGNMENT.ABSOLUTE, $enum.NODE_ALIGNMENT.UNKNOWN);
         }
-        else {
-            if (layout.length === 1) {
-                const child = node.item(0) as T;
-                if (node.documentRoot && isTargeted(node, child)) {
-                    node.hide();
-                    next = true;
-                }
-                else if (child.plainText) {
-                    child.hide();
-                    node.clear();
-                    node.setInlineText(true);
-                    layout.setType(CONTAINER_NODE.TEXT);
-                }
-                else if (
-                    this.userSettings.collapseUnattributedElements &&
-                    node.element &&
-                    node.positionStatic &&
-                    node.documentParent === node.actualParent &&
-                    !node.groupParent &&
-                    !node.blockStatic &&
-                    !node.elementId &&
-                    !node.marginTop &&
-                    !node.marginBottom &&
-                    !node.hasWidth &&
-                    !node.hasHeight &&
-                    !node.visibleStyle.padding &&
-                    !node.visibleStyle.background &&
-                    !node.rightAligned &&
-                    !node.autoMargin.horizontal &&
-                    !node.companion &&
-                    !node.has('maxWidth') &&
-                    !node.has('maxHeight') &&
-                    !node.has('textAlign') &&
-                    !node.has('verticalAlign') &&
-                    node.lineHeight <= child.lineHeight &&
-                    !node.documentParent.hasAlign($enum.NODE_ALIGNMENT.AUTO_LAYOUT) &&
-                    !node.dataset.use &&
-                    !node.dataset.target &&
-                    !this.hasAppendProcessing(node.id))
-                {
-                    child.documentRoot = node.documentRoot;
-                    child.siblingIndex = node.siblingIndex;
-                    child.parent = parent;
-                    node.renderAs = child;
-                    node.resetBox($enum.BOX_STANDARD.MARGIN, child, true);
-                    node.hide();
-                    node.innerChild = child;
-                    child.outerParent = node;
-                    renderAs = child;
-                }
-                else if (node.autoMargin.horizontal) {
-                    layout.setType(CONTAINER_NODE.LINEAR, $enum.NODE_ALIGNMENT.VERTICAL | $enum.NODE_ALIGNMENT.SINGLE);
-                }
-                else if (parent.layoutConstraint && parent.flexElement && node.flexbox.alignSelf === 'baseline' && child.textElement) {
-                    layout.setType(CONTAINER_NODE.LINEAR, $enum.NODE_ALIGNMENT.HORIZONTAL | $enum.NODE_ALIGNMENT.SINGLE);
-                }
-                else {
-                    layout.setType(CONTAINER_NODE.FRAME, $enum.NODE_ALIGNMENT.SINGLE);
-                }
+        else if (layout.length === 1) {
+            const child = node.item(0) as T;
+            if (node.documentRoot && isTargeted(node, child)) {
+                node.hide();
+                next = true;
+            }
+            else if (child.plainText) {
+                child.hide();
+                node.clear();
+                node.setInlineText(true);
+                layout.setType(CONTAINER_NODE.TEXT);
+            }
+            else if (
+                this.userSettings.collapseUnattributedElements &&
+                node.element &&
+                node.positionStatic &&
+                node.documentParent === node.actualParent &&
+                !node.groupParent &&
+                !node.blockStatic &&
+                !node.elementId &&
+                !node.marginTop &&
+                !node.marginBottom &&
+                !node.hasWidth &&
+                !node.hasHeight &&
+                !node.visibleStyle.padding &&
+                !node.visibleStyle.background &&
+                !node.rightAligned &&
+                !node.autoMargin.horizontal &&
+                !node.companion &&
+                !node.has('maxWidth') &&
+                !node.has('maxHeight') &&
+                !node.has('textAlign') &&
+                !node.has('verticalAlign') &&
+                node.lineHeight <= child.lineHeight &&
+                !node.documentParent.hasAlign($enum.NODE_ALIGNMENT.AUTO_LAYOUT) &&
+                !node.dataset.use &&
+                !node.dataset.target &&
+                !this.hasAppendProcessing(node.id))
+            {
+                child.documentRoot = node.documentRoot;
+                child.siblingIndex = node.siblingIndex;
+                child.parent = parent;
+                node.renderAs = child;
+                node.resetBox($enum.BOX_STANDARD.MARGIN, child, true);
+                node.hide();
+                node.innerChild = child;
+                child.outerParent = node;
+                renderAs = child;
+            }
+            else if (node.autoMargin.horizontal) {
+                layout.setType(CONTAINER_NODE.LINEAR, $enum.NODE_ALIGNMENT.VERTICAL | $enum.NODE_ALIGNMENT.SINGLE);
+            }
+            else if (parent.layoutConstraint && parent.flexElement && node.flexbox.alignSelf === 'baseline' && child.textElement) {
+                layout.setType(CONTAINER_NODE.LINEAR, $enum.NODE_ALIGNMENT.HORIZONTAL | $enum.NODE_ALIGNMENT.SINGLE);
             }
             else {
-                if (node.element && Resource.hasLineBreak(node, true)) {
-                    layout.setType(layout.some(item => item.positionRelative && !item.positionAuto) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR, $enum.NODE_ALIGNMENT.VERTICAL, $enum.NODE_ALIGNMENT.UNKNOWN);
-                }
-                else if (this.checkConstraintFloat(layout)) {
-                    layout.setType(CONTAINER_NODE.CONSTRAINT, $enum.NODE_ALIGNMENT.FLOAT);
-                }
-                else if (layout.linearX) {
-                    if (this.checkFrameHorizontal(layout)) {
-                        layout.renderType |= $enum.NODE_ALIGNMENT.FLOAT | $enum.NODE_ALIGNMENT.HORIZONTAL;
-                    }
-                    else if (this.checkConstraintHorizontal(layout)) {
-                        layout.setType(CONTAINER_NODE.CONSTRAINT);
-                    }
-                    else if (this.checkRelativeHorizontal(layout)) {
-                        layout.setType(CONTAINER_NODE.RELATIVE);
-                    }
-                    else {
-                        layout.setType(CONTAINER_NODE.LINEAR);
-                        if (layout.floated.size) {
-                            sortHorizontalFloat(layout.children);
-                        }
-                    }
-                    layout.add($enum.NODE_ALIGNMENT.HORIZONTAL);
-                }
-                else if (layout.linearY) {
-                    layout.setType(layout.some(item => item.positionRelative && !item.positionStatic) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR, $enum.NODE_ALIGNMENT.VERTICAL, node.documentRoot ? $enum.NODE_ALIGNMENT.UNKNOWN : 0);
-                }
-                else if (layout.every(item => item.inlineFlow)) {
-                    if (this.checkFrameHorizontal(layout)) {
-                        layout.renderType |= $enum.NODE_ALIGNMENT.FLOAT | $enum.NODE_ALIGNMENT.HORIZONTAL;
-                    }
-                    else {
-                        layout.setType(CONTAINER_NODE.RELATIVE, $enum.NODE_ALIGNMENT.HORIZONTAL, $enum.NODE_ALIGNMENT.UNKNOWN);
-                    }
-                }
-                else if (layout.some(item => item.alignedVertically(item.previousSiblings(), layout.children, layout.cleared))) {
-                    layout.setType(CONTAINER_NODE.LINEAR, $enum.NODE_ALIGNMENT.VERTICAL, $enum.NODE_ALIGNMENT.UNKNOWN);
-                }
-                else {
-                    layout.setType(CONTAINER_NODE.CONSTRAINT, $enum.NODE_ALIGNMENT.UNKNOWN);
+                layout.setType(CONTAINER_NODE.FRAME, $enum.NODE_ALIGNMENT.SINGLE);
+            }
+        }
+        else if (node.element && Resource.hasLineBreak(node, true)) {
+            layout.setType(layout.some(item => item.positionRelative && !item.positionAuto) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR, $enum.NODE_ALIGNMENT.VERTICAL, $enum.NODE_ALIGNMENT.UNKNOWN);
+        }
+        else if (this.checkConstraintFloat(layout)) {
+            layout.setType(CONTAINER_NODE.CONSTRAINT, $enum.NODE_ALIGNMENT.FLOAT);
+        }
+        else if (layout.linearX) {
+            if (this.checkFrameHorizontal(layout)) {
+                layout.renderType |= $enum.NODE_ALIGNMENT.FLOAT | $enum.NODE_ALIGNMENT.HORIZONTAL;
+            }
+            else if (this.checkConstraintHorizontal(layout)) {
+                layout.setType(CONTAINER_NODE.CONSTRAINT);
+            }
+            else if (this.checkRelativeHorizontal(layout)) {
+                layout.setType(CONTAINER_NODE.RELATIVE);
+            }
+            else {
+                layout.setType(CONTAINER_NODE.LINEAR);
+                if (layout.floated.size) {
+                    sortHorizontalFloat(layout.children);
                 }
             }
+            layout.add($enum.NODE_ALIGNMENT.HORIZONTAL);
+        }
+        else if (layout.linearY) {
+            layout.setType(layout.some(item => item.positionRelative && !item.positionStatic) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR, $enum.NODE_ALIGNMENT.VERTICAL, node.documentRoot ? $enum.NODE_ALIGNMENT.UNKNOWN : 0);
+        }
+        else if (layout.every(item => item.inlineFlow)) {
+            if (this.checkFrameHorizontal(layout)) {
+                layout.renderType |= $enum.NODE_ALIGNMENT.FLOAT | $enum.NODE_ALIGNMENT.HORIZONTAL;
+            }
+            else {
+                layout.setType(CONTAINER_NODE.RELATIVE, $enum.NODE_ALIGNMENT.HORIZONTAL, $enum.NODE_ALIGNMENT.UNKNOWN);
+            }
+        }
+        else if (layout.some(item => item.alignedVertically(item.previousSiblings(), layout.children, layout.cleared))) {
+            layout.setType(CONTAINER_NODE.LINEAR, $enum.NODE_ALIGNMENT.VERTICAL, $enum.NODE_ALIGNMENT.UNKNOWN);
+        }
+        else {
+            layout.setType(CONTAINER_NODE.CONSTRAINT, $enum.NODE_ALIGNMENT.UNKNOWN);
         }
         return { layout, next, renderAs };
     }
@@ -1474,21 +1470,17 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 const renderParent = node.renderParent;
                 if (renderParent) {
                     if (renderParent.overflowX) {
-                        if (node.has('width', $enum.CSS_STANDARD.LENGTH)) {
-                            return node.toFloat('width', true);
+                        let width = renderParent.actualWidth;
+                        if (renderParent.css('boxSizing') === 'content-box') {
+                            width -= renderParent.contentBoxWidth;
                         }
-                        else if (renderParent.has('width', $enum.CSS_STANDARD.LENGTH)) {
-                            return renderParent.toFloat('width', true);
-                        }
-                        else if (renderParent.has('width', $enum.CSS_STANDARD.PERCENT)) {
-                            return renderParent.actualWidth - renderParent.contentBoxWidth;
-                        }
+                        return width;
                     }
-                    else if (renderParent.groupParent && renderParent.hasAlign($enum.NODE_ALIGNMENT.FLOAT)) {
+                    else if (renderParent.groupParent) {
                         let floatStart = Number.NEGATIVE_INFINITY;
                         $util.captureMap(
                             node.documentParent.actualChildren,
-                            item => item.float === 'left' && item.siblingIndex < node.siblingIndex,
+                            (item: T) => item.float === 'left' && !children.includes(item),
                             item => floatStart = Math.max(floatStart, item.linear.right)
                         );
                         if (floatStart !== Number.NEGATIVE_INFINITY && children.some(item => item.linear.left === floatStart)) {
@@ -1986,6 +1978,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         const floating = node.hasAlign($enum.NODE_ALIGNMENT.FLOAT);
         if (horizontal.length > 1) {
             node.alignmentType |= $enum.NODE_ALIGNMENT.MULTILINE;
+            node.horizontalRows = horizontal;
         }
         if (floating) {
             if (children.some(item => item.has('width', $enum.CSS_STANDARD.PERCENT))) {

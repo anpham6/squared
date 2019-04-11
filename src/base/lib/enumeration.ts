@@ -16,7 +16,8 @@ export const enum NODE_ALIGNMENT {
     RIGHT = 1024,
     SINGLE = 2048,
     MULTILINE = 4096,
-    EXTENDABLE = 8192
+    LEADING = 8192,
+    EXTENDABLE = 16384
 }
 
 export const enum NODE_TEMPLATE {

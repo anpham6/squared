@@ -2,7 +2,6 @@ import { FlexboxData } from '../@types/extension';
 
 import Extension from '../extension';
 import Node from '../node';
-import NodeList from '../nodelist';
 
 import { EXT_NAME } from '../lib/constant';
 import { NODE_ALIGNMENT } from '../lib/enumeration';
@@ -66,51 +65,68 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
             node.cssFinally('alignItems');
         }
         if (mainData.wrap) {
-            function setDirection(align: string, sort: string, size: string) {
-                const map = new Map<number, T[]>();
+            let size: string;
+            let method: string;
+            if (mainData.rowDirection) {
                 children.sort((a, b) => {
-                    if (!$util.withinRange(a.linear[align], b.linear[align])) {
-                        return a.linear[align] < b.linear[align] ? -1 : 1;
+                    if (!a.intersectX(b.bounds, 'bounds')) {
+                        return a.linear.top < b.linear.top ? -1 : 1;
                     }
-                    else if (!$util.withinRange(a.linear[sort], b.linear[sort])) {
-                        return a.linear[sort] < b.linear[sort] ? -1 : 1;
+                    else if (!$util.withinRange(a.linear.left, b.linear.left)) {
+                        return a.linear.left < b.linear.left ? -1 : 1;
                     }
                     return 0;
                 });
-                for (const item of children) {
-                    const point = Math.round(item.linear[align]);
-                    const items: T[] = map.get(point) || [];
-                    items.push(item);
-                    map.set(point, items);
-                }
-                let maxCount = 0;
-                let i = 0;
-                node.clear();
-                for (const seg of map.values()) {
-                    const group = controller.createNodeGroup(seg[0], seg, node);
-                    group.siblingIndex = i++;
-                    const box = group.unsafe('box');
-                    if (box) {
-                        box[size] = node.box[size];
-                    }
-                    group.alignmentType |= NODE_ALIGNMENT.SEGMENTED;
-                    maxCount = Math.max(seg.length, maxCount);
-                }
-                node.sort(NodeList.siblingIndex);
-                if (mainData.rowDirection) {
-                    mainData.rowCount = map.size;
-                    mainData.columnCount = maxCount;
-                }
-                else {
-                    mainData.rowCount = maxCount;
-                    mainData.columnCount = map.size;
-                }
-            }
-            if (mainData.rowDirection) {
-                setDirection(mainData.wrapReverse ? 'bottom' : 'top', 'left', 'right');
+                size = 'right';
+                method = 'intersectX';
             }
             else {
-                setDirection('left', 'top', 'bottom');
+                children.sort((a, b) => {
+                    if (!a.intersectY(b.bounds, 'bounds')) {
+                        return a.linear.left < b.linear.left ? -1 : 1;
+                    }
+                    else if (!$util.withinRange(a.linear.top, b.linear.top)) {
+                        return a.linear.top < b.linear.top ? -1 : 1;
+                    }
+                    return 0;
+                });
+                size = 'bottom';
+                method = 'intersectY';
+            }
+            let row: T[] = [children[0]];
+            let rowStart = children[0];
+            const rows: T[][] = [row];
+            for (let i = 1; i < children.length; i++) {
+                const item = children[i];
+                if (rowStart[method](item.bounds, 'bounds')) {
+                    row.push(item);
+                }
+                else {
+                    rowStart = item;
+                    row = [item];
+                    rows.push(row);
+                }
+            }
+            node.clear();
+            let maxCount = 0;
+            for (let i = 0; i < rows.length; i++) {
+                const seg = rows[i];
+                const group = controller.createNodeGroup(seg[0], seg, node);
+                group.siblingIndex = i;
+                const box = group.unsafe('box');
+                if (box) {
+                    box[size] = node.box[size];
+                }
+                group.alignmentType |= NODE_ALIGNMENT.SEGMENTED;
+                maxCount = Math.max(seg.length, maxCount);
+            }
+            if (mainData.rowDirection) {
+                mainData.rowCount = rows.length;
+                mainData.columnCount = maxCount;
+            }
+            else {
+                mainData.rowCount = maxCount;
+                mainData.columnCount = rows.length;
             }
         }
         else {

@@ -107,7 +107,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
     public afterBaseLayout() {
         const processed = new Set<T>();
         for (const node of this.application.processing.cache) {
-            if (node.naturalElement && !node.gridElement && !node.flexElement) {
+            if (node.naturalElement && !node.layoutElement) {
                 const children = node.actualChildren;
                 let firstChild: T | undefined;
                 let lastChild: T | undefined;

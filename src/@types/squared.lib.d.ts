@@ -24,7 +24,7 @@ declare global {
             export import BOX_PADDING = $css.BOX_PADDING;
             function getStyle(element: Element | null, target?: string, cache?: boolean): CSSStyleDeclaration;
             function hasComputedStyle(element: Element | null): element is HTMLElement;
-            function checkStyleValue(element: Element, attr: string, value: string, specificity?: number, fontSize?: number, style?: CSSStyleDeclaration): string;
+            function checkStyleValue(element: Element, attr: string, value: string, style?: CSSStyleDeclaration, specificity?: number, fontSize?: number): string;
             function getSpecificity(value: string): number;
             function getKeyframeRules(): CSSRuleData;
             function getDataSet(element: HTMLElement | null, prefix: string): StringMap;

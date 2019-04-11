@@ -358,7 +358,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 renderAs.inherit(node, 'initial', 'base');
                 renderAs.resetBox($enum.BOX_STANDARD.MARGIN | $enum.BOX_STANDARD.PADDING);
                 renderAs.exclude({
-                    procedure: $enum.NODE_PROCEDURE.AUTOFIT | $enum.NODE_PROCEDURE.CUSTOMIZATION,
+                    procedure: $enum.NODE_PROCEDURE.CUSTOMIZATION,
                     resource: $enum.NODE_RESOURCE.BOX_STYLE | $enum.NODE_RESOURCE.ASSET
                 });
                 parent.appendTry(node, renderAs);

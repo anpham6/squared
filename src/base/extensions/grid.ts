@@ -48,7 +48,7 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
     };
 
     public condition(node: T) {
-        if (node.length > 1 && !node.flexElement && !node.gridElement && !node.has('listStyle')) {
+        if (node.length > 1 && !node.layoutElement && !node.has('listStyle')) {
             if (node.display === 'table') {
                 return node.every(item => item.display === 'table-row' && item.every(child => child.display === 'table-cell'));
             }

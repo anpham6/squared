@@ -82,6 +82,7 @@ export function getRangeClientRect(element: Element) {
     }
     let bounds: RectDimension = newRectDimension();
     let multiline = 0;
+    let maxTop = Number.NEGATIVE_INFINITY;
     if (domRect.length) {
         bounds = assignRect(domRect[0]);
         for (let i = 1 ; i < domRect.length; i++) {
@@ -102,8 +103,11 @@ export function getRangeClientRect(element: Element) {
                 bounds.height = rect.height;
             }
             bounds.width += rect.width;
+            if (rect.top > maxTop) {
+                maxTop = rect.top;
+            }
         }
-        if (domRect.length > 1 && domRect[domRect.length - 1].top >= domRect[0].bottom && element.textContent && (element.textContent.trim() !== '' || /^\s*\n/.test(element.textContent))) {
+        if (domRect.length > 1 && maxTop >= domRect[0].bottom && element.textContent && (element.textContent.trim() !== '' || /^\s*\n/.test(element.textContent))) {
             multiline = domRect.length - 1;
         }
     }

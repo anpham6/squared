@@ -43,18 +43,18 @@
             -ms-flex-wrap: wrap;
                 flex-wrap: wrap;
       }
-      .col {
-        float: left;
-        -moz-box-sizing: border-box;
-             box-sizing: border-box;
-        padding: 0 .6875em 1.375em;
-      }
       .row-wrapping > .col {
         float: none;
         vertical-align: top;
         display: inline-block;
         font-size: 16px;
         font-size: 1rem;
+      }
+      .col {
+        float: left;
+        -moz-box-sizing: border-box;
+             box-sizing: border-box;
+        padding: 0 .6875em 1.375em;
       }
       .flexbox .col,
       .flexboxtweener .col {
@@ -188,6 +188,16 @@
               <li class="col">
                 <div class="story">
                   <h3><a href="#">Proin leo felis, semper nec</a></h3>
+                </div>
+              </li>
+              <li class="col" style="float: right;">
+                <div class="story">
+                  <h3><a href="#">Aliquam vitae risus tortor. Sed!</a></h3>
+                </div>
+              </li>
+              <li class="col" style="float: left;">
+                <div class="story">
+                  <h3><a href="#">Aliquam vitae risus tortor. Sed!</a></h3>
                 </div>
               </li>
               <li class="col">

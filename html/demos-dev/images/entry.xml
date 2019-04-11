@@ -80,7 +80,7 @@
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@+id/textview_18"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol8578"
+                    android:text="@string/__symbol97456"
                     style="@style/Plaintext" />
             </RelativeLayout>
             <LinearLayout
@@ -194,6 +194,7 @@
                 android:layout_height="wrap_content"
                 android:layout_width="@dimen/select_layout_width_1"
                 android:minWidth="@dimen/select_min_width"
+                android:paddingHorizontal="@dimen/select_padding_horizontal"
                 android:paddingVertical="@dimen/select_padding_vertical"
                 style="@style/Select" />
             <Space
@@ -228,7 +229,7 @@
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@+id/textview_21"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol8578"
+                    android:text="@string/__symbol97456"
                     style="@style/Plaintext" />
             </RelativeLayout>
             <LinearLayout
@@ -255,6 +256,7 @@
                     android:layout_marginStart="@dimen/select_layout_margin_start"
                     android:layout_width="wrap_content"
                     android:minWidth="@dimen/select_min_width"
+                    android:paddingHorizontal="@dimen/select_padding_horizontal"
                     android:paddingVertical="@dimen/select_padding_vertical"
                     style="@style/Select" />
             </LinearLayout>
@@ -278,6 +280,7 @@
                 android:layout_height="wrap_content"
                 android:layout_width="@dimen/select_layout_width"
                 android:minWidth="@dimen/select_min_width"
+                android:paddingHorizontal="@dimen/select_padding_horizontal"
                 android:paddingVertical="@dimen/select_padding_vertical"
                 style="@style/Select" />
             <Space
@@ -300,6 +303,7 @@
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:minWidth="@dimen/select_min_width"
+                android:paddingHorizontal="@dimen/select_padding_horizontal"
                 android:paddingVertical="@dimen/select_padding_vertical"
                 style="@style/Select" />
             <Space
@@ -322,6 +326,7 @@
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:minWidth="@dimen/select_min_width"
+                android:paddingHorizontal="@dimen/select_padding_horizontal"
                 android:paddingVertical="@dimen/select_padding_vertical"
                 style="@style/Select" />
         </GridLayout>
@@ -355,6 +360,7 @@
                 android:layout_height="wrap_content"
                 android:layout_width="@dimen/select_layout_width"
                 android:minWidth="@dimen/select_min_width"
+                android:paddingHorizontal="@dimen/select_padding_horizontal"
                 android:paddingVertical="@dimen/select_padding_vertical"
                 style="@style/Select" />
             <Space
@@ -377,6 +383,7 @@
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:minWidth="@dimen/select_min_width"
+                android:paddingHorizontal="@dimen/select_padding_horizontal"
                 android:paddingVertical="@dimen/select_padding_vertical"
                 style="@style/Select" />
             <Space
@@ -405,6 +412,7 @@
                     android:layout_height="wrap_content"
                     android:layout_width="@dimen/select_layout_width"
                     android:minWidth="@dimen/select_min_width"
+                    android:paddingHorizontal="@dimen/select_padding_horizontal"
                     android:paddingVertical="@dimen/select_padding_vertical"
                     style="@style/Select" />
                 <Button
@@ -456,6 +464,7 @@
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:minWidth="@dimen/select_min_width"
+                android:paddingHorizontal="@dimen/select_padding_horizontal"
                 android:paddingVertical="@dimen/select_padding_vertical"
                 style="@style/Select" />
             <Space
@@ -478,6 +487,7 @@
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:minWidth="@dimen/select_min_width"
+                android:paddingHorizontal="@dimen/select_padding_horizontal"
                 android:paddingVertical="@dimen/select_padding_vertical"
                 style="@style/Select" />
             <Space
@@ -500,6 +510,7 @@
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:minWidth="@dimen/select_min_width"
+                android:paddingHorizontal="@dimen/select_padding_horizontal"
                 android:paddingVertical="@dimen/select_padding_vertical"
                 style="@style/Select" />
             <Space
@@ -528,6 +539,7 @@
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
                     android:minWidth="@dimen/select_min_width"
+                    android:paddingHorizontal="@dimen/select_padding_horizontal"
                     android:paddingVertical="@dimen/select_padding_vertical"
                     style="@style/Select" />
                 <Spinner
@@ -538,6 +550,7 @@
                     android:layout_marginStart="@dimen/select_layout_margin_start"
                     android:layout_width="wrap_content"
                     android:minWidth="@dimen/select_min_width"
+                    android:paddingHorizontal="@dimen/select_padding_horizontal"
                     android:paddingVertical="@dimen/select_padding_vertical"
                     style="@style/Select" />
                 <Button
@@ -580,6 +593,7 @@
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
                     android:minWidth="@dimen/select_min_width"
+                    android:paddingHorizontal="@dimen/select_padding_horizontal"
                     android:paddingVertical="@dimen/select_padding_vertical"
                     style="@style/Select" />
                 <Spinner
@@ -590,6 +604,7 @@
                     android:layout_marginStart="@dimen/select_layout_margin_start"
                     android:layout_width="wrap_content"
                     android:minWidth="@dimen/select_min_width"
+                    android:paddingHorizontal="@dimen/select_padding_horizontal"
                     android:paddingVertical="@dimen/select_padding_vertical"
                     style="@style/Select" />
                 <Button
@@ -651,7 +666,7 @@
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@+id/textview_24"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol8578"
+                    android:text="@string/__symbol97456"
                     style="@style/Plaintext" />
             </RelativeLayout>
             <LinearLayout
@@ -678,6 +693,7 @@
                     android:layout_marginStart="@dimen/select_layout_margin_start"
                     android:layout_width="wrap_content"
                     android:minWidth="@dimen/select_min_width"
+                    android:paddingHorizontal="@dimen/select_padding_horizontal"
                     android:paddingVertical="@dimen/select_padding_vertical"
                     style="@style/Select" />
                 <Spinner
@@ -688,6 +704,7 @@
                     android:layout_marginStart="@dimen/select_layout_margin_start"
                     android:layout_width="wrap_content"
                     android:minWidth="@dimen/select_min_width"
+                    android:paddingHorizontal="@dimen/select_padding_horizontal"
                     android:paddingVertical="@dimen/select_padding_vertical"
                     style="@style/Select" />
             </LinearLayout>
@@ -717,6 +734,7 @@
                     android:layout_height="wrap_content"
                     android:layout_width="@dimen/select_layout_width_2"
                     android:minWidth="@dimen/select_min_width"
+                    android:paddingHorizontal="@dimen/select_padding_horizontal"
                     android:paddingVertical="@dimen/select_padding_vertical"
                     style="@style/Select" />
                 <RadioGroup
@@ -777,7 +795,7 @@
     <string name="app_name">android</string>
     <string name="__00_inactive">00 - Inactive</string>
     <string name="__01_active">01 - Active</string>
-    <string name="__symbol8578"> ):</string>
+    <string name="__symbol97456"> ):</string>
     <string name="active">Active:</string>
     <string name="add">Add</string>
     <string name="all">All</string>
@@ -1028,6 +1046,7 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_width">wrap_content</item>
         <item name="android:minWidth">@dimen/select_min_width</item>
+        <item name="android:paddingHorizontal">@dimen/select_padding_horizontal</item>
         <item name="android:paddingVertical">@dimen/select_padding_vertical</item>
     </style>
     <style name="Text">
@@ -1070,7 +1089,8 @@
     <dimen name="select_layout_width_1">160dp</dimen>
     <dimen name="select_layout_width_2">100dp</dimen>
     <dimen name="select_min_width">37dp</dimen>
-    <dimen name="select_padding_vertical">2dp</dimen>
+    <dimen name="select_padding_horizontal">1dp</dimen>
+    <dimen name="select_padding_vertical">3dp</dimen>
     <dimen name="space_layout_height">6dp</dimen>
     <dimen name="text_layout_margin_end">5dp</dimen>
     <dimen name="text_layout_width">44dp</dimen>
