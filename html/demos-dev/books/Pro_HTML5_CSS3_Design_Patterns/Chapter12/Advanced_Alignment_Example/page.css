@@ -1,6 +1,6 @@
 sub   { vertical-align:-0.3em; font-size:0.75em; }
 
-*.ac1     {font-size:4em; font-family:"Times New Roman" serif; white-space:nowrap; }
+*.ac1     {font-size:4em; font-family:sans-serif; white-space:nowrap; }
 *.ac1-func{vertical-align:0.6em; font-size:0.3em; font-style:italic; }
 *.ac1-sum {vertical-align:0.2em; font-size:0.6em; position:relative; left:-0.1em;}
 *.ac1-max {vertical-align:3em;   font-size:0.2em; position:relative; left:-6em;  }
