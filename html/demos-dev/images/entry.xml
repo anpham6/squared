@@ -80,7 +80,7 @@
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@+id/textview_18"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol97456"
+                    android:text="@string/__symbol21610"
                     style="@style/Plaintext" />
             </RelativeLayout>
             <LinearLayout
@@ -89,7 +89,7 @@
                 android:layout_width="wrap_content"
                 android:orientation="vertical">
                 <LinearLayout
-                    android:id="@+id/linearlayout_9"
+                    android:id="@+id/linearlayout_5"
                     style="@style/Linearlayout_1">
                     <Spinner
                         android:id="@+id/month0"
@@ -107,7 +107,7 @@
                         style="@style/Select.Linearlayout_2" />
                 </LinearLayout>
                 <LinearLayout
-                    android:id="@+id/linearlayout_10"
+                    android:id="@+id/linearlayout_6"
                     android:layout_marginTop="@dimen/select_group_layout_margin_top"
                     style="@style/Linearlayout_1">
                     <Spinner
@@ -126,7 +126,7 @@
                         style="@style/Select.Linearlayout_2" />
                 </LinearLayout>
                 <LinearLayout
-                    android:id="@+id/linearlayout_11"
+                    android:id="@+id/linearlayout_7"
                     android:layout_marginTop="@dimen/select_group_layout_margin_top"
                     style="@style/Linearlayout_1">
                     <Spinner
@@ -160,7 +160,6 @@
                 style="@style/Label" />
             <LinearLayout
                 android:id="@+id/linearlayout_2"
-                android:baselineAlignedChildIndex="0"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:orientation="horizontal">
@@ -229,12 +228,11 @@
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@+id/textview_21"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol97456"
+                    android:text="@string/__symbol21610"
                     style="@style/Plaintext" />
             </RelativeLayout>
             <LinearLayout
                 android:id="@+id/linearlayout_3"
-                android:baselineAlignedChildIndex="0"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:orientation="horizontal">
@@ -399,16 +397,15 @@
                 android:paddingTop="@dimen/label_padding_top"
                 android:text="@string/entries"
                 style="@style/Label" />
-            <LinearLayout
-                android:id="@+id/linearlayout_4"
-                android:baselineAlignedChildIndex="0"
+            <RelativeLayout
+                android:id="@+id/relativelayout_3"
                 android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:orientation="horizontal">
+                android:layout_width="wrap_content">
                 <Spinner
                     android:id="@+id/entry_1"
                     android:background="@drawable/select_series_1"
                     android:entries="@array/subset_1_array"
+                    android:layout_alignParentStart="true"
                     android:layout_height="wrap_content"
                     android:layout_width="@dimen/select_layout_width"
                     android:minWidth="@dimen/select_min_width"
@@ -419,8 +416,11 @@
                     android:id="@+id/button_1"
                     android:background="@drawable/button_button_1"
                     android:enabled="false"
+                    android:gravity="center"
+                    android:layout_alignBottom="@+id/entry_1"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/button_layout_margin_start"
+                    android:layout_toEndOf="@+id/entry_1"
                     android:layout_width="wrap_content"
                     android:minHeight="@dimen/button_min_height"
                     android:minWidth="@dimen/button_min_width"
@@ -433,8 +433,11 @@
                     android:id="@+id/button_2"
                     android:background="@drawable/button_button_1"
                     android:enabled="false"
+                    android:gravity="center"
+                    android:layout_alignBottom="@+id/entry_1"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/button_layout_margin_start"
+                    android:layout_toEndOf="@+id/button_1"
                     android:layout_width="wrap_content"
                     android:minHeight="@dimen/button_min_height"
                     android:minWidth="@dimen/button_min_width"
@@ -443,7 +446,7 @@
                     android:text="@string/all"
                     android:textAllCaps="false"
                     style="@style/Button_2" />
-            </LinearLayout>
+            </RelativeLayout>
             <Space
                 android:id="@+id/space_10"
                 android:layout_columnSpan="2"
@@ -526,16 +529,15 @@
                 android:paddingTop="@dimen/label_padding_top"
                 android:text="@string/version"
                 style="@style/Label" />
-            <LinearLayout
-                android:id="@+id/linearlayout_5"
-                android:baselineAlignedChildIndex="0"
+            <RelativeLayout
+                android:id="@+id/relativelayout_4"
                 android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:orientation="horizontal">
+                android:layout_width="wrap_content">
                 <Spinner
                     android:id="@+id/version"
                     android:background="@drawable/select_series_1"
                     android:entries="@array/version_array"
+                    android:layout_alignParentStart="true"
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
                     android:minWidth="@dimen/select_min_width"
@@ -546,8 +548,10 @@
                     android:id="@+id/version_update"
                     android:background="@drawable/select_series_1"
                     android:entries="@array/version_array"
+                    android:layout_alignBaseline="@+id/version"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/select_layout_margin_start"
+                    android:layout_toEndOf="@+id/version"
                     android:layout_width="wrap_content"
                     android:minWidth="@dimen/select_min_width"
                     android:paddingHorizontal="@dimen/select_padding_horizontal"
@@ -556,8 +560,11 @@
                 <Button
                     android:id="@+id/button_3"
                     android:background="@drawable/button_button_1"
+                    android:gravity="center"
+                    android:layout_alignBottom="@+id/version"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/button_layout_margin_start_1"
+                    android:layout_toEndOf="@+id/version_update"
                     android:layout_width="wrap_content"
                     android:minHeight="@dimen/button_min_height"
                     android:minWidth="@dimen/button_min_width"
@@ -566,7 +573,7 @@
                     android:text="@string/update"
                     android:textAllCaps="false"
                     style="@style/Button_1" />
-            </LinearLayout>
+            </RelativeLayout>
             <Space
                 android:id="@+id/space_14"
                 android:layout_columnSpan="2"
@@ -580,16 +587,15 @@
                 android:paddingTop="@dimen/label_padding_top"
                 android:text="@string/branch"
                 style="@style/Label" />
-            <LinearLayout
-                android:id="@+id/linearlayout_6"
-                android:baselineAlignedChildIndex="0"
+            <RelativeLayout
+                android:id="@+id/relativelayout_5"
                 android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:orientation="horizontal">
+                android:layout_width="wrap_content">
                 <Spinner
                     android:id="@+id/branch"
                     android:background="@drawable/select_series_1"
                     android:entries="@array/branch_array"
+                    android:layout_alignParentStart="true"
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
                     android:minWidth="@dimen/select_min_width"
@@ -600,8 +606,10 @@
                     android:id="@+id/branch_update"
                     android:background="@drawable/select_series_1"
                     android:entries="@array/branch_array"
+                    android:layout_alignBaseline="@+id/branch"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/select_layout_margin_start"
+                    android:layout_toEndOf="@+id/branch"
                     android:layout_width="wrap_content"
                     android:minWidth="@dimen/select_min_width"
                     android:paddingHorizontal="@dimen/select_padding_horizontal"
@@ -610,8 +618,11 @@
                 <Button
                     android:id="@+id/button_4"
                     android:background="@drawable/button_button_1"
+                    android:gravity="center"
+                    android:layout_alignBottom="@+id/branch"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/button_layout_margin_start_1"
+                    android:layout_toEndOf="@+id/branch_update"
                     android:layout_width="wrap_content"
                     android:minHeight="@dimen/button_min_height"
                     android:minWidth="@dimen/button_min_width"
@@ -623,8 +634,11 @@
                 <Button
                     android:id="@+id/button_5"
                     android:background="@drawable/button_button_1"
+                    android:gravity="center"
+                    android:layout_alignBottom="@+id/branch"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/button_layout_margin_start"
+                    android:layout_toEndOf="@+id/button_4"
                     android:layout_width="wrap_content"
                     android:minHeight="@dimen/button_min_height"
                     android:minWidth="@dimen/button_min_width"
@@ -633,14 +647,14 @@
                     android:text="@string/clone"
                     android:textAllCaps="false"
                     style="@style/Button_1" />
-            </LinearLayout>
+            </RelativeLayout>
             <Space
                 android:id="@+id/space_15"
                 android:layout_columnSpan="2"
                 android:layout_height="@dimen/space_layout_height"
                 android:layout_width="match_parent" />
             <RelativeLayout
-                android:id="@+id/relativelayout_3"
+                android:id="@+id/relativelayout_6"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/label_layout_margin_end"
                 android:layout_width="@dimen/label_layout_width"
@@ -666,12 +680,11 @@
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@+id/textview_24"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol97456"
+                    android:text="@string/__symbol21610"
                     style="@style/Plaintext" />
             </RelativeLayout>
             <LinearLayout
-                android:id="@+id/linearlayout_7"
-                android:baselineAlignedChildIndex="0"
+                android:id="@+id/linearlayout_4"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:orientation="horizontal">
@@ -721,16 +734,15 @@
                 android:paddingTop="@dimen/label_padding_top"
                 android:text="@string/conclusion"
                 style="@style/Label" />
-            <LinearLayout
-                android:id="@+id/linearlayout_8"
-                android:baselineAlignedChildIndex="0"
+            <RelativeLayout
+                android:id="@+id/relativelayout_7"
                 android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:orientation="horizontal">
+                android:layout_width="wrap_content">
                 <Spinner
                     android:id="@+id/person"
                     android:background="@drawable/select_series_1"
                     android:entries="@array/subset_1_array"
+                    android:layout_alignParentStart="true"
                     android:layout_height="wrap_content"
                     android:layout_width="@dimen/select_layout_width_2"
                     android:minWidth="@dimen/select_min_width"
@@ -742,6 +754,8 @@
                     android:checkedButton="@+id/c2"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/div_layout_margin_start"
+                    android:layout_marginTop="@dimen/div_layout_margin_top"
+                    android:layout_toEndOf="@+id/person"
                     android:layout_width="wrap_content"
                     android:orientation="horizontal">
                     <RadioButton
@@ -775,8 +789,11 @@
                 <Button
                     android:id="@+id/button_6"
                     android:background="@drawable/button_button_1"
+                    android:gravity="center"
+                    android:layout_alignBottom="@+id/person"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/button_layout_margin_start_2"
+                    android:layout_toEndOf="@+id/radiogroup_1"
                     android:layout_width="wrap_content"
                     android:minHeight="@dimen/button_min_height"
                     android:minWidth="@dimen/button_min_width"
@@ -785,7 +802,7 @@
                     android:text="@string/update"
                     android:textAllCaps="false"
                     style="@style/Button_1" />
-            </LinearLayout>
+            </RelativeLayout>
         </GridLayout>
     </LinearLayout>
 </LinearLayout>
@@ -795,7 +812,7 @@
     <string name="app_name">android</string>
     <string name="__00_inactive">00 - Inactive</string>
     <string name="__01_active">01 - Active</string>
-    <string name="__symbol97456"> ):</string>
+    <string name="__symbol21610">):</string>
     <string name="active">Active:</string>
     <string name="add">Add</string>
     <string name="all">All</string>
@@ -980,6 +997,8 @@
     <color name="darkgray">#A9A9A9</color>
     <color name="lightgray_1">#CCCCCC</color>
     <color name="gainsboro_1">#DDDDDD</color>
+    <color name="whitesmoke_2">#EEEEEE</color>
+    <color name="whitesmoke_1">#F8F8F8</color>
     <color name="white">#FFFFFF</color>
 </resources>
 <!-- filename: res/values/colors.xml -->
@@ -1021,7 +1040,6 @@
         <item name="android:textStyle">italic</item>
     </style>
     <style name="Linearlayout_1">
-        <item name="android:baselineAlignedChildIndex">0</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_width">wrap_content</item>
         <item name="android:orientation">horizontal</item>
@@ -1064,12 +1082,13 @@
     <dimen name="button_layout_margin_start_2">4dp</dimen>
     <dimen name="button_min_height">25dp</dimen>
     <dimen name="button_min_width">35dp</dimen>
-    <dimen name="button_padding_horizontal">6dp</dimen>
-    <dimen name="button_padding_vertical">1dp</dimen>
+    <dimen name="button_padding_horizontal">8dp</dimen>
+    <dimen name="button_padding_vertical">3dp</dimen>
     <dimen name="checkbox_layout_margin_end">3dp</dimen>
     <dimen name="checkbox_layout_margin_start">7dp</dimen>
     <dimen name="checkbox_layout_margin_vertical">3dp</dimen>
     <dimen name="div_layout_margin_start">3dp</dimen>
+    <dimen name="div_layout_margin_top">-4dp</dimen>
     <dimen name="form_padding_horizontal">11dp</dimen>
     <dimen name="form_padding_vertical">6dp</dimen>
     <dimen name="h2_padding">9dp</dimen>
@@ -1105,13 +1124,6 @@
 
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="@color/darkblue" />
-    <stroke android:width="1dp" android:color="@color/yellowgreen" />
-</shape>
-<!-- filename: res/drawable/h2_textview_1.xml -->
-
-<?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
     <solid android:color="@color/white" />
     <stroke android:width="1dp" android:color="@color/lightgray_1" />
 </shape>
@@ -1119,8 +1131,34 @@
 
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <stroke android:width="2dp" android:color="@color/black" />
+    <solid android:color="@color/darkblue" />
+    <stroke android:width="1dp" android:color="@color/yellowgreen" />
 </shape>
+<!-- filename: res/drawable/h2_textview_1.xml -->
+
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:left="-2dp" android:right="-3dp" android:bottom="-2dp">
+        <shape android:shape="rectangle">
+            <stroke android:width="2dp" android:color="@color/gray" />
+        </shape>
+    </item>
+    <item android:left="-2dp" android:top="-3dp" android:bottom="-2dp">
+        <shape android:shape="rectangle">
+            <stroke android:width="2dp" android:color="@color/lightgray_1" />
+        </shape>
+    </item>
+    <item android:left="-2dp" android:top="-3dp" android:right="-3dp">
+        <shape android:shape="rectangle">
+            <stroke android:width="2dp" android:color="@color/lightgray_1" />
+        </shape>
+    </item>
+    <item android:top="-3dp" android:right="-3dp" android:bottom="-2dp">
+        <shape android:shape="rectangle">
+            <stroke android:width="2dp" android:color="@color/gray" />
+        </shape>
+    </item>
+</layer-list>
 <!-- filename: res/drawable/text_order.xml -->
 
 <?xml version="1.0" encoding="utf-8"?>
@@ -1130,8 +1168,31 @@
 <!-- filename: res/drawable/select_series_1.xml -->
 
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="@color/gainsboro_1" />
-    <stroke android:width="2dp" android:color="@color/gainsboro_1" />
-</shape>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/gainsboro_1" />
+        </shape>
+    </item>
+    <item android:left="-2dp" android:right="-3dp" android:bottom="-2dp">
+        <shape android:shape="rectangle">
+            <stroke android:width="2dp" android:color="@color/whitesmoke_1" />
+        </shape>
+    </item>
+    <item android:left="-2dp" android:top="-3dp" android:bottom="-2dp">
+        <shape android:shape="rectangle">
+            <stroke android:width="2dp" android:color="@color/whitesmoke_2" />
+        </shape>
+    </item>
+    <item android:left="-2dp" android:top="-3dp" android:right="-3dp">
+        <shape android:shape="rectangle">
+            <stroke android:width="2dp" android:color="@color/whitesmoke_2" />
+        </shape>
+    </item>
+    <item android:top="-3dp" android:right="-3dp" android:bottom="-2dp">
+        <shape android:shape="rectangle">
+            <stroke android:width="2dp" android:color="@color/whitesmoke_1" />
+        </shape>
+    </item>
+</layer-list>
 <!-- filename: res/drawable/button_button_1.xml -->

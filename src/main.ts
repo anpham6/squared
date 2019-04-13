@@ -82,7 +82,7 @@ export function parseDocument(...elements: (string | HTMLElement)[]): FunctionMa
     };
 }
 
-export function include(value: Extension | string) {
+export function include(value: any) {
     if (main) {
         if (value instanceof squared.base.Extension) {
             return main.extensionManager.include(value);
@@ -98,7 +98,7 @@ export function include(value: Extension | string) {
     return false;
 }
 
-export function includeAsync(value: Extension | string) {
+export function includeAsync(value: any) {
     if (include(value)) {
         return true;
     }
@@ -111,7 +111,7 @@ export function includeAsync(value: Extension | string) {
     return false;
 }
 
-export function exclude(value: Extension | string) {
+export function exclude(value: any) {
     if (main) {
         if (value instanceof squared.base.Extension) {
             if (extensionsAsync.has(value)) {
@@ -134,7 +134,7 @@ export function exclude(value: Extension | string) {
     return false;
 }
 
-export function configure(value: Extension | string, options: {}) {
+export function configure(value: any, options: {}) {
     if (typeof options === 'object') {
         if (value instanceof squared.base.Extension) {
             Object.assign(value.options, options);
@@ -160,7 +160,7 @@ export function configure(value: Extension | string, options: {}) {
     return false;
 }
 
-export function apply(value: Extension | string, options?: ExternalData) {
+export function apply(value: any, options?: {}) {
     if (value instanceof squared.base.Extension) {
         return include(value);
     }

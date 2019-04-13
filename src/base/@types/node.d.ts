@@ -74,8 +74,6 @@ export interface CachedValue<T> {
 
 export interface VisibleStyle {
     padding: boolean;
-    paddingHorizontal: boolean;
-    paddingVertical: boolean;
     borderWidth: boolean;
     background: boolean;
     backgroundImage: boolean;
@@ -99,3 +97,10 @@ export type AutoMargin = {
     bottom: boolean;
     topBottom: boolean;
 };
+
+export interface SiblingDirection {
+    floating?: boolean;
+    pageFlow?: boolean;
+    lineBreak?: boolean;
+    excluded?: boolean;
+}

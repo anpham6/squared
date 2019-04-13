@@ -2,9 +2,10 @@ import { UserSettingsAndroid } from './@types/application';
 
 const settings: UserSettingsAndroid = {
     builtInExtensions: [
+        'android.delegate.percent',
         'android.delegate.max-width-height',
         'android.delegate.fixed',
-        'android.delegate.percent',
+        'android.delegate.negative-x',
         'android.delegate.radiogroup',
         'android.delegate.scrollbar',
         'squared.external',

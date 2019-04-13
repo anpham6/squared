@@ -1,5 +1,5 @@
 import { NodeTemplate } from '../base/@types/application';
-import { AutoMargin, InitialData, Support, VisibleStyle } from '../base/@types/node';
+import { AutoMargin, InitialData, SiblingDirection, Support, VisibleStyle } from '../base/@types/node';
 
 import Container = squared.lib.base.Container;
 
@@ -26,9 +26,11 @@ declare global {
             tagName: string;
             controlName: string;
             baseline: boolean;
+            textContent: string;
             multiline: boolean;
             overflow: number;
             flexbox: Flexbox;
+            dir: string;
             documentParent: Node;
             actualChildren: Node[];
             renderExclude: boolean;
@@ -119,12 +121,12 @@ declare global {
             readonly float: string;
             readonly zIndex: number;
             readonly visibleStyle: VisibleStyle;
-            readonly textContent: string;
             readonly fontSize: number;
             readonly src: string;
             readonly overflowX: boolean;
             readonly overflowY: boolean;
             readonly verticalAlign: string;
+            readonly textEmpty: boolean;
             readonly preserveWhiteSpace: boolean;
             readonly layoutHorizontal: boolean;
             readonly layoutVertical: boolean;
@@ -139,7 +141,6 @@ declare global {
             readonly previousSibling: Node | undefined;
             readonly nextSibling: Node | undefined;
             readonly documentId: string;
-            readonly dir: string;
             readonly nodes: Node[];
             readonly center: Point;
             setControlType(controlName: string, containerType?: number): void;
@@ -208,10 +209,10 @@ declare global {
             resetBox(region: number, node?: Node, fromParent?: boolean): void;
             inheritBox(region: number, node: Node): void;
             actualRect(direction: string, dimension?: string): number;
-            previousSiblings(floating?: boolean, pageFlow?: boolean, lineBreak?: boolean, excluded?: boolean): Node[];
-            nextSiblings(floating?: boolean, pageFlow?: boolean, lineBreak?: boolean, excluded?: boolean): Node[];
-            getFirstChildElement(lineBreak?: boolean, excluded?: boolean): Element | null;
-            getLastChildElement(lineBreak?: boolean, excluded?: boolean): Element | null;
+            previousSiblings(options?: SiblingDirection): Node[];
+            nextSiblings(options?: SiblingDirection): Node[];
+            getFirstChildElement(options?: SiblingDirection): Element | null;
+            getLastChildElement(options?: SiblingDirection): Element | null;
         }
 
         class Node implements Node {}

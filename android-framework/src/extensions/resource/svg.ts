@@ -6,7 +6,7 @@ import { GradientTemplate } from '../../@types/resource';
 import Resource from '../../resource';
 import View from '../../view';
 
-import { convertColorStops } from '../../extensions/resource/background';
+import { convertColorStops } from './background';
 
 import { XMLNS_ANDROID } from '../../lib/constant';
 import { BUILD_ANDROID } from '../../lib/enumeration';

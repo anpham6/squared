@@ -35,7 +35,7 @@ declare global {
             getAfterInsideTemplate(id: number, depth: number): string;
             getAfterOutsideTemplate(id: number, depth: number): string;
             hasAppendProcessing(id: number): boolean;
-            includeElement(element: Element): boolean;
+            includeElement(element: Element, target?: string): boolean;
             cascadeDocument(templates: NodeTemplate<T>[], depth: number): string;
             getEnclosingTag(type: number, options: NodeTag<T>): string;
         }

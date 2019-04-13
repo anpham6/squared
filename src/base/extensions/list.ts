@@ -4,7 +4,7 @@ import Extension from '../extension';
 import Node from '../node';
 
 import { EXT_NAME } from '../lib/constant';
-import { BOX_STANDARD, NODE_RESOURCE } from '../lib/enumeration';
+import { NODE_RESOURCE } from '../lib/enumeration';
 
 const $css = squared.lib.css;
 
@@ -107,14 +107,5 @@ export default abstract class List<T extends Node> extends Extension<T> {
             item.data(EXT_NAME.LIST, 'mainData', mainData);
         });
         return undefined;
-    }
-
-    public postBaseLayout(node: T) {
-        if (node.paddingLeft > 0) {
-            node.modifyBox(BOX_STANDARD.PADDING_LEFT, null);
-        }
-        else {
-            node.modifyBox(BOX_STANDARD.MARGIN_LEFT, null);
-        }
     }
 }

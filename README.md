@@ -90,9 +90,10 @@ These settings are available in the global variable "squared" to customize your 
 ```javascript
 squared.settings = {
     builtInExtensions: [
-        'android.delegate.max-width-height',
-        'android.delegate.fixed',
         'android.delegate.percent',
+        'android.delegate.fixed',
+        'android.delegate.max-width-height',
+        'android.delegate.negative-x',
         'android.delegate.radiogroup',
         'android.delegate.scrollbar',
         'squared.external',

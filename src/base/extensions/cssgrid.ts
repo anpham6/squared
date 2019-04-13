@@ -165,7 +165,7 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                                     data.autoFill = true;
                                     break;
                                 default:
-                                    iterations = $util.convertInt(match[3]);
+                                    iterations = $util.convertInt(match[2]);
                                     break;
                             }
                             if (iterations > 0) {

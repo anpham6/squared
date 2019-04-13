@@ -2,10 +2,6 @@ export interface AccessibilityOptions {
     showLabel: boolean;
 }
 
-export interface GridOptions {
-    columnBalanceEqual: boolean;
-}
-
 export interface CssGridData<T> {
     children: Set<T>;
     row: CssGridDirectionData;

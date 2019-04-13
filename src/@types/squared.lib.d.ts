@@ -107,7 +107,7 @@ declare global {
             function formatPercent(value: string | number, round?: boolean): string;
             function formatString(value: string, ...params: string[]): string;
             function hasBit(value: number, offset: number): boolean;
-            function isNumber(value: string): boolean;
+            function isNumber(value: any): boolean;
             function isString(value: any): value is string;
             function isArray<T>(value: any): value is Array<T>;
             function isLength(value: string, percent?: boolean): boolean;

@@ -123,7 +123,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                         continue;
                     }
                     if (isBlockElement(current)) {
-                        const previousSiblings = current.previousSiblings(false);
+                        const previousSiblings = current.previousSiblings({ floating: false });
                         if (previousSiblings.length) {
                             const previous = previousSiblings.find(item => !item.floating) as T;
                             if (previous) {
@@ -160,10 +160,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                                     previous.css('marginBottom', $util.formatPX(marginBottom), true);
                                                 }
                                                 if (previous.visible) {
-                                                    bottomChild.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
-                                                    if (bottomChild.companion) {
-                                                        bottomChild.companion.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
-                                                    }
+                                                    resetMargin(bottomChild, BOX_STANDARD.MARGIN_BOTTOM);
                                                 }
                                             }
                                         }
@@ -176,25 +173,16 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                                     current.css('marginTop', $util.formatPX(marginTop), true);
                                                 }
                                                 if (current.visible) {
-                                                    topChild.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
-                                                    if (topChild.companion) {
-                                                        topChild.companion.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
-                                                    }
+                                                    resetMargin(topChild, BOX_STANDARD.MARGIN_TOP);
                                                 }
                                             }
                                         }
                                         if (marginBottom > 0 && marginTop > 0) {
                                             if (marginTop <= marginBottom) {
-                                                currentVisible.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
-                                                if (currentVisible.companion) {
-                                                    currentVisible.companion.modifyBox(BOX_STANDARD.MARGIN_TOP, null);
-                                                }
+                                                resetMargin(currentVisible, BOX_STANDARD.MARGIN_TOP);
                                             }
                                             else {
-                                                previousVisible.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
-                                                if (previousVisible.companion) {
-                                                    previousVisible.companion.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, null);
-                                                }
+                                                resetMargin(previousVisible, BOX_STANDARD.MARGIN_BOTTOM);
                                             }
                                         }
                                     }
@@ -219,8 +207,8 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
         }
         for (const node of this.application.processing.excluded) {
             if (!processed.has(node) && node.lineBreak && !node.lineBreakTrailing) {
-                const previousSiblings = node.previousSiblings(false) as T[];
-                const nextSiblings = node.nextSiblings(false) as T[];
+                const previousSiblings = node.previousSiblings({ floating: false }) as T[];
+                const nextSiblings = node.nextSiblings({ floating: false }) as T[];
                 let valid = false;
                 if (previousSiblings.length && nextSiblings.length) {
                     let above = previousSiblings.pop() as T;

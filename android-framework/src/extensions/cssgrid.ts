@@ -61,7 +61,15 @@ function getGridSize(mainData: CssGridData<View>, direction: string, node: View)
             return 0;
         }
     }
-    value += (data.count - 1) * data.gap;
+    value += data.gap * (data.count - 1);
+    if (node.contentBox) {
+        if ($util.isUserAgent($util.USER_AGENT.FIREFOX)) {
+            value += horizontal ? node.borderLeftWidth + node.borderRightWidth : node.borderTopWidth + node.borderBottomWidth;
+        }
+    }
+    else {
+        value += horizontal ? node.contentBoxWidth : node.contentBoxHeight;
+    }
     return (horizontal ? node.actualWidth : node.actualHeight) - value;
 }
 

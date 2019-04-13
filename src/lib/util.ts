@@ -479,7 +479,7 @@ export function hasBit(value: number, offset: number) {
     return (value & offset) === offset;
 }
 
-export function isNumber(value: string): boolean {
+export function isNumber(value: any) {
     return typeof value === 'string' && REGEXP_COMPILED.DECIMAL.test(value.trim());
 }
 
@@ -736,7 +736,7 @@ export function hasValue<T>(value: T): value is T {
     return value !== undefined && value !== null && value.toString().trim() !== '';
 }
 
-export function withinRange(a: number, b: number, offset = 0.5) {
+export function withinRange(a: number, b: number, offset = 1) {
     return b >= (a - offset) && b <= (a + offset);
 }
 

@@ -1,3 +1,5 @@
+import { SiblingDirection } from './@types/node';
+
 import Node from './node';
 import NodeList from './nodelist';
 
@@ -19,9 +21,8 @@ export default abstract class NodeGroup extends Node {
             }
             this.setBounds();
             this.saveAsInitial();
-            const actualParent = this.actualParent;
-            if (actualParent) {
-                this.css('direction', actualParent.dir);
+            if (this.actualParent) {
+                this.dir = this.actualParent.dir;
             }
         }
     }
@@ -37,14 +38,14 @@ export default abstract class NodeGroup extends Node {
         }
     }
 
-    public previousSiblings(floating = true, pageFlow = true, lineBreak = true, excluded = true) {
+    public previousSiblings(options: SiblingDirection = {}) {
         const node = this.item(0);
-        return node ? node.previousSiblings(floating, pageFlow, lineBreak, excluded) : [];
+        return node ? node.previousSiblings(options) : [];
     }
 
-    public nextSiblings(floating = true, pageFlow = true, lineBreak = true, excluded = true) {
+    public nextSiblings(options: SiblingDirection = {}) {
         const node = this.item();
-        return node ? node.nextSiblings(floating, pageFlow, lineBreak, excluded) : [];
+        return node ? node.nextSiblings(options) : [];
     }
 
     get actualParent() {
@@ -100,7 +101,7 @@ export default abstract class NodeGroup extends Node {
     }
 
     get multiline() {
-        return this.some(node => node.multiline);
+        return false;
     }
 
     get display() {

@@ -24,6 +24,7 @@ import ConstraintGuideline from './extensions/constraint/guideline';
 
 import DelegateFixed from './extensions/delegate/fixed';
 import DelegateMaxWidthHeight from './extensions/delegate/max-width-height';
+import DelegateNegativeX from './extensions/delegate/negative-x';
 import DelegatePercent from './extensions/delegate/percent';
 import DelegateRadioGroup from './extensions/delegate/radiogroup';
 import DelegateScrollBar from './extensions/delegate/scrollbar';
@@ -97,6 +98,7 @@ const appBase: AppFramework<T> = {
         delegate: {
             Fixed: DelegateFixed,
             MaxWidthHeight: DelegateMaxWidthHeight,
+            NegativeX: DelegateNegativeX,
             Percent: DelegatePercent,
             RadioGroup: DelegateRadioGroup,
             ScrollBar: DelegateScrollBar
@@ -218,6 +220,7 @@ const appBase: AppFramework<T> = {
             [EA.CONSTRAINT_GUIDELINE]: new ConstraintGuideline(EA.CONSTRAINT_GUIDELINE, framework),
             [EA.DELEGATE_FIXED]: new DelegateFixed(EA.DELEGATE_FIXED, framework),
             [EA.DELEGATE_MAXWIDTHHEIGHT]: new DelegateMaxWidthHeight(EA.DELEGATE_MAXWIDTHHEIGHT, framework),
+            [EA.DELEGATE_NEGATIVEX]: new DelegateNegativeX(EA.DELEGATE_NEGATIVEX, framework),
             [EA.DELEGATE_PERCENT]: new DelegatePercent(EA.DELEGATE_PERCENT, framework),
             [EA.DELEGATE_RADIOGROUP]: new DelegateRadioGroup(EA.DELEGATE_RADIOGROUP, framework),
             [EA.DELEGATE_SCROLLBAR]: new DelegateScrollBar(EA.DELEGATE_SCROLLBAR, framework),

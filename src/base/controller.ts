@@ -68,15 +68,20 @@ export default abstract class Controller<T extends Node> implements squared.base
         else {
             styleMap = $session.getElementCache(element, 'styleMap', this.application.processing.sessionId) || {};
             if ($util.isUserAgent($util.USER_AGENT.FIREFOX)) {
-                if (styleMap.display === undefined) {
-                    switch (element.tagName) {
-                        case 'INPUT':
-                        case 'TEXTAREA':
-                        case 'SELECT':
-                        case 'BUTTON':
+                switch (element.tagName) {
+                    case 'INPUT':
+                    case 'SELECT':
+                    case 'BUTTON':
+                    case 'TEXTAREA':
+                        if (styleMap.display === undefined) {
                             styleMap.display = 'inline-block';
-                            break;
-                    }
+                        }
+                        break;
+                    case 'FIELDSET':
+                        if (styleMap.display === undefined) {
+                            styleMap.display = 'block';
+                        }
+                        break;
                 }
             }
             switch (element.tagName) {
@@ -95,8 +100,26 @@ export default abstract class Controller<T extends Node> implements squared.base
                                     }
                                 }
                             }
-                            break;
                         }
+                        case 'submit':
+                        case 'button':
+                            if (styleMap.textAlign === undefined) {
+                                styleMap.textAlign = 'center';
+                            }
+                            if (styleMap.verticalAlign === undefined) {
+                                styleMap.verticalAlign = 'text-bottom';
+                            }
+                            break;
+                    }
+                    break;
+                case 'BUTTON':
+                    if (styleMap.textAlign === undefined) {
+                        styleMap.textAlign = 'center';
+                    }
+                case 'TEXTAREA':
+                case 'SELECT':
+                    if (styleMap.verticalAlign === undefined && (element.tagName !== 'SELECT' || (<HTMLSelectElement> element).size > 1)) {
+                        styleMap.verticalAlign = 'text-bottom';
                     }
                     break;
                 case 'FORM':
@@ -213,14 +236,14 @@ export default abstract class Controller<T extends Node> implements squared.base
         return this._beforeOutside[id] !== undefined || this._beforeInside[id] !== undefined || this._afterInside[id] !== undefined || this._afterOutside[id] !== undefined;
     }
 
-    public includeElement(element: Element) {
+    public includeElement(element: Element, target?: string) {
         const rect = $session.getClientRect(element, this.application.processing.sessionId);
         if (withinViewport(rect)) {
-            if (rect.width !== 0 && rect.height !== 0) {
+            if (rect.width > 0 && rect.height > 0) {
                 return true;
             }
-            const style = $css.getStyle(element);
-            return style.getPropertyValue('display') === 'block' && (parseInt(style.getPropertyValue('margin-top')) !== 0 || parseInt(style.getPropertyValue('margin-bottom')) !== 0) || style.getPropertyValue('clear') !== 'none';
+            const style = $css.getStyle(element, target);
+            return rect.width > 0 && style.getPropertyValue('float') !== 'none' || style.getPropertyValue('display') === 'block' && (parseInt(style.getPropertyValue('margin-top')) !== 0 || parseInt(style.getPropertyValue('margin-bottom')) !== 0) || style.getPropertyValue('clear') !== 'none';
         }
         return false;
     }

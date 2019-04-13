@@ -27,7 +27,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                     for (let i = 0; i < renderChildren.length; i++) {
                         let found = false;
                         for (const value of renderChildren[i].combine('_', 'android')) {
-                            if (value.startsWith('style=')) {
+                            if (!found && value.startsWith('style=')) {
                                 if (i === 0) {
                                     style = value;
                                 }

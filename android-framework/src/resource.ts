@@ -164,7 +164,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
             if (srcset !== '') {
                 const filepath = element.src.substring(0, element.src.lastIndexOf('/') + 1);
                 for (const value of srcset.split($util.REGEXP_COMPILED.SEPARATOR)) {
-                    const match = /^(.+)\s*(?:(\d*\.?\d*)(x|w))?$/.exec(value.trim());
+                    const match = /^(.+)\s*(?:(\d*\.?\d*)[xw])?$/.exec(value.trim());
                     if (match) {
                         if (!match[2]) {
                             match[2] = '1';

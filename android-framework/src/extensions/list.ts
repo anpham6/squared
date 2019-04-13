@@ -114,6 +114,8 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         top = position.top;
                         left = position.left;
                         gravity = 'left';
+                        minWidth = 0;
+                        adjustPadding = false;
                     }
                     image = Resource.addImageURL(mainData.imageSrc);
                 }
@@ -124,7 +126,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 }
                 else {
                     const length = mainData.ordinal ? mainData.ordinal.length : 1;
-                    paddingRight = Math.max(minWidth / (image ? 8 : length * 4), 4);
+                    paddingRight = Math.max(minWidth / (image ? 6 : length * 4), 4);
                 }
                 const options = createViewAttribute({
                     android: {
@@ -160,7 +162,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         Object.assign(options.android, {
                             src: `@drawable/${image}`,
                             scaleType: !inside && gravity === 'right' ? 'fitEnd' : 'fitStart',
-                            baselineAlignBottom: 'true'
+                            baselineAlignBottom: adjustPadding ? 'true' : ''
                         });
                         ordinal.setControlType(CONTAINER_ANDROID.IMAGE, CONTAINER_NODE.IMAGE);
                     }
@@ -208,6 +210,14 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             if (columnCount > 0) {
                 node.android('layout_width', '0px');
                 node.android('layout_columnWeight', '1');
+            }
+            if (adjustPadding) {
+                if (parent.paddingLeft > 0) {
+                    parent.modifyBox($enum.BOX_STANDARD.PADDING_LEFT, null);
+                }
+                else {
+                    parent.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, null);
+                }
             }
             if (node.length && node.every(item => item.baseline)) {
                 const layout = new $Layout(

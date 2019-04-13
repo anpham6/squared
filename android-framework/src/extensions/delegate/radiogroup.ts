@@ -50,8 +50,13 @@ export default class RadioGroup<T extends View> extends squared.base.Extension<T
 
     public processNode(node: T, parent: T) {
         if (node.length) {
-            node.setControlType(CONTROL_NAME, node.block ? CONTAINER_NODE.BLOCK : CONTAINER_NODE.INLINE);
+            node.setControlType(CONTROL_NAME, CONTAINER_NODE.LINEAR);
+            node.alignmentType |= $enum.NODE_ALIGNMENT.HORIZONTAL;
             node.android('orientation', AXIS_ANDROID.HORIZONTAL);
+            if (node.baseline) {
+                node.css('verticalAlign', '0px', true);
+                node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, -4);
+            }
             node.render(parent);
             return {
                 output: <NodeXmlTemplate<T>> {
@@ -92,9 +97,10 @@ export default class RadioGroup<T extends View> extends squared.base.Extension<T
                 if (parent.layoutConstraint) {
                     container.companion = replacement || node;
                 }
-                container.setControlType(CONTROL_NAME, CONTAINER_NODE.INLINE);
+                container.setControlType(CONTROL_NAME, CONTAINER_NODE.LINEAR);
                 container.inherit(node, 'alignment');
-                container.css('verticalAlign', 'text-bottom');
+                container.css('verticalAlign', '0px');
+                container.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, -4);
                 container.exclude({ resource: $enum.NODE_RESOURCE.ASSET });
                 container.each((item: T, index) => {
                     if (item !== node) {

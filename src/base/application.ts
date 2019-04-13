@@ -8,16 +8,14 @@ import Node from './node';
 import NodeList from './nodelist';
 import Resource from './resource';
 
-import { APP_SECTION, BOX_STANDARD, CSS_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } from './lib/enumeration';
+import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } from './lib/enumeration';
 
 const $css = squared.lib.css;
 const $dom = squared.lib.dom;
 const $session = squared.lib.session;
 const $util = squared.lib.util;
 
-const REGEXP_CACHED: ObjectMap<RegExp> = {
-    PSEUDO_CONTENT: /^(padding|border)/
-};
+const REGEXP_CACHED: ObjectMap<RegExp> = {};
 let NodeConstructor!: Constructor<Node>;
 
 function prioritizeExtensions<T extends Node>(element: HTMLElement, extensions: Extension<T>[], documentRoot: HTMLElement | null = null) {
@@ -630,13 +628,13 @@ export default class Application<T extends Node> implements squared.base.Applica
                             parent = node.absoluteParent as T;
                             while (parent && parent !== rootNode) {
                                 if (!outside) {
-                                    if (parent.css('overflow') === 'hidden' || node.has('top', CSS_STANDARD.ZERO) || node.has('right', CSS_STANDARD.ZERO) || node.has('bottom', CSS_STANDARD.ZERO) || node.has('left', CSS_STANDARD.ZERO)) {
+                                    if (parent.css('overflow') === 'hidden' || node.cssInitial('top') === '0px' || node.cssInitial('right') === '0px' || node.cssInitial('bottom') === '0px' || node.cssInitial('left') === '0px') {
                                         break;
                                     }
                                     else if (
-                                        (node.left < 0 || node.marginLeft < 0) && node.outsideX(parent.box) ||
+                                        (node.left < 0 || node.marginLeft < 0 || !parent.pageFlow && node.left > 0) && node.outsideX(parent.box) ||
                                         !node.has('left') && node.right !== 0 && node.outsideX(parent.box) ||
-                                        (node.top < 0 || node.marginTop < 0) && node.outsideY(parent.box) ||
+                                        (node.top < 0 || node.marginTop < 0 || !parent.pageFlow && node.top > 0) && node.outsideY(parent.box) ||
                                         !node.has('top') && node.bottom !== 0 && node.outsideY(parent.box))
                                     {
                                         outside = true;
@@ -951,7 +949,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                     if (m === 0) {
                                         const next = item.nextSiblings().shift();
                                         if (next) {
-                                            if (item.blockStatic || item.float === 'right' && next.blockStatic || next.alignedVertically([item], [item], cleared)) {
+                                            if (item.blockStatic || next.alignedVertically([item], [item], cleared)) {
                                                 vertical.push(item);
                                             }
                                             else {
@@ -1139,6 +1137,12 @@ export default class Application<T extends Node> implements squared.base.Applica
                 }
             }
         }
+        this.processing.cache.sort((a, b) => {
+            if (a.length > 0 && b.length === 0) {
+                return -1;
+            }
+            return 0;
+        });
         this.session.cache.concat(this.processing.cache.children);
         this.session.excluded.concat(this.processing.excluded.children);
         for (const node of this.processing.cache) {
@@ -1660,7 +1664,7 @@ export default class Application<T extends Node> implements squared.base.Applica
 
     private createPseduoElement(element: HTMLElement, target: string) {
         const styleMap: StringMap = $session.getElementCache(element, `styleMap::${target}`, this.processing.sessionId);
-        if (styleMap && styleMap.content !== undefined && this.controllerHandler.includeElement(element)) {
+        if (styleMap && styleMap.content && this.controllerHandler.includeElement(element, target)) {
             let value: string = styleMap.content;
             if (value === 'inherit') {
                 let current = element.parentElement;
@@ -1923,8 +1927,9 @@ export default class Application<T extends Node> implements squared.base.Applica
         for (const selectorText of item.selectorText.split($util.REGEXP_COMPILED.SEPARATOR)) {
             const specificity = $css.getSpecificity(selectorText);
             const [selector, target] = selectorText.split('::');
+            const targetElt = target ? '::' + target : '';
             document.querySelectorAll(selector || '*').forEach((element: HTMLElement) => {
-                const style = $css.getStyle(element, target);
+                const style = $css.getStyle(element, targetElt);
                 const fontSize = $util.parseUnit(style.getPropertyValue('font-size'));
                 const styleMap: StringMap = {};
                 for (const attr of fromRule) {
@@ -1946,8 +1951,8 @@ export default class Application<T extends Node> implements squared.base.Applica
                         }
                     }
                 }
-                const attrStyle = `styleMap${target ? '::' + target : ''}`;
-                const attrSpecificity = `styleSpecificity${target ? '::' + target : ''}`;
+                const attrStyle = `styleMap${targetElt}`;
+                const attrSpecificity = `styleSpecificity${targetElt}`;
                 const styleData = $session.getElementCache(element, attrStyle, this.processing.sessionId);
                 if (styleData) {
                     const specificityData: ObjectMap<number> = $session.getElementCache(element, attrSpecificity, this.processing.sessionId) || {};
@@ -1963,7 +1968,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                     for (const attr in styleMap) {
                         specificityData[attr] = specificity;
                     }
-                    $session.setElementCache(element, `style${target ? '::' + target : ''}`, '0', style);
+                    $session.setElementCache(element, `style${targetElt}`, '0', style);
                     $session.setElementCache(element, attrStyle, this.processing.sessionId, styleMap);
                     $session.setElementCache(element, attrSpecificity, this.processing.sessionId, specificityData);
                 }

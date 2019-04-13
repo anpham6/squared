@@ -326,7 +326,8 @@ function getPercentOffset(direction: string, position: RectPosition, backgroundS
             if (backgroundSize !== 'cover') {
                 const value = orientation.length === 4 ? orientation[1] : orientation[0];
                 if ($util.isPercent(value)) {
-                    return sign * (direction === 'left' ? position.leftAsPercent : position.rightAsPercent) * (bounds.width - dimension.width);
+                    const result = (direction === 'left' ? position.leftAsPercent : position.rightAsPercent) * (bounds.width - dimension.width);
+                    return sign === -1 ? Math.abs(result) * -1 : result;
                 }
             }
             else {
@@ -337,7 +338,8 @@ function getPercentOffset(direction: string, position: RectPosition, backgroundS
             if (backgroundSize !== 'contain') {
                 const value = orientation.length === 4 ? orientation[3] : orientation[1];
                 if ($util.isPercent(value)) {
-                    return sign * (direction === 'top' ? position.topAsPercent : position.bottomAsPercent) * (bounds.height - dimension.height);
+                    const result = (direction === 'top' ? position.topAsPercent : position.bottomAsPercent) * (bounds.height - dimension.height);
+                    return sign === -1 ? Math.abs(result) * -1 : result;
                 }
             }
             else {
@@ -458,6 +460,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     stored.borderLeft
                 ];
                 const borderVisible: boolean[] = [];
+                let resizable = true;
                 let borderStyle = true;
                 let borderData: BorderAttribute | undefined;
                 for (let i = 0; i < borders.length; i++) {
@@ -673,10 +676,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 case 'contain':
                                     break;
                                 case 'cover':
-                                    gravity = 'center';
                                     tileMode = '';
                                     tileModeX = '';
                                     tileModeY = '';
+                                    gravity = '';
                                     break;
                                 case '100%':
                                     gravityX = 'fill_horizontal';
@@ -689,7 +692,12 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     backgroundSize[i].split(' ').forEach((size, index) => {
                                         if (size !== 'auto') {
                                             if (index === 0) {
-                                                width = node.parseUnit(size, true, false);
+                                                if (size === '100%') {
+                                                    gravityX = 'fill_horizontal';
+                                                }
+                                                else {
+                                                    width = node.parseUnit(size, true, false);
+                                                }
                                             }
                                             else {
                                                 if (size === '100%') {
@@ -712,13 +720,14 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                             const ratio = Math.max(bounds.width / dimension.width, bounds.height / dimension.height);
                                             width = dimension.width * ratio;
                                             height = dimension.height * ratio;
+                                            gravity = 'top|center_horizontal';
                                         }
                                         else {
                                             width = 0;
                                             height = 0;
-                                            gravityX = 'fill_horizontal';
-                                            gravityY = 'fill_vertical';
+                                            gravity = 'fill';
                                         }
+                                        resizable = false;
                                         break;
                                     case 'contain':
                                         if (dimension.width !== bounds.width && dimension.height !== bounds.height) {
@@ -729,9 +738,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         else {
                                             width = 0;
                                             height = 0;
-                                            gravityX = 'fill_horizontal';
-                                            gravityY = 'fill_vertical';
                                         }
+                                        resizable = false;
                                         break;
                                     default:
                                         if (width === 0 && (height > 0 || gravityY === 'fill_vertical') && gravityX !== 'fill_horizontal' && tileMode !== 'repeat' && tileModeX !== 'repeat') {
@@ -1040,7 +1048,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             $xml.applyTemplate('layer-list', LAYERLIST_TMPL, layerListData)
                         );
                     }
-                    if (this.options.autoSizeBackgroundImage && backgroundImage.length && !node.documentRoot && !node.is(CONTAINER_NODE.IMAGE) && node.renderParent && !node.renderParent.tableElement && node.hasProcedure($enum.NODE_PROCEDURE.AUTOFIT)) {
+                    if (this.options.autoSizeBackgroundImage && resizable && backgroundImage.length && !node.documentRoot && !node.is(CONTAINER_NODE.IMAGE) && node.renderParent && !node.renderParent.tableElement && node.hasProcedure($enum.NODE_PROCEDURE.AUTOFIT)) {
                         let parentWidth = 0;
                         let parentHeight = 0;
                         for (const image of imageDimensions) {

@@ -28,7 +28,7 @@ const CHAIN_MAP = {
     rightLeftBottomTop: ['rightLeft', 'bottomTop'],
     leftRightTopBottom: ['leftRight', 'topBottom'],
     widthHeight: ['Width', 'Height'],
-    horizontalVertical: ['Horizontal', 'Vertical']
+    horizontalVertical: [AXIS_ANDROID.HORIZONTAL, AXIS_ANDROID.VERTICAL]
 };
 
 function adjustGrowRatio(parent: View, items: View[], horizontal: boolean) {
@@ -162,13 +162,6 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 if (index !== -1) {
                     const container = (<android.base.Controller<T>> this.application.controllerHandler).createNodeWrapper(node, parent);
                     container.flexbox = node.flexbox;
-                    container.saveAsInitial(true);
-                    container.cssApply({
-                        marginLeft: '0px',
-                        marginRight: '0px',
-                        marginTop: '0px',
-                        marginBottom: '0px'
-                    });
                     mainData.children[index] = container;
                     if (node.autoMargin.horizontal && !node.hasWidth) {
                         node.android('layout_width', 'wrap_content');
@@ -206,7 +199,6 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         if (pageFlow.length) {
                             if (mainData.rowDirection) {
                                 item.android('layout_width', 'match_parent');
-                                segmented.push(item);
                                 chainHorizontal.push(pageFlow);
                             }
                             else {
@@ -224,10 +216,10 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     }
                                     item.constraint.horizontal = true;
                                 }
-                                segmented.push(item);
                                 chainVertical.push(pageFlow);
                                 previous = pageFlow;
                             }
+                            segmented.push(item);
                         }
                     }
                 });
@@ -262,8 +254,8 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
             [chainHorizontal, chainVertical].forEach((partition, index) => {
                 const horizontal = index === 0;
                 const inverse = horizontal ? 1 : 0;
-                const HV = CHAIN_MAP.horizontalVertical[index];
-                const VH = CHAIN_MAP.horizontalVertical[inverse];
+                const orientation = CHAIN_MAP.horizontalVertical[index];
+                const orientationInverse = CHAIN_MAP.horizontalVertical[inverse];
                 const WH = CHAIN_MAP.widthHeight[index];
                 const HW = CHAIN_MAP.widthHeight[inverse];
                 const LT = CHAIN_MAP.leftTop[index];
@@ -274,34 +266,36 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 const RLBT = CHAIN_MAP.rightLeftBottomTop[index];
                 const WHL = WH.toLowerCase();
                 const HWL = HW.toLowerCase();
-                const orientation = HV.toLowerCase();
+                const VHU = $util.capitalize(orientationInverse);
+                const dimensionDirection = node[`has${WH}`];
                 const hasDimension = (chain: T, dimension: boolean) => chain[`has${dimension ? HW : WH}`] || chain.has(dimension ? HWL : WHL, $enum.CSS_STANDARD.PERCENT);
                 function setLayoutWeight(chain: T, value: number) {
-                    chain.app(`layout_constraint${HV}_weight`, $math.truncate(value, chain.localSettings.floatPrecision));
+                    chain.app(`layout_constraint${$util.capitalize(orientation)}_weight`, $math.truncate(value, chain.localSettings.floatPrecision));
                     chain.android(`layout_${WH.toLowerCase()}`, '0px');
                 }
                 for (let i = 0; i < partition.length; i++) {
                     const seg = partition[i];
                     const segStart = seg[0].actualAnchor as T;
                     const segEnd = seg[seg.length - 1].actualAnchor as T;
-                    const segGroup = seg.every(item => item.hasAlign($enum.NODE_ALIGNMENT.SEGMENTED));
-                    const justifyContent = !segGroup && seg.every(item => item.flexbox.grow === 0);
+                    const opposing = seg === segmented;
+                    const justifyContent = !opposing && seg.every(item => item.flexbox.grow === 0);
                     const spreadInside = justifyContent && (mainData.justifyContent === 'space-between' || mainData.justifyContent === 'space-around' && seg.length > 1);
                     const layoutWeight: T[] = [];
                     let growAvailable = 0;
                     let parentEnd = true;
                     let baseline: T | undefined;
-                    const maxSize = $math.maxArray($util.objectMap(seg, item => item.initial.bounds ? item.initial.bounds[HWL] : 0));
-                    if (segGroup) {
-                        if (node[`has${WH}`]) {
+                    const sizeMap = new Set<number>($util.objectMap(seg, item => item.initial.bounds ? item.initial.bounds[HWL] : 0));
+                    const maxSize = sizeMap.size > 1 ? $math.maxArray(Array.from(sizeMap)) : 0;
+                    if (opposing) {
+                        if (dimensionDirection) {
                             let chainStyle = 'spread';
-                            let bias = '0';
+                            let bias = 0;
                             switch (mainData.alignContent) {
                                 case 'left':
                                 case 'right':
                                 case 'flex-end':
                                     chainStyle = 'packed';
-                                    bias = '1';
+                                    bias = 1;
                                     parentEnd = false;
                                     break;
                                 case 'baseline':
@@ -312,8 +306,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     parentEnd = false;
                                     break;
                             }
-                            segStart.app(`layout_constraint${HV}_chainStyle`, chainStyle);
-                            segStart.app(`layout_constraint${HV}_bias`, bias);
+                            segStart.anchorStyle(orientation, chainStyle, bias);
                         }
                     }
                     else {
@@ -330,8 +323,8 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         if (previous) {
                             chain.anchor(LRTB, (previous.outerParent || previous).documentId);
                         }
-                        if (segGroup) {
-                            if (parentEnd && seg.length > 1 && node[`has${WH}`]) {
+                        if (opposing) {
+                            if (parentEnd && seg.length > 1 && dimensionDirection) {
                                 setLayoutWeight(chainActual, 1);
                             }
                         }
@@ -400,9 +393,9 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             }
                             switch (chain.flexbox.alignSelf) {
                                 case 'stretch':
-                                    chain.anchorParent(VH.toLowerCase());
+                                    chain.anchorParent(orientationInverse);
                                     chainActual.android(`layout_${HWL}`, '0px');
-                                    chainActual.app(`layout_constraint${VH}_weight`, '1');
+                                    chainActual.app(`layout_constraint${VHU}_weight`, '1');
                                     break;
                                 case 'start':
                                 case 'flex-start':
@@ -445,7 +438,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                 contentChild.mergeGravity('layout_gravity', horizontal ? 'center_vertical' : 'center_horizontal');
                                             }
                                             else {
-                                                chain.anchorParent(VH.toLowerCase());
+                                                chain.anchorParent(orientationInverse);
                                             }
                                             break;
                                         case 'space-between':
@@ -465,7 +458,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                     contentChild.mergeGravity('layout_gravity', horizontal ? 'center_vertical' : 'center_horizontal');
                                                 }
                                                 else {
-                                                    chain.anchorParent(VH.toLowerCase());
+                                                    chain.anchorParent(orientationInverse);
                                                 }
                                             }
                                             else {
@@ -481,9 +474,15 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                             chain.anchor(mainData.wrapReverse ? BR : TL, 'parent');
                                             if (!hasDimension(chain, true)) {
                                                 chain.anchor(mainData.wrapReverse ? TL : BR, 'parent');
-                                                if (node.has(HWL) || chain.initial.bounds && chain.initial.bounds[HWL] < maxSize) {
-                                                    chainActual.android(`layout_${HWL}`, '0px');
-                                                    chainActual.app(`layout_constraint${VH}_weight`, '1');
+                                                const stretchable = node.has(HWL);
+                                                if (stretchable || sizeMap.size === 1 || chain.initial.bounds && chain.initial.bounds[HWL] < maxSize) {
+                                                    if (!stretchable && sizeMap.size === 1) {
+                                                        chainActual.android(`layout_${HWL}`, 'wrap_content');
+                                                    }
+                                                    else {
+                                                        chainActual.android(`layout_${HWL}`, '0px');
+                                                        chainActual.app(`layout_constraint${VHU}_weight`, '1');
+                                                    }
                                                     const child = chainActual.innerChild as T;
                                                     if (child && !child.autoMargin[orientation]) {
                                                         child.android(`layout_${HWL}`, 'match_parent');
@@ -509,8 +508,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     }
                     segStart.anchor(LT, 'parent');
                     segEnd.anchor(RB, 'parent');
-                    if (!segGroup && (horizontal || mainData.columnDirection)) {
-                        const chainStyle = `layout_constraint${HV}_chainStyle`;
+                    if (!opposing && (horizontal || mainData.columnDirection)) {
                         let centered = false;
                         if (justifyContent) {
                             switch (mainData.justifyContent) {
@@ -520,13 +518,11 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     }
                                 case 'start':
                                 case 'flex-start':
-                                    segStart.app(chainStyle, 'packed');
-                                    segStart.app(`layout_constraint${HV}_bias`, '0');
+                                    segStart.anchorStyle(orientation);
                                     break;
                                 case 'center':
                                     if (seg.length > 1) {
-                                        segStart.app(chainStyle, 'packed');
-                                        segStart.app(`layout_constraint${HV}_bias`, '0.5');
+                                        segStart.anchorStyle(orientation, 'packed', 0.5);
                                     }
                                     centered = true;
                                     break;
@@ -536,8 +532,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     }
                                 case 'end':
                                 case 'flex-end':
-                                    segStart.app(chainStyle, 'packed');
-                                    segStart.app(`layout_constraint${HV}_bias`, '1');
+                                    segStart.anchorStyle(orientation, 'packed', 1);
                                     break;
                                 case 'space-between':
                                     if (seg.length === 1) {
@@ -546,9 +541,10 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     break;
                                 case 'space-evenly':
                                     if (seg.length > 1) {
-                                        segStart.app(chainStyle, 'spread');
+                                        segStart.anchorStyle(orientation, 'spread');
+                                        const HVU = $util.capitalize(orientation);
                                         for (const item of seg) {
-                                            item.app(`layout_constraint${HV}_weight`, (item.flexbox.grow || 1).toString());
+                                            item.app(`layout_constraint${HVU}_weight`, (item.flexbox.grow || 1).toString());
                                         }
                                     }
                                     else {
@@ -579,11 +575,10 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 !horizontal && $util.withinRange(node.box.top, segStart.linear.top) && $util.withinRange(segEnd.linear.bottom, node.box.bottom) && !seg.some(item => item.autoMargin.vertical)
                            ))
                         {
-                            segStart.app(chainStyle, 'spread_inside', false);
+                            segStart.anchorStyle(orientation, 'spread_inside', 0, false);
                         }
                         else if (!centered) {
-                            segStart.app(chainStyle, 'packed', false);
-                            segStart.app(`layout_constraint${HV}_bias`, mainData.directionReverse ? '1' : '0', false);
+                            segStart.anchorStyle(orientation, 'packed', mainData.directionReverse ? 1 : 0, false);
                         }
                     }
                 }

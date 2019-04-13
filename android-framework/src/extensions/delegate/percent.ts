@@ -3,21 +3,16 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 import $Layout = squared.base.Layout;
 
 const $enum = squared.base.lib.enumeration;
-const $util = squared.lib.util;
 
 export default class Percent<T extends android.base.View> extends squared.base.Extension<T> {
     public condition(node: T, parent: T) {
-        return node.pageFlow && parent.layoutVertical && node.has('width', $enum.CSS_STANDARD.PERCENT, { not: '100%' }) && !node.documentBody && !node.imageElement;
+        return node.pageFlow && (parent.layoutVertical || parent.layoutFrame && node.singleChild) && node.has('width', $enum.CSS_STANDARD.PERCENT, { not: '100%' }) && !node.documentBody && !node.imageElement;
     }
 
     public processNode(node: T, parent: T) {
         const container = (<android.base.Controller<T>> this.application.controllerHandler).createNodeWrapper(node, parent);
         container.android('layout_width', 'match_parent');
-        container.android('layout_height', 'wrap_content');
-        if (!node.has('height', $enum.CSS_STANDARD.LENGTH)) {
-            node.css('height', $util.formatPX(node.bounds.height), true);
-        }
-        node.resetBox($enum.BOX_STANDARD.MARGIN, container, true);
+        container.android('layout_height', node.has('height', $enum.CSS_STANDARD.PERCENT) ? 'match_parent' : 'wrap_content');
         return {
             parent: container,
             renderAs: container,
@@ -29,7 +24,15 @@ export default class Percent<T extends android.base.View> extends squared.base.E
                     $enum.NODE_ALIGNMENT.SINGLE,
                     container.children as T[]
                 )
-            )
+            ),
+            include: true
         };
+    }
+
+    public postConstraints(node: T) {
+        const parent = node.parent;
+        if (parent && parent.visible) {
+            node.resetBox($enum.BOX_STANDARD.MARGIN, parent, true);
+        }
     }
 }

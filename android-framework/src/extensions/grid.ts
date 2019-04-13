@@ -107,7 +107,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
     }
 
     public postBaseLayout(node: T) {
-        if (!(node.tableElement && node.css('borderCollapse') === 'collapse')) {
+        if (node.css('borderCollapse') !== 'collapse') {
             const mainData: GridData = node.data($const.EXT_NAME.GRID, 'mainData');
             if (mainData) {
                 node.renderEach(item => {

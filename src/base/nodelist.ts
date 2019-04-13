@@ -59,18 +59,24 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
 
     public static baseline<T extends Node>(list: T[], text = false) {
         let baseline = $util.filterArray(list, item => !item.baselineAltered && !item.floating);
-        if (baseline.length === 0) {
-            return baseline;
+        if (baseline.length) {
+            list = baseline;
         }
         else {
-            list = baseline;
+            return baseline;
         }
         baseline = $util.filterArray(list, item => item.textElement || item.baseline && (item.length === 0 || item.every(child => child.baseline)));
         if (baseline.length) {
             list = baseline;
         }
+        else {
+            return baseline;
+        }
         if (text) {
-            $util.spliceArray(list, item => item.imageElement || !item.naturalElement);
+            $util.spliceArray(list, item => !(item.textElement && item.naturalElement));
+            if (list.length === 0) {
+                return list;
+            }
         }
         let lineHeight = 0;
         let boundsHeight = 0;
