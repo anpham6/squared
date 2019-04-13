@@ -226,7 +226,7 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                             i++;
                         }
                         else if (REGEXP_GRID.UNIT.test(match[1])) {
-                            data.unit.push(convertLength(node, match[1]));
+                            data.unit.push(match[1] === 'auto' ? 'auto' : convertLength(node, match[1]));
                             data.unitMin.push('');
                             data.repeat.push(false);
                             i++;
@@ -351,23 +351,25 @@ export default class CssGrid<T extends Node> extends Extension<T> {
         }
         else {
             node.css('gridTemplateAreas').split(/"[\s\n]+"/).forEach((template, i) => {
-                const templateAreas = mainData.templateAreas;
-                $util.trimString(template.trim(), '"').split(' ').forEach((area, j) => {
-                    if (area !== '.') {
-                        if (templateAreas[area] === undefined) {
-                            templateAreas[area] = {
-                                rowStart: i,
-                                rowSpan: 1,
-                                columnStart: j,
-                                columnSpan: 1
-                            };
+                if (template !== 'none') {
+                    const templateAreas = mainData.templateAreas;
+                    $util.trimString(template.trim(), '"').split(' ').forEach((area, j) => {
+                        if (area !== '.') {
+                            if (templateAreas[area] === undefined) {
+                                templateAreas[area] = {
+                                    rowStart: i,
+                                    rowSpan: 1,
+                                    columnStart: j,
+                                    columnSpan: 1
+                                };
+                            }
+                            else {
+                                templateAreas[area].rowSpan = (i - templateAreas[area].rowStart) + 1;
+                                templateAreas[area].columnSpan = (j - templateAreas[area].columnStart) + 1;
+                            }
                         }
-                        else {
-                            templateAreas[area].rowSpan = (i - templateAreas[area].rowStart) + 1;
-                            templateAreas[area].columnSpan = (j - templateAreas[area].columnStart) + 1;
-                        }
-                    }
-                });
+                    });
+                }
             });
             node.each((item, index) => {
                 const positions = [
@@ -379,52 +381,54 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                 const placement: number[] = [];
                 let rowSpan = 1;
                 let columnSpan = 1;
-                for (let i = 0; i < positions.length; i++) {
-                    const name = positions[i];
-                    let template = mainData.templateAreas[name];
-                    if (template) {
-                        switch (i) {
-                            case 0:
-                                placement[0] = template.rowStart + 1;
-                                break;
-                            case 1:
-                                placement[1] = template.columnStart + 1;
-                                break;
-                            case 2:
-                                placement[2] = template.rowStart + template.rowSpan + 1;
-                                break;
-                            case 3:
-                                placement[3] = template.columnStart + template.columnSpan + 1;
-                                break;
+                if (Object.keys(mainData.templateAreas).length) {
+                    for (let i = 0; i < positions.length; i++) {
+                        const name = positions[i];
+                        let template = mainData.templateAreas[name];
+                        if (template) {
+                            switch (i) {
+                                case 0:
+                                    placement[0] = template.rowStart + 1;
+                                    break;
+                                case 1:
+                                    placement[1] = template.columnStart + 1;
+                                    break;
+                                case 2:
+                                    placement[2] = template.rowStart + template.rowSpan + 1;
+                                    break;
+                                case 3:
+                                    placement[3] = template.columnStart + template.columnSpan + 1;
+                                    break;
+                            }
                         }
-                    }
-                    else {
-                        const match = REGEXP_GRID.STARTEND.exec(name);
-                        if (match) {
-                            template = mainData.templateAreas[match[1]];
-                            if (template) {
-                                if (match[2] === 'start') {
-                                    switch (i) {
-                                        case 0:
-                                        case 2:
-                                            placement[i] = template.rowStart + 1;
-                                            break;
-                                        case 1:
-                                        case 3:
-                                            placement[i] = template.columnStart + 1;
-                                            break;
+                        else {
+                            const match = REGEXP_GRID.STARTEND.exec(name);
+                            if (match) {
+                                template = mainData.templateAreas[match[1]];
+                                if (template) {
+                                    if (match[2] === 'start') {
+                                        switch (i) {
+                                            case 0:
+                                            case 2:
+                                                placement[i] = template.rowStart + 1;
+                                                break;
+                                            case 1:
+                                            case 3:
+                                                placement[i] = template.columnStart + 1;
+                                                break;
+                                        }
                                     }
-                                }
-                                else {
-                                    switch (i) {
-                                        case 0:
-                                        case 2:
-                                            placement[i] = template.rowStart + template.rowSpan + 1;
-                                            break;
-                                        case 1:
-                                        case 3:
-                                            placement[i] = template.columnStart + template.columnSpan + 1;
-                                            break;
+                                    else {
+                                        switch (i) {
+                                            case 0:
+                                            case 2:
+                                                placement[i] = template.rowStart + template.rowSpan + 1;
+                                                break;
+                                            case 1:
+                                            case 3:
+                                                placement[i] = template.columnStart + template.columnSpan + 1;
+                                                break;
+                                        }
                                     }
                                 }
                             }
@@ -487,7 +491,7 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                             if (named) {
                                 const nameIndex = parseInt(alias[0]);
                                 if (nameIndex <= named.length) {
-                                    placement[i] = named[nameIndex - 1];
+                                    placement[i] = named[nameIndex - 1] + (alias[1] === positions[i - 2] ? 1 : 0);
                                 }
                             }
                         }
@@ -752,7 +756,6 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                 mainData.row.count = mainData.rowData.length;
                 mainData.column.count = columnCount;
                 const modified = new Set<T>();
-                columnCount = mainData.column.unit.length;
                 for (let i = 0; i < mainData.row.count; i++) {
                     for (let j = 0; j < columnCount; j++) {
                         const column = mainData.rowData[i][j] as T[];

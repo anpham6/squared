@@ -218,7 +218,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                             largest = previous[j];
                                         }
                                     }
-                                    const offset = item.linear.left - largest.actualRight();
+                                    const offset = item.linear.left - largest.actualRect('right');
                                     if (offset > 0) {
                                         item.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, offset);
                                     }

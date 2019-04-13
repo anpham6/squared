@@ -218,67 +218,64 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
             }
         }
         for (const node of this.application.processing.excluded) {
-            if (!processed.has(node) && node.lineBreak) {
-                const actualParent = node.actualParent;
+            if (!processed.has(node) && node.lineBreak && !node.lineBreakTrailing) {
                 const previousSiblings = node.previousSiblings(false) as T[];
                 const nextSiblings = node.nextSiblings(false) as T[];
                 let valid = false;
                 if (previousSiblings.length && nextSiblings.length) {
-                    if (nextSiblings[0].lineBreak) {
-                        continue;
-                    }
-                    else {
-                        let above = previousSiblings.pop() as T;
-                        let below = nextSiblings.pop() as T;
-                        if (above.inlineStatic && below.inlineStatic) {
-                            if (previousSiblings.length === 0) {
-                                processed.add(node);
-                                continue;
-                            }
-                            else {
-                                const abovePrevious = previousSiblings.pop() as T;
-                                if (abovePrevious.lineBreak) {
-                                    abovePrevious.setBounds();
-                                    if (abovePrevious.bounds.bottom !== 0) {
-                                        above = abovePrevious;
-                                    }
+                    let above = previousSiblings.pop() as T;
+                    let below = nextSiblings.pop() as T;
+                    if (above.inlineStatic && below.inlineStatic) {
+                        if (previousSiblings.length === 0) {
+                            processed.add(node);
+                            continue;
+                        }
+                        else {
+                            const abovePrevious = previousSiblings.pop() as T;
+                            if (abovePrevious.lineBreak) {
+                                abovePrevious.setBounds();
+                                if (abovePrevious.bounds.bottom !== 0) {
+                                    above = abovePrevious;
                                 }
                             }
                         }
-                        valid = true;
-                        let offset: number;
-                        if (below.lineHeight > 0 && below.element && below.cssTry('lineHeight', '0px')) {
-                            offset = $session.getClientRect(below.element, below.sessionId).top - below.marginTop;
-                            below.cssFinally('lineHeight');
+                    }
+                    valid = true;
+                    let offset: number;
+                    if (below.lineHeight > 0 && below.element && below.cssTry('lineHeight', '0px')) {
+                        offset = $session.getClientRect(below.element, below.sessionId).top - below.marginTop;
+                        below.cssFinally('lineHeight');
+                    }
+                    else {
+                        offset = below.linear.top;
+                    }
+                    if (above.lineHeight > 0 && above.element && above.cssTry('lineHeight', '0px')) {
+                        offset -= $session.getClientRect(above.element, above.sessionId).bottom + above.marginBottom;
+                        above.cssFinally('lineHeight');
+                    }
+                    else {
+                        offset -= above.linear.bottom;
+                    }
+                    if (offset !== 0) {
+                        above = getVisibleNode(above) as T;
+                        below = getVisibleNode(below) as T;
+                        const aboveParent = above.visible && above.renderParent;
+                        const belowParent = below.visible && below.renderParent;
+                        if (belowParent && belowParent.groupParent && belowParent.firstChild === below) {
+                            belowParent.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
+                        }
+                        else if (aboveParent && aboveParent.groupParent && aboveParent.lastChild === above) {
+                            aboveParent.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offset);
+                        }
+                        else if (belowParent && belowParent.layoutVertical && below.visible) {
+                            below.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
+                        }
+                        else if (aboveParent && aboveParent.layoutVertical && above.visible) {
+                            above.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offset);
                         }
                         else {
-                            offset = below.linear.top;
-                        }
-                        if (above.lineHeight > 0 && above.element && above.cssTry('lineHeight', '0px')) {
-                            offset -= $session.getClientRect(above.element, above.sessionId).bottom + above.marginBottom;
-                            above.cssFinally('lineHeight');
-                        }
-                        else {
-                            offset -= above.linear.bottom;
-                        }
-                        if (offset !== 0) {
-                            above = getVisibleNode(above) as T;
-                            below = getVisibleNode(below) as T;
-                            const aboveParent = above.visible && above.renderParent;
-                            const belowParent = below.visible && below.renderParent;
-                            if (belowParent && belowParent.groupParent && belowParent.firstChild === below) {
-                                belowParent.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
-                            }
-                            else if (aboveParent && aboveParent.groupParent && aboveParent.lastChild === above) {
-                                aboveParent.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offset);
-                            }
-                            else if (belowParent && belowParent.layoutVertical && below.visible) {
-                                below.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
-                            }
-                            else if (aboveParent && aboveParent.layoutVertical && above.visible) {
-                                above.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offset);
-                            }
-                            else if (!belowParent && !aboveParent && actualParent && actualParent.visible) {
+                            const actualParent = node.actualParent;
+                            if (!belowParent && !aboveParent && actualParent && actualParent.visible) {
                                 if (below.lineBreak || below.excluded) {
                                     actualParent.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);
                                 }
@@ -295,32 +292,35 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                         }
                     }
                 }
-                else if (actualParent && actualParent.visible) {
-                    if (!actualParent.documentRoot && previousSiblings.length) {
-                        const previousStart = previousSiblings[previousSiblings.length - 1];
-                        const offset = actualParent.box.bottom - previousStart.linear[previousStart.lineBreak || previousStart.excluded ? 'top' : 'bottom'];
-                        if (offset !== 0) {
-                            if (previousStart.rendered || actualParent.visibleStyle.background) {
-                                actualParent.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);
-                            }
-                            else if (!actualParent.hasHeight) {
-                                setMinHeight(actualParent, offset);
-                            }
-                        }
-                    }
-                    else if (nextSiblings.length) {
-                        const nextStart = nextSiblings[nextSiblings.length - 1];
-                        const offset = nextStart.linear[nextStart.lineBreak || nextStart.excluded ? 'bottom' : 'top'] - actualParent.box.top;
-                        if (offset !== 0) {
-                            if (nextStart.rendered || actualParent.visibleStyle.background) {
-                                actualParent.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
-                            }
-                            else if (!actualParent.hasHeight) {
-                                setMinHeight(actualParent, offset);
+                else {
+                    const actualParent = node.actualParent;
+                    if (actualParent && actualParent.visible) {
+                        if (!actualParent.documentRoot && previousSiblings.length) {
+                            const previousStart = previousSiblings[previousSiblings.length - 1];
+                            const offset = actualParent.box.bottom - previousStart.linear[previousStart.lineBreak || previousStart.excluded ? 'top' : 'bottom'];
+                            if (offset !== 0) {
+                                if (previousStart.rendered || actualParent.visibleStyle.background) {
+                                    actualParent.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);
+                                }
+                                else if (!actualParent.hasHeight) {
+                                    setMinHeight(actualParent, offset);
+                                }
                             }
                         }
+                        else if (nextSiblings.length) {
+                            const nextStart = nextSiblings[nextSiblings.length - 1];
+                            const offset = nextStart.linear[nextStart.lineBreak || nextStart.excluded ? 'bottom' : 'top'] - actualParent.box.top;
+                            if (offset !== 0) {
+                                if (nextStart.rendered || actualParent.visibleStyle.background) {
+                                    actualParent.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
+                                }
+                                else if (!actualParent.hasHeight) {
+                                    setMinHeight(actualParent, offset);
+                                }
+                            }
+                        }
+                        valid = true;
                     }
-                    valid = true;
                 }
                 if (valid) {
                     for (const item of previousSiblings) {
@@ -341,7 +341,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                 const renderParent = node.renderAs ? node.renderAs.renderParent : node.renderParent;
                 if (renderParent && !renderParent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
                     function setSpacingOffset(region: number, value: number) {
-                        const offset = (region === BOX_STANDARD.MARGIN_LEFT ? node.linear.left : node.linear.top) - value;
+                        const offset = (region === BOX_STANDARD.MARGIN_LEFT ? node.actualRect('left') : node.actualRect('top')) - value;
                         if (offset > 0) {
                             node = getVisibleNode(node.outerParent || node) as T;
                             node.modifyBox(region, offset);
@@ -368,7 +368,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                             if (previous.length && !previous.some(item => item.lineBreak || item.excluded && item.blockStatic)) {
                                 const previousSibling = previous.pop() as T;
                                 if (previousSibling.inlineVertical) {
-                                    setSpacingOffset(BOX_STANDARD.MARGIN_LEFT, previousSibling.actualRight());
+                                    setSpacingOffset(BOX_STANDARD.MARGIN_LEFT, previousSibling.actualRect('right'));
                                 }
                                 else if (previousSibling.floating) {
                                     current = previousSibling;

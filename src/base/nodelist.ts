@@ -58,14 +58,14 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
     }
 
     public static baseline<T extends Node>(list: T[], text = false) {
-        let baseline = $util.filterArray(list, item => item.baseline && !item.baselineAltered);
+        let baseline = $util.filterArray(list, item => !item.baselineAltered && !item.floating);
         if (baseline.length === 0) {
             return baseline;
         }
         else {
             list = baseline;
         }
-        baseline = $util.filterArray(list, item => item.textElement || !item.verticalAlign.startsWith('text-'));
+        baseline = $util.filterArray(list, item => item.textElement || item.baseline && (item.length === 0 || item.every(child => child.baseline)));
         if (baseline.length) {
             list = baseline;
         }
@@ -77,7 +77,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
         for (const item of list) {
             lineHeight = Math.max(lineHeight, item.lineHeight);
             if (!item.layoutVertical && !item.multiline) {
-                boundsHeight = Math.max(boundsHeight, item.actualHeight);
+                boundsHeight = Math.max(boundsHeight, item.bounds.height);
             }
         }
         $util.spliceArray(list, item => lineHeight > boundsHeight ? item.lineHeight !== lineHeight : !$util.withinRange(item.actualHeight, boundsHeight));
@@ -182,8 +182,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                 let x = 1;
                 let y = 1;
                 for (let i = 1; i < nodes.length; i++) {
-                    const previousSiblings = nodes[i].previousSiblings() as T[];
-                    if (nodes[i].alignedVertically(previousSiblings, siblings, cleared)) {
+                    if (nodes[i].alignedVertically(nodes[i].previousSiblings() as T[], siblings, cleared)) {
                         y++;
                     }
                     else {

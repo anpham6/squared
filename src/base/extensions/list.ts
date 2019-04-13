@@ -110,6 +110,11 @@ export default abstract class List<T extends Node> extends Extension<T> {
     }
 
     public postBaseLayout(node: T) {
-        node.modifyBox(BOX_STANDARD.PADDING_LEFT, null);
+        if (node.paddingLeft > 0) {
+            node.modifyBox(BOX_STANDARD.PADDING_LEFT, null);
+        }
+        else {
+            node.modifyBox(BOX_STANDARD.MARGIN_LEFT, null);
+        }
     }
 }

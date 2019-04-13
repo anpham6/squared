@@ -53,9 +53,11 @@ const $xml = squared.lib.xml;
 function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = false): ShapeSolidData {
     const style = border.style;
     const width = parseInt(border.width);
+    let lighten = false;
     switch (style) {
         case 'inset':
         case 'outset':
+            lighten = true;
         case 'groove':
         case 'ridge': {
             const color = $color.parseColor(border.color);
@@ -79,11 +81,11 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
                 switch (direction) {
                     case 0:
                     case 3:
-                        percent = 0.8;
+                        percent = lighten ? 0.8 : 1;
                         break;
                     case 1:
                     case 2:
-                        percent = 0.5;
+                        percent = lighten ? 0.5 : -0.75;
                         break;
                 }
                 if (percent !== 1) {
@@ -508,61 +510,81 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             const src = `@drawable/${value}`;
                             let gravityX = '';
                             let gravityY = '';
-                            if (backgroundRepeat[i] !== 'repeat') {
-                                if (backgroundRepeat[i] !== 'repeat-x') {
-                                    switch (position.horizontal) {
-                                        case '0%':
-                                        case 'left':
-                                            resetPosition('left', 'right');
-                                            gravityX = node.localizeString('left');
-                                            break;
-                                        case '50%':
-                                        case 'center':
-                                            resetPosition('left', 'right', true);
-                                            gravityX = 'center_horizontal';
-                                            break;
-                                        case '100%':
-                                        case 'right':
-                                            resetPosition('right', 'left');
-                                            gravityX = node.localizeString('right');
-                                            break;
-                                        default:
-                                            if (position.right !== 0) {
-                                                gravityX += node.localizeString('right');
-                                            }
-                                            else {
-                                                gravityX += node.localizeString('left');
-                                            }
-                                            break;
+                            if (backgroundRepeat[i] !== 'repeat-x') {
+                                switch (position.horizontal) {
+                                    case '0%':
+                                    case 'left':
+                                        resetPosition('left', 'right');
+                                        gravityX = node.localizeString('left');
+                                        break;
+                                    case '50%':
+                                    case 'center':
+                                        resetPosition('left', 'right', true);
+                                        gravityX = 'center_horizontal';
+                                        break;
+                                    case '100%':
+                                    case 'right':
+                                        resetPosition('right', 'left');
+                                        gravityX = node.localizeString('right');
+                                        break;
+                                    default:
+                                        if (position.right !== 0) {
+                                            gravityX += node.localizeString('right');
+                                        }
+                                        else {
+                                            gravityX += node.localizeString('left');
+                                        }
+                                        break;
+                                }
+                            }
+                            else {
+                                if (dimension) {
+                                    while (position.left > 0) {
+                                        position.left -= dimension.width;
                                     }
                                 }
-                                if (backgroundRepeat[i] !== 'repeat-y') {
-                                    switch (position.vertical) {
-                                        case '0%':
-                                        case 'top':
-                                            resetPosition('top', 'bottom');
-                                            gravityY += 'top';
-                                            break;
-                                        case '50%':
-                                        case 'center':
-                                            resetPosition('top', 'bottom', true);
-                                            gravityY += 'center_vertical';
-                                            break;
-                                        case '100%':
-                                        case 'bottom':
-                                            resetPosition('bottom', 'top');
+                                else {
+                                    position.left = 0;
+                                }
+                                position.right = 0;
+                                                            }
+                            if (backgroundRepeat[i] !== 'repeat-y') {
+                                switch (position.vertical) {
+                                    case '0%':
+                                    case 'top':
+                                        resetPosition('top', 'bottom');
+                                        gravityY += 'top';
+                                        break;
+                                    case '50%':
+                                    case 'center':
+                                        resetPosition('top', 'bottom', true);
+                                        gravityY += 'center_vertical';
+                                        break;
+                                    case '100%':
+                                    case 'bottom':
+                                        resetPosition('bottom', 'top');
+                                        gravityY += 'bottom';
+                                        break;
+                                    default:
+                                        if (position.bottom !== 0) {
                                             gravityY += 'bottom';
-                                            break;
-                                        default:
-                                            if (position.bottom !== 0) {
-                                                gravityY += 'bottom';
-                                            }
-                                            else {
-                                                gravityY += 'top';
-                                            }
-                                            break;
+                                        }
+                                        else {
+                                            gravityY += 'top';
+                                        }
+                                        break;
+                                }
+                            }
+                            else {
+                                if (dimension) {
+                                    while (position.top > 0) {
+                                        position.top -= dimension.height;
                                     }
                                 }
+                                else {
+                                    position.top = 0;
+                                }
+                                position.bottom = 0;
                             }
                             let width = 0;
                             let height = 0;
@@ -584,56 +606,64 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     tileMode = 'disabled';
                                     break;
                             }
-                            if (node.renderChildren.length === 0 && dimension) {
-                                if (gravityX !== '' && tileModeY === 'repeat') {
-                                    const tileWidth = node.hasWidth ? node.width + node.paddingLeft + node.paddingRight : node.bounds.width - (node.borderLeftWidth + node.borderRightWidth);
-                                    if (dimension.width < tileWidth) {
-                                        const layoutWidth = $util.convertInt(node.android('layout_width'));
-                                        if (/(left|start)/.test(gravityX)) {
-                                            position.right = tileWidth - dimension.width;
-                                            if (!node.hasWidth && tileWidth > layoutWidth) {
-                                                node.android('layout_width', $util.formatPX(node.actualWidth));
-                                            }
-                                        }
-                                        else if (/(right|end)/.test(gravityX)) {
-                                            position.left = tileWidth - dimension.width;
-                                            if (!node.hasWidth && tileWidth > layoutWidth) {
-                                                node.android('layout_width', $util.formatPX(node.actualWidth));
-                                            }
-                                        }
-                                        else if (gravityX === 'center_horizontal') {
-                                            position.left = Math.floor((tileWidth - dimension.width) / 2);
-                                            width = dimension.width;
-                                            if (!node.hasWidth && tileWidth > layoutWidth) {
-                                                node.android('layout_width', $util.formatPX(node.actualWidth));
-                                            }
-                                        }
+                            if (dimension) {
+                                if (dimension.width - position.left >= node.bounds.width) {
+                                    tileModeX = '';
+                                    if (tileMode === 'repeat') {
+                                        tileModeY = 'repeat';
+                                        tileMode = '';
                                     }
                                 }
-                                if (gravityY !== '' && tileModeX === 'repeat') {
-                                    const tileHeight = node.hasHeight ? node.height + node.paddingTop + node.paddingBottom : node.bounds.height - (node.borderTopWidth + node.borderBottomWidth);
-                                    if (dimension.height < tileHeight) {
-                                        const layoutHeight = $util.convertInt(node.android('layout_height'));
-                                        if (gravityY === 'top') {
-                                            position.bottom = tileHeight - dimension.height;
-                                            if (!node.hasHeight && tileHeight > layoutHeight) {
-                                                node.android('layout_height', $util.formatPX(node.actualHeight));
-                                            }
-                                        }
-                                        else if (gravityY === 'bottom') {
-                                            position.top = tileHeight - dimension.height;
-                                            if (!node.hasHeight && tileHeight > layoutHeight) {
-                                                node.android('layout_height', $util.formatPX(node.actualHeight));
-                                            }
-                                        }
-                                        else if (gravityY === 'center_vertical') {
-                                            position.top = Math.floor((tileHeight - dimension.height) / 2);
-                                            height = dimension.height;
-                                            if (!node.hasHeight && tileHeight > layoutHeight) {
-                                                node.android('layout_height', $util.formatPX(node.actualHeight));
-                                            }
-                                        }
+                                if (dimension.height - position.top >= node.bounds.height) {
+                                    tileModeY = '';
+                                    if (tileMode === 'repeat') {
+                                        tileModeX = 'repeat';
+                                        tileMode = '';
                                     }
+                                }
+                            }
+                            if (node.renderChildren.length === 0 && dimension) {
+                                if (gravityX !== '' && tileModeY === 'repeat' && dimension.width < node.actualWidth) {
+                                    if (/(left|start)/.test(gravityX)) {
+                                        position.left = node.borderLeftWidth;
+                                        position.right = 0;
+                                        imageData.gravity = gravityY;
+                                        gravityY = '';
+                                    }
+                                    else if (/(right|end)/.test(gravityX)) {
+                                        position.left = 0;
+                                        position.right = node.borderRightWidth;
+                                        imageData.gravity = gravityY;
+                                        gravityY = '';
+                                    }
+                                    else if (gravityX === 'center_horizontal') {
+                                        position.left = 0;
+                                        position.right = 0;
+                                        imageData.gravity = gravityY;
+                                        gravityY = '';
+                                    }
+                                    width = dimension.width;
+                                }
+                                if (gravityY !== '' && tileModeX === 'repeat' && dimension.height < node.actualHeight) {
+                                    if (gravityY === 'top') {
+                                        position.top = node.borderTopWidth;
+                                        position.bottom = 0;
+                                        imageData.gravity = gravityY;
+                                        gravityY = '';
+                                    }
+                                    else if (gravityY === 'bottom') {
+                                        position.top = 0;
+                                        position.bottom = node.borderBottomWidth;
+                                        imageData.gravity = gravityY;
+                                        gravityY = '';
+                                    }
+                                    else if (gravityY === 'center_vertical') {
+                                        position.top = 0;
+                                        position.top = 0;
+                                        imageData.gravity = gravityY;
+                                        gravityY = '';
+                                    }
+                                    height = dimension.height;
                                 }
                             }
                             switch (backgroundSize[i]) {
@@ -1037,19 +1067,13 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         const width = node.cssInitial('width');
                         const height = node.cssInitial('height');
                         if (!$util.isLength(width) && width !== '100%') {
-                            let backgroundWidth = node.bounds.width;
-                            if (!node.is(CONTAINER_NODE.LINE)) {
-                                backgroundWidth -= $util.isPercent(width) ? node.contentBoxWidth : node.borderLeftWidth + node.borderRightWidth;
-                            }
+                            const backgroundWidth = node.bounds.width - (node.contentBox ? node.contentBoxWidth : 0);
                             if (backgroundWidth > 0 && (parentWidth === 0 || backgroundWidth < parentWidth)) {
                                 node.css('width', $util.formatPX(backgroundWidth), true);
                             }
                         }
                         if (!$util.isLength(height) && height !== '100%' && (node.length === 0 || node.some(item => !item.multiline))) {
-                            let backgroundHeight = node.bounds.height;
-                            if (!node.is(CONTAINER_NODE.LINE)) {
-                                backgroundHeight -= $util.isPercent(height) ? node.contentBoxHeight : node.borderTopWidth + node.borderBottomWidth;
-                            }
+                            const backgroundHeight = node.bounds.height - (node.contentBox ? node.contentBoxHeight : 0);
                             if (backgroundHeight > 0 && (parentHeight === 0 || backgroundHeight < parentHeight)) {
                                 node.css('height', $util.formatPX(backgroundHeight), true);
                                 if (node.marginTop < 0) {

@@ -45,7 +45,6 @@ declare global {
             function newBoxRect(): BoxRect;
             function newRectDimension(): RectDimension;
             function newBoxModel(): BoxModel;
-            function getRangeClientRect(element: Element): TextDimension;
             function assignRect(rect: DOMRect | RectDimension): RectDimension;
             function removeElementsByClassName(className: string): void;
             function getElementsBetweenSiblings(elementStart: Element | null, elementEnd: Element, whiteSpace?: boolean): Element[] | undefined;
@@ -74,7 +73,8 @@ declare global {
 
         namespace session {
             function getClientRect(element: Element, sessionId: string, cache?: boolean): ClientRect;
-            function isLineBreak(element: Element, sessionId: string): boolean;
+            function getRangeClientRect(element: Element, sessionId: string, cache?: boolean): TextDimension;
+            function causesLineBreak(element: Element, sessionId: string): boolean;
             function setElementCache(element: Element, attr: string, sessionId: string, data: any): void;
             function getElementCache(element: Element, attr: string, sessionId: string): any;
             function deleteElementCache(element: Element, attr: string, sessionId: string): void;

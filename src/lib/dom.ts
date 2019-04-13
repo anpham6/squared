@@ -1,4 +1,4 @@
-import { spliceArray, withinRange } from './util';
+import { spliceArray } from './util';
 
 export const ELEMENT_BLOCK = [
     'ADDRESS',
@@ -67,52 +67,6 @@ export function newBoxModel(): BoxModel {
         paddingBottom: 0,
         paddingLeft: 0
     };
-}
-
-export function getRangeClientRect(element: Element) {
-    const range = document.createRange();
-    range.selectNodeContents(element);
-    const clientRects = range.getClientRects();
-    const domRect: ClientRect[] = [];
-    for (let i = 0; i < clientRects.length; i++) {
-        const item = <ClientRect> clientRects.item(i);
-        if (!(Math.round(item.width) === 0 && withinRange(item.left, item.right))) {
-            domRect.push(item);
-        }
-    }
-    let bounds: RectDimension = newRectDimension();
-    let multiline = 0;
-    let maxTop = Number.NEGATIVE_INFINITY;
-    if (domRect.length) {
-        bounds = assignRect(domRect[0]);
-        for (let i = 1 ; i < domRect.length; i++) {
-            const rect = domRect[i];
-            if (rect.left < bounds.left) {
-                bounds.left = rect.left;
-            }
-            if (rect.right > bounds.right) {
-                bounds.right = rect.right;
-            }
-            if (rect.top < bounds.top) {
-                bounds.top = rect.top;
-            }
-            if (rect.bottom > bounds.bottom) {
-                bounds.bottom = rect.bottom;
-            }
-            if (rect.height > bounds.height) {
-                bounds.height = rect.height;
-            }
-            bounds.width += rect.width;
-            if (rect.top > maxTop) {
-                maxTop = rect.top;
-            }
-        }
-        if (domRect.length > 1 && maxTop >= domRect[0].bottom && element.textContent && (element.textContent.trim() !== '' || /^\s*\n/.test(element.textContent))) {
-            multiline = domRect.length - 1;
-        }
-    }
-    (<TextDimension> bounds).multiline = multiline;
-    return <TextDimension> bounds;
 }
 
 export function assignRect(rect: DOMRect | RectDimension): RectDimension {

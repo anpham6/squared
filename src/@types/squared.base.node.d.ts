@@ -16,6 +16,8 @@ declare global {
             positionStatic: boolean;
             baselineActive: boolean;
             baselineAltered: boolean;
+            lineBreakLeading: boolean;
+            lineBreakTrailing: boolean;
             positioned: boolean;
             visible: boolean;
             excluded: boolean;
@@ -110,6 +112,7 @@ declare global {
             readonly block: boolean;
             readonly blockStatic: boolean;
             readonly blockDimension: boolean;
+            readonly contentBox: boolean;
             readonly autoMargin: AutoMargin;
             readonly pageFlow: boolean;
             readonly floating: boolean;
@@ -204,7 +207,7 @@ declare global {
             extractAttributes(depth: number): string;
             resetBox(region: number, node?: Node, fromParent?: boolean): void;
             inheritBox(region: number, node: Node): void;
-            actualRight(dimension?: string): number;
+            actualRect(direction: string, dimension?: string): number;
             previousSiblings(floating?: boolean, pageFlow?: boolean, lineBreak?: boolean, excluded?: boolean): Node[];
             nextSiblings(floating?: boolean, pageFlow?: boolean, lineBreak?: boolean, excluded?: boolean): Node[];
             getFirstChildElement(lineBreak?: boolean, excluded?: boolean): Element | null;

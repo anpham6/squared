@@ -26,7 +26,7 @@ export function getStyle(element: Element | null, target?: string, cache = true)
 }
 
 export function hasComputedStyle(element: Element | null): element is HTMLElement {
-    return !!element && typeof element['style'] === 'object' && element['style']['display'] !== null;
+    return !!element && typeof element['style'] === 'object' && typeof element['style']['display'] === 'string';
 }
 
 export function getSpecificity(value: string) {

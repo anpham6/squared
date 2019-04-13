@@ -51,15 +51,24 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
         const mainData: ListData = node.data($const.EXT_NAME.LIST, 'mainData');
         if (mainData) {
             const controller = <android.base.Controller<T>> this.application.controllerHandler;
-            let paddingLeft = node.marginLeft;
+            let minWidth = node.marginLeft;
             let columnCount = 0;
             node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, null);
+            let adjustPadding = false;
             if (parent.is(CONTAINER_NODE.GRID)) {
                 columnCount = $util.convertInt(parent.android('columnCount'));
-                paddingLeft += parent.paddingLeft;
+                adjustPadding = true;
             }
             else if (parent.item(0) === node) {
-                paddingLeft += parent.paddingLeft;
+                adjustPadding = true;
+            }
+            if (adjustPadding) {
+                if (parent.paddingLeft > 0) {
+                    minWidth += parent.paddingLeft;
+                }
+                else {
+                    minWidth += parent.marginLeft;
+                }
             }
             let ordinal = !mainData.ordinal ? node.find(item => item.float === 'left' && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) as T : undefined;
             if (ordinal) {
@@ -81,9 +90,9 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 if (columnCount === 3) {
                     node.android('layout_columnSpan', '2');
                 }
-                paddingLeft += ordinal.marginLeft;
-                if (paddingLeft > 0 && !ordinal.hasWidth) {
-                    ordinal.android('minWidth', $util.formatPX(paddingLeft));
+                minWidth += ordinal.marginLeft;
+                if (minWidth > 0 && !ordinal.hasWidth) {
+                    ordinal.android('minWidth', $util.formatPX(minWidth));
                 }
                 ordinal.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, null);
                 this.application.addRenderTemplate(
@@ -96,32 +105,26 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 const columnWeight = columnCount > 0 ? '0' : '';
                 const inside = node.css('listStylePosition') === 'inside';
                 let gravity = 'right';
-                let minWidth = 0;
-                let top = NaN;
-                let left = NaN;
+                let top = 0;
+                let left = 0;
                 let image: string | undefined;
                 if (mainData.imageSrc !== '') {
                     if (mainData.imagePosition) {
                         const position = $css.getBackgroundPosition(mainData.imagePosition, node.actualDimension, node.fontSize);
                         top = position.top;
                         left = position.left;
-                        paddingLeft += node.paddingLeft;
                         gravity = 'left';
-                        node.modifyBox($enum.BOX_STANDARD.PADDING_LEFT, null);
                     }
                     image = Resource.addImageURL(mainData.imageSrc);
                 }
-                let paddingRight: number;
+                let paddingRight = 0;
                 if (gravity === 'left') {
-                    paddingRight = node.paddingLeft;
-                }
-                else if (isNaN(left)) {
-                    paddingRight = Math.max(paddingLeft / (image ? 8 : 4), 4);
-                    minWidth = paddingLeft;
+                    minWidth += node.paddingLeft - left;
+                    node.modifyBox($enum.BOX_STANDARD.PADDING_LEFT, null);
                 }
                 else {
-                    paddingRight = 0;
-                    minWidth = Math.max(0, minWidth - left);
+                    const length = mainData.ordinal ? mainData.ordinal.length : 1;
+                    paddingRight = Math.max(minWidth / (image ? 8 : length * 4), 4);
                 }
                 const options = createViewAttribute({
                     android: {
@@ -172,7 +175,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     }
                     ordinal.inherit(node, 'textStyle');
                     ordinal.cssApply({
-                        minWidth: $util.formatPX(minWidth),
+                        minWidth: minWidth > 0 ? $util.formatPX(minWidth) : '',
                         marginTop: node.marginTop !== 0 ? $util.formatPX(node.marginTop) : '',
                         paddingTop: node.paddingTop > 0 ? $util.formatPX(node.paddingTop) : '',
                         paddingRight: paddingRight > 0 && gravity === 'right' ? $util.formatPX(paddingRight) : '',
@@ -181,12 +184,12 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     });
                     ordinal.apply(options);
                     if (!inside) {
-                        ordinal.mergeGravity('gravity', paddingLeft > 20 ? node.localizeString(gravity) : 'center_horizontal');
+                        ordinal.mergeGravity('gravity', node.localizeString(gravity));
                     }
-                    if (top) {
+                    if (top !== 0) {
                         ordinal.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, top);
                     }
-                    if (left) {
+                    if (left !== 0) {
                         ordinal.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, left);
                     }
                     ordinal.render(parent);

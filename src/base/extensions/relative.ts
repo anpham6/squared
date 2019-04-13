@@ -2,7 +2,7 @@ import Extension from '../extension';
 import Layout from '../layout';
 import Node from '../node';
 
-import { BOX_STANDARD, NODE_ALIGNMENT } from '../lib/enumeration';
+import { BOX_STANDARD } from '../lib/enumeration';
 
 const $util = squared.lib.util;
 
@@ -35,7 +35,7 @@ export default abstract class Relative<T extends Node> extends Extension<T> {
                     layout.renderIndex = index + 1;
                 }
                 this.application.addRenderLayout(layout);
-                if (!renderParent.hasAlign(NODE_ALIGNMENT.VERTICAL)) {
+                if (renderParent.layoutHorizontal && node.documentParent.toInt('textIndent') < 0) {
                     renderParent.renderEach(item => {
                         if (item.alignSibling('topBottom') === node.documentId) {
                             item.alignSibling('topBottom', target.documentId);

@@ -55,25 +55,27 @@ export default class VerticalAlign<T extends Node> extends Extension<T> {
                 if (aboveBaseline.length) {
                     const top = aboveBaseline[0].linear.top;
                     for (const item of children) {
-                        if (item.inlineVertical && !item.baseline && !aboveBaseline.includes(item)) {
-                            let valid = false;
-                            switch (item.verticalAlign) {
-                                case 'super':
-                                case 'sub':
-                                    valid = true;
-                                    break;
-                                default:
-                                    if ($util.isLength(item.verticalAlign) || baseline === undefined) {
+                        if (item !== baseline) {
+                            if (item.inlineVertical && !item.baseline && !aboveBaseline.includes(item)) {
+                                let valid = false;
+                                switch (item.verticalAlign) {
+                                    case 'super':
+                                    case 'sub':
                                         valid = true;
-                                    }
-                                    break;
+                                        break;
+                                    default:
+                                        if ($util.isLength(item.verticalAlign) || baseline === undefined) {
+                                            valid = true;
+                                        }
+                                        break;
+                                }
+                                if (valid) {
+                                    item.modifyBox(BOX_STANDARD.MARGIN_TOP, item.linear.top - top);
+                                }
                             }
-                            if (valid) {
-                                item.modifyBox(BOX_STANDARD.MARGIN_TOP, item.linear.top - top);
+                            if (item.baselineAltered) {
+                                item.css('verticalAlign', '0px', true);
                             }
-                        }
-                        if (item.baselineAltered) {
-                            item.css('verticalAlign', '0px', true);
                         }
                     }
                     if (baseline) {

@@ -152,10 +152,10 @@ function replaceWhiteSpace(parent: Node, node: Node, element: Element, value: st
                 .replace(/\s+/g, ' ');
             break;
         default:
-            if (element.previousSibling && $session.isLineBreak(<Element> element.previousSibling, node.sessionId)) {
+            if (element.previousSibling && $session.causesLineBreak(<Element> element.previousSibling, node.sessionId)) {
                 value = value.replace($util.REGEXP_COMPILED.LEADINGSPACE, '');
             }
-            if (element.nextSibling && $session.isLineBreak(<Element> element.nextSibling, node.sessionId)) {
+            if (element.nextSibling && $session.causesLineBreak(<Element> element.nextSibling, node.sessionId)) {
                 value = value.replace($util.REGEXP_COMPILED.TRAILINGSPACE, '');
             }
             return [value, false];
@@ -171,13 +171,32 @@ function getBackgroundSize(node: Node, index: number, value?: string) {
     return undefined;
 }
 
-function applyTextTransform(value: string, transform: string | null) {
+function applyTextTransform(transform: string, value: string) {
+    if (transform === 'none' || transform === 'initial') {
+        return value;
+    }
+    const words = value.split(/[^\w&#;]+/);
     switch (transform) {
         case 'uppercase':
-            value = value.toUpperCase();
+            for (const word of words) {
+                if (!value.startsWith('&') && !value.endsWith(';')) {
+                    value = value.replace(word, word.toUpperCase());
+                }
+            }
             break;
         case 'lowercase':
-            value = value.toLowerCase();
+            for (const word of words) {
+                if (!value.startsWith('&') && !value.endsWith(';')) {
+                    value = value.replace(word, word.toLowerCase());
+                }
+            }
+            break;
+        case 'capitalize':
+            for (const word of words) {
+                if (!value.startsWith('&') && !value.endsWith(';')) {
+                    value = value.replace(word, $util.capitalize(word));
+                }
+            }
             break;
     }
     return value;
@@ -250,7 +269,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
 
     public static getOptionArray(element: HTMLSelectElement) {
         const stringArray: string[] = [];
-        const textTransform = $css.getStyle(element).textTransform;
+        const textTransform = $css.getStyle(element).getPropertyValue('text-transform');
         let numberArray: string[] | undefined = [];
         let i = -1;
         while (++i < element.children.length) {
@@ -267,7 +286,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         continue;
                     }
                     if (value !== '') {
-                        stringArray.push(applyTextTransform(value, textTransform));
+                        stringArray.push(applyTextTransform(textTransform, value));
                     }
                 }
             }
@@ -322,7 +341,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
         return false;
     }
 
-    public static isLineBreak(node: Node) {
+    public static causesLineBreak(node: Node) {
         return node.lineBreak || node.excluded && node.blockStatic;
     }
 
@@ -771,6 +790,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                     let value = '';
                     let inlineTrim = false;
                     let performTrim = false;
+                    const textTransform = node.css('textTransform');
                     switch (element.tagName) {
                         case 'INPUT':
                             value = element.value;
@@ -830,12 +850,13 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                     value = $util.isUserAgent($util.USER_AGENT.FIREFOX) ? 'Browse...' : 'Choose File';
                                     break;
                             }
+                            value = applyTextTransform(textTransform, value);
                             break;
                         case 'TEXTAREA':
-                            value = element.value;
+                            value = applyTextTransform(textTransform, element.value);
                             break;
                         case 'BUTTON':
-                            value = element.innerText;
+                            value = applyTextTransform(textTransform, element.innerText);
                             break;
                         case 'IFRAME':
                             value = element.src;
@@ -843,7 +864,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         default:
                             if (node.plainText) {
                                 name = node.textContent.trim();
-                                value = node.textContent
+                                value = applyTextTransform(textTransform, node.textContent)
                                     .replace(/&[A-Za-z]+;/g, match => match.replace('&', '&amp;'))
                                     .replace(/\u00A0/g, '&#160;');
                                 [value] = replaceWhiteSpace(renderParent, node, element, value);
@@ -856,25 +877,24 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                     value = removeExcluded(node, element, 'innerHTML');
                                 }
                                 else if (Resource.hasLineBreak(node, true)) {
-                                    value = removeExcluded(node, element, 'innerHTML')
+                                    value = applyTextTransform(textTransform, removeExcluded(node, element, 'innerHTML'))
                                         .replace(REGEXP_LINEBREAK, '\\n')
                                         .replace($util.REGEXP_COMPILED.TAGNAME, '');
                                 }
                                 else {
-                                    value = removeExcluded(node, element, 'textContent');
+                                    value = applyTextTransform(textTransform, removeExcluded(node, element, 'textContent'));
                                 }
                                 [value, inlineTrim] = replaceWhiteSpace(renderParent, node, element, value);
                                 performTrim = true;
                             }
                             else if (Resource.isBackgroundVisible(node.data(Resource.KEY_NAME, 'boxStyle')) && element.innerText.trim() === '') {
-                                value = element.innerText;
+                                value = applyTextTransform(textTransform, element.innerText);
                             }
                             break;
                     }
                     if (value !== '') {
                         if (performTrim) {
                             const previousSibling = node.previousSiblings().pop();
-                            const nextSibling = node.nextSiblings().shift();
                             let previousSpaceEnd = false;
                             if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && $util.REGEXP_COMPILED.TRAILINGSPACE.test(previousSibling.textContent)) {
                                 value = value.replace($util.REGEXP_COMPILED.LEADINGSPACE, '');
@@ -885,10 +905,10 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                             if (inlineTrim) {
                                 const original = value;
                                 value = value.trim();
-                                if (previousSibling && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd && (node.plainText && !previousSibling.plainText && !previousSibling.lineBreak || $util.REGEXP_COMPILED.LEADINGSPACE.test(original))) {
+                                if (previousSibling && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd && $util.REGEXP_COMPILED.LEADINGSPACE.test(original)) {
                                     value = '&#160;' + value;
                                 }
-                                if (nextSibling && !nextSibling.lineBreak && $util.REGEXP_COMPILED.TRAILINGSPACE.test(original)) {
+                                if (!node.lineBreakTrailing && $util.REGEXP_COMPILED.TRAILINGSPACE.test(original)) {
                                     value += '&#160;';
                                 }
                             }
@@ -899,14 +919,14 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                     previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
                                     node.multiline && Resource.hasLineBreak(node)) ? '' : '&#160;'
                                 );
-                                value = value.replace($util.REGEXP_COMPILED.TRAILINGSPACE, node.display === 'table-cell' || nextSibling && nextSibling.lineBreak || node.blockStatic ? '' : '&#160;');
+                                value = value.replace($util.REGEXP_COMPILED.TRAILINGSPACE, node.display === 'table-cell' || node.lineBreakTrailing || node.blockStatic ? '' : '&#160;');
                             }
                             else {
                                 continue;
                             }
                         }
                         if (value !== '') {
-                            node.data(Resource.KEY_NAME, 'valueString', { name, value: applyTextTransform(value, node.css('textTransform')) });
+                            node.data(Resource.KEY_NAME, 'valueString', { name, value });
                         }
                     }
                 }

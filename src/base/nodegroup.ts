@@ -51,40 +51,6 @@ export default abstract class NodeGroup extends Node {
         return NodeList.actualParent(this._initial.children);
     }
 
-    get firstChild() {
-        const actualParent = this.actualParent;
-        if (actualParent) {
-            const nodes = this.nodes;
-            for (const node of actualParent.actualChildren) {
-                if (nodes.includes(node)) {
-                    return node;
-                }
-            }
-        }
-        if (this._initial.children.length) {
-            return this._initial.children[0];
-        }
-        return undefined;
-    }
-
-    get lastChild() {
-        const actualParent = this.actualParent;
-        if (actualParent) {
-            const nodes = this.nodes;
-            const children = actualParent.actualChildren;
-            for (let i = children.length - 1; i >= 0; i--) {
-                const node = children[i];
-                if (nodes.includes(node)) {
-                    return node;
-                }
-            }
-        }
-        if (this._initial.children.length) {
-            return this._initial.children[this._initial.children.length - 1];
-        }
-        return undefined;
-    }
-
     get inline() {
         return this.every(node => node.inline);
     }

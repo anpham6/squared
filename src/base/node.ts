@@ -26,6 +26,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public rendered = false;
     public baselineActive = false;
     public baselineAltered = false;
+    public lineBreakLeading = false;
+    public lineBreakTrailing = false;
     public positioned = false;
     public controlId = '';
     public style!: CSSStyleDeclaration;
@@ -277,6 +279,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         this._cached.rightAligned = undefined;
                         this._cached.bottomAligned = undefined;
                         break;
+                    case 'float':
+                        this._cached.floating = undefined;
+                        break;
                     default:
                         if (attr.startsWith('margin')) {
                             this._cached.autoMargin = undefined;
@@ -363,6 +368,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         fontWeight: node.css('fontWeight'),
                         color: node.css('color'),
                         whiteSpace: node.css('whiteSpace'),
+                        textTransform: node.css('textTransform'),
                         opacity: node.css('opacity')
                     });
                     break;
@@ -391,7 +397,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         if (horizontal) {
                             let top = this.linear.top;
                             if (this.textElement && !this.plainText) {
-                                const rect = $dom.getRangeClientRect(<Element> this._element);
+                                const rect = $session.getRangeClientRect(<Element> this._element, this.sessionId);
                                 if (rect.top > top) {
                                     top = rect.top;
                                 }
@@ -403,7 +409,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         else {
                             let bottom = this.linear.bottom;
                             if (this.textElement && !this.plainText) {
-                                const rect = $dom.getRangeClientRect(<Element> this._element);
+                                const rect = $session.getRangeClientRect(<Element> this._element, this.sessionId);
                                 if (rect.bottom > bottom) {
                                     bottom = rect.bottom;
                                 }
@@ -416,12 +422,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 }
             }
             for (const previous of previousSiblings) {
-                if (!this.floating && previous.blockStatic ||
-                    this.blockStatic && (!previous.inlineFlow || horizontal === false && previous.floating || cleared && cleared.has(previous)) ||
-                    !previous.floating && (this.blockStatic || !this.floating && !this.inlineFlow || $util.isArray(siblings) && this.display === 'inline-block' && this.linear.top >= Math.floor(siblings[siblings.length - 1].linear.bottom)) ||
-                    previous.bounds.width > (actualParent.has('width', CSS_STANDARD.LENGTH) ? actualParent.width : actualParent.box.width) && (!previous.textElement || previous.textElement && previous.css('whiteSpace') === 'nowrap') ||
+                if (previous.blockStatic && (!this.floating || horizontal === false) ||
                     previous.lineBreak ||
                     previous.autoMargin.leftRight ||
+                    this.blockStatic && (!previous.inlineFlow || cleared && cleared.has(previous)) ||
+                    !previous.floating && (this.blockStatic || !this.floating && !this.inlineFlow || $util.isArray(siblings) && this.display === 'inline-block' && this.linear.top >= Math.floor(siblings[siblings.length - 1].linear.bottom)) ||
+                    previous.bounds.width > (actualParent.has('width', CSS_STANDARD.LENGTH) ? actualParent.width : actualParent.box.width) && (!previous.textElement || previous.textElement && previous.css('whiteSpace') === 'nowrap') ||
                     previous.float === 'left' && this.autoMargin.right ||
                     previous.float === 'right' && this.autoMargin.left ||
                     cleared && cleared.get(previous) === 'both' && (!$util.isArray(siblings) || siblings[0] !== previous))
@@ -808,7 +814,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             }
         }
         else if (this.plainText) {
-            const rect = $dom.getRangeClientRect(<Element> this._element);
+            const rect = $session.getRangeClientRect(<Element> this._element, this.sessionId, cache);
             this._bounds = $dom.assignRect(rect);
             this._cached.multiline = rect.multiline > 0;
         }
@@ -1015,9 +1021,21 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return null;
     }
 
-    public actualRight(dimension = 'linear') {
-        const node = this.companion && !this.companion.visible && this.companion[dimension].right > this[dimension].right ? this.companion : this;
-        return node[dimension].right as number;
+    public actualRect(direction: string, dimension = 'linear') {
+        let node: T;
+        switch (direction) {
+            case 'top':
+            case 'left':
+                node = this.companion && !this.companion.visible && this.companion[dimension][direction] < this[dimension][direction] ? this.companion : this;
+                break;
+            case 'right':
+            case 'bottom':
+                node = this.companion && !this.companion.visible && this.companion[dimension][direction] > this[dimension][direction] ? this.companion : this;
+                break;
+            default:
+                return NaN;
+        }
+        return node[dimension][direction] as number;
     }
 
     private setDimensions(dimension: string) {
@@ -1442,8 +1460,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get positionAuto() {
         if (this._cached.positionAuto === undefined) {
             const styleMap = this._initial.iteration === -1 ? this._styleMap : this._initial.styleMap;
-            this._cached.positionAuto = (
-                !this.pageFlow &&
+            this._cached.positionAuto = !this.pageFlow && (
                 (styleMap.top === 'auto' || !styleMap.top) &&
                 (styleMap.right === 'auto' || !styleMap.right) &&
                 (styleMap.bottom === 'auto' || !styleMap.bottom) &&
@@ -1571,6 +1588,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             this._cached.paddingLeft = this.convertBox('padding', 'Left');
         }
         return this._cached.paddingLeft;
+    }
+
+    get contentBox() {
+        return this.css('boxSizing') === 'content-box' && !this.documentParent.layoutElement && !this.tableElement;
     }
 
     get contentBoxWidth() {
@@ -1807,7 +1828,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
     get multiline() {
         if (this._cached.multiline === undefined) {
-            this._cached.multiline = this.plainText || this.inlineText && (this.inlineFlow || this.length === 0) ? $dom.getRangeClientRect(<Element> this._element).multiline > 0 : false;
+            this._cached.multiline = this.plainText || this.inlineText && (this.inlineFlow || this.length === 0) ? $session.getRangeClientRect(<Element> this._element, this.sessionId).multiline > 0 : false;
         }
         return this._cached.multiline;
     }
@@ -1817,7 +1838,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
     get renderExclude() {
         if (this._cached.renderExclude === undefined) {
-            this._cached.renderExclude = this.pseudoElement && this.css('content') === '""' && this.contentBoxWidth === 0 && this.contentBoxHeight === 0;
+            this._cached.renderExclude = (
+                this.pseudoElement && this.css('content') === '""' && this.contentBoxWidth === 0 && this.contentBoxHeight === 0 ||
+                this.bounds.height === 0 && (this.marginTop < 0 || this.marginBottom < 0)
+            );
         }
         return this._cached.renderExclude;
     }
@@ -1935,7 +1959,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         if (maxWidth > 0) {
                             width = Math.min(width, maxWidth);
                         }
-                        if (this.css('boxSizing') === 'content-box' && !this.documentParent.layoutElement) {
+                        if (this.contentBox) {
                             width += this.contentBoxWidth;
                         }
                         this._cached.actualWidth = width;
@@ -1965,7 +1989,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         if (maxHeight > 0) {
                             height = Math.min(height, maxHeight);
                         }
-                        if (this.css('boxSizing') === 'content-box' && !this.documentParent.layoutElement) {
+                        if (this.contentBox) {
                             height += this.contentBoxHeight;
                         }
                         this._cached.actualHeight = height;
@@ -1987,21 +2011,15 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get firstChild() {
-        if (this.htmlElement && this.naturalElement && this.actualChildren.length) {
+        if (this.actualChildren.length) {
             return this.actualChildren[0];
-        }
-        else if (this.length) {
-            return this.nodes[0];
         }
         return undefined;
     }
 
     get lastChild() {
-        if (this.htmlElement && this.naturalElement && this.actualChildren.length) {
+        if (this.actualChildren.length) {
             return this.actualChildren[this.actualChildren.length - 1];
-        }
-        else if (this.length) {
-            return this.nodes[this.nodes.length - 1];
         }
         return undefined;
     }
