@@ -55,6 +55,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             let columnCount = 0;
             node.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, null);
             let adjustPadding = false;
+            let resetPadding: number | null = null;
             if (parent.is(CONTAINER_NODE.GRID)) {
                 columnCount = $util.convertInt(parent.android('columnCount'));
                 adjustPadding = true;
@@ -114,8 +115,19 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         top = position.top;
                         left = position.left;
                         gravity = 'left';
+                        if (node.marginLeft < 0) {
+                            resetPadding = node.marginLeft;
+                            if (parent.paddingLeft > 0) {
+                                resetPadding += parent.paddingLeft;
+                            }
+                            else {
+                                resetPadding += parent.marginLeft;
+                            }
+                        }
+                        else {
+                            adjustPadding = false;
+                        }
                         minWidth = 0;
-                        adjustPadding = false;
                     }
                     image = Resource.addImageURL(mainData.imageSrc);
                 }
@@ -212,11 +224,11 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 node.android('layout_columnWeight', '1');
             }
             if (adjustPadding) {
-                if (parent.paddingLeft > 0) {
-                    parent.modifyBox($enum.BOX_STANDARD.PADDING_LEFT, null);
+                if (resetPadding === null || resetPadding <= 0) {
+                    parent.modifyBox(parent.paddingLeft > 0 ? $enum.BOX_STANDARD.PADDING_LEFT : $enum.BOX_STANDARD.MARGIN_LEFT, null);
                 }
-                else {
-                    parent.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, null);
+                if (typeof resetPadding === 'number' && resetPadding < 0) {
+                    parent.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, resetPadding);
                 }
             }
             if (node.length && node.every(item => item.baseline)) {

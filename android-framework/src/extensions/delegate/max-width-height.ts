@@ -12,7 +12,7 @@ export default class MaxWidthHeight<T extends android.base.View> extends squared
     }
 
     public processNode(node: T, parent: T) {
-        const absolute = node.filter(item => !item.pageFlow);
+        const absolute = node.filter(item => !item.pageFlow && (item.absoluteParent !== node || node.documentRoot));
         let container: T;
         if (absolute.length) {
             container = (<android.base.Controller<T>> this.application.controllerHandler).createNodeWrapper(node, parent, absolute as T[], CONTAINER_ANDROID.CONSTRAINT, CONTAINER_NODE.CONSTRAINT);
@@ -24,6 +24,9 @@ export default class MaxWidthHeight<T extends android.base.View> extends squared
         const maxWidth = node.css('maxWidth');
         const maxHeight = node.css('maxHeight');
         if ($util.isLength(maxWidth, true)) {
+            if (!node.hasWidth) {
+                node.android('layout_width', node.some(item => item.blockStatic) ? 'match_parent' : 'wrap_content');
+            }
             const width = $util.formatPX(node.parseUnit(maxWidth) + ($util.isPercent(maxWidth) ? 0 : node.contentBoxWidth + (node.marginLeft > 0 ? node.marginLeft : 0) + (node.marginRight > 0 ? node.marginRight : 0)));
             container.cssApply({ width, maxWidth: width }, true);
             if (parent.layoutElement) {
@@ -34,6 +37,9 @@ export default class MaxWidthHeight<T extends android.base.View> extends squared
             }
         }
         if ($util.isLength(maxHeight, true)) {
+            if (!node.hasHeight) {
+                node.android('layout_height', 'wrap_content');
+            }
             const height = $util.formatPX(node.parseUnit(maxHeight) + ($util.isPercent(maxHeight) ? 0 : node.contentBoxHeight + (node.marginTop > 0 ? node.marginTop : 0) + (node.marginBottom > 0 ? node.marginBottom : 0)));
             container.cssApply({ height, maxHeight: height }, true);
             if (parent.layoutElement) {

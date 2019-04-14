@@ -263,19 +263,22 @@ export default abstract class Table<T extends Node> extends Extension<T> {
         }
         else if (mapWidth.every(value => $util.isLength(value))) {
             const width = mapWidth.reduce((a, b) => a + parseInt(b), 0);
-            if (width < node.width) {
-                $util.replaceMap<string, string>(mapWidth, value => value !== '0px' ? `${(parseInt(value) / width) * 100}%` : value);
-            }
-            else if (width > node.width) {
-                node.css('width', 'auto', true);
-                if (!layoutFixed) {
-                    for (const item of node.cascade()) {
-                        item.css('width', 'auto', true);
+            if (node.width > 0) {
+                if (width < node.width) {
+                    $util.replaceMap<string, string>(mapWidth, value => value !== '0px' ? `${(parseInt(value) / width) * 100}%` : value);
+                }
+                else if (width > node.width) {
+                    node.css('width', 'auto', true);
+                    if (!layoutFixed) {
+                        for (const item of node.cascade()) {
+                            item.css('width', 'auto', true);
+                        }
                     }
                 }
             }
-        }
-        else {
+            if (layoutFixed && !node.has('width')) {
+                node.css('width', $util.formatPX(node.bounds.width), true);
+            }
         }
         const mapPercent = mapWidth.reduce((a, b) => a + ($util.isPercent(b) ? parseFloat(b) : 0), 0);
         mainData.layoutType = (() => {

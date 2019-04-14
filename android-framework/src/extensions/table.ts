@@ -56,20 +56,12 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                     }
                 });
                 if (requireWidth && !node.hasWidth) {
-                    const actualWidth = node.actualWidth;
-                    let parentWidth = 0;
-                    node.ascend().some(item => {
-                        if (item.hasWidth) {
-                            parentWidth = item.bounds.width;
-                            return true;
-                        }
-                        return false;
-                    });
-                    if (actualWidth >= parentWidth) {
+                    const above = node.ascend(false, item => item.hasWidth);
+                    if (above.length && node.actualWidth >= above[0].actualWidth) {
                         node.android('layout_width', 'match_parent');
                     }
                     else {
-                        node.css('width', $util.formatPX(actualWidth), true);
+                        node.css('width', $util.formatPX(node.actualWidth), true);
                     }
                 }
             }

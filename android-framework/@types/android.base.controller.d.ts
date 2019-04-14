@@ -6,7 +6,7 @@ declare global {
         interface Controller<T extends View> extends squared.base.Controller<T> {
             readonly userSettings: UserSettingsAndroid;
             checkFrameHorizontal(data: squared.base.Layout<T>): boolean;
-            checkConstraintFloat(data: squared.base.Layout<T>): boolean;
+            checkConstraintFloat(data: squared.base.Layout<T>, horizontal?: boolean): boolean;
             checkConstraintHorizontal(data: squared.base.Layout<T>): boolean;
             checkRelativeHorizontal(data: squared.base.Layout<T>): boolean;
             addGuideline(node: T, parent: T, orientation?: string, percent?: boolean, opposite?: boolean): void;

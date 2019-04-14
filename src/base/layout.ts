@@ -48,6 +48,27 @@ export default class Layout<T extends Node> extends squared.lib.base.Container<T
         this.itemCount = this.children.length;
     }
 
+    public reset(parent?: T, node?: T) {
+        this.containerType = 0;
+        this.alignmentType = 0;
+        this.rowCount = 0;
+        this.columnCount = 0;
+        this.renderType = 0;
+        this.renderIndex = -1;
+        this.itemCount = 0;
+        this._floated = undefined;
+        this._cleared = undefined;
+        this._linearX = undefined;
+        this._linearY = undefined;
+        if (parent) {
+            this.parent = parent;
+        }
+        if (node) {
+            this.node = node;
+        }
+        this.clear();
+    }
+
     public setType(containerType: number, ...alignmentType: number[]) {
         this.containerType = containerType;
         for (const value of alignmentType) {

@@ -116,10 +116,6 @@ export function checkStyleValue(element: Element, attr: string, value: string, s
                     case 'borderRightColor':
                     case 'borderBottomColor':
                     case 'borderLeftColor':
-                    case 'borderTopWidth':
-                    case 'borderRightWidth':
-                    case 'borderBottomWidth':
-                    case 'borderLeftWidth':
                         valid = true;
                         break;
                     default:

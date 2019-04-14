@@ -8,6 +8,7 @@ export interface CssGridData<T> {
     column: CssGridDirectionData;
     emptyRows: Array<Undefined<number[]>>;
     rowData: (T[] | undefined)[][];
+    rowWeight: number[];
     templateAreas: ObjectMap<CssGridCellData>;
     alignItems: string;
     alignContent: string;
@@ -37,14 +38,14 @@ export interface CssGridCellData {
 }
 
 export interface FlexboxData<T> {
+    directionReverse: boolean;
+    directionRow: boolean;
+    directionColumn: boolean;
     wrap: boolean;
     wrapReverse: boolean;
-    directionReverse: boolean;
     alignContent: string;
     justifyContent: string;
     rowCount: number;
-    rowDirection: boolean;
-    columnDirection: boolean;
     columnCount: number;
     children: T[];
 }

@@ -55,8 +55,8 @@ export default class FloatingActionButton<T extends android.base.View> extends s
         $Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean($constA.EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
         let parentAs: T | undefined;
         if (!node.pageFlow || target) {
-            const horizontalBias = node.horizontalBias();
-            const verticalBias = node.verticalBias();
+            const horizontalBias = node.horizontalBias;
+            const verticalBias = node.verticalBias;
             const documentParent = node.documentParent;
             const gravity: string[] = [];
             if (horizontalBias < 0.5) {
@@ -78,9 +78,8 @@ export default class FloatingActionButton<T extends android.base.View> extends s
             else {
                 gravity.push('center_vertical');
             }
-            let layoutGravity = '';
             for (const value of gravity) {
-                layoutGravity = node.mergeGravity('layout_gravity', value);
+                node.mergeGravity('layout_gravity', value);
             }
             if (horizontalBias > 0 && horizontalBias < 1 && horizontalBias !== 0.5) {
                 if (horizontalBias < 0.5) {
@@ -100,6 +99,7 @@ export default class FloatingActionButton<T extends android.base.View> extends s
             }
             node.positioned = true;
             if (target) {
+                const layoutGravity = node.android('layout_gravity');
                 let anchor = parent.documentId;
                 if (parent.controlName === $constA.SUPPORT_ANDROID.TOOLBAR) {
                     const outerParent: string = parent.data(WIDGET_NAME.TOOLBAR, 'outerParent');
@@ -107,11 +107,11 @@ export default class FloatingActionButton<T extends android.base.View> extends s
                         anchor = outerParent;
                     }
                 }
-                node.app('layout_anchor', anchor);
                 if (layoutGravity !== '') {
                     node.app('layout_anchorGravity', layoutGravity);
                     node.delete('android', 'layout_gravity');
                 }
+                node.app('layout_anchor', anchor);
                 node.exclude({ procedure: $enum.NODE_PROCEDURE.ALIGNMENT });
                 node.render(this.application.resolveTarget(target));
                 parentAs = node.renderParent as T;

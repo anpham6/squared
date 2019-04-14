@@ -54,8 +54,7 @@ export default class RadioGroup<T extends View> extends squared.base.Extension<T
             node.alignmentType |= $enum.NODE_ALIGNMENT.HORIZONTAL;
             node.android('orientation', AXIS_ANDROID.HORIZONTAL);
             if (node.baseline) {
-                node.css('verticalAlign', '0px', true);
-                node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, -4);
+                node.css('verticalAlign', 'text-bottom', true);
             }
             node.render(parent);
             return {
@@ -99,15 +98,14 @@ export default class RadioGroup<T extends View> extends squared.base.Extension<T
                 }
                 container.setControlType(CONTROL_NAME, CONTAINER_NODE.LINEAR);
                 container.inherit(node, 'alignment');
-                container.css('verticalAlign', '0px');
+                container.css('verticalAlign', 'text-bottom');
                 container.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, -4);
                 container.exclude({ resource: $enum.NODE_RESOURCE.ASSET });
-                container.each((item: T, index) => {
+                container.each(item => {
                     if (item !== node) {
                         item.setControlType(CONTAINER_ANDROID.RADIO, CONTAINER_NODE.RADIO);
                     }
                     item.positioned = true;
-                    item.siblingIndex = index;
                 });
                 container.render(!node.dataset.use && node.dataset.target ? this.application.resolveTarget(node.dataset.target) : parent);
                 container.android('orientation', $NodeList.linearData(children).linearX ? AXIS_ANDROID.HORIZONTAL : AXIS_ANDROID.VERTICAL);

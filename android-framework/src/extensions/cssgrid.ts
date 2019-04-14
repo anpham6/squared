@@ -63,9 +63,7 @@ function getGridSize(mainData: CssGridData<View>, direction: string, node: View)
     }
     value += data.gap * (data.count - 1);
     if (node.contentBox) {
-        if ($util.isUserAgent($util.USER_AGENT.FIREFOX)) {
-            value += horizontal ? node.borderLeftWidth + node.borderRightWidth : node.borderTopWidth + node.borderBottomWidth;
-        }
+        value += horizontal ? node.borderLeftWidth + node.borderRightWidth : node.borderTopWidth + node.borderBottomWidth;
     }
     else {
         value += horizontal ? node.contentBoxWidth : node.contentBoxHeight;
@@ -444,6 +442,21 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             }
             if (node.hasHeight && mainData.alignContent !== 'normal') {
                 setContentSpacing(mainData, node, mainData.alignContent, 'row');
+                if (mainData.rowWeight.length > 1) {
+                    for (let i = 0; i < mainData.row.count; i++) {
+                        if (mainData.rowWeight[i] > 0) {
+                            for (let j = 0; j < mainData.rowData[i].length; j++) {
+                                const item = mainData.rowData[i][j];
+                                if (item) {
+                                    for (const column of item) {
+                                        column.android('layout_rowWeight', $math.truncate(mainData.rowWeight[i], this.application.controllerHandler.localSettings.precision.standardFloat).toString());
+                                        column.android('layout_height', '0px');
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
             if (mainData.column.normal && !mainData.column.unit.includes('auto')) {
                 const columnGap =  mainData.column.gap * (mainData.column.count - 1);

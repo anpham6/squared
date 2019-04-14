@@ -101,13 +101,11 @@ export default abstract class Controller<T extends Node> implements squared.base
                                 }
                             }
                         }
+                        case 'reset':
                         case 'submit':
                         case 'button':
                             if (styleMap.textAlign === undefined) {
                                 styleMap.textAlign = 'center';
-                            }
-                            if (styleMap.verticalAlign === undefined) {
-                                styleMap.verticalAlign = 'text-bottom';
                             }
                             break;
                     }
@@ -116,6 +114,7 @@ export default abstract class Controller<T extends Node> implements squared.base
                     if (styleMap.textAlign === undefined) {
                         styleMap.textAlign = 'center';
                     }
+                    break;
                 case 'TEXTAREA':
                 case 'SELECT':
                     if (styleMap.verticalAlign === undefined && (element.tagName !== 'SELECT' || (<HTMLSelectElement> element).size > 1)) {

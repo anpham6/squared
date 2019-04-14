@@ -2,6 +2,7 @@ import { FlexboxData } from '../@types/extension';
 
 import Extension from '../extension';
 import Node from '../node';
+import NodeList from '../nodelist';
 
 import { EXT_NAME } from '../lib/constant';
 import { NODE_ALIGNMENT } from '../lib/enumeration';
@@ -13,14 +14,14 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
         const wrap = node.css('flexWrap');
         const direction = node.css('flexDirection');
         return {
+            directionRow: direction.startsWith('row'),
+            directionColumn: direction.startsWith('column'),
+            directionReverse: direction.endsWith('reverse'),
             wrap: wrap.startsWith('wrap'),
             wrapReverse: wrap === 'wrap-reverse',
-            directionReverse: direction.endsWith('reverse'),
             alignContent: node.css('alignContent'),
             justifyContent: node.css('justifyContent'),
-            rowDirection: direction.startsWith('row'),
             rowCount: 0,
-            columnDirection: direction.startsWith('column'),
             columnCount: 0,
             children
         };
@@ -65,34 +66,31 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
             node.cssFinally('alignItems');
         }
         if (mainData.wrap) {
+            let align: string;
+            let sort: string;
             let size: string;
             let method: string;
-            if (mainData.rowDirection) {
-                children.sort((a, b) => {
-                    if (!a.intersectX(b.bounds, 'bounds')) {
-                        return a.linear.top < b.linear.top ? -1 : 1;
-                    }
-                    else if (!$util.withinRange(a.linear.left, b.linear.left)) {
-                        return a.linear.left < b.linear.left ? -1 : 1;
-                    }
-                    return 0;
-                });
+            if (mainData.directionRow) {
+                align = 'top';
+                sort = 'left';
                 size = 'right';
-                method = 'intersectX';
-            }
-            else {
-                children.sort((a, b) => {
-                    if (!a.intersectY(b.bounds, 'bounds')) {
-                        return a.linear.left < b.linear.left ? -1 : 1;
-                    }
-                    else if (!$util.withinRange(a.linear.top, b.linear.top)) {
-                        return a.linear.top < b.linear.top ? -1 : 1;
-                    }
-                    return 0;
-                });
-                size = 'bottom';
                 method = 'intersectY';
             }
+            else {
+                align = 'left';
+                sort = 'top';
+                size = 'bottom';
+                method = 'intersectX';
+            }
+            children.sort((a, b) => {
+                if (!a[method](b.bounds, 'bounds')) {
+                    return a.linear[align] < b.linear[align] ? -1 : 1;
+                }
+                else if (!$util.withinRange(a.linear[sort], b.linear[sort])) {
+                    return a.linear[sort] < b.linear[sort] ? -1 : 1;
+                }
+                return 0;
+            });
             let row: T[] = [children[0]];
             let rowStart = children[0];
             const rows: T[][] = [row];
@@ -113,6 +111,7 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
                 const seg = rows[i];
                 const group = controller.createNodeGroup(seg[0], seg, node);
                 group.siblingIndex = i;
+                node.sort(NodeList.siblingIndex);
                 const box = group.unsafe('box');
                 if (box) {
                     box[size] = node.box[size];
@@ -120,7 +119,7 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
                 group.alignmentType |= NODE_ALIGNMENT.SEGMENTED;
                 maxCount = Math.max(seg.length, maxCount);
             }
-            if (mainData.rowDirection) {
+            if (mainData.directionRow) {
                 mainData.rowCount = rows.length;
                 mainData.columnCount = maxCount;
             }
@@ -140,7 +139,7 @@ export default abstract class Flexbox<T extends Node> extends Extension<T> {
                     return a.flexbox.order > b.flexbox.order ? c : d;
                 });
             }
-            if (mainData.rowDirection) {
+            if (mainData.directionRow) {
                 mainData.rowCount = 1;
                 mainData.columnCount = node.length;
             }

@@ -62,7 +62,7 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
         case 'ridge': {
             const color = $color.parseColor(border.color);
             if (color) {
-                if (style === 'outset' || style === 'ridge') {
+                if (style === 'outset') {
                     halfSize = !halfSize;
                 }
                 if (halfSize) {
@@ -718,9 +718,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     case 'cover':
                                         if (dimension.width < bounds.width || dimension.height < bounds.height) {
                                             const ratio = Math.max(bounds.width / dimension.width, bounds.height / dimension.height);
-                                            width = dimension.width * ratio;
+                                            width = 0;
                                             height = dimension.height * ratio;
-                                            gravity = 'top|center_horizontal';
+                                            gravity = 'top|center_horizontal|fill_horizontal';
                                         }
                                         else {
                                             width = 0;
@@ -776,6 +776,14 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     }
                                     else if (backgroundClip.top < backgroundClip.bottom) {
                                         bottom = backgroundClip.bottom - backgroundClip.top;
+                                    }
+                                }
+                                else if (width === 0 && height === 0 && dimension.width < node.actualWidth && tileMode !== 'repeat') {
+                                    if (tileModeX !== 'repeat') {
+                                        width = dimension.width;
+                                    }
+                                    if (tileModeY !== 'repeat') {
+                                        height = dimension.height;
                                     }
                                 }
                                 if (width > 0) {
@@ -980,19 +988,18 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             }
                         }
                         else {
-                            const index = layerListData[0].item.length;
-                            for (let i = 0; i < borders.length; i++) {
-                                const item = borders[i];
+                            function setBorderStyle(layerList: ObjectMap<any>, index: number) {
+                                const item = borders[index];
                                 if (item) {
                                     const width = parseInt(item.width);
                                     if (item.style === 'double' && width > 2) {
                                         insertDoubleBorder.apply(null, [
-                                            layerListData[0].item,
+                                            layerList.item,
                                             item,
-                                            i === 0,
-                                            i === 1,
-                                            i === 2,
-                                            i === 3,
+                                            index === 0,
+                                            index === 1,
+                                            index === 2,
+                                            index === 3,
                                             corners
                                         ]);
                                     }
@@ -1003,34 +1010,38 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         const visible = !visibleAll && item.width === '1px';
                                         let hideWidth = `-${baseWidth}px`;
                                         let outerWidth = `-${baseWidth + (visibleAll ? 1 : 0)}px`;
-                                        layerListData[0].item.push({
-                                            top:  i === 0 ? '' : outerWidth,
-                                            right: i === 1 ? (visible ? item.width : '') : outerWidth,
-                                            bottom: i === 2 ? (visible ? item.width : '') : hideWidth,
-                                            left: i === 3 ? '' : hideWidth,
+                                        layerList.item.push({
+                                            top:  index === 0 ? '' : outerWidth,
+                                            right: index === 1 ? (visible ? item.width : '') : outerWidth,
+                                            bottom: index === 2 ? (visible ? item.width : '') : hideWidth,
+                                            left: index === 3 ? '' : hideWidth,
                                             shape: {
                                                 'android:shape': 'rectangle',
                                                 corners,
-                                                stroke: getShapeStroke(item, i, hasInset)
+                                                stroke: getShapeStroke(item, index, hasInset)
                                             }
                                         });
                                         if (hasInset) {
                                             hideWidth = `-${$util.formatPX(getHideWidth(width))}`;
                                             outerWidth = `-${width + (visibleAll ? 1 : 0)}px`;
-                                            layerListData[0].item.splice(index, 0, {
-                                                top:  i === 0 ? '' : outerWidth,
-                                                right: i === 1 ? (visible ? item.width : '') : outerWidth,
-                                                bottom: i === 2 ? (visible ? item.width : '') : hideWidth,
-                                                left: i === 3 ? '' : hideWidth,
+                                            layerList.item.splice(layerList.item.length, 0, {
+                                                top:  index === 0 ? '' : outerWidth,
+                                                right: index === 1 ? (visible ? item.width : '') : outerWidth,
+                                                bottom: index === 2 ? (visible ? item.width : '') : hideWidth,
+                                                left: index === 3 ? '' : hideWidth,
                                                 shape: {
                                                     'android:shape': 'rectangle',
-                                                    stroke: getShapeStroke(item, i, hasInset, true)
+                                                    stroke: getShapeStroke(item, index, hasInset, true)
                                                 }
                                             });
                                         }
                                     }
                                 }
                             }
+                            setBorderStyle(layerListData[0], 3);
+                            setBorderStyle(layerListData[0], 0);
+                            setBorderStyle(layerListData[0], 1);
+                            setBorderStyle(layerListData[0], 2);
                         }
                     }
                     const filename = `${node.tagName.toLowerCase()}_${node.controlId}`;
@@ -1049,44 +1060,39 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         );
                     }
                     if (this.options.autoSizeBackgroundImage && resizable && backgroundImage.length && !node.documentRoot && !node.is(CONTAINER_NODE.IMAGE) && node.renderParent && !node.renderParent.tableElement && node.hasProcedure($enum.NODE_PROCEDURE.AUTOFIT)) {
-                        let parentWidth = 0;
-                        let parentHeight = 0;
+                        let imageWidth = 0;
+                        let imageHeight = 0;
                         for (const image of imageDimensions) {
                             if (image) {
-                                parentWidth = Math.max(parentWidth, image.width);
-                                parentHeight = Math.max(parentHeight, image.height);
+                                imageWidth = Math.max(imageWidth, image.width);
+                                imageHeight = Math.max(imageHeight, image.height);
                             }
                         }
-                        if (parentWidth === 0) {
-                            let current = node;
-                            while (current && !current.documentBody) {
-                                if (current.hasWidth) {
-                                    parentWidth = current.actualWidth;
+                        if (node.blockStatic || imageWidth === 0) {
+                            let ascend = node;
+                            while (ascend) {
+                                if (ascend.hasWidth) {
+                                    imageWidth = ascend.has('width') ? ascend.actualWidth : ascend.bounds.width;
                                 }
-                                if (current.hasHeight) {
-                                    parentHeight = current.actualHeight;
+                                if (ascend.hasHeight) {
+                                    imageHeight = ascend.has('height') ? ascend.actualHeight : ascend.bounds.height;
                                 }
-                                if (!current.pageFlow || parentWidth > 0 && parentHeight > 0) {
+                                if (ascend.documentBody || imageWidth > 0 && imageHeight > 0 || !ascend.pageFlow) {
                                     break;
                                 }
-                                current = current.documentParent as T;
+                                ascend = ascend.actualParent as T;
                             }
                         }
-                        const width = node.cssInitial('width');
-                        const height = node.cssInitial('height');
-                        if (!$util.isLength(width) && width !== '100%') {
+                        if (!node.has('width', $enum.CSS_STANDARD.LENGTH, { map: 'initial', not: '100%' }) && (imageWidth === 0 || node.bounds.width < imageWidth)) {
                             const backgroundWidth = node.bounds.width - (node.contentBox ? node.contentBoxWidth : 0);
-                            if (backgroundWidth > 0 && (parentWidth === 0 || backgroundWidth < parentWidth)) {
+                            if (backgroundWidth > 0) {
                                 node.css('width', $util.formatPX(backgroundWidth), true);
                             }
                         }
-                        if (!$util.isLength(height) && height !== '100%' && (node.length === 0 || node.some(item => !item.multiline))) {
+                        if (!node.has('height', $enum.CSS_STANDARD.LENGTH, { map: 'initial', not: '100%' }) && (imageHeight === 0 || node.bounds.height < imageHeight)) {
                             const backgroundHeight = node.bounds.height - (node.contentBox ? node.contentBoxHeight : 0);
-                            if (backgroundHeight > 0 && (parentHeight === 0 || backgroundHeight < parentHeight)) {
+                            if (backgroundHeight > 0) {
                                 node.css('height', $util.formatPX(backgroundHeight), true);
-                                if (node.marginTop < 0) {
-                                    node.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, null);
-                                }
                                 if (node.marginBottom < 0) {
                                     node.modifyBox($enum.BOX_STANDARD.MARGIN_BOTTOM, null);
                                 }

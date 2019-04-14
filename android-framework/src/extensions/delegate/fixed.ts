@@ -3,7 +3,6 @@ import View from '../../view';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import $Layout = squared.base.Layout;
-import $NodeList = squared.base.NodeList;
 
 const $enum = squared.base.lib.enumeration;
 const $util = squared.lib.util;
@@ -63,10 +62,7 @@ export default class Fixed<T extends View> extends squared.base.Extension<T> {
             });
             children.push(container);
             container.innerChild = node;
-            for (let i = 0; i < children.length; i++) {
-                children[i].siblingIndex = i;
-            }
-            node.sort($NodeList.siblingIndex);
+            node.retain(children);
             node.resetBox($enum.BOX_STANDARD.PADDING | (node.documentBody ? $enum.BOX_STANDARD.MARGIN : 0), container, true);
             node.outerParent = container;
             return {

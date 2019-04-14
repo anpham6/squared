@@ -623,7 +623,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         case 'borderBottom':
                         case 'borderLeft': {
                             const style = node.css(`${attr}Style`) || 'none';
-                            let width = node.convertPX(node.css(`${attr}Width`), (attr === 'borderLeft' || attr === 'borderRight'), false) || '0px';
+                            let width = node.css(`${attr}Width`);
                             switch (width) {
                                 case 'thin':
                                     width = '1px';
@@ -633,6 +633,9 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                     break;
                                 case 'thick':
                                     width = '3px';
+                                    break;
+                                default:
+                                    width = node.convertPX(width, (attr === 'borderLeft' || attr === 'borderRight'), false) || '0px';
                                     break;
                             }
                             let color = node.css(`${attr}Color`) || 'initial';
@@ -802,7 +805,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                     }
                                     break;
                                 case 'submit':
-                                    if (value === '' && !$util.REGEXP_COMPILED.URL.test(node.css('background'))) {
+                                    if (value === '' && !node.visibleStyle.backgroundImage) {
                                         value = 'Submit';
                                     }
                                     break;

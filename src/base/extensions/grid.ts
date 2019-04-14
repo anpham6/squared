@@ -236,11 +236,9 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                 item.hide();
             }
             node.clear();
-            let index = 0;
             for (const group of children) {
                 for (const item of group) {
                     item.parent = node;
-                    item.siblingIndex = index++;
                 }
             }
             if (node.tableElement && node.css('borderCollapse') === 'collapse') {

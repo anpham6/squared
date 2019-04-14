@@ -1,7 +1,7 @@
 import Extension from '../extension';
 import Node from '../node';
 
-import { BOX_STANDARD, CSS_STANDARD, NODE_ALIGNMENT } from '../lib/enumeration';
+import { BOX_STANDARD, CSS_STANDARD } from '../lib/enumeration';
 
 const $session = squared.lib.session;
 const $util = squared.lib.util;
@@ -14,7 +14,7 @@ function setMinHeight(node: Node, offset: number) {
 }
 
 function isBlockElement(node: Node | undefined) {
-    return node ? node.blockStatic && !node.lineBreak && !node.positioned : false;
+    return node ? (node.blockStatic || node.display === 'table') && !node.lineBreak && !node.positioned : false;
 }
 
 function getVisibleNode(node: Node) {
@@ -107,12 +107,15 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
     public afterBaseLayout() {
         const processed = new Set<T>();
         for (const node of this.application.processing.cache) {
-            if (node.naturalElement && !node.layoutElement) {
+            if (node.naturalElement && !node.layoutElement && node.actualChildren.length) {
                 const children = node.actualChildren;
                 let firstChild: T | undefined;
                 let lastChild: T | undefined;
                 for (let i = 0; i < children.length; i++) {
                     const current = children[i] as T;
+                    if (!current.pageFlow) {
+                        continue;
+                    }
                     if (node.blockStatic) {
                         if (firstChild === undefined) {
                             firstChild = current;
@@ -177,19 +180,24 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                                 }
                                             }
                                         }
-                                        if (marginBottom > 0 && marginTop > 0) {
-                                            if (marginTop <= marginBottom) {
-                                                resetMargin(currentVisible, BOX_STANDARD.MARGIN_TOP);
+                                        if (marginBottom > 0) {
+                                            if (marginTop > 0) {
+                                                if (marginTop <= marginBottom) {
+                                                    resetMargin(currentVisible, BOX_STANDARD.MARGIN_TOP);
+                                                }
+                                                else {
+                                                    resetMargin(previousVisible, BOX_STANDARD.MARGIN_BOTTOM);
+                                                }
                                             }
-                                            else {
+                                            else if (previous.bounds.height === 0) {
                                                 resetMargin(previousVisible, BOX_STANDARD.MARGIN_BOTTOM);
                                             }
                                         }
                                     }
                                 }
-                                else if (previous.tagName === 'IMG') {
+                                else if (!previous.block && previous.blockDimension && current.length === 0) {
                                     const offset = current.linear.top - previous.linear.bottom;
-                                    if (offset > 0 && !current.ascend(true).some(item => item.has('height'))) {
+                                    if (Math.floor(offset) > 0 && current.ascend(false, item => item.has('height')).length === 0) {
                                         currentVisible.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
                                     }
                                 }
@@ -202,6 +210,12 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                 }
                 if (lastChild) {
                     applyMarginCollapse(node, lastChild, false);
+                    if (lastChild.marginTop < 0) {
+                        const offset = lastChild.bounds.height + lastChild.marginBottom + lastChild.marginTop;
+                        if (offset < 0) {
+                            node.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset, false);
+                        }
+                    }
                 }
             }
         }
@@ -325,9 +339,9 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
     public afterConstraints() {
         const modified: number[] = [];
         for (let node of this.application.processing.cache) {
-            if (node.pageFlow && node.styleElement && node.inlineVertical && !modified.includes(node.id)) {
+            if (node.pageFlow && node.styleElement && node.inlineVertical && !node.documentParent.layoutElement && !modified.includes(node.id)) {
                 const renderParent = node.renderAs ? node.renderAs.renderParent : node.renderParent;
-                if (renderParent && !renderParent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
+                if (renderParent) {
                     function setSpacingOffset(region: number, value: number) {
                         const offset = (region === BOX_STANDARD.MARGIN_LEFT ? node.actualRect('left') : node.actualRect('top')) - value;
                         if (offset > 0) {
@@ -338,14 +352,9 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                     }
                     if (renderParent.layoutVertical) {
                         if (node.blockDimension) {
-                            const renderChildren = renderParent.renderChildren;
-                            for (let i = 0; i < renderChildren.length; i++) {
-                                if (node === renderChildren[i]) {
-                                    if (i > 0) {
-                                        setSpacingOffset(BOX_STANDARD.MARGIN_TOP, renderChildren[i - 1].linear.bottom);
-                                    }
-                                    break;
-                                }
+                            const index = renderParent.renderChildren.findIndex(item => item === node);
+                            if (index > 0) {
+                                setSpacingOffset(BOX_STANDARD.MARGIN_TOP, renderParent.renderChildren[index - 1].linear.bottom);
                             }
                         }
                     }

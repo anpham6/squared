@@ -78,6 +78,7 @@ export default class CssGrid<T extends Node> extends Extension<T> {
         return {
             children: new Set(),
             rowData: [],
+            rowWeight: [],
             templateAreas: {},
             row: CssGrid.createDataRowAttribute(),
             column: CssGrid.createDataRowAttribute(),
@@ -755,8 +756,10 @@ export default class CssGrid<T extends Node> extends Extension<T> {
             if (mainData.children.size === node.length) {
                 mainData.row.count = mainData.rowData.length;
                 mainData.column.count = columnCount;
+                let maxHeight = 0;
                 const modified = new Set<T>();
                 for (let i = 0; i < mainData.row.count; i++) {
+                    mainData.rowWeight.push(0);
                     for (let j = 0; j < columnCount; j++) {
                         const column = mainData.rowData[i][j] as T[];
                         if (column) {
@@ -771,11 +774,18 @@ export default class CssGrid<T extends Node> extends Extension<T> {
                                     if (y < mainData.row.count - 1) {
                                         item.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, mainData.row.gap);
                                     }
+                                    if (cellData.rowSpan === 1) {
+                                        mainData.rowWeight[i] = Math.max(mainData.rowWeight[i], item.bounds.height);
+                                    }
+                                    maxHeight = Math.max(maxHeight, item.bounds.height);
                                     modified.add(item);
                                 }
                             }
                         }
                     }
+                }
+                for (let i = 0; i < mainData.rowWeight.length; i++) {
+                    mainData.rowWeight[i] /= maxHeight;
                 }
                 node.retain(Array.from(mainData.children));
                 node.cssSort('zIndex');

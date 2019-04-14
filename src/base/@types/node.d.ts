@@ -5,7 +5,6 @@ export interface InitialData<T> {
     bounds?: RectDimension;
     linear?: RectDimension;
     box?: RectDimension;
-    documentParent?: T;
 }
 
 export interface CachedValue<T> {

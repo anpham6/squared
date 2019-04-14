@@ -18,6 +18,7 @@ declare global {
             readonly visible: T[];
             init(): void;
             setType(containerType: number, ...alignmentType: number[]): void;
+            reset(): void;
             add(value: number): number;
             delete(value: number): number;
         }

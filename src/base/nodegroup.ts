@@ -48,70 +48,114 @@ export default abstract class NodeGroup extends Node {
         return node ? node.nextSiblings(options) : [];
     }
 
-    get actualParent() {
-        return NodeList.actualParent(this._initial.children);
-    }
-
-    get inline() {
-        return this.every(node => node.inline);
-    }
-
-    get pageFlow() {
-        return this.every(node => node.pageFlow);
-    }
-
-    get inlineFlow() {
-        return this.inlineStatic || this.hasAlign(NODE_ALIGNMENT.SEGMENTED);
-    }
-
-    get inlineStatic() {
-        return this.every(node => node.inlineStatic);
-    }
-
-    get inlineVertical() {
-        return this.every(node => node.inlineVertical);
-    }
-
     get block() {
-        return this.some(node => node.block);
+        if (this._cached.block === undefined) {
+            this._cached.block = this.some(node => node.block);
+        }
+        return this._cached.block;
     }
 
     get blockStatic() {
-        return this.hasAlign(NODE_ALIGNMENT.BLOCK) || this.layoutVertical && this.some(node => node.blockStatic) || this.documentParent.blockStatic && this.hasAlign(NODE_ALIGNMENT.COLUMN);
+        if (this._cached.blockStatic === undefined) {
+            this._cached.blockStatic = this.actualWidth === this.documentParent.actualWidth || this.hasAlign(NODE_ALIGNMENT.BLOCK) || this.layoutVertical && this.some(node => node.blockStatic) || this.documentParent.blockStatic && this.hasAlign(NODE_ALIGNMENT.COLUMN);
+        }
+        return this._cached.blockStatic;
     }
 
     get blockDimension() {
-        return this.some(node => node.blockDimension);
-    }
-
-    get floating() {
-        return this.every(node => node.floating);
-    }
-
-    get float() {
-        if (this.floating) {
-            return this.hasAlign(NODE_ALIGNMENT.RIGHT) ? 'right' : 'left';
+        if (this._cached.blockDimension === undefined) {
+            this._cached.blockDimension = this.some(node => node.blockDimension);
         }
-        return 'none';
+        return this._cached.blockDimension;
+    }
+
+    get inline() {
+        if (this._cached.inline === undefined) {
+            this._cached.inline = this.every(node => node.inline);
+        }
+        return this._cached.inline;
+    }
+
+    get inlineStatic() {
+        if (this._cached.inlineStatic === undefined) {
+            this._cached.inlineStatic = this.every(node => node.inlineStatic);
+        }
+        return this._cached.inlineStatic;
+    }
+
+    get inlineVertical() {
+        if (this._cached.inlineVertical === undefined) {
+            this._cached.inlineVertical = this.every(node => node.inlineVertical);
+        }
+        return this._cached.inlineVertical;
+    }
+
+    get inlineFlow() {
+        if (this._cached.inlineStatic === undefined) {
+            this._cached.inlineStatic = this.hasAlign(NODE_ALIGNMENT.SEGMENTED) || this.inlineStatic;
+        }
+        return this._cached.inlineStatic;
+    }
+
+    get pageFlow() {
+        if (this._cached.pageFlow === undefined) {
+            this._cached.pageFlow = this.every(node => node.pageFlow);
+        }
+        return this._cached.pageFlow;
     }
 
     get baseline() {
-        const value = this.cssInitial('verticalAlign', true);
-        return value !== '' ? value === 'baseline' : this.every(node => node.baseline);
+        if (this._cached.baseline === undefined) {
+            const value = this.cssInitial('verticalAlign', true);
+            if (value !== '') {
+                this._cached.baseline = value === 'baseline';
+            }
+            else {
+                this._cached.baseline = this.every(node => node.baseline);
+            }
+        }
+        return this._cached.baseline;
     }
 
-    get multiline() {
-        return false;
+    get float() {
+        if (this._cached.float === undefined) {
+            if (this.floating) {
+                this._cached.float = this.hasAlign(NODE_ALIGNMENT.RIGHT) ? 'right' : 'left';
+            }
+            else {
+                this._cached.float = 'none';
+            }
+        }
+        return this._cached.float;
+    }
+
+    get floating() {
+        if (this._cached.floating === undefined) {
+            this._cached.floating = this.every(node => node.floating);
+        }
+        return this._cached.floating;
     }
 
     get display() {
         return (
             this.css('display') ||
-            this.some(node => node.block) ? 'block' : (this.some(node => node.blockDimension || node.inlineVertical) ? 'inline-block' : 'inline')
+            this.some(node => node.blockStatic) ? 'block'
+                                                : this.some(node => node.blockDimension || node.inlineVertical) ? 'inline-block' : 'inline'
         );
+    }
+
+    get actualParent() {
+        if (this._cached.actualParent === undefined) {
+            this._cached.actualParent = NodeList.actualParent(this._initial.children);
+        }
+        return this._cached.actualParent;
     }
 
     get groupParent() {
         return true;
+    }
+
+    get multiline() {
+        return false;
     }
 }

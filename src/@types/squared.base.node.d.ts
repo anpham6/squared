@@ -140,6 +140,7 @@ declare global {
             readonly lastChild: Node | undefined;
             readonly previousSibling: Node | undefined;
             readonly nextSibling: Node | undefined;
+            readonly singleChild: boolean;
             readonly documentId: string;
             readonly nodes: Node[];
             readonly center: Point;
@@ -169,7 +170,7 @@ declare global {
             hide(invisible?: boolean): void;
             data(name: string, attr: string, value?: any, overwrite?: boolean): any;
             unsetCache(...attrs: string[]): void;
-            ascend(generated?: boolean, levels?: number): Node[];
+            ascend(generated?: boolean, condition?: (item: Node) => boolean, levels?: number): Node[];
             cascade(element?: boolean): Node[];
             inherit(node: Node, ...modules: string[]): void;
             alignedVertically(previousSiblings: Node[], siblings?: Node[], cleared?: Map<Node, string>, horizontal?: boolean): boolean;

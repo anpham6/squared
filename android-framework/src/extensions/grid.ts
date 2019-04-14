@@ -34,7 +34,6 @@ function transferData(parent: View, siblings: View[])  {
         else {
             destination = item.data($const.EXT_NAME.GRID, 'cellData');
         }
-        item.siblingIndex = i;
         item.data($const.EXT_NAME.GRID, 'cellData', null);
     }
     parent.data($const.EXT_NAME.GRID, 'cellData', destination);

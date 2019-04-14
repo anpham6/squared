@@ -31,7 +31,7 @@ function replaceEntity(value: string) {
 export default class ResourceStrings<T extends android.base.View> extends squared.base.Extension<T> {
     public readonly options: ResourceStringsOptions = {
         numberResourceValue: false,
-        replaceCharacterEntities: false
+        replaceCharacterEntities: true
     };
 
     public readonly eventOnly = true;

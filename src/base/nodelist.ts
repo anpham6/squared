@@ -58,14 +58,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
     }
 
     public static baseline<T extends Node>(list: T[], text = false) {
-        let baseline = $util.filterArray(list, item => !item.baselineAltered && !item.floating);
-        if (baseline.length) {
-            list = baseline;
-        }
-        else {
-            return baseline;
-        }
-        baseline = $util.filterArray(list, item => item.textElement || item.baseline && (item.length === 0 || item.every(child => child.baseline)));
+        const baseline = $util.filterArray(list, item => !item.baselineAltered && (item.baseline || $util.isLength(item.verticalAlign)) && !item.floating && (item.length === 0 || item.every(child => child.baseline)));
         if (baseline.length) {
             list = baseline;
         }
@@ -86,7 +79,7 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                 boundsHeight = Math.max(boundsHeight, item.bounds.height);
             }
         }
-        $util.spliceArray(list, item => lineHeight > boundsHeight ? item.lineHeight !== lineHeight : !$util.withinRange(item.actualHeight, boundsHeight));
+        $util.spliceArray(list, item => lineHeight > boundsHeight ? item.lineHeight !== lineHeight : !$util.withinRange(item.bounds.height, boundsHeight));
         return list.sort((a, b) => {
             if (a.groupParent || a.length || (!a.baseline && b.baseline)) {
                 return 1;
