@@ -273,7 +273,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                             minSize = 0;
                             sizeWeight = 0;
                         }
-                        else {
+                        else if (dimension === 'width') {
                             size = 0;
                             minSize = 0;
                             sizeWeight = 0.01;

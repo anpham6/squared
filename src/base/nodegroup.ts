@@ -9,7 +9,7 @@ export default abstract class NodeGroup extends Node {
     public init() {
         if (this.length) {
             let siblingIndex = Number.POSITIVE_INFINITY;
-            for (const item of this.children) {
+            for (const item of this) {
                 siblingIndex = Math.min(siblingIndex, item.siblingIndex);
                 item.parent = this;
             }
@@ -57,7 +57,11 @@ export default abstract class NodeGroup extends Node {
 
     get blockStatic() {
         if (this._cached.blockStatic === undefined) {
-            this._cached.blockStatic = this.actualWidth === this.documentParent.actualWidth || this.hasAlign(NODE_ALIGNMENT.BLOCK) || this.layoutVertical && this.some(node => node.blockStatic) || this.documentParent.blockStatic && this.hasAlign(NODE_ALIGNMENT.COLUMN);
+            const value = this.actualChildren.length && this.actualChildren[0].blockStatic || this.actualWidth === this.documentParent.actualWidth || this.hasAlign(NODE_ALIGNMENT.BLOCK) || this.layoutVertical && this.some(node => node.blockStatic) || this.documentParent.blockStatic && this.hasAlign(NODE_ALIGNMENT.COLUMN);
+            if (!value && this.containerType === 0) {
+                return false;
+            }
+            this._cached.blockStatic = value;
         }
         return this._cached.blockStatic;
     }

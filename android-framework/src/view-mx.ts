@@ -177,7 +177,7 @@ export default (Base: Constructor<squared.base.Node>) => {
             current: {}
         };
 
-        protected _namespaces = new Set(['android', 'app']);
+        protected _namespaces = ['android', 'app'];
         protected _controlName = '';
         protected _fontSize = 0;
         protected _documentParent?: T;
@@ -601,7 +601,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                                 if (this.has('maxWidth')) {
                                     value = this.parseUnit(this.css('maxWidth'));
                                 }
-                                else if (!renderParent.blockWidth) {
+                                else if (renderParent.inlineWidth || this.imageElement) {
                                     value = this.bounds.width;
                                 }
                                 else {
@@ -626,15 +626,15 @@ export default (Base: Constructor<squared.base.Node>) => {
                         }
                         else {
                             if (this.blockStatic && !this.inputElement && !renderParent.is(CONTAINER_NODE.GRID)) {
-                                if (renderParent.layoutConstraint && this.alignParent('left') && this.alignParent('right')) {
-                                    layoutWidth = this.autoMargin.horizontal || this.ascend(false, item => item.hasWidth || item.blockStatic).length > 0 ? '0px' : 'match_parent';
-                                }
-                                else if (!this.documentParent.layoutElement || this.gridElement) {
+                                if (!this.documentParent.layoutElement || this.layoutElement) {
                                     layoutWidth = 'match_parent';
+                                }
+                                else if (!this.documentParent.flexElement && renderParent.layoutConstraint && this.alignParent('left') && this.alignParent('right')) {
+                                    layoutWidth = this.autoMargin.horizontal || this.ascend(false, item => item.has('width') || item.blockStatic).length > 0 ? '0px' : 'match_parent';
                                 }
                             }
                             if (!layoutWidth && (
-                                    this.groupParent && this.layoutVertical && this.layoutLinear && renderParent.blockWidth ||
+                                    this.layoutVertical && this.layoutLinear && renderParent.blockWidth && this.actualChildren.some(item => item.lineBreak) ||
                                     !this.pageFlow && this.absoluteParent === this.documentParent && this.has('left') && this.has('right') ||
                                     this.documentParent.flexElement && this.documentParent.css('flexDirection') !== 'column' && this.flexbox.grow > 0 && renderParent.flexibleWidth
                                ))
@@ -642,6 +642,9 @@ export default (Base: Constructor<squared.base.Node>) => {
                                 layoutWidth = 'match_parent';
                             }
                         }
+                    }
+                    if (!layoutWidth && this.some((node: T) => node.layoutConstraint && node.some((child: T) => child.flexibleWidth))) {
+                        layoutWidth = $util.formatPX(this.actualWidth);
                     }
                     this.android('layout_width', layoutWidth || 'wrap_content');
                 }
@@ -654,11 +657,14 @@ export default (Base: Constructor<squared.base.Node>) => {
                             value = this.actualHeight;
                         }
                         else if ($util.isPercent(height)) {
-                            if (height === '100%' && (this.documentRoot || renderParent.blockWidth && !this.has('maxHeight'))) {
+                            if (height === '100%' && (this.documentRoot || renderParent.blockHeight && !this.has('maxHeight'))) {
                                 layoutHeight = 'match_parent';
                             }
-                            else {
+                            else if (this.documentParent.has('height', $enum.CSS_STANDARD.LENGTH)) {
                                 value = this.actualHeight;
+                            }
+                            else if (this.imageElement) {
+                                value = this.bounds.height;
                             }
                         }
                         if (value > 0) {
@@ -681,7 +687,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                                 layoutHeight = $util.formatPX(this.actualHeight);
                             }
                         }
-                        else if (this.display === 'table-cell' || !this.pageFlow && this.absoluteParent === this.documentParent && this.has('top') && this.has('bottom')) {
+                        else if (this.display === 'table-cell' || !this.pageFlow && (this.absoluteParent === this.documentParent || this.position === 'fixed') && this.has('top') && this.has('bottom')) {
                             layoutHeight = 'match_parent';
                         }
                     }
@@ -693,8 +699,8 @@ export default (Base: Constructor<squared.base.Node>) => {
                 if (this.has('minHeight')) {
                     this.android('minHeight', this.convertPX(this.css('minHeight'), false), false);
                 }
-                if (!this.pageFlow && this.textElement && this.inlineWidth) {
-                    this.android('maxWidth', $util.formatPX(this.bounds.width));
+                if (!this.pageFlow && this.textElement && this.inlineWidth && this.textContent.indexOf(' ') !== -1) {
+                    this.android('maxWidth', $util.formatPX(Math.ceil(this.bounds.width)));
                 }
                 if (renderParent.layoutConstraint && !renderParent.blockHeight && renderParent.horizontalRows === undefined && !this.documentParent.documentBody && this.pageFlow && this.alignParent('top') && !this.alignParent('bottom') && this.alignSibling('bottomTop') === '' && $util.withinRange(this.actualRect('bottom'), renderParent.box.bottom)) {
                     this.anchor('bottom', 'parent', false);
@@ -821,24 +827,26 @@ export default (Base: Constructor<squared.base.Node>) => {
                         return;
                     }
                     else if (renderParent.layoutConstraint) {
-                        switch (alignment) {
-                            case 'top':
-                                this.anchor('top', 'parent', false);
-                                break;
-                            case 'right':
-                            case 'end':
-                                this.anchor('right', 'parent', false);
-                                break;
-                            case 'bottom':
-                                this.anchor('bottom', 'parent', false);
-                                break;
-                            case 'left':
-                            case 'start':
-                                this.anchor('left', 'parent', false);
-                                break;
-                            case 'center_horizontal':
-                                this.anchorParent(AXIS_ANDROID.HORIZONTAL, true);
-                                break;
+                        if (!this.positioned) {
+                            switch (alignment) {
+                                case 'top':
+                                    this.anchor('top', 'parent', false);
+                                    break;
+                                case 'right':
+                                case 'end':
+                                    this.anchor('right', 'parent', false);
+                                    break;
+                                case 'bottom':
+                                    this.anchor('bottom', 'parent', false);
+                                    break;
+                                case 'left':
+                                case 'start':
+                                    this.anchor('left', 'parent', false);
+                                    break;
+                                case 'center_horizontal':
+                                    this.anchorParent(AXIS_ANDROID.HORIZONTAL, true);
+                                    break;
+                            }
                         }
                         return;
                     }

@@ -20,13 +20,16 @@ interface UtilRegExpPattern {
     URL: RegExp;
     PROTOCOL: RegExp;
     ATTRIBUTE: RegExp;
-    TAGNAME: RegExp;
     SEPARATOR: RegExp;
-    CHAR_ENTITY: RegExp;
+    ENTITY: RegExp;
     CUSTOMPROPERTY: RegExp;
     LEADINGSPACE: RegExp;
     TRAILINGSPACE: RegExp;
     LEADINGNEWLINE: RegExp;
+    LEADINGNUMBER: RegExp;
+    BREAKWORD: RegExp;
+    TAGNAME_G: RegExp;
+    NONWORD_G: RegExp;
 }
 
 const REGEXP_WORD = /\w/;
@@ -70,15 +73,18 @@ export const REGEXP_COMPILED: UtilRegExpPattern = {
     ANGLE: new RegExp(`^${STRING_PATTERN.ANGLE}$`),
     CALC: new RegExp(`^${STRING_PATTERN.CALC}$`),
     URL: new RegExp(STRING_PATTERN.URL),
-    CHAR_ENTITY: /&#?[A-Za-z0-9]+;/,
-    TAGNAME: /(<([^>]+)>)/g,
+    ENTITY: /&#?[A-Za-z0-9]+;/,
     PROTOCOL: /^[A-Za-z]+:\/\//,
     SEPARATOR: /\s*,\s*/,
     ATTRIBUTE: /([^\s]+)="([^"]+)"/,
     CUSTOMPROPERTY: /^(?:var|calc)\(.+\)$/,
     LEADINGSPACE: /^\s+/,
     TRAILINGSPACE: /\s+$/,
-    LEADINGNEWLINE: /^\s*\n+/
+    LEADINGNEWLINE: /^\s*\n+/,
+    LEADINGNUMBER: /^\d/,
+    BREAKWORD: /[^A-Za-z0-9&#;]+/,
+    TAGNAME_G: /(<([^>]+)>)/g,
+    NONWORD_G: /[^A-Za-z\d]+/g
 };
 
 export function isUserAgent(value: string | number) {

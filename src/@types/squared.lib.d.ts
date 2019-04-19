@@ -50,6 +50,7 @@ declare global {
             function getElementsBetweenSiblings(elementStart: Element | null, elementEnd: Element, whiteSpace?: boolean): Element[] | undefined;
             function getNamedItem(element: Element | null, attr: string): string;
             function createElement(parent?: Element | null, tagName?: string, placeholder?: boolean, index?: number): HTMLElement;
+            function getTextMetrics(value: string, fontFamily: string, fontSize: number): TextMetrics | undefined;
         }
 
         namespace math {
@@ -156,12 +157,15 @@ declare global {
 
         namespace xml {
             export import STRING_XMLENCODING = $xml.STRING_XMLENCODING;
+            export import REGEXP_ESCAPE = $xml.REGEXP_ESCAPE;
             function pushIndent(value: string, depth: number, char?: string, indent?: string): string;
             function pushIndentArray(values: string[], depth: number, char?: string, separator?: string): string;
             function replaceIndent(value: string, depth: number, pattern: RegExp): string;
             function replaceTab(value: string, spaces?: number, preserve?: boolean): string;
             function applyTemplate(tagName: string, template: ExternalData, children: ExternalData[], depth?: number): string;
             function formatTemplate(value: string, closeEmpty?: boolean, startIndent?: number, char?: string): string;
+            function replaceCharacter(value: string): string;
+            function replaceEntity(value: string): string;
         }
     }
 }

@@ -17,6 +17,7 @@ const $dom = squared.lib.dom;
 const $util = squared.lib.util;
 
 const MINWIDTH_INSIDE = 24;
+const PADDINGRIGHT_DFN = 8;
 
 export default class <T extends View> extends squared.base.extensions.List<T> {
     public processNode(node: T, parent: T) {
@@ -182,6 +183,10 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         element.innerHTML = mainData.ordinal;
                         ordinal.setInlineText(true);
                         ordinal.setControlType(CONTAINER_ANDROID.TEXT, CONTAINER_NODE.TEXT);
+                        if (node.tagName === 'DFN') {
+                            minWidth += PADDINGRIGHT_DFN;
+                            ordinal.modifyBox($enum.BOX_STANDARD.PADDING_RIGHT, PADDINGRIGHT_DFN);
+                        }
                     }
                     else {
                         ordinal.setControlType(CONTAINER_ANDROID.SPACE, CONTAINER_NODE.SPACE);
@@ -194,7 +199,8 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         paddingTop: node.paddingTop > 0 ? $util.formatPX(node.paddingTop) : '',
                         paddingRight: paddingRight > 0 && gravity === 'right' ? $util.formatPX(paddingRight) : '',
                         paddingLeft: paddingRight > 0 && gravity === 'left' && (!image || mainData.imagePosition) ? $util.formatPX(paddingRight) : '',
-                        fontSize: mainData.ordinal && !mainData.ordinal.endsWith('.') ? $util.formatPX(ordinal.toInt('fontSize') * 0.75) : ''
+                        fontSize: mainData.ordinal && !mainData.ordinal.endsWith('.') ? $util.formatPX(ordinal.toInt('fontSize') * 0.75) : '',
+                        lineHeight: node.lineHeight > 0 ? $util.formatPX(node.lineHeight) : ''
                     });
                     ordinal.apply(options);
                     if (!inside) {

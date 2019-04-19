@@ -119,13 +119,13 @@ export default abstract class Grid<T extends Node> extends Extension<T> {
                     else {
                         const endIndex = columns.length - 1;
                         if (columns[endIndex]) {
-                            let minLeft = columns[endIndex][0].linear.left;
-                            let maxRight = columns[endIndex][0].linear.right;
-                            for (let k = 1; k < columns[endIndex].length; k++) {
-                                minLeft = Math.min(minLeft, columns[endIndex][k].linear.left);
-                                maxRight = Math.max(maxRight, columns[endIndex][k].linear.right);
-                            }
-                            if (nextX.linear.left > minLeft && nextX.linear.right > maxRight) {
+                            let minLeft = Number.POSITIVE_INFINITY;
+                            let maxRight = Number.NEGATIVE_INFINITY;
+                            columns[endIndex].forEach(item => {
+                                minLeft = Math.min(minLeft, item.linear.left);
+                                maxRight = Math.max(maxRight, item.linear.right);
+                            });
+                            if (nextX.linear.left > Math.ceil(minLeft) && nextX.linear.right > Math.ceil(maxRight)) {
                                 const index = getRowIndex(columns, nextX);
                                 if (index !== -1) {
                                     for (let k = columns.length - 1; k >= 0; k--) {

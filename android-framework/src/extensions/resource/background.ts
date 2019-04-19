@@ -489,6 +489,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     let resourceName = '';
                     for (let i = imageLength - 1; i >= 0; i--) {
                         const value = backgroundImage[i];
+                        const bounds = node.bounds;
                         const position = backgroundPosition[i];
                         const imageData: BackgroundImageData = {
                             bitmap: false,
@@ -611,48 +612,64 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     tileMode = 'disabled';
                                     break;
                             }
-                            if (node.renderChildren.length === 0 && dimension) {
-                                if (gravityX !== '' && tileModeY === 'repeat' && dimension.width < node.actualWidth) {
-                                    if (/(left|start)/.test(gravityX)) {
-                                        position.left = node.borderLeftWidth;
-                                        position.right = 0;
-                                        imageData.gravity = gravityY;
-                                        gravityY = '';
-                                    }
-                                    else if (/(right|end)/.test(gravityX)) {
-                                        position.left = 0;
-                                        position.right = node.borderRightWidth;
-                                        imageData.gravity = gravityY;
-                                        gravityY = '';
-                                    }
-                                    else if (gravityX === 'center_horizontal') {
-                                        position.left = 0;
-                                        position.right = 0;
-                                        imageData.gravity = gravityY;
-                                        gravityY = '';
+                            if (dimension) {
+                                if (gravityX !== '' && tileModeY === 'repeat' && dimension.width < bounds.width) {
+                                    switch (gravityX) {
+                                        case 'start':
+                                        case 'left':
+                                            position.left = node.borderLeftWidth;
+                                            position.right = 0;
+                                            break;
+                                        case 'end':
+                                        case 'right':
+                                            position.left = 0;
+                                            position.right = node.borderRightWidth;
+                                            break;
+                                        case 'center_horizontal':
+                                            position.left = 0;
+                                            position.right = 0;
+                                            break;
                                     }
                                     width = dimension.width;
                                 }
-                                if (gravityY !== '' && tileModeX === 'repeat' && dimension.height < node.actualHeight) {
-                                    if (gravityY === 'top') {
-                                        position.top = node.borderTopWidth;
-                                        position.bottom = 0;
-                                        imageData.gravity = gravityY;
-                                        gravityY = '';
-                                    }
-                                    else if (gravityY === 'bottom') {
-                                        position.top = 0;
-                                        position.bottom = node.borderBottomWidth;
-                                        imageData.gravity = gravityY;
-                                        gravityY = '';
-                                    }
-                                    else if (gravityY === 'center_vertical') {
-                                        position.top = 0;
-                                        position.top = 0;
-                                        imageData.gravity = gravityY;
-                                        gravityY = '';
+                                if (gravityY !== '' && tileModeX === 'repeat' && dimension.height < bounds.height) {
+                                    switch (gravityY) {
+                                        case 'top':
+                                            position.top = node.borderTopWidth;
+                                            position.bottom = 0;
+                                            imageData.gravity = gravityY;
+                                            gravityY = '';
+                                            break;
+                                        case 'bottom':
+                                            position.top = 0;
+                                            position.bottom = node.borderBottomWidth;
+                                            imageData.gravity = gravityY;
+                                            gravityY = '';
+                                            break;
+                                        case 'center_vertical':
+                                            position.top = 0;
+                                            position.bottom = 0;
+                                            imageData.gravity = gravityY;
+                                            gravityY = '';
+                                            break;
                                     }
                                     height = dimension.height;
+                                }
+                                if (!node.blockStatic || node.hasWidth) {
+                                    if (dimension.width >= bounds.width) {
+                                        tileModeX = '';
+                                        if (tileMode === 'repeat') {
+                                            tileModeY = 'repeat';
+                                            tileMode = '';
+                                        }
+                                    }
+                                    if (dimension.height >= bounds.height) {
+                                        tileModeY = '';
+                                        if (tileMode === 'repeat') {
+                                            tileModeX = 'repeat';
+                                            tileMode = '';
+                                        }
+                                    }
                                 }
                             }
                             switch (backgroundSize[i]) {
@@ -699,7 +716,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             }
                             if (dimension) {
                                 const backgroundClip = stored.backgroundClip;
-                                const bounds = node.bounds;
                                 switch (backgroundSize[i]) {
                                     case 'cover':
                                         if (dimension.width < bounds.width || dimension.height < bounds.height) {

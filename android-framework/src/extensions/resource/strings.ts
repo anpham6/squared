@@ -4,34 +4,15 @@ import Resource from '../../resource';
 
 const $enum = squared.base.lib.enumeration;
 const $css = squared.lib.css;
+const $dom = squared.lib.dom;
 const $util = squared.lib.util;
-
-function replaceCharacter(value: string) {
-    return value
-        .replace(/&nbsp;/g, '&#160;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/'/g, "\\'")
-        .replace(/"/g, '&quot;');
-}
-
-function replaceEntity(value: string) {
-    return value
-        .replace(/&#(\d+);/g, (match, capture) => String.fromCharCode(parseInt(capture)))
-        .replace(/\u00A0/g, '&#160;')
-        .replace(/\u2002/g, '&#8194;')
-        .replace(/\u2003/g, '&#8195;')
-        .replace(/\u2009/g, '&#8201;')
-        .replace(/\u200C/g, '&#8204;')
-        .replace(/\u200D/g, '&#8205;')
-        .replace(/\u200E/g, '&#8206;')
-        .replace(/\u200F/g, '&#8207;');
-}
+const $xml = squared.lib.xml;
 
 export default class ResourceStrings<T extends android.base.View> extends squared.base.Extension<T> {
     public readonly options: ResourceStringsOptions = {
         numberResourceValue: false,
-        replaceCharacterEntities: true
+        replaceCharacterEntities: true,
+        fontVariantSmallCapsReduction: 0.8
     };
 
     public readonly eventOnly = true;
@@ -53,9 +34,9 @@ export default class ResourceStrings<T extends android.base.View> extends square
                                 result = [];
                                 for (let value of resourceArray) {
                                     if (this.options.replaceCharacterEntities) {
-                                        value = replaceEntity(value);
+                                        value = $xml.replaceEntity(value);
                                     }
-                                    value = Resource.addString(replaceCharacter(value), '', this.options.numberResourceValue);
+                                    value = Resource.addString($xml.replaceCharacter(value), '', this.options.numberResourceValue);
                                     if (value !== '') {
                                         result.push(`@string/${value}`);
                                     }
@@ -72,7 +53,7 @@ export default class ResourceStrings<T extends android.base.View> extends square
                     }
                     case 'IFRAME': {
                         const stored: NameValue = node.data(Resource.KEY_NAME, 'valueString');
-                        const value = replaceCharacter(stored.value);
+                        const value = $xml.replaceCharacter(stored.value);
                         Resource.addString(value, stored.name);
                         break;
                     }
@@ -100,29 +81,39 @@ export default class ResourceStrings<T extends android.base.View> extends square
                                     }
                                 }
                             }
-                            value = replaceCharacter(value);
-                            if (node.htmlElement) {
-                                if (node.css('fontVariant') === 'small-caps') {
-                                    value = value.toUpperCase();
-                                }
-                            }
-                            const actualParent = node.actualParent;
-                            if (actualParent) {
-                                let textIndent = 0;
-                                if (actualParent.blockDimension || node.blockDimension) {
-                                    textIndent = node.toInt('textIndent') || actualParent.toInt('textIndent');
-                                }
-                                if (textIndent !== 0 && (node.blockDimension || actualParent.firstChild === node)) {
-                                    if (textIndent > 0) {
-                                        value = '&#160;'.repeat(Math.floor(textIndent / (node.fontSize / 3))) + value;
+                            if (node.css('fontVariant') === 'small-caps') {
+                                const words = value.split($util.REGEXP_COMPILED.BREAKWORD);
+                                for (const word of words) {
+                                    if (!$util.REGEXP_COMPILED.ENTITY.test(word)) {
+                                        value = value.replace(word, word.toUpperCase());
                                     }
-                                    else if (node.toInt('textIndent') + node.bounds.width < 0) {
-                                        value = '';
-                                    }
+                                }
+                                const fontStyle: FontAttribute = node.data(Resource.KEY_NAME, 'fontStyle');
+                                if (fontStyle) {
+                                    fontStyle.fontSize = `${parseFloat(fontStyle.fontSize) * this.options.fontVariantSmallCapsReduction}px`;
                                 }
                             }
                             if (this.options.replaceCharacterEntities) {
-                                value = replaceEntity(value);
+                                value = $xml.replaceEntity(value);
+                            }
+                            value = $xml.replaceCharacter(value);
+                            let textIndent = 0;
+                            if (node.blockDimension) {
+                                textIndent = node.toFloat('textIndent');
+                                if (textIndent + node.bounds.width < 0) {
+                                    value = '';
+                                }
+                            }
+                            if (textIndent === 0) {
+                                const actualParent = node.actualParent;
+                                if (actualParent && actualParent.blockDimension && node === actualParent.firstChild) {
+                                    textIndent = actualParent.toFloat('textIndent');
+                                }
+                            }
+                            if (textIndent > 0) {
+                                const metrics = $dom.getTextMetrics(' ', node.css('fontFamily'), node.fontSize);
+                                const width = metrics && metrics.width || node.fontSize / 2;
+                                value = '&#160;'.repeat(Math.max(Math.floor(textIndent / width), 1)) + value;
                             }
                             const name = Resource.addString(value, stored.name, this.options.numberResourceValue);
                             if (name !== '') {

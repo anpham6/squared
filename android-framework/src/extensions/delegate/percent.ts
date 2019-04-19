@@ -6,13 +6,14 @@ const $enum = squared.base.lib.enumeration;
 
 export default class Percent<T extends android.base.View> extends squared.base.Extension<T> {
     public condition(node: T, parent: T) {
-        return node.pageFlow && (parent.layoutVertical || parent.layoutFrame && node.singleChild) && node.has('width', $enum.CSS_STANDARD.PERCENT, { not: '100%' }) && !node.documentBody && !node.imageElement;
+        return node.pageFlow && node.has('width', $enum.CSS_STANDARD.PERCENT, { not: '100%' }) && (parent.layoutVertical || parent.layoutFrame && node.singleChild) && (node.has('height') || parent.blockStatic || parent.has('width')) && !node.imageElement && !node.documentBody;
     }
 
     public processNode(node: T, parent: T) {
         const container = (<android.base.Controller<T>> this.application.controllerHandler).createNodeWrapper(node, parent);
         container.android('layout_width', 'match_parent');
         container.android('layout_height', node.has('height', $enum.CSS_STANDARD.PERCENT) ? 'match_parent' : 'wrap_content');
+        node.android('layout_width', '0px');
         return {
             parent: container,
             renderAs: container,

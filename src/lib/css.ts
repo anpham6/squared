@@ -141,6 +141,24 @@ export function checkStyleValue(element: Element, attr: string, value: string, s
                     return computed;
                 }
             }
+            switch (attr) {
+                case 'borderTopWidth':
+                case 'borderRightWidth':
+                case 'borderBottomWidth':
+                case 'borderLeftWidth':
+                    switch (value) {
+                        case 'thin':
+                            value = '1px';
+                            break;
+                        case 'medium':
+                            value = '2px';
+                            break;
+                        case 'thick':
+                            value = '3px';
+                            break;
+                    }
+                    break;
+            }
             if (numeric) {
                 setElementCache(element, attr, specificity.toString(), value);
             }
@@ -216,6 +234,10 @@ export function getKeyframeRules(): CSSRuleData {
 }
 
 export function validMediaRule(value: string) {
+    const media = /^@media([^{]+)/.exec(value);
+    if (media) {
+        value = media[1].trim();
+    }
     switch (value) {
         case 'only all':
         case 'only screen':

@@ -58,6 +58,7 @@ function adjustGrowRatio(parent: View, items: View[], attr: string) {
         let maxBasis!: View;
         let maxBasisUnit = 0;
         let maxDimension = 0;
+        let growShrinkType = 0;
         let maxRatio = NaN;
         for (const item of items) {
             const dimension = item.bounds[attr];
@@ -70,12 +71,14 @@ function adjustGrowRatio(parent: View, items: View[], attr: string) {
                         if (isNaN(maxRatio) || shrink < maxRatio) {
                             maxRatio = shrink;
                             largest = true;
+                            growShrinkType = 1;
                         }
                     }
                     else {
                         if (isNaN(maxRatio) || grow > maxRatio) {
                             maxRatio = grow;
                             largest = true;
+                            growShrinkType = 2;
                         }
                     }
                     if (largest) {
@@ -97,21 +100,23 @@ function adjustGrowRatio(parent: View, items: View[], attr: string) {
                 percentage.push(item);
             }
         }
-        if (groupBasis.length > 1) {
-            for (const data of groupBasis) {
-                const item = data.item;
-                if (item === maxBasis || data.basis === maxBasisUnit && (maxRatio === data.shrink || maxRatio === data.grow)) {
-                    item.flexbox.grow = 1;
-                }
-                else {
-                    item.flexbox.grow = ((data.dimension / data.basis) / (maxDimension / maxBasisUnit)) * data.basis / maxBasisUnit;
+        if (growShrinkType !== 0) {
+            if (groupBasis.length > 1) {
+                for (const data of groupBasis) {
+                    const item = data.item;
+                    if (item === maxBasis || data.basis === maxBasisUnit && (growShrinkType === 1 && maxRatio === data.shrink || growShrinkType === 2 && maxRatio === data.grow)) {
+                        item.flexbox.grow = 1;
+                    }
+                    else {
+                        item.flexbox.grow = ((data.dimension / data.basis) / (maxDimension / maxBasisUnit)) * data.basis / maxBasisUnit;
+                    }
                 }
             }
-        }
-        if (percentage.length) {
-            const rowSize = parent.box[attr];
-            for (const item of percentage) {
-                item.flexbox.basis = `${item.bounds[attr] / rowSize * 100}%`;
+            if (percentage.length) {
+                const rowSize = parent.box[attr];
+                for (const item of percentage) {
+                    item.flexbox.basis = `${item.bounds[attr] / rowSize * 100}%`;
+                }
             }
         }
     }
@@ -224,9 +229,11 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                             largest = previous[j];
                                         }
                                     }
-                                    const offset = item.linear.left - largest.actualRect('right');
-                                    if (offset > 0) {
-                                        item.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, offset);
+                                    if (mainData.wrapReverse) {
+                                        const offset = item.linear.left - largest.actualRect('right');
+                                        if (offset > 0) {
+                                            item.modifyBox($enum.BOX_STANDARD.MARGIN_LEFT, offset);
+                                        }
                                     }
                                     item.constraint.horizontal = true;
                                 }
@@ -435,7 +442,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     chain.anchorParent(orientationInverse);
                                     chain.anchorStyle(orientationInverse, 'packed', 0.5);
                                     if (!hasDimension(chain)) {
-                                        chain.android(`layout_${HWL}`, chain.some(item => item.textElement && (item.blockStatic || item.multiline)) ? '0dp' : 'wrap_content');
+                                        chain.android(`layout_${HWL}`, 'wrap_content');
                                     }
                                     break;
                                 default:

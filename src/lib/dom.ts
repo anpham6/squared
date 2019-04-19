@@ -145,6 +145,18 @@ export function createElement(parent?: Element | null, tagName = 'span', placeho
     return element;
 }
 
+export function getTextMetrics(value: string, fontFamily: string, fontSize: number) {
+    if (fontFamily && fontSize) {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        if (context) {
+            context.font = `${fontSize}px ${fontFamily}`;
+            return context.measureText(value);
+        }
+    }
+    return undefined;
+}
+
 export function getNamedItem(element: Element | null, attr: string) {
     if (element) {
         const item = element.attributes.getNamedItem(attr);

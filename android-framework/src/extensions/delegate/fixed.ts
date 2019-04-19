@@ -60,11 +60,11 @@ export default class Fixed<T extends View> extends squared.base.Extension<T> {
                 procedure: $enum.NODE_PROCEDURE.NONPOSITIONAL,
                 resource: $enum.NODE_RESOURCE.BOX_STYLE | $enum.NODE_RESOURCE.ASSET
             });
+            container.outerParent = node;
             children.push(container);
-            container.innerChild = node;
             node.retain(children);
             node.resetBox($enum.BOX_STANDARD.PADDING | (node.documentBody ? $enum.BOX_STANDARD.MARGIN : 0), container, true);
-            node.outerParent = container;
+            node.innerChild = container;
             return {
                 output: this.application.renderNode(
                     new $Layout(

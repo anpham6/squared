@@ -168,9 +168,9 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
             for (const item of container.children) {
                 if (predicate === undefined || predicate(item)) {
                     result.push(item);
-                    if (item instanceof Container && item.length) {
-                        concatArray(result, cascade(item));
-                    }
+                }
+                if (item instanceof Container && item.length) {
+                    concatArray(result, cascade(item));
                 }
             }
             return result;

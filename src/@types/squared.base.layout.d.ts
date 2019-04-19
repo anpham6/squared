@@ -15,6 +15,7 @@ declare global {
             readonly linearY: boolean;
             readonly floated: Set<string>;
             readonly cleared: Map<T, string>;
+            readonly singleRowAligned: boolean;
             readonly visible: T[];
             init(): void;
             setType(containerType: number, ...alignmentType: number[]): void;

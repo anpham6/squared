@@ -12,6 +12,7 @@ const $css = squared.lib.css;
 const $math = squared.lib.math;
 const $session = squared.lib.session;
 const $util = squared.lib.util;
+const $xml = squared.lib.xml;
 
 const REGEXP_LINEBREAK = /\s*<br[^>]*>\s*/g;
 const STRING_COLORSTOP = `(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[a-zA-Z\\d]{3,}|[a-z]+)\\s*(${$util.STRING_PATTERN.LENGTH_PERCENTAGE}|${$util.STRING_PATTERN.ANGLE}|(?:${$util.STRING_PATTERN.CALC}(?=,)|${$util.STRING_PATTERN.CALC}))?,?\\s*`;
@@ -23,6 +24,9 @@ function removeExcluded(node: Node, element: Element, attr: string) {
         if ((item.excluded || item.pseudoElement || item.dataset.target) && $util.isString(item[attr])) {
             value = value.replace(item[attr], '');
         }
+    }
+    if (attr === 'innerHTML') {
+        value = value.replace($xml.REGEXP_ESCAPE.ENTITY, (match, capture) => String.fromCharCode(parseInt(capture)));
     }
     return value;
 }
@@ -133,7 +137,7 @@ function parseAngle(value: string) {
 }
 
 function replaceWhiteSpace(parent: Node, node: Node, element: Element, value: string): [string, boolean] {
-    value = value.replace(/\u00A0/g, '&#160;');
+    value = value.replace($xml.REGEXP_ESCAPE.U00A0, '&#160;');
     switch (node.css('whiteSpace')) {
         case 'nowrap':
             value = value.replace(/\n/g, ' ');
@@ -173,21 +177,22 @@ function getBackgroundSize(node: Node, index: number, value?: string) {
 }
 
 function applyTextTransform(type: string, value: string) {
+    value = value.replace($xml.REGEXP_ESCAPE.AMP, '&amp;');
     if (type === 'none' || type === 'initial') {
         return value;
     }
-    const words = value.split(/[^\w&#;]+/);
+    const words = value.split($util.REGEXP_COMPILED.BREAKWORD);
     switch (type) {
         case 'uppercase':
             for (const word of words) {
-                if (!$util.REGEXP_COMPILED.CHAR_ENTITY.test(word)) {
+                if (!$util.REGEXP_COMPILED.ENTITY.test(word)) {
                     value = value.replace(word, word.toUpperCase());
                 }
             }
             break;
         case 'lowercase':
             for (const word of words) {
-                if (!$util.REGEXP_COMPILED.CHAR_ENTITY.test(word)) {
+                if (!$util.REGEXP_COMPILED.ENTITY.test(word)) {
                     value = value.replace(word, word.toLowerCase());
                 }
             }
@@ -357,7 +362,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                 if (node.plainText && $css.isParentStyle(node.element, 'whiteSpace', 'pre', 'pre-wrap')) {
                     return true;
                 }
-                return node.css('whiteSpace').substring(0, 3) === 'pre';
+                return node.css('whiteSpace').startsWith('pre');
             }
         }
         return false;
@@ -622,21 +627,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         case 'borderBottom':
                         case 'borderLeft': {
                             const style = node.css(`${attr}Style`) || 'none';
-                            let width = node.css(`${attr}Width`);
-                            switch (width) {
-                                case 'thin':
-                                    width = '1px';
-                                    break;
-                                case 'medium':
-                                    width = '2px';
-                                    break;
-                                case 'thick':
-                                    width = '3px';
-                                    break;
-                                default:
-                                    width = node.convertPX(width, (attr === 'borderLeft' || attr === 'borderRight'), false) || '0px';
-                                    break;
-                            }
+                            const width = node.convertPX(node.css(`${attr}Width`), (attr === 'borderLeft' || attr === 'borderRight'), false) || '0px';
                             let color = node.css(`${attr}Color`) || 'initial';
                             switch (color.toLowerCase()) {
                                 case 'initial':
@@ -792,7 +783,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                     let value = '';
                     let trimming = false;
                     let inlined = false;
-                    const textTransform = node.css('textTransform');
+                    const transform = node.css('textTransform');
                     switch (element.tagName) {
                         case 'INPUT':
                             value = element.value;
@@ -852,13 +843,12 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                     value = $util.isUserAgent($util.USER_AGENT.FIREFOX) ? 'Browse...' : 'Choose File';
                                     break;
                             }
-                            value = applyTextTransform(textTransform, value);
                             break;
                         case 'TEXTAREA':
-                            value = applyTextTransform(textTransform, element.value);
+                            value = element.value;
                             break;
                         case 'BUTTON':
-                            value = applyTextTransform(textTransform, element.innerText);
+                            value = applyTextTransform(transform, element.innerText);
                             break;
                         case 'IFRAME':
                             value = element.src;
@@ -866,7 +856,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         default:
                             if (node.plainText) {
                                 name = node.textContent.trim();
-                                [value] = replaceWhiteSpace(renderParent, node, element, applyTextTransform(textTransform, node.textContent).replace(/&[A-Za-z]+;/g, match => match.replace('&', '&amp;')));
+                                [value] = replaceWhiteSpace(renderParent, node, element, applyTextTransform(transform, node.textContent));
                                 inlined = true;
                                 trimming = true;
                             }
@@ -876,16 +866,16 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                     value = removeExcluded(node, element, 'innerHTML');
                                 }
                                 else if (Resource.hasLineBreak(node, true)) {
-                                    value = applyTextTransform(textTransform, removeExcluded(node, element, 'innerHTML')).replace(REGEXP_LINEBREAK, '\\n').replace($util.REGEXP_COMPILED.TAGNAME, '');
+                                    value = applyTextTransform(transform, removeExcluded(node, element, 'innerHTML')).replace(REGEXP_LINEBREAK, '\\n').replace($util.REGEXP_COMPILED.TAGNAME_G, '');
                                 }
                                 else {
-                                    value = applyTextTransform(textTransform, removeExcluded(node, element, 'textContent'));
+                                    value = applyTextTransform(transform, removeExcluded(node, element, 'textContent'));
                                 }
                                 [value, inlined] = replaceWhiteSpace(renderParent, node, element, value);
                                 trimming = true;
                             }
                             else if (Resource.isBackgroundVisible(node.data(Resource.KEY_NAME, 'boxStyle')) && element.innerText.trim() === '') {
-                                value = applyTextTransform(textTransform, element.innerText);
+                                value = applyTextTransform(transform, element.innerText);
                             }
                             break;
                     }

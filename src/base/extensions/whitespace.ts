@@ -18,7 +18,17 @@ function isBlockElement(node: Node | undefined) {
 }
 
 function getVisibleNode(node: Node) {
-    return node.visible || node.excluded ? node : node.renderAs || node.outerParent || node.innerChild || node;
+    if (node.visible) {
+        const innerChild = node.innerChild;
+        if (innerChild && !innerChild.naturalElement) {
+            return innerChild;
+        }
+        return node;
+    }
+    else if (node.excluded) {
+        return node;
+    }
+    return node.renderAs || node.outerParent || node.innerChild || node;
 }
 
 function resetMargin(node: Node, value: number) {
@@ -47,56 +57,24 @@ function applyMarginCollapse(node: Node, child: Node, direction: boolean) {
             boxMargin = BOX_STANDARD.MARGIN_BOTTOM;
         }
         if (node[borderWidth] === 0 && node[padding] === 0) {
-            let replaced = false;
             while (child[margin] === 0 && child[borderWidth] === 0 && child[padding] === 0) {
                 const endChild = (direction ? child.firstChild : child.lastChild) as Node;
                 if (isBlockElement(endChild)) {
-                    if (HTML5 && endChild[margin] !== 0 && child.has(margin, CSS_STANDARD.ZERO)) {
-                        endChild.modifyBox(boxMargin, null);
-                        replaced = false;
-                        break;
-                    }
                     child = endChild;
-                    replaced = true;
                 }
                 else {
                     break;
                 }
             }
-            if (HTML5 && node[margin] < child[margin]) {
-                const visibleNode = getVisibleNode(node);
-                if (node.elementId === '')  {
-                    visibleNode.modifyBox(boxMargin, null);
+            if (child.valueBox(boxMargin)[0] !== 1) {
+                if (HTML5 && node[margin] < child[margin]) {
+                    const visibleParent = getVisibleNode(node);
+                    visibleParent.modifyBox(boxMargin, null);
+                    visibleParent.modifyBox(boxMargin, child[margin]);
                 }
-                if (!replaced && !node.documentBody) {
-                    if (child[margin] > node[margin]) {
-                        if (node.elementId !== '')  {
-                            visibleNode.modifyBox(boxMargin, null);
-                        }
-                        visibleNode.modifyBox(boxMargin, child[margin]);
-                    }
-                    resetMargin(child, boxMargin);
-                }
-            }
-            else if (!HTML5 && node.cssInitial(margin) === '0px') {
                 resetMargin(child, boxMargin);
-            }
-            else if (node.naturalElement && node[margin] > 0) {
-                if (node.visible && child.visible) {
-                    child.modifyBox(boxMargin, null);
-                }
-                else {
-                    const replacement = child.outerParent || child.innerChild;
-                    if (replacement) {
-                        replacement.modifyBox(boxMargin, -child[margin], false);
-                        child = replacement;
-                    }
-                    else {
-                        return;
-                    }
-                }
-                if (child.companion) {
-                    child.companion.modifyBox(boxMargin, null);
+                if (child.bounds.height === 0) {
+                    resetMargin(child, direction ? BOX_STANDARD.MARGIN_BOTTOM : BOX_STANDARD.MARGIN_TOP);
                 }
             }
         }
@@ -156,28 +134,24 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                     else {
                                         if (previous.paddingBottom === 0 && previous.borderBottomWidth === 0) {
                                             const bottomChild = previous.lastChild as T;
-                                            if (isBlockElement(bottomChild) && bottomChild.elementId === '') {
+                                            if (isBlockElement(bottomChild) && bottomChild.valueBox(BOX_STANDARD.MARGIN_BOTTOM)[0] !== 1) {
                                                 const childMarginBottom = $util.convertFloat(bottomChild.cssInitial('marginBottom', false, true));
                                                 if (childMarginBottom > marginBottom) {
                                                     marginBottom = childMarginBottom;
-                                                    previous.css('marginBottom', $util.formatPX(marginBottom), true);
+                                                    previousVisible.css('marginBottom', $util.formatPX(marginBottom), true);
                                                 }
-                                                if (previous.visible) {
-                                                    resetMargin(bottomChild, BOX_STANDARD.MARGIN_BOTTOM);
-                                                }
+                                                resetMargin(getVisibleNode(bottomChild), BOX_STANDARD.MARGIN_BOTTOM);
                                             }
                                         }
                                         if (current.borderTopWidth === 0 && current.paddingTop === 0) {
                                             const topChild = current.firstChild as T;
-                                            if (isBlockElement(topChild) && topChild.elementId === '') {
+                                            if (isBlockElement(topChild) && topChild.valueBox(BOX_STANDARD.MARGIN_TOP)[0] !== 1) {
                                                 const childMarginTop = $util.convertFloat(topChild.cssInitial('marginTop', false, true));
                                                 if (childMarginTop > marginTop) {
                                                     marginTop = childMarginTop;
-                                                    current.css('marginTop', $util.formatPX(marginTop), true);
+                                                    currentVisible.css('marginTop', $util.formatPX(marginTop), true);
                                                 }
-                                                if (current.visible) {
-                                                    resetMargin(topChild, BOX_STANDARD.MARGIN_TOP);
-                                                }
+                                                resetMargin(getVisibleNode(topChild), BOX_STANDARD.MARGIN_TOP);
                                             }
                                         }
                                         if (marginBottom > 0) {
@@ -195,7 +169,7 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
                                         }
                                     }
                                 }
-                                else if (!previous.block && previous.blockDimension && current.length === 0) {
+                                else if (previous.blockDimension && !previous.block && current.length === 0) {
                                     const offset = current.linear.top - previous.linear.bottom;
                                     if (Math.floor(offset) > 0 && current.ascend(false, item => item.has('height')).length === 0) {
                                         currentVisible.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);

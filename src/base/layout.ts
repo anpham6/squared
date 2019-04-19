@@ -16,6 +16,7 @@ export default class Layout<T extends Node> extends squared.lib.base.Container<T
     private _cleared?: Map<T, string>;
     private _linearX?: boolean;
     private _linearY?: boolean;
+    private _singleRow?: boolean;
 
     constructor(
         public parent: T,
@@ -110,6 +111,26 @@ export default class Layout<T extends Node> extends squared.lib.base.Container<T
 
     get linearY() {
         return this._linearY !== undefined ? this._linearY : false;
+    }
+
+    get singleRowAligned() {
+        if (this._singleRow === undefined) {
+            let previousBottom = Number.POSITIVE_INFINITY;
+            for (const node of this) {
+                if (!node.inlineVertical && !node.plainText || node.multiline) {
+                    return false;
+                }
+                else {
+                    const offset = $util.convertFloat(node.verticalAlign);
+                    if (node.linear.top - offset >= previousBottom) {
+                        return false;
+                    }
+                    previousBottom = node.linear.bottom + offset;
+                }
+            }
+            this._singleRow = true;
+        }
+        return this._singleRow;
     }
 
     get visible() {

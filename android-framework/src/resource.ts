@@ -9,6 +9,9 @@ const $color = squared.lib.color;
 const $css = squared.lib.css;
 const $util = squared.lib.util;
 
+const REGEXP_NONENTITY = /&(?!#?[A-Za-z0-9]{2,};)/g;
+const REGEXP_NONWORD = /[^\w+]/g;
+
 const DIRECTORY_THEME = 'res/values';
 const FILENAME_THEME = 'themes.xml';
 
@@ -57,7 +60,7 @@ function formatObject(obj: {}, numberAlias = false) {
 }
 
 function escapeNonEntity(value: string) {
-    return value.replace(/&(?!#?[A-Za-z0-9]{2,};)/g, '&amp;');
+    return value.replace(REGEXP_NONENTITY, '&amp;');
 }
 
 export default class Resource<T extends View> extends squared.base.Resource<T> implements android.base.Resource<T> {
@@ -72,10 +75,10 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
     }
 
     public static formatName(value: string) {
-        if (/^\d/.test(value)) {
+        if ($util.REGEXP_COMPILED.LEADINGNUMBER.test(value)) {
             value = '__' + value;
         }
-        return value.replace(/[^\w+]/g, '_');
+        return value.replace(REGEXP_NONWORD, '_');
     }
 
     public static addTheme(...values: StyleAttribute[]) {
@@ -130,7 +133,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                         return resourceName;
                     }
                 }
-                const partial = $util.trimString(name.replace(/[^A-Za-z\d]+/g, '_'), '_').split(/_+/);
+                const partial = $util.trimString(name.replace($util.REGEXP_COMPILED.NONWORD_G, '_'), '_').split(/_+/);
                 if (partial.length > 1) {
                     if (partial.length > 4) {
                         partial.length = 4;
@@ -141,7 +144,7 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
                     name = partial[0];
                 }
                 name = name.toLowerCase();
-                if (numeric || /^\d/.test(name) || RESERVED_JAVA.includes(name)) {
+                if (numeric || $util.REGEXP_COMPILED.LEADINGNUMBER.test(name) || RESERVED_JAVA.includes(name)) {
                     name = `__${name}`;
                 }
                 else if (name === '') {

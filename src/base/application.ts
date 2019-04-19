@@ -551,7 +551,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         }
                     }
                 }
-                if (element.dir === 'rtl') {
+                if (node.dir === 'rtl') {
                     element.dir = 'ltr';
                     direction.add(element);
                 }
@@ -953,7 +953,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                     if (m === 0) {
                                         const next = item.nextSiblings().shift();
                                         if (next) {
-                                            if (!item.horizontalAligned || next.alignedVertically([item], [item], cleared)) {
+                                            if (!item.horizontalAligned || next.alignedVertically([item], [item])) {
                                                 vertical.push(item);
                                             }
                                             else {
@@ -1555,7 +1555,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 const pageFlow = staticRows[i] || [];
                 if (floatedRows[i] === null && pageFlow.length) {
                     const layoutType = controller.containerTypeVertical;
-                    layoutType.alignmentType |= NODE_ALIGNMENT.SEGMENTED;
+                    layoutType.alignmentType |= NODE_ALIGNMENT.SEGMENTED | NODE_ALIGNMENT.BLOCK;
                     this.addRenderLayout(new Layout(
                         layout.node,
                         controller.createNodeGroup(pageFlow[0], pageFlow, layout.node),
@@ -1613,7 +1613,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                 basegroup,
                                 node,
                                 vertical.containerType,
-                                vertical.alignmentType | NODE_ALIGNMENT.SEGMENTED,
+                                vertical.alignmentType | NODE_ALIGNMENT.SEGMENTED | NODE_ALIGNMENT.BLOCK,
                                 node.children as T[]
                             ));
                         }
@@ -1747,6 +1747,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                             REGEXP_CACHED.CSS_CONTENT = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:, ([a-z\-]+))?\)|(counters)\(([^,]+), "([^"]*)"(?:, ([a-z\-]+))?\)|"([^"]+)")\s*/g;
                         }
                         let match: RegExpExecArray | null;
+                        let found = false;
                         while ((match = REGEXP_CACHED.CSS_CONTENT.exec(value)) !== null) {
                             if (match[1]) {
                                 content += $dom.getNamedItem(element, match[1].trim());
@@ -1875,6 +1876,10 @@ export default class Application<T extends Node> implements squared.base.Applica
                             else if (match[9]) {
                                 content += match[9];
                             }
+                            found = true;
+                        }
+                        if (!found) {
+                            content = value;
                         }
                     }
                     break;
@@ -1913,7 +1918,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                 this.applyStyleRule(<CSSStyleRule> rule);
                                 break;
                             case CSSRule.MEDIA_RULE:
-                                if ($css.validMediaRule((<CSSConditionRule> rule).conditionText)) {
+                                if ($css.validMediaRule((<CSSConditionRule> rule).conditionText || (<CSSConditionRule> rule).cssText)) {
                                     const items = (<CSSMediaRule> rule).cssRules;
                                     for (let k = 0; k < items.length; k++) {
                                         this.applyStyleRule(<CSSStyleRule> items[k]);

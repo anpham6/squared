@@ -121,6 +121,7 @@ declare global {
             readonly floating: boolean;
             readonly float: string;
             readonly zIndex: number;
+            readonly positiveAxis: boolean;
             readonly visibleStyle: VisibleStyle;
             readonly fontSize: number;
             readonly src: string;
