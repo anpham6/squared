@@ -80,7 +80,7 @@
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@+id/textview_18"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol8160"
+                    android:text="@string/__symbol30270"
                     style="@style/Plaintext" />
             </RelativeLayout>
             <LinearLayout
@@ -94,17 +94,17 @@
                     <Spinner
                         android:id="@+id/month0"
                         android:entries="@array/month0_array"
-                        style="@style/Select.Linearlayout_2" />
+                        style="@style/Select.Linearlayout_9" />
                     <Spinner
                         android:id="@+id/day0"
                         android:entries="@array/day0_array"
                         android:layout_marginStart="@dimen/select_layout_margin_start"
-                        style="@style/Select.Linearlayout_2" />
+                        style="@style/Select.Linearlayout_9" />
                     <Spinner
                         android:id="@+id/year0"
                         android:entries="@array/year0_array"
                         android:layout_marginStart="@dimen/select_layout_margin_start"
-                        style="@style/Select.Linearlayout_2" />
+                        style="@style/Select.Linearlayout_9" />
                 </LinearLayout>
                 <LinearLayout
                     android:id="@+id/linearlayout_10"
@@ -113,17 +113,17 @@
                     <Spinner
                         android:id="@+id/month1"
                         android:entries="@array/month0_array"
-                        style="@style/Select.Linearlayout_2" />
+                        style="@style/Select.Linearlayout_9" />
                     <Spinner
                         android:id="@+id/day1"
                         android:entries="@array/day0_array"
                         android:layout_marginStart="@dimen/select_layout_margin_start"
-                        style="@style/Select.Linearlayout_2" />
+                        style="@style/Select.Linearlayout_9" />
                     <Spinner
                         android:id="@+id/year1"
                         android:entries="@array/year0_array"
                         android:layout_marginStart="@dimen/select_layout_margin_start"
-                        style="@style/Select.Linearlayout_2" />
+                        style="@style/Select.Linearlayout_9" />
                 </LinearLayout>
                 <LinearLayout
                     android:id="@+id/linearlayout_11"
@@ -132,17 +132,17 @@
                     <Spinner
                         android:id="@+id/month2"
                         android:entries="@array/month0_array"
-                        style="@style/Select.Linearlayout_2" />
+                        style="@style/Select.Linearlayout_9" />
                     <Spinner
                         android:id="@+id/day2"
                         android:entries="@array/day0_array"
                         android:layout_marginStart="@dimen/select_layout_margin_start"
-                        style="@style/Select.Linearlayout_2" />
+                        style="@style/Select.Linearlayout_9" />
                     <Spinner
                         android:id="@+id/year2"
                         android:entries="@array/year0_array"
                         android:layout_marginStart="@dimen/select_layout_margin_start"
-                        style="@style/Select.Linearlayout_2" />
+                        style="@style/Select.Linearlayout_9" />
                 </LinearLayout>
             </LinearLayout>
             <Space
@@ -160,18 +160,19 @@
                 style="@style/Label" />
             <LinearLayout
                 android:id="@+id/linearlayout_2"
+                android:baselineAlignedChildIndex="0"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:orientation="horizontal">
                 <Spinner
                     android:id="@+id/hour"
                     android:entries="@array/hour_array"
-                    style="@style/Select.Linearlayout_2" />
+                    style="@style/Select.Linearlayout_9" />
                 <Spinner
                     android:id="@+id/minute"
                     android:entries="@array/minute_array"
                     android:layout_marginStart="@dimen/select_layout_margin_start"
-                    style="@style/Select.Linearlayout_2" />
+                    style="@style/Select.Linearlayout_9" />
             </LinearLayout>
             <Space
                 android:id="@+id/space_3"
@@ -228,11 +229,12 @@
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@+id/textview_21"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol8160"
+                    android:text="@string/__symbol30270"
                     style="@style/Plaintext" />
             </RelativeLayout>
             <LinearLayout
                 android:id="@+id/linearlayout_3"
+                android:baselineAlignedChildIndex="0"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:orientation="horizontal">
@@ -399,6 +401,7 @@
                 style="@style/Label" />
             <LinearLayout
                 android:id="@+id/linearlayout_4"
+                android:baselineAlignedChildIndex="0"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:orientation="horizontal">
@@ -527,6 +530,7 @@
                 style="@style/Label" />
             <LinearLayout
                 android:id="@+id/linearlayout_5"
+                android:baselineAlignedChildIndex="0"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:orientation="horizontal">
@@ -581,6 +585,7 @@
                 style="@style/Label" />
             <LinearLayout
                 android:id="@+id/linearlayout_6"
+                android:baselineAlignedChildIndex="0"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:orientation="horizontal">
@@ -666,11 +671,12 @@
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@+id/textview_24"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol8160"
+                    android:text="@string/__symbol30270"
                     style="@style/Plaintext" />
             </RelativeLayout>
             <LinearLayout
                 android:id="@+id/linearlayout_7"
+                android:baselineAlignedChildIndex="0"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:orientation="horizontal">
@@ -722,6 +728,7 @@
                 style="@style/Label" />
             <LinearLayout
                 android:id="@+id/linearlayout_8"
+                android:baselineAlignedChildIndex="0"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:orientation="horizontal">
@@ -737,6 +744,7 @@
                     style="@style/Select" />
                 <RadioGroup
                     android:id="@+id/radiogroup_1"
+                    android:baselineAlignedChildIndex="2"
                     android:checkedButton="@+id/c2"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/div_layout_margin_start"
@@ -794,7 +802,7 @@
     <string name="app_name">android</string>
     <string name="__00_inactive">00 - Inactive</string>
     <string name="__01_active">01 - Active</string>
-    <string name="__symbol8160">):</string>
+    <string name="__symbol30270">):</string>
     <string name="active">Active:</string>
     <string name="add">Add</string>
     <string name="all">All</string>
@@ -1022,6 +1030,7 @@
         <item name="android:textStyle">italic</item>
     </style>
     <style name="Linearlayout_1">
+        <item name="android:baselineAlignedChildIndex">0</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_width">wrap_content</item>
         <item name="android:orientation">horizontal</item>
@@ -1041,7 +1050,7 @@
         <item name="android:textColor">@color/black</item>
         <item name="android:textSize">11sp</item>
     </style>
-    <style name="Select.Linearlayout_2">
+    <style name="Select.Linearlayout_9">
         <item name="android:background">@drawable/select_series_1</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_width">wrap_content</item>
@@ -1119,9 +1128,14 @@
 
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:left="-2dp" android:right="-3dp" android:bottom="-2dp">
+    <item android:top="-3dp" android:right="-3dp" android:bottom="-2dp">
         <shape android:shape="rectangle">
             <stroke android:width="2dp" android:color="@color/gray" />
+        </shape>
+    </item>
+    <item android:left="-2dp" android:top="-1dp" android:right="-3dp" android:bottom="-2dp">
+        <shape android:shape="rectangle">
+            <stroke android:width="3dp" android:color="@color/gray" />
         </shape>
     </item>
     <item android:left="-2dp" android:top="-3dp" android:bottom="-2dp">
@@ -1132,11 +1146,6 @@
     <item android:left="-2dp" android:top="-3dp" android:right="-3dp">
         <shape android:shape="rectangle">
             <stroke android:width="2dp" android:color="@color/lightgray_1" />
-        </shape>
-    </item>
-    <item android:top="-3dp" android:right="-3dp" android:bottom="-2dp">
-        <shape android:shape="rectangle">
-            <stroke android:width="2dp" android:color="@color/gray" />
         </shape>
     </item>
 </layer-list>
@@ -1155,9 +1164,14 @@
             <solid android:color="@color/gainsboro_1" />
         </shape>
     </item>
-    <item android:left="-2dp" android:right="-3dp" android:bottom="-2dp">
+    <item android:top="-3dp" android:right="-3dp" android:bottom="-2dp">
         <shape android:shape="rectangle">
             <stroke android:width="2dp" android:color="@color/whitesmoke_1" />
+        </shape>
+    </item>
+    <item android:left="-2dp" android:top="-1dp" android:right="-3dp" android:bottom="-2dp">
+        <shape android:shape="rectangle">
+            <stroke android:width="3dp" android:color="@color/whitesmoke_1" />
         </shape>
     </item>
     <item android:left="-2dp" android:top="-3dp" android:bottom="-2dp">
@@ -1168,11 +1182,6 @@
     <item android:left="-2dp" android:top="-3dp" android:right="-3dp">
         <shape android:shape="rectangle">
             <stroke android:width="2dp" android:color="@color/whitesmoke_2" />
-        </shape>
-    </item>
-    <item android:top="-3dp" android:right="-3dp" android:bottom="-2dp">
-        <shape android:shape="rectangle">
-            <stroke android:width="2dp" android:color="@color/whitesmoke_1" />
         </shape>
     </item>
 </layer-list>

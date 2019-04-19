@@ -77,6 +77,7 @@ declare global {
             readonly centerAligned: boolean;
             readonly rightAligned: boolean;
             readonly bottomAligned: boolean;
+            readonly horizontalAligned: boolean;
             readonly width: number;
             readonly height: number;
             readonly hasWidth: boolean;
@@ -171,7 +172,7 @@ declare global {
             data(name: string, attr: string, value?: any, overwrite?: boolean): any;
             unsetCache(...attrs: string[]): void;
             ascend(generated?: boolean, condition?: (item: Node) => boolean, levels?: number): Node[];
-            cascade(element?: boolean): Node[];
+            cascade(predicate?: (item: Node) => boolean, element?: boolean): Node[];
             inherit(node: Node, ...modules: string[]): void;
             alignedVertically(previousSiblings: Node[], siblings?: Node[], cleared?: Map<Node, string>, horizontal?: boolean): boolean;
             intersectX(rect: RectDimension, dimension?: string): boolean;

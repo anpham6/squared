@@ -22,7 +22,7 @@ declare global {
             partition(predicate: IteratorPredicate<T, boolean>): [T[], T[]];
             map<U>(predicate: IteratorPredicate<T, U>): U[];
             flatMap<U>(predicate: IteratorPredicate<T, U>): U[];
-            cascade(): T[];
+            cascade(predicate?: (item: T) => boolean): T[];
             cascadeSome(predicate: IteratorPredicate<T, boolean>): boolean;
         }
 

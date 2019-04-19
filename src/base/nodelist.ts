@@ -71,20 +71,34 @@ export default class NodeList<T extends Node> extends squared.lib.base.Container
                 return list;
             }
         }
-        let lineHeight = 0;
-        let boundsHeight = 0;
-        for (const item of list) {
-            lineHeight = Math.max(lineHeight, item.lineHeight);
-            if (!item.layoutVertical && !item.multiline) {
-                boundsHeight = Math.max(boundsHeight, item.bounds.height);
+        if (list.length > 1) {
+            let lineHeight = 0;
+            let boundsHeight = 0;
+            for (let i = 0; i < list.length; i++) {
+                const item = list[i];
+                if (!(item.layoutVertical && item.length > 1 || item.plainText && item.multiline)) {
+                    lineHeight = Math.max(lineHeight, item.lineHeight);
+                    let height: number;
+                    if (item.multiline && item.cssTry('whiteSpace', 'nowrap')) {
+                        height = (<Element> item.element).getBoundingClientRect().height;
+                        item.cssFinally('whiteSpace');
+                    }
+                    else {
+                        height = item.bounds.height;
+                    }
+                    boundsHeight = Math.max(boundsHeight, height);
+                }
+                else {
+                    list.splice(i--, 1);
+                }
             }
+            $util.spliceArray(list, item => lineHeight > boundsHeight ? item.lineHeight !== lineHeight : item.bounds.height < boundsHeight);
         }
-        $util.spliceArray(list, item => lineHeight > boundsHeight ? item.lineHeight !== lineHeight : !$util.withinRange(item.bounds.height, boundsHeight));
         return list.sort((a, b) => {
-            if (a.groupParent || a.length || (!a.baseline && b.baseline)) {
+            if (a.groupParent || a.length || !a.baseline && b.baseline) {
                 return 1;
             }
-            else if (b.groupParent || b.length || (a.baseline && !b.baseline)) {
+            else if (b.groupParent || b.length || a.baseline && !b.baseline) {
                 return -1;
             }
             else if (!a.imageElement || !b.imageElement) {

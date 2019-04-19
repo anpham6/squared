@@ -1,4 +1,4 @@
-/* android.widget 0.9.2
+/* android.widget 0.9.3
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -45,7 +45,7 @@ this.android.widget.drawer = (function () {
                 const navigationViewOptions = $utilA.createViewAttribute(this.options.navigationView);
                 $util.assignEmptyValue(navigationViewOptions, 'android', 'layout_gravity', node.localizeString('left'));
                 const navView = node.item();
-                navView.android('layout_gravity', navigationViewOptions.android.layout_gravity);
+                navView.mergeGravity('layout_gravity', navigationViewOptions.android.layout_gravity);
                 navView.android('layout_height', 'match_parent');
                 navView.positioned = true;
             }

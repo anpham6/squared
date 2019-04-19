@@ -664,6 +664,13 @@ export default class Application<T extends Node> implements squared.base.Applica
                     parent = !node.pageFlow ? rootNode : node.parent as T;
                 }
                 if (parent !== node.parent) {
+                    let current: T | undefined = node.parent as T;
+                    let opacity = $util.convertFloat(node.css('opacity')) || 1;
+                    while (current && current !== parent) {
+                        opacity *= $util.convertFloat(current.css('opacity')) || 1;
+                        current = current.actualParent as T;
+                    }
+                    node.css('opacity', opacity.toString());
                     node.parent = parent;
                     node.siblingIndex = Number.POSITIVE_INFINITY;
                     alteredParent.add(parent as T);
@@ -946,7 +953,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                     if (m === 0) {
                                         const next = item.nextSiblings().shift();
                                         if (next) {
-                                            if (item.blockStatic || next.alignedVertically([item], [item], cleared)) {
+                                            if (!item.horizontalAligned || next.alignedVertically([item], [item], cleared)) {
                                                 vertical.push(item);
                                             }
                                             else {
@@ -1024,7 +1031,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                         else if (vertical.length > 1) {
                             result = controller.processTraverseVertical(new Layout(parentY, nodeY, 0, 0, vertical), axisY);
                             segEnd = vertical[vertical.length - 1];
-                            if (!segEnd.blockStatic && segEnd !== axisY[axisY.length - 1]) {
+                            if (segEnd.horizontalAligned && segEnd !== axisY[axisY.length - 1]) {
                                 segEnd.alignmentType |= NODE_ALIGNMENT.EXTENDABLE;
                             }
                         }
@@ -1347,7 +1354,9 @@ export default class Application<T extends Node> implements squared.base.Applica
         const vertical = controller.containerTypeVertical;
         const alignmentType = rightAbove.length + rightBelow.length === layout.length ? NODE_ALIGNMENT.RIGHT : 0;
         if (inlineBelow.length) {
-            inlineBelow[0].alignmentType |= NODE_ALIGNMENT.EXTENDABLE;
+            if (inlineBelow.length > 1) {
+                inlineBelow[0].alignmentType |= NODE_ALIGNMENT.EXTENDABLE;
+            }
             inlineBelow.unshift(layout.node);
             const parent = this.createNode($dom.createElement(layout.node.actualParent && layout.node.actualParent.element), true, layout.parent, inlineBelow);
             this.addRenderLayout(new Layout(
@@ -1766,14 +1775,14 @@ export default class Application<T extends Node> implements squared.base.Applica
                                     }
                                     return undefined;
                                 }
-                                const getPseduoIncrement = (parent: Element) => {
+                                const getIncrementValue = (parent: Element) => {
                                     const pseduoStyle: StringMap = $session.getElementCache(parent, `styleMap::${target}`, this.processing.sessionId);
                                     if (pseduoStyle && pseduoStyle.counterIncrement) {
                                         return getCounterValue(pseduoStyle.counterIncrement);
                                     }
                                     return undefined;
                                 };
-                                const initalValue = (getPseduoIncrement(element) || 0) + (getCounterValue(style.getPropertyValue('counter-reset')) || 0);
+                                const initalValue = (getIncrementValue(element) || 0) + (getCounterValue(style.getPropertyValue('counter-reset')) || 0);
                                 const subcounter: number[] = [];
                                 let current: Element | null = element;
                                 let counter = initalValue;
@@ -1792,7 +1801,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                         for (let i = 0; i < sibling.children.length; i++) {
                                             const child = sibling.children[i];
                                             if (child.className !== '__squared.pseudo') {
-                                                let increment = getPseduoIncrement(child);
+                                                let increment = getIncrementValue(child);
                                                 if (increment) {
                                                     incrementCounter(increment, true);
                                                 }
@@ -1824,7 +1833,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                                         break;
                                     }
                                     if (current.className !== '__squared.pseudo') {
-                                        const pesudoIncrement = getPseduoIncrement(current);
+                                        const pesudoIncrement = getIncrementValue(current);
                                         if (pesudoIncrement) {
                                             incrementCounter(pesudoIncrement, true);
                                         }
@@ -1965,7 +1974,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                 if (styleData) {
                     const specificityData: ObjectMap<number> = $session.getElementCache(element, attrSpecificity, this.processing.sessionId) || {};
                     for (const attr in styleMap) {
-                        if (styleData[attr] === undefined || specificityData[attr] <= specificity || specificityData[attr] === undefined) {
+                        if (styleData[attr] === undefined || specificity >= specificityData[attr] || specificityData[attr] === undefined) {
                             styleData[attr] = styleMap[attr];
                             specificityData[attr] = specificity;
                         }

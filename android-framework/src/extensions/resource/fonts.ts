@@ -170,7 +170,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     }
                     if (!system && (fontStyle || fontWeight)) {
                         const fonts = Resource.STORED.fonts.get(fontFamily) || {};
-                        fonts[(fontStyle ? fontStyle : 'normal') + '-' + (FONTWEIGHT_ANDROID[fontWeight] || fontWeight || '400')] = true;
+                        fonts[(fontStyle ? fontStyle : 'normal') + '-' + (fontWeight || '400')] = true;
                         Resource.STORED.fonts.set(fontFamily, fonts);
                     }
                 }
@@ -383,20 +383,61 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         for (const node of this.application.session.cache) {
             const styles = nodeMap[node.id];
             if (styles && styles.length) {
-                parentStyle.add(styles.join('.'));
-                node.attr('_', 'style', `@style/${styles.pop()}`);
+                if (styles.length > 1) {
+                    parentStyle.add(styles.join('.'));
+                    styles.shift();
+                }
+                else {
+                    parentStyle.add(styles[0]);
+                }
+                node.attr('_', 'style', `@style/${styles.join('.')}`);
             }
         }
         for (const value of parentStyle) {
+            const styleName: string[] = [];
+            let items: NameValue[] | undefined;
             let parent = '';
-            for (const name of value.split('.')) {
-                const match = REGEXP_TAGNAME.exec(name);
+            value.split('.').forEach((tag, index, array) => {
+                const match = REGEXP_TAGNAME.exec(tag);
                 if (match) {
-                    const data = resource[match[1].toUpperCase()][$util.convertInt(match[2])];
-                    if (data) {
-                        STORED.styles.set(name, { ...data, name, parent });
-                        parent = name;
+                    const styleData = resource[match[1].toUpperCase()][$util.convertInt(match[2])];
+                    if (styleData) {
+                        if (index === 0) {
+                            parent = tag;
+                            if (array.length === 1) {
+                                items = <NameValue[]> styleData.items;
+                            }
+                            else if (!STORED.styles.has(tag)) {
+                                STORED.styles.set(tag, { name: tag, parent: '', items: styleData.items });
+                            }
+                        }
+                        else {
+                            if (items === undefined) {
+                                items = (<NameValue[]> styleData.items).slice(0);
+                            }
+                            else {
+                                for (const item of styleData.items as NameValue[]) {
+                                    const replaceIndex = items.findIndex(previous => previous.name === item.name);
+                                    if (replaceIndex !== -1) {
+                                        items[replaceIndex] = item;
+                                    }
+                                    else {
+                                        items.push(item);
+                                    }
+                                }
+                            }
+                            styleName.push(tag);
+                        }
                     }
+                }
+            });
+            if (items) {
+                if (styleName.length === 0) {
+                    STORED.styles.set(parent, { name: parent, parent: '', items });
+                }
+                else {
+                    const name = styleName.join('.');
+                    STORED.styles.set(name, { name, parent, items });
                 }
             }
         }

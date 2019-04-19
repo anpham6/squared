@@ -133,6 +133,7 @@ function parseAngle(value: string) {
 }
 
 function replaceWhiteSpace(parent: Node, node: Node, element: Element, value: string): [string, boolean] {
+    value = value.replace(/\u00A0/g, '&#160;');
     switch (node.css('whiteSpace')) {
         case 'nowrap':
             value = value.replace(/\n/g, ' ');
@@ -171,31 +172,29 @@ function getBackgroundSize(node: Node, index: number, value?: string) {
     return undefined;
 }
 
-function applyTextTransform(transform: string, value: string) {
-    if (transform === 'none' || transform === 'initial') {
+function applyTextTransform(type: string, value: string) {
+    if (type === 'none' || type === 'initial') {
         return value;
     }
     const words = value.split(/[^\w&#;]+/);
-    switch (transform) {
+    switch (type) {
         case 'uppercase':
             for (const word of words) {
-                if (!value.startsWith('&') && !value.endsWith(';')) {
+                if (!$util.REGEXP_COMPILED.CHAR_ENTITY.test(word)) {
                     value = value.replace(word, word.toUpperCase());
                 }
             }
             break;
         case 'lowercase':
             for (const word of words) {
-                if (!value.startsWith('&') && !value.endsWith(';')) {
+                if (!$util.REGEXP_COMPILED.CHAR_ENTITY.test(word)) {
                     value = value.replace(word, word.toLowerCase());
                 }
             }
             break;
         case 'capitalize':
             for (const word of words) {
-                if (!value.startsWith('&') && !value.endsWith(';')) {
-                    value = value.replace(word, $util.capitalize(word));
-                }
+                value = value.replace(word, $util.capitalize(word));
             }
             break;
     }
@@ -661,7 +660,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                             break;
                         }
                         case 'borderRadius':
-                            if (value !== 'none') {
+                            if (value !== '0px') {
                                 const horizontal = node.actualWidth >= node.actualHeight;
                                 const [A, B] = node.css('borderTopLeftRadius').split(' ');
                                 const [C, D] = node.css('borderTopRightRadius').split(' ');
@@ -791,8 +790,8 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                 if (element && renderParent) {
                     let name = '';
                     let value = '';
-                    let inlineTrim = false;
-                    let performTrim = false;
+                    let trimming = false;
+                    let inlined = false;
                     const textTransform = node.css('textTransform');
                     switch (element.tagName) {
                         case 'INPUT':
@@ -867,12 +866,9 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                         default:
                             if (node.plainText) {
                                 name = node.textContent.trim();
-                                value = applyTextTransform(textTransform, node.textContent)
-                                    .replace(/&[A-Za-z]+;/g, match => match.replace('&', '&amp;'))
-                                    .replace(/\u00A0/g, '&#160;');
-                                [value] = replaceWhiteSpace(renderParent, node, element, value);
-                                inlineTrim = true;
-                                performTrim = true;
+                                [value] = replaceWhiteSpace(renderParent, node, element, applyTextTransform(textTransform, node.textContent).replace(/&[A-Za-z]+;/g, match => match.replace('&', '&amp;')));
+                                inlined = true;
+                                trimming = true;
                             }
                             else if (node.inlineText) {
                                 name = node.textContent.trim();
@@ -880,15 +876,13 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                     value = removeExcluded(node, element, 'innerHTML');
                                 }
                                 else if (Resource.hasLineBreak(node, true)) {
-                                    value = applyTextTransform(textTransform, removeExcluded(node, element, 'innerHTML'))
-                                        .replace(REGEXP_LINEBREAK, '\\n')
-                                        .replace($util.REGEXP_COMPILED.TAGNAME, '');
+                                    value = applyTextTransform(textTransform, removeExcluded(node, element, 'innerHTML')).replace(REGEXP_LINEBREAK, '\\n').replace($util.REGEXP_COMPILED.TAGNAME, '');
                                 }
                                 else {
                                     value = applyTextTransform(textTransform, removeExcluded(node, element, 'textContent'));
                                 }
-                                [value, inlineTrim] = replaceWhiteSpace(renderParent, node, element, value);
-                                performTrim = true;
+                                [value, inlined] = replaceWhiteSpace(renderParent, node, element, value);
+                                trimming = true;
                             }
                             else if (Resource.isBackgroundVisible(node.data(Resource.KEY_NAME, 'boxStyle')) && element.innerText.trim() === '') {
                                 value = applyTextTransform(textTransform, element.innerText);
@@ -896,16 +890,18 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                             break;
                     }
                     if (value !== '') {
-                        if (performTrim) {
+                        if (trimming) {
                             const previousSibling = node.previousSiblings().pop();
                             let previousSpaceEnd = false;
-                            if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && $util.REGEXP_COMPILED.TRAILINGSPACE.test(previousSibling.textContent)) {
-                                value = value.replace($util.REGEXP_COMPILED.LEADINGSPACE, '');
+                            if (value.length > 1) {
+                                if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && $util.REGEXP_COMPILED.TRAILINGSPACE.test(previousSibling.textContent)) {
+                                    value = value.replace($util.REGEXP_COMPILED.LEADINGSPACE, '');
+                                }
+                                else if (previousSibling.element) {
+                                    previousSpaceEnd = $util.REGEXP_COMPILED.TRAILINGSPACE.test((<HTMLElement> previousSibling.element).innerHTML || (<HTMLElement> previousSibling.element).innerText || previousSibling.textContent);
+                                }
                             }
-                            else if (previousSibling.element) {
-                                previousSpaceEnd = $util.REGEXP_COMPILED.TRAILINGSPACE.test((<HTMLElement> previousSibling.element).innerHTML || (<HTMLElement> previousSibling.element).innerText || previousSibling.textContent);
-                            }
-                            if (inlineTrim) {
+                            if (inlined) {
                                 const original = value;
                                 value = value.trim();
                                 if (previousSibling && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd && $util.REGEXP_COMPILED.LEADINGSPACE.test(original)) {
@@ -924,7 +920,7 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                 );
                                 value = value.replace($util.REGEXP_COMPILED.TRAILINGSPACE, node.display === 'table-cell' || node.lineBreakTrailing || node.blockStatic ? '' : '&#160;');
                             }
-                            else {
+                            else if (!node.inlineText) {
                                 continue;
                             }
                         }

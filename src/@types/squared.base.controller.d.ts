@@ -19,7 +19,7 @@ declare global {
             processUnknownChild(layout: Layout<T>): LayoutResult<T>;
             processTraverseHorizontal(layout: Layout<T>, siblings?: T[]): LayoutResult<T>;
             processTraverseVertical(layout: Layout<T>, siblings?: T[]): LayoutResult<T>;
-            processLayoutHorizontal(layout: Layout<T>, strictMode?: boolean): LayoutResult<T>;
+            processLayoutHorizontal(layout: Layout<T>): LayoutResult<T>;
             setConstraints(): void;
             renderNode(layout: Layout<T>): NodeTemplate<T> | undefined;
             renderNodeGroup(layout: Layout<T>): NodeTemplate<T> | undefined;

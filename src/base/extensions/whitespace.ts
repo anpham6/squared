@@ -339,65 +339,63 @@ export default abstract class WhiteSpace<T extends Node> extends Extension<T> {
     public afterConstraints() {
         const modified: number[] = [];
         for (let node of this.application.processing.cache) {
-            if (node.pageFlow && node.styleElement && node.inlineVertical && !node.documentParent.layoutElement && !modified.includes(node.id)) {
-                const renderParent = node.renderAs ? node.renderAs.renderParent : node.renderParent;
-                if (renderParent) {
-                    function setSpacingOffset(region: number, value: number) {
-                        const offset = (region === BOX_STANDARD.MARGIN_LEFT ? node.actualRect('left') : node.actualRect('top')) - value;
-                        if (offset > 0) {
-                            node = getVisibleNode(node.outerParent || node) as T;
-                            node.modifyBox(region, offset);
-                            modified.push(node.id);
+            const renderParent = node.renderAs ? node.renderAs.renderParent : node.renderParent;
+            if (renderParent && node.pageFlow && node.styleElement && node.inlineVertical && !node.documentParent.layoutElement && !renderParent.tableElement && !modified.includes(node.id)) {
+                function setSpacingOffset(region: number, value: number) {
+                    const offset = (region === BOX_STANDARD.MARGIN_LEFT ? node.actualRect('left') : node.actualRect('top')) - value;
+                    if (offset > 0) {
+                        node = getVisibleNode(node.outerParent || node) as T;
+                        node.modifyBox(region, offset);
+                        modified.push(node.id);
+                    }
+                }
+                if (renderParent.layoutVertical) {
+                    if (node.blockDimension && !node.lineBreakLeading) {
+                        const index = renderParent.renderChildren.findIndex(item => item === node);
+                        if (index > 0) {
+                            setSpacingOffset(BOX_STANDARD.MARGIN_TOP, renderParent.renderChildren[index - 1].linear.bottom);
                         }
                     }
-                    if (renderParent.layoutVertical) {
-                        if (node.blockDimension) {
-                            const index = renderParent.renderChildren.findIndex(item => item === node);
-                            if (index > 0) {
-                                setSpacingOffset(BOX_STANDARD.MARGIN_TOP, renderParent.renderChildren[index - 1].linear.bottom);
+                }
+                else if (!node.alignParent('left')) {
+                    let current = node;
+                    while (true) {
+                        const previous = current.previousSiblings() as T[];
+                        if (previous.length && !previous.some(item => item.lineBreak || item.excluded && item.blockStatic)) {
+                            const previousSibling = previous.pop() as T;
+                            if (previousSibling.inlineVertical) {
+                                setSpacingOffset(BOX_STANDARD.MARGIN_LEFT, previousSibling.actualRect('right'));
+                            }
+                            else if (previousSibling.floating) {
+                                current = previousSibling;
+                                continue;
                             }
                         }
+                        break;
                     }
-                    else if (!node.alignParent('left')) {
-                        let current = node;
-                        while (true) {
-                            const previous = current.previousSiblings() as T[];
-                            if (previous.length && !previous.some(item => item.lineBreak || item.excluded && item.blockStatic)) {
-                                const previousSibling = previous.pop() as T;
-                                if (previousSibling.inlineVertical) {
-                                    setSpacingOffset(BOX_STANDARD.MARGIN_LEFT, previousSibling.actualRect('right'));
-                                }
-                                else if (previousSibling.floating) {
-                                    current = previousSibling;
-                                    continue;
+                }
+                else if (renderParent.horizontalRows && node.blockDimension && !node.floating) {
+                    found: {
+                        let maxBottom = 0;
+                        for (let i = 0; i < renderParent.horizontalRows.length; i++) {
+                            const row = renderParent.horizontalRows[i];
+                            for (let j = 0; j < row.length; j++) {
+                                if (node === row[j]) {
+                                    if (i > 0) {
+                                        setSpacingOffset(BOX_STANDARD.MARGIN_TOP, maxBottom);
+                                    }
+                                    break found;
                                 }
                             }
-                            break;
-                        }
-                    }
-                    else if (renderParent.horizontalRows && node.blockDimension && !node.floating) {
-                        found: {
-                            let maxBottom = 0;
-                            for (let i = 0; i < renderParent.horizontalRows.length; i++) {
-                                const row = renderParent.horizontalRows[i];
-                                for (let j = 0; j < row.length; j++) {
-                                    if (node === row[j]) {
-                                        if (i > 0) {
-                                            setSpacingOffset(BOX_STANDARD.MARGIN_TOP, maxBottom);
-                                        }
-                                        break found;
-                                    }
+                            let valid = false;
+                            for (const item of row) {
+                                if (item.blockDimension && !item.floating && item.linear.bottom > maxBottom) {
+                                    maxBottom = item.linear.bottom;
+                                    valid = true;
                                 }
-                                let valid = false;
-                                for (const item of row) {
-                                    if (item.blockDimension && !item.floating && item.linear.bottom > maxBottom) {
-                                        maxBottom = item.linear.bottom;
-                                        valid = true;
-                                    }
-                                }
-                                if (!valid) {
-                                    break;
-                                }
+                            }
+                            if (!valid) {
+                                break;
                             }
                         }
                     }

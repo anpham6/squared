@@ -12,7 +12,7 @@ h2  { margin:0; font-size:1.1em; font-style:italic; background-color:white; widt
 
 *.parent   { height:80px; /* width:435px; */ text-align:center;
              margin-top:5px; background-color:white; padding:0 134px;
-             border:1px solid black; repeat-y; }
+             border:1px solid black; }
 
 *.box     { background-color: gold; border: 1px solid black; } 
 *.spacer  { height:15px; border:none!important; background:none!important; font-size:1px; line-height:1px; }

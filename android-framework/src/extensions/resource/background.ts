@@ -550,7 +550,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     position.left = 0;
                                 }
                                 position.right = 0;
-                                                            }
+                                gravityX = node.localizeString('left');
+                            }
                             if (backgroundRepeat[i] !== 'repeat-y') {
                                 switch (position.vertical) {
                                     case '0%':
@@ -588,6 +589,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     position.top = 0;
                                 }
                                 position.bottom = 0;
+                                gravityY = 'top';
                             }
                             let width = 0;
                             let height = 0;
@@ -608,22 +610,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 default:
                                     tileMode = 'disabled';
                                     break;
-                            }
-                            if (dimension) {
-                                if (dimension.width - position.left >= node.bounds.width) {
-                                    tileModeX = '';
-                                    if (tileMode === 'repeat') {
-                                        tileModeY = 'repeat';
-                                        tileMode = '';
-                                    }
-                                }
-                                if (dimension.height - position.top >= node.bounds.height) {
-                                    tileModeY = '';
-                                    if (tileMode === 'repeat') {
-                                        tileModeX = 'repeat';
-                                        tileMode = '';
-                                    }
-                                }
                             }
                             if (node.renderChildren.length === 0 && dimension) {
                                 if (gravityX !== '' && tileModeY === 'repeat' && dimension.width < node.actualWidth) {
@@ -989,7 +975,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                         else {
                             function setBorderStyle(layerList: ObjectMap<any>, index: number) {
-                                const item = borders[index];
+                                let item = borders[index];
                                 if (item) {
                                     const width = parseInt(item.width);
                                     if (item.style === 'double' && width > 2) {
@@ -1010,8 +996,12 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         const visible = !visibleAll && item.width === '1px';
                                         let hideWidth = `-${baseWidth}px`;
                                         let outerWidth = `-${baseWidth + (visibleAll ? 1 : 0)}px`;
+                                        if (index === 0 && visibleAll) {
+                                            item = { ...item };
+                                            item.width = `${width + 1}px`;
+                                        }
                                         layerList.item.push({
-                                            top:  index === 0 ? '' : outerWidth,
+                                            top:  index === 0 ? (visibleAll ? '-1px' : '') : outerWidth,
                                             right: index === 1 ? (visible ? item.width : '') : outerWidth,
                                             bottom: index === 2 ? (visible ? item.width : '') : hideWidth,
                                             left: index === 3 ? '' : hideWidth,
@@ -1025,7 +1015,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                             hideWidth = `-${$util.formatPX(getHideWidth(width))}`;
                                             outerWidth = `-${width + (visibleAll ? 1 : 0)}px`;
                                             layerList.item.splice(layerList.item.length, 0, {
-                                                top:  index === 0 ? '' : outerWidth,
+                                                top:  index === 0 ? (visibleAll ? '-1px' : '') : outerWidth,
                                                 right: index === 1 ? (visible ? item.width : '') : outerWidth,
                                                 bottom: index === 2 ? (visible ? item.width : '') : hideWidth,
                                                 left: index === 3 ? '' : hideWidth,

@@ -22,6 +22,7 @@ interface UtilRegExpPattern {
     ATTRIBUTE: RegExp;
     TAGNAME: RegExp;
     SEPARATOR: RegExp;
+    CHAR_ENTITY: RegExp;
     CUSTOMPROPERTY: RegExp;
     LEADINGSPACE: RegExp;
     TRAILINGSPACE: RegExp;
@@ -49,13 +50,13 @@ export const enum USER_AGENT {
 }
 
 export const STRING_PATTERN: UtilRegExpString = <any> {
-    URL: 'url\\("?(.+?)"?\\)',
     DECIMAL: '-?\\d+(?:\\.\\d+)?',
     PERCENT: '-?\\d+(?:\\.\\d+)?%',
     CALC: 'calc(\\(.+\\))',
     VAR: 'var\\((--[A-Za-z0-9\\-]+)(?!,\\s*var\\()(?:,\\s*([a-z\\-]+\\([^)]+\\)|[^)]+))?\\)',
     ZERO_ONE: '0(?:\\.\\d+)?|1(?:\\.0+)?',
-    SELECTOR: '\\s*([^\\s:\\[]+)?(:[\\w\\-]+(?:\\(([^)]+)\\))?|(::[\\w\\-]+)|\\[([\\w\\-]+)(?:[~^$*|]?="(.+)")?\\])?\\s*'
+    SELECTOR: '\\s*([^\\s:\\[]+)?(:[\\w\\-]+(?:\\(([^)]+)\\))?|(::[\\w\\-]+)|\\[([\\w\\-]+)(?:[~^$*|]?="(.+)")?\\])?\\s*',
+    URL: 'url\\("?(.+?)"?\\)'
 };
 
 STRING_PATTERN.LENGTH = `(${STRING_PATTERN.DECIMAL})(${UNIT_TYPE})?`;
@@ -69,6 +70,7 @@ export const REGEXP_COMPILED: UtilRegExpPattern = {
     ANGLE: new RegExp(`^${STRING_PATTERN.ANGLE}$`),
     CALC: new RegExp(`^${STRING_PATTERN.CALC}$`),
     URL: new RegExp(STRING_PATTERN.URL),
+    CHAR_ENTITY: /&#?[A-Za-z0-9]+;/,
     TAGNAME: /(<([^>]+)>)/g,
     PROTOCOL: /^[A-Za-z]+:\/\//,
     SEPARATOR: /\s*,\s*/,

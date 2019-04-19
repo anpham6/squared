@@ -1,4 +1,4 @@
-/* squared.svg 0.9.2
+/* squared.svg 0.9.3
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -395,7 +395,7 @@
         }
         return value;
     }
-    function parseAttributeUrl(value) {
+    function parseAttributeURL(value) {
         const match = /url\("?(#.+?)"?\)/.exec(value);
         return match ? match[1] : '';
     }
@@ -454,7 +454,7 @@
         getDOMRect: getDOMRect,
         getAttribute: getAttribute,
         getParentAttribute: getParentAttribute,
-        parseAttributeUrl: parseAttributeUrl,
+        parseAttributeURL: parseAttributeURL,
         getTargetElement: getTargetElement,
         getNearestViewBox: getNearestViewBox,
         getPathLength: getPathLength
@@ -4843,7 +4843,7 @@
         return undefined;
     }
     function getFillPattern(element, viewport) {
-        const value = parseAttributeUrl(getParentAttribute(element, 'fill'));
+        const value = parseAttributeURL(getParentAttribute(element, 'fill'));
         if (value !== '') {
             if (viewport && viewport.definitions.pattern.has(value)) {
                 return viewport.definitions.pattern.get(value);
@@ -5305,7 +5305,7 @@
                             break;
                         case 'fill':
                         case 'stroke':
-                            const url = parseAttributeUrl(value);
+                            const url = parseAttributeURL(value);
                             if (url !== '') {
                                 this[`${attr}Pattern`] = url;
                             }

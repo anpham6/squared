@@ -1,4 +1,4 @@
-/* squared 0.9.2
+/* squared 0.9.3
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -19,12 +19,13 @@
     const CACHE_CAMELCASE = {};
     const CACHE_UNDERSCORE = {};
     const STRING_PATTERN = {
-        URL: 'url\\("?(.+?)"?\\)',
         DECIMAL: '-?\\d+(?:\\.\\d+)?',
-        PERCENT: '\\d+(?:\\.\\d+)?%',
+        PERCENT: '-?\\d+(?:\\.\\d+)?%',
         CALC: 'calc(\\(.+\\))',
         VAR: 'var\\((--[A-Za-z0-9\\-]+)(?!,\\s*var\\()(?:,\\s*([a-z\\-]+\\([^)]+\\)|[^)]+))?\\)',
-        ZERO_ONE: '0(?:\\.\\d+)?|1(?:\\.0+)?'
+        ZERO_ONE: '0(?:\\.\\d+)?|1(?:\\.0+)?',
+        SELECTOR: '\\s*([^\\s:\\[]+)?(:[\\w\\-]+(?:\\(([^)]+)\\))?|(::[\\w\\-]+)|\\[([\\w\\-]+)(?:[~^$*|]?="(.+)")?\\])?\\s*',
+        URL: 'url\\("?(.+?)"?\\)'
     };
     STRING_PATTERN.LENGTH = `(${STRING_PATTERN.DECIMAL})(${UNIT_TYPE})?`;
     STRING_PATTERN.LENGTH_PERCENTAGE = `(${STRING_PATTERN.DECIMAL}(?:${UNIT_TYPE}|%)?)`;
@@ -36,6 +37,7 @@
         ANGLE: new RegExp(`^${STRING_PATTERN.ANGLE}$`),
         CALC: new RegExp(`^${STRING_PATTERN.CALC}$`),
         URL: new RegExp(STRING_PATTERN.URL),
+        CHAR_ENTITY: /&#?[A-Za-z0-9]+;/,
         TAGNAME: /(<([^>]+)>)/g,
         PROTOCOL: /^[A-Za-z]+:\/\//,
         SEPARATOR: /\s*,\s*/,
@@ -347,7 +349,7 @@
     }
     function parseUnit(value, fontSize) {
         if (value) {
-            const match = value.match(REGEXP_COMPILED.LENGTH);
+            const match = REGEXP_COMPILED.LENGTH.exec(value);
             if (match) {
                 let result = parseFloat(match[1]);
                 switch (match[2]) {
@@ -602,8 +604,18 @@
         }
         return -1;
     }
-    function fromLastIndexOf(value, char = '/') {
-        return value.substring(value.lastIndexOf(char) + 1);
+    function fromLastIndexOf(value, ...char) {
+        let result = value;
+        for (const ch of char) {
+            const index = result.lastIndexOf(ch);
+            if (index !== -1) {
+                result = result.substring(result.lastIndexOf(ch) + 1);
+            }
+            else {
+                return value;
+            }
+        }
+        return result;
     }
     function searchObject(obj, value) {
         const result = [];
@@ -640,7 +652,7 @@
     function hasValue(value) {
         return value !== undefined && value !== null && value.toString().trim() !== '';
     }
-    function withinRange(a, b, offset = 0.5) {
+    function withinRange(a, b, offset = 1) {
         return b >= (a - offset) && b <= (a + offset);
     }
     function assignEmptyProperty(dest, source) {
@@ -1045,13 +1057,15 @@
             }
             return cascade(this);
         }
-        cascade() {
+        cascade(predicate) {
             function cascade(container) {
                 const result = [];
                 for (const item of container.children) {
-                    result.push(item);
-                    if (item instanceof Container && item.length) {
-                        concatArray(result, cascade(item));
+                    if (predicate === undefined || predicate(item)) {
+                        result.push(item);
+                        if (item instanceof Container && item.length) {
+                            concatArray(result, cascade(item));
+                        }
                     }
                 }
                 return result;
@@ -3167,15 +3181,12 @@
             }
             else if (result.length > 1) {
                 const total = hsl.l + hsl.s;
-                const combined = [];
-                for (const color of result) {
-                    combined.push(Math.abs(total - (color.hsl.l + color.hsl.s)));
-                }
                 let nearest = Number.POSITIVE_INFINITY;
                 let index = -1;
-                for (let i = 0; i < combined.length; i++) {
-                    if (combined[i] < nearest) {
-                        nearest = combined[i];
+                for (let i = 0; i < result.length; i++) {
+                    const offset = Math.abs(total - (result[i].hsl.l + result[i].hsl.s));
+                    if (offset < nearest) {
+                        nearest = offset;
                         index = i;
                     }
                 }
@@ -3198,7 +3209,7 @@
                 rgba = parseRGBA(value);
             }
             else if (value.startsWith('rgb')) {
-                const match = value.match(REGEXP_RGBA);
+                const match = REGEXP_RGBA.exec(value);
                 if (match) {
                     rgba = {
                         r: parseInt(match[1]),
@@ -3360,7 +3371,229 @@
         formatHSLA: formatHSLA
     });
 
-    function isLineBreak(element, sessionId) {
+    const ELEMENT_BLOCK = [
+        'ADDRESS',
+        'ARTICLE',
+        'ASIDE',
+        'BLOCKQUOTE',
+        'DD',
+        'DETAILS',
+        'DIALOG',
+        'DIV',
+        'DL',
+        'DT',
+        'FIELDSET',
+        'FIGCAPTION',
+        'FIGURE',
+        'FOOTER',
+        'FORM',
+        'H1',
+        'H2',
+        'H3',
+        'H4',
+        'H5',
+        'H6',
+        'HEADER',
+        'HGROUP',
+        'HR',
+        'LI',
+        'MAIN',
+        'NAV',
+        'OL',
+        'P',
+        'PRE',
+        'SECTION',
+        'TABLE',
+        'UL'
+    ];
+    function newBoxRect() {
+        return {
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0
+        };
+    }
+    function newRectDimension() {
+        return {
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: 0,
+            height: 0
+        };
+    }
+    function newBoxModel() {
+        return {
+            marginTop: 0,
+            marginRight: 0,
+            marginBottom: 0,
+            marginLeft: 0,
+            paddingTop: 0,
+            paddingRight: 0,
+            paddingBottom: 0,
+            paddingLeft: 0
+        };
+    }
+    function assignRect(rect) {
+        return {
+            top: rect.top,
+            right: rect.right,
+            bottom: rect.bottom,
+            left: rect.left,
+            width: rect.width,
+            height: rect.height
+        };
+    }
+    function removeElementsByClassName(className) {
+        for (const element of Array.from(document.getElementsByClassName(className))) {
+            if (element.parentElement) {
+                element.parentElement.removeChild(element);
+            }
+        }
+    }
+    function getElementsBetweenSiblings(elementStart, elementEnd, whiteSpace = false) {
+        if (!elementStart || elementStart.parentElement === elementEnd.parentElement) {
+            const parent = elementEnd.parentElement;
+            if (parent) {
+                let startIndex = elementStart ? -1 : 0;
+                let endIndex = -1;
+                const elements = Array.from(parent.childNodes);
+                for (let i = 0; i < elements.length; i++) {
+                    if (elements[i] === elementStart) {
+                        startIndex = i;
+                    }
+                    if (elements[i] === elementEnd) {
+                        endIndex = i;
+                    }
+                }
+                if (startIndex !== -1 && endIndex !== -1 && startIndex !== endIndex) {
+                    const result = elements.slice(Math.min(startIndex, endIndex) + 1, Math.max(startIndex, endIndex));
+                    if (whiteSpace) {
+                        spliceArray(result, element => element.nodeName === '#comment');
+                    }
+                    else {
+                        spliceArray(result, element => element.nodeName.charAt(0) === '#' && (element.nodeName !== 'text' || !!element.textContent && element.textContent.trim() === ''));
+                    }
+                    return result.length ? result : undefined;
+                }
+            }
+        }
+        return undefined;
+    }
+    function createElement(parent, tagName = 'span', placeholder = true, index = -1) {
+        const element = document.createElement(tagName);
+        const style = element.style;
+        if (placeholder) {
+            style.setProperty('position', 'static');
+            style.setProperty('margin', '0px');
+            style.setProperty('padding', '0px');
+            style.setProperty('border', 'none');
+            style.setProperty('float', 'none');
+            style.setProperty('clear', 'none');
+            element.className = '__squared.placeholder';
+        }
+        else {
+            element.className = '__squared.pseudo';
+        }
+        style.setProperty('display', 'none');
+        if (parent) {
+            if (index >= 0 && index < parent.childNodes.length) {
+                parent.insertBefore(element, parent.childNodes[index]);
+            }
+            else {
+                parent.appendChild(element);
+            }
+        }
+        return element;
+    }
+    function getNamedItem(element, attr) {
+        if (element) {
+            const item = element.attributes.getNamedItem(attr);
+            if (item) {
+                return item.value.trim();
+            }
+        }
+        return '';
+    }
+
+    var dom = /*#__PURE__*/Object.freeze({
+        ELEMENT_BLOCK: ELEMENT_BLOCK,
+        newBoxRect: newBoxRect,
+        newRectDimension: newRectDimension,
+        newBoxModel: newBoxModel,
+        assignRect: assignRect,
+        removeElementsByClassName: removeElementsByClassName,
+        getElementsBetweenSiblings: getElementsBetweenSiblings,
+        createElement: createElement,
+        getNamedItem: getNamedItem
+    });
+
+    function getClientRect(element, sessionId, cache = true) {
+        if (cache) {
+            const rect = getElementCache(element, 'boundingClientRect', sessionId);
+            if (rect) {
+                return rect;
+            }
+        }
+        const bounds = element.getBoundingClientRect();
+        setElementCache(element, 'boundingClientRect', sessionId, bounds);
+        return bounds;
+    }
+    function getRangeClientRect(element, sessionId, cache = true) {
+        if (cache) {
+            const rect = getElementCache(element, 'rangeClientRect', sessionId);
+            if (rect) {
+                return rect;
+            }
+        }
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        const clientRects = range.getClientRects();
+        const domRect = [];
+        for (let i = 0; i < clientRects.length; i++) {
+            const item = clientRects.item(i);
+            if (!(Math.round(item.width) === 0 && withinRange(item.left, item.right))) {
+                domRect.push(item);
+            }
+        }
+        let bounds = newRectDimension();
+        let multiline = 0;
+        let maxTop = Number.NEGATIVE_INFINITY;
+        if (domRect.length) {
+            bounds = assignRect(domRect[0]);
+            for (let i = 1; i < domRect.length; i++) {
+                const rect = domRect[i];
+                if (rect.left < bounds.left) {
+                    bounds.left = rect.left;
+                }
+                if (rect.right > bounds.right) {
+                    bounds.right = rect.right;
+                }
+                if (rect.top < bounds.top) {
+                    bounds.top = rect.top;
+                }
+                if (rect.bottom > bounds.bottom) {
+                    bounds.bottom = rect.bottom;
+                }
+                if (rect.height > bounds.height) {
+                    bounds.height = rect.height;
+                }
+                bounds.width += rect.width;
+                if (rect.top > maxTop) {
+                    maxTop = rect.top;
+                }
+            }
+            if (domRect.length > 1 && maxTop >= domRect[0].bottom && element.textContent && (element.textContent.trim() !== '' || /^\s*\n/.test(element.textContent))) {
+                multiline = domRect.length - 1;
+            }
+        }
+        bounds.multiline = multiline;
+        setElementCache(element, 'rangeClientRect', sessionId, bounds);
+        return bounds;
+    }
+    function causesLineBreak(element, sessionId) {
         if (element.tagName === 'BR') {
             return true;
         }
@@ -3387,7 +3620,9 @@
     }
 
     var session = /*#__PURE__*/Object.freeze({
-        isLineBreak: isLineBreak,
+        getClientRect: getClientRect,
+        getRangeClientRect: getRangeClientRect,
+        causesLineBreak: causesLineBreak,
         setElementCache: setElementCache,
         getElementCache: getElementCache,
         deleteElementCache: deleteElementCache,
@@ -3397,8 +3632,164 @@
     const BOX_POSITION = ['top', 'right', 'bottom', 'left'];
     const BOX_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
     const BOX_PADDING = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'];
+    function getStyle(element, target, cache = true) {
+        if (element) {
+            const attr = 'style' + (target ? '::' + target : '');
+            if (cache) {
+                const style = getElementCache(element, attr, '0');
+                if (style) {
+                    return style;
+                }
+            }
+            if (hasComputedStyle(element)) {
+                const style = getComputedStyle(element, target);
+                setElementCache(element, attr, '0', style);
+                return style;
+            }
+            return { display: 'inline' };
+        }
+        return { display: 'none' };
+    }
+    function hasComputedStyle(element) {
+        return !!element && typeof element['style'] === 'object' && typeof element['style']['display'] === 'string';
+    }
+    function getSpecificity(value) {
+        const pattern = new RegExp(STRING_PATTERN.SELECTOR, 'g');
+        let result = 0;
+        let match;
+        while ((match = pattern.exec(value.trim())) !== null) {
+            if (match[0]) {
+                if (match[1]) {
+                    let check = true;
+                    switch (match[1].charAt(0)) {
+                        case '*':
+                        case '>':
+                        case '+':
+                        case '~':
+                            continue;
+                        case ':':
+                        case '[':
+                            check = false;
+                            break;
+                        case '#':
+                            result += 100;
+                            break;
+                        case '.':
+                            result += 10;
+                            match[1] = match[1].substring(1);
+                            break;
+                        default:
+                            if (match[1].indexOf('#') > 0) {
+                                result += 100;
+                            }
+                            result += 1;
+                            break;
+                    }
+                    if (check) {
+                        result += (match[1].split('.').length - 1) * 10;
+                    }
+                }
+                if (match[2]) {
+                    if (match[2].startsWith(':not(')) {
+                        if (match[3]) {
+                            result += getSpecificity(match[3]);
+                        }
+                    }
+                    else {
+                        switch (match[2]) {
+                            case ':root':
+                            case ':global':
+                            case ':local':
+                                break;
+                            default:
+                                result += 10;
+                                break;
+                        }
+                    }
+                }
+                if (match[4]) {
+                    result += 1;
+                }
+                if (match[5]) {
+                    result += 10;
+                }
+            }
+            else {
+                break;
+            }
+        }
+        return result;
+    }
+    function checkStyleValue(element, attr, value, style, specificity = 0, fontSize) {
+        if (value && value !== 'initial') {
+            if (value === 'inherit') {
+                value = getInheritedStyle(element, attr);
+            }
+            const computed = style[attr];
+            if (value !== computed && value !== 'auto') {
+                const numeric = isNumber(value);
+                if (computed) {
+                    let valid = false;
+                    switch (attr) {
+                        case 'fontSize':
+                        case 'fontWeight':
+                        case 'color':
+                        case 'backgroundColor':
+                        case 'borderTopColor':
+                        case 'borderRightColor':
+                        case 'borderBottomColor':
+                        case 'borderLeftColor':
+                            valid = true;
+                            break;
+                        default:
+                            if (isPercent(value)) {
+                                switch (attr) {
+                                    case 'width':
+                                    case 'minWidth':
+                                    case 'maxWidth':
+                                    case 'height':
+                                    case 'minHeight':
+                                    case 'maxHeight':
+                                    case 'columnWidth':
+                                        break;
+                                    default:
+                                        valid = true;
+                                        break;
+                                }
+                            }
+                            break;
+                    }
+                    if (valid || numeric || isCustomProperty(value)) {
+                        setElementCache(element, attr, specificity.toString(), value);
+                        return computed;
+                    }
+                }
+                if (numeric) {
+                    setElementCache(element, attr, specificity.toString(), value);
+                }
+                else if (isLength(value)) {
+                    setElementCache(element, attr, specificity.toString(), value);
+                    return convertPX(value, fontSize);
+                }
+            }
+            return value;
+        }
+        return '';
+    }
+    function getDataSet(element, prefix) {
+        const result = {};
+        if (element) {
+            prefix = convertCamelCase(prefix, '.');
+            for (const attr in element.dataset) {
+                if (attr.startsWith(prefix)) {
+                    result[capitalize(attr.substring(prefix.length), false)] = element.dataset[attr];
+                }
+            }
+        }
+        return result;
+    }
     function getKeyframeRules() {
-        const keyFrameRule = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
+        const pattern = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
         const result = new Map();
         violation: {
             for (let i = 0; i < document.styleSheets.length; i++) {
@@ -3410,7 +3801,7 @@
                             if (item.type === 7) {
                                 const map = {};
                                 for (let k = 0; k < item.cssRules.length; k++) {
-                                    const match = keyFrameRule.exec(item.cssRules[k].cssText);
+                                    const match = pattern.exec(item.cssRules[k].cssText);
                                     if (match) {
                                         for (let percent of (item.cssRules[k]['keyText'] || match[1].trim()).split(REGEXP_COMPILED.SEPARATOR)) {
                                             percent = percent.trim();
@@ -3444,99 +3835,114 @@
         }
         return result;
     }
-    function hasComputedStyle(element) {
-        if (element) {
-            return typeof element['style'] === 'object' && element['style'] !== null && element['style']['display'] !== null;
+    function validMediaRule(value) {
+        switch (value) {
+            case 'only all':
+            case 'only screen':
+                return true;
+            default: {
+                function compareRange(operation, unit, range) {
+                    switch (operation) {
+                        case '<=':
+                            return unit <= range;
+                        case '<':
+                            return unit < range;
+                        case '>=':
+                            return unit >= range;
+                        case '>':
+                            return unit > range;
+                        default:
+                            return unit === range;
+                    }
+                }
+                const pattern = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
+                const fontSize = parseUnit(getStyle(document.body).getPropertyValue('font-size'));
+                let match;
+                while ((match = pattern.exec(value)) !== null) {
+                    const negate = match[1] === 'not';
+                    const patternCondition = /\(([a-z\-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
+                    let condition;
+                    let valid = false;
+                    while ((condition = patternCondition.exec(match[2])) !== null) {
+                        const attr = condition[1];
+                        let operation;
+                        if (condition[1].startsWith('min')) {
+                            operation = '>=';
+                        }
+                        else if (condition[1].startsWith('max')) {
+                            operation = '<=';
+                        }
+                        else {
+                            operation = match[2];
+                        }
+                        const rule = condition[3];
+                        switch (attr) {
+                            case 'aspect-ratio':
+                            case 'min-aspect-ratio':
+                            case 'max-aspect-ratio':
+                                const [width, height] = replaceMap(rule.split('/'), ratio => parseInt(ratio));
+                                valid = compareRange(operation, window.innerWidth / window.innerHeight, width / height);
+                                break;
+                            case 'width':
+                            case 'min-width':
+                            case 'max-width':
+                            case 'height':
+                            case 'min-height':
+                            case 'max-height':
+                                valid = compareRange(operation, attr.indexOf('width') !== -1 ? window.innerWidth : window.innerHeight, parseUnit(rule, fontSize));
+                                break;
+                            case 'orientation':
+                                valid = rule === 'portrait' && window.innerWidth <= window.innerHeight || rule === 'landscape' && window.innerWidth > window.innerHeight;
+                                break;
+                            case 'resolution':
+                            case 'min-resolution':
+                            case 'max-resolution':
+                                let resolution = parseFloat(rule);
+                                if (rule.endsWith('dpcm')) {
+                                    resolution *= 2.54;
+                                }
+                                else if (rule.endsWith('dppx') || rule.endsWith('x')) {
+                                    resolution *= 96;
+                                }
+                                valid = compareRange(operation, getDeviceDPI(), resolution);
+                                break;
+                            case 'grid':
+                                valid = rule === '0';
+                                break;
+                            case 'color':
+                                valid = rule === undefined || convertInt(rule) > 0;
+                                break;
+                            case 'min-color':
+                                valid = convertInt(rule) <= screen.colorDepth / 3;
+                                break;
+                            case 'max-color':
+                                valid = convertInt(rule) >= screen.colorDepth / 3;
+                                break;
+                            case 'color-index':
+                            case 'min-color-index':
+                            case 'monochrome':
+                            case 'min-monochrome':
+                                valid = rule === '0';
+                                break;
+                            case 'max-color-index':
+                            case 'max-monochrome':
+                                valid = convertInt(rule) >= 0;
+                                break;
+                            default:
+                                valid = false;
+                                break;
+                        }
+                        if (!valid) {
+                            break;
+                        }
+                    }
+                    if (!negate && valid || negate && !valid) {
+                        return true;
+                    }
+                }
+            }
         }
         return false;
-    }
-    function checkStyleValue(element, attr, value, fontSize, style) {
-        if (value === 'inherit') {
-            value = getInheritedStyle(element, attr);
-        }
-        if (value && value !== 'initial') {
-            const computed = style ? style[attr] : '';
-            if (value !== computed) {
-                if (computed !== '') {
-                    switch (attr) {
-                        case 'backgroundColor':
-                        case 'borderTopColor':
-                        case 'borderRightColor':
-                        case 'borderBottomColor':
-                        case 'borderLeftColor':
-                        case 'color':
-                        case 'fontSize':
-                        case 'fontWeight':
-                            return computed;
-                    }
-                    if (REGEXP_COMPILED.CUSTOMPROPERTY.test(value)) {
-                        return computed;
-                    }
-                }
-                switch (attr) {
-                    case 'width':
-                    case 'height':
-                    case 'minWidth':
-                    case 'maxWidth':
-                    case 'minHeight':
-                    case 'maxHeight':
-                    case 'lineHeight':
-                    case 'verticalAlign':
-                    case 'textIndent':
-                    case 'letterSpacing':
-                    case 'columnGap':
-                    case 'top':
-                    case 'right':
-                    case 'bottom':
-                    case 'left':
-                    case 'marginTop':
-                    case 'marginRight':
-                    case 'marginBottom':
-                    case 'marginLeft':
-                    case 'paddingTop':
-                    case 'paddingRight':
-                    case 'paddingBottom':
-                    case 'paddingLeft': {
-                        if (isNumber(value)) {
-                            return computed;
-                        }
-                        return isLength(value) ? convertPX(value, fontSize) : value;
-                    }
-                }
-            }
-            return value;
-        }
-        return '';
-    }
-    function getDataSet(element, prefix) {
-        const result = {};
-        if (element) {
-            prefix = convertCamelCase(prefix, '.');
-            for (const attr in element.dataset) {
-                if (attr.startsWith(prefix)) {
-                    result[capitalize(attr.substring(prefix.length), false)] = element.dataset[attr];
-                }
-            }
-        }
-        return result;
-    }
-    function getStyle(element, target, cache = true) {
-        if (element) {
-            const attr = 'style' + (target ? '::' + target : '');
-            if (cache) {
-                const style = getElementCache(element, attr, '0');
-                if (style) {
-                    return style;
-                }
-            }
-            if (hasComputedStyle(element)) {
-                const style = getComputedStyle(element, target);
-                setElementCache(element, attr, '0', style);
-                return style;
-            }
-            return { display: 'inline' };
-        }
-        return { display: 'none' };
     }
     function getFontSize(element) {
         return parseFloat(getStyle(element).getPropertyValue('font-size')) || undefined;
@@ -3600,6 +4006,7 @@
         return undefined;
     }
     function getBackgroundPosition(value, dimension, fontSize) {
+        const orientation = value === 'center' ? ['center', 'center'] : value.split(' ');
         const result = {
             top: 0,
             left: 0,
@@ -3610,9 +4017,9 @@
             rightAsPercent: 0,
             bottomAsPercent: 0,
             horizontal: 'left',
-            vertical: 'top'
+            vertical: 'top',
+            orientation
         };
-        const orientation = value === 'center' ? ['center', 'center'] : value.split(' ');
         if (orientation.length === 2) {
             for (let i = 0; i < orientation.length; i++) {
                 const position = orientation[i];
@@ -3728,7 +4135,7 @@
         return valueAsDefault ? value.toString() : '';
     }
     function resolveURL(value) {
-        const match = value.match(REGEXP_COMPILED.URL);
+        const match = REGEXP_COMPILED.URL.exec(value);
         return match ? resolvePath(match[1]) : '';
     }
     function insertStyleSheetRule(value, index = 0) {
@@ -3753,11 +4160,13 @@
         BOX_POSITION: BOX_POSITION,
         BOX_MARGIN: BOX_MARGIN,
         BOX_PADDING: BOX_PADDING,
-        getKeyframeRules: getKeyframeRules,
+        getStyle: getStyle,
         hasComputedStyle: hasComputedStyle,
+        getSpecificity: getSpecificity,
         checkStyleValue: checkStyleValue,
         getDataSet: getDataSet,
-        getStyle: getStyle,
+        getKeyframeRules: getKeyframeRules,
+        validMediaRule: validMediaRule,
         getFontSize: getFontSize,
         isParentStyle: isParentStyle,
         getInheritedStyle: getInheritedStyle,
@@ -3769,261 +4178,8 @@
         insertStyleSheetRule: insertStyleSheetRule
     });
 
-    const ELEMENT_BLOCK = [
-        'ADDRESS',
-        'ARTICLE',
-        'ASIDE',
-        'BLOCKQUOTE',
-        'CANVAS',
-        'DD',
-        'DIV',
-        'DL',
-        'DT',
-        'FIELDSET',
-        'FIGCAPTION',
-        'FIGURE',
-        'FOOTER',
-        'FORM',
-        'H1',
-        'H2',
-        'H3',
-        'H4',
-        'H5',
-        'H6',
-        'HEADER',
-        'LI',
-        'MAIN',
-        'NAV',
-        'OL',
-        'OUTPUT',
-        'P',
-        'PRE',
-        'SECTION',
-        'TFOOT',
-        'TH',
-        'THEAD',
-        'TR',
-        'UL',
-        'VIDEO'
-    ];
-    const ELEMENT_INLINE = [
-        'A',
-        'ABBR',
-        'ACRONYM',
-        'B',
-        'BDO',
-        'BIG',
-        'BR',
-        'BUTTON',
-        'CITE',
-        'CODE',
-        'DFN',
-        'EM',
-        'I',
-        'IFRAME',
-        'IMG',
-        'INPUT',
-        'KBD',
-        'LABEL',
-        'MAP',
-        'OBJECT',
-        'Q',
-        'S',
-        'SAMP',
-        'SCRIPT',
-        'SELECT',
-        'SMALL',
-        'SPAN',
-        'STRIKE',
-        'STRONG',
-        'SUB',
-        'SUP',
-        'TEXTAREA',
-        'TIME',
-        'TT',
-        'U',
-        'VAR',
-        'PLAINTEXT'
-    ];
-    const withinViewport = (rect) => !(rect.left < 0 && rect.top < 0 && Math.abs(rect.left) >= rect.width && Math.abs(rect.top) >= rect.height);
-    function newBoxRect() {
-        return {
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0
-        };
-    }
-    function newRectDimension() {
-        return {
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            width: 0,
-            height: 0
-        };
-    }
-    function newBoxModel() {
-        return {
-            marginTop: 0,
-            marginRight: 0,
-            marginBottom: 0,
-            marginLeft: 0,
-            paddingTop: 0,
-            paddingRight: 0,
-            paddingBottom: 0,
-            paddingLeft: 0
-        };
-    }
-    function getRangeClientRect(element) {
-        const range = document.createRange();
-        range.selectNodeContents(element);
-        const clientRects = range.getClientRects();
-        const domRect = [];
-        for (let i = 0; i < clientRects.length; i++) {
-            const item = clientRects.item(i);
-            if (!(Math.round(item.width) === 0 && withinRange(item.left, item.right))) {
-                domRect.push(item);
-            }
-        }
-        let bounds = newRectDimension();
-        let multiline = 0;
-        if (domRect.length) {
-            bounds = assignRect(domRect[0]);
-            const top = new Set([bounds.top]);
-            const bottom = new Set([bounds.bottom]);
-            let minTop = bounds.top;
-            let maxBottom = bounds.bottom;
-            for (let i = 1; i < domRect.length; i++) {
-                const rect = domRect[i];
-                top.add(Math.round(rect.top));
-                bottom.add(Math.round(rect.bottom));
-                minTop = Math.min(minTop, rect.top);
-                maxBottom = Math.min(maxBottom, rect.bottom);
-                bounds.width += rect.width;
-                bounds.right = Math.max(rect.right, bounds.right);
-                bounds.height = Math.max(rect.height, bounds.height);
-            }
-            if (top.size > 1 && bottom.size > 1) {
-                bounds.top = minTop;
-                bounds.bottom = maxBottom;
-                if (domRect[domRect.length - 1].top >= domRect[0].bottom && element.textContent && (element.textContent.trim() !== '' || /^\s*\n/.test(element.textContent))) {
-                    multiline = domRect.length - 1;
-                }
-            }
-        }
-        bounds.multiline = multiline;
-        return bounds;
-    }
-    function assignRect(rect) {
-        return {
-            top: rect.top,
-            right: rect.right,
-            bottom: rect.bottom,
-            left: rect.left,
-            width: rect.width,
-            height: rect.height
-        };
-    }
-    function removeElementsByClassName(className) {
-        for (const element of Array.from(document.getElementsByClassName(className))) {
-            if (element.parentElement) {
-                element.parentElement.removeChild(element);
-            }
-        }
-    }
-    function isElementVisible(element, viewport = false) {
-        const rect = element.getBoundingClientRect();
-        if (!viewport || withinViewport(rect)) {
-            if (rect.width !== 0 && rect.height !== 0) {
-                return true;
-            }
-            const style = getStyle(element);
-            return style.getPropertyValue('display') === 'block' && (parseInt(style.getPropertyValue('margin-top')) !== 0 || parseInt(style.getPropertyValue('margin-bottom')) !== 0);
-        }
-        return false;
-    }
-    function getElementsBetweenSiblings(elementStart, elementEnd, whiteSpace = false) {
-        if (!elementStart || elementStart.parentElement === elementEnd.parentElement) {
-            const parent = elementEnd.parentElement;
-            if (parent) {
-                let startIndex = elementStart ? -1 : 0;
-                let endIndex = -1;
-                const elements = Array.from(parent.childNodes);
-                for (let i = 0; i < elements.length; i++) {
-                    if (elements[i] === elementStart) {
-                        startIndex = i;
-                    }
-                    if (elements[i] === elementEnd) {
-                        endIndex = i;
-                    }
-                }
-                if (startIndex !== -1 && endIndex !== -1 && startIndex !== endIndex) {
-                    const result = elements.slice(Math.min(startIndex, endIndex) + 1, Math.max(startIndex, endIndex));
-                    if (whiteSpace) {
-                        spliceArray(result, element => element.nodeName === '#comment');
-                    }
-                    else {
-                        spliceArray(result, element => element.nodeName.charAt(0) === '#' && (element.nodeName !== 'text' || !!element.textContent && element.textContent.trim() === ''));
-                    }
-                    return result.length ? result : undefined;
-                }
-            }
-        }
-        return undefined;
-    }
-    function createElement(parent, tagName = 'span', placeholder = true, index = -1) {
-        const element = document.createElement(tagName);
-        const style = element.style;
-        if (placeholder) {
-            style.setProperty('position', 'static');
-            style.setProperty('margin', '0px');
-            style.setProperty('padding', '0px');
-            style.setProperty('border', 'none');
-            style.setProperty('cssFloat', 'none');
-            style.setProperty('clear', 'none');
-            element.className = 'squared.placeholder';
-        }
-        else {
-            element.className = '__squared.pseudo';
-        }
-        style.setProperty('display', 'none');
-        if (parent) {
-            if (index >= 0 && index < parent.childNodes.length) {
-                parent.insertBefore(element, parent.childNodes[index]);
-            }
-            else {
-                parent.appendChild(element);
-            }
-        }
-        return element;
-    }
-    function getNamedItem(element, attr) {
-        if (element) {
-            const item = element.attributes.getNamedItem(attr);
-            if (item) {
-                return item.value.trim();
-            }
-        }
-        return '';
-    }
-
-    var dom = /*#__PURE__*/Object.freeze({
-        ELEMENT_BLOCK: ELEMENT_BLOCK,
-        ELEMENT_INLINE: ELEMENT_INLINE,
-        newBoxRect: newBoxRect,
-        newRectDimension: newRectDimension,
-        newBoxModel: newBoxModel,
-        getRangeClientRect: getRangeClientRect,
-        assignRect: assignRect,
-        removeElementsByClassName: removeElementsByClassName,
-        isElementVisible: isElementVisible,
-        getElementsBetweenSiblings: getElementsBetweenSiblings,
-        createElement: createElement,
-        getNamedItem: getNamedItem
-    });
-
+    const REGEXP_TRUNCATE = /^(-?\d+)\.(\d*?)(0{5,}|9{5,})\d*$/;
+    const REGEXP_DECIMALNOTATION = /^(-?\d+\.\d+)e(-?\d+)$/;
     function minArray(list) {
         if (list.length) {
             return Math.min.apply(null, list);
@@ -4060,9 +4216,22 @@
             return value.toPrecision(precision).replace(/\.?0+$/, '');
         }
     }
+    function convertDecimalNotation(value) {
+        const match = REGEXP_DECIMALNOTATION.exec(value.toString());
+        if (match) {
+            const multiplier = parseInt(match[2]);
+            if (multiplier > 0) {
+                return value.toFixed(multiplier + 1);
+            }
+            else {
+                return value.toFixed(Math.abs(multiplier));
+            }
+        }
+        return value.toString();
+    }
     function truncateFraction(value) {
         if (value !== Math.floor(value)) {
-            const match = /^(\d+)\.(\d*?)(0{5,}|9{5,})\d*$/.exec(value.toString());
+            const match = REGEXP_TRUNCATE.exec(convertDecimalNotation(value));
             if (match) {
                 return match[2] === '' ? Math.round(value) : parseFloat(value.toPrecision((match[1] !== '0' ? match[1].length : 0) + match[2].length));
             }
@@ -4159,6 +4328,7 @@
         moreEqual: moreEqual,
         lessEqual: lessEqual,
         truncate: truncate,
+        convertDecimalNotation: convertDecimalNotation,
         truncateFraction: truncateFraction,
         truncateString: truncateString,
         convertRadian: convertRadian,
@@ -4210,7 +4380,7 @@
         if (spaces > 0) {
             if (preserve) {
                 return joinMap(value.split('\n'), line => {
-                    const match = line.match(REGEXP_INDENT);
+                    const match = REGEXP_INDENT.exec(line);
                     if (match) {
                         return ' '.repeat(spaces * match[1].length) + match[2];
                     }

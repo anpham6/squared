@@ -1,4 +1,4 @@
-/* android.widget 0.9.2
+/* android.widget 0.9.3
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -56,13 +56,13 @@ this.android.widget.toolbar = (function () {
             for (let i = 0; i < element.children.length; i++) {
                 const item = element.children[i];
                 if (item.tagName === 'IMG') {
-                    if ($util.hasValue(item.dataset.navigationIcon)) {
+                    if (item.dataset.navigationIcon) {
                         const src = $Resource.addImageSrc(item, $constA.PREFIX_ANDROID.MENU);
                         if (src !== '') {
                             $util.assignEmptyValue(toolbarOptions, 'app', 'navigationIcon', `@drawable/${src}`);
                         }
                     }
-                    if ($util.hasValue(item.dataset.collapseIcon)) {
+                    if (item.dataset.collapseIcon) {
                         const src = $Resource.addImageSrc(item, $constA.PREFIX_ANDROID.MENU);
                         if (src !== '') {
                             $util.assignEmptyValue(toolbarOptions, 'app', 'collapseIcon', `@drawable/${src}`);
@@ -93,7 +93,7 @@ this.android.widget.toolbar = (function () {
             else {
                 $util.assignEmptyValue(toolbarOptions, 'app', 'popupTheme', '@style/ThemeOverlay.AppCompat.Light');
                 if (backgroundImage) {
-                    $util.assignEmptyValue(hasAppBar ? appBarOptions : toolbarOptions, 'android', 'background', `@drawable/${$Resource.addImageUrl(node.css('backgroundImage'))}`);
+                    $util.assignEmptyValue(hasAppBar ? appBarOptions : toolbarOptions, 'android', 'background', `@drawable/${$Resource.addImageURL(node.css('backgroundImage'))}`);
                     node.exclude({ resource: $enum.NODE_RESOURCE.IMAGE_SOURCE });
                 }
                 else {
@@ -184,7 +184,7 @@ this.android.widget.toolbar = (function () {
                 node.render(target ? application.resolveTarget(target) : parent);
             }
             if (backgroundImage && hasCollapsingToolbar) {
-                const src = $Resource.addImageUrl(node.css('backgroundImage'));
+                const src = $Resource.addImageURL(node.css('backgroundImage'));
                 if (src !== '') {
                     const backgroundImageOptions = $utilA.createViewAttribute(options.backgroundImage);
                     let scaleType = 'center';
@@ -265,7 +265,7 @@ this.android.widget.toolbar = (function () {
             for (const item of children) {
                 siblingIndex = Math.min(siblingIndex, item.siblingIndex);
             }
-            const placeholder = this.application.createNode($dom.createElement(node.actualParent ? node.actualParent.element : null, node.block ? 'div' : 'span'), true, node, children);
+            const placeholder = this.application.createNode($dom.createElement(node.actualParent && node.actualParent.element, node.block ? 'div' : 'span'), true, node, children);
             placeholder.siblingIndex = siblingIndex;
             if (target) {
                 placeholder.dataset.target = target;

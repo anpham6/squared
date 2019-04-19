@@ -15,8 +15,9 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
         super.processNode(node, parent);
         const mainData: TableData = node.data($const.EXT_NAME.TABLE, 'mainData');
         if (mainData) {
+            let requireWidth = false;
             if (mainData.columnCount > 1) {
-                let requireWidth = !!node.data($const.EXT_NAME.TABLE, 'expand');
+                requireWidth = !!node.data($const.EXT_NAME.TABLE, 'expand');
                 node.each((item: T) => {
                     if (item.css('width') === '0px') {
                         item.android('layout_width', '0px');
@@ -55,7 +56,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                         }
                     }
                 });
-                if (requireWidth && !node.hasWidth) {
+                if (!node.hasWidth && requireWidth) {
                     const above = node.ascend(false, item => item.hasWidth);
                     if (above.length && node.actualWidth >= above[0].actualWidth) {
                         node.android('layout_width', 'match_parent');
@@ -64,6 +65,21 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                         node.css('width', $util.formatPX(node.actualWidth), true);
                     }
                 }
+                else {
+                    requireWidth = false;
+                }
+            }
+            if (!requireWidth && node.has('width') && node.actualWidth < Math.floor(node.bounds.width)) {
+                if (!node.has('minWidth')) {
+                    node.android('minWidth', $util.formatPX(node.actualWidth));
+                }
+                node.css('width', 'auto', true);
+            }
+            if (node.has('height') && node.actualHeight < Math.floor(node.bounds.height)) {
+                if (!node.has('minHeight')) {
+                    node.android('minHeight', $util.formatPX(node.actualHeight));
+                }
+                node.css('height', 'auto', true);
             }
             const layout = new $Layout(
                 parent,

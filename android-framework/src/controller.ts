@@ -399,7 +399,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 node.hide();
                 next = true;
             }
-            else if (node.naturalElement && child.plainText) {
+            else if (node.naturalElement && child.plainText && (<Element> node.element).children.length === 0) {
                 node.clear();
                 node.setInlineText(true);
                 node.textContent = child.textContent;
@@ -411,9 +411,9 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 node.naturalElement &&
                 node.positionStatic &&
                 node.documentParent === node.actualParent &&
+                !node.documentParent.hasAlign($enum.NODE_ALIGNMENT.AUTO_LAYOUT) &&
                 !node.groupParent &&
                 !node.pseudoElement &&
-                !node.blockStatic &&
                 !node.elementId &&
                 !node.marginTop &&
                 !node.marginBottom &&
@@ -429,8 +429,8 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 !node.has('maxHeight') &&
                 !node.has('textAlign') &&
                 !node.has('verticalAlign') &&
-                !node.has('lineHeight') &&
-                !node.documentParent.hasAlign($enum.NODE_ALIGNMENT.AUTO_LAYOUT) &&
+                (!node.has('lineHeight') || child.length > 0) &&
+                (!node.blockStatic || child.blockStatic) &&
                 !node.dataset.use &&
                 !node.dataset.target &&
                 !this.hasAppendProcessing(node.id))
@@ -563,7 +563,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         return { layout };
     }
 
-    public processLayoutHorizontal(layout: $Layout<T>, strictMode = false) {
+    public processLayoutHorizontal(layout: $Layout<T>) {
         let containerType = 0;
         if (this.checkConstraintFloat(layout, true)) {
             layout.setType(CONTAINER_NODE.CONSTRAINT, $enum.NODE_ALIGNMENT.FLOAT);
@@ -574,7 +574,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         else if (this.checkRelativeHorizontal(layout)) {
             containerType = CONTAINER_NODE.RELATIVE;
         }
-        else if (!strictMode || layout.linearX && !layout.floated.has('right')) {
+        else {
             containerType = CONTAINER_NODE.LINEAR;
             if (layout.floated.size) {
                 sortHorizontalFloat(layout.children);
@@ -635,7 +635,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
         let B = 0;
         for (const node of layout) {
             const excluded = layout.cleared.has(node) || node.renderExclude;
-            if (A !== -1 && node.marginTop >= 0 && node.marginLeft >= 0 && (node.floating && (!node.positionRelative || node.positionRelative && node.top >= 0 && node.right <= 0 && node.bottom <= 0 && node.left >= 0) || node.autoMargin.horizontal || excluded)) {
+            if (A !== -1 && node.marginTop >= 0 && node.marginLeft >= 0 && node.marginRight >= 0 && (node.floating && (!node.positionRelative || node.positionRelative && node.top >= 0 && node.right <= 0 && node.bottom <= 0 && node.left >= 0) || node.autoMargin.horizontal || excluded)) {
                 A++;
             }
             else {
@@ -664,7 +664,13 @@ export default class Controller<T extends View> extends squared.base.Controller<
             }
             previousHeight = layout.children[i].actualHeight;
         }
-        return !sameHeight && !layout.parent.hasHeight && layout.some(node => node.verticalAlign === 'bottom') && layout.every(node => node.inlineVertical && (node.baseline || node.verticalAlign === 'bottom') || node.renderExclude);
+        if (!sameHeight && !layout.parent.hasHeight && layout.some(node => node.verticalAlign === 'bottom') && layout.every(node => node.inlineVertical && (node.baseline || node.verticalAlign === 'bottom') || node.renderExclude)) {
+            return true;
+        }
+        else if (layout.node.cssInitialAny('textAlign', 'center', 'end', 'right') && layout.every(node => node.inlineVertical)) {
+            return $NodeList.partitionRows(layout.children, layout.node).length === 1;
+        }
+        return false;
     }
 
     public checkRelativeHorizontal(layout: $Layout<T>) {
@@ -975,25 +981,48 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             node.android('inputType', 'textPassword');
                             break;
                         case 'range':
-                            if (element.value) {
-                                node.android('progress', element.value);
-                            }
                         case 'time':
-                        case 'week':
-                        case 'month':
                         case 'number':
                         case 'datetime-local':
-                            if (element.min) {
+                            switch (element.type) {
+                                case 'number':
+                                case 'range':
+                                    node.android('inputType', 'number');
+                                    break;
+                                case 'time':
+                                    node.android('inputType', 'time');
+                                    break;
+                                case 'datetime-local':
+                                    node.android('inputType', 'datetime');
+                                    break;
+                            }
+                            if ($util.isString(element.min)) {
                                 node.android('min', element.min);
                             }
-                            if (element.max) {
+                            if ($util.isString(element.max)) {
                                 node.android('max', element.max);
                             }
                             break;
-                        case 'url':
                         case 'email':
-                        case 'search':
                         case 'tel':
+                        case 'url':
+                        case 'week':
+                        case 'month':
+                        case 'search':
+                            switch (element.type) {
+                                case 'email':
+                                    node.android('inputType', 'textEmailAddress');
+                                    break;
+                                case 'tel':
+                                    node.android('inputType', 'phone');
+                                    break;
+                                case 'url':
+                                    node.android('inputType', 'textUri');
+                                    break;
+                                default:
+                                    node.android('inputType', 'text');
+                                    break;
+                            }
                             if (element.minLength !== -1) {
                                 node.android('minLength', element.minLength.toString());
                             }
@@ -1478,7 +1507,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
             const maxBoxWidth = Math.min(boxWidth, this.userSettings.maxWordWrapWidth);
             const checkLineWrap = node.css('whiteSpace') !== 'nowrap';
             const cleared = $NodeList.linearData(children, true).cleared;
-            const textIndent = node.toInt('textIndent');
+            const textIndent = node.block || node.blockDimension ? node.toInt('textIndent') : 0;
             let rowWidth = 0;
             let rowPreviousLeft: T | undefined;
             $util.partitionArray(children, item => item.float !== 'right').forEach((seg, index) => {
@@ -1877,6 +1906,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 item.anchor(reverse ? 'right' : 'left', 'parent');
             }
             else {
+                previous.anchor(reverse ? 'leftRight' : 'rightLeft', item.documentId);
                 item.anchor(reverse ? 'rightLeft' : 'leftRight', previous.documentId);
             }
             if (item.inlineVertical) {
@@ -1909,6 +1939,17 @@ export default class Controller<T extends View> extends squared.base.Controller<
                         break;
                 }
             }
+        }
+        switch (node.cssInitial('textAlign')) {
+            case 'center':
+                children[children.length - 1].anchor(reverse ? 'left' : 'right', 'parent');
+                children[0].anchorStyle(AXIS_ANDROID.HORIZONTAL, 'packed', 0.5);
+                break;
+            case 'right':
+            case 'end':
+                children[children.length - 1].anchor(reverse ? 'left' : 'right', 'parent');
+                children[0].anchorStyle(AXIS_ANDROID.HORIZONTAL, 'packed', reverse ? 0 : 1);
+                break;
         }
     }
 

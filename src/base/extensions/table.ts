@@ -35,7 +35,7 @@ export default abstract class Table<T extends Node> extends Extension<T> {
         const mainData = Table.createDataAttribute();
         const table: T[] = [];
         function setAutoWidth(td: T) {
-            td.data(EXT_NAME.TABLE, 'percent', `${Math.round((td.bounds.width / node.bounds.width) * 100)}%`);
+            td.data(EXT_NAME.TABLE, 'percent', `${Math.round((td.bounds.width / node.box.width) * 100)}%`);
             td.data(EXT_NAME.TABLE, 'expand', true);
         }
         function setBoundsWidth(td: T) {
@@ -106,7 +106,6 @@ export default abstract class Table<T extends Node> extends Extension<T> {
         const rowCount = table.length;
         let columnIndex: number[] = new Array(rowCount).fill(0);
         let columnCount = 0;
-        let multiline = false;
         for (let i = 0; i < rowCount; i++) {
             const tr = table[i];
             rowWidth[i] = horizontal;
@@ -223,9 +222,6 @@ export default abstract class Table<T extends Node> extends Extension<T> {
                         }
                     }
                 }
-                if (!multiline) {
-                    multiline = td.multiline;
-                }
                 if (td.length || td.inlineText) {
                     rowWidth[i] += td.bounds.width + horizontal;
                 }
@@ -262,10 +258,10 @@ export default abstract class Table<T extends Node> extends Extension<T> {
             });
         }
         else if (mapWidth.every(value => $util.isLength(value))) {
-            const width = mapWidth.reduce((a, b) => a + parseInt(b), 0);
+            const width = mapWidth.reduce((a, b) => a + parseFloat(b), 0);
             if (node.width > 0) {
                 if (width < node.width) {
-                    $util.replaceMap<string, string>(mapWidth, value => value !== '0px' ? `${(parseInt(value) / width) * 100}%` : value);
+                    $util.replaceMap<string, string>(mapWidth, value => value !== '0px' ? `${(parseFloat(value) / width) * 100}%` : value);
                 }
                 else if (width > node.width) {
                     node.css('width', 'auto', true);
@@ -285,25 +281,35 @@ export default abstract class Table<T extends Node> extends Extension<T> {
             if (mapWidth.some(value => $util.isPercent(value)) || mapWidth.every(value => $util.isLength(value) && value !== '0px')) {
                 return LAYOUT_TABLE.VARIABLE;
             }
-            if (mapWidth.every(value => value === mapWidth[0])) {
-                if (multiline) {
-                    return node.some(td => td.has('height')) ? LAYOUT_TABLE.FIXED : LAYOUT_TABLE.VARIABLE;
+            else if (mapWidth.every(value => value === mapWidth[0])) {
+                if (node.cascadeSome(td => td.hasHeight)) {
+                    mainData.expand = true;
+                    return LAYOUT_TABLE.VARIABLE;
                 }
-                if (mapWidth[0] === 'auto') {
-                    return node.has('width') ? LAYOUT_TABLE.VARIABLE : LAYOUT_TABLE.NONE;
+                else if (mapWidth[0] === 'auto') {
+                    if (node.hasWidth) {
+                        return LAYOUT_TABLE.VARIABLE;
+                    }
+                    else {
+                        const td = node.cascade(item => item.tagName === 'TD');
+                        if (td.length && td.every(item => $util.withinRange(item.bounds.width, td[0].bounds.width))) {
+                            return LAYOUT_TABLE.NONE;
+                        }
+                        return LAYOUT_TABLE.VARIABLE;
+                    }
                 }
-                if (node.hasWidth) {
+                else if (node.hasWidth) {
                     return LAYOUT_TABLE.FIXED;
                 }
             }
-            if (mapWidth.every(value => value === 'auto' || ($util.isLength(value) && value !== '0px'))) {
+            if (mapWidth.every(value => value === 'auto' || $util.isLength(value) && value !== '0px')) {
+                if (!node.hasWidth) {
+                    mainData.expand = true;
+                }
                 return LAYOUT_TABLE.STRETCH;
             }
             return LAYOUT_TABLE.NONE;
         })();
-        if (multiline || mainData.layoutType === LAYOUT_TABLE.STRETCH && !node.hasWidth) {
-            mainData.expand = true;
-        }
         const caption = node.find(item => item.tagName === 'CAPTION') as T | undefined;
         node.clear();
         if (caption) {

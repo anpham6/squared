@@ -321,12 +321,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return result;
     }
 
-    public cascade(element = false) {
-        const result = super.cascade();
-        if (element) {
-            return $util.spliceArray(result, node => node.element === null);
-        }
-        return result;
+    public cascade(predicate?: (item: T) => boolean, element = false) {
+        const result = super.cascade(predicate);
+        return element ? $util.spliceArray(result, node => node.element === null) : result;
     }
 
     public inherit(node: T, ...modules: string[]) {
@@ -420,7 +417,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 }
             }
             for (const previous of previousSiblings) {
-                if (this.blockStatic && (!previous.floating || previous.float !== 'right' && $util.withinRange(previous.linear.right, actualParent.box.right) || cleared && cleared.has(previous)) ||
+                if ((this.blockStatic || this.display === 'table') && (!previous.floating || previous.float !== 'right' && $util.withinRange(previous.linear.right, actualParent.box.right) || cleared && cleared.has(previous)) ||
                     previous.blockStatic ||
                     previous.lineBreak ||
                     previous.autoMargin.leftRight ||
@@ -432,7 +429,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 }
                 if (this.blockDimension) {
                     const previousBottom = $util.isArray(siblings) && this.linear.top >= Math.floor(siblings[siblings.length - 1].linear.bottom);
-                    if (previousBottom && (!previous.floating || this.has('width', CSS_STANDARD.PERCENT))) {
+                    if (previousBottom && (!previous.floating || this.has('width', CSS_STANDARD.PERCENT)) || this.css('width') === '100%' && !this.has('maxWidth')) {
                         return true;
                     }
                 }
@@ -1588,7 +1585,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get contentBox() {
-        return this.css('boxSizing') !== 'border-box' && !this.tableElement;
+        return this.css('boxSizing') !== 'border-box';
     }
 
     get contentBoxWidth() {
@@ -1689,6 +1686,13 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             this._cached.bottomAligned = !this.pageFlow && this.has('bottom') && this.bottom >= 0;
         }
         return this._cached.bottomAligned;
+    }
+
+    get horizontalAligned() {
+        if (this._cached.horizontalAligned === undefined) {
+            this._cached.horizontalAligned = !this.blockStatic && !this.autoMargin.horizontal && !(this.blockDimension && this.css('width') === '100%');
+        }
+        return this._cached.horizontalAligned;
     }
 
     get autoMargin() {
@@ -1950,14 +1954,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             if (this.plainText) {
                 this._cached.actualWidth = this.bounds.right - this.bounds.left;
             }
-            else if (this.display !== 'table-cell' && !this.documentParent.flexElement) {
+            else if (!this.documentParent.flexElement && this.display !== 'table-cell') {
                 let width = this.parseUnit(this.cssInitial('width', true));
                 if (width > 0) {
                     const maxWidth = this.parseUnit(this.css('maxWidth'));
                     if (maxWidth > 0) {
                         width = Math.min(width, maxWidth);
                     }
-                    if (this.contentBox && !this.documentParent.gridElement) {
+                    if (this.contentBox && !this.documentParent.gridElement && !this.tableElement) {
                         width += this.contentBoxWidth;
                     }
                     this._cached.actualWidth = width;
@@ -1974,14 +1978,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             if (this.plainText) {
                 this._cached.actualHeight = this.bounds.bottom - this.bounds.top;
             }
-            else if (this.display !== 'table-cell' && !this.documentParent.flexElement) {
-                let height = this.parseUnit(this.cssInitial('height', true), true);
+            else if (!this.documentParent.flexElement && this.display !== 'table-cell') {
+                let height = this.parseUnit(this.cssInitial('height', true), false);
                 if (height > 0) {
                     const maxHeight = this.parseUnit(this.css('maxHeight'));
                     if (maxHeight > 0) {
                         height = Math.min(height, maxHeight);
                     }
-                    if (this.contentBox && !this.documentParent.gridElement) {
+                    if (this.contentBox && !this.documentParent.gridElement && !this.tableElement) {
                         height += this.contentBoxHeight;
                     }
                     this._cached.actualHeight = height;

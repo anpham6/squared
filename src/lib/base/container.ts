@@ -162,13 +162,15 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return cascade(this);
     }
 
-    public cascade() {
+    public cascade(predicate?: (item: T) => boolean) {
         function cascade(container: Container<T>) {
             const result: T[] = [];
             for (const item of container.children) {
-                result.push(item);
-                if (item instanceof Container && item.length) {
-                    concatArray(result, cascade(item));
+                if (predicate === undefined || predicate(item)) {
+                    result.push(item);
+                    if (item instanceof Container && item.length) {
+                        concatArray(result, cascade(item));
+                    }
                 }
             }
             return result;

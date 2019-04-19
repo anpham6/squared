@@ -33,7 +33,7 @@ export default abstract class Controller<T extends Node> implements squared.base
     public abstract processUnknownChild(layout: Layout<T>): LayoutResult<T>;
     public abstract processTraverseHorizontal(layout: Layout<T>, siblings?: T[]): LayoutResult<T>;
     public abstract processTraverseVertical(layout: Layout<T>, siblings?: T[]): LayoutResult<T>;
-    public abstract processLayoutHorizontal(layout: Layout<T>, strictMode?: boolean): LayoutResult<T>;
+    public abstract processLayoutHorizontal(layout: Layout<T>): LayoutResult<T>;
     public abstract sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
     public abstract renderNode(layout: Layout<T>): NodeTemplate<T> | undefined;
     public abstract renderNodeGroup(layout: Layout<T>): NodeTemplate<T> | undefined;

@@ -1,4 +1,4 @@
-/* android.widget 0.9.2
+/* android.widget 0.9.3
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -54,7 +54,7 @@ this.android.widget.menu = (function () {
         for (const attr in element.dataset) {
             const value = element.dataset[attr];
             if (value && validator[attr]) {
-                const match = value.match(validator[attr]);
+                const match = validator[attr].exec(value);
                 if (match) {
                     options[NAMESPACE_APP.includes(attr) ? 'app' : 'android'][attr] = Array.from(new Set(match)).join('|');
                 }
@@ -190,7 +190,7 @@ this.android.widget.menu = (function () {
                     if (!options.android.icon) {
                         const style = $css.getStyle(element);
                         const backgroundImage = style.getPropertyValue('background-image');
-                        let src = $Resource.addImageUrl(backgroundImage !== 'none' ? backgroundImage : style.getPropertyValue('background'), $constA.PREFIX_ANDROID.MENU);
+                        let src = $Resource.addImageURL(backgroundImage !== 'none' ? backgroundImage : style.getPropertyValue('background'), $constA.PREFIX_ANDROID.MENU);
                         if (src !== '') {
                             options.android.icon = `@drawable/${src}`;
                         }

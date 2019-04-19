@@ -18,6 +18,8 @@ declare global {
             readonly inlineHeight: boolean;
             readonly blockWidth: boolean;
             readonly blockHeight: boolean;
+            readonly flexibleWidth: boolean;
+            readonly flexibleHeight: boolean;
             android(attr: string, value?: string, overwrite?: boolean): string;
             app(attr: string, value?: string, overwrite?: boolean): string;
             formatted(value: string, overwrite?: boolean): void;
