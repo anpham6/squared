@@ -213,6 +213,25 @@ function getTextBottom<T extends View>(nodes: T[]): T | undefined {
     })[0];
 }
 
+function getAnchorDirection(reverse: boolean) {
+    if (reverse) {
+        return {
+            anchorStart: 'right',
+            anchorEnd: 'left',
+            chainStart: 'rightLeft',
+            chainEnd: 'leftRight'
+        };
+    }
+    else {
+        return {
+            anchorStart: 'left',
+            anchorEnd: 'right',
+            chainStart: 'leftRight',
+            chainEnd: 'rightLeft'
+        };
+    }
+}
+
 export default class Controller<T extends View> extends squared.base.Controller<T> implements android.base.Controller<T> {
     public static evaluateAnchors<T extends View>(nodes: T[]) {
         const horizontal: T[] = [];
@@ -656,7 +675,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     public checkConstraintHorizontal(layout: $Layout<T>) {
-        if ((layout.node.cssInitialAny('textAlign', 'center', 'end', 'right') || !layout.parent.hasHeight && layout.some(node => node.verticalAlign === 'bottom')) && layout.singleRowAligned && layout.every(node => node.positiveAxis || node.renderExclude)) {
+        if ((layout.node.cssInitialAny('textAlign', 'center', 'end', 'right') || !layout.parent.hasHeight && layout.some(node => node.verticalAlign === 'middle' || node.verticalAlign === 'bottom')) && layout.singleRowAligned && layout.every(node => node.positiveAxis && node.verticalAlign !== 'super' || node.renderExclude)) {
             return true;
         }
         return false;
@@ -889,16 +908,23 @@ export default class Controller<T extends View> extends squared.base.Controller<
                             }
                         }
                         node.android('scaleType', scaleType);
-                        if (image && (width === 0 || height === 0)) {
-                            if (width === 0) {
-                                width = image.width;
+                        if (width === 0 && height > 0) {
+                            if (image && image.width > 0 && image.height > 0) {
+                                width = image.width * (height / image.height);
+                                node.css('width', $util.formatPX(width), true);
                             }
-                            if (height === 0) {
-                                height = image.height;
+                            else {
+                                node.android('adjustViewBounds', 'true');
                             }
                         }
-                        if (width > 0 && height === 0 || width === 0 && height > 0) {
-                            node.android('adjustViewBounds', 'true');
+                        if (height === 0 && width > 0) {
+                            if (image && image.width > 0 && image.height > 0) {
+                                height = image.height * (width / image.width);
+                                node.css('height', $util.formatPX(height), true);
+                            }
+                            else {
+                                node.android('adjustViewBounds', 'true');
+                            }
                         }
                         if (node.baseline) {
                             node.android('baselineAlignBottom', 'true');
@@ -1873,9 +1899,11 @@ export default class Controller<T extends View> extends squared.base.Controller<
 
     protected processConstraintHorizontal(node: T, children: T[]) {
         const baseline = $NodeList.baseline(children)[0] as T | undefined;
-        const baselineText = $NodeList.baseline(children, true)[0] as T | undefined;
+        const textBaseline = $NodeList.baseline(children, true)[0] as T | undefined;
         const reverse = node.hasAlign($enum.NODE_ALIGNMENT.RIGHT);
         let textBottom = getTextBottom(children);
+        let maxCenterHeight = 0;
+        let lowest: T | undefined;
         if (baseline) {
             baseline.baselineActive = true;
             if (textBottom && baseline.bounds.height < Math.floor(textBottom.bounds.height)) {
@@ -1885,49 +1913,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 textBottom = undefined;
             }
         }
-        for (let i = 0; i < children.length; i++) {
-            const item = children[i];
-            const previous = children[i - 1];
-            if (i === 0) {
-                item.anchor(reverse ? 'right' : 'left', 'parent');
-            }
-            else {
-                previous.anchor(reverse ? 'leftRight' : 'rightLeft', item.documentId);
-                item.anchor(reverse ? 'rightLeft' : 'leftRight', previous.documentId);
-            }
-            if (item.inlineVertical) {
-                switch (item.verticalAlign) {
-                    case 'text-top':
-                        if (baselineText && item !== baselineText) {
-                            item.anchor('top', baselineText.documentId);
-                        }
-                        break;
-                    case 'super':
-                    case 'top':
-                        item.anchor('top', 'parent');
-                        break;
-                    case 'middle':
-                        item.anchorParent(AXIS_ANDROID.VERTICAL);
-                        break;
-                    case 'text-bottom':
-                        if (baselineText && item !== baselineText && item !== textBottom) {
-                            item.anchor('bottom', baselineText.documentId);
-                        }
-                        break;
-                    case 'sub':
-                    case 'bottom':
-                        item.anchor('bottom', 'parent');
-                        break;
-                    case 'baseline':
-                        if (baseline && item !== baseline) {
-                            item.anchor('baseline', baseline.documentId);
-                        }
-                        break;
-                }
-            }
-            item.anchored = true;
-            item.positioned = true;
-        }
+        const { anchorStart, anchorEnd, chainStart, chainEnd } = getAnchorDirection(reverse);
         let bias = 0;
         switch (node.cssInitial('textAlign')) {
             case 'center':
@@ -1940,8 +1926,88 @@ export default class Controller<T extends View> extends squared.base.Controller<
                 }
                 break;
         }
-        children[0].anchorStyle(AXIS_ANDROID.HORIZONTAL, 'packed', bias);
-        children[children.length - 1].anchor(reverse ? 'left' : 'right', 'parent');
+        for (let i = 0; i < children.length; i++) {
+            const item = children[i];
+            if (i === 0) {
+                item.anchor(anchorStart, 'parent');
+                item.anchorStyle(AXIS_ANDROID.HORIZONTAL, 'packed', bias);
+            }
+            else {
+                const previous = children[i - 1];
+                previous.anchor(chainEnd, item.documentId);
+                item.anchor(chainStart, previous.documentId);
+                if (i === children.length - 1) {
+                    item.anchor(anchorEnd, 'parent');
+                }
+            }
+            if (item.inlineVertical) {
+                function setParentVertical() {
+                    item.anchorParent(AXIS_ANDROID.VERTICAL);
+                    item.anchorStyle(AXIS_ANDROID.VERTICAL);
+                }
+                switch (item.verticalAlign) {
+                    case 'text-top':
+                        if (textBaseline && item !== textBaseline) {
+                            item.anchor('top', textBaseline.documentId);
+                        }
+                        else {
+                            setParentVertical();
+                        }
+                        break;
+                    case 'middle':
+                        if (baseline && !baseline.textElement) {
+                            setParentVertical();
+                            item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, item.linear.top - baseline.linear.top);
+                        }
+                        else {
+                            item.anchorParent(AXIS_ANDROID.VERTICAL);
+                            if (item.imageElement) {
+                                maxCenterHeight = Math.max(Math.max(item.actualHeight, item.lineHeight), maxCenterHeight);
+                            }
+                        }
+                        break;
+                    case 'text-bottom':
+                        if (textBaseline && item !== textBaseline && item !== textBottom) {
+                            item.anchor('bottom', textBaseline.documentId);
+                            break;
+                        }
+                    case 'sub':
+                    case 'bottom':
+                        if (lowest === undefined) {
+                            for (let j = 0; j < children.length; j++) {
+                                const child = children[j];
+                                if (!child.baseline && (lowest === undefined || child.linear.bottom > lowest.linear.bottom)) {
+                                    lowest = child;
+                                }
+                            }
+                        }
+                        if (item === lowest) {
+                            setParentVertical();
+                            item.modifyBox($enum.BOX_STANDARD.MARGIN_TOP, item.linear.top - node.box.top);
+                        }
+                        else {
+                            item.anchor('bottom', 'parent');
+                        }
+                        break;
+                    case 'baseline':
+                        if (baseline && item !== baseline) {
+                            item.anchor('baseline', baseline.documentId);
+                        }
+                        break;
+                    default:
+                        setParentVertical();
+                        break;
+                }
+            }
+            else if (baseline && item !== baseline && item.plainText && item.baseline) {
+                item.anchor('baseline', baseline.documentId);
+            }
+            item.anchored = true;
+            item.positioned = true;
+        }
+        if (baseline && baseline.textElement && maxCenterHeight > baseline.actualHeight) {
+            baseline.anchorParent(AXIS_ANDROID.VERTICAL, true);
+        }
     }
 
     protected processConstraintColumn(node: T, children: T[]) {
@@ -2154,23 +2220,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
                     return;
                 }
                 const reverse = seg === floatingRight;
-                let anchorStart: string;
-                let anchorEnd: string;
-                let chainStart: string;
-                let chainEnd: string;
-                if (reverse) {
-                    anchorStart = 'right';
-                    anchorEnd = 'left';
-                    chainStart = 'rightLeft';
-                    chainEnd = 'leftRight';
-                }
-                else {
-                    anchorStart = 'left';
-                    anchorEnd = 'right';
-                    chainStart = 'leftRight';
-                    chainEnd = 'rightLeft';
-                    sortHorizontalFloat(floatingLeft);
-                }
+                const { anchorStart, anchorEnd, chainStart, chainEnd } = getAnchorDirection(reverse);
                 const rowStart = seg[0];
                 const rowEnd = seg[seg.length - 1];
                 rowStart.anchor(anchorStart, 'parent');

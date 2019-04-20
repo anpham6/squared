@@ -1380,27 +1380,32 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get lineHeight() {
         if (this._cached.lineHeight === undefined) {
-            let hasOwnStyle = this.has('lineHeight');
-            let lineHeight = 0;
-            if (hasOwnStyle) {
-                lineHeight = this.toFloat('lineHeight');
-            }
-            else if (this.naturalElement) {
-                lineHeight = $util.convertFloat(this.cssAscend('lineHeight', true));
-                if (!this.plainText) {
-                    const element = <Element> (this.styleElement ? this._element : this.documentParent.element);
-                    const fontSize: string | undefined = $session.getElementCache(element, 'fontSize', this.cssSpecificity('fontSize').toString());
-                    if (fontSize && fontSize.endsWith('em')) {
-                        const emSize = parseFloat(fontSize);
-                        if (emSize < 1) {
-                            lineHeight *= emSize;
-                            this.css('lineHeight', $util.formatPX(lineHeight));
-                            hasOwnStyle = true;
+            if (!this.imageElement && !this.svgElement) {
+                let hasOwnStyle = this.has('lineHeight');
+                let lineHeight = 0;
+                if (hasOwnStyle) {
+                    lineHeight = this.toFloat('lineHeight');
+                }
+                else if (this.naturalElement) {
+                    lineHeight = $util.convertFloat(this.cssAscend('lineHeight', true));
+                    if (!this.plainText) {
+                        const element = <Element> (this.styleElement ? this._element : this.documentParent.element);
+                        const fontSize: string | undefined = $session.getElementCache(element, 'fontSize', this.cssSpecificity('fontSize').toString());
+                        if (fontSize && fontSize.endsWith('em')) {
+                            const emSize = parseFloat(fontSize);
+                            if (emSize < 1) {
+                                lineHeight *= emSize;
+                                this.css('lineHeight', $util.formatPX(lineHeight));
+                                hasOwnStyle = true;
+                            }
                         }
                     }
                 }
+                this._cached.lineHeight = hasOwnStyle || lineHeight > this.actualHeight || this.multiline || this.block && this.actualChildren.some(node => node.textElement) ? lineHeight : 0;
             }
-            this._cached.lineHeight = hasOwnStyle || lineHeight > this.actualHeight || this.multiline || this.block && this.actualChildren.some(node => node.textElement) ? lineHeight : 0;
+            else {
+                this._cached.lineHeight = 0;
+            }
         }
         return this._cached.lineHeight;
     }

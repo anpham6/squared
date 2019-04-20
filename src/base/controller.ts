@@ -151,10 +151,10 @@ export default abstract class Controller<T extends Node> implements squared.base
                                     styleMap.height = '150px';
                                 }
                             }
-                            else if (!(styleMap.maxWidth && $util.isPercent(styleMap.maxWidth) || styleMap.maxHeight && $util.isPercent(styleMap.maxHeight)) && (styleMap[opposing] === undefined || $util.isLength(styleMap[opposing]))) {
+                            else if ($util.isLength(styleMap[opposing]) && !(styleMap.maxWidth && $util.isPercent(styleMap.maxWidth) || styleMap.maxHeight && $util.isPercent(styleMap.maxHeight))) {
                                 const image = this.application.session.image.get((<HTMLImageElement> element).src);
                                 if (image && image.width > 0 && image.height > 0) {
-                                    styleMap[attr] = $util.formatPX(image[attr] * (styleMap[opposing] && $util.isLength(styleMap[opposing]) ? (parseFloat(styleMap[opposing]) / image[opposing]) : 1));
+                                    styleMap[attr] = $util.formatPX(image[attr] * (styleMap[opposing] && $util.isLength(styleMap[opposing]) ? parseFloat(styleMap[opposing]) / image[opposing] : 1));
                                 }
                             }
                         }

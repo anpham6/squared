@@ -110,15 +110,8 @@ function setMultiline(node: T, lineHeight: number, overwrite: boolean) {
 }
 
 function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top = true, bottom = true) {
-    function adjustMinHeight() {
-        const minHeight = node.parseUnit(node.css('minHeight'), true);
-        if (node.inlineText) {
-            lineHeight += node.contentBoxHeight;
-            node.mergeGravity('gravity', 'center_vertical', false);
-        }
-        if (lineHeight > minHeight) {
-            node.android('minHeight', $util.formatPX(lineHeight));
-        }
+    if (node.imageElement || node.svgElement) {
+        return;
     }
     if (node.multiline) {
         setMultiline(node, lineHeight, false);
@@ -130,7 +123,7 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top 
             node.cssFinally('lineHeight');
         }
         else if (inlineStyle && node.inlineText && (!node.inlineVertical || node.display === 'table-cell')) {
-            adjustMinHeight();
+            adjustMinHeight(node, lineHeight);
             return;
         }
         else {
@@ -146,7 +139,18 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top 
         }
     }
     else if (inlineStyle && lineHeight > node.height && (node.layoutHorizontal && node.horizontalRows === undefined || node.hasAlign($enum.NODE_ALIGNMENT.SINGLE))) {
-        adjustMinHeight();
+        adjustMinHeight(node, lineHeight);
+    }
+}
+
+function adjustMinHeight(node: T, value: number) {
+    const minHeight = node.parseUnit(node.css('minHeight'), true);
+    if (node.inlineText) {
+        value += node.contentBoxHeight;
+        node.mergeGravity('gravity', 'center_vertical', false);
+    }
+    if (value > minHeight) {
+        node.android('minHeight', $util.formatPX(value));
     }
 }
 
