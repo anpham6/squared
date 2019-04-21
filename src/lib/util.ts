@@ -592,7 +592,7 @@ export function cloneObject(data: {}, result = {}, array = false) {
 
 export function optional(obj: UndefNull<object>, value: string, type?: string) {
     let valid = false;
-    let result;
+    let result!: any;
     if (obj && typeof obj === 'object') {
         result = obj;
         const attrs = value.split('.');
@@ -831,11 +831,19 @@ export function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]) 
 }
 
 export function flatArray<T>(list: any[]): T[] {
-    let current = list;
-    while (current.some(item => Array.isArray(item))) {
-        current = [].concat.apply([], filterArray(current, item => item !== undefined && item !== null));
+    const result: T[] = [];
+    for (let i = 0; i < list.length; i++) {
+        const item = list[i];
+        if (Array.isArray(item)) {
+            if (item.length) {
+                result.push(...flatArray<T>(item));
+            }
+        }
+        else if (item !== undefined && item !== null) {
+            result.push(item);
+        }
     }
-    return current;
+    return result;
 }
 
 export function partitionArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): [T[], T[]] {
@@ -866,14 +874,12 @@ export function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolea
 }
 
 export function filterArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>) {
-    const result: T[] = new Array(list.length);
-    let j = 0;
+    const result: T[] = [];
     for (let i = 0; i < list.length; i++) {
         if (predicate(list[i], i, list)) {
-            result[j++] = list[i];
+            result.push(list[i]);
         }
     }
-    result.length = j;
     return result;
 }
 
@@ -894,27 +900,23 @@ export function concatMultiArray<T>(dest: T[], ...source: T[][]) {
 }
 
 export function flatMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[] {
-    const result: U[] = new Array(list.length);
-    let j = 0;
+    const result: U[] = [];
     for (let i = 0; i < list.length; i++) {
         const item = predicate(list[i], i, list);
         if (hasValue(item)) {
-            result[j++] = item;
+            result.push(item);
         }
     }
-    result.length = j;
     return result;
 }
 
 export function filterMap<T, U>(list: T[], predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, U>): U[] {
-    const result: U[] = new Array(list.length);
-    let j = 0;
+    const result: U[] = [];
     for (let i = 0; i < list.length; i++) {
         if (predicate(list[i], i, list)) {
-            result[j++] = callback(list[i], i, list);
+            result.push(callback(list[i], i, list));
         }
     }
-    result.length = j;
     return result;
 }
 

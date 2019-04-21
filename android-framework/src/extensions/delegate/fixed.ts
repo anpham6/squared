@@ -1,8 +1,14 @@
 import View from '../../view';
 
+import { EXT_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import $Layout = squared.base.Layout;
+
+type FixedData = {
+    fixedRight: boolean;
+    fixedBottom: boolean;
+};
 
 const $enum = squared.base.lib.enumeration;
 const $util = squared.lib.util;
@@ -19,27 +25,43 @@ export default class Fixed<T extends View> extends squared.base.Extension<T> {
             const right: number[] = [];
             const bottom: number[] = [];
             const left: number[] = [];
+            let fixedRight = false;
+            let fixedBottom = false;
             for (const item of fixed) {
-                if (item.has('top') && item.top >= 0) {
-                    top.push(item.top);
+                if (item.has('top')) {
+                    if (item.top >= 0) {
+                        top.push(item.top);
+                    }
                 }
-                if (item.has('right') && item.right >= 0) {
-                    right.push(item.right);
-                }
-                if (item.has('bottom') && item.bottom >= 0) {
+                else if (item.bottom >= 0 && item.has('bottom')) {
                     bottom.push(item.bottom);
+                    if (item.position === 'fixed') {
+                        fixedBottom = true;
+                    }
                 }
-                if (item.has('left') && item.left >= 0) {
-                    left.push(item.left);
+                if (item.has('left')) {
+                    if (item.left >= 0) {
+                        left.push(item.left);
+                    }
+                }
+                else if (item.right >= 0 && item.has('right')) {
+                    right.push(item.right);
+                    if (item.position === 'fixed') {
+                        fixedRight = true;
+                    }
                 }
             }
-            return (
-                withinBoxRegion(top, node.paddingTop + (node.documentBody ? node.marginTop : 0)) ||
+            if (withinBoxRegion(top, node.paddingTop + (node.documentBody ? node.marginTop : 0)) ||
                 withinBoxRegion(right, node.paddingRight + (node.documentBody ? node.marginRight : 0)) ||
                 withinBoxRegion(bottom, node.paddingBottom + (node.documentBody ? node.marginBottom : 0)) ||
                 withinBoxRegion(left, node.paddingLeft + (node.documentBody ? node.marginLeft : 0)) ||
-                node.documentBody && right.length > 0 && node.hasWidth
-            );
+                node.documentBody && (right.length > 0 && node.has('width') || bottom.length && node.has('height')))
+            {
+                if (node.documentBody) {
+                    node.data(EXT_ANDROID.DELEGATE_FIXED, 'mainData', <FixedData> { fixedRight, fixedBottom });
+                }
+                return true;
+            }
         }
         return false;
     }
@@ -60,6 +82,29 @@ export default class Fixed<T extends View> extends squared.base.Extension<T> {
                 procedure: $enum.NODE_PROCEDURE.NONPOSITIONAL,
                 resource: $enum.NODE_RESOURCE.BOX_STYLE | $enum.NODE_RESOURCE.ASSET
             });
+            if (node.documentBody) {
+                const mainData: FixedData = node.data(EXT_ANDROID.DELEGATE_FIXED, 'mainData');
+                if (mainData && (mainData.fixedRight || mainData.fixedBottom)) {
+                    if (node.has('width')) {
+                        container.css('width', node.css('width'));
+                    }
+                    if (node.has('height')) {
+                        container.css('height', node.css('height'));
+                    }
+                    node.cssApply({
+                        display: 'block',
+                        width: 'auto',
+                        height: 'auto',
+                        float: 'none'
+                    }, true);
+                    if (mainData.fixedRight) {
+                        node.android('layout_width', 'match_parent');
+                    }
+                    if (mainData.fixedBottom) {
+                        node.android('layout_height', 'match_parent');
+                    }
+                }
+            }
             container.outerParent = node;
             children.push(container);
             node.retain(children);

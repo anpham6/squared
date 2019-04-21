@@ -42,14 +42,14 @@ function getGridSize(mainData: CssGridData<View>, direction: string, node: View)
         for (let i = 0; i < data.unit.length; i++) {
             const unit = data.unit[i];
             if (unit.endsWith('px')) {
-                value += parseInt(unit);
+                value += parseFloat(unit);
             }
             else {
                 let size = 0;
                 $util.captureMap(
                     mainData.rowData[i] as View[][],
                     item => item && item.length > 0,
-                    item => size = Math.min(size, item[0].bounds[dimension])
+                    item => size = Math.min(size, ...$util.objectMap(item, child => child.bounds[dimension]))
                 );
                 value += size;
             }
@@ -100,17 +100,15 @@ function setContentSpacing(mainData: CssGridData<View>, node: View, alignment: s
                 case 'space-around': {
                     const [marginSize, marginExcess] = getMarginSize(itemCount * 2);
                     for (let i = 0; i < itemCount; i++) {
-                        for (const item of new Set<View>($util.flatArray(rowData[i]))) {
-                            if (item) {
-                                const marginStart = (i > 0 && i <= marginExcess ? 1 : 0) + marginSize;
-                                if (!adjusted.has(item)) {
-                                    item.modifyBox(MARGIN_START, marginStart);
-                                    item.modifyBox(MARGIN_END, marginSize);
-                                    adjusted.add(item);
-                                }
-                                else {
-                                    item.cssPX(dimension, sizeTotal / itemCount);
-                                }
+                        for (const item of new Set($util.flatArray<View>(rowData[i]))) {
+                            const marginStart = (i > 0 && i <= marginExcess ? 1 : 0) + marginSize;
+                            if (!adjusted.has(item)) {
+                                item.modifyBox(MARGIN_START, marginStart);
+                                item.modifyBox(MARGIN_END, marginSize);
+                                adjusted.add(item);
+                            }
+                            else {
+                                item.cssPX(dimension, sizeTotal / itemCount);
                             }
                         }
                     }
@@ -121,32 +119,21 @@ function setContentSpacing(mainData: CssGridData<View>, node: View, alignment: s
                     if (itemCount > 1) {
                         const [marginSize, marginExcess] = getMarginSize(itemCount - 1);
                         for (let i = 0; i < itemCount; i++) {
-                            for (const item of new Set<View>($util.flatArray(rowData[i]))) {
-                                if (item) {
-                                    const marginEnd = (i < marginExcess ? 1 : 0) + marginSize;
-                                    if (i < itemCount - 1) {
-                                        if (!adjusted.has(item)) {
-                                            item.modifyBox(MARGIN_END, marginEnd);
-                                            adjusted.add(item);
-                                        }
-                                        else {
-                                            item.cssPX(dimension, marginEnd);
-                                        }
+                            for (const item of new Set($util.flatArray<View>(rowData[i]))) {
+                                const marginEnd = marginSize + (i < marginExcess ? 1 : 0);
+                                if (i < itemCount - 1) {
+                                    if (!adjusted.has(item)) {
+                                        item.modifyBox(MARGIN_END, marginEnd);
+                                        adjusted.add(item);
                                     }
                                     else {
-                                        let span = 0;
-                                        if (direction === 'column') {
-                                            span = $util.convertInt(item.android('layout_columnSpan'));
-                                        }
-                                        else {
-                                            span = $util.convertInt(item.android('layout_rowSpan'));
-                                        }
-                                        if (span > 1) {
-                                            item.cssPX(dimension, marginEnd);
-                                            if (adjusted.has(item)) {
-                                                item.modifyBox(MARGIN_END, -marginEnd);
-                                            }
-                                        }
+                                        item.cssPX(dimension, marginEnd);
+                                    }
+                                }
+                                else if ($util.convertInt(item.android(direction === 'column' ? 'layout_columnSpan' : 'layout_rowSpan')) > 1) {
+                                    item.cssPX(dimension, marginEnd);
+                                    if (adjusted.has(item)) {
+                                        item.modifyBox(MARGIN_END, -marginEnd);
                                     }
                                 }
                             }
@@ -158,19 +145,17 @@ function setContentSpacing(mainData: CssGridData<View>, node: View, alignment: s
                 case 'space-evenly': {
                     const [marginSize, marginExcess] = getMarginSize(itemCount + 1);
                     for (let i = 0; i < itemCount; i++) {
-                        for (const item of new Set<View>($util.flatArray(rowData[i]))) {
-                            if (item) {
-                                const marginEnd = (i < marginExcess ? 1 : 0) + marginSize;
-                                if (!adjusted.has(item)) {
-                                    if (i === 0) {
-                                        item.modifyBox(MARGIN_START, marginSize);
-                                    }
-                                    item.modifyBox(MARGIN_END, marginEnd);
-                                    adjusted.add(item);
+                        for (const item of new Set($util.flatArray<View>(rowData[i]))) {
+                            const marginEnd = marginSize + (i < marginExcess ? 1 : 0);
+                            if (!adjusted.has(item)) {
+                                if (i === 0) {
+                                    item.modifyBox(MARGIN_START, marginSize);
                                 }
-                                else {
-                                    item.cssPX(dimension, marginEnd);
-                                }
+                                item.modifyBox(MARGIN_END, marginEnd);
+                                adjusted.add(item);
+                            }
+                            else {
+                                item.cssPX(dimension, marginEnd);
                             }
                         }
                     }

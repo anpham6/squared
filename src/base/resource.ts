@@ -33,7 +33,7 @@ function removeExcluded(node: Node, element: Element, attr: string) {
 
 function parseColorStops(node: Node, gradient: Gradient, value: string, opacity: string) {
     const radial = <RadialGradient> gradient;
-    const repeating = !!radial.repeating;
+    const repeating = radial.repeating === true;
     const extent = repeating && gradient.type === 'radial' ? radial.radiusExtent / radial.radius : 1;
     const result: ColorStop[] = [];
     const pattern = new RegExp(STRING_COLORSTOP, 'g');

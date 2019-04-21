@@ -701,7 +701,7 @@ export default class Application<T extends Node> implements squared.base.Applica
                     }
                 });
                 if (layers.length) {
-                    const children = node.children;
+                    const children = node.children as T[];
                     for (let j = 0, k = 0; j < layers.length; j++, k++) {
                         const order = layers[j];
                         if (order) {
@@ -714,10 +714,16 @@ export default class Application<T extends Node> implements squared.base.Applica
                                 }
                                 return 0;
                             });
+                            for (let l = 0; l < children.length; l++) {
+                                if (order.includes(children[l])) {
+                                    children[l] = undefined as any;
+                                }
+                            }
                             children.splice(k, 0, ...order);
                             k += order.length;
                         }
                     }
+                    node.retain($util.flatArray(children));
                 }
             }
             node.saveAsInitial();
