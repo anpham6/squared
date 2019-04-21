@@ -1913,6 +1913,12 @@ export default class Application<T extends Node> implements squared.base.Applica
 
     private setStyleMap() {
         let warning = false;
+        const applyCSSRule = (rule: CSSConditionRule) => {
+            const items = rule.cssRules;
+            for (let k = 0; k < items.length; k++) {
+                this.applyStyleRule(<CSSStyleRule> items[k]);
+            }
+        };
         for (let i = 0; i < document.styleSheets.length; i++) {
             const item = <CSSStyleSheet> document.styleSheets[i];
             try {
@@ -1924,11 +1930,13 @@ export default class Application<T extends Node> implements squared.base.Applica
                                 this.applyStyleRule(<CSSStyleRule> rule);
                                 break;
                             case CSSRule.MEDIA_RULE:
-                                if ($css.validMediaRule((<CSSConditionRule> rule).conditionText || (<CSSConditionRule> rule).cssText)) {
-                                    const items = (<CSSMediaRule> rule).cssRules;
-                                    for (let k = 0; k < items.length; k++) {
-                                        this.applyStyleRule(<CSSStyleRule> items[k]);
-                                    }
+                                if ($css.validMediaRule((<CSSConditionRule> rule).conditionText || $css.parseConditionText('media', rule.cssText))) {
+                                    applyCSSRule(<CSSConditionRule> rule);
+                                }
+                                break;
+                            case CSSRule.SUPPORTS_RULE:
+                                if (CSS.supports && CSS.supports((<CSSConditionRule> rule).conditionText || $css.parseConditionText('supports', rule.cssText))) {
+                                    applyCSSRule(<CSSConditionRule> rule);
                                 }
                                 break;
                         }

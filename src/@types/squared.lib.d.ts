@@ -27,6 +27,7 @@ declare global {
             function checkStyleValue(element: Element, attr: string, value: string, style?: CSSStyleDeclaration, specificity?: number, fontSize?: number): string;
             function getSpecificity(value: string): number;
             function getKeyframeRules(): CSSRuleData;
+            function parseConditionText(rule: string, value: string): string;
             function validMediaRule(value: string): boolean;
             function getDataSet(element: HTMLElement | null, prefix: string): StringMap;
             function getFontSize(element: Element | null): number | undefined;

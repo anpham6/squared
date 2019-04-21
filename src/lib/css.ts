@@ -233,11 +233,15 @@ export function getKeyframeRules(): CSSRuleData {
     return result;
 }
 
-export function validMediaRule(value: string) {
-    const media = /^@media([^{]+)/.exec(value);
-    if (media) {
-        value = media[1].trim();
+export function parseConditionText(rule: string, value: string) {
+    const match = new RegExp(`^@${rule}([^{]+)`).exec(value);
+    if (match) {
+        value = match[1].trim();
     }
+    return value;
+}
+
+export function validMediaRule(value: string) {
     switch (value) {
         case 'only all':
         case 'only screen':

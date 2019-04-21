@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android" 
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/squared_ui"
     android:baselineAlignedChildIndex="0"
     android:layout_height="wrap_content"
@@ -80,13 +80,13 @@
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@+id/textview_18"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol30270"
+                    android:text="@string/__symbol17883"
                     style="@style/Plaintext" />
             </RelativeLayout>
             <LinearLayout
                 android:id="@+id/linearlayout_1"
                 android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:orientation="vertical">
                 <LinearLayout
                     android:id="@+id/linearlayout_9"
@@ -229,7 +229,7 @@
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@+id/textview_21"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol30270"
+                    android:text="@string/__symbol17883"
                     style="@style/Plaintext" />
             </RelativeLayout>
             <LinearLayout
@@ -671,7 +671,7 @@
                     android:layout_height="wrap_content"
                     android:layout_toEndOf="@+id/textview_24"
                     android:layout_width="wrap_content"
-                    android:text="@string/__symbol30270"
+                    android:text="@string/__symbol17883"
                     style="@style/Plaintext" />
             </RelativeLayout>
             <LinearLayout
@@ -802,7 +802,7 @@
     <string name="app_name">android</string>
     <string name="__00_inactive">00 - Inactive</string>
     <string name="__01_active">01 - Active</string>
-    <string name="__symbol30270">):</string>
+    <string name="__symbol17883">):</string>
     <string name="active">Active:</string>
     <string name="add">Add</string>
     <string name="all">All</string>
@@ -1128,22 +1128,22 @@
 
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:top="-3dp" android:right="-3dp" android:bottom="-2dp">
+    <item android:top="-3dp" android:right="-2dp" android:bottom="-2dp">
         <shape android:shape="rectangle">
             <stroke android:width="2dp" android:color="@color/gray" />
         </shape>
     </item>
-    <item android:left="-2dp" android:top="-1dp" android:right="-3dp" android:bottom="-2dp">
+    <item android:left="-3dp" android:top="-1dp" android:right="-2dp" android:bottom="-2dp">
         <shape android:shape="rectangle">
             <stroke android:width="3dp" android:color="@color/gray" />
         </shape>
     </item>
-    <item android:left="-2dp" android:top="-3dp" android:bottom="-2dp">
+    <item android:left="-3dp" android:top="-3dp" android:bottom="-2dp">
         <shape android:shape="rectangle">
             <stroke android:width="2dp" android:color="@color/lightgray_1" />
         </shape>
     </item>
-    <item android:left="-2dp" android:top="-3dp" android:right="-3dp">
+    <item android:left="-3dp" android:top="-3dp" android:right="-2dp">
         <shape android:shape="rectangle">
             <stroke android:width="2dp" android:color="@color/lightgray_1" />
         </shape>
@@ -1164,22 +1164,22 @@
             <solid android:color="@color/gainsboro_1" />
         </shape>
     </item>
-    <item android:top="-3dp" android:right="-3dp" android:bottom="-2dp">
+    <item android:top="-3dp" android:right="-2dp" android:bottom="-2dp">
         <shape android:shape="rectangle">
             <stroke android:width="2dp" android:color="@color/whitesmoke_1" />
         </shape>
     </item>
-    <item android:left="-2dp" android:top="-1dp" android:right="-3dp" android:bottom="-2dp">
+    <item android:left="-3dp" android:top="-1dp" android:right="-2dp" android:bottom="-2dp">
         <shape android:shape="rectangle">
             <stroke android:width="3dp" android:color="@color/whitesmoke_1" />
         </shape>
     </item>
-    <item android:left="-2dp" android:top="-3dp" android:bottom="-2dp">
+    <item android:left="-3dp" android:top="-3dp" android:bottom="-2dp">
         <shape android:shape="rectangle">
             <stroke android:width="2dp" android:color="@color/whitesmoke_2" />
         </shape>
     </item>
-    <item android:left="-2dp" android:top="-3dp" android:right="-3dp">
+    <item android:left="-3dp" android:top="-3dp" android:right="-2dp">
         <shape android:shape="rectangle">
             <stroke android:width="2dp" android:color="@color/whitesmoke_2" />
         </shape>
