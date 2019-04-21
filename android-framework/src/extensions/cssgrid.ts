@@ -233,9 +233,8 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
         if (mainData && cellData) {
             function applyLayout(item: T, direction: string, dimension: string) {
                 const data: CssGridDirectionData = mainData[direction];
-                const cellStart = `${direction}Start`;
-                const cellSpan = `${direction}Span`;
-                const cellTotal = cellData[cellSpan] - cellData[cellStart];
+                const cellStart = cellData[`${direction}Start`];
+                const cellSpan = cellData[`${direction}Span`];
                 const minDimension = `min${$util.capitalize(dimension)}`;
                 let size = 0;
                 let minSize = 0;
@@ -250,12 +249,12 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         data.unit.length = 0;
                     }
                 }
-                for (let i = 0, j = 0; i < cellData[cellSpan]; i++) {
-                    const unitMin = data.unitMin[cellData[cellStart] + i];
+                for (let i = 0, j = 0; i < cellSpan; i++) {
+                    const unitMin = data.unitMin[cellStart + i];
                     if (unitMin !== '') {
                         minUnitSize += parent.parseUnit(unitMin);
                     }
-                    let unit = data.unit[cellData[cellStart] + i];
+                    let unit = data.unit[cellStart + i];
                     if (!unit) {
                         if (data.auto[j]) {
                             unit = data.auto[j];
@@ -268,7 +267,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         }
                     }
                     if (unit === 'auto' || unit === 'min-content' || unit === 'max-content') {
-                        if (cellTotal < data.unit.length && (!parent.has(dimension) || data.unit.some(value => $util.isLength(value)) || unit === 'min-content')) {
+                        if (cellSpan < data.unit.length && (!parent.has(dimension) || data.unit.some(value => $util.isLength(value)) || unit === 'min-content')) {
                             size = node.bounds[dimension];
                             minSize = 0;
                             sizeWeight = 0;
@@ -309,8 +308,8 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         fitContent = true;
                     }
                 }
-                if (cellData[cellSpan] > 1) {
-                    const value = (cellData[cellSpan] - 1) * data.gap;
+                if (cellSpan > 1) {
+                    const value = (cellSpan - 1) * data.gap;
                     if (size > 0 && minSize === 0) {
                         size += value;
                     }
@@ -330,9 +329,9 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         minSize = minUnitSize;
                     }
                 }
-                item.android(`layout_${direction}`, cellData[cellStart].toString());
-                if (cellData[cellSpan] > 1) {
-                    item.android(`layout_${direction}Span`, cellData[cellSpan].toString());
+                item.android(`layout_${direction}`, cellStart.toString());
+                if (cellSpan > 1) {
+                    item.android(`layout_${direction}Span`, cellSpan.toString());
                 }
                 if (minSize > 0 && !item.has(minDimension)) {
                     item.css(minDimension, $util.formatPX(minSize), true);
@@ -354,6 +353,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         item.css(dimension, $util.formatPX(size), true);
                     }
                 }
+                return [cellStart, cellSpan];
             }
             const alignSelf = node.flexbox.alignSelf;
             const justifySelf = node.flexbox.justifySelf;
@@ -414,18 +414,18 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             }
             const target = renderAs || node;
             applyLayout(target, 'column', 'width');
-            applyLayout(target, 'row', 'height');
-            if (!target.has('height')) {
-                if (parent.hasHeight && mainData.alignContent === 'normal') {
-                    target.android('layout_height', '0px');
-                    target.android('layout_rowWeight', '1');
-                }
-                if (!(mainData.row.count === 1 && mainData.alignContent === 'space-between')) {
-                    target.mergeGravity('layout_gravity', 'fill_vertical');
-                }
-            }
             if (!target.has('width')) {
                 target.mergeGravity('layout_gravity', 'fill_horizontal');
+            }
+            const [rowStart, rowSpan] = applyLayout(target, 'row', 'height');
+            if (mainData.alignContent === 'normal' && rowSpan === 1 && (!mainData.row.unit[rowStart] || mainData.row.unit[rowStart] === 'auto') && (mainData.rowHeightCount[rowStart] === 1 || node.bounds.height < mainData.rowHeight[rowStart]) && (parent.hasHeight && !target.has('height') || mainData.rowSpanMultiple[rowStart] === true)) {
+                target.android('layout_height', '0px');
+                if (mainData.rowHeightCount[rowStart] === 1) {
+                    target.android('layout_rowWeight', $math.truncate(mainData.rowWeight[rowStart] || 1, node.localSettings.floatPrecision));
+                }
+            }
+            if (!target.has('height') && !(mainData.row.count === 1 && mainData.alignContent === 'space-between')) {
+                target.mergeGravity('layout_gravity', 'fill_vertical');
             }
         }
         return {

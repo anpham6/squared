@@ -639,8 +639,8 @@ export default abstract class Resource<T extends Node> implements squared.base.R
                                     break;
                             }
                             if (style !== 'none' && width !== '0px') {
-                                const borderColor = $color.parseColor(color, node.css('opacity'));
-                                if (borderColor && !borderColor.transparent) {
+                                const borderColor = $color.parseColor(color, node.css('opacity'), true);
+                                if (borderColor) {
                                     boxStyle[attr] = <BorderAttribute> {
                                         width,
                                         style,

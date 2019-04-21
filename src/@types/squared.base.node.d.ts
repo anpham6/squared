@@ -122,6 +122,7 @@ declare global {
             readonly float: string;
             readonly zIndex: number;
             readonly positiveAxis: boolean;
+            readonly leftTopAxis: boolean;
             readonly visibleStyle: VisibleStyle;
             readonly fontSize: number;
             readonly src: string;
@@ -138,10 +139,10 @@ declare global {
             readonly actualWidth: number;
             readonly actualHeight: number;
             readonly actualDimension: Dimension;
-            readonly firstChild: Node | undefined;
-            readonly lastChild: Node | undefined;
-            readonly previousSibling: Node | undefined;
-            readonly nextSibling: Node | undefined;
+            readonly firstChild: Node | null;
+            readonly lastChild: Node | null;
+            readonly previousSibling: Node | null;
+            readonly nextSibling: Node | null;
             readonly singleChild: boolean;
             readonly documentId: string;
             readonly nodes: Node[];
@@ -172,7 +173,7 @@ declare global {
             hide(invisible?: boolean): void;
             data(name: string, attr: string, value?: any, overwrite?: boolean): any;
             unsetCache(...attrs: string[]): void;
-            ascend(generated?: boolean, condition?: (item: Node) => boolean, levels?: number): Node[];
+            ascend(generated?: boolean, condition?: (item: Node) => boolean, parent?: Node): Node[];
             cascade(predicate?: (item: Node) => boolean, element?: boolean): Node[];
             inherit(node: Node, ...modules: string[]): void;
             alignedVertically(previousSiblings: Node[], siblings?: Node[], cleared?: Map<Node, string>, horizontal?: boolean): boolean;

@@ -167,14 +167,14 @@ export default class Resource<T extends View> extends squared.base.Resource<T> i
             if (srcset !== '') {
                 const filepath = element.src.substring(0, element.src.lastIndexOf('/') + 1);
                 for (const value of srcset.split($util.REGEXP_COMPILED.SEPARATOR)) {
-                    const match = /^(.+)\s*(?:(\d*\.?\d*)[xw])?$/.exec(value.trim());
+                    const match = /^(.*?)\s*(?:(\d*\.?\d*)([xw]))?$/.exec(value.trim());
                     if (match) {
                         if (!match[2]) {
-                            match[2] = '1';
+                            match[2] = '1x';
                         }
                         const src = filepath + $util.fromLastIndexOf(match[1], '/');
                         const size = parseFloat(match[2]);
-                        if (isNaN(size)) {
+                        if (!isNaN(size)) {
                             if (match[3] === 'x') {
                                 if (size <= 0.75) {
                                     images.ldpi = src;

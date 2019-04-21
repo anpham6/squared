@@ -8,7 +8,10 @@ export interface CssGridData<T> {
     column: CssGridDirectionData;
     emptyRows: Array<Undefined<number[]>>;
     rowData: (T[] | undefined)[][];
+    rowHeight: number[];
+    rowHeightCount: number[];
     rowWeight: number[];
+    rowSpanMultiple: (true | undefined)[];
     templateAreas: ObjectMap<CssGridCellData>;
     alignItems: string;
     alignContent: string;

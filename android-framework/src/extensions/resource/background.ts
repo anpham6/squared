@@ -60,7 +60,7 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
             lighten = true;
         case 'groove':
         case 'ridge': {
-            const color = $color.parseColor(border.color);
+            const color = $color.parseColor(border.color, '1', true);
             if (color) {
                 if (style === 'outset') {
                     halfSize = !halfSize;
@@ -91,7 +91,7 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
                 if (percent !== 1) {
                     const reduced = $color.reduceColor(color.valueAsRGBA, percent);
                     if (reduced) {
-                        const colorName = Resource.addColor(reduced);
+                        const colorName = Resource.addColor(reduced, true);
                         if (colorName !== '') {
                             return getColorAttribute(colorName);
                         }
@@ -101,7 +101,7 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
             break;
         }
     }
-    const result = getColorAttribute(Resource.addColor(border.color));
+    const result = getColorAttribute(Resource.addColor(border.color, true));
     switch (style) {
         case 'dotted':
         case 'dashed':
@@ -177,10 +177,8 @@ function insertDoubleBorder(items: ExternalData[], border: BorderAttribute, top:
     const baseWidth = Math.floor(width / 3);
     const remainder = width % 3;
     const offset =  remainder === 2 ? 1 : 0;
-    const leftWidth = baseWidth + offset;
-    const rightWidth = baseWidth + offset;
-    let indentWidth = `${$util.formatPX(width - baseWidth)}`;
-    let hideWidth = `-${indentWidth}`;
+    let drawWidth = `${$util.formatPX(width - baseWidth)}`;
+    let hideWidth = `-${drawWidth}`;
     items.push({
         top: top ? '' : hideWidth,
         right: right ? '' : hideWidth,
@@ -189,25 +187,25 @@ function insertDoubleBorder(items: ExternalData[], border: BorderAttribute, top:
         shape: {
             'android:shape': 'rectangle',
             stroke: {
-                width: $util.formatPX(leftWidth),
+                width: $util.formatPX(baseWidth + offset),
                 ...getBorderStyle(border)
             },
             corners
         }
     });
     if (width === 3) {
-        indentWidth = `${$util.formatPX(width)}`;
-        hideWidth = `-${indentWidth}`;
+        drawWidth = `${$util.formatPX(width)}`;
+        hideWidth = `-${drawWidth}`;
     }
     items.push({
-        top: top ? indentWidth : hideWidth,
-        right: right ? indentWidth : hideWidth,
-        bottom: bottom ? indentWidth : hideWidth,
-        left: left ? indentWidth : hideWidth,
+        top: top ? drawWidth : hideWidth,
+        right: right ? drawWidth : hideWidth,
+        bottom: bottom ? drawWidth : hideWidth,
+        left: left ? drawWidth : hideWidth,
         shape: {
             'android:shape': 'rectangle',
             stroke: {
-                width: $util.formatPX(rightWidth),
+                width: $util.formatPX(baseWidth + offset),
                 ...getBorderStyle(border)
             },
             corners
@@ -1006,21 +1004,23 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                         ]);
                                     }
                                     else {
-                                        const hasInset = item.style === 'groove' || item.style === 'ridge';
-                                        const outsetWidth = hasInset ? Math.ceil(width / 2) : width;
-                                        const baseWidth = getHideWidth(outsetWidth);
                                         const visible = !visibleAll && item.width === '1px';
-                                        let hideWidth = `-${baseWidth}px`;
-                                        let outerWidth = `-${baseWidth + (visibleAll ? 1 : 0)}px`;
+                                        const hasInset = item.style === 'groove' || item.style === 'ridge';
+                                        const baseWidth = getHideWidth(hasInset ? Math.ceil(width / 2) : width);
+                                        const drawWidth = visible ? item.width : '';
+                                        let outerWidth = `-${baseWidth}px`;
+                                        let innerWidth = `-${baseWidth + (visibleAll ? 1 : 0)}px`;
+                                        let topWidth = '';
                                         if (index === 0 && visibleAll) {
                                             item = { ...item };
                                             item.width = `${width + 1}px`;
+                                            topWidth = '-1px';
                                         }
                                         layerList.item.push({
-                                            top:  index === 0 ? (visibleAll ? '-1px' : '') : outerWidth,
-                                            right: index === 1 ? (visible ? item.width : '') : outerWidth,
-                                            bottom: index === 2 ? (visible ? item.width : '') : hideWidth,
-                                            left: index === 3 ? '' : hideWidth,
+                                            top:  index === 0 ? topWidth : innerWidth,
+                                            right: index === 1 ? drawWidth : outerWidth,
+                                            bottom: index === 2 ? drawWidth : outerWidth,
+                                            left: index === 3 ? '' : innerWidth,
                                             shape: {
                                                 'android:shape': 'rectangle',
                                                 corners,
@@ -1028,13 +1028,13 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                             }
                                         });
                                         if (hasInset) {
-                                            hideWidth = `-${$util.formatPX(getHideWidth(width))}`;
-                                            outerWidth = `-${width + (visibleAll ? 1 : 0)}px`;
+                                            outerWidth = `-${$util.formatPX(getHideWidth(width))}`;
+                                            innerWidth = `-${width + (visibleAll ? 1 : 0)}px`;
                                             layerList.item.splice(layerList.item.length, 0, {
-                                                top:  index === 0 ? (visibleAll ? '-1px' : '') : outerWidth,
-                                                right: index === 1 ? (visible ? item.width : '') : outerWidth,
-                                                bottom: index === 2 ? (visible ? item.width : '') : hideWidth,
-                                                left: index === 3 ? '' : hideWidth,
+                                                top:  index === 0 ? topWidth : innerWidth,
+                                                right: index === 1 ? drawWidth : outerWidth,
+                                                bottom: index === 2 ? drawWidth : outerWidth,
+                                                left: index === 3 ? '' : innerWidth,
                                                 shape: {
                                                     'android:shape': 'rectangle',
                                                     stroke: getShapeStroke(item, index, hasInset, true)

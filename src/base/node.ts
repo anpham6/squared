@@ -301,11 +301,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
     }
 
-    public ascend(generated = false, condition?: (item: T) => boolean, levels = -1) {
+    public ascend(generated = false, condition?: (item: T) => boolean, parent?: T) {
         const result: T[] = [];
         const attr = generated ? (this.renderParent ? 'renderParent' : 'parent') : 'actualParent';
         let current: UndefNull<T> = this[attr];
-        let i = -1;
         while (current && current.id !== 0 && !result.includes(current)) {
             if (condition) {
                 if (condition(current)) {
@@ -315,7 +314,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             else {
                 result.push(current);
             }
-            if (++i === levels) {
+            if (current === parent) {
                 break;
             }
             current = current[attr];
@@ -1875,6 +1874,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this._cached.positiveAxis;
     }
 
+    get leftTopAxis() {
+        return this.absoluteParent === this.documentParent || this.position === 'fixed';
+    }
+
     set renderExclude(value) {
         this._cached.renderExclude = value;
     }
@@ -2039,14 +2042,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (this.actualChildren.length) {
             return this.actualChildren[0];
         }
-        return undefined;
+        return null;
     }
 
     get lastChild() {
         if (this.actualChildren.length) {
             return this.actualChildren[this.actualChildren.length - 1];
         }
-        return undefined;
+        return null;
     }
 
     get singleChild() {
@@ -2060,31 +2063,39 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get previousSibling() {
-        if (this.naturalElement && !this.pseudoElement) {
-            let element = <Element> (this._element as Element).previousSibling;
-            while (element) {
-                const node = $session.getElementAsNode<Node>(element, this.sessionId);
-                if (node && node.naturalElement && !node.pseudoElement && (!node.excluded || node.lineBreak)) {
-                    return node;
+        if (this._cached.previousSibling === undefined) {
+            if (this.naturalElement) {
+                let element = <Element> (this._element as Element).previousSibling;
+                while (element) {
+                    const node = $session.getElementAsNode<Node>(element, this.sessionId);
+                    if (node && node.naturalElement && !node.pseudoElement && (!node.excluded || node.lineBreak)) {
+                        this._cached.previousSibling = node;
+                        return node;
+                    }
+                    element = <Element> element.previousSibling;
                 }
-                element = <Element> element.previousSibling;
             }
+            this._cached.previousSibling = null;
         }
-        return undefined;
+        return this._cached.previousSibling;
     }
 
     get nextSibling() {
-        if (this.naturalElement && !this.pseudoElement) {
-            let element = <Element> (this._element as Element).nextSibling;
-            while (element) {
-                const node =  $session.getElementAsNode<Node>(element, this.sessionId);
-                if (node && node.naturalElement && !node.pseudoElement && (!node.excluded || node.lineBreak)) {
-                    return node;
+        if (this._cached.nextSibling === undefined) {
+            if (this.naturalElement) {
+                let element = <Element> (this._element as Element).nextSibling;
+                while (element) {
+                    const node =  $session.getElementAsNode<Node>(element, this.sessionId);
+                    if (node && node.naturalElement && !node.pseudoElement && (!node.excluded || node.lineBreak)) {
+                        this._cached.nextSibling = node;
+                        return node;
+                    }
+                    element = <Element> element.nextSibling;
                 }
-                element = <Element> element.nextSibling;
             }
+            this._cached.nextSibling = null;
         }
-        return undefined;
+        return this._cached.nextSibling;
     }
 
     set dir(value) {

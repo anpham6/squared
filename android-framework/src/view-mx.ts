@@ -630,7 +630,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                         }
                         else {
                             if (this.blockStatic && !this.inputElement && !renderParent.is(CONTAINER_NODE.GRID)) {
-                                if (!this.documentParent.layoutElement || this.layoutElement) {
+                                if (!this.documentParent.layoutElement || this.flexElement) {
                                     layoutWidth = 'match_parent';
                                 }
                                 else if (!this.documentParent.flexElement && renderParent.layoutConstraint && this.alignParent('left') && this.alignParent('right')) {
@@ -691,7 +691,11 @@ export default (Base: Constructor<squared.base.Node>) => {
                                 layoutHeight = $util.formatPX(this.actualHeight);
                             }
                         }
-                        else if (this.display === 'table-cell' || !this.pageFlow && (this.absoluteParent === this.documentParent || this.position === 'fixed') && this.has('top') && this.has('bottom')) {
+                        else if (
+                            this.display === 'table-cell' ||
+                            this.singleChild && renderParent.flexElement && renderParent.css('flexDirection') === 'row' ||
+                            !this.pageFlow && this.leftTopAxis && this.has('top') && this.has('bottom'))
+                        {
                             layoutHeight = 'match_parent';
                         }
                     }
