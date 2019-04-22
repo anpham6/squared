@@ -11,6 +11,7 @@ const $color = squared.lib.color;
 const $client = squared.lib.client;
 const $css = squared.lib.css;
 const $session = squared.lib.session;
+const $util = squared.lib.util;
 const $xml = squared.lib.xml;
 
 const withinViewport = (rect: DOMRect | ClientRect) => !(rect.left < 0 && rect.top < 0 && Math.abs(rect.left) >= rect.width && Math.abs(rect.top) >= rect.height);
@@ -141,7 +142,12 @@ export default abstract class Controller<T extends Node> implements squared.base
                         if (styleMap[attr] === undefined || styleMap[attr] === 'auto') {
                             const match = new RegExp(`\\s+${attr}="([^"]+)"`).exec(element.outerHTML);
                             if (match) {
-                                styleMap[attr] = $css.formatPX($css.isPercent(match[1]) ? parseFloat(match[1]) / 100 * $session.getClientRect(element.parentElement || element, this.application.processing.sessionId)[attr] : match[1]);
+                                if ($css.isLength(match[1])) {
+                                    styleMap[attr] = $css.formatPX(match[1]);
+                                }
+                                else if ($css.isPercent(match[1])) {
+                                    styleMap[attr] = match[1];
+                                }
                             }
                             else if (element.tagName === 'IFRAME') {
                                 if (attr ===  'width') {
@@ -151,10 +157,13 @@ export default abstract class Controller<T extends Node> implements squared.base
                                     styleMap.height = '150px';
                                 }
                             }
-                            else if ($css.isLength(styleMap[opposing]) && !(styleMap.maxWidth && $css.isPercent(styleMap.maxWidth) || styleMap.maxHeight && $css.isPercent(styleMap.maxHeight))) {
-                                const image = this.application.session.image.get((<HTMLImageElement> element).src);
-                                if (image && image.width > 0 && image.height > 0) {
-                                    styleMap[attr] = $css.formatPX(image[attr] * (styleMap[opposing] && $css.isLength(styleMap[opposing]) ? parseFloat(styleMap[opposing]) / image[opposing] : 1));
+                            else if (styleMap[opposing] && $css.isLength(styleMap[opposing])) {
+                                const attrMax = `max${$util.capitalize(attr)}`;
+                                if (styleMap[attrMax] === undefined || !$css.isPercent(attrMax)) {
+                                    const image = this.application.session.image.get((<HTMLImageElement> element).src);
+                                    if (image && image.width > 0 && image.height > 0) {
+                                        styleMap[attr] = $css.formatPX(image[attr] * parseFloat(styleMap[opposing]) / image[opposing]);
+                                    }
                                 }
                             }
                         }

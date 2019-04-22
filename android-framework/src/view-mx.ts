@@ -622,7 +622,7 @@ export default (Base: Constructor<squared.base.Node>) => {
                         }
                         else {
                             if (this.blockStatic && !this.inputElement && !renderParent.is(CONTAINER_NODE.GRID)) {
-                                if (!this.documentParent.layoutElement || this.flexElement) {
+                                if (!this.documentParent.layoutElement || this.display === 'flex') {
                                     layoutWidth = 'match_parent';
                                 }
                                 else if (!this.documentParent.flexElement && renderParent.layoutConstraint && this.alignParent('left') && this.alignParent('right')) {

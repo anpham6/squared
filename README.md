@@ -65,7 +65,7 @@ Library files are in the /dist folder. A minimum of *three* files are required t
 
 Usable combinations: 1-2-4 + 1-2-4-5 + 1-2-3-4-5 + 1-3
 
-There are ES5 minified versions (*.min.js) and ES6 non-minified versions. ES5 is more compatible with older browsers. ES6 performs better in newer browsers and recommended for internal development.
+There are ES6 minified versions (*.min.js) and also ES6 non-minified versions. Browsers which do not support at least ES6 (under 5%) are not being supported due to this primarily being a development tool.
 
 NOTE: Calling "save" or "write" methods before the images have completely loaded can sometimes cause them to be excluded from the generated layout. In these cases you should use the "parseDocument" promise method "then" to set a callback for your commands.
 
@@ -283,7 +283,7 @@ Most of the Android support library extensions can be configured using the same 
 
 Layout rendering can also be customized using extensions as the program was built to be nearly completely modular. Some of the common layouts already have built-in extensions which you can load or unload based on your preference.
 
-CSS Grid and Flexbox layouts are mostly supported. There is also support for SVG and most of the common floating techniques.
+CSS Grid and Flexbox layouts are are for the most part fully supported. There is also support for SVG and most of the common floating techniques.
 
 ```javascript
 <script src="/dist/extensions/android.widget.coordinator.min.js"></script>

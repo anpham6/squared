@@ -1175,7 +1175,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get gridElement() {
-        return this.display === 'grid';
+        return this.display === 'grid' || this.display === 'inline-grid';
     }
 
     get textElement() {

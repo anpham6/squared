@@ -1,4 +1,3 @@
-import babel from 'rollup-plugin-babel';
 import { terser } from 'rollup-plugin-terser';
 
 import { version } from './package.json';
@@ -23,7 +22,6 @@ export default [
             format: 'iife'
         },
         plugins: [
-            babel(),
             terser({
                 compress: {
                     pure_getters: true,
@@ -51,7 +49,6 @@ export default [
             format: 'iife'
         },
         plugins: [
-            babel(),
             terser({
                 compress: {
                     pure_getters: true,
@@ -79,7 +76,6 @@ export default [
             format: 'iife'
         },
         plugins: [
-            babel(),
             terser({
                 compress: {
                     pure_getters: true,
@@ -107,7 +103,6 @@ export default [
             format: 'iife'
         },
         plugins: [
-            babel(),
             terser({
                 compress: {
                     pure_getters: true,
@@ -135,7 +130,6 @@ export default [
             format: 'iife'
         },
         plugins: [
-            babel(),
             terser({
                 compress: {
                     pure_getters: true,
@@ -163,7 +157,6 @@ export default [
             format: 'iife'
         },
         plugins: [
-            babel(),
             terser({
                 compress: {
                     pure_getters: true,
